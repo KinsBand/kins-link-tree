@@ -1324,83 +1324,89 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------------------------------------------------------------
   const PRESET_THEMES = {
     classic: {
-      name: 'Classic Light',
+      name: 'Kins Emerald',
       dark: {
-        // M3 Dark variant of Classic — deep emerald Kins signature
-        primary: '#A8C7FA',
-        onPrimary: '#002d6d',
-        primaryContainer: '#004397',
-        surface: '#121316',
-        surfaceContainer: '#1e2022',
-        surfaceContainerHigh: '#282a2c',
-        onSurface: '#e3e3e3',
-        onSurfaceVariant: '#c4c7c0',
-        outline: '#8e918a',
-        outlineVariant: '#44483e',
-        // Legacy aliases
-        bgDark: '#0f1115',
-        bgGradient: 'linear-gradient(180deg, #121316 0%, #0a0b0d 100%)',
-        btnGreen: '#A8C7FA',
-        btnGreenHover: '#7cacf8',
-        btnTextColor: '#002d6d',
-        textWhite: '#e3e3e3'
+        primary: '#53c678',
+        onPrimary: '#0b1f18',
+        primaryContainer: '#11382b',
+        surface: '#002217',
+        surfaceContainer: '#0b1f18',
+        surfaceContainerHigh: '#11382b',
+        onSurface: '#ffffff',
+        onSurfaceVariant: '#a1b5ac',
+        outline: '#53c678',
+        outlineVariant: '#2e5a47',
+        bgDark: '#002217',
+        bgGradient: 'linear-gradient(180deg, #11382b 0%, #0b1f18 100%)',
+        btnGreen: '#53c678',
+        btnGreenHover: '#46b76a',
+        btnGreenShadow: '#3aa35c',
+        btnTextColor: '#0b1f18',
+        textWhite: '#ffffff',
+        cardBg: 'rgba(11, 31, 24, 0.94)'
       },
       light: {
-        primary: '#1A73E8',
+        primary: '#10b981',
         onPrimary: '#ffffff',
-        primaryContainer: '#d3e3fd',
-        surface: '#F8F9FA',
-        surfaceContainer: '#eef0f2',
-        surfaceContainerHigh: '#e3e5e8',
-        onSurface: '#1f1f1f',
-        onSurfaceVariant: '#444746',
-        outline: '#74796d',
-        outlineVariant: '#c4c7c0',
-        bgDark: '#F8F9FA',
-        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #eef0f2 100%)',
-        btnGreen: '#1A73E8',
-        btnGreenHover: '#005AC1',
+        primaryContainer: '#d1fae5',
+        surface: '#f0fdf4',
+        surfaceContainer: '#e6f4ea',
+        surfaceContainerHigh: '#dcfce7',
+        onSurface: '#064e3b',
+        onSurfaceVariant: '#047857',
+        outline: '#10b981',
+        outlineVariant: '#6ee7b7',
+        bgDark: '#f0fdf4',
+        bgGradient: 'linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%)',
+        btnGreen: '#10b981',
+        btnGreenHover: '#059669',
+        btnGreenShadow: '#047857',
         btnTextColor: '#ffffff',
-        textWhite: '#1f1f1f'
+        textWhite: '#064e3b',
+        cardBg: 'rgba(255, 255, 255, 0.95)'
       }
     },
     slate: {
       name: 'Midnight Slate',
       dark: {
-        primary: '#D0BCFF',
-        onPrimary: '#381e72',
-        primaryContainer: '#4f378b',
-        surface: '#0F1115',
-        surfaceContainer: '#1a1c20',
-        surfaceContainerHigh: '#242628',
-        onSurface: '#e6e1e5',
-        onSurfaceVariant: '#cac4d0',
-        outline: '#938f99',
-        outlineVariant: '#49454f',
-        bgDark: '#0F1115',
-        bgGradient: 'linear-gradient(180deg, #141620 0%, #08090d 100%)',
-        btnGreen: '#D0BCFF',
-        btnGreenHover: '#b69df7',
-        btnTextColor: '#381e72',
-        textWhite: '#e6e1e5'
+        primary: '#818cf8',
+        onPrimary: '#1e1b4b',
+        primaryContainer: '#312e81',
+        surface: '#0f172a',
+        surfaceContainer: '#1e1b4b',
+        surfaceContainerHigh: '#312e81',
+        onSurface: '#f8fafc',
+        onSurfaceVariant: '#94a3b8',
+        outline: '#818cf8',
+        outlineVariant: '#4338ca',
+        bgDark: '#0f172a',
+        bgGradient: 'linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%)',
+        btnGreen: '#818cf8',
+        btnGreenHover: '#6366f1',
+        btnGreenShadow: '#4338ca',
+        btnTextColor: '#ffffff',
+        textWhite: '#f8fafc',
+        cardBg: 'rgba(30, 27, 75, 0.94)'
       },
       light: {
-        primary: '#6750A4',
+        primary: '#4f46e5',
         onPrimary: '#ffffff',
-        primaryContainer: '#eaddff',
-        surface: '#fef7ff',
-        surfaceContainer: '#f3edf7',
-        surfaceContainerHigh: '#ece6f0',
-        onSurface: '#1d1b20',
-        onSurfaceVariant: '#49454f',
-        outline: '#79747e',
-        outlineVariant: '#cac4d0',
-        bgDark: '#fef7ff',
-        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f3edf7 100%)',
-        btnGreen: '#6750A4',
-        btnGreenHover: '#4f378b',
+        primaryContainer: '#e0e7ff',
+        surface: '#f8fafc',
+        surfaceContainer: '#e0e7ff',
+        surfaceContainerHigh: '#c7d2fe',
+        onSurface: '#1e1b4b',
+        onSurfaceVariant: '#3730a3',
+        outline: '#4f46e5',
+        outlineVariant: '#818cf8',
+        bgDark: '#f8fafc',
+        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #e0e7ff 100%)',
+        btnGreen: '#4f46e5',
+        btnGreenHover: '#4338ca',
+        btnGreenShadow: '#3730a3',
         btnTextColor: '#ffffff',
-        textWhite: '#1d1b20'
+        textWhite: '#1e1b4b',
+        cardBg: 'rgba(255, 255, 255, 0.95)'
       }
     },
     'high-contrast': {
@@ -1417,11 +1423,13 @@ document.addEventListener('DOMContentLoaded', () => {
         outline: '#ffffff',
         outlineVariant: '#ffffff',
         bgDark: '#000000',
-        bgGradient: 'linear-gradient(180deg, #0a0a0a 0%, #000000 100%)',
+        bgGradient: 'linear-gradient(180deg, #18181b 0%, #000000 100%)',
         btnGreen: '#ffff00',
-        btnGreenHover: '#cccc00',
+        btnGreenHover: '#eab308',
+        btnGreenShadow: '#ca8a04',
         btnTextColor: '#000000',
-        textWhite: '#ffffff'
+        textWhite: '#ffffff',
+        cardBg: 'rgba(24, 24, 27, 0.96)'
       },
       light: {
         primary: '#000000',
@@ -1437,87 +1445,97 @@ document.addEventListener('DOMContentLoaded', () => {
         bgDark: '#ffffff',
         bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%)',
         btnGreen: '#000000',
-        btnGreenHover: '#333333',
+        btnGreenHover: '#27272a',
+        btnGreenShadow: '#3f3f46',
         btnTextColor: '#ffffff',
-        textWhite: '#000000'
+        textWhite: '#000000',
+        cardBg: '#ffffff'
       }
     },
     terracotta: {
       name: 'Warm Sage',
       dark: {
-        primary: '#ffb4ab',
-        onPrimary: '#561e10',
-        primaryContainer: '#733424',
-        surface: '#1a1110',
-        surfaceContainer: '#271d1b',
-        surfaceContainerHigh: '#322825',
-        onSurface: '#f1dfdb',
+        primary: '#e07a5f',
+        onPrimary: '#1c1917',
+        primaryContainer: '#5c2c1e',
+        surface: '#1c1917',
+        surfaceContainer: '#2a1a15',
+        surfaceContainerHigh: '#3d241c',
+        onSurface: '#fdfbf7',
         onSurfaceVariant: '#d8c2bb',
-        outline: '#a08d86',
-        outlineVariant: '#534340',
-        bgDark: '#1a1110',
-        bgGradient: 'linear-gradient(180deg, #201815 0%, #0f0a08 100%)',
-        btnGreen: '#ffb4ab',
-        btnGreenHover: '#e09990',
-        btnTextColor: '#561e10',
-        textWhite: '#f1dfdb'
+        outline: '#e07a5f',
+        outlineVariant: '#a0533d',
+        bgDark: '#1c1917',
+        bgGradient: 'linear-gradient(180deg, #2a1a15 0%, #170e0b 100%)',
+        btnGreen: '#e07a5f',
+        btnGreenHover: '#d96241',
+        btnGreenShadow: '#b84728',
+        btnTextColor: '#ffffff',
+        textWhite: '#fdfbf7',
+        cardBg: 'rgba(42, 26, 21, 0.94)'
       },
       light: {
-        primary: '#A95A44',
+        primary: '#d96241',
         onPrimary: '#ffffff',
         primaryContainer: '#ffdbd1',
-        surface: '#F4F1EA',
-        surfaceContainer: '#ede9e2',
-        surfaceContainerHigh: '#e6e2db',
-        onSurface: '#231917',
+        surface: '#fdfbf7',
+        surfaceContainer: '#f4f1de',
+        surfaceContainerHigh: '#ede9e2',
+        onSurface: '#2b2d42',
         onSurfaceVariant: '#534340',
-        outline: '#85736e',
-        outlineVariant: '#d8c2bb',
-        bgDark: '#F4F1EA',
-        bgGradient: 'linear-gradient(180deg, #faf7f2 0%, #ede9e2 100%)',
-        btnGreen: '#A95A44',
-        btnGreenHover: '#8b4231',
+        outline: '#d96241',
+        outlineVariant: '#e07a5f',
+        bgDark: '#fdfbf7',
+        bgGradient: 'linear-gradient(180deg, #fdfbf7 0%, #f4f1de 100%)',
+        btnGreen: '#d96241',
+        btnGreenHover: '#c44f2f',
+        btnGreenShadow: '#a03c20',
         btnTextColor: '#ffffff',
-        textWhite: '#231917'
+        textWhite: '#2b2d42',
+        cardBg: 'rgba(255, 255, 255, 0.95)'
       }
     },
     cyber: {
       name: 'Vibrant Cyber',
       dark: {
-        primary: '#D0BCFF',
-        onPrimary: '#381e72',
-        primaryContainer: '#4f378b',
-        surface: '#12061e',
-        surfaceContainer: '#1e1028',
-        surfaceContainerHigh: '#2a1b35',
+        primary: '#ff007f',
+        onPrimary: '#ffffff',
+        primaryContainer: '#58002b',
+        surface: '#0f051d',
+        surfaceContainer: '#2e0836',
+        surfaceContainerHigh: '#450d52',
         onSurface: '#ece1f9',
         onSurfaceVariant: '#cec2d8',
-        outline: '#9e8fa8',
-        outlineVariant: '#4d3f58',
-        bgDark: '#12061e',
-        bgGradient: 'linear-gradient(180deg, #1e0a32 0%, #090214 100%)',
-        btnGreen: '#FFB4AB',
-        btnGreenHover: '#e0998f',
-        btnTextColor: '#561e10',
-        textWhite: '#ece1f9'
+        outline: '#ff007f',
+        outlineVariant: '#b30059',
+        bgDark: '#0f051d',
+        bgGradient: 'linear-gradient(180deg, #2e0836 0%, #0f051d 100%)',
+        btnGreen: '#ff007f',
+        btnGreenHover: '#d9006c',
+        btnGreenShadow: '#a30052',
+        btnTextColor: '#ffffff',
+        textWhite: '#ece1f9',
+        cardBg: 'rgba(46, 8, 54, 0.94)'
       },
       light: {
-        primary: '#7B2D8E',
+        primary: '#9333ea',
         onPrimary: '#ffffff',
-        primaryContainer: '#f8d8ff',
-        surface: '#fef7ff',
-        surfaceContainer: '#f9eef8',
-        surfaceContainerHigh: '#f2e6f2',
-        onSurface: '#1e1a20',
-        onSurfaceVariant: '#4d444c',
-        outline: '#7f747c',
-        outlineVariant: '#d0c3cc',
-        bgDark: '#fef7ff',
-        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f9eef8 100%)',
-        btnGreen: '#7B2D8E',
-        btnGreenHover: '#621b74',
+        primaryContainer: '#f3e8ff',
+        surface: '#faf5ff',
+        surfaceContainer: '#f3e8ff',
+        surfaceContainerHigh: '#e9d5ff',
+        onSurface: '#3b0764',
+        onSurfaceVariant: '#6b21a8',
+        outline: '#9333ea',
+        outlineVariant: '#c084fc',
+        bgDark: '#faf5ff',
+        bgGradient: 'linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%)',
+        btnGreen: '#9333ea',
+        btnGreenHover: '#7e22ce',
+        btnGreenShadow: '#6b21a8',
         btnTextColor: '#ffffff',
-        textWhite: '#1e1a20'
+        textWhite: '#3b0764',
+        cardBg: 'rgba(255, 255, 255, 0.95)'
       }
     }
   };
@@ -1592,6 +1610,8 @@ document.addEventListener('DOMContentLoaded', () => {
         root.style.setProperty('--md-sys-color-surface', c.bgDark);
         root.style.setProperty('--btn-green', c.btnGreen);
         root.style.setProperty('--btn-green-hover', c.btnGreenHover);
+        root.style.setProperty('--btn-green-shadow', c.btnGreenHover);
+        root.style.setProperty('--btn-text-color', c.btnTextColor || '#ffffff');
         root.style.setProperty('--text-white', c.textWhite || '#ffffff');
       }
     } else {
@@ -1624,9 +1644,10 @@ document.addEventListener('DOMContentLoaded', () => {
       root.style.setProperty('--bg-dark-green-gradient', tokens.bgGradient);
       root.style.setProperty('--btn-green', tokens.btnGreen);
       root.style.setProperty('--btn-green-hover', tokens.btnGreenHover);
+      root.style.setProperty('--btn-green-shadow', tokens.btnGreenShadow);
       root.style.setProperty('--btn-text-color', tokens.btnTextColor);
       root.style.setProperty('--text-white', tokens.textWhite);
-      root.style.setProperty('--card-bg', tokens.surface);
+      root.style.setProperty('--card-bg', tokens.cardBg);
     }
   }
 
