@@ -173,42 +173,51 @@ def fetch_twitter() -> int | None:
 def fetch_tiktok() -> int | None:
     client_key = os.environ.get("TIKTOK_CLIENT_KEY")
     client_secret = os.environ.get("TIKTOK_CLIENT_SECRET")
-    if not client_key or not client_secret:
-        print("  ⏭ TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET not set, skipping.")
-        return None
-
-    # TikTok Research API: Get access token
-    token_data = http_post_form("https://open.tiktokapis.com/v2/oauth/token/", {
-        "client_key": client_key,
-        "client_secret": client_secret,
-        "grant_type": "client_credentials",
-    })
-    if not token_data or "access_token" not in token_data:
-        return None
-    token = token_data["access_token"]
-
     username = CONFIG["tiktok_username"]
-    url = f"https://open.tiktokapis.com/v2/research/user/info/?fields=follower_count"
-    # POST body for research API
-    req_body = json.dumps({"username": username}).encode()
-    req = urllib.request.Request(
-        url,
-        data=req_body,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
+
+    # Try official API if keys present
+    if client_key and client_secret:
+        token_data = http_post_form("https://open.tiktokapis.com/v2/oauth/token/", {
+            "client_key": client_key,
+            "client_secret": client_secret,
+            "grant_type": "client_credentials",
+        })
+        if token_data and "access_token" in token_data:
+            token = token_data["access_token"]
+            url = f"https://open.tiktokapis.com/v2/research/user/info/?fields=follower_count"
+            req_body = json.dumps({"username": username}).encode()
+            req = urllib.request.Request(
+                url,
+                data=req_body,
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                method="POST"
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    data = json.loads(resp.read().decode())
+                count = data["data"]["user_info"]["follower_count"]
+                print(f"  ✓ TikTok followers (API): {count:,}")
+                return count
+            except Exception:
+                pass
+
+    # Fallback to public web page scraper
     try:
+        url = f"https://www.tiktok.com/@{username}"
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        )
         with urllib.request.urlopen(req, timeout=15) as resp:
-            data = json.loads(resp.read().decode())
-        count = data["data"]["user_info"]["follower_count"]
-        print(f"  ✓ TikTok followers: {count:,}")
-        return count
+            html = resp.read().decode()
+        match = re.search(r'"followerCount":(\d+)', html)
+        if match:
+            count = int(match.group(1))
+            print(f"  ✓ TikTok followers (web): {count:,}")
+            return count
     except Exception as e:
         print(f"  ⚠ TikTok error: {e}", file=sys.stderr)
-        return None
+    return None
 
 
 def fetch_soundcloud() -> int | None:
