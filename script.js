@@ -632,7 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -------------------------------------------------------------
-  // 11. Inspired Us CTA & Interactive 3-Row Scroll Section
+  // 11. Inspired Us CTA & Per-Artist Multi-Page Rendering Engine
   // -------------------------------------------------------------
   const inspiredCtaBtn = document.getElementById('inspiredCtaBtn');
   if (inspiredCtaBtn) {
@@ -644,75 +644,393 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Artist Navigation Filter Bar
-  const filterBtns = document.querySelectorAll('.artist-filter-bar .filter-pill-btn');
-  const musicCards = document.querySelectorAll('.inspired-section .music-card');
+  // Multi-Page Dataset per Artist
+  const INSPIRED_ARTISTS_DATA = {
+    'all': {
+      name: 'All Artists',
+      genre: 'Curated Inspiration Vault',
+      bio: 'Explore all iconic tracks driving the creative energy behind Kins.',
+      iconClass: 'fa-layer-group',
+      pages: [
+        [
+          { title: 'My Number', artist: 'Foals', duration: '4:00', genre: 'Indie Rock', quote: 'Inspires our drum grooves', icon: 'fa-bolt' },
+          { title: 'R U Mine?', artist: 'Arctic Monkeys', duration: '3:21', genre: 'Garage Rock', quote: 'Heavy guitar tone benchmark', icon: 'fa-guitar' },
+          { title: 'The Less I Know', artist: 'Tame Impala', duration: '3:36', genre: 'Psychedelic', quote: 'Analog synth bass influence', icon: 'fa-sliders' },
+          { title: 'Last Nite', artist: 'The Strokes', duration: '3:17', genre: 'Post-Punk', quote: 'Raw garage energy inspiration', icon: 'fa-radio' },
+          { title: "Can't Stop", artist: 'Red Hot Chili Peppers', duration: '4:29', genre: 'Funk Rock', quote: 'Slap bass rhythm inspiration', icon: 'fa-fire' },
+          { title: 'Mountain At My Gates', artist: 'Foals', duration: '4:02', genre: 'Math Rock', quote: 'Building climax guitar arrangement', icon: 'fa-compact-disc' }
+        ],
+        [
+          { title: 'Do I Wanna Know?', artist: 'Arctic Monkeys', duration: '4:32', genre: 'Alt Rock', quote: 'Moody guitar riff dynamics', icon: 'fa-headphones' },
+          { title: 'Feels Like We Only...', artist: 'Tame Impala', duration: '3:15', genre: 'Neo-Psychedelia', quote: 'Dreamy vocal reverb texture', icon: 'fa-wave-square' },
+          { title: 'Reptilia', artist: 'The Strokes', duration: '3:39', genre: 'Indie Rock', quote: 'Interlocking guitar leads', icon: 'fa-drum' },
+          { title: 'Californication', artist: 'Red Hot Chili Peppers', duration: '5:21', genre: 'Alt Rock', quote: 'Melodic bassline inspiration', icon: 'fa-record-vinyl' },
+          { title: 'Spanish Sahara', artist: 'Foals', duration: '6:50', genre: 'Atmospheric', quote: 'Patience in song structure', icon: 'fa-sliders' },
+          { title: '505', artist: 'Arctic Monkeys', duration: '4:13', genre: 'Indie Rock', quote: 'Organ driven slow burner', icon: 'fa-certificate' }
+        ],
+        [
+          { title: 'Borderline', artist: 'Tame Impala', duration: '3:57', genre: 'Synth Pop', quote: 'Vintage drum machine feel', icon: 'fa-compact-disc' },
+          { title: 'Someday', artist: 'The Strokes', duration: '3:03', genre: 'Garage Rock', quote: 'Nostalgic chord progressions', icon: 'fa-sun' },
+          { title: 'Dani California', artist: 'Red Hot Chili Peppers', duration: '4:42', genre: 'Funk Metal', quote: 'Vintage guitar solo energy', icon: 'fa-bolt' },
+          { title: 'What Went Down', artist: 'Foals', duration: '5:00', genre: 'Hard Rock', quote: 'Explosive studio loudness', icon: 'fa-fire' },
+          { title: 'Fluorescent Adolescent', artist: 'Arctic Monkeys', duration: '2:57', genre: 'Indie Rock', quote: 'Punchy bass & drums pairing', icon: 'fa-music' },
+          { title: 'Let It Happen', artist: 'Tame Impala', duration: '7:46', genre: 'Electronic Rock', quote: 'Epic intro synth sequencing', icon: 'fa-headphones' }
+        ]
+      ]
+    },
+    'foals': {
+      name: 'Foals',
+      genre: 'Indie Rock / Math Rock',
+      bio: 'Polyrhythmic energy, driving basslines, and math-rock guitar climaxes.',
+      iconClass: 'fa-bolt',
+      pages: [
+        [
+          { title: 'My Number', artist: 'Foals', duration: '4:00', genre: 'Indie Rock', quote: 'Inspires our upbeat drum grooves', icon: 'fa-bolt' },
+          { title: 'Mountain At My Gates', artist: 'Foals', duration: '4:02', genre: 'Math Rock', quote: 'Building climax guitar arrangement', icon: 'fa-compact-disc' },
+          { title: 'Spanish Sahara', artist: 'Foals', duration: '6:50', genre: 'Atmospheric Rock', quote: 'Patience & build-up in structure', icon: 'fa-sliders' },
+          { title: 'Red Socks Pugie', artist: 'Foals', duration: '5:09', genre: 'Math Rock', quote: 'Complex guitar interlocking', icon: 'fa-guitar' }
+        ],
+        [
+          { title: 'What Went Down', artist: 'Foals', duration: '5:00', genre: 'Alternative Metal', quote: 'Raw fuzz vocals and aggressive riffs', icon: 'fa-fire' },
+          { title: 'Life Is Yours', artist: 'Foals', duration: '4:12', genre: 'Dance Punk', quote: 'Summer synth grooves', icon: 'fa-sun' },
+          { title: '2001', artist: 'Foals', duration: '4:27', genre: 'Funk Rock', quote: 'Tight rhythm section syncopation', icon: 'fa-headphones' },
+          { title: 'The Runner', artist: 'Foals', duration: '4:21', genre: 'Heavy Rock', quote: 'Driving stomp rhythm', icon: 'fa-drum' }
+        ],
+        [
+          { title: 'Inhaler', artist: 'Foals', duration: '4:54', genre: 'Hard Rock', quote: 'Massive fuzz chorus explosion', icon: 'fa-bolt' },
+          { title: 'Olympic Airways', artist: 'Foals', duration: '4:19', genre: 'Indie Rock', quote: 'Clean delay-driven guitar lines', icon: 'fa-radio' },
+          { title: 'Late Night', artist: 'Foals', duration: '5:27', genre: 'Post-Rock', quote: 'Emotional guitar solos', icon: 'fa-certificate' },
+          { title: 'Exits', artist: 'Foals', duration: '5:57', genre: 'Art Rock', quote: 'Hypnotic bass groove loops', icon: 'fa-wave-square' }
+        ]
+      ]
+    },
+    'arctic-monkeys': {
+      name: 'Arctic Monkeys',
+      genre: 'Garage Rock / Post-Punk',
+      bio: 'Dark guitar riffs, sharp lyrics, and punchy garage rock rhythm section.',
+      iconClass: 'fa-guitar',
+      pages: [
+        [
+          { title: 'R U Mine?', artist: 'Arctic Monkeys', duration: '3:21', genre: 'Garage Rock', quote: 'Heavy guitar tone benchmark', icon: 'fa-guitar' },
+          { title: 'Do I Wanna Know?', artist: 'Arctic Monkeys', duration: '4:32', genre: 'Stoner Rock', quote: 'Moody riff dynamics', icon: 'fa-headphones' },
+          { title: '505', artist: 'Arctic Monkeys', duration: '4:13', genre: 'Indie Rock', quote: 'Organ driven slow build to crash', icon: 'fa-certificate' },
+          { title: 'I Bet You Look Good', artist: 'Arctic Monkeys', duration: '2:53', genre: 'Post-Punk', quote: 'High tempo live adrenaline', icon: 'fa-bolt' }
+        ],
+        [
+          { title: 'Fluorescent Adolescent', artist: 'Arctic Monkeys', duration: '2:57', genre: 'Indie Pop', quote: 'Punchy bass & drums pairing', icon: 'fa-music' },
+          { title: 'Arabella', artist: 'Arctic Monkeys', duration: '3:27', genre: 'Hard Rock', quote: 'Sabbath-style heavy chorus drop', icon: 'fa-fire' },
+          { title: 'Crying Lightning', artist: 'Arctic Monkeys', duration: '3:43', genre: 'Psychedelic Rock', quote: 'Twisted bassline riffs', icon: 'fa-sliders' },
+          { title: 'Teddy Picker', artist: 'Arctic Monkeys', duration: '2:43', genre: 'Indie Rock', quote: 'Sharp rhythm guitars', icon: 'fa-compact-disc' }
+        ],
+        [
+          { title: 'Brianstorm', artist: 'Arctic Monkeys', duration: '2:50', genre: 'Speed Rock', quote: 'Relentless drum fill energy', icon: 'fa-drum' },
+          { title: 'Cornerstone', artist: 'Arctic Monkeys', duration: '3:17', genre: 'Pop Rock', quote: 'Melodic storytelling vocal line', icon: 'fa-sun' },
+          { title: 'Four Out Of Five', artist: 'Arctic Monkeys', duration: '5:12', genre: 'Glam Rock', quote: 'Lounge vintage piano keys', icon: 'fa-radio' },
+          { title: 'Snap Out Of It', artist: 'Arctic Monkeys', duration: '3:13', genre: 'Pop Rock', quote: 'Catchy handclap rhythms', icon: 'fa-thumbs-up' }
+        ]
+      ]
+    },
+    'tame-impala': {
+      name: 'Tame Impala',
+      genre: 'Psychedelic Synth / Neo-Psychedelia',
+      bio: 'Psychedelic synths, hypnotic disco-rock grooves, and lush studio production.',
+      iconClass: 'fa-sliders',
+      pages: [
+        [
+          { title: 'The Less I Know', artist: 'Tame Impala', duration: '3:36', genre: 'Psychedelic Disco', quote: 'Analog synth bassline tone', icon: 'fa-sliders' },
+          { title: 'Feels Like We Only...', artist: 'Tame Impala', duration: '3:15', genre: 'Neo-Psychedelia', quote: 'Dreamy vocal reverb texture', icon: 'fa-wave-square' },
+          { title: 'Borderline', artist: 'Tame Impala', duration: '3:57', genre: 'Synth Pop', quote: 'Vintage drum machine feel', icon: 'fa-compact-disc' },
+          { title: 'Let It Happen', artist: 'Tame Impala', duration: '7:46', genre: 'Electronic Rock', quote: 'Epic intro synth sequencing', icon: 'fa-headphones' }
+        ],
+        [
+          { title: 'Elephant', artist: 'Tame Impala', duration: '3:31', genre: 'Psychedelic Rock', quote: 'Heavy distorted bass riffing', icon: 'fa-guitar' },
+          { title: 'Lost In Yesterday', artist: 'Tame Impala', duration: '4:09', genre: 'Disco Rock', quote: 'Driving bass groove', icon: 'fa-bolt' },
+          { title: 'Mind Mischief', artist: 'Tame Impala', duration: '4:31', genre: 'Psychedelic', quote: 'Flanged guitar rhythm loop', icon: 'fa-fire' },
+          { title: 'Breathe Deeper', artist: 'Tame Impala', duration: '6:12', genre: 'House/Synth', quote: 'Chilled piano chords into 303 acid synth', icon: 'fa-music' }
+        ],
+        [
+          { title: 'Eventually', artist: 'Tame Impala', duration: '5:19', genre: 'Synth Rock', quote: 'Crushing synth-fuzz hits', icon: 'fa-certificate' },
+          { title: 'Is It True', artist: 'Tame Impala', duration: '3:58', genre: 'Dance Rock', quote: 'Funky bass pulse', icon: 'fa-radio' },
+          { title: 'New Person, Same Old', artist: 'Tame Impala', duration: '6:04', genre: 'R&B Psychedelia', quote: 'Low-end sub bass atmosphere', icon: 'fa-drum' },
+          { title: 'Solitude Is Bliss', artist: 'Tame Impala', duration: '3:55', genre: 'Fuzz Rock', quote: 'Classic phaser guitar chords', icon: 'fa-sun' }
+        ]
+      ]
+    },
+    'the-strokes': {
+      name: 'The Strokes',
+      genre: 'New York Indie Rock / Post-Punk Revival',
+      bio: 'Raw New York indie rock, interlocking guitar melodies, and effortless hooks.',
+      iconClass: 'fa-radio',
+      pages: [
+        [
+          { title: 'Last Nite', artist: 'The Strokes', duration: '3:17', genre: 'Post-Punk', quote: 'Raw garage energy inspiration', icon: 'fa-radio' },
+          { title: 'Reptilia', artist: 'The Strokes', duration: '3:39', genre: 'Indie Rock', quote: 'Interlocking guitar leads', icon: 'fa-drum' },
+          { title: 'Someday', artist: 'The Strokes', duration: '3:03', genre: 'Garage Rock', quote: 'Nostalgic chord progressions', icon: 'fa-sun' },
+          { title: 'The Adults Are Talking', artist: 'The Strokes', duration: '4:47', genre: 'New Wave', quote: 'Clean drum machine rhythm', icon: 'fa-compact-disc' }
+        ],
+        [
+          { title: 'Hard To Explain', artist: 'The Strokes', duration: '3:44', genre: 'Indie Rock', quote: 'Compressed studio drum sound', icon: 'fa-headphones' },
+          { title: '12:51', artist: 'The Strokes', duration: '2:33', genre: 'New Wave', quote: 'Synth-like guitar solo tone', icon: 'fa-bolt' },
+          { title: 'Juicebox', artist: 'The Strokes', duration: '3:17', genre: 'Hard Rock', quote: 'Aggressive fuzz bass intro', icon: 'fa-fire' },
+          { title: 'Under Cover of Darkness', artist: 'The Strokes', duration: '3:57', genre: 'Indie Pop', quote: 'Upbeat dual guitar harmonies', icon: 'fa-guitar' }
+        ],
+        [
+          { title: 'Machu Picchu', artist: 'The Strokes', duration: '3:29', genre: 'Reggae Rock', quote: 'Funky muted guitar skank', icon: 'fa-sliders' },
+          { title: 'Is This It', artist: 'The Strokes', duration: '2:35', genre: 'Garage Rock', quote: 'Laid back bass groove', icon: 'fa-music' },
+          { title: 'Automatic Stop', artist: 'The Strokes', duration: '3:26', genre: 'Indie Rock', quote: 'Arpeggiated guitar weave', icon: 'fa-wave-square' },
+          { title: 'You Only Live Once', artist: 'The Strokes', duration: '3:09', genre: 'Indie Rock', quote: 'Anthemic opening riff', icon: 'fa-certificate' }
+        ]
+      ]
+    },
+    'rhcp': {
+      name: 'Red Hot Chili Peppers',
+      genre: 'Funk Rock / Alternative Rock',
+      bio: 'Slap basslines, explosive drum grooves, and soaring anthemic guitar hooks.',
+      iconClass: 'fa-fire',
+      pages: [
+        [
+          { title: "Can't Stop", artist: 'Red Hot Chili Peppers', duration: '4:29', genre: 'Funk Rock', quote: 'Slap bass & percussive guitar intro', icon: 'fa-fire' },
+          { title: 'Californication', artist: 'Red Hot Chili Peppers', duration: '5:21', genre: 'Alt Rock', quote: 'Melodic bassline storytelling', icon: 'fa-record-vinyl' },
+          { title: 'Dani California', artist: 'Red Hot Chili Peppers', duration: '4:42', genre: 'Funk Metal', quote: 'Vintage wah guitar solo energy', icon: 'fa-bolt' },
+          { title: 'By The Way', artist: 'Red Hot Chili Peppers', duration: '3:37', genre: 'Funk Rock', quote: 'Rapid Verse to Melodic Chorus dynamics', icon: 'fa-guitar' }
+        ],
+        [
+          { title: 'Scar Tissue', artist: 'Red Hot Chili Peppers', duration: '3:37', genre: 'Alt Rock', quote: 'Soulful slide guitar licks', icon: 'fa-sun' },
+          { title: 'Under The Bridge', artist: 'Red Hot Chili Peppers', duration: '4:24', genre: 'Ballad', quote: 'Hendrix-inspired chord embellishments', icon: 'fa-sliders' },
+          { title: 'Give It Away', artist: 'Red Hot Chili Peppers', duration: '4:43', genre: 'Funk Rock', quote: 'Unstoppable rhythm pocket', icon: 'fa-drum' },
+          { title: 'Snow (Hey Oh)', artist: 'Red Hot Chili Peppers', duration: '5:34', genre: 'Indie Rock', quote: 'Fast arpeggiated guitar riffing', icon: 'fa-compact-disc' }
+        ],
+        [
+          { title: 'Dark Necessities', artist: 'Red Hot Chili Peppers', duration: '5:02', genre: 'Funk Rock', quote: 'Piano & slap bass combo', icon: 'fa-headphones' },
+          { title: 'Black Summer', artist: 'Red Hot Chili Peppers', duration: '3:52', genre: 'Alt Rock', quote: 'Classic Frusciante bend tones', icon: 'fa-certificate' },
+          { title: 'Otherside', artist: 'Red Hot Chili Peppers', duration: '4:15', genre: 'Post-Punk', quote: 'Minimalist bass & vocal space', icon: 'fa-wave-square' },
+          { title: 'Tell Me Baby', artist: 'Red Hot Chili Peppers', duration: '4:07', genre: 'Funk Rock', quote: 'High-energy chorus groove', icon: 'fa-music' }
+        ]
+      ]
+    }
+  };
 
-  filterBtns.forEach(btn => {
+  // State Management for Per-Artist Multi-Page Pagination
+  let currentArtistKey = 'all';
+  let currentPageIndex = 0;
+
+  // DOM Elements
+  const artistFilterBtns = document.querySelectorAll('#artistFilterBar .filter-pill-btn');
+  const spotlightName = document.getElementById('spotlightName');
+  const spotlightGenre = document.getElementById('spotlightGenre');
+  const spotlightBio = document.getElementById('spotlightBio');
+  const spotlightAvatar = document.getElementById('spotlightAvatar');
+  const spotlightTrackCount = document.getElementById('spotlightTrackCount');
+
+  const pagePillsContainer = document.getElementById('pagePillsContainer');
+  const prevPageBtn = document.getElementById('prevPageBtn');
+  const nextPageBtn = document.getElementById('nextPageBtn');
+  const pageCounterText = document.getElementById('pageCounterText');
+  const inspiredTracksContainer = document.getElementById('inspiredTracksContainer');
+
+  // Bottom Audio Bar Elements
+  const bottomAudioBar = document.getElementById('bottomAudioBar');
+  const audioBarTitle = document.getElementById('audioBarTitle');
+  const audioBarArtist = document.getElementById('audioBarArtist');
+  const audioBarToggleBtn = document.getElementById('audioBarToggleBtn');
+  const audioBarCloseBtn = document.getElementById('audioBarCloseBtn');
+  let isPlayingAudio = false;
+
+  // Initialize Hero Studio Live Song Ticker
+  const tickerSongs = [
+    'Foals — My Number',
+    'Arctic Monkeys — R U Mine?',
+    'Tame Impala — The Less I Know',
+    'The Strokes — Reptilia',
+    'RHCP — Can\'t Stop'
+  ];
+  let tickerIdx = 0;
+  const heroStudioTicker = document.getElementById('heroStudioTicker');
+  if (heroStudioTicker) {
+    setInterval(() => {
+      tickerIdx = (tickerIdx + 1) % tickerSongs.length;
+      heroStudioTicker.style.opacity = '0';
+      setTimeout(() => {
+        heroStudioTicker.textContent = tickerSongs[tickerIdx];
+        heroStudioTicker.style.opacity = '1';
+      }, 300);
+    }, 4000);
+  }
+
+  // Render Artist Header & Multi-Page View
+  function renderArtistView(artistKey, pageIdx = 0) {
+    const artistData = INSPIRED_ARTISTS_DATA[artistKey] || INSPIRED_ARTISTS_DATA['all'];
+    currentArtistKey = artistKey;
+
+    const totalPages = artistData.pages.length;
+    currentPageIndex = Math.max(0, Math.min(pageIdx, totalPages - 1));
+
+    // Update Spotlight Banner
+    if (spotlightName) spotlightName.textContent = artistData.name;
+    if (spotlightGenre) spotlightGenre.textContent = artistData.genre;
+    if (spotlightBio) spotlightBio.textContent = artistData.bio;
+    if (spotlightAvatar) {
+      spotlightAvatar.innerHTML = `<i class="fa-solid ${artistData.iconClass}"></i>`;
+    }
+    
+    // Count total tracks for artist across all pages
+    let totalTrackCount = 0;
+    artistData.pages.forEach(p => totalTrackCount += p.length);
+    if (spotlightTrackCount) {
+      spotlightTrackCount.innerHTML = `<i class="fa-solid fa-music"></i> ${totalTrackCount} Tracks`;
+    }
+
+    // Render Page Pill Buttons
+    if (pagePillsContainer) {
+      pagePillsContainer.innerHTML = '';
+      for (let i = 0; i < totalPages; i++) {
+        const pill = document.createElement('button');
+        pill.className = `page-pill-btn ${i === currentPageIndex ? 'active' : ''}`;
+        pill.innerHTML = `<span>Page ${i + 1}</span>`;
+        pill.addEventListener('click', () => {
+          renderArtistView(currentArtistKey, i);
+        });
+        pagePillsContainer.appendChild(pill);
+      }
+    }
+
+    // Update Prev / Next Buttons State
+    if (prevPageBtn) {
+      prevPageBtn.disabled = (currentPageIndex === 0);
+    }
+    if (nextPageBtn) {
+      nextPageBtn.disabled = (currentPageIndex === totalPages - 1);
+    }
+
+    // Update Page Counter Text
+    if (pageCounterText) {
+      pageCounterText.textContent = `Page ${currentPageIndex + 1} of ${totalPages}`;
+    }
+
+    // Render Track Cards for active page with transition
+    if (inspiredTracksContainer) {
+      inspiredTracksContainer.style.opacity = '0';
+      inspiredTracksContainer.style.transform = 'translateY(8px)';
+
+      setTimeout(() => {
+        inspiredTracksContainer.innerHTML = '';
+        const pageTracks = artistData.pages[currentPageIndex] || [];
+
+        pageTracks.forEach(track => {
+          const card = document.createElement('div');
+          card.className = 'music-card paginated-card';
+          card.innerHTML = `
+            <div class="music-card-thumb">
+              <i class="fa-solid ${track.icon || 'fa-music'} thumb-icon"></i>
+              <div class="vinyl-disc-mini"><i class="fa-solid fa-compact-disc"></i></div>
+            </div>
+            <div class="music-card-info">
+              <div class="card-title-row">
+                <span class="song-title">${track.title}</span>
+                <span class="track-duration">${track.duration}</span>
+              </div>
+              <span class="artist-name">${track.artist}</span>
+              <div class="card-badge-row">
+                <span class="genre-tag">${track.genre}</span>
+                <span class="quote-tag" title="${track.quote}"><i class="fa-solid fa-quote-left"></i> ${track.quote}</span>
+              </div>
+            </div>
+            <button class="play-btn" aria-label="Play song" data-song="${track.title}" data-artist="${track.artist}">
+              <i class="fa-solid fa-play"></i>
+            </button>
+          `;
+
+          // Attach play event listener
+          const playBtn = card.querySelector('.play-btn');
+          if (playBtn) {
+            playBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              playTrackPreview(track.title, track.artist);
+            });
+          }
+
+          inspiredTracksContainer.appendChild(card);
+        });
+
+        inspiredTracksContainer.style.opacity = '1';
+        inspiredTracksContainer.style.transform = 'translateY(0)';
+      }, 180);
+    }
+  }
+
+  // Filter Pill Button Listeners
+  artistFilterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
+      artistFilterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      const filter = btn.getAttribute('data-filter');
-      musicCards.forEach(card => {
-        const cardArtist = card.getAttribute('data-artist');
-        if (filter === 'all' || cardArtist === filter) {
-          card.classList.remove('hidden-card');
-        } else {
-          card.classList.add('hidden-card');
-        }
-      });
+      const artistKey = btn.getAttribute('data-artist-key') || 'all';
+      renderArtistView(artistKey, 0);
     });
   });
 
-  // 3-Row Scroll Sync & Pagination Dots
-  const inspiredRows = document.querySelectorAll('.inspired-scroll-row');
-  const paginationDots = document.querySelectorAll('.inspired-pagination .pagination-dot');
-
-  inspiredRows.forEach((row) => {
-    row.addEventListener('scroll', () => {
-      const maxScroll = row.scrollWidth - row.clientWidth;
-      if (maxScroll > 0) {
-        const scrollRatio = row.scrollLeft / maxScroll;
-        const activeIndex = Math.min(
-          Math.floor(scrollRatio * paginationDots.length),
-          paginationDots.length - 1
-        );
-        paginationDots.forEach((dot, idx) => {
-          if (idx === activeIndex) {
-            dot.classList.add('active');
-          } else {
-            dot.classList.remove('active');
-          }
-        });
+  // Prev / Next Page Controls
+  if (prevPageBtn) {
+    prevPageBtn.addEventListener('click', () => {
+      if (currentPageIndex > 0) {
+        renderArtistView(currentArtistKey, currentPageIndex - 1);
       }
     });
-  });
+  }
 
-  paginationDots.forEach((dot, idx) => {
-    dot.addEventListener('click', () => {
-      paginationDots.forEach(d => d.classList.remove('active'));
-      dot.classList.add('active');
-      inspiredRows.forEach(row => {
-        const maxScroll = row.scrollWidth - row.clientWidth;
-        if (maxScroll > 0) {
-          const targetScroll = (idx / (paginationDots.length - 1)) * maxScroll;
-          row.scrollTo({ left: targetScroll, behavior: 'smooth' });
-        }
-      });
+  if (nextPageBtn) {
+    nextPageBtn.addEventListener('click', () => {
+      const artistData = INSPIRED_ARTISTS_DATA[currentArtistKey] || INSPIRED_ARTISTS_DATA['all'];
+      if (currentPageIndex < artistData.pages.length - 1) {
+        renderArtistView(currentArtistKey, currentPageIndex + 1);
+      }
     });
-  });
+  }
 
-  // Play button interactive feedback
-  document.querySelectorAll('.inspired-section .play-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const card = btn.closest('.music-card');
-      const song = card?.querySelector('.song-title')?.textContent || 'Track';
-      const artist = card?.querySelector('.artist-name')?.textContent || 'Artist';
-      showToast(`Now Playing: "${song}" - ${artist}`);
+  // Floating Audio Preview Player Handler
+  function playTrackPreview(songTitle, artistName) {
+    if (bottomAudioBar) {
+      bottomAudioBar.classList.remove('hidden');
+      bottomAudioBar.classList.add('active-player');
+    }
+    if (audioBarTitle) audioBarTitle.textContent = songTitle;
+    if (audioBarArtist) audioBarArtist.textContent = artistName;
+
+    isPlayingAudio = true;
+    if (audioBarToggleBtn) {
+      audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+    }
+
+    showToast(`Now Playing Preview: "${songTitle}" by ${artistName}`);
+  }
+
+  if (audioBarToggleBtn) {
+    audioBarToggleBtn.addEventListener('click', () => {
+      isPlayingAudio = !isPlayingAudio;
+      if (isPlayingAudio) {
+        audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+        bottomAudioBar.classList.add('active-player');
+        showToast('Resumed Track Preview');
+      } else {
+        audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+        bottomAudioBar.classList.remove('active-player');
+        showToast('Paused Track Preview');
+      }
     });
-  });
+  }
+
+  if (audioBarCloseBtn) {
+    audioBarCloseBtn.addEventListener('click', () => {
+      if (bottomAudioBar) {
+        bottomAudioBar.classList.add('hidden');
+        bottomAudioBar.classList.remove('active-player');
+      }
+      isPlayingAudio = false;
+    });
+  }
+
+  // Initial Render: Load 'all' artists page 0
+  renderArtistView('all', 0);
 
   // -------------------------------------------------------------
   // 12. Toast Notification Helper
