@@ -1155,34 +1155,50 @@ body {
 /* Toast Notifications */
 .toast-container {
   position: fixed;
-  bottom: 24px;
+  top: 24px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 300;
+  z-index: 10000;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
   pointer-events: none;
+  width: auto;
+  max-width: 90vw;
 }
 
 .toast {
-  background: #0f172a;
+  background: rgba(11, 31, 24, 0.94);
   color: #ffffff;
-  padding: 10px 18px;
-  border-radius: 20px;
+  padding: 10px 20px;
+  border-radius: 30px;
+  border: 1px solid rgba(83, 198, 120, 0.45);
   font-family: var(--font-primary);
   font-size: 0.82rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-  animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(83, 198, 120, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  white-space: nowrap;
+  animation: toastSlideDown 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.toast.toast-fade-out {
+  animation: toastFadeOut 0.22s ease-out forwards;
+}
+
+@keyframes toastSlideDown {
+  from { opacity: 0; transform: translateY(-20px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toastFadeOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-10px) scale(0.95); }
 }
 
 /* ------------------------------------------------------------- */
@@ -2125,7 +2141,7 @@ body.audio-bar-active .floating-gig-pill-container {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(83, 198, 120, 0.2);
   backdrop-filter: blur(14px);
   z-index: 999;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .bottom-audio-bar.hidden {
@@ -2149,8 +2165,8 @@ body.audio-bar-active .floating-gig-pill-container {
 }
 
 .audio-bar-icon-box {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
   background: var(--btn-green, #53c678);
   color: #0b1f18;
@@ -2159,12 +2175,15 @@ body.audio-bar-active .floating-gig-pill-container {
   justify-content: center;
   font-size: 0.95rem;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .audio-bar-details {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  max-width: 140px;
 }
 
 .audio-bar-title {
@@ -2180,6 +2199,9 @@ body.audio-bar-active .floating-gig-pill-container {
 .audio-bar-artist {
   font-size: 0.72rem;
   color: #a1b5ac;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .audio-bar-center {
@@ -2205,6 +2227,11 @@ body.audio-bar-active .floating-gig-pill-container {
 .bottom-audio-bar.active-player .bar-4 { animation: eqBounce 0.5s ease-in-out 0.15s infinite alternate; }
 .bottom-audio-bar.active-player .bar-5 { animation: eqBounce 0.7s ease-in-out 0.25s infinite alternate; }
 
+.bottom-audio-bar.paused-player .eq-bar {
+  animation-play-state: paused !important;
+  height: 4px !important;
+}
+
 @keyframes eqBounce {
   0% { height: 4px; }
   100% { height: 18px; }
@@ -2229,6 +2256,11 @@ body.audio-bar-active .floating-gig-pill-container {
   justify-content: center;
   font-size: 0.8rem;
   cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.audio-bar-toggle-btn:active {
+  transform: scale(0.92);
 }
 
 .audio-bar-close-btn {

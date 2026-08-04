@@ -940,13 +940,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   }
 
-  // Render Genre-Based Artist View with Bottom Pagination Dots & iTunes Covers
-  function renderArtistView(artistKey, pageIdx = 0) {
-    const artistData = INSPIRED_ARTISTS_DATA[artistKey] || INSPIRED_ARTISTS_DATA['all'];
-    currentArtistKey = artistKey;
+  // -------------------------------------------------------------
+  // Track Play Buttons Helper (In-Place Update without Re-rendering)
+  // -------------------------------------------------------------
+  function updateTrackPlayButtons() {
+    if (!inspiredTracksContainer) return;
+    const playBtns = inspiredTracksContainer.querySelectorAll('.play-btn');
+    playBtns.forEach(btn => {
+      const songTitle = btn.getAttribute('data-song');
+      const isThisTrackPlaying = currentPlayingTrack && currentPlayingTrack.title === songTitle && isPlayingAudio;
+      const icon = btn.querySelector('i');
+      if (icon) {
+        icon.className = `fa-solid ${isThisTrackPlaying ? 'fa-pause' : 'fa-play'}`;
+      }
+    });
 
+    if (bottomAudioBar) {
+      if (isPlayingAudio) {
+        bottomAudioBar.classList.add('active-player');
+        bottomAudioBar.classList.remove('paused-player');
+      } else {
+        bottomAudioBar.classList.remove('active-player');
+        bottomAudioBar.classList.add('paused-player');
+      }
+    }
+  }
+
+  // Directional Track rendering with Swipe Animation
+  let prevPageIndex = 0;
+  let prevArtistKey = 'all';
+
+  function renderArtistView(artistKey, pageIdx = 0, overrideDirection = null) {
+    const artistData = INSPIRED_ARTISTS_DATA[artistKey] || INSPIRED_ARTISTS_DATA['all'];
+    
+    // Determine slide direction
+    let direction = overrideDirection;
+    if (!direction) {
+      if (artistKey !== prevArtistKey) {
+        direction = 'next';
+      } else if (pageIdx > prevPageIndex) {
+        direction = 'next';
+      } else if (pageIdx < prevPageIndex) {
+        direction = 'prev';
+      } else {
+        direction = 'fade';
+      }
+    }
+
+    currentArtistKey = artistKey;
     const totalPages = artistData.pages.length;
     currentPageIndex = Math.max(0, Math.min(pageIdx, totalPages - 1));
+    prevPageIndex = currentPageIndex;
+    prevArtistKey = currentArtistKey;
 
     // Render Bottom Pagination Dots
     if (dotsPaginationContainer) {
@@ -958,7 +1003,8 @@ document.addEventListener('DOMContentLoaded', () => {
           dot.className = `inspired-dot ${i === currentPageIndex ? 'active' : ''}`;
           dot.setAttribute('aria-label', `Page ${i + 1}`);
           dot.addEventListener('click', () => {
-            renderArtistView(currentArtistKey, i);
+            const dir = i > currentPageIndex ? 'next' : 'prev';
+            renderArtistView(currentArtistKey, i, dir);
           });
           dotsPaginationContainer.appendChild(dot);
         }
@@ -967,10 +1013,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Render Track Cards for active page with transition
+    // Render Track Cards with Directional Slide / Swipe Animation
     if (inspiredTracksContainer) {
+      let exitTransform = 'translateY(8px)';
+      let enterTransform = 'translateX(40px)';
+
+      if (direction === 'next') {
+        exitTransform = 'translateX(-40px)';
+        enterTransform = 'translateX(40px)';
+      } else if (direction === 'prev') {
+        exitTransform = 'translateX(40px)';
+        enterTransform = 'translateX(-40px)';
+      }
+
+      inspiredTracksContainer.style.transition = 'all 0.16s ease-in';
       inspiredTracksContainer.style.opacity = '0';
-      inspiredTracksContainer.style.transform = 'translateY(8px)';
+      inspiredTracksContainer.style.transform = exitTransform;
 
       setTimeout(() => {
         inspiredTracksContainer.innerHTML = '';
@@ -1031,9 +1089,19 @@ document.addEventListener('DOMContentLoaded', () => {
           inspiredTracksContainer.appendChild(card);
         });
 
+        // Prepare for slide IN
+        inspiredTracksContainer.style.transition = 'none';
+        inspiredTracksContainer.style.transform = enterTransform;
+        inspiredTracksContainer.style.opacity = '0';
+
+        // Force reflow
+        void inspiredTracksContainer.offsetWidth;
+
+        // Slide IN smoothly
+        inspiredTracksContainer.style.transition = 'all 0.28s cubic-bezier(0.16, 1, 0.3, 1)';
         inspiredTracksContainer.style.opacity = '1';
-        inspiredTracksContainer.style.transform = 'translateY(0)';
-      }, 180);
+        inspiredTracksContainer.style.transform = 'translateX(0)';
+      }, 160);
     }
   }
 
@@ -1044,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('active');
 
       const artistKey = btn.getAttribute('data-artist-key') || 'all';
-      renderArtistView(artistKey, 0);
+      renderArtistView(artistKey, 0, 'next');
     });
   });
 
@@ -1066,26 +1134,45 @@ document.addEventListener('DOMContentLoaded', () => {
         const swipeDiff = swipeStartX - swipeEndX;
 
         if (swipeDiff > 45 && currentPageIndex < totalPages - 1) {
-          renderArtistView(currentArtistKey, currentPageIndex + 1);
+          renderArtistView(currentArtistKey, currentPageIndex + 1, 'next');
         } else if (swipeDiff < -45 && currentPageIndex > 0) {
-          renderArtistView(currentArtistKey, currentPageIndex - 1);
+          renderArtistView(currentArtistKey, currentPageIndex - 1, 'prev');
         }
       }
     }, { passive: true });
   }
 
-  // Floating Audio Preview Player Handler with Real 30s iTunes Stream
+  // Floating Audio Preview Player Handler
   async function playTrackPreview(track) {
     const songTitle = typeof track === 'string' ? track : track.title;
     const artistName = typeof track === 'object' ? track.artist : 'Artist';
     const trackObj = typeof track === 'object' ? track : { title: songTitle, artist: artistName };
 
+    // Toggle play/pause if clicking the currently playing track
+    if (currentPlayingTrack && currentPlayingTrack.title === trackObj.title) {
+      isPlayingAudio = !isPlayingAudio;
+      if (vaultAudioPlayer) {
+        if (isPlayingAudio) {
+          vaultAudioPlayer.play();
+        } else {
+          vaultAudioPlayer.pause();
+        }
+      }
+      if (audioBarToggleBtn) {
+        audioBarToggleBtn.innerHTML = `<i class="fa-solid ${isPlayingAudio ? 'fa-pause' : 'fa-play'}"></i>`;
+      }
+      updateTrackPlayButtons();
+      showToast(isPlayingAudio ? `Resumed: "${trackObj.title}"` : `Paused: "${trackObj.title}"`);
+      return;
+    }
+
     currentPlayingTrack = trackObj;
 
-    // Show bottom audio player and add body class to shift gig pill up cleanly
+    // Show bottom audio player
     if (bottomAudioBar) {
       bottomAudioBar.classList.remove('hidden');
       bottomAudioBar.classList.add('active-player');
+      bottomAudioBar.classList.remove('paused-player');
       document.body.classList.add('audio-bar-active');
     }
 
@@ -1099,6 +1186,9 @@ document.addEventListener('DOMContentLoaded', () => {
         audioBarCoverImg.classList.remove('hidden');
       }
       if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'none';
+    } else {
+      if (audioBarCoverImg) audioBarCoverImg.classList.add('hidden');
+      if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'block';
     }
 
     // Fetch iTunes audio stream if missing
@@ -1119,20 +1209,21 @@ document.addEventListener('DOMContentLoaded', () => {
       vaultAudioPlayer.play().then(() => {
         isPlayingAudio = true;
         if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-        showToast(`Now Playing Preview: "${trackObj.title}" by ${trackObj.artist}`);
+        updateTrackPlayButtons();
+        showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
       }).catch(err => {
         console.log('Audio autoplay info:', err);
         isPlayingAudio = true;
         if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-        showToast(`Playing Preview: "${trackObj.title}"`);
+        updateTrackPlayButtons();
+        showToast(`Playing: "${trackObj.title}"`);
       });
     } else {
       isPlayingAudio = true;
       if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-      showToast(`Playing Preview: "${trackObj.title}" by ${trackObj.artist}`);
+      updateTrackPlayButtons();
+      showToast(`Playing: "${trackObj.title}" by ${trackObj.artist}`);
     }
-
-    renderArtistView(currentArtistKey, currentPageIndex);
   }
 
   // Audio Play / Pause toggle
@@ -1149,13 +1240,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isPlayingAudio) {
         audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
         bottomAudioBar.classList.add('active-player');
+        bottomAudioBar.classList.remove('paused-player');
         document.body.classList.add('audio-bar-active');
         showToast('Resumed Track Preview');
       } else {
         audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+        bottomAudioBar.classList.remove('active-player');
+        bottomAudioBar.classList.add('paused-player');
         showToast('Paused Track Preview');
       }
-      renderArtistView(currentArtistKey, currentPageIndex);
+      updateTrackPlayButtons();
     });
   }
 
@@ -1164,7 +1258,11 @@ document.addEventListener('DOMContentLoaded', () => {
     vaultAudioPlayer.addEventListener('ended', () => {
       isPlayingAudio = false;
       if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-      renderArtistView(currentArtistKey, currentPageIndex);
+      if (bottomAudioBar) {
+        bottomAudioBar.classList.remove('active-player');
+        bottomAudioBar.classList.add('paused-player');
+      }
+      updateTrackPlayButtons();
     });
   }
 
@@ -1176,11 +1274,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (bottomAudioBar) {
         bottomAudioBar.classList.add('hidden');
         bottomAudioBar.classList.remove('active-player');
+        bottomAudioBar.classList.remove('paused-player');
       }
       document.body.classList.remove('audio-bar-active');
       isPlayingAudio = false;
       currentPlayingTrack = null;
-      renderArtistView(currentArtistKey, currentPageIndex);
+      updateTrackPlayButtons();
     });
   }
 
@@ -1188,18 +1287,36 @@ document.addEventListener('DOMContentLoaded', () => {
   renderArtistView('all', 0);
 
   // -------------------------------------------------------------
-  // 12. Toast Notification Helper
+  // 12. Toast Notification Helper (Throttled Single Alert Instance)
   // -------------------------------------------------------------
+  let activeToast = null;
+  let activeToastTimeout = null;
+
   function showToast(message) {
     if (!toastContainer) return;
+
+    // Immediately remove existing active toast to prevent multiple stacking alerts
+    if (activeToast) {
+      clearTimeout(activeToastTimeout);
+      activeToast.remove();
+      activeToast = null;
+    }
+
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
+    toast.innerHTML = `<i class="fa-solid fa-circle-info" style="color: #53c678;"></i> <span>${message}</span>`;
     toastContainer.appendChild(toast);
+    activeToast = toast;
 
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
+    activeToastTimeout = setTimeout(() => {
+      if (toast) {
+        toast.classList.add('toast-fade-out');
+        setTimeout(() => {
+          toast.remove();
+          if (activeToast === toast) activeToast = null;
+        }, 220);
+      }
+    }, 2800);
   }
 
 });
