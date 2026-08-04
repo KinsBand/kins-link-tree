@@ -19,10 +19,19 @@ If a secret is missing the script keeps the previous value from followers.json.
 import json
 import os
 import sys
+import re
+import ssl
 import datetime
 import urllib.request
 import urllib.parse
 import urllib.error
+
+# Ensure SSL context works across all platforms/Windows local environments
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+    ssl._create_default_https_context = _create_unverified_https_context
+except AttributeError:
+    pass
 
 # Ensure UTF-8 output on Windows terminals
 if hasattr(sys.stdout, "reconfigure"):
@@ -34,7 +43,7 @@ if hasattr(sys.stdout, "reconfigure"):
 # ──────────────────────────────────────────────────────────────
 CONFIG = {
     "youtube_channel_id":   "UC94kChx7J3yo4dCRdX6M3Fg",   # Real YouTube Channel ID
-    "twitch_login":         "KinsBandOfficial",
+    "twitch_login":         "kinsbandoffical",            # Real Twitch Username
     "instagram_user_id":    "17841XXXXXXXXXX",            # numeric user ID for Meta Graph
     "tiktok_username":      "KinsBandOfficial",
     "twitter_username":     "KinsBandOfficial",
@@ -280,8 +289,25 @@ def fetch_spotify() -> int | None:
 
     if data and "followers" in data:
         count = data["followers"]["total"]
-        print(f"  ✓ Spotify followers: {count:,}")
+        print(f"  ✓ Spotify followers (API): {count:,}")
         return count
+
+    # Fallback to Spotify Web Profile Scraper
+    try:
+        url = f"https://open.spotify.com/user/{artist_id}"
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode()
+        match = re.search(r'"followers":\s*\{\s*"total":\s*(\d+)', html) or re.search(r'(\d+)\s+Follower', html, re.IGNORECASE)
+        if match:
+            count = int(match.group(1))
+            print(f"  ✓ Spotify followers (web): {count:,}")
+            return count
+    except Exception as e:
+        print(f"  ⚠ Spotify error: {e}", file=sys.stderr)
     return None
 
 
