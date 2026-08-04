@@ -75,10 +75,6 @@
               <i class="fa-solid fa-location-dot location-pin-icon"></i>
               <span>Melbourne, Australia</span>
             </div>
-            <button id="themeToggleBtn" class="theme-toggle-pill" aria-label="Customize Theme & Wallpaper">
-              <i class="fa-solid fa-palette"></i>
-              <span>Theme</span>
-            </button>
           </div>
 
           <!-- Total Followers Card -->
@@ -618,6 +614,11 @@
   <div class="ambient-wallpaper-bg" id="ambientWallpaperBg"></div>
 
   <!-- Theme & Wallpaper Customizer Drawer Modal -->
+  <!-- Floating Bottom-Left Theme Toggle Button -->
+  <button id="themeToggleBtn" class="floating-theme-btn" aria-label="Customize Theme & Wallpaper">
+    <i class="fa-solid fa-palette"></i>
+  </button>
+
   <div class="theme-drawer-modal hidden" id="themeDrawerModal">
     <div class="theme-drawer-overlay" id="themeDrawerOverlay"></div>
     <div class="theme-drawer-content">
@@ -632,9 +633,54 @@
       </div>
 
       <div class="drawer-body">
-        <!-- Segmented Mode Switcher: Light / Dark -->
-        <div class="theme-mode-switcher-container">
-          <span class="mode-label">Mode:</span>
+        <!-- Horizontal Theme Row -->
+        <div class="theme-horizontal-row" id="paletteCardGrid">
+          <!-- Far Left: Upload Image Circle Button -->
+          <label for="wallpaperFileInput" class="upload-circle-btn" id="wallpaperDropzone" title="Upload Custom Wallpaper">
+            <i class="fa-solid fa-image"></i>
+            <input type="file" id="wallpaperFileInput" accept="image/*" class="hidden-file-input">
+          </label>
+
+          <!-- Core Color Swatches (No Text) -->
+          <!-- Preset 1: Classic Light -->
+          <button class="theme-circle-btn active" data-theme-id="classic" title="Classic Light">
+            <span class="core-color-swatch" style="background: #1A73E8;"></span>
+          </button>
+
+          <!-- Preset 2: Midnight Slate -->
+          <button class="theme-circle-btn" data-theme-id="slate" title="Midnight Slate">
+            <span class="core-color-swatch" style="background: #6750A4;"></span>
+          </button>
+
+          <!-- Preset 3: Max Contrast -->
+          <button class="theme-circle-btn" data-theme-id="high-contrast" title="Max Contrast">
+            <span class="core-color-swatch" style="background: #ffff00;"></span>
+          </button>
+
+          <!-- Preset 4: Warm Sage -->
+          <button class="theme-circle-btn" data-theme-id="terracotta" title="Warm Sage">
+            <span class="core-color-swatch" style="background: #A95A44;"></span>
+          </button>
+
+          <!-- Preset 5: Vibrant Cyber -->
+          <button class="theme-circle-btn" data-theme-id="cyber" title="Vibrant Cyber">
+            <span class="core-color-swatch" style="background: #7B2D8E;"></span>
+          </button>
+        </div>
+
+        <!-- Custom Image Preview & Remove Bar (if active) -->
+        <div class="wallpaper-preview-box hidden" id="wallpaperPreviewBox">
+          <div class="preview-img-wrapper">
+            <img id="wallpaperPreviewImg" src="" alt="Custom Wallpaper Preview">
+            <span class="preview-tag">Custom Wallpaper Active</span>
+          </div>
+          <button id="removeCustomWallpaperBtn" class="remove-wallpaper-btn">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+
+        <!-- Dark / Light Mode Selector Below Horizontal Row -->
+        <div class="theme-mode-row">
           <div class="theme-segmented-box">
             <button class="theme-mode-btn active" id="modeDarkBtn" data-mode="dark">
               <i class="fa-solid fa-moon"></i> Dark
@@ -643,92 +689,8 @@
               <i class="fa-solid fa-sun"></i> Light
             </button>
           </div>
-        </div>
-
-        <!-- Curated Palette Selector -->
-        <div class="drawer-section-title">
-          <span>Curated Color Themes</span>
-        </div>
-
-        <div class="palette-card-grid" id="paletteCardGrid">
-          <!-- Preset 1: Classic Light -->
-          <div class="palette-card active" data-theme-id="classic">
-            <div class="palette-swatch-row">
-              <span class="swatch-color" style="background: #121316;"></span>
-              <span class="swatch-color" style="background: #1A73E8;"></span>
-              <span class="swatch-color" style="background: #F8F9FA;"></span>
-            </div>
-            <span class="palette-name">Classic Light</span>
-          </div>
-
-          <!-- Preset 2: Midnight Slate -->
-          <div class="palette-card" data-theme-id="slate">
-            <div class="palette-swatch-row">
-              <span class="swatch-color" style="background: #0F1115;"></span>
-              <span class="swatch-color" style="background: #6750A4;"></span>
-              <span class="swatch-color" style="background: #fef7ff;"></span>
-            </div>
-            <span class="palette-name">Midnight Slate</span>
-          </div>
-
-          <!-- Preset 3: Maximum Contrast -->
-          <div class="palette-card" data-theme-id="high-contrast">
-            <div class="palette-swatch-row">
-              <span class="swatch-color" style="background: #000000;"></span>
-              <span class="swatch-color" style="background: #ffff00;"></span>
-              <span class="swatch-color" style="background: #ffffff;"></span>
-            </div>
-            <span class="palette-name">Max Contrast</span>
-          </div>
-
-          <!-- Preset 4: Warm Sage -->
-          <div class="palette-card" data-theme-id="terracotta">
-            <div class="palette-swatch-row">
-              <span class="swatch-color" style="background: #1a1110;"></span>
-              <span class="swatch-color" style="background: #A95A44;"></span>
-              <span class="swatch-color" style="background: #F4F1EA;"></span>
-            </div>
-            <span class="palette-name">Warm Sage</span>
-          </div>
-
-          <!-- Preset 5: Vibrant Cyber -->
-          <div class="palette-card" data-theme-id="cyber">
-            <div class="palette-swatch-row">
-              <span class="swatch-color" style="background: #12061e;"></span>
-              <span class="swatch-color" style="background: #7B2D8E;"></span>
-              <span class="swatch-color" style="background: #fef7ff;"></span>
-            </div>
-            <span class="palette-name">Vibrant Cyber</span>
-          </div>
-        </div>
-
-        <!-- Custom Wallpaper Upload Section -->
-        <div class="drawer-section-title">
-          <span>Upload Custom Wallpaper</span>
-        </div>
-
-        <div class="wallpaper-dropzone" id="wallpaperDropzone">
-          <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
-          <p class="dropzone-text">Click or drag & drop a wallpaper image</p>
-          <span class="dropzone-subtext">Extracts dynamic colors & sets wallpaper background</span>
-          <input type="file" id="wallpaperFileInput" accept="image/*" class="hidden-file-input">
-        </div>
-
-        <!-- Custom Image Preview Box -->
-        <div class="wallpaper-preview-box hidden" id="wallpaperPreviewBox">
-          <div class="preview-img-wrapper">
-            <img id="wallpaperPreviewImg" src="" alt="Custom Wallpaper Preview">
-            <span class="preview-tag">Custom Palette Active</span>
-          </div>
-          <button id="removeCustomWallpaperBtn" class="remove-wallpaper-btn">
-            <i class="fa-solid fa-trash-can"></i> Remove Wallpaper
-          </button>
-        </div>
-
-        <!-- Footer Actions -->
-        <div class="drawer-footer-actions">
-          <button id="resetThemeBtn" class="reset-theme-btn">
-            <i class="fa-solid fa-rotate-left"></i> Reset to Default
+          <button id="resetThemeBtn" class="reset-theme-btn" title="Reset Theme">
+            <i class="fa-solid fa-rotate-left"></i>
           </button>
         </div>
       </div>

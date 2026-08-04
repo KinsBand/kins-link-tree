@@ -1563,8 +1563,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modeDarkBtn) modeDarkBtn.classList.toggle('active', !isLight);
     if (modeLightBtn) modeLightBtn.classList.toggle('active', isLight);
 
-    // Update Palette Cards UI
-    const cards = document.querySelectorAll('.palette-card');
+    // Update Palette Buttons UI
+    const cards = document.querySelectorAll('.theme-circle-btn, .palette-card');
     cards.forEach(card => {
       const tid = card.getAttribute('data-theme-id');
       card.classList.toggle('active', tid === themeState.themeId && !themeState.customWallpaperDataUrl);
@@ -1744,10 +1744,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Palette Card Grid Clicks
+  // Palette Row/Grid Clicks
   if (paletteCardGrid) {
     paletteCardGrid.addEventListener('click', (e) => {
-      const card = e.target.closest('.palette-card');
+      const card = e.target.closest('.theme-circle-btn, .palette-card');
       if (card) {
         const themeId = card.getAttribute('data-theme-id');
         if (PRESET_THEMES[themeId]) {
