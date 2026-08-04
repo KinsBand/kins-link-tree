@@ -452,27 +452,29 @@ body.audio-bar-active .floating-theme-btn {
 
 /* Single Total Followers Card */
 .total-followers-card {
-  background: var(--card-white);
-  border-radius: 18px;
-  padding: 14px 20px;
+  background: var(--card-bg, rgba(11, 31, 24, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 16px 20px;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: var(--text-dark);
-  box-shadow: 0 5px 0 var(--card-white-shadow);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  color: var(--text-white, #ffffff);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .total-followers-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 7px 0 var(--card-white-shadow);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
 }
 
 .followers-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-weight: 700;
   font-size: 1rem;
 }
@@ -486,7 +488,7 @@ body.audio-bar-active .floating-theme-btn {
 .followers-last-updated {
   font-size: 0.65rem;
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--md-sys-color-on-surface-variant, #94a3b8);
   opacity: 0;
   transition: opacity 0.5s ease;
   letter-spacing: 0.01em;
@@ -498,14 +500,14 @@ body.audio-bar-active .floating-theme-btn {
 
 .followers-left i {
   font-size: 1.25rem;
-  color: var(--text-dark);
+  color: var(--btn-green, #53c678);
 }
 
 .followers-count {
   font-family: var(--font-secondary);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 800;
-  color: var(--bg-dark-green);
+  color: var(--text-white, #ffffff);
 }
 
 
@@ -518,37 +520,60 @@ body.audio-bar-active .floating-theme-btn {
 
 /* Single Segmented Switcher Button Container */
 .segmented-switcher-box {
-  background: var(--card-white);
-  border-radius: 18px;
-  padding: 5px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 4px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 5px;
-  box-shadow: 0 5px 0 var(--card-white-shadow);
+  gap: 4px;
+  backdrop-filter: blur(8px);
+}
+
+body.theme-light .segmented-switcher-box {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.1);
 }
 
 .switcher-tab {
   background: transparent;
   border: none;
-  color: var(--text-dark);
+  color: rgba(255, 255, 255, 0.75);
   font-family: var(--font-primary);
-  font-size: 1.05rem;
-  font-weight: 800;
-  padding: 12px 0;
-  border-radius: 14px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  padding: 10px 0;
+  border-radius: 16px;
   cursor: pointer;
   text-align: center;
-  transition: background-color 0.25s ease, color 0.25s ease, transform 0.15s ease;
+  transition: all 0.25s ease;
+}
+
+body.theme-light .switcher-tab {
+  color: #475569;
 }
 
 .switcher-tab:hover {
-  background: rgba(1, 59, 41, 0.06);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-light .switcher-tab:hover {
+  color: #0f172a;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .switcher-tab.active {
-  background: var(--text-dark);
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: var(--btn-green, #53c678);
+  color: var(--btn-text-color, #0b1f18);
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+body.theme-light .switcher-tab.active {
+  background: var(--btn-green);
+  color: var(--btn-text-color, #ffffff);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 /* Tab Content Visibility */
@@ -578,7 +603,7 @@ body.audio-bar-active .floating-theme-btn {
 /* Green 3D Link Buttons */
 .green-link-btn {
   background-color: var(--btn-green);
-  color: var(--text-dark);
+  color: var(--btn-text-color, #0b1f18);
   border-radius: 18px;
   padding: 16px 20px;
   text-decoration: none;
@@ -586,7 +611,7 @@ body.audio-bar-active .floating-theme-btn {
   align-items: center;
   justify-content: flex-start;
   position: relative;
-  box-shadow: 0 6px 0 var(--btn-green-shadow);
+  box-shadow: 0 6px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
   cursor: pointer;
   overflow: hidden;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
@@ -596,12 +621,12 @@ body.audio-bar-active .floating-theme-btn {
 .green-link-btn:hover {
   background-color: var(--btn-green-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 0 var(--btn-green-shadow);
+  box-shadow: 0 8px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
 }
 
 .green-link-btn:active {
   transform: translateY(3px);
-  box-shadow: 0 3px 0 var(--btn-green-shadow);
+  box-shadow: 0 3px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
 }
 
 .btn-icon {
@@ -611,7 +636,7 @@ body.audio-bar-active .floating-theme-btn {
   align-items: center;
   justify-content: center;
   margin-right: 14px;
-  color: var(--text-dark);
+  color: var(--btn-text-color, #0b1f18);
   flex-shrink: 0;
 }
 
@@ -621,17 +646,18 @@ body.audio-bar-active .floating-theme-btn {
   font-weight: 600;
   flex: 1;
   text-align: left;
+  color: var(--btn-text-color, #0b1f18);
 }
 
-/* Red-Tipped Banana Concept: Right-End Covered Tip Cap Badge with Mock Count */
+/* Right-End Covered Tip Cap Badge */
 .card-tip-badge {
   position: absolute;
   right: 0;
   top: 0;
   bottom: 0;
   width: 60px;
-  background: var(--text-dark); /* Dark green covered tip cap */
-  color: #ffffff;
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -647,8 +673,8 @@ body.audio-bar-active .floating-theme-btn {
 }
 
 .green-link-btn:hover .card-tip-badge {
-  background: #002217;
-  color: var(--btn-green);
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffffff;
 }
 
 /* ------------------------------------------------------------- */
@@ -671,7 +697,7 @@ body.audio-bar-active .floating-theme-btn {
 .members-section-title {
   font-size: 1.05rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-white, #ffffff);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -730,8 +756,8 @@ body.audio-bar-active .floating-theme-btn {
   background: #ffffff;
   border-radius: 24px;
   padding: 14px;
-  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.18), 0 12px 25px rgba(0, 0, 0, 0.25);
-  color: var(--text-dark);
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 12px 25px rgba(0, 0, 0, 0.25);
+  color: #0f172a;
   display: flex;
   flex-direction: column;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -739,7 +765,7 @@ body.audio-bar-active .floating-theme-btn {
 
 .member-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 0 rgba(0, 0, 0, 0.18), 0 18px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 0 rgba(0, 0, 0, 0.2), 0 18px 30px rgba(0, 0, 0, 0.3);
 }
 
 /* Default Gradient Avatar Boxes */
@@ -843,7 +869,7 @@ body.audio-bar-active .floating-theme-btn {
 .member-role {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #059669;
+  color: #0d9264;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -852,8 +878,8 @@ body.audio-bar-active .floating-theme-btn {
 
 .member-bio {
   font-size: 0.78rem;
-  color: #475569;
-  line-height: 1.4;
+  color: #334155;
+  line-height: 1.45;
   margin-bottom: 12px;
   flex: 1;
 }
@@ -904,7 +930,7 @@ body.audio-bar-active .floating-theme-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #013b29;
+  background: rgba(1, 59, 41, 0.9);
   color: #ffffff;
   padding: 8px 12px;
   border-radius: 12px;
@@ -912,6 +938,11 @@ body.audio-bar-active .floating-theme-btn {
   font-weight: 700;
   text-decoration: none;
   transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+body.theme-light .member-social-link {
+  background: var(--btn-green, #10b981);
+  color: var(--btn-text-color, #ffffff);
 }
 
 .member-social-link:hover {
@@ -929,12 +960,20 @@ body.audio-bar-active .floating-theme-btn {
 }
 
 .subscribe-card, .emails-card {
-  background: var(--card-white);
+  background: var(--card-bg, rgba(11, 31, 24, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 24px;
   padding: 24px 20px;
-  color: var(--text-dark);
-  box-shadow: 0 8px 0 var(--card-white-shadow), 0 12px 25px rgba(0, 0, 0, 0.25);
+  color: var(--text-white, #ffffff);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   text-align: center;
+}
+
+body.theme-light .subscribe-card,
+body.theme-light .emails-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
 }
 
 .subscribe-card h3, .emails-card h3 {
@@ -942,13 +981,23 @@ body.audio-bar-active .floating-theme-btn {
   font-weight: 800;
   letter-spacing: -0.3px;
   margin-bottom: 4px;
+  color: var(--text-white, #ffffff);
+}
+
+body.theme-light .subscribe-card h3,
+body.theme-light .emails-card h3 {
   color: #0f172a;
 }
 
 .subscribe-subtext, .emails-subtext {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--md-sys-color-on-surface-variant, #94a3b8);
   margin-bottom: 18px;
+}
+
+body.theme-light .subscribe-subtext,
+body.theme-light .emails-subtext {
+  color: #64748b;
 }
 
 .subscribe-form {
@@ -961,24 +1010,45 @@ body.audio-bar-active .floating-theme-btn {
   width: 100%;
   padding: 14px 18px;
   border-radius: 16px;
-  border: 2px solid #e2e8f0;
-  background: #f8fafc;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
   font-family: var(--font-primary);
   font-size: 0.95rem;
-  color: #0f172a;
+  color: var(--text-white, #ffffff);
   outline: none;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 
+body.theme-light .form-group input {
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+body.theme-light .form-group input::placeholder {
+  color: #94a3b8;
+}
+
 .form-group input:focus {
-  border-color: #013b29;
+  border-color: var(--btn-green, #53c678);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(83, 198, 120, 0.15);
+}
+
+body.theme-light .form-group input:focus {
+  border-color: var(--btn-green);
   background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(83, 198, 120, 0.1);
 }
 
 .green-submit-btn {
   width: 100%;
   background-color: var(--btn-green);
-  color: var(--text-dark);
+  color: var(--btn-text-color, #0b1f18);
   border: none;
   border-radius: 16px;
   padding: 14px;
@@ -986,19 +1056,19 @@ body.audio-bar-active .floating-theme-btn {
   font-size: 1rem;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 5px 0 var(--btn-green-shadow);
+  box-shadow: 0 5px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
   transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .green-submit-btn:hover {
   background-color: var(--btn-green-hover);
   transform: translateY(-2px);
-  box-shadow: 0 7px 0 var(--btn-green-shadow);
+  box-shadow: 0 7px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
 }
 
 .green-submit-btn:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 var(--btn-green-shadow);
+  box-shadow: 0 2px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
 }
 
 .subscribe-success {
@@ -1104,7 +1174,11 @@ body.audio-bar-active .floating-theme-btn {
   text-align: center;
   padding: 15px 0 10px;
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+body.theme-light .site-footer {
+  color: rgba(0, 0, 0, 0.45);
 }
 
 /* SHARE MODAL */
@@ -1230,7 +1304,7 @@ body.audio-bar-active .floating-theme-btn {
 
 .copy-btn {
   background: var(--btn-green);
-  color: var(--text-dark);
+  color: var(--btn-text-color, #0b1f18);
   border: none;
   border-radius: 12px;
   padding: 0 16px;
@@ -1640,7 +1714,7 @@ body.audio-bar-active .floating-gig-pill-container {
 .venue-card-name {
   font-size: 1.1rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-white, #ffffff);
 }
 
 .venue-rating-badge {
@@ -1658,12 +1732,12 @@ body.audio-bar-active .floating-gig-pill-container {
 
 .venue-card-city {
   font-size: 0.78rem;
-  color: #a1a1aa;
+  color: var(--md-sys-color-on-surface-variant, #a1a1aa);
 }
 
 .venue-booking-btn {
-  background: #53c678;
-  color: #0b1f18;
+  background: var(--btn-green, #53c678);
+  color: var(--btn-text-color, #0b1f18);
   border: none;
   border-radius: 16px;
   padding: 10px 16px;
@@ -1675,7 +1749,7 @@ body.audio-bar-active .floating-gig-pill-container {
   display: flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 15px rgba(83, 198, 120, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
   transition: background 0.2s ease, transform 0.15s ease;
   white-space: nowrap;
 }
@@ -1863,7 +1937,7 @@ body.audio-bar-active .floating-gig-pill-container {
   font-family: var(--font-primary, 'Outfit', sans-serif);
   font-size: 0.98rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-white, #ffffff);
   margin: 0;
   line-height: 1.2;
 }
@@ -1871,7 +1945,7 @@ body.audio-bar-active .floating-gig-pill-container {
 .hero-cta-subtitle {
   font-family: var(--font-secondary, 'Plus Jakarta Sans', sans-serif);
   font-size: 0.76rem;
-  color: #a1b5ac;
+  color: var(--md-sys-color-on-surface-variant, #a1b5ac);
   margin: 0;
   line-height: 1.2;
   white-space: nowrap;
@@ -1891,9 +1965,9 @@ body.audio-bar-active .floating-gig-pill-container {
 
 .inspired-cta-btn {
   background: var(--btn-green, #72cf7b);
-  color: var(--text-dark, #002b1e);
+  color: var(--btn-text-color, #002b1e);
   border: none;
-  border-bottom: 3px solid #4a9b52;
+  border-bottom: 3px solid rgba(0, 0, 0, 0.25);
   border-radius: 18px;
   padding: 8px 14px;
   font-family: var(--font-secondary, 'Plus Jakarta Sans', sans-serif);
@@ -1903,7 +1977,7 @@ body.audio-bar-active .floating-gig-pill-container {
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(114, 207, 123, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -1955,14 +2029,14 @@ body.audio-bar-active .floating-gig-pill-container {
   font-family: var(--font-primary, 'Outfit', sans-serif);
   font-size: 1.4rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-white, #ffffff);
   margin: 0 0 2px 0;
 }
 
 .inspired-subtitle {
   font-family: var(--font-secondary, 'Plus Jakarta Sans', sans-serif);
   font-size: 0.84rem;
-  color: #a1b5ac;
+  color: var(--md-sys-color-on-surface-variant, #a1b5ac);
   margin: 0;
   line-height: 1.3;
 }
@@ -2054,13 +2128,13 @@ body.audio-bar-active .floating-gig-pill-container {
 
 .music-card.paginated-card {
   width: 100%;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 18px;
   padding: 12px 14px;
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
   position: relative;
   overflow: hidden;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
@@ -2147,7 +2221,7 @@ body.audio-bar-active .floating-gig-pill-container {
   font-family: var(--font-primary, 'Outfit', sans-serif);
   font-size: 0.9rem;
   font-weight: 700;
-  color: #0b1f18;
+  color: #0f172a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2156,14 +2230,14 @@ body.audio-bar-active .floating-gig-pill-container {
 .track-duration {
   font-size: 0.68rem;
   font-weight: 600;
-  color: #64748b;
+  color: #475569;
   flex-shrink: 0;
 }
 
 .artist-name {
   font-family: var(--font-secondary, 'Plus Jakarta Sans', sans-serif);
   font-size: 0.76rem;
-  color: #475569;
+  color: #334155;
   font-weight: 600;
 }
 
@@ -2180,7 +2254,7 @@ body.audio-bar-active .floating-gig-pill-container {
   font-weight: 700;
   background: #e2e8f0;
   color: #1e293b;
-  padding: 1px 6px;
+  padding: 2px 7px;
   border-radius: 6px;
   flex-shrink: 0;
 }
@@ -2286,7 +2360,7 @@ body.audio-bar-active .floating-gig-pill-container {
   font-family: var(--font-primary, 'Outfit', sans-serif);
   font-size: 0.85rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-white, #ffffff);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2294,7 +2368,7 @@ body.audio-bar-active .floating-gig-pill-container {
 
 .audio-bar-artist {
   font-size: 0.72rem;
-  color: #a1b5ac;
+  color: var(--md-sys-color-on-surface-variant, #a1b5ac);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
