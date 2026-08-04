@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 
@@ -69,10 +69,16 @@
           <!-- Short Bio Description -->
           <p class="profile-bio-text">Rock band 4 friends making music together</p>
 
-          <!-- Option 1 Hometown Location Badge -->
-          <div class="location-badge">
-            <i class="fa-solid fa-location-dot location-pin-icon"></i>
-            <span>Melbourne, Australia</span>
+          <!-- Hometown Location Badge & Theme Customizer Button -->
+          <div class="profile-actions-row">
+            <div class="location-badge">
+              <i class="fa-solid fa-location-dot location-pin-icon"></i>
+              <span>Melbourne, Australia</span>
+            </div>
+            <button id="themeToggleBtn" class="theme-toggle-pill" aria-label="Customize Theme & Wallpaper">
+              <i class="fa-solid fa-palette"></i>
+              <span>Theme</span>
+            </button>
           </div>
 
           <!-- Total Followers Card -->
@@ -608,6 +614,127 @@
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="script.js?v=3"></script>
+  <!-- Ambient Wallpaper Background Container -->
+  <div class="ambient-wallpaper-bg" id="ambientWallpaperBg"></div>
+
+  <!-- Theme & Wallpaper Customizer Drawer Modal -->
+  <div class="theme-drawer-modal hidden" id="themeDrawerModal">
+    <div class="theme-drawer-overlay" id="themeDrawerOverlay"></div>
+    <div class="theme-drawer-content">
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <i class="fa-solid fa-wand-magic-sparkles drawer-title-icon"></i>
+          <h3>Theme & Wallpaper</h3>
+        </div>
+        <button id="themeDrawerCloseBtn" class="drawer-close-btn" aria-label="Close Theme Drawer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Segmented Mode Switcher: Light / Dark -->
+        <div class="theme-mode-switcher-container">
+          <span class="mode-label">Mode:</span>
+          <div class="theme-segmented-box">
+            <button class="theme-mode-btn active" id="modeDarkBtn" data-mode="dark">
+              <i class="fa-solid fa-moon"></i> Dark
+            </button>
+            <button class="theme-mode-btn" id="modeLightBtn" data-mode="light">
+              <i class="fa-solid fa-sun"></i> Light
+            </button>
+          </div>
+        </div>
+
+        <!-- Curated Palette Selector -->
+        <div class="drawer-section-title">
+          <span>Curated Color Themes</span>
+        </div>
+
+        <div class="palette-card-grid" id="paletteCardGrid">
+          <!-- Preset 1: Classic Emerald -->
+          <div class="palette-card active" data-theme-id="classic">
+            <div class="palette-swatch-row">
+              <span class="swatch-color" style="background: #11382b;"></span>
+              <span class="swatch-color" style="background: #53c678;"></span>
+              <span class="swatch-color" style="background: #ffffff;"></span>
+            </div>
+            <span class="palette-name">Classic Emerald</span>
+          </div>
+
+          <!-- Preset 2: Midnight Slate -->
+          <div class="palette-card" data-theme-id="slate">
+            <div class="palette-swatch-row">
+              <span class="swatch-color" style="background: #0f172a;"></span>
+              <span class="swatch-color" style="background: #38bdf8;"></span>
+              <span class="swatch-color" style="background: #f8fafc;"></span>
+            </div>
+            <span class="palette-name">Midnight Slate</span>
+          </div>
+
+          <!-- Preset 3: Maximum Contrast -->
+          <div class="palette-card" data-theme-id="high-contrast">
+            <div class="palette-swatch-row">
+              <span class="swatch-color" style="background: #000000;"></span>
+              <span class="swatch-color" style="background: #ffff00;"></span>
+              <span class="swatch-color" style="background: #ffffff;"></span>
+            </div>
+            <span class="palette-name">Max Contrast</span>
+          </div>
+
+          <!-- Preset 4: Warm Sage -->
+          <div class="palette-card" data-theme-id="terracotta">
+            <div class="palette-swatch-row">
+              <span class="swatch-color" style="background: #2a2421;"></span>
+              <span class="swatch-color" style="background: #e07a5f;"></span>
+              <span class="swatch-color" style="background: #f4f1de;"></span>
+            </div>
+            <span class="palette-name">Warm Sage</span>
+          </div>
+
+          <!-- Preset 5: Cyber Sunset -->
+          <div class="palette-card" data-theme-id="cyber">
+            <div class="palette-swatch-row">
+              <span class="swatch-color" style="background: #1a0b2e;"></span>
+              <span class="swatch-color" style="background: #ff007f;"></span>
+              <span class="swatch-color" style="background: #00f0ff;"></span>
+            </div>
+            <span class="palette-name">Cyber Sunset</span>
+          </div>
+        </div>
+
+        <!-- Custom Wallpaper Upload Section -->
+        <div class="drawer-section-title">
+          <span>Upload Custom Wallpaper</span>
+        </div>
+
+        <div class="wallpaper-dropzone" id="wallpaperDropzone">
+          <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+          <p class="dropzone-text">Click or drag & drop a wallpaper image</p>
+          <span class="dropzone-subtext">Extracts dynamic colors & sets wallpaper background</span>
+          <input type="file" id="wallpaperFileInput" accept="image/*" class="hidden-file-input">
+        </div>
+
+        <!-- Custom Image Preview Box -->
+        <div class="wallpaper-preview-box hidden" id="wallpaperPreviewBox">
+          <div class="preview-img-wrapper">
+            <img id="wallpaperPreviewImg" src="" alt="Custom Wallpaper Preview">
+            <span class="preview-tag">Custom Palette Active</span>
+          </div>
+          <button id="removeCustomWallpaperBtn" class="remove-wallpaper-btn">
+            <i class="fa-solid fa-trash-can"></i> Remove Wallpaper
+          </button>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="drawer-footer-actions">
+          <button id="resetThemeBtn" class="reset-theme-btn">
+            <i class="fa-solid fa-rotate-left"></i> Reset to Default
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=4"></script>
 </body>
 </html>

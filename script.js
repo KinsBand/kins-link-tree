@@ -1319,4 +1319,430 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2800);
   }
 
+  // -------------------------------------------------------------
+  // 13. Dynamic Theme & Wallpaper Adaptability Engine
+  // -------------------------------------------------------------
+  const PRESET_THEMES = {
+    classic: {
+      name: 'Classic Emerald',
+      dark: {
+        bgDark: '#002217',
+        bgGradient: 'linear-gradient(180deg, #11382b 0%, #0b1f18 100%)',
+        btnGreen: '#53c678',
+        btnGreenHover: '#46b76a',
+        btnTextColor: '#0b1f18',
+        cardBg: '#ffffff',
+        cardBorder: 'rgba(255, 255, 255, 0.15)',
+        textDark: '#0b1f18',
+        textWhite: '#ffffff'
+      },
+      light: {
+        bgDark: '#f1f5f9',
+        bgGradient: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)',
+        btnGreen: '#10b981',
+        btnGreenHover: '#059669',
+        btnTextColor: '#ffffff',
+        cardBg: 'rgba(255, 255, 255, 0.95)',
+        cardBorder: 'rgba(15, 23, 42, 0.12)',
+        textDark: '#0f172a',
+        textWhite: '#0f172a'
+      }
+    },
+    slate: {
+      name: 'Midnight Slate',
+      dark: {
+        bgDark: '#090d16',
+        bgGradient: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)',
+        btnGreen: '#38bdf8',
+        btnGreenHover: '#0284c7',
+        btnTextColor: '#0f172a',
+        cardBg: '#ffffff',
+        cardBorder: 'rgba(56, 189, 248, 0.25)',
+        textDark: '#0f172a',
+        textWhite: '#ffffff'
+      },
+      light: {
+        bgDark: '#f8fafc',
+        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%)',
+        btnGreen: '#0284c7',
+        btnGreenHover: '#0369a1',
+        btnTextColor: '#ffffff',
+        cardBg: 'rgba(255, 255, 255, 0.95)',
+        cardBorder: 'rgba(15, 23, 42, 0.12)',
+        textDark: '#0f172a',
+        textWhite: '#0f172a'
+      }
+    },
+    'high-contrast': {
+      name: 'Max Contrast',
+      dark: {
+        bgDark: '#000000',
+        bgGradient: 'linear-gradient(180deg, #18181b 0%, #000000 100%)',
+        btnGreen: '#ffff00',
+        btnGreenHover: '#eab308',
+        btnTextColor: '#000000',
+        cardBg: '#ffffff',
+        cardBorder: 'rgba(255, 255, 0, 0.4)',
+        textDark: '#000000',
+        textWhite: '#ffffff'
+      },
+      light: {
+        bgDark: '#ffffff',
+        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f4f4f5 100%)',
+        btnGreen: '#000000',
+        btnGreenHover: '#27272a',
+        btnTextColor: '#ffffff',
+        cardBg: '#ffffff',
+        cardBorder: 'rgba(0, 0, 0, 0.25)',
+        textDark: '#000000',
+        textWhite: '#000000'
+      }
+    },
+    terracotta: {
+      name: 'Warm Sage',
+      dark: {
+        bgDark: '#1c1917',
+        bgGradient: 'linear-gradient(180deg, #292524 0%, #0c0a09 100%)',
+        btnGreen: '#e07a5f',
+        btnGreenHover: '#d96241',
+        btnTextColor: '#ffffff',
+        cardBg: '#ffffff',
+        cardBorder: 'rgba(224, 122, 95, 0.3)',
+        textDark: '#1c1917',
+        textWhite: '#ffffff'
+      },
+      light: {
+        bgDark: '#fdfbf7',
+        bgGradient: 'linear-gradient(180deg, #fefae0 0%, #f4f1de 100%)',
+        btnGreen: '#d96241',
+        btnGreenHover: '#c44f2f',
+        btnTextColor: '#ffffff',
+        cardBg: 'rgba(255, 255, 255, 0.95)',
+        cardBorder: 'rgba(217, 98, 65, 0.2)',
+        textDark: '#2b2d42',
+        textWhite: '#2b2d42'
+      }
+    },
+    cyber: {
+      name: 'Cyber Sunset',
+      dark: {
+        bgDark: '#0f051d',
+        bgGradient: 'linear-gradient(180deg, #1e0938 0%, #090214 100%)',
+        btnGreen: '#ff007f',
+        btnGreenHover: '#d9006c',
+        btnTextColor: '#ffffff',
+        cardBg: '#ffffff',
+        cardBorder: 'rgba(255, 0, 127, 0.35)',
+        textDark: '#0f051d',
+        textWhite: '#ffffff'
+      },
+      light: {
+        bgDark: '#faf5ff',
+        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f3e8ff 100%)',
+        btnGreen: '#9333ea',
+        btnGreenHover: '#7e22ce',
+        btnTextColor: '#ffffff',
+        cardBg: 'rgba(255, 255, 255, 0.95)',
+        cardBorder: 'rgba(147, 51, 234, 0.2)',
+        textDark: '#3b0764',
+        textWhite: '#3b0764'
+      }
+    }
+  };
+
+  // State
+  let themeState = {
+    mode: 'dark',
+    themeId: 'classic',
+    customWallpaperDataUrl: null,
+    customColors: null
+  };
+
+  // Load Saved Theme Configuration
+  function loadThemeConfig() {
+    try {
+      const saved = localStorage.getItem('kins_theme_config');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        themeState = { ...themeState, ...parsed };
+      }
+    } catch (e) {
+      console.warn('Theme storage error:', e);
+    }
+    applyTheme();
+  }
+
+  function saveThemeConfig() {
+    try {
+      localStorage.setItem('kins_theme_config', JSON.stringify(themeState));
+    } catch (e) {
+      console.warn('Theme save error:', e);
+    }
+  }
+
+  // Apply Theme State to DOM
+  function applyTheme() {
+    const isLight = themeState.mode === 'light';
+    document.body.classList.toggle('theme-light', isLight);
+
+    // Update Mode Buttons UI
+    const modeDarkBtn = document.getElementById('modeDarkBtn');
+    const modeLightBtn = document.getElementById('modeLightBtn');
+    if (modeDarkBtn) modeDarkBtn.classList.toggle('active', !isLight);
+    if (modeLightBtn) modeLightBtn.classList.toggle('active', isLight);
+
+    // Update Palette Cards UI
+    const cards = document.querySelectorAll('.palette-card');
+    cards.forEach(card => {
+      const tid = card.getAttribute('data-theme-id');
+      card.classList.toggle('active', tid === themeState.themeId && !themeState.customWallpaperDataUrl);
+    });
+
+    const ambientBg = document.getElementById('ambientWallpaperBg');
+    const previewBox = document.getElementById('wallpaperPreviewBox');
+    const previewImg = document.getElementById('wallpaperPreviewImg');
+
+    if (themeState.customWallpaperDataUrl) {
+      // Apply Custom Wallpaper & Extracted Palette
+      if (ambientBg) {
+        ambientBg.style.backgroundImage = `url(${themeState.customWallpaperDataUrl})`;
+        ambientBg.classList.add('active');
+      }
+      if (previewBox && previewImg) {
+        previewImg.src = themeState.customWallpaperDataUrl;
+        previewBox.classList.remove('hidden');
+      }
+
+      if (themeState.customColors) {
+        const c = themeState.customColors;
+        document.documentElement.style.setProperty('--bg-dark', c.bgDark);
+        document.documentElement.style.setProperty('--bg-dark-gradient', c.bgGradient);
+        document.documentElement.style.setProperty('--btn-green', c.btnGreen);
+        document.documentElement.style.setProperty('--btn-green-hover', c.btnGreenHover);
+        document.documentElement.style.setProperty('--btn-text-color', c.btnTextColor);
+      }
+    } else {
+      // Apply Preset Theme Tokens
+      if (ambientBg) {
+        ambientBg.style.backgroundImage = '';
+        ambientBg.classList.remove('active');
+      }
+      if (previewBox) previewBox.classList.add('hidden');
+
+      const themeConfig = PRESET_THEMES[themeState.themeId] || PRESET_THEMES['classic'];
+      const tokens = isLight ? themeConfig.light : themeConfig.dark;
+
+      document.documentElement.style.setProperty('--bg-dark', tokens.bgDark);
+      document.documentElement.style.setProperty('--bg-dark-gradient', tokens.bgGradient);
+      document.documentElement.style.setProperty('--btn-green', tokens.btnGreen);
+      document.documentElement.style.setProperty('--btn-green-hover', tokens.btnGreenHover);
+      document.documentElement.style.setProperty('--btn-text-color', tokens.btnTextColor);
+    }
+  }
+
+  // HTML5 Canvas Color Extractor for Uploaded Wallpaper
+  function extractColorsFromImage(dataUrl) {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = dataUrl;
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 40;
+        canvas.height = 40;
+        ctx.drawImage(img, 0, 0, 40, 40);
+
+        const imgData = ctx.getImageData(0, 0, 40, 40).data;
+        let r = 0, g = 0, b = 0, count = 0;
+
+        for (let i = 0; i < imgData.length; i += 4) {
+          const pr = imgData[i];
+          const pg = imgData[i + 1];
+          const pb = imgData[i + 2];
+          const brightness = (pr + pg + pb) / 3;
+
+          if (brightness > 20 && brightness < 235) {
+            r += pr;
+            g += pg;
+            b += pb;
+            count++;
+          }
+        }
+
+        if (count > 0) {
+          r = Math.floor(r / count);
+          g = Math.floor(g / count);
+          b = Math.floor(b / count);
+
+          const darkR = Math.max(8, Math.floor(r * 0.28));
+          const darkG = Math.max(12, Math.floor(g * 0.28));
+          const darkB = Math.max(16, Math.floor(b * 0.28));
+
+          const accentR = Math.min(255, Math.floor(r * 1.25));
+          const accentG = Math.min(255, Math.floor(g * 1.25));
+          const accentB = Math.min(255, Math.floor(b * 1.25));
+
+          const brightness = (accentR * 299 + accentG * 587 + accentB * 114) / 1000;
+          const btnTextColor = brightness > 155 ? '#0b1f18' : '#ffffff';
+
+          themeState.customWallpaperDataUrl = dataUrl;
+          themeState.themeId = 'custom';
+          themeState.customColors = {
+            bgDark: `rgb(${darkR}, ${darkG}, ${darkB})`,
+            bgGradient: `linear-gradient(180deg, rgb(${Math.floor(r*0.6)}, ${Math.floor(g*0.6)}, ${Math.floor(b*0.6)}) 0%, rgb(${darkR}, ${darkG}, ${darkB}) 100%)`,
+            btnGreen: `rgb(${accentR}, ${accentG}, ${accentB})`,
+            btnGreenHover: `rgb(${Math.max(0, accentR - 25)}, ${Math.max(0, accentG - 25)}, ${Math.max(0, accentB - 25)})`,
+            btnTextColor: btnTextColor
+          };
+
+          saveThemeConfig();
+          applyTheme();
+          showToast('Extracted wallpaper palette!');
+        }
+      } catch (err) {
+        console.warn('Canvas color extraction error:', err);
+      }
+    };
+  }
+
+  // DOM Event Listeners for Theme Customizer Drawer
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const themeDrawerModal = document.getElementById('themeDrawerModal');
+  const themeDrawerOverlay = document.getElementById('themeDrawerOverlay');
+  const themeDrawerCloseBtn = document.getElementById('themeDrawerCloseBtn');
+  const modeDarkBtn = document.getElementById('modeDarkBtn');
+  const modeLightBtn = document.getElementById('modeLightBtn');
+  const paletteCardGrid = document.getElementById('paletteCardGrid');
+  const wallpaperDropzone = document.getElementById('wallpaperDropzone');
+  const wallpaperFileInput = document.getElementById('wallpaperFileInput');
+  const removeCustomWallpaperBtn = document.getElementById('removeCustomWallpaperBtn');
+  const resetThemeBtn = document.getElementById('resetThemeBtn');
+
+  // Open Drawer
+  if (themeToggleBtn && themeDrawerModal) {
+    themeToggleBtn.addEventListener('click', () => {
+      themeDrawerModal.classList.remove('hidden');
+    });
+  }
+
+  // Close Drawer
+  function closeThemeDrawer() {
+    if (themeDrawerModal) themeDrawerModal.classList.add('hidden');
+  }
+
+  if (themeDrawerOverlay) themeDrawerOverlay.addEventListener('click', closeThemeDrawer);
+  if (themeDrawerCloseBtn) themeDrawerCloseBtn.addEventListener('click', closeThemeDrawer);
+
+  // Mode Switcher [ Light | Dark ]
+  if (modeDarkBtn) {
+    modeDarkBtn.addEventListener('click', () => {
+      themeState.mode = 'dark';
+      saveThemeConfig();
+      applyTheme();
+      showToast('Switched to Dark Mode 🌙');
+    });
+  }
+
+  if (modeLightBtn) {
+    modeLightBtn.addEventListener('click', () => {
+      themeState.mode = 'light';
+      saveThemeConfig();
+      applyTheme();
+      showToast('Switched to Light Mode ☀️');
+    });
+  }
+
+  // Palette Card Grid Clicks
+  if (paletteCardGrid) {
+    paletteCardGrid.addEventListener('click', (e) => {
+      const card = e.target.closest('.palette-card');
+      if (card) {
+        const themeId = card.getAttribute('data-theme-id');
+        if (PRESET_THEMES[themeId]) {
+          themeState.themeId = themeId;
+          themeState.customWallpaperDataUrl = null;
+          themeState.customColors = null;
+          saveThemeConfig();
+          applyTheme();
+          showToast(`Applied ${PRESET_THEMES[themeId].name} theme!`);
+        }
+      }
+    });
+  }
+
+  // File Input & Drag-and-Drop Uploader
+  if (wallpaperDropzone && wallpaperFileInput) {
+    wallpaperDropzone.addEventListener('click', () => {
+      wallpaperFileInput.click();
+    });
+
+    wallpaperDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      wallpaperDropzone.style.borderColor = '#53c678';
+    });
+
+    wallpaperDropzone.addEventListener('dragleave', () => {
+      wallpaperDropzone.style.borderColor = '';
+    });
+
+    wallpaperDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      wallpaperDropzone.style.borderColor = '';
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleWallpaperFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    wallpaperFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleWallpaperFile(e.target.files[0]);
+      }
+    });
+  }
+
+  function handleWallpaperFile(file) {
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      extractColorsFromImage(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Remove Custom Wallpaper
+  if (removeCustomWallpaperBtn) {
+    removeCustomWallpaperBtn.addEventListener('click', () => {
+      themeState.customWallpaperDataUrl = null;
+      themeState.customColors = null;
+      themeState.themeId = 'classic';
+      saveThemeConfig();
+      applyTheme();
+      showToast('Removed wallpaper & reset colors');
+    });
+  }
+
+  // Reset to Default
+  if (resetThemeBtn) {
+    resetThemeBtn.addEventListener('click', () => {
+      themeState = {
+        mode: 'dark',
+        themeId: 'classic',
+        customWallpaperDataUrl: null,
+        customColors: null
+      };
+      saveThemeConfig();
+      applyTheme();
+      showToast('Reset theme to Default Emerald 🌲');
+    });
+  }
+
+  // Initialize Theme on Load
+  loadThemeConfig();
+
 });
