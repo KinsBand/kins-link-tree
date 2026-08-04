@@ -3,14 +3,15 @@
    ========================================================================== */
 
 :root {
-  --bg-dark-green: #013b29;
-  --bg-dark-green-gradient: linear-gradient(180deg, #013b29 0%, #002b1e 100%);
-  --btn-green: #72cf7b;
-  --btn-green-hover: #7de087;
-  --btn-green-shadow: #4a9b52;
+  --bg-dark-green: #11382b;
+  --bg-dark-green-gradient: linear-gradient(180deg, #11382b 0%, #0b1f18 100%);
+  --btn-green: #53c678;
+  --btn-green-hover: #46b76a;
+  --btn-green-shadow: #3aa35c;
   --card-white: #ffffff;
+  --card-bg: #ffffff;
   --card-white-shadow: #d1d5db;
-  --text-dark: #013b29;
+  --text-dark: #0b1f18;
   --text-white: #ffffff;
   --font-primary: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-secondary: 'Plus Jakarta Sans', sans-serif;
