@@ -165,9 +165,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return `Updated ${Math.floor(diff / 86400)}d ago`;
   }
 
-  /** Animate a single element's text from its current number to `target`. */
+  /** Animate a single element's text from its current number to `target`.
+   *  Only animates UPWARD — if target <= current, snaps instantly. */
   function animateCount(el, target, duration = 900) {
     const start = parseInt(el.getAttribute('data-raw') || '0', 10);
+    // Never animate downward — only count UP
+    if (target <= start) {
+      el.innerText = formatShortNumber(target);
+      el.setAttribute('data-raw', target);
+      return;
+    }
     const startTime = performance.now();
     function step(now) {
       const progress = Math.min((now - startTime) / duration, 1);
