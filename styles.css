@@ -393,7 +393,7 @@ body {
 /* Floating Bottom-Left Theme Button (Icon Only) */
 .floating-theme-btn {
   position: fixed;
-  bottom: 24px;
+  bottom: 23px;
   left: 20px;
   z-index: 998;
   width: 44px;
@@ -424,9 +424,9 @@ body {
   transform: scale(0.92);
 }
 
-/* Animate upwards when bottom audio bar is active */
+/* Animate upwards when bottom audio bar is active (aligned to middle height of next gig button) */
 body.audio-bar-active .floating-theme-btn {
-  bottom: 88px;
+  bottom: 83px;
 }
 
 .location-badge {
@@ -753,14 +753,15 @@ body.theme-light .switcher-tab.active {
   flex: 0 0 240px;
   width: 240px;
   scroll-snap-align: start;
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
+  border: 2px solid var(--btn-green, #53c678);
   border-radius: 24px;
   padding: 14px;
-  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 12px 25px rgba(0, 0, 0, 0.25);
-  color: #0f172a;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.2), 0 0 16px var(--btn-green-shadow, rgba(83, 198, 120, 0.25));
+  color: var(--text-white, #ffffff);
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
 .member-card:hover {
@@ -840,15 +841,15 @@ body.theme-light .switcher-tab.active {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(1, 42, 29, 0.9);
-  color: #00e699;
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--btn-green, #00e699);
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.8px;
   padding: 4px 10px;
   border-radius: 10px;
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(0, 230, 153, 0.35);
+  border: 1px solid var(--btn-green, rgba(0, 230, 153, 0.35));
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -861,7 +862,7 @@ body.theme-light .switcher-tab.active {
 .member-name {
   font-size: 1.1rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-white, #ffffff);
   margin-bottom: 2px;
   letter-spacing: -0.3px;
 }
@@ -869,7 +870,7 @@ body.theme-light .switcher-tab.active {
 .member-role {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #0d9264;
+  color: var(--btn-green, #0d9264);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -878,7 +879,7 @@ body.theme-light .switcher-tab.active {
 
 .member-bio {
   font-size: 0.78rem;
-  color: #334155;
+  color: var(--md-sys-color-on-surface-variant, #94a3b8);
   line-height: 1.45;
   margin-bottom: 12px;
   flex: 1;
@@ -2128,16 +2129,17 @@ body.audio-bar-active .floating-gig-pill-container {
 
 .music-card.paginated-card {
   width: 100%;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg, rgba(11, 31, 24, 0.94));
+  border: 2px solid var(--btn-green, #53c678);
   border-radius: 18px;
   padding: 12px 14px;
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), 0 0 12px var(--btn-green-shadow, rgba(83, 198, 120, 0.2));
   position: relative;
   overflow: hidden;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
 .music-card.paginated-card:hover {
@@ -2148,7 +2150,8 @@ body.audio-bar-active .floating-gig-pill-container {
 .music-card-thumb {
   width: 48px;
   height: 48px;
-  background: #0f3428;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--btn-green, #53c678);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -2221,7 +2224,7 @@ body.audio-bar-active .floating-gig-pill-container {
   font-family: var(--font-primary, 'Outfit', sans-serif);
   font-size: 0.9rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-white, #ffffff);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2230,14 +2233,14 @@ body.audio-bar-active .floating-gig-pill-container {
 .track-duration {
   font-size: 0.68rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--md-sys-color-on-surface-variant, #94a3b8);
   flex-shrink: 0;
 }
 
 .artist-name {
   font-family: var(--font-secondary, 'Plus Jakarta Sans', sans-serif);
   font-size: 0.76rem;
-  color: #334155;
+  color: var(--md-sys-color-on-surface-variant, #cbd5e1);
   font-weight: 600;
 }
 
@@ -2252,8 +2255,8 @@ body.audio-bar-active .floating-gig-pill-container {
 .genre-tag {
   font-size: 0.64rem;
   font-weight: 700;
-  background: #e2e8f0;
-  color: #1e293b;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-white, #ffffff);
   padding: 2px 7px;
   border-radius: 6px;
   flex-shrink: 0;
@@ -2493,13 +2496,24 @@ body.theme-light .inspired-subtitle {
   color: var(--md-sys-color-on-surface-variant, #475569);
 }
 
-body.theme-light .hero-banner-card,
-body.theme-light .hero-music-cta-card,
 body.theme-light .tabbed-links-section,
 body.theme-light .gig-map-card,
-body.theme-light .music-vault-card {
+body.theme-light .music-vault-card,
+body.theme-light .member-card,
+body.theme-light .music-card.paginated-card {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   background: var(--card-bg, #ffffff);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+body.theme-light .member-name,
+body.theme-light .song-title {
+  color: var(--md-sys-color-on-surface, #0f172a);
+}
+
+body.theme-light .genre-tag {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--md-sys-color-on-surface, #0f172a);
 }
 
 body.theme-light .hero-music-cta-card .studio-cta-title {
