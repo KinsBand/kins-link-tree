@@ -24,18 +24,23 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
+# Ensure UTF-8 output on Windows terminals
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 # ──────────────────────────────────────────────────────────────
 # Config — edit these to match your actual account IDs/handles
 # ──────────────────────────────────────────────────────────────
 CONFIG = {
-    "youtube_channel_id":   "UCxxxxxxxxxxxxxxxxxxxxxxx",   # from YouTube Studio > Channel ID
+    "youtube_channel_id":   "UC94kChx7J3yo4dCRdX6M3Fg",   # Real YouTube Channel ID
     "twitch_login":         "KinsBandOfficial",
-    "instagram_user_id":    "17841XXXXXXXXXX",              # numeric user ID for Meta Graph
+    "instagram_user_id":    "17841XXXXXXXXXX",            # numeric user ID for Meta Graph
     "tiktok_username":      "KinsBandOfficial",
     "twitter_username":     "KinsBandOfficial",
     "soundcloud_permalink": "KinsBandOfficial",
-    "spotify_artist_id":    "xxxxxxxxxxxxxxxxxxxxxxxx",     # from Spotify artist URL
-    "linkedin_org_id":      "00000000",                     # org ID from LinkedIn URL
+    "spotify_artist_id":    "31gmlrlrd3c2cjcwbyg73ywurdre",# Real Spotify Profile ID
+    "linkedin_org_id":      "00000000",                   # org ID from LinkedIn URL
 }
 
 FOLLOWERS_FILE = os.path.join(os.path.dirname(__file__), "followers.json")
@@ -257,6 +262,13 @@ def fetch_spotify() -> int | None:
         f"https://api.spotify.com/v1/artists/{artist_id}",
         headers={"Authorization": f"Bearer {token}"},
     )
+    if not data or "followers" not in data:
+        # Fallback to user profile endpoint if artist endpoint failed
+        data = http_get(
+            f"https://api.spotify.com/v1/users/{artist_id}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
     if data and "followers" in data:
         count = data["followers"]["total"]
         print(f"  ✓ Spotify followers: {count:,}")
@@ -312,7 +324,7 @@ def main():
     current["ytmusic"] = current.get("ytmusic", {"followers": 1200000, "label": "streams"})
 
     output = {
-        "last_updated": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "last_updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "platforms": current,
     }
 
