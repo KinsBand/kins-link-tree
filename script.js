@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Render initial fallback values immediately (no animation)
   updateLiveMetrics(false);
 
-  // ── Fetch real counts from followers.json ───────────────────
+  // ── Fetch real counts from followers.json ─────────────────────
   (async () => {
     try {
       // Cache-bust so we always get the latest committed version
@@ -258,27 +258,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
-  // ── Micro-tick: small organic increments for liveliness ─────
-  // Only runs on social platforms (not streams) and only after fetch
-  setInterval(() => {
-    const socialKeys = ['instagram', 'tiktok', 'twitter', 'youtube', 'twitch'];
-    const randomKey = socialKeys[Math.floor(Math.random() * socialKeys.length)];
-    const increment = Math.floor(Math.random() * 3) + 1;
-    platformStats[randomKey] += increment;
+  // ── Re-fetch real counts every 30 minutes ─────────────────────
+  setInterval(async () => {
+    try {
+      const res = await fetch(`followers.json?t=${Date.now()}`);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.platforms) {
+        Object.keys(json.platforms).forEach(key => {
+          const val = json.platforms[key]?.followers;
+          if (typeof val === 'number' && platformStats.hasOwnProperty(key)) {
+            platformStats[key] = val;
+          }
+        });
+        updateLiveMetrics(true);
 
-    // Update just the affected badge + total (no full animation, just snap)
-    const badge = document.getElementById(`badge-${randomKey}`);
-    if (badge) {
-      badge.innerText = formatShortNumber(platformStats[randomKey]);
-      badge.setAttribute('data-raw', platformStats[randomKey]);
+        if (lastUpdatedEl && json.last_updated) {
+          lastUpdatedEl.textContent = formatRelativeTime(json.last_updated);
+          lastUpdatedEl.title = new Date(json.last_updated).toLocaleString();
+        }
+      }
+    } catch (err) {
+      console.warn('[Kins] Live refresh failed:', err);
     }
-    const socialKeys2 = ['instagram', 'linkedin', 'tiktok', 'twitch', 'twitter', 'youtube'];
-    const total = socialKeys2.reduce((s, k) => s + (platformStats[k] || 0), 0);
-    if (totalFollowersCountEl) {
-      totalFollowersCountEl.innerText = formatShortNumber(total).toUpperCase();
-      totalFollowersCountEl.setAttribute('data-raw', total);
-    }
-  }, 7000);
+  }, 30 * 60 * 1000);
 
   // -------------------------------------------------------------
   // 5. Desktop View Toggle (Mobile Frame vs Full Width)
@@ -644,4 +647,3 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
-
