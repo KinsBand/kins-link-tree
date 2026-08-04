@@ -429,11 +429,13 @@ body {
 }
 
 /* Tab Content Visibility */
-.tab-content {
+.tab-content,
+.sub-tab-content {
   display: none;
 }
 
-.tab-content.active {
+.tab-content.active,
+.sub-tab-content.active {
   display: block;
   animation: fadeInTab 0.3s ease forwards;
 }
@@ -2290,6 +2292,4 @@ body {
 
 .audio-bar-close-btn:hover {
   color: #ffffff;
-}
-  box-shadow: 0 0 8px rgba(83, 198, 120, 0.5);
 }
