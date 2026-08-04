@@ -353,6 +353,25 @@ body {
   font-size: 1rem;
 }
 
+.followers-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.followers-last-updated {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  letter-spacing: 0.01em;
+}
+
+.followers-last-updated.visible {
+  opacity: 1;
+}
+
 .followers-left i {
   font-size: 1.25rem;
   color: var(--text-dark);
@@ -364,6 +383,7 @@ body {
   font-weight: 800;
   color: var(--bg-dark-green);
 }
+
 
 /* TABBED LINKS SECTION WITH SEGMENTED SWITCHER */
 .tabbed-links-section {

@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const toastContainer = document.getElementById('toastContainer');
   const totalFollowersCountEl = document.getElementById('totalFollowersCount');
+  const lastUpdatedEl = document.getElementById('followersLastUpdated');
 
   // Set current full URL for share input
   if (shareUrlInput) {
@@ -129,18 +130,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // -------------------------------------------------------------
-  // 4. Live Data Metrics & Stats Sync Engine
+  // 4. Live Data Metrics — Fetched from followers.json
   // -------------------------------------------------------------
+
+  // Fallback values used while loading or if fetch fails
   const platformStats = {
-    instagram: 124500,
-    linkedin: 5200,
-    tiktok: 350200,
-    twitch: 18300,
-    twitter: 42100,
-    youtube: 89400,
-    ytmusic: 1200000,
+    instagram:  124500,
+    linkedin:   5200,
+    tiktok:     350200,
+    twitch:     18300,
+    twitter:    42100,
+    youtube:    89400,
+    ytmusic:    1200000,
     soundcloud: 240000,
-    spotify: 3500000
+    spotify:    3500000
   };
 
   function formatShortNumber(num) {
@@ -153,39 +156,122 @@ document.addEventListener('DOMContentLoaded', () => {
     return num.toString();
   }
 
-  function updateLiveMetrics() {
-    let totalSocialFollowers = 
-      platformStats.instagram + 
-      platformStats.linkedin + 
-      platformStats.tiktok + 
-      platformStats.twitch + 
-      platformStats.twitter + 
-      platformStats.youtube;
+  function formatRelativeTime(isoString) {
+    if (!isoString) return '';
+    const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+    if (diff < 60)   return 'Updated just now';
+    if (diff < 3600) return `Updated ${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `Updated ${Math.floor(diff / 3600)}h ago`;
+    return `Updated ${Math.floor(diff / 86400)}d ago`;
+  }
+
+  /** Animate a single element's text from its current number to `target`. */
+  function animateCount(el, target, duration = 900) {
+    const start = parseInt(el.getAttribute('data-raw') || '0', 10);
+    const startTime = performance.now();
+    function step(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(start + (target - start) * eased);
+      el.innerText = formatShortNumber(current);
+      el.setAttribute('data-raw', current);
+      if (progress < 1) requestAnimationFrame(step);
+      else {
+        el.innerText = formatShortNumber(target);
+        el.setAttribute('data-raw', target);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function updateLiveMetrics(animate = false) {
+    const socialKeys = ['instagram', 'linkedin', 'tiktok', 'twitch', 'twitter', 'youtube'];
+    let totalSocialFollowers = socialKeys.reduce((sum, k) => sum + (platformStats[k] || 0), 0);
 
     if (totalFollowersCountEl) {
-      totalFollowersCountEl.innerText = formatShortNumber(totalSocialFollowers).toUpperCase();
+      if (animate) {
+        animateCount(totalFollowersCountEl, totalSocialFollowers);
+      } else {
+        totalFollowersCountEl.innerText = formatShortNumber(totalSocialFollowers).toUpperCase();
+        totalFollowersCountEl.setAttribute('data-raw', totalSocialFollowers);
+      }
     }
 
     // Update individual platform badges
     Object.keys(platformStats).forEach(key => {
       const badge = document.getElementById(`badge-${key}`);
       if (badge) {
-        badge.innerText = formatShortNumber(platformStats[key]);
+        if (animate) {
+          animateCount(badge, platformStats[key], 800);
+        } else {
+          badge.innerText = formatShortNumber(platformStats[key]);
+          badge.setAttribute('data-raw', platformStats[key]);
+        }
       }
     });
   }
 
-  // Initial Sync
-  updateLiveMetrics();
+  // Render initial fallback values immediately (no animation)
+  updateLiveMetrics(false);
 
-  // Simulated Live Data Stream Updates (adds new followers periodically)
+  // ── Fetch real counts from followers.json ───────────────────
+  (async () => {
+    try {
+      // Cache-bust so we always get the latest committed version
+      const res = await fetch(`followers.json?t=${Date.now()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+
+      let anyUpdated = false;
+      if (json.platforms) {
+        Object.keys(json.platforms).forEach(key => {
+          const val = json.platforms[key]?.followers;
+          if (typeof val === 'number' && platformStats.hasOwnProperty(key)) {
+            platformStats[key] = val;
+            anyUpdated = true;
+          }
+        });
+      }
+
+      if (anyUpdated) {
+        // Animate numbers counting up to real values
+        updateLiveMetrics(true);
+
+        // Show last-updated timestamp
+        if (lastUpdatedEl && json.last_updated) {
+          lastUpdatedEl.textContent = formatRelativeTime(json.last_updated);
+          lastUpdatedEl.title = new Date(json.last_updated).toLocaleString();
+          lastUpdatedEl.classList.add('visible');
+        }
+      }
+    } catch (err) {
+      // Silently fail — fallback numbers are already displayed
+      console.warn('[Kins] followers.json fetch failed, using fallback data:', err);
+    }
+  })();
+
+  // ── Micro-tick: small organic increments for liveliness ─────
+  // Only runs on social platforms (not streams) and only after fetch
   setInterval(() => {
-    const keys = Object.keys(platformStats);
-    const randomKey = keys[Math.floor(Math.random() * keys.length)];
-    const increment = Math.floor(Math.random() * 8) + 1;
+    const socialKeys = ['instagram', 'tiktok', 'twitter', 'youtube', 'twitch'];
+    const randomKey = socialKeys[Math.floor(Math.random() * socialKeys.length)];
+    const increment = Math.floor(Math.random() * 3) + 1;
     platformStats[randomKey] += increment;
-    updateLiveMetrics();
-  }, 4000);
+
+    // Update just the affected badge + total (no full animation, just snap)
+    const badge = document.getElementById(`badge-${randomKey}`);
+    if (badge) {
+      badge.innerText = formatShortNumber(platformStats[randomKey]);
+      badge.setAttribute('data-raw', platformStats[randomKey]);
+    }
+    const socialKeys2 = ['instagram', 'linkedin', 'tiktok', 'twitch', 'twitter', 'youtube'];
+    const total = socialKeys2.reduce((s, k) => s + (platformStats[k] || 0), 0);
+    if (totalFollowersCountEl) {
+      totalFollowersCountEl.innerText = formatShortNumber(total).toUpperCase();
+      totalFollowersCountEl.setAttribute('data-raw', total);
+    }
+  }, 7000);
 
   // -------------------------------------------------------------
   // 5. Desktop View Toggle (Mobile Frame vs Full Width)
