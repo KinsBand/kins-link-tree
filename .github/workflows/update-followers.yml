@@ -2,8 +2,8 @@ name: 📊 Update Social Follower Counts
 
 on:
   schedule:
-    # Runs daily at 6:00 AM UTC (4 PM AEST / Melbourne time)
-    - cron: '0 6 * * *'
+    # Runs every 30 minutes (48 times/day) — max frequency within Twitter/X free tier limit (1,500 req/month)
+    - cron: '*/30 * * * *'
   # Allow manual trigger from GitHub Actions tab
   workflow_dispatch:
 
