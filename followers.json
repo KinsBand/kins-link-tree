@@ -1,49 +1,14 @@
 {
-  "last_updated": "2026-08-04T13:36:37Z",
+  "last_updated": "2026-08-04T13:49:00Z",
   "platforms": {
-    "instagram": {
-      "followers": 124500,
-      "label": "followers",
-      "stale": true
-    },
-    "tiktok": {
-      "followers": 350200,
-      "label": "followers",
-      "stale": true
-    },
-    "twitter": {
-      "followers": 42100,
-      "label": "followers",
-      "stale": true
-    },
-    "youtube": {
-      "followers": 0,
-      "label": "subscribers",
-      "stale": false
-    },
-    "twitch": {
-      "followers": 18300,
-      "label": "followers",
-      "stale": true
-    },
-    "linkedin": {
-      "followers": 5200,
-      "label": "followers",
-      "stale": true
-    },
-    "soundcloud": {
-      "followers": 240000,
-      "label": "followers",
-      "stale": true
-    },
-    "spotify": {
-      "followers": 3500000,
-      "label": "monthly listeners",
-      "stale": true
-    },
-    "ytmusic": {
-      "followers": 1200000,
-      "label": "streams"
-    }
+    "instagram": { "followers": 0, "label": "followers" },
+    "tiktok":    { "followers": 0, "label": "followers" },
+    "twitter":   { "followers": 0, "label": "followers" },
+    "youtube":   { "followers": 0, "label": "subscribers" },
+    "twitch":    { "followers": 0, "label": "followers" },
+    "linkedin":  { "followers": 0, "label": "followers" },
+    "soundcloud":{ "followers": 0, "label": "followers" },
+    "spotify":   { "followers": 0, "label": "monthly listeners" },
+    "ytmusic":   { "followers": 0, "label": "streams" }
   }
 }

@@ -135,15 +135,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Fallback values used while loading or if fetch fails
   const platformStats = {
-    instagram:  124500,
-    linkedin:   5200,
-    tiktok:     350200,
-    twitch:     18300,
-    twitter:    42100,
-    youtube:    89400,
-    ytmusic:    1200000,
-    soundcloud: 240000,
-    spotify:    3500000
+    instagram:  0,
+    linkedin:   0,
+    tiktok:     0,
+    twitch:     0,
+    twitter:    0,
+    youtube:    0,
+    ytmusic:    0,
+    soundcloud: 0,
+    spotify:    0
   };
 
   function formatShortNumber(num) {
