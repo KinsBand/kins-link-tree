@@ -1,6 +1,32 @@
 // JavaScript Logic for Kins (@KinsBandOfficial) Link in Bio Page
 
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  });
+}
+
+// Click Analytics & Conversion Tracking (Mock Function)
+function trackClick(eventName, details = {}) {
+  console.log(`[Analytics Track] Event: "${eventName}"`, details, `Timestamp: ${new Date().toISOString()}`);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  
+  // Track initial page view
+  trackClick('page_view', { url: window.location.href });
+
+  // Attach outbound link click analytics
+  document.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      const href = link.getAttribute('href');
+      const text = link.innerText.trim();
+      trackClick('outbound_click', { text, href });
+    });
+  });
   
   // Element References
   const phoneFrame = document.getElementById('phoneFrame');
@@ -317,11 +343,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -------------------------------------------------------------
-  // 7. Share Modal Logic
+  // 7. Share Modal & Dynamic QR Code Generation
   // -------------------------------------------------------------
+  let qrCodeInstance = null;
+
   if (shareBtn && shareModal && closeShareModal) {
     shareBtn.addEventListener('click', () => {
       shareModal.classList.add('active');
+      trackClick('open_share_modal');
+
+      // Generate dynamic QR code if qrcode.js is loaded
+      const qrCanvasContainer = document.getElementById('qrcodeCanvas');
+      if (qrCanvasContainer && typeof QRCode !== 'undefined') {
+        qrCanvasContainer.innerHTML = '';
+        qrCodeInstance = new QRCode(qrCanvasContainer, {
+          text: window.location.href,
+          width: 130,
+          height: 130,
+          colorDark: "#0b1f18",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      }
     });
 
     closeShareModal.addEventListener('click', () => {
@@ -341,6 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         await navigator.clipboard.writeText(shareUrlInput.value);
         showToast('Link copied to clipboard!');
+        trackClick('copy_share_url', { url: shareUrlInput.value });
         copyUrlBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
         setTimeout(() => {
           copyUrlBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
@@ -355,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -------------------------------------------------------------
-  // 8. Form Submission (Email Only)
+  // 8. Form Submission (Mock Backend API Handler)
   // -------------------------------------------------------------
   if (subscribeForm) {
     // Check if user already subscribed in localStorage
@@ -364,11 +408,22 @@ document.addEventListener('DOMContentLoaded', () => {
       subscribeSuccess.classList.remove('hidden');
     }
 
-    subscribeForm.addEventListener('submit', (e) => {
+    subscribeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('emailInput').value.trim();
+      const submitBtn = subscribeForm.querySelector('button[type="submit"]');
 
       if (email) {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span>Subscribing...</span>';
+        }
+
+        trackClick('submit_newsletter_form', { email });
+
+        // Simulate backend API call delay (Netlify/Mailchimp/ConvertKit endpoint)
+        await new Promise(resolve => setTimeout(resolve, 800));
+
         // Store in local state
         localStorage.setItem('kins_subscribed', 'true');
         localStorage.setItem('kins_user_email', email);
@@ -403,17 +458,37 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   };
 
-  const floatingGigPillBtn = document.getElementById('floatingGigPillBtn');
-  const gigPillTag = document.getElementById('gigPillTag');
-  const gigPillLocation = document.getElementById('gigPillLocation');
+  const addToCalendarBtn = document.getElementById('addToCalendarBtn');
+  if (addToCalendarBtn) {
+    addToCalendarBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      trackClick('add_to_calendar', { venue: GIG_DATA.upcoming.venue, date: GIG_DATA.upcoming.date });
+      
+      const icsData = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Kins Band//NONSGML Live Gig//EN
+BEGIN:VEVENT
+UID:${Date.now()}@kins.au
+DTSTAMP:20261024T090000Z
+DTSTART:20261024T100000Z
+DTEND:20261024T130000Z
+SUMMARY:Kins Live at Enmore Theatre
+DESCRIPTION:Kins (@KinsBandOfficial) Live Concert at Enmore Theatre Sydney.
+LOCATION:Enmore Theatre, 118-132 Enmore Rd, Newtown NSW 2042
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR`;
 
-  const gigMapModal = document.getElementById('gigMapModal');
-  const closeGigMapSheet = document.getElementById('closeGigMapSheet');
-
-  const gigBannerVenue = document.getElementById('gigBannerVenue');
-  const gigBannerMeta = document.getElementById('gigBannerMeta');
-  const gigBannerTicketBtn = document.getElementById('gigBannerTicketBtn');
-  const gigStatusBadge = document.getElementById('gigStatusBadge');
+      const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', 'Kins_Enmore_Theatre_Gig.ics');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Calendar event (.ics) downloaded!');
+    });
+  }
 
   let leafletMapInstance = null;
 
@@ -649,162 +724,100 @@ document.addEventListener('DOMContentLoaded', () => {
     'all': {
       name: 'All Artists',
       genre: 'Curated Inspiration Vault',
-      bio: 'Explore all iconic tracks driving the creative energy behind Kins.',
+      bio: 'Explore all iconic tracks from The Cure, Weezer, Pulp, and The Long Faces driving Kins.',
       iconClass: 'fa-layer-group',
       pages: [
         [
-          { title: 'My Number', artist: 'Foals', duration: '4:00', genre: 'Indie Rock', quote: 'Inspires our drum grooves', icon: 'fa-bolt' },
-          { title: 'R U Mine?', artist: 'Arctic Monkeys', duration: '3:21', genre: 'Garage Rock', quote: 'Heavy guitar tone benchmark', icon: 'fa-guitar' },
-          { title: 'The Less I Know', artist: 'Tame Impala', duration: '3:36', genre: 'Psychedelic', quote: 'Analog synth bass influence', icon: 'fa-sliders' },
-          { title: 'Last Nite', artist: 'The Strokes', duration: '3:17', genre: 'Post-Punk', quote: 'Raw garage energy inspiration', icon: 'fa-radio' },
-          { title: "Can't Stop", artist: 'Red Hot Chili Peppers', duration: '4:29', genre: 'Funk Rock', quote: 'Slap bass rhythm inspiration', icon: 'fa-fire' },
-          { title: 'Mountain At My Gates', artist: 'Foals', duration: '4:02', genre: 'Math Rock', quote: 'Building climax guitar arrangement', icon: 'fa-compact-disc' }
+          { title: 'Just Like Heaven', artist: 'The Cure', duration: '3:32', genre: 'Post-Punk', quote: 'Shimmering guitar chorus & bass drive', icon: 'fa-heart' },
+          { title: 'Buddy Holly', artist: 'Weezer', duration: '2:39', genre: 'Power Pop', quote: 'Iconic synth-guitar lead & tight rhythm', icon: 'fa-headphones' },
+          { title: 'Common People', artist: 'Pulp', duration: '5:51', genre: 'Britpop', quote: 'Building crescendo synth & theatrical delivery', icon: 'fa-layer-group' },
+          { title: 'Jane!', artist: 'The Long Faces', duration: '3:45', genre: 'Art Rock', quote: 'Complex polyrhythms & theatrical vocals', icon: 'fa-masks-theater' },
+          { title: "Boys Don't Cry", artist: 'The Cure', duration: '2:37', genre: 'Post-Punk', quote: 'Bouncy guitar riff & iconic vocal hook', icon: 'fa-bolt' },
+          { title: 'Hash Pipe', artist: 'Weezer', duration: '3:06', genre: 'Power Pop', quote: 'Aggressive staccato riffing & driving beat', icon: 'fa-drum' }
         ],
         [
-          { title: 'Do I Wanna Know?', artist: 'Arctic Monkeys', duration: '4:32', genre: 'Alt Rock', quote: 'Moody guitar riff dynamics', icon: 'fa-headphones' },
-          { title: 'Feels Like We Only...', artist: 'Tame Impala', duration: '3:15', genre: 'Neo-Psychedelia', quote: 'Dreamy vocal reverb texture', icon: 'fa-wave-square' },
-          { title: 'Reptilia', artist: 'The Strokes', duration: '3:39', genre: 'Indie Rock', quote: 'Interlocking guitar leads', icon: 'fa-drum' },
-          { title: 'Californication', artist: 'Red Hot Chili Peppers', duration: '5:21', genre: 'Alt Rock', quote: 'Melodic bassline inspiration', icon: 'fa-record-vinyl' },
-          { title: 'Spanish Sahara', artist: 'Foals', duration: '6:50', genre: 'Atmospheric', quote: 'Patience in song structure', icon: 'fa-sliders' },
-          { title: '505', artist: 'Arctic Monkeys', duration: '4:13', genre: 'Indie Rock', quote: 'Organ driven slow burner', icon: 'fa-certificate' }
+          { title: 'Babies', artist: 'Pulp', duration: '4:04', genre: 'Britpop', quote: 'Driving bassline & storytelling lyrics', icon: 'fa-microphone' },
+          { title: 'Pink Triangle', artist: 'Weezer', duration: '3:58', genre: 'Power Pop', quote: 'Heartfelt distortion & anthemic chorus', icon: 'fa-compact-disc' },
+          { title: "Friday I'm in Love", artist: 'The Cure', duration: '3:35', genre: 'Jangle Pop', quote: 'Uplifting 12-string guitar jangle', icon: 'fa-sun' },
+          { title: 'Cadillac', artist: 'The Long Faces', duration: '4:12', genre: 'Art Rock', quote: 'Jazzy guitar weaves & dramatic brass energy', icon: 'fa-car' },
+          { title: 'Do You Remember the First Time?', artist: 'Pulp', duration: '4:22', genre: 'Britpop', quote: 'Melodic guitar riff & bittersweet vocal hook', icon: 'fa-certificate' },
+          { title: 'Across The Sea', artist: 'Weezer', duration: '4:32', genre: 'Alt Rock', quote: 'Dynamic arrangement & soaring guitar solo', icon: 'fa-sliders' }
         ],
         [
-          { title: 'Borderline', artist: 'Tame Impala', duration: '3:57', genre: 'Synth Pop', quote: 'Vintage drum machine feel', icon: 'fa-compact-disc' },
-          { title: 'Someday', artist: 'The Strokes', duration: '3:03', genre: 'Garage Rock', quote: 'Nostalgic chord progressions', icon: 'fa-sun' },
-          { title: 'Dani California', artist: 'Red Hot Chili Peppers', duration: '4:42', genre: 'Funk Metal', quote: 'Vintage guitar solo energy', icon: 'fa-bolt' },
-          { title: 'What Went Down', artist: 'Foals', duration: '5:00', genre: 'Hard Rock', quote: 'Explosive studio loudness', icon: 'fa-fire' },
-          { title: 'Fluorescent Adolescent', artist: 'Arctic Monkeys', duration: '2:57', genre: 'Indie Rock', quote: 'Punchy bass & drums pairing', icon: 'fa-music' },
-          { title: 'Let It Happen', artist: 'Tame Impala', duration: '7:46', genre: 'Electronic Rock', quote: 'Epic intro synth sequencing', icon: 'fa-headphones' }
+          { title: 'Lovesong', artist: 'The Cure', duration: '3:29', genre: 'Goth Rock', quote: 'Melodic bassline & lush synth arrangement', icon: 'fa-music' },
+          { title: 'Do You Wanna Get High?', artist: 'Weezer', duration: '3:27', genre: 'Alt Rock', quote: 'Pinkerton-era heavy fuzz guitar crunch', icon: 'fa-fire' },
+          { title: 'Underwear', artist: 'Pulp', duration: '4:06', genre: 'Britpop', quote: 'Dramatic synth swells & cabaret tension', icon: 'fa-mask' },
+          { title: 'Sail Away', artist: 'The Long Faces', duration: '3:58', genre: 'Indie Rock', quote: 'Swelling guitar textures & soaring hooks', icon: 'fa-compass' },
+          { title: 'Go Away', artist: 'Weezer', duration: '3:13', genre: 'Power Pop', quote: 'Catchy dual-vocal power pop harmony', icon: 'fa-guitar' },
+          { title: 'Oberon', artist: 'The Long Faces', duration: '3:50', genre: 'Math Rock', quote: 'Energetic math-rock tempo changes', icon: 'fa-bolt' }
         ]
       ]
     },
-    'foals': {
-      name: 'Foals',
-      genre: 'Indie Rock / Math Rock',
-      bio: 'Polyrhythmic energy, driving basslines, and math-rock guitar climaxes.',
-      iconClass: 'fa-bolt',
+    'the-cure': {
+      name: 'The Cure',
+      genre: 'Post-Punk / Goth Rock / New Wave',
+      bio: 'Shimmering post-punk guitars, atmospheric basslines, and melancholic pop melodies.',
+      iconClass: 'fa-heart',
       pages: [
         [
-          { title: 'My Number', artist: 'Foals', duration: '4:00', genre: 'Indie Rock', quote: 'Inspires our upbeat drum grooves', icon: 'fa-bolt' },
-          { title: 'Mountain At My Gates', artist: 'Foals', duration: '4:02', genre: 'Math Rock', quote: 'Building climax guitar arrangement', icon: 'fa-compact-disc' },
-          { title: 'Spanish Sahara', artist: 'Foals', duration: '6:50', genre: 'Atmospheric Rock', quote: 'Patience & build-up in structure', icon: 'fa-sliders' },
-          { title: 'Red Socks Pugie', artist: 'Foals', duration: '5:09', genre: 'Math Rock', quote: 'Complex guitar interlocking', icon: 'fa-guitar' }
-        ],
-        [
-          { title: 'What Went Down', artist: 'Foals', duration: '5:00', genre: 'Alternative Metal', quote: 'Raw fuzz vocals and aggressive riffs', icon: 'fa-fire' },
-          { title: 'Life Is Yours', artist: 'Foals', duration: '4:12', genre: 'Dance Punk', quote: 'Summer synth grooves', icon: 'fa-sun' },
-          { title: '2001', artist: 'Foals', duration: '4:27', genre: 'Funk Rock', quote: 'Tight rhythm section syncopation', icon: 'fa-headphones' },
-          { title: 'The Runner', artist: 'Foals', duration: '4:21', genre: 'Heavy Rock', quote: 'Driving stomp rhythm', icon: 'fa-drum' }
-        ],
-        [
-          { title: 'Inhaler', artist: 'Foals', duration: '4:54', genre: 'Hard Rock', quote: 'Massive fuzz chorus explosion', icon: 'fa-bolt' },
-          { title: 'Olympic Airways', artist: 'Foals', duration: '4:19', genre: 'Indie Rock', quote: 'Clean delay-driven guitar lines', icon: 'fa-radio' },
-          { title: 'Late Night', artist: 'Foals', duration: '5:27', genre: 'Post-Rock', quote: 'Emotional guitar solos', icon: 'fa-certificate' },
-          { title: 'Exits', artist: 'Foals', duration: '5:57', genre: 'Art Rock', quote: 'Hypnotic bass groove loops', icon: 'fa-wave-square' }
+          { title: 'Just Like Heaven', artist: 'The Cure', duration: '3:32', genre: 'Post-Punk', quote: 'Shimmering guitar chorus & bass drive', icon: 'fa-heart' },
+          { title: "Boys Don't Cry", artist: 'The Cure', duration: '2:37', genre: 'Post-Punk', quote: 'Bouncy guitar riff & iconic vocal hook', icon: 'fa-bolt' },
+          { title: "Friday I'm in Love", artist: 'The Cure', duration: '3:35', genre: 'Jangle Pop', quote: 'Uplifting 12-string guitar jangle', icon: 'fa-sun' },
+          { title: 'Lovesong', artist: 'The Cure', duration: '3:29', genre: 'Goth Rock', quote: 'Melodic bassline & lush synth arrangement', icon: 'fa-music' }
         ]
       ]
     },
-    'arctic-monkeys': {
-      name: 'Arctic Monkeys',
-      genre: 'Garage Rock / Post-Punk',
-      bio: 'Dark guitar riffs, sharp lyrics, and punchy garage rock rhythm section.',
-      iconClass: 'fa-guitar',
+    'weezer': {
+      name: 'Weezer',
+      genre: 'Alternative Rock / Power Pop',
+      bio: 'Crunchy fuzz guitar riffs, anthemic power pop harmonies, and raw emotional hooks.',
+      iconClass: 'fa-glasses',
       pages: [
         [
-          { title: 'R U Mine?', artist: 'Arctic Monkeys', duration: '3:21', genre: 'Garage Rock', quote: 'Heavy guitar tone benchmark', icon: 'fa-guitar' },
-          { title: 'Do I Wanna Know?', artist: 'Arctic Monkeys', duration: '4:32', genre: 'Stoner Rock', quote: 'Moody riff dynamics', icon: 'fa-headphones' },
-          { title: '505', artist: 'Arctic Monkeys', duration: '4:13', genre: 'Indie Rock', quote: 'Organ driven slow build to crash', icon: 'fa-certificate' },
-          { title: 'I Bet You Look Good', artist: 'Arctic Monkeys', duration: '2:53', genre: 'Post-Punk', quote: 'High tempo live adrenaline', icon: 'fa-bolt' }
+          { title: 'Do You Wanna Get High?', artist: 'Weezer', duration: '3:27', genre: 'Alt Rock', quote: 'Pinkerton-era heavy fuzz guitar crunch', icon: 'fa-fire' },
+          { title: 'Go Away', artist: 'Weezer', duration: '3:13', genre: 'Power Pop', quote: 'Catchy dual-vocal power pop harmony', icon: 'fa-guitar' },
+          { title: 'Jamie', artist: 'Weezer', duration: '4:19', genre: 'Power Pop', quote: 'Raw early Weezer garage charm', icon: 'fa-radio' },
+          { title: 'Hash Pipe', artist: 'Weezer', duration: '3:06', genre: 'Heavy Power Pop', quote: 'Aggressive staccato riffing & driving beat', icon: 'fa-drum' }
         ],
         [
-          { title: 'Fluorescent Adolescent', artist: 'Arctic Monkeys', duration: '2:57', genre: 'Indie Pop', quote: 'Punchy bass & drums pairing', icon: 'fa-music' },
-          { title: 'Arabella', artist: 'Arctic Monkeys', duration: '3:27', genre: 'Hard Rock', quote: 'Sabbath-style heavy chorus drop', icon: 'fa-fire' },
-          { title: 'Crying Lightning', artist: 'Arctic Monkeys', duration: '3:43', genre: 'Psychedelic Rock', quote: 'Twisted bassline riffs', icon: 'fa-sliders' },
-          { title: 'Teddy Picker', artist: 'Arctic Monkeys', duration: '2:43', genre: 'Indie Rock', quote: 'Sharp rhythm guitars', icon: 'fa-compact-disc' }
-        ],
-        [
-          { title: 'Brianstorm', artist: 'Arctic Monkeys', duration: '2:50', genre: 'Speed Rock', quote: 'Relentless drum fill energy', icon: 'fa-drum' },
-          { title: 'Cornerstone', artist: 'Arctic Monkeys', duration: '3:17', genre: 'Pop Rock', quote: 'Melodic storytelling vocal line', icon: 'fa-sun' },
-          { title: 'Four Out Of Five', artist: 'Arctic Monkeys', duration: '5:12', genre: 'Glam Rock', quote: 'Lounge vintage piano keys', icon: 'fa-radio' },
-          { title: 'Snap Out Of It', artist: 'Arctic Monkeys', duration: '3:13', genre: 'Pop Rock', quote: 'Catchy handclap rhythms', icon: 'fa-thumbs-up' }
+          { title: 'Pink Triangle', artist: 'Weezer', duration: '3:58', genre: 'Power Pop', quote: 'Heartfelt distortion & anthemic chorus', icon: 'fa-compact-disc' },
+          { title: 'Buddy Holly', artist: 'Weezer', duration: '2:39', genre: 'Power Pop', quote: 'Iconic synth-guitar lead & tight rhythm', icon: 'fa-headphones' },
+          { title: 'Across The Sea', artist: 'Weezer', duration: '4:32', genre: 'Alt Rock', quote: 'Dynamic arrangement & soaring guitar solo', icon: 'fa-sliders' }
         ]
       ]
     },
-    'tame-impala': {
-      name: 'Tame Impala',
-      genre: 'Psychedelic Synth / Neo-Psychedelia',
-      bio: 'Psychedelic synths, hypnotic disco-rock grooves, and lush studio production.',
-      iconClass: 'fa-sliders',
+    'pulp': {
+      name: 'Pulp',
+      genre: 'Britpop / Art Pop / Glam Rock',
+      bio: 'Dramatic storytelling, disco-infused synthpop grooves, and theatrical British pop.',
+      iconClass: 'fa-compact-disc',
       pages: [
         [
-          { title: 'The Less I Know', artist: 'Tame Impala', duration: '3:36', genre: 'Psychedelic Disco', quote: 'Analog synth bassline tone', icon: 'fa-sliders' },
-          { title: 'Feels Like We Only...', artist: 'Tame Impala', duration: '3:15', genre: 'Neo-Psychedelia', quote: 'Dreamy vocal reverb texture', icon: 'fa-wave-square' },
-          { title: 'Borderline', artist: 'Tame Impala', duration: '3:57', genre: 'Synth Pop', quote: 'Vintage drum machine feel', icon: 'fa-compact-disc' },
-          { title: 'Let It Happen', artist: 'Tame Impala', duration: '7:46', genre: 'Electronic Rock', quote: 'Epic intro synth sequencing', icon: 'fa-headphones' }
+          { title: 'Common People', artist: 'Pulp', duration: '5:51', genre: 'Britpop', quote: 'Building crescendo synth & theatrical delivery', icon: 'fa-layer-group' },
+          { title: 'Babies', artist: 'Pulp', duration: '4:04', genre: 'Britpop', quote: 'Driving bassline & storytelling lyrics', icon: 'fa-microphone' },
+          { title: 'Do You Remember the First Time?', artist: 'Pulp', duration: '4:22', genre: 'Britpop', quote: 'Melodic guitar riff & bittersweet vocal hook', icon: 'fa-certificate' },
+          { title: 'Underwear', artist: 'Pulp', duration: '4:06', genre: 'Britpop', quote: 'Dramatic synth swells & cabaret tension', icon: 'fa-mask' }
         ],
         [
-          { title: 'Elephant', artist: 'Tame Impala', duration: '3:31', genre: 'Psychedelic Rock', quote: 'Heavy distorted bass riffing', icon: 'fa-guitar' },
-          { title: 'Lost In Yesterday', artist: 'Tame Impala', duration: '4:09', genre: 'Disco Rock', quote: 'Driving bass groove', icon: 'fa-bolt' },
-          { title: 'Mind Mischief', artist: 'Tame Impala', duration: '4:31', genre: 'Psychedelic', quote: 'Flanged guitar rhythm loop', icon: 'fa-fire' },
-          { title: 'Breathe Deeper', artist: 'Tame Impala', duration: '6:12', genre: 'House/Synth', quote: 'Chilled piano chords into 303 acid synth', icon: 'fa-music' }
-        ],
-        [
-          { title: 'Eventually', artist: 'Tame Impala', duration: '5:19', genre: 'Synth Rock', quote: 'Crushing synth-fuzz hits', icon: 'fa-certificate' },
-          { title: 'Is It True', artist: 'Tame Impala', duration: '3:58', genre: 'Dance Rock', quote: 'Funky bass pulse', icon: 'fa-radio' },
-          { title: 'New Person, Same Old', artist: 'Tame Impala', duration: '6:04', genre: 'R&B Psychedelia', quote: 'Low-end sub bass atmosphere', icon: 'fa-drum' },
-          { title: 'Solitude Is Bliss', artist: 'Tame Impala', duration: '3:55', genre: 'Fuzz Rock', quote: 'Classic phaser guitar chords', icon: 'fa-sun' }
+          { title: 'I Want You', artist: 'Pulp', duration: '4:42', genre: 'Alt Rock', quote: 'Raw emotional guitar crunch & pulse', icon: 'fa-fire' },
+          { title: 'Have You Seen Her Lately?', artist: 'Pulp', duration: '4:21', genre: 'Chamber Pop', quote: 'Lush orchestral pop textures & storytelling', icon: 'fa-eye' }
         ]
       ]
     },
-    'the-strokes': {
-      name: 'The Strokes',
-      genre: 'New York Indie Rock / Post-Punk Revival',
-      bio: 'Raw New York indie rock, interlocking guitar melodies, and effortless hooks.',
-      iconClass: 'fa-radio',
+    'the-long-faces': {
+      name: 'The Long Faces',
+      genre: 'Art Rock / Math Rock / Neo-Psychedelia',
+      bio: 'Complex polyrhythms, intricate jazzy guitar weaves, and theatrical art-rock arrangements.',
+      iconClass: 'fa-masks-theater',
       pages: [
         [
-          { title: 'Last Nite', artist: 'The Strokes', duration: '3:17', genre: 'Post-Punk', quote: 'Raw garage energy inspiration', icon: 'fa-radio' },
-          { title: 'Reptilia', artist: 'The Strokes', duration: '3:39', genre: 'Indie Rock', quote: 'Interlocking guitar leads', icon: 'fa-drum' },
-          { title: 'Someday', artist: 'The Strokes', duration: '3:03', genre: 'Garage Rock', quote: 'Nostalgic chord progressions', icon: 'fa-sun' },
-          { title: 'The Adults Are Talking', artist: 'The Strokes', duration: '4:47', genre: 'New Wave', quote: 'Clean drum machine rhythm', icon: 'fa-compact-disc' }
+          { title: 'Jane!', artist: 'The Long Faces', duration: '3:45', genre: 'Art Rock', quote: 'Complex polyrhythms & theatrical vocals', icon: 'fa-masks-theater' },
+          { title: 'Cadillac', artist: 'The Long Faces', duration: '4:12', genre: 'Art Rock', quote: 'Jazzy guitar weaves & dramatic brass energy', icon: 'fa-car' },
+          { title: 'Sail Away', artist: 'The Long Faces', duration: '3:58', genre: 'Indie Rock', quote: 'Swelling guitar textures & soaring hooks', icon: 'fa-compass' },
+          { title: 'Documentaries', artist: 'The Long Faces', duration: '4:05', genre: 'Art Rock', quote: 'Intricate basswork & cinematic dynamics', icon: 'fa-film' }
         ],
         [
-          { title: 'Hard To Explain', artist: 'The Strokes', duration: '3:44', genre: 'Indie Rock', quote: 'Compressed studio drum sound', icon: 'fa-headphones' },
-          { title: '12:51', artist: 'The Strokes', duration: '2:33', genre: 'New Wave', quote: 'Synth-like guitar solo tone', icon: 'fa-bolt' },
-          { title: 'Juicebox', artist: 'The Strokes', duration: '3:17', genre: 'Hard Rock', quote: 'Aggressive fuzz bass intro', icon: 'fa-fire' },
-          { title: 'Under Cover of Darkness', artist: 'The Strokes', duration: '3:57', genre: 'Indie Pop', quote: 'Upbeat dual guitar harmonies', icon: 'fa-guitar' }
-        ],
-        [
-          { title: 'Machu Picchu', artist: 'The Strokes', duration: '3:29', genre: 'Reggae Rock', quote: 'Funky muted guitar skank', icon: 'fa-sliders' },
-          { title: 'Is This It', artist: 'The Strokes', duration: '2:35', genre: 'Garage Rock', quote: 'Laid back bass groove', icon: 'fa-music' },
-          { title: 'Automatic Stop', artist: 'The Strokes', duration: '3:26', genre: 'Indie Rock', quote: 'Arpeggiated guitar weave', icon: 'fa-wave-square' },
-          { title: 'You Only Live Once', artist: 'The Strokes', duration: '3:09', genre: 'Indie Rock', quote: 'Anthemic opening riff', icon: 'fa-certificate' }
-        ]
-      ]
-    },
-    'rhcp': {
-      name: 'Red Hot Chili Peppers',
-      genre: 'Funk Rock / Alternative Rock',
-      bio: 'Slap basslines, explosive drum grooves, and soaring anthemic guitar hooks.',
-      iconClass: 'fa-fire',
-      pages: [
-        [
-          { title: "Can't Stop", artist: 'Red Hot Chili Peppers', duration: '4:29', genre: 'Funk Rock', quote: 'Slap bass & percussive guitar intro', icon: 'fa-fire' },
-          { title: 'Californication', artist: 'Red Hot Chili Peppers', duration: '5:21', genre: 'Alt Rock', quote: 'Melodic bassline storytelling', icon: 'fa-record-vinyl' },
-          { title: 'Dani California', artist: 'Red Hot Chili Peppers', duration: '4:42', genre: 'Funk Metal', quote: 'Vintage wah guitar solo energy', icon: 'fa-bolt' },
-          { title: 'By The Way', artist: 'Red Hot Chili Peppers', duration: '3:37', genre: 'Funk Rock', quote: 'Rapid Verse to Melodic Chorus dynamics', icon: 'fa-guitar' }
-        ],
-        [
-          { title: 'Scar Tissue', artist: 'Red Hot Chili Peppers', duration: '3:37', genre: 'Alt Rock', quote: 'Soulful slide guitar licks', icon: 'fa-sun' },
-          { title: 'Under The Bridge', artist: 'Red Hot Chili Peppers', duration: '4:24', genre: 'Ballad', quote: 'Hendrix-inspired chord embellishments', icon: 'fa-sliders' },
-          { title: 'Give It Away', artist: 'Red Hot Chili Peppers', duration: '4:43', genre: 'Funk Rock', quote: 'Unstoppable rhythm pocket', icon: 'fa-drum' },
-          { title: 'Snow (Hey Oh)', artist: 'Red Hot Chili Peppers', duration: '5:34', genre: 'Indie Rock', quote: 'Fast arpeggiated guitar riffing', icon: 'fa-compact-disc' }
-        ],
-        [
-          { title: 'Dark Necessities', artist: 'Red Hot Chili Peppers', duration: '5:02', genre: 'Funk Rock', quote: 'Piano & slap bass combo', icon: 'fa-headphones' },
-          { title: 'Black Summer', artist: 'Red Hot Chili Peppers', duration: '3:52', genre: 'Alt Rock', quote: 'Classic Frusciante bend tones', icon: 'fa-certificate' },
-          { title: 'Otherside', artist: 'Red Hot Chili Peppers', duration: '4:15', genre: 'Post-Punk', quote: 'Minimalist bass & vocal space', icon: 'fa-wave-square' },
-          { title: 'Tell Me Baby', artist: 'Red Hot Chili Peppers', duration: '4:07', genre: 'Funk Rock', quote: 'High-energy chorus groove', icon: 'fa-music' }
+          { title: 'Oberon', artist: 'The Long Faces', duration: '3:50', genre: 'Math Rock', quote: 'Energetic math-rock tempo changes', icon: 'fa-bolt' }
         ]
       ]
     }
@@ -921,11 +934,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize Hero Studio Live Song Ticker
   const tickerSongs = [
-    'Foals — My Number',
-    'Arctic Monkeys — R U Mine?',
-    'Tame Impala — The Less I Know',
-    'The Strokes — Reptilia',
-    'RHCP — Can\'t Stop'
+    'The Cure — Just Like Heaven',
+    'Weezer — Buddy Holly',
+    'Pulp — Common People',
+    'The Long Faces — Jane!',
+    'The Cure — Friday I\'m in Love',
+    'Weezer — Hash Pipe',
+    'Pulp — Babies'
   ];
   let tickerIdx = 0;
   const heroStudioTicker = document.getElementById('heroStudioTicker');
@@ -1639,6 +1654,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Set Legacy Aliases
       root.style.setProperty('--bg-dark', tokens.bgDark);
+      root.style.setProperty('--hero-gradient-end', tokens.bgDark);
       root.style.setProperty('--bg-dark-gradient', tokens.bgGradient);
       root.style.setProperty('--bg-dark-green', tokens.bgDark);
       root.style.setProperty('--bg-dark-green-gradient', tokens.bgGradient);

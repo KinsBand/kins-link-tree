@@ -4,7 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kins | Link in Bio</title>
-  <meta name="description" content="Official link in bio for Kins (@KinsBandOfficial). Stream latest music, follow on social media, and get exclusive updates.">
+  <meta name="description" content="Official link in bio for Kins (@KinsBandOfficial). Stream latest music, follow on social media, buy merch, and get gig updates.">
+
+  <!-- Open Graph / Facebook Meta Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://beacons.ai/KinsBandOfficial">
+  <meta property="og:title" content="Kins Official | Link in Bio">
+  <meta property="og:description" content="Stream latest singles, buy official merch, and get live tour updates from Melbourne rock band Kins.">
+  <meta property="og:image" content="pfp.jpg">
+
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kins Official | Link in Bio">
+  <meta name="twitter:description" content="Stream latest singles, buy official merch, and get live tour updates from Melbourne rock band Kins.">
+  <meta name="twitter:image" content="pfp.jpg">
+
+  <!-- PWA Manifest & Theme Color -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#53c678">
+
+  <!-- QRCode.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   
   <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +38,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
 
@@ -89,27 +109,42 @@
             <div class="followers-count" id="totalFollowersCount">0</div>
           </div>
 
-          <!-- IN THE STUDIO MUSIC CTA CARD -->
+          <!-- PRE-SAVE RELEASE SMART LINK CTA CARD -->
           <div class="hero-music-cta-card">
             <div class="hero-cta-left">
               <div class="studio-icon-box">
                 <span class="studio-live-pulse"></span>
                 <i class="fa-solid fa-compact-disc studio-icon spinning-vinyl"></i>
-                <span class="studio-tag">STUDIO</span>
+                <span class="studio-tag">PRE-SAVE</span>
               </div>
             </div>
             <div class="hero-cta-center">
-              <h3 class="hero-cta-title">Songs Coming Soon by Kins</h3>
-              <p class="hero-cta-subtitle">Exclusive releases & studio previews in production</p>
+              <h3 class="hero-cta-title">New Single "Midnight City"</h3>
+              <p class="hero-cta-subtitle">Out Oct 31 • Pre-save on Spotify & Apple Music</p>
             </div>
             <div class="hero-cta-right">
-              <button id="inspiredCtaBtn" class="inspired-cta-btn" aria-label="Scroll to What Inspires Us">
-                <span>Inspired Us!</span>
-                <i class="fa-solid fa-arrow-down"></i>
-              </button>
+              <a href="https://distrokid.com" target="_blank" rel="noopener" class="inspired-cta-btn presave-btn" aria-label="Pre-Save Release">
+                <span>PRE-SAVE</span>
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
             </div>
           </div>
         </section>
+
+        <!-- DISCORD FAN COMMUNITY CTA BANNER -->
+        <div class="community-banner-card">
+          <div class="community-left">
+            <i class="fa-brands fa-discord discord-banner-icon"></i>
+            <div class="community-info">
+              <h4>Join Kins Discord Server</h4>
+              <p>Exclusive updates, demo listening parties & VIP chat</p>
+            </div>
+          </div>
+          <a href="https://discord.gg" target="_blank" rel="noopener" class="join-community-btn">
+            <span>JOIN</span>
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        </div>
 
         <!-- MAIN DYNAMIC CONTENT SECTION WITH SEGMENTED SWITCHER (SOCIALS & STREAMS) -->
         <section class="tabbed-links-section">
@@ -299,6 +334,70 @@
           </div>
         </section>
 
+        <!-- OFFICIAL BAND MERCHANDISE SECTION -->
+        <section class="merch-section">
+          <div class="members-section-header">
+            <h3 class="members-section-title"><i class="fa-solid fa-shirt"></i> Official Merch</h3>
+            <a href="https://bandcamp.com" target="_blank" rel="noopener" class="scroll-hint-pill merch-store-link">
+              <i class="fa-solid fa-bag-shopping"></i> Bandcamp Shop
+            </a>
+          </div>
+
+          <div class="merch-scroll-container">
+            <!-- Merch Item 1 -->
+            <div class="merch-card">
+              <div class="merch-img-box">
+                <i class="fa-solid fa-shirt merch-icon"></i>
+                <span class="merch-badge">NEW</span>
+              </div>
+              <div class="merch-info">
+                <h4 class="merch-title">Kins World Tour Tee</h4>
+                <p class="merch-price">$35.00 AUD</p>
+                <a href="https://bandcamp.com" target="_blank" rel="noopener" class="buy-merch-btn">Buy Now</a>
+              </div>
+            </div>
+
+            <!-- Merch Item 2 -->
+            <div class="merch-card">
+              <div class="merch-img-box">
+                <i class="fa-solid fa-compact-disc merch-icon"></i>
+                <span class="merch-badge">VINYL</span>
+              </div>
+              <div class="merch-info">
+                <h4 class="merch-title">Debut EP Limited Vinyl</h4>
+                <p class="merch-price">$45.00 AUD</p>
+                <a href="https://bandcamp.com" target="_blank" rel="noopener" class="buy-merch-btn">Buy Now</a>
+              </div>
+            </div>
+
+            <!-- Merch Item 3 -->
+            <div class="merch-card">
+              <div class="merch-img-box">
+                <i class="fa-solid fa-note-sticky merch-icon"></i>
+                <span class="merch-badge">STICKER</span>
+              </div>
+              <div class="merch-info">
+                <h4 class="merch-title">Logo Sticker Pack (5x)</h4>
+                <p class="merch-price">$10.00 AUD</p>
+                <a href="https://bandcamp.com" target="_blank" rel="noopener" class="buy-merch-btn">Buy Now</a>
+              </div>
+            </div>
+
+            <!-- Merch Item 4 -->
+            <div class="merch-card">
+              <div class="merch-img-box">
+                <i class="fa-solid fa-tape merch-icon"></i>
+                <span class="merch-badge">CASSETTE</span>
+              </div>
+              <div class="merch-info">
+                <h4 class="merch-title">Demo Tapes Cassette</h4>
+                <p class="merch-price">$20.00 AUD</p>
+                <a href="https://bandcamp.com" target="_blank" rel="noopener" class="buy-merch-btn">Buy Now</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- WHAT INSPIRES US - GENRE BASED INSPIRATION VAULT -->
         <section class="inspired-section" id="inspired-section">
           <!-- Section Header -->
@@ -314,20 +413,17 @@
             <button class="filter-pill-btn active" data-artist-key="all">
               <i class="fa-solid fa-layer-group"></i> All Artists
             </button>
-            <button class="filter-pill-btn" data-artist-key="foals">
-              <i class="fa-solid fa-bolt"></i> Foals
+            <button class="filter-pill-btn" data-artist-key="the-cure">
+              <i class="fa-solid fa-heart"></i> The Cure
             </button>
-            <button class="filter-pill-btn" data-artist-key="arctic-monkeys">
-              <i class="fa-solid fa-guitar"></i> Arctic Monkeys
+            <button class="filter-pill-btn" data-artist-key="weezer">
+              <i class="fa-solid fa-glasses"></i> Weezer
             </button>
-            <button class="filter-pill-btn" data-artist-key="tame-impala">
-              <i class="fa-solid fa-sliders"></i> Tame Impala
+            <button class="filter-pill-btn" data-artist-key="pulp">
+              <i class="fa-solid fa-compact-disc"></i> Pulp
             </button>
-            <button class="filter-pill-btn" data-artist-key="the-strokes">
-              <i class="fa-solid fa-radio"></i> The Strokes
-            </button>
-            <button class="filter-pill-btn" data-artist-key="rhcp">
-              <i class="fa-solid fa-fire"></i> RHCP
+            <button class="filter-pill-btn" data-artist-key="the-long-faces">
+              <i class="fa-solid fa-masks-theater"></i> The Long Faces
             </button>
           </div>
 
@@ -469,27 +565,7 @@
       </div>
       <div class="modal-body">
         <div class="qr-box">
-          <svg viewBox="0 0 100 100" class="dummy-qr">
-            <rect width="100" height="100" fill="#ffffff"/>
-            <rect x="10" y="10" width="25" height="25" fill="#033b26"/>
-            <rect x="15" y="15" width="15" height="15" fill="#ffffff"/>
-            <rect x="18" y="18" width="9" height="9" fill="#033b26"/>
-            
-            <rect x="65" y="10" width="25" height="25" fill="#033b26"/>
-            <rect x="70" y="15" width="15" height="15" fill="#ffffff"/>
-            <rect x="73" y="18" width="9" height="9" fill="#033b26"/>
-
-            <rect x="10" y="65" width="25" height="25" fill="#033b26"/>
-            <rect x="15" y="70" width="15" height="15" fill="#ffffff"/>
-            <rect x="18" y="73" width="9" height="9" fill="#033b26"/>
-            
-            <rect x="40" y="10" width="8" height="8" fill="#033b26"/>
-            <rect x="50" y="18" width="8" height="8" fill="#033b26"/>
-            <rect x="42" y="42" width="16" height="16" fill="#033b26"/>
-            <rect x="65" y="45" width="10" height="10" fill="#033b26"/>
-            <rect x="75" y="65" width="15" height="15" fill="#033b26"/>
-            <rect x="45" y="75" width="12" height="12" fill="#033b26"/>
-          </svg>
+          <div id="qrcodeCanvas"></div>
           <span>Scan to view on mobile</span>
         </div>
         <div class="copy-input-group">
@@ -537,6 +613,11 @@
         </button>
       </div>
 
+      <!-- Bandsintown Widget Integration Container -->
+      <div class="bandsintown-widget-container">
+        <a class="bit-widget-initializer" data-artist-name="Kins" data-background-color="transparent" data-text-color="#ffffff" data-link-color="#53c678">Automated Tour Dates (Bandsintown)</a>
+      </div>
+
       <!-- 80% Height Interactive Map -->
       <div class="gig-map-view" id="gigMapView"></div>
 
@@ -554,10 +635,30 @@
             <p class="venue-card-city" id="venueCardCity">Sydney, Australia • Live Music Venue</p>
           </div>
           
-          <a href="https://enmoretheatre.com.au" target="_blank" rel="noopener" class="venue-booking-btn" id="venueBookingBtn">
-            <i class="fa-solid fa-ticket"></i>
-            <span>BOOK TICKETS</span>
-          </a>
+          <div class="venue-action-buttons-group">
+            <a href="https://enmoretheatre.com.au" target="_blank" rel="noopener" class="venue-booking-btn" id="venueBookingBtn">
+              <i class="fa-solid fa-ticket"></i>
+              <span>TICKETS</span>
+            </a>
+            <a id="addToCalendarBtn" href="#" class="venue-action-pill-btn" title="Add to Calendar">
+              <i class="fa-regular fa-calendar-plus"></i>
+              <span>Calendar</span>
+            </a>
+            <a id="getDirectionsBtn" href="https://maps.google.com/?q=Enmore+Theatre+Sydney" target="_blank" rel="noopener" class="venue-action-pill-btn" title="Get Directions">
+              <i class="fa-solid fa-diamond-turn-right"></i>
+              <span>Directions</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Live Show Photo/Video Recap Gallery -->
+        <div class="live-archive-header">
+          <span class="archive-title"><i class="fa-solid fa-camera-retro"></i> Recent Show Recaps</span>
+        </div>
+        <div class="live-recap-gallery">
+          <div class="recap-card"><img src="pfp.jpg" alt="Enmore Show 2026"><span class="recap-label">Sydney 2026</span></div>
+          <div class="recap-card"><img src="pfp.jpg" alt="Melbourne Forum 2026"><span class="recap-label">Melbourne 2026</span></div>
+          <div class="recap-card"><img src="pfp.jpg" alt="Brisbane Tivoli 2026"><span class="recap-label">Brisbane 2026</span></div>
         </div>
 
         <!-- Horizontal Scroll Gallery of Venue Features / Photos -->
@@ -583,8 +684,8 @@
           <i class="fa-solid fa-music audio-icon-anim" id="audioBarFallbackIcon"></i>
         </div>
         <div class="audio-bar-details">
-          <span class="audio-bar-title" id="audioBarTitle">My Number</span>
-          <span class="audio-bar-artist" id="audioBarArtist">Foals</span>
+          <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
+          <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
         </div>
       </div>
       <div class="audio-bar-center">
