@@ -383,7 +383,13 @@ document.addEventListener('DOMContentLoaded', () => {
         `);
 
         upMarker.on('click', () => {
-          updateGigBanner(up.venue, `${up.date} • ${up.time} | ${up.city}`, up.ticketUrl, "⚡ UPCOMING GIG", "#ffd700");
+          updateGigBanner(up.venue, `${up.date} • ${up.time} | ${up.city}`, "⚡ UPCOMING GIG", "#ffd700");
+          updateVenueDetailCard(up.venue, "5.0", `${up.city} • Live Stage`, up.ticketUrl, [
+            { icon: "fa-guitar", text: "Iconic Concert Stage" },
+            { icon: "fa-users", text: "2,500 Capacity" },
+            { icon: "fa-martini-glass", text: "Full Bar & Lounge" },
+            { icon: "fa-wheelchair", text: "Accessible Venue" }
+          ]);
         });
       }
 
@@ -401,7 +407,13 @@ document.addEventListener('DOMContentLoaded', () => {
         `);
 
         marker.on('click', () => {
-          updateGigBanner(past.venue, `Played on ${past.date} | ${past.city}`, `https://maps.google.com/?q=${encodeURIComponent(past.venue + ' ' + past.city)}`, "📍 PAST VENUE", "#00e699");
+          const mapSearchUrl = `https://maps.google.com/?q=${encodeURIComponent(past.venue + ' ' + past.city)}`;
+          updateGigBanner(past.venue, `Played on ${past.date} | ${past.city}`, "📍 PAST VENUE", "#00e699");
+          updateVenueDetailCard(past.venue, "5.0", `${past.city} • "${past.notes}"`, mapSearchUrl, [
+            { icon: "fa-clock-rotate-left", text: `Gig Date: ${past.date}` },
+            { icon: "fa-location-dot", text: past.city },
+            { icon: "fa-star", text: "5.0 Fan Rating" }
+          ]);
         });
       });
     }
@@ -415,13 +427,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 350);
   }
 
-  function updateGigBanner(venue, meta, link, statusText, color) {
+  function updateGigBanner(venue, meta, statusText, color) {
     if (gigBannerVenue) gigBannerVenue.textContent = venue;
     if (gigBannerMeta) gigBannerMeta.innerHTML = `<i class="fa-regular fa-calendar-days"></i> ${meta}`;
-    if (gigBannerTicketBtn) gigBannerTicketBtn.href = link;
     if (gigStatusBadge) {
       gigStatusBadge.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${statusText}`;
       gigStatusBadge.style.color = color || "#ffd700";
+    }
+  }
+
+  function updateVenueDetailCard(name, rating, city, bookingUrl, chips) {
+    const venueCardName = document.getElementById('venueCardName');
+    const venueRatingText = document.getElementById('venueRatingText');
+    const venueCardCity = document.getElementById('venueCardCity');
+    const venueBookingBtn = document.getElementById('venueBookingBtn');
+    const venueGalleryContainer = document.getElementById('venueGalleryContainer');
+
+    if (venueCardName) venueCardName.textContent = name;
+    if (venueRatingText) venueRatingText.textContent = `${rating} / 5.0`;
+    if (venueCardCity) venueCardCity.textContent = city;
+    if (venueBookingBtn) venueBookingBtn.href = bookingUrl || '#';
+
+    if (venueGalleryContainer && chips && Array.isArray(chips)) {
+      venueGalleryContainer.innerHTML = chips.map(c => `
+        <div class="gallery-chip"><i class="fa-solid ${c.icon}"></i> ${c.text}</div>
+      `).join('');
     }
   }
 
@@ -444,6 +474,65 @@ document.addEventListener('DOMContentLoaded', () => {
         gigMapModal.classList.remove('active');
       }
     });
+  }
+
+  // -------------------------------------------------------------
+  // SWIPE-DOWN TO CLOSE GESTURE ON BOTTOM SHEET MODAL
+  // -------------------------------------------------------------
+  const bottomSheetContainer = document.getElementById('bottomSheetContainer');
+  const sheetDragArea = document.getElementById('sheetDragArea');
+
+  if (bottomSheetContainer && sheetDragArea && gigMapModal) {
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    function onTouchStart(e) {
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      isDragging = true;
+      bottomSheetContainer.style.transition = 'none';
+    }
+
+    function onTouchMove(e) {
+      if (!isDragging) return;
+      currentY = e.touches ? e.touches[0].clientY : e.clientY;
+      const deltaY = currentY - startY;
+
+      // Only allow pulling downwards
+      if (deltaY > 0) {
+        bottomSheetContainer.style.transform = `translateY(${deltaY}px)`;
+      }
+    }
+
+    function onTouchEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      const deltaY = currentY - startY;
+
+      bottomSheetContainer.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+
+      // If swiped down past 100px threshold, close modal
+      if (deltaY > 100) {
+        gigMapModal.classList.remove('active');
+        setTimeout(() => {
+          bottomSheetContainer.style.transform = '';
+        }, 300);
+      } else {
+        bottomSheetContainer.style.transform = 'translateY(0)';
+      }
+
+      startY = 0;
+      currentY = 0;
+    }
+
+    // Attach listeners to drag handle header
+    sheetDragArea.addEventListener('touchstart', onTouchStart, { passive: true });
+    sheetDragArea.addEventListener('touchmove', onTouchMove, { passive: true });
+    sheetDragArea.addEventListener('touchend', onTouchEnd);
+
+    sheetDragArea.addEventListener('mousedown', onTouchStart);
+    window.addEventListener('mousemove', onTouchMove);
+    window.addEventListener('mouseup', onTouchEnd);
   }
 
   // -------------------------------------------------------------

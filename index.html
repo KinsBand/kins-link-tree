@@ -57,17 +57,11 @@
 
         <!-- Band Profile Section -->
         <section class="profile-section">
-          <!-- Header title row with centered title & right-aligned handle copy button -->
-          <div class="profile-header-row">
-            <div class="header-left-spacer"></div>
+          <!-- Pressable Kins Title with subtle small copy icon -->
+          <button class="pressable-title-btn" id="handleCopyBtn" title="Click to copy @KinsBandOfficial" aria-label="Copy handle">
             <h1 class="profile-title">Kins</h1>
-            <div class="header-right-box">
-              <button class="profile-handle-btn" id="handleCopyBtn" title="Click to copy handle" aria-label="Copy handle">
-                <span class="handle-text">@KinsBandOfficial</span>
-                <i class="fa-regular fa-copy copy-icon"></i>
-              </button>
-            </div>
-          </div>
+            <i class="fa-regular fa-copy small-copy-icon"></i>
+          </button>
 
           <!-- Short Bio Description -->
           <p class="profile-bio-text">Rock band 4 friends making music together</p>
@@ -456,11 +450,15 @@
     </div>
   </div>
 
-  <!-- BOTTOM SHEET GIG MAP MODAL (FULL WIDTH, 40% HEIGHT, BLUR BACKDROP) -->
+  <!-- BOTTOM SHEET GIG MAP MODAL (FULL WIDTH, 80% HEIGHT, BLUR BACKDROP, SWIPE TO CLOSE) -->
   <div class="bottom-sheet-backdrop" id="gigMapModal">
-    <div class="bottom-sheet-container">
-      <!-- Drag Handle -->
-      <div class="sheet-drag-handle"></div>
+    <div class="bottom-sheet-container" id="bottomSheetContainer">
+      
+      <!-- Swipe Drag Handle Header -->
+      <div class="sheet-drag-area" id="sheetDragArea">
+        <div class="sheet-drag-handle"></div>
+        <span class="swipe-hint-text"><i class="fa-solid fa-chevron-down"></i> Swipe down to close</span>
+      </div>
 
       <!-- Sheet Header & Gig Banner -->
       <div class="gig-sheet-header">
@@ -470,18 +468,45 @@
             <h4 class="gig-banner-venue" id="gigBannerVenue">Enmore Theatre</h4>
             <p class="gig-banner-meta" id="gigBannerMeta"><i class="fa-regular fa-calendar-days"></i> Fri Oct 24, 2026 • 8:00 PM | Sydney, AU</p>
           </div>
-          <a href="https://enmoretheatre.com.au" target="_blank" rel="noopener" class="gig-banner-ticket-btn" id="gigBannerTicketBtn">
-            <span>TICKETS</span>
-            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-          </a>
         </div>
         <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <!-- 40% Height Interactive Map -->
+      <!-- 80% Height Interactive Map -->
       <div class="gig-map-view" id="gigMapView"></div>
+
+      <!-- VENUE DETAIL CARD OVERLAY AT BOTTOM OF MAP SHEET -->
+      <div class="venue-detail-bottom-card" id="venueDetailBottomCard">
+        <div class="venue-card-header">
+          <div class="venue-header-info">
+            <div class="venue-title-row">
+              <h4 class="venue-card-name" id="venueCardName">Enmore Theatre</h4>
+              <div class="venue-rating-badge">
+                <i class="fa-solid fa-star"></i>
+                <span id="venueRatingText">5.0 / 5.0</span>
+              </div>
+            </div>
+            <p class="venue-card-city" id="venueCardCity">Sydney, Australia • Live Music Venue</p>
+          </div>
+          
+          <a href="https://enmoretheatre.com.au" target="_blank" rel="noopener" class="venue-booking-btn" id="venueBookingBtn">
+            <i class="fa-solid fa-ticket"></i>
+            <span>BOOK TICKETS</span>
+          </a>
+        </div>
+
+        <!-- Horizontal Scroll Gallery of Venue Features / Photos -->
+        <div class="venue-gallery-container" id="venueGalleryContainer">
+          <div class="gallery-chip"><i class="fa-solid fa-guitar"></i> Iconic Concert Hall</div>
+          <div class="gallery-chip"><i class="fa-solid fa-users"></i> 2,500 Capacity</div>
+          <div class="gallery-chip"><i class="fa-solid fa-martini-glass"></i> Full Bar & Lounge</div>
+          <div class="gallery-chip"><i class="fa-solid fa-wheelchair"></i> Accessible Venue</div>
+          <div class="gallery-chip"><i class="fa-solid fa-square-parking"></i> Nearby Transit</div>
+        </div>
+      </div>
+
     </div>
   </div>
 

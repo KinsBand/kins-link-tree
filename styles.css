@@ -243,20 +243,31 @@ body {
   margin-top: 80px;
 }
 
-/* Header title row with centered title & right-aligned handle copy button */
-.profile-header-row {
-  display: flex;
+/* Pressable Kins Title Container */
+.pressable-title-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 20px;
+  padding: 4px 14px;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
-  margin-bottom: 4px;
-  position: relative;
+  margin-bottom: 6px;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
-.header-left-spacer {
-  flex: 1;
-  visibility: hidden;
+.pressable-title-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px) scale(1.03);
+}
+
+.pressable-title-btn:active {
+  transform: scale(0.96);
 }
 
 /* Profile Title - Centered */
@@ -271,55 +282,15 @@ body {
   white-space: nowrap;
 }
 
-.header-right-box {
-  flex: 1;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+.small-copy-icon {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.85rem;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
-/* Pressable Greyed Out Handle - Half the size of Kins text (approx 0.76rem) */
-.profile-handle-btn {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 14px;
-  padding: 3px 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-  transform-origin: left center;
-}
-
-.profile-handle-btn:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.6);
-  transform: scale(1.05);
-}
-
-.profile-handle-btn:active {
-  transform: scale(0.95);
-}
-
-.handle-text {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.72rem; /* Half the size of 2.2rem Kins title */
-  font-weight: 700;
-  font-family: var(--font-secondary);
-  transition: color 0.2s ease;
-}
-
-.copy-icon {
-  color: rgba(255, 255, 255, 0.75);
-  font-size: 0.68rem;
-  transition: color 0.2s ease;
-}
-
-.profile-handle-btn:hover .copy-icon {
+.pressable-title-btn:hover .small-copy-icon {
   color: var(--btn-green);
+  transform: scale(1.15);
 }
 
 /* Short Bio Description */
@@ -1318,31 +1289,58 @@ body {
   width: 100%;
   max-width: 520px;
   margin: 0 auto;
-  height: 42vh;
-  min-height: 340px;
+  height: 80vh;
+  min-height: 480px;
   background: #01241a;
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  border: 1px solid rgba(0, 230, 153, 0.35);
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  border: 1px solid rgba(0, 230, 153, 0.4);
   border-bottom: none;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 -15px 50px rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
   transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: none; /* Enables drag handling */
 }
 
 .bottom-sheet-backdrop.active .bottom-sheet-container {
   transform: translateY(0);
 }
 
+.sheet-drag-area {
+  width: 100%;
+  padding: 8px 0 4px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: grab;
+  user-select: none;
+  background: rgba(1, 45, 31, 0.98);
+}
+
+.sheet-drag-area:active {
+  cursor: grabbing;
+}
+
 .sheet-drag-handle {
-  width: 40px;
+  width: 44px;
   height: 5px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 3px;
-  margin: 8px auto 4px auto;
+}
+
+.swipe-hint-text {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .gig-sheet-header {
@@ -1386,25 +1384,6 @@ body {
   margin: 0;
 }
 
-.gig-banner-ticket-btn {
-  background: #00e699;
-  color: #012a1d;
-  padding: 8px 14px;
-  border-radius: 12px;
-  font-weight: 800;
-  font-size: 0.75rem;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-
-.gig-banner-ticket-btn:hover {
-  background: #1affb2;
-  transform: translateY(-1px);
-}
-
 .close-sheet-btn {
   background: rgba(255, 255, 255, 0.15);
   border: none;
@@ -1429,6 +1408,137 @@ body {
   width: 100%;
   height: 100%;
   background: #0a1712;
+}
+
+/* ------------------------------------------------------------- */
+/* VENUE DETAIL BOTTOM SHEET CARD OVERLAY                         */
+/* ------------------------------------------------------------- */
+.venue-detail-bottom-card {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 800;
+  background: rgba(1, 35, 25, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(0, 230, 153, 0.35);
+  box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.6);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slideUpCard 0.35s ease forwards;
+}
+
+@keyframes slideUpCard {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.venue-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.venue-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.venue-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.venue-card-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+.venue-rating-badge {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.venue-card-city {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+.venue-booking-btn {
+  background: #00e699;
+  color: #012a1d;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 4px 15px rgba(0, 230, 153, 0.3);
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.venue-booking-btn:hover {
+  background: #1affb2;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 230, 153, 0.45);
+}
+
+.venue-booking-btn:active {
+  transform: scale(0.96);
+}
+
+/* Horizontal Scroll Gallery of Venue Features / Highlights */
+.venue-gallery-container {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.venue-gallery-container::-webkit-scrollbar {
+  display: none;
+}
+
+.gallery-chip {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.gallery-chip i {
+  color: #00e699;
+  font-size: 0.72rem;
 }
 
 /* Custom Leaflet Map styling */
