@@ -1324,128 +1324,200 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------------------------------------------------------------
   const PRESET_THEMES = {
     classic: {
-      name: 'Classic Emerald',
+      name: 'Classic Light',
       dark: {
-        bgDark: '#002217',
-        bgGradient: 'linear-gradient(180deg, #11382b 0%, #0b1f18 100%)',
-        btnGreen: '#53c678',
-        btnGreenHover: '#46b76a',
-        btnTextColor: '#0b1f18',
-        cardBg: '#ffffff',
-        cardBorder: 'rgba(255, 255, 255, 0.15)',
-        textDark: '#0b1f18',
-        textWhite: '#ffffff'
+        // M3 Dark variant of Classic — deep emerald Kins signature
+        primary: '#A8C7FA',
+        onPrimary: '#002d6d',
+        primaryContainer: '#004397',
+        surface: '#121316',
+        surfaceContainer: '#1e2022',
+        surfaceContainerHigh: '#282a2c',
+        onSurface: '#e3e3e3',
+        onSurfaceVariant: '#c4c7c0',
+        outline: '#8e918a',
+        outlineVariant: '#44483e',
+        // Legacy aliases
+        bgDark: '#0f1115',
+        bgGradient: 'linear-gradient(180deg, #121316 0%, #0a0b0d 100%)',
+        btnGreen: '#A8C7FA',
+        btnGreenHover: '#7cacf8',
+        btnTextColor: '#002d6d',
+        textWhite: '#e3e3e3'
       },
       light: {
-        bgDark: '#f1f5f9',
-        bgGradient: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)',
-        btnGreen: '#10b981',
-        btnGreenHover: '#059669',
+        primary: '#1A73E8',
+        onPrimary: '#ffffff',
+        primaryContainer: '#d3e3fd',
+        surface: '#F8F9FA',
+        surfaceContainer: '#eef0f2',
+        surfaceContainerHigh: '#e3e5e8',
+        onSurface: '#1f1f1f',
+        onSurfaceVariant: '#444746',
+        outline: '#74796d',
+        outlineVariant: '#c4c7c0',
+        bgDark: '#F8F9FA',
+        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #eef0f2 100%)',
+        btnGreen: '#1A73E8',
+        btnGreenHover: '#005AC1',
         btnTextColor: '#ffffff',
-        cardBg: 'rgba(255, 255, 255, 0.95)',
-        cardBorder: 'rgba(15, 23, 42, 0.12)',
-        textDark: '#0f172a',
-        textWhite: '#0f172a'
+        textWhite: '#1f1f1f'
       }
     },
     slate: {
       name: 'Midnight Slate',
       dark: {
-        bgDark: '#090d16',
-        bgGradient: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)',
-        btnGreen: '#38bdf8',
-        btnGreenHover: '#0284c7',
-        btnTextColor: '#0f172a',
-        cardBg: '#ffffff',
-        cardBorder: 'rgba(56, 189, 248, 0.25)',
-        textDark: '#0f172a',
-        textWhite: '#ffffff'
+        primary: '#D0BCFF',
+        onPrimary: '#381e72',
+        primaryContainer: '#4f378b',
+        surface: '#0F1115',
+        surfaceContainer: '#1a1c20',
+        surfaceContainerHigh: '#242628',
+        onSurface: '#e6e1e5',
+        onSurfaceVariant: '#cac4d0',
+        outline: '#938f99',
+        outlineVariant: '#49454f',
+        bgDark: '#0F1115',
+        bgGradient: 'linear-gradient(180deg, #141620 0%, #08090d 100%)',
+        btnGreen: '#D0BCFF',
+        btnGreenHover: '#b69df7',
+        btnTextColor: '#381e72',
+        textWhite: '#e6e1e5'
       },
       light: {
-        bgDark: '#f8fafc',
-        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%)',
-        btnGreen: '#0284c7',
-        btnGreenHover: '#0369a1',
+        primary: '#6750A4',
+        onPrimary: '#ffffff',
+        primaryContainer: '#eaddff',
+        surface: '#fef7ff',
+        surfaceContainer: '#f3edf7',
+        surfaceContainerHigh: '#ece6f0',
+        onSurface: '#1d1b20',
+        onSurfaceVariant: '#49454f',
+        outline: '#79747e',
+        outlineVariant: '#cac4d0',
+        bgDark: '#fef7ff',
+        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f3edf7 100%)',
+        btnGreen: '#6750A4',
+        btnGreenHover: '#4f378b',
         btnTextColor: '#ffffff',
-        cardBg: 'rgba(255, 255, 255, 0.95)',
-        cardBorder: 'rgba(15, 23, 42, 0.12)',
-        textDark: '#0f172a',
-        textWhite: '#0f172a'
+        textWhite: '#1d1b20'
       }
     },
     'high-contrast': {
       name: 'Max Contrast',
       dark: {
+        primary: '#ffff00',
+        onPrimary: '#000000',
+        primaryContainer: '#3d3d00',
+        surface: '#000000',
+        surfaceContainer: '#121212',
+        surfaceContainerHigh: '#1e1e1e',
+        onSurface: '#ffffff',
+        onSurfaceVariant: '#ffffff',
+        outline: '#ffffff',
+        outlineVariant: '#ffffff',
         bgDark: '#000000',
-        bgGradient: 'linear-gradient(180deg, #18181b 0%, #000000 100%)',
+        bgGradient: 'linear-gradient(180deg, #0a0a0a 0%, #000000 100%)',
         btnGreen: '#ffff00',
-        btnGreenHover: '#eab308',
+        btnGreenHover: '#cccc00',
         btnTextColor: '#000000',
-        cardBg: '#ffffff',
-        cardBorder: 'rgba(255, 255, 0, 0.4)',
-        textDark: '#000000',
         textWhite: '#ffffff'
       },
       light: {
+        primary: '#000000',
+        onPrimary: '#ffffff',
+        primaryContainer: '#e0e0e0',
+        surface: '#ffffff',
+        surfaceContainer: '#f5f5f5',
+        surfaceContainerHigh: '#eeeeee',
+        onSurface: '#000000',
+        onSurfaceVariant: '#000000',
+        outline: '#000000',
+        outlineVariant: '#757575',
         bgDark: '#ffffff',
-        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f4f4f5 100%)',
+        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%)',
         btnGreen: '#000000',
-        btnGreenHover: '#27272a',
+        btnGreenHover: '#333333',
         btnTextColor: '#ffffff',
-        cardBg: '#ffffff',
-        cardBorder: 'rgba(0, 0, 0, 0.25)',
-        textDark: '#000000',
         textWhite: '#000000'
       }
     },
     terracotta: {
       name: 'Warm Sage',
       dark: {
-        bgDark: '#1c1917',
-        bgGradient: 'linear-gradient(180deg, #292524 0%, #0c0a09 100%)',
-        btnGreen: '#e07a5f',
-        btnGreenHover: '#d96241',
-        btnTextColor: '#ffffff',
-        cardBg: '#ffffff',
-        cardBorder: 'rgba(224, 122, 95, 0.3)',
-        textDark: '#1c1917',
-        textWhite: '#ffffff'
+        primary: '#ffb4ab',
+        onPrimary: '#561e10',
+        primaryContainer: '#733424',
+        surface: '#1a1110',
+        surfaceContainer: '#271d1b',
+        surfaceContainerHigh: '#322825',
+        onSurface: '#f1dfdb',
+        onSurfaceVariant: '#d8c2bb',
+        outline: '#a08d86',
+        outlineVariant: '#534340',
+        bgDark: '#1a1110',
+        bgGradient: 'linear-gradient(180deg, #201815 0%, #0f0a08 100%)',
+        btnGreen: '#ffb4ab',
+        btnGreenHover: '#e09990',
+        btnTextColor: '#561e10',
+        textWhite: '#f1dfdb'
       },
       light: {
-        bgDark: '#fdfbf7',
-        bgGradient: 'linear-gradient(180deg, #fefae0 0%, #f4f1de 100%)',
-        btnGreen: '#d96241',
-        btnGreenHover: '#c44f2f',
+        primary: '#A95A44',
+        onPrimary: '#ffffff',
+        primaryContainer: '#ffdbd1',
+        surface: '#F4F1EA',
+        surfaceContainer: '#ede9e2',
+        surfaceContainerHigh: '#e6e2db',
+        onSurface: '#231917',
+        onSurfaceVariant: '#534340',
+        outline: '#85736e',
+        outlineVariant: '#d8c2bb',
+        bgDark: '#F4F1EA',
+        bgGradient: 'linear-gradient(180deg, #faf7f2 0%, #ede9e2 100%)',
+        btnGreen: '#A95A44',
+        btnGreenHover: '#8b4231',
         btnTextColor: '#ffffff',
-        cardBg: 'rgba(255, 255, 255, 0.95)',
-        cardBorder: 'rgba(217, 98, 65, 0.2)',
-        textDark: '#2b2d42',
-        textWhite: '#2b2d42'
+        textWhite: '#231917'
       }
     },
     cyber: {
-      name: 'Cyber Sunset',
+      name: 'Vibrant Cyber',
       dark: {
-        bgDark: '#0f051d',
-        bgGradient: 'linear-gradient(180deg, #1e0938 0%, #090214 100%)',
-        btnGreen: '#ff007f',
-        btnGreenHover: '#d9006c',
-        btnTextColor: '#ffffff',
-        cardBg: '#ffffff',
-        cardBorder: 'rgba(255, 0, 127, 0.35)',
-        textDark: '#0f051d',
-        textWhite: '#ffffff'
+        primary: '#D0BCFF',
+        onPrimary: '#381e72',
+        primaryContainer: '#4f378b',
+        surface: '#12061e',
+        surfaceContainer: '#1e1028',
+        surfaceContainerHigh: '#2a1b35',
+        onSurface: '#ece1f9',
+        onSurfaceVariant: '#cec2d8',
+        outline: '#9e8fa8',
+        outlineVariant: '#4d3f58',
+        bgDark: '#12061e',
+        bgGradient: 'linear-gradient(180deg, #1e0a32 0%, #090214 100%)',
+        btnGreen: '#FFB4AB',
+        btnGreenHover: '#e0998f',
+        btnTextColor: '#561e10',
+        textWhite: '#ece1f9'
       },
       light: {
-        bgDark: '#faf5ff',
-        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f3e8ff 100%)',
-        btnGreen: '#9333ea',
-        btnGreenHover: '#7e22ce',
+        primary: '#7B2D8E',
+        onPrimary: '#ffffff',
+        primaryContainer: '#f8d8ff',
+        surface: '#fef7ff',
+        surfaceContainer: '#f9eef8',
+        surfaceContainerHigh: '#f2e6f2',
+        onSurface: '#1e1a20',
+        onSurfaceVariant: '#4d444c',
+        outline: '#7f747c',
+        outlineVariant: '#d0c3cc',
+        bgDark: '#fef7ff',
+        bgGradient: 'linear-gradient(180deg, #ffffff 0%, #f9eef8 100%)',
+        btnGreen: '#7B2D8E',
+        btnGreenHover: '#621b74',
         btnTextColor: '#ffffff',
-        cardBg: 'rgba(255, 255, 255, 0.95)',
-        cardBorder: 'rgba(147, 51, 234, 0.2)',
-        textDark: '#3b0764',
-        textWhite: '#3b0764'
+        textWhite: '#1e1a20'
       }
     }
   };
@@ -1501,6 +1573,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ambientBg = document.getElementById('ambientWallpaperBg');
     const previewBox = document.getElementById('wallpaperPreviewBox');
     const previewImg = document.getElementById('wallpaperPreviewImg');
+    const root = document.documentElement;
 
     if (themeState.customWallpaperDataUrl) {
       // Apply Custom Wallpaper & Extracted Palette
@@ -1515,11 +1588,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (themeState.customColors) {
         const c = themeState.customColors;
-        document.documentElement.style.setProperty('--bg-dark', c.bgDark);
-        document.documentElement.style.setProperty('--bg-dark-gradient', c.bgGradient);
-        document.documentElement.style.setProperty('--btn-green', c.btnGreen);
-        document.documentElement.style.setProperty('--btn-green-hover', c.btnGreenHover);
-        document.documentElement.style.setProperty('--btn-text-color', c.btnTextColor);
+        root.style.setProperty('--md-sys-color-primary', c.btnGreen);
+        root.style.setProperty('--md-sys-color-surface', c.bgDark);
+        root.style.setProperty('--btn-green', c.btnGreen);
+        root.style.setProperty('--btn-green-hover', c.btnGreenHover);
+        root.style.setProperty('--text-white', c.textWhite || '#ffffff');
       }
     } else {
       // Apply Preset Theme Tokens
@@ -1532,11 +1605,28 @@ document.addEventListener('DOMContentLoaded', () => {
       const themeConfig = PRESET_THEMES[themeState.themeId] || PRESET_THEMES['classic'];
       const tokens = isLight ? themeConfig.light : themeConfig.dark;
 
-      document.documentElement.style.setProperty('--bg-dark', tokens.bgDark);
-      document.documentElement.style.setProperty('--bg-dark-gradient', tokens.bgGradient);
-      document.documentElement.style.setProperty('--btn-green', tokens.btnGreen);
-      document.documentElement.style.setProperty('--btn-green-hover', tokens.btnGreenHover);
-      document.documentElement.style.setProperty('--btn-text-color', tokens.btnTextColor);
+      // Set M3 System Tokens
+      root.style.setProperty('--md-sys-color-primary', tokens.primary);
+      root.style.setProperty('--md-sys-color-on-primary', tokens.onPrimary);
+      root.style.setProperty('--md-sys-color-primary-container', tokens.primaryContainer);
+      root.style.setProperty('--md-sys-color-surface', tokens.surface);
+      root.style.setProperty('--md-sys-color-surface-container', tokens.surfaceContainer);
+      root.style.setProperty('--md-sys-color-surface-container-high', tokens.surfaceContainerHigh);
+      root.style.setProperty('--md-sys-color-on-surface', tokens.onSurface);
+      root.style.setProperty('--md-sys-color-on-surface-variant', tokens.onSurfaceVariant);
+      root.style.setProperty('--md-sys-color-outline', tokens.outline);
+      root.style.setProperty('--md-sys-color-outline-variant', tokens.outlineVariant);
+
+      // Set Legacy Aliases
+      root.style.setProperty('--bg-dark', tokens.bgDark);
+      root.style.setProperty('--bg-dark-gradient', tokens.bgGradient);
+      root.style.setProperty('--bg-dark-green', tokens.bgDark);
+      root.style.setProperty('--bg-dark-green-gradient', tokens.bgGradient);
+      root.style.setProperty('--btn-green', tokens.btnGreen);
+      root.style.setProperty('--btn-green-hover', tokens.btnGreenHover);
+      root.style.setProperty('--btn-text-color', tokens.btnTextColor);
+      root.style.setProperty('--text-white', tokens.textWhite);
+      root.style.setProperty('--card-bg', tokens.surface);
     }
   }
 
