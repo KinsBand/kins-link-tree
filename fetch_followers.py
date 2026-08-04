@@ -46,7 +46,7 @@ CONFIG = {
     "twitch_login":         "kinsbandoffical",            # Real Twitch Username
     "instagram_user_id":    "17841XXXXXXXXXX",            # numeric user ID for Meta Graph
     "tiktok_username":      "KinsBandOfficial",
-    "twitter_username":     "KinsBandOfficial",
+    "twitter_username":     "KinsBandOfficia",            # Real Twitter / X Handle (15 chars)
     "soundcloud_permalink": "KinsBandOfficial",
     "spotify_artist_id":    "31gmlrlrd3c2cjcwbyg73ywurdre",# Real Spotify Profile ID
     "linkedin_org_id":      "00000000",                   # org ID from LinkedIn URL
@@ -165,17 +165,34 @@ def fetch_instagram() -> int | None:
 
 
 def fetch_twitter() -> int | None:
-    bearer = os.environ.get("TWITTER_BEARER_TOKEN")
-    if not bearer:
-        print("  ⏭ TWITTER_BEARER_TOKEN not set, skipping.")
-        return None
     username = CONFIG["twitter_username"]
-    url = f"https://api.twitter.com/2/users/by/username/{username}?user.fields=public_metrics"
-    data = http_get(url, headers={"Authorization": f"Bearer {bearer}"})
-    if data and data.get("data"):
-        count = data["data"]["public_metrics"]["followers_count"]
-        print(f"  ✓ Twitter/X followers: {count:,}")
-        return count
+    bearer = os.environ.get("TWITTER_BEARER_TOKEN")
+
+    # Try official API v2 first if token present
+    if bearer:
+        url = f"https://api.twitter.com/2/users/by/username/{username}?user.fields=public_metrics"
+        data = http_get(url, headers={"Authorization": f"Bearer {bearer}"})
+        if data and data.get("data"):
+            count = data["data"]["public_metrics"]["followers_count"]
+            print(f"  ✓ Twitter/X followers (API): {count:,}")
+            return count
+
+    # Fallback to Twitter Web Syndication
+    try:
+        url = f"https://syndication.twitter.com/srv/timeline-profile/pk/{username}"
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode()
+        match = re.search(r'"followers_count":\s*(\d+)', html)
+        if match:
+            count = int(match.group(1))
+            print(f"  ✓ Twitter/X followers (web): {count:,}")
+            return count
+    except Exception as e:
+        print(f"  ⚠ Twitter/X error: {e}", file=sys.stderr)
     return None
 
 
