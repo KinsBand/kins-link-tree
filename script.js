@@ -810,31 +810,114 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // State Management for Per-Artist Multi-Page Pagination
+  // -------------------------------------------------------------
+  // 10. Wallpaper Dynamic Color Theme Extractor
+  // -------------------------------------------------------------
+  function initWallpaperColorExtractor() {
+    const heroImg = document.querySelector('.hero-banner-img');
+    if (!heroImg) return;
+
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = heroImg.src;
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 20;
+        canvas.height = 20;
+        ctx.drawImage(img, 0, 0, 20, 20);
+
+        const imgData = ctx.getImageData(0, 0, 20, 20).data;
+        let r = 0, g = 0, b = 0, count = 0;
+
+        for (let i = 0; i < imgData.length; i += 4) {
+          // Average non-black/non-white pixels
+          const pr = imgData[i];
+          const pg = imgData[i + 1];
+          const pb = imgData[i + 2];
+          const brightness = (pr + pg + pb) / 3;
+
+          if (brightness > 15 && brightness < 240) {
+            r += pr;
+            g += pg;
+            b += pb;
+            count++;
+          }
+        }
+
+        if (count > 0) {
+          r = Math.floor(r / count);
+          g = Math.floor(g / count);
+          b = Math.floor(b / count);
+
+          // Darkened background color for contrast
+          const darkBgR = Math.max(1, Math.floor(r * 0.25));
+          const darkBgG = Math.max(20, Math.floor(g * 0.35));
+          const darkBgB = Math.max(15, Math.floor(b * 0.3));
+
+          document.documentElement.style.setProperty('--bg-dark', `rgb(${darkBgR}, ${darkBgG}, ${darkBgB})`);
+          document.documentElement.style.setProperty('--hero-gradient-end', `rgb(${darkBgR}, ${darkBgG}, ${darkBgB})`);
+        }
+      } catch (e) {
+        console.log('Wallpaper theme color extraction active.');
+      }
+    };
+  }
+  initWallpaperColorExtractor();
+
+  // -------------------------------------------------------------
+  // 11. Genre-Based Track Vault with iTunes Metadata
+  // -------------------------------------------------------------
+  // iTunes Metadata Cache & API Fetcher
+  const ITUNES_CACHE = {};
+
+  async function getITunesTrackData(artist, title) {
+    const cacheKey = `${artist} - ${title}`.toLowerCase();
+    if (ITUNES_CACHE[cacheKey]) return ITUNES_CACHE[cacheKey];
+
+    try {
+      const query = encodeURIComponent(`${artist} ${title}`);
+      const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
+      const data = await res.json();
+
+      if (data.results && data.results.length > 0) {
+        const item = data.results[0];
+        const result = {
+          artworkUrl: item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '300x300bb') : null,
+          previewUrl: item.previewUrl || null
+        };
+        ITUNES_CACHE[cacheKey] = result;
+        return result;
+      }
+    } catch (e) {
+      console.warn('iTunes API fallback:', e);
+    }
+    return { artworkUrl: null, previewUrl: null };
+  }
+
+  // State Management for Per-Artist Genre-Based Pagination
   let currentArtistKey = 'all';
   let currentPageIndex = 0;
 
   // DOM Elements
   const artistFilterBtns = document.querySelectorAll('#artistFilterBar .filter-pill-btn');
-  const spotlightName = document.getElementById('spotlightName');
-  const spotlightGenre = document.getElementById('spotlightGenre');
-  const spotlightBio = document.getElementById('spotlightBio');
-  const spotlightAvatar = document.getElementById('spotlightAvatar');
-  const spotlightTrackCount = document.getElementById('spotlightTrackCount');
-
-  const pagePillsContainer = document.getElementById('pagePillsContainer');
-  const prevPageBtn = document.getElementById('prevPageBtn');
-  const nextPageBtn = document.getElementById('nextPageBtn');
-  const pageCounterText = document.getElementById('pageCounterText');
   const inspiredTracksContainer = document.getElementById('inspiredTracksContainer');
+  const dotsPaginationContainer = document.getElementById('dotsPaginationContainer');
 
-  // Bottom Audio Bar Elements
+  // Bottom Audio Player Elements
   const bottomAudioBar = document.getElementById('bottomAudioBar');
   const audioBarTitle = document.getElementById('audioBarTitle');
   const audioBarArtist = document.getElementById('audioBarArtist');
   const audioBarToggleBtn = document.getElementById('audioBarToggleBtn');
   const audioBarCloseBtn = document.getElementById('audioBarCloseBtn');
+  const audioBarCoverImg = document.getElementById('audioBarCoverImg');
+  const audioBarFallbackIcon = document.getElementById('audioBarFallbackIcon');
+  const vaultAudioPlayer = document.getElementById('vaultAudioPlayer');
+
   let isPlayingAudio = false;
+  let currentPlayingTrack = null;
 
   // Initialize Hero Studio Live Song Ticker
   const tickerSongs = [
@@ -857,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
   }
 
-  // Render Artist Header & Multi-Page View
+  // Render Genre-Based Artist View with Bottom Pagination Dots & iTunes Covers
   function renderArtistView(artistKey, pageIdx = 0) {
     const artistData = INSPIRED_ARTISTS_DATA[artistKey] || INSPIRED_ARTISTS_DATA['all'];
     currentArtistKey = artistKey;
@@ -865,46 +948,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalPages = artistData.pages.length;
     currentPageIndex = Math.max(0, Math.min(pageIdx, totalPages - 1));
 
-    // Update Spotlight Banner
-    if (spotlightName) spotlightName.textContent = artistData.name;
-    if (spotlightGenre) spotlightGenre.textContent = artistData.genre;
-    if (spotlightBio) spotlightBio.textContent = artistData.bio;
-    if (spotlightAvatar) {
-      spotlightAvatar.innerHTML = `<i class="fa-solid ${artistData.iconClass}"></i>`;
-    }
-    
-    // Count total tracks for artist across all pages
-    let totalTrackCount = 0;
-    artistData.pages.forEach(p => totalTrackCount += p.length);
-    if (spotlightTrackCount) {
-      spotlightTrackCount.innerHTML = `<i class="fa-solid fa-music"></i> ${totalTrackCount} Tracks`;
-    }
-
-    // Render Page Pill Buttons
-    if (pagePillsContainer) {
-      pagePillsContainer.innerHTML = '';
-      for (let i = 0; i < totalPages; i++) {
-        const pill = document.createElement('button');
-        pill.className = `page-pill-btn ${i === currentPageIndex ? 'active' : ''}`;
-        pill.innerHTML = `<span>Page ${i + 1}</span>`;
-        pill.addEventListener('click', () => {
-          renderArtistView(currentArtistKey, i);
-        });
-        pagePillsContainer.appendChild(pill);
+    // Render Bottom Pagination Dots
+    if (dotsPaginationContainer) {
+      dotsPaginationContainer.innerHTML = '';
+      if (totalPages > 1) {
+        dotsPaginationContainer.style.display = 'flex';
+        for (let i = 0; i < totalPages; i++) {
+          const dot = document.createElement('button');
+          dot.className = `inspired-dot ${i === currentPageIndex ? 'active' : ''}`;
+          dot.setAttribute('aria-label', `Page ${i + 1}`);
+          dot.addEventListener('click', () => {
+            renderArtistView(currentArtistKey, i);
+          });
+          dotsPaginationContainer.appendChild(dot);
+        }
+      } else {
+        dotsPaginationContainer.style.display = 'none';
       }
-    }
-
-    // Update Prev / Next Buttons State
-    if (prevPageBtn) {
-      prevPageBtn.disabled = (currentPageIndex === 0);
-    }
-    if (nextPageBtn) {
-      nextPageBtn.disabled = (currentPageIndex === totalPages - 1);
-    }
-
-    // Update Page Counter Text
-    if (pageCounterText) {
-      pageCounterText.textContent = `Page ${currentPageIndex + 1} of ${totalPages}`;
     }
 
     // Render Track Cards for active page with transition
@@ -917,10 +977,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const pageTracks = artistData.pages[currentPageIndex] || [];
 
         pageTracks.forEach(track => {
+          const isThisTrackPlaying = currentPlayingTrack && currentPlayingTrack.title === track.title && isPlayingAudio;
           const card = document.createElement('div');
           card.className = 'music-card paginated-card';
           card.innerHTML = `
             <div class="music-card-thumb">
+              <img class="track-artwork-img hidden" alt="${track.title} cover">
               <i class="fa-solid ${track.icon || 'fa-music'} thumb-icon"></i>
               <div class="vinyl-disc-mini"><i class="fa-solid fa-compact-disc"></i></div>
             </div>
@@ -936,16 +998,33 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
             <button class="play-btn" aria-label="Play song" data-song="${track.title}" data-artist="${track.artist}">
-              <i class="fa-solid fa-play"></i>
+              <i class="fa-solid ${isThisTrackPlaying ? 'fa-pause' : 'fa-play'}"></i>
             </button>
           `;
+
+          // Async iTunes Cover Art loading
+          getITunesTrackData(track.artist, track.title).then(meta => {
+            if (meta && meta.artworkUrl) {
+              const imgEl = card.querySelector('.track-artwork-img');
+              const iconEl = card.querySelector('.thumb-icon');
+              if (imgEl) {
+                imgEl.src = meta.artworkUrl;
+                imgEl.classList.remove('hidden');
+              }
+              if (iconEl) iconEl.style.display = 'none';
+              track.coverUrl = meta.artworkUrl;
+            }
+            if (meta && meta.previewUrl) {
+              track.previewUrl = meta.previewUrl;
+            }
+          });
 
           // Attach play event listener
           const playBtn = card.querySelector('.play-btn');
           if (playBtn) {
             playBtn.addEventListener('click', (e) => {
               e.stopPropagation();
-              playTrackPreview(track.title, track.artist);
+              playTrackPreview(track);
             });
           }
 
@@ -969,63 +1048,139 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Prev / Next Page Controls
-  if (prevPageBtn) {
-    prevPageBtn.addEventListener('click', () => {
-      if (currentPageIndex > 0) {
-        renderArtistView(currentArtistKey, currentPageIndex - 1);
+  // Swipe Gesture Handling for Touch Devices
+  let swipeStartX = 0;
+  let swipeEndX = 0;
+  if (inspiredTracksContainer) {
+    inspiredTracksContainer.addEventListener('touchstart', (e) => {
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        swipeStartX = e.changedTouches[0].screenX;
       }
-    });
+    }, { passive: true });
+
+    inspiredTracksContainer.addEventListener('touchend', (e) => {
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        swipeEndX = e.changedTouches[0].screenX;
+        const artistData = INSPIRED_ARTISTS_DATA[currentArtistKey] || INSPIRED_ARTISTS_DATA['all'];
+        const totalPages = artistData.pages.length;
+        const swipeDiff = swipeStartX - swipeEndX;
+
+        if (swipeDiff > 45 && currentPageIndex < totalPages - 1) {
+          renderArtistView(currentArtistKey, currentPageIndex + 1);
+        } else if (swipeDiff < -45 && currentPageIndex > 0) {
+          renderArtistView(currentArtistKey, currentPageIndex - 1);
+        }
+      }
+    }, { passive: true });
   }
 
-  if (nextPageBtn) {
-    nextPageBtn.addEventListener('click', () => {
-      const artistData = INSPIRED_ARTISTS_DATA[currentArtistKey] || INSPIRED_ARTISTS_DATA['all'];
-      if (currentPageIndex < artistData.pages.length - 1) {
-        renderArtistView(currentArtistKey, currentPageIndex + 1);
-      }
-    });
-  }
+  // Floating Audio Preview Player Handler with Real 30s iTunes Stream
+  async function playTrackPreview(track) {
+    const songTitle = typeof track === 'string' ? track : track.title;
+    const artistName = typeof track === 'object' ? track.artist : 'Artist';
+    const trackObj = typeof track === 'object' ? track : { title: songTitle, artist: artistName };
 
-  // Floating Audio Preview Player Handler
-  function playTrackPreview(songTitle, artistName) {
+    currentPlayingTrack = trackObj;
+
+    // Show bottom audio player and add body class to shift gig pill up cleanly
     if (bottomAudioBar) {
       bottomAudioBar.classList.remove('hidden');
       bottomAudioBar.classList.add('active-player');
-    }
-    if (audioBarTitle) audioBarTitle.textContent = songTitle;
-    if (audioBarArtist) audioBarArtist.textContent = artistName;
-
-    isPlayingAudio = true;
-    if (audioBarToggleBtn) {
-      audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+      document.body.classList.add('audio-bar-active');
     }
 
-    showToast(`Now Playing Preview: "${songTitle}" by ${artistName}`);
+    if (audioBarTitle) audioBarTitle.textContent = trackObj.title;
+    if (audioBarArtist) audioBarArtist.textContent = trackObj.artist;
+
+    // Update Cover Image in Bottom Audio Bar
+    if (trackObj.coverUrl) {
+      if (audioBarCoverImg) {
+        audioBarCoverImg.src = trackObj.coverUrl;
+        audioBarCoverImg.classList.remove('hidden');
+      }
+      if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'none';
+    }
+
+    // Fetch iTunes audio stream if missing
+    let previewUrl = trackObj.previewUrl;
+    if (!previewUrl) {
+      const meta = await getITunesTrackData(trackObj.artist, trackObj.title);
+      if (meta && meta.previewUrl) previewUrl = meta.previewUrl;
+      if (meta && meta.artworkUrl && audioBarCoverImg) {
+        audioBarCoverImg.src = meta.artworkUrl;
+        audioBarCoverImg.classList.remove('hidden');
+        if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'none';
+      }
+    }
+
+    // Play Audio using HTML5 Audio Element
+    if (vaultAudioPlayer && previewUrl) {
+      vaultAudioPlayer.src = previewUrl;
+      vaultAudioPlayer.play().then(() => {
+        isPlayingAudio = true;
+        if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+        showToast(`Now Playing Preview: "${trackObj.title}" by ${trackObj.artist}`);
+      }).catch(err => {
+        console.log('Audio autoplay info:', err);
+        isPlayingAudio = true;
+        if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+        showToast(`Playing Preview: "${trackObj.title}"`);
+      });
+    } else {
+      isPlayingAudio = true;
+      if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+      showToast(`Playing Preview: "${trackObj.title}" by ${trackObj.artist}`);
+    }
+
+    renderArtistView(currentArtistKey, currentPageIndex);
   }
 
+  // Audio Play / Pause toggle
   if (audioBarToggleBtn) {
     audioBarToggleBtn.addEventListener('click', () => {
       isPlayingAudio = !isPlayingAudio;
+      if (vaultAudioPlayer) {
+        if (isPlayingAudio) {
+          vaultAudioPlayer.play();
+        } else {
+          vaultAudioPlayer.pause();
+        }
+      }
       if (isPlayingAudio) {
         audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
         bottomAudioBar.classList.add('active-player');
+        document.body.classList.add('audio-bar-active');
         showToast('Resumed Track Preview');
       } else {
         audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-        bottomAudioBar.classList.remove('active-player');
         showToast('Paused Track Preview');
       }
+      renderArtistView(currentArtistKey, currentPageIndex);
+    });
+  }
+
+  // Audio Ended Handler
+  if (vaultAudioPlayer) {
+    vaultAudioPlayer.addEventListener('ended', () => {
+      isPlayingAudio = false;
+      if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+      renderArtistView(currentArtistKey, currentPageIndex);
     });
   }
 
   if (audioBarCloseBtn) {
     audioBarCloseBtn.addEventListener('click', () => {
+      if (vaultAudioPlayer) {
+        vaultAudioPlayer.pause();
+      }
       if (bottomAudioBar) {
         bottomAudioBar.classList.add('hidden');
         bottomAudioBar.classList.remove('active-player');
       }
+      document.body.classList.remove('audio-bar-active');
       isPlayingAudio = false;
+      currentPlayingTrack = null;
+      renderArtistView(currentArtistKey, currentPageIndex);
     });
   }
 
