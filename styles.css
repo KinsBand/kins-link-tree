@@ -1815,6 +1815,13 @@ body.audio-bar-active .floating-gig-pill-container {
     bottom: 16px;
     right: 16px;
   }
+  .floating-theme-btn {
+    bottom: 15px;
+    left: 16px;
+  }
+  body.audio-bar-active .floating-theme-btn {
+    bottom: 75px;
+  }
   .gig-pill-inner {
     padding: 8px 14px;
   }
