@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Render initial fallback values immediately (no animation)
   updateLiveMetrics(false);
 
-  // ── Fetch real counts from followers.json ─────────────────────
+  // ── Fetch real counts from followers.json ───────────────────
   (async () => {
     try {
       // Cache-bust so we always get the latest committed version
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
-  // ── Re-fetch real counts every 30 minutes ─────────────────────
+  // ── Re-fetch real counts every 30 minutes ───────────────────
   setInterval(async () => {
     try {
       const res = await fetch(`followers.json?t=${Date.now()}`);
@@ -632,7 +632,90 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -------------------------------------------------------------
-  // 10. Toast Notification Helper
+  // 11. Inspired Us CTA & Interactive 3-Row Scroll Section
+  // -------------------------------------------------------------
+  const inspiredCtaBtn = document.getElementById('inspiredCtaBtn');
+  if (inspiredCtaBtn) {
+    inspiredCtaBtn.addEventListener('click', () => {
+      const targetSec = document.getElementById('inspired-section');
+      if (targetSec) {
+        targetSec.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
+
+  // Artist Navigation Filter Bar
+  const filterBtns = document.querySelectorAll('.artist-filter-bar .filter-pill-btn');
+  const musicCards = document.querySelectorAll('.inspired-section .music-card');
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const filter = btn.getAttribute('data-filter');
+      musicCards.forEach(card => {
+        const cardArtist = card.getAttribute('data-artist');
+        if (filter === 'all' || cardArtist === filter) {
+          card.classList.remove('hidden-card');
+        } else {
+          card.classList.add('hidden-card');
+        }
+      });
+    });
+  });
+
+  // 3-Row Scroll Sync & Pagination Dots
+  const inspiredRows = document.querySelectorAll('.inspired-scroll-row');
+  const paginationDots = document.querySelectorAll('.inspired-pagination .pagination-dot');
+
+  inspiredRows.forEach((row) => {
+    row.addEventListener('scroll', () => {
+      const maxScroll = row.scrollWidth - row.clientWidth;
+      if (maxScroll > 0) {
+        const scrollRatio = row.scrollLeft / maxScroll;
+        const activeIndex = Math.min(
+          Math.floor(scrollRatio * paginationDots.length),
+          paginationDots.length - 1
+        );
+        paginationDots.forEach((dot, idx) => {
+          if (idx === activeIndex) {
+            dot.classList.add('active');
+          } else {
+            dot.classList.remove('active');
+          }
+        });
+      }
+    });
+  });
+
+  paginationDots.forEach((dot, idx) => {
+    dot.addEventListener('click', () => {
+      paginationDots.forEach(d => d.classList.remove('active'));
+      dot.classList.add('active');
+      inspiredRows.forEach(row => {
+        const maxScroll = row.scrollWidth - row.clientWidth;
+        if (maxScroll > 0) {
+          const targetScroll = (idx / (paginationDots.length - 1)) * maxScroll;
+          row.scrollTo({ left: targetScroll, behavior: 'smooth' });
+        }
+      });
+    });
+  });
+
+  // Play button interactive feedback
+  document.querySelectorAll('.inspired-section .play-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const card = btn.closest('.music-card');
+      const song = card?.querySelector('.song-title')?.textContent || 'Track';
+      const artist = card?.querySelector('.artist-name')?.textContent || 'Artist';
+      showToast(`Now Playing: "${song}" - ${artist}`);
+    });
+  });
+
+  // -------------------------------------------------------------
+  // 12. Toast Notification Helper
   // -------------------------------------------------------------
   function showToast(message) {
     if (!toastContainer) return;

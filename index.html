@@ -83,6 +83,26 @@
             </div>
             <div class="followers-count" id="totalFollowersCount">0</div>
           </div>
+
+          <!-- UPDATE 1: MUSIC CTA CARD POSITIONING (Below Total Followers, Above Socials/Streams) -->
+          <div class="hero-music-cta-card">
+            <div class="hero-cta-left">
+              <div class="studio-icon-box">
+                <i class="fa-solid fa-compact-disc studio-icon"></i>
+                <span class="studio-tag">IN THE STUDIO</span>
+              </div>
+            </div>
+            <div class="hero-cta-center">
+              <h3 class="hero-cta-title">Songs That Inspire Us</h3>
+              <p class="hero-cta-subtitle">Discover what shapes our sound</p>
+            </div>
+            <div class="hero-cta-right">
+              <button id="inspiredCtaBtn" class="inspired-cta-btn" aria-label="Scroll to What Inspires Us">
+                <span>Inspired Us!</span>
+                <i class="fa-solid fa-arrow-down"></i>
+              </button>
+            </div>
+          </div>
         </section>
 
         <!-- MAIN DYNAMIC CONTENT SECTION WITH SEGMENTED SWITCHER (SOCIALS & STREAMS) -->
@@ -105,37 +125,31 @@
               <a href="https://instagram.com/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="instagram">
                 <div class="btn-icon"><i class="fa-brands fa-instagram"></i></div>
                 <span class="btn-text">Instagram</span>
-                <div class="card-tip-badge" id="badge-instagram">0</div>
               </a>
 
               <a href="https://linkedin.com/company/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="linkedin">
                 <div class="btn-icon"><i class="fa-brands fa-linkedin-in"></i></div>
                 <span class="btn-text">Linkedin</span>
-                <div class="card-tip-badge" id="badge-linkedin">0</div>
               </a>
 
               <a href="https://tiktok.com/@KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="tiktok">
                 <div class="btn-icon"><i class="fa-brands fa-tiktok"></i></div>
                 <span class="btn-text">Tiktok</span>
-                <div class="card-tip-badge" id="badge-tiktok">0</div>
               </a>
 
               <a href="https://twitch.tv/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="twitch">
                 <div class="btn-icon"><i class="fa-brands fa-twitch"></i></div>
                 <span class="btn-text">Twitch</span>
-                <div class="card-tip-badge" id="badge-twitch">0</div>
               </a>
 
               <a href="https://x.com/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="twitter">
                 <div class="btn-icon"><i class="fa-brands fa-x-twitter"></i></div>
                 <span class="btn-text">Twitter</span>
-                <div class="card-tip-badge" id="badge-twitter">0</div>
               </a>
 
               <a href="https://youtube.com/@KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="youtube">
                 <div class="btn-icon"><i class="fa-brands fa-youtube"></i></div>
                 <span class="btn-text">Youtube</span>
-                <div class="card-tip-badge" id="badge-youtube">0</div>
               </a>
 
             </div>
@@ -150,7 +164,6 @@
                   <i class="fa-regular fa-circle-play"></i>
                 </div>
                 <span class="btn-text">YT Music</span>
-                <div class="card-tip-badge" id="badge-ytmusic">0</div>
               </a>
 
               <a href="https://soundcloud.com/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform="soundcloud">
@@ -158,7 +171,6 @@
                   <i class="fa-brands fa-soundcloud"></i>
                 </div>
                 <span class="btn-text">SoundCloud</span>
-                <div class="card-tip-badge" id="badge-soundcloud">0</div>
               </a>
 
               <a href="https://open.spotify.com/search/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform="spotify">
@@ -166,7 +178,6 @@
                   <i class="fa-brands fa-spotify"></i>
                 </div>
                 <span class="btn-text">Spotify</span>
-                <div class="card-tip-badge" id="badge-spotify">0</div>
               </a>
 
             </div>
@@ -279,6 +290,175 @@
               </div>
             </div>
 
+          </div>
+        </section>
+
+        <!-- UPDATE 2: "INSPIRED US" 3-ROW INTERACTIVE SCROLL SECTION -->
+        <section class="inspired-section" id="inspired-section">
+          <!-- Section Header -->
+          <div class="inspired-header">
+            <h2 class="inspired-title">What Inspires Us</h2>
+            <p class="inspired-subtitle">Explore the records and artists driving the energy behind Kins.</p>
+          </div>
+
+          <!-- Artist Navigation Buttons (Filter Bar) -->
+          <div class="artist-filter-bar">
+            <button class="filter-pill-btn active" data-filter="all">All Artists</button>
+            <button class="filter-pill-btn" data-filter="artist-1">Artist 1</button>
+            <button class="filter-pill-btn" data-filter="artist-2">Artist 2</button>
+            <button class="filter-pill-btn" data-filter="artist-3">Artist 3</button>
+            <button class="filter-pill-btn" data-filter="artist-4">Artist 4</button>
+          </div>
+
+          <!-- 3-Row Horizontal Scroll Container -->
+          <div class="inspired-rows-wrapper">
+            <!-- Row 1 -->
+            <div class="inspired-scroll-row" id="inspiredRow1">
+              <div class="music-card" data-artist="artist-1">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-music"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">My Number</span>
+                  <span class="artist-name">Artist 1</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+
+              <div class="music-card" data-artist="artist-2">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-record-vinyl"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">R U Mine?</span>
+                  <span class="artist-name">Artist 2</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+
+              <div class="music-card" data-artist="artist-3">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-compact-disc"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">The Less I Know</span>
+                  <span class="artist-name">Artist 3</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+
+              <div class="music-card" data-artist="artist-4">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-radio"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">Last Nite</span>
+                  <span class="artist-name">Artist 4</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="inspired-scroll-row" id="inspiredRow2">
+              <div class="music-card" data-artist="artist-1">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-guitar"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">Spanish Sahara</span>
+                  <span class="artist-name">Artist 1</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+
+              <div class="music-card" data-artist="artist-2">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-headphones"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">Do I Wanna Know?</span>
+                  <span class="artist-name">Artist 2</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+
+              <div class="music-card" data-artist="artist-3">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-sliders"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">Feels Like We Only...</span>
+                  <span class="artist-name">Artist 3</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+
+              <div class="music-card" data-artist="artist-4">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-drum"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">Reptilia</span>
+                  <span class="artist-name">Artist 4</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="inspired-scroll-row" id="inspiredRow3">
+              <div class="music-card" data-artist="artist-1">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">Mountain At My Gates</span>
+                  <span class="artist-name">Artist 1</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+
+              <div class="music-card" data-artist="artist-2">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-wave-square"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">505</span>
+                  <span class="artist-name">Artist 2</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+
+              <div class="music-card" data-artist="artist-3">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-certificate"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">Borderline</span>
+                  <span class="artist-name">Artist 3</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+
+              <div class="music-card" data-artist="artist-4">
+                <div class="music-card-thumb">
+                  <i class="fa-solid fa-fire"></i>
+                </div>
+                <div class="music-card-info">
+                  <span class="song-title">Someday</span>
+                  <span class="artist-name">Artist 4</span>
+                </div>
+                <button class="play-btn" aria-label="Play song"><i class="fa-solid fa-play"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row / Pagination Indicator Dots -->
+          <div class="inspired-pagination">
+            <span class="pagination-dot active" data-row="0"></span>
+            <span class="pagination-dot" data-row="1"></span>
+            <span class="pagination-dot" data-row="2"></span>
           </div>
         </section>
 
