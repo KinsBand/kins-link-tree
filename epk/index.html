@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Kins | Official Venue EPK & Booking Portal</title>
+  <meta name="description" content="Official Electronic Press Kit & Booking Portal for Kins (@KinsBandOfficial). Venue specs, live video clips, technical riders, setlists, and booking contact.">
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The Kins — Official Venue EPK & Booking Portal">
+  <meta property="og:description" content="Everything venue talent buyers and promoters need to book The Kins. Instant audio/video, stage plots, setlists, and tech riders.">
+  <meta property="og:image" content="../pfp.jpg">
+
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom EPK CSS -->
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+
+  <!-- VIEWPORT SWITCHER BAR FOR DESKTOP PREVIEWING -->
+  <div class="view-toggle-bar">
+    <div class="view-toggle-brand">
+      <i class="fa-solid fa-guitar"></i>
+      <span>THE KINS EPK PREVIEW</span>
+    </div>
+    <div class="view-toggle-buttons">
+      <button id="toggleMobileView" class="toggle-btn active" title="Switch to Mobile Frame view">
+        <i class="fa-solid fa-mobile-screen-button"></i> Mobile Phone
+      </button>
+      <button id="toggleFullView" class="toggle-btn" title="Switch to Full Width Desktop view">
+        <i class="fa-solid fa-desktop"></i> Full Width Desktop
+      </button>
+    </div>
+    <div class="view-toggle-actions">
+      <button id="openVipPortalBtn" class="vip-badge-btn" title="Unlock VIP Promoter Portal">
+        <i class="fa-solid fa-lock"></i> VIP Portal
+      </button>
+      <button id="openAnalyticsBtn" class="analytics-badge-btn" title="Open Real-time EPK Analytics">
+        <i class="fa-solid fa-chart-line"></i> Analytics
+      </button>
+    </div>
+  </div>
+
+  <!-- APP WRAPPER -->
+  <div class="app-wrapper">
+    <!-- PHONE FRAME (Active when in mobile view mode) -->
+    <div class="phone-frame" id="phoneFrame">
+      <div class="phone-notch"></div>
+
+      <!-- STICKY GLASSMOGRAPHIC NAVIGATION HEADER -->
+      <header class="epk-header" id="epkHeader">
+        <div class="header-content">
+          <a href="#hero" class="brand-logo">
+            <span class="brand-name">THE KINS</span>
+            <span class="epk-tag">EPK</span>
+          </a>
+          <nav class="desktop-nav">
+            <a href="#quick-facts">Facts</a>
+            <a href="#live-video">Video</a>
+            <a href="#music">Music</a>
+            <a href="#band">Band</a>
+            <a href="#shows">Shows</a>
+            <a href="#song-catalogue">Setlists</a>
+            <a href="#technical">Tech & Plot</a>
+            <a href="#downloads">Assets</a>
+            <a href="#booking" class="nav-cta-link">Book Now</a>
+          </nav>
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation Menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+
+        <!-- Mobile Slide-down Navigation -->
+        <div class="mobile-dropdown-nav" id="mobileDropdownNav">
+          <a href="#quick-facts" class="mobile-nav-item"><i class="fa-solid fa-bolt"></i> Quick Facts</a>
+          <a href="#live-video" class="mobile-nav-item"><i class="fa-solid fa-video"></i> Live Video</a>
+          <a href="#music" class="mobile-nav-item"><i class="fa-solid fa-music"></i> Music & Audio</a>
+          <a href="#band" class="mobile-nav-item"><i class="fa-solid fa-users"></i> Meet The Band</a>
+          <a href="#shows" class="mobile-nav-item"><i class="fa-solid fa-calendar-check"></i> Show History</a>
+          <a href="#song-catalogue" class="mobile-nav-item"><i class="fa-solid fa-list-check"></i> Songs & Setlists</a>
+          <a href="#technical" class="mobile-nav-item"><i class="fa-solid fa-sliders"></i> Tech Specs & Stage Plot</a>
+          <a href="#downloads" class="mobile-nav-item"><i class="fa-solid fa-download"></i> Downloads</a>
+          <a href="#booking" class="mobile-nav-item highlight"><i class="fa-solid fa-paper-plane"></i> Booking Inquiry</a>
+        </div>
+      </header>
+
+      <!-- MAIN CONTENT STREAM -->
+      <main class="epk-container">
+
+        <!-- DYNAMIC LIVE STATUS NOTIFICATION BANNER -->
+        <div class="dynamic-status-banner" id="dynamicStatusBanner">
+          <div class="status-banner-left">
+            <span class="status-pulse-dot"></span>
+            <span class="status-banner-badge" id="statusBadgeText">CURRENTLY TOUR READY</span>
+            <span class="status-banner-msg" id="statusMsgText">Melbourne & Regional VIC • Spring / Summer Bookings Open</span>
+          </div>
+          <button class="status-toggle-btn" id="toggleStatusStateBtn" title="Toggle Live Status Demo">
+            <i class="fa-solid fa-rotate"></i> Change Status
+          </button>
+        </div>
+
+        <!-- HERO SECTION -->
+        <section class="hero-section" id="hero">
+          <div class="hero-bg-media">
+            <img src="../pfp.jpg" alt="The Kins live performance background" class="hero-img">
+            <div class="hero-overlay"></div>
+          </div>
+          <div class="hero-content">
+            <div class="genre-pill-group">
+              <span class="badge-pill pulse"><i class="fa-solid fa-fire"></i> INDIE ROCK</span>
+              <span class="badge-pill"><i class="fa-solid fa-location-dot"></i> MELBOURNE, AU</span>
+              <span class="badge-pill outline"><i class="fa-solid fa-shield-halved"></i> TOUR READY</span>
+            </div>
+            <h1 class="hero-headline">THE KINS</h1>
+            <p class="hero-subheadline">High-energy 4-piece Melbourne indie rock band delivering tight original tracks, massive pub covers, and undeniable stage energy.</p>
+            <div class="hero-actions">
+              <a href="#booking" class="btn primary-btn"><i class="fa-solid fa-calendar-plus"></i> Book The Kins</a>
+              <a href="#live-video" class="btn secondary-btn"><i class="fa-solid fa-play"></i> Watch Live Clip</a>
+              <button class="btn glass-btn" id="quickDownloadPackBtn"><i class="fa-solid fa-file-pdf"></i> Pitch Pack PDF</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- QUICK FACTS BAR (FOR VENUE MANAGERS & TALENT BUYERS) -->
+        <section class="section quick-facts-section" id="quick-facts">
+          <div class="section-header">
+            <div class="header-tag">BOOKER SUMMARY</div>
+            <h2>Quick Facts for Talent Buyers</h2>
+            <p>Everything you need to evaluate our fit for your lineup in under 15 seconds.</p>
+          </div>
+
+          <div class="quick-facts-grid">
+            <div class="fact-card">
+              <div class="fact-icon"><i class="fa-solid fa-compact-disc"></i></div>
+              <div class="fact-info">
+                <span class="fact-label">Genre & Vibe</span>
+                <span class="fact-value">Indie Rock / Alt Rock</span>
+                <span class="fact-sub">FFO: The Cure, Weezer, Arctic Monkeys</span>
+              </div>
+            </div>
+
+            <div class="fact-card">
+              <div class="fact-icon"><i class="fa-solid fa-users"></i></div>
+              <div class="fact-info">
+                <span class="fact-label">Band Lineup</span>
+                <span class="fact-value">4 Active Members</span>
+                <span class="fact-sub">Lead Vocals/Gtr, Rhythm Gtr, Bass, Drums</span>
+              </div>
+            </div>
+
+            <div class="fact-card">
+              <div class="fact-icon"><i class="fa-solid fa-clock"></i></div>
+              <div class="fact-info">
+                <span class="fact-label">Performance Length</span>
+                <span class="fact-value">30 / 45 / 60 / 90 Mins</span>
+                <span class="fact-sub">Originals, Pub Covers & Acoustic Sets</span>
+              </div>
+            </div>
+
+            <div class="fact-card">
+              <div class="fact-icon"><i class="fa-solid fa-ticket"></i></div>
+              <div class="fact-info">
+                <span class="fact-label">Average Draw</span>
+                <span class="fact-value">120 - 450+ Attendees</span>
+                <span class="fact-sub">Melbourne metro & regional VIC fans</span>
+              </div>
+            </div>
+
+            <div class="fact-card">
+              <div class="fact-icon"><i class="fa-solid fa-building-columns"></i></div>
+              <div class="fact-info">
+                <span class="fact-label">Available For</span>
+                <span class="fact-value">Pubs, Festivals, Unis</span>
+                <span class="fact-sub">Support Slots, Headliners & Corporate</span>
+              </div>
+            </div>
+
+            <div class="fact-card">
+              <div class="fact-icon"><i class="fa-solid fa-envelope"></i></div>
+              <div class="fact-info">
+                <span class="fact-label">Direct Booking Contact</span>
+                <span class="fact-value copy-chip" id="quickCopyEmail" data-copy="bookings@thekins.au">bookings@thekins.au <i class="fa-regular fa-copy"></i></span>
+                <span class="fact-sub">Avg. response time: &lt; 2 hours</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- EMBEDDED LIVE PERFORMANCE VIDEO -->
+        <section class="section live-video-section" id="live-video">
+          <div class="section-header">
+            <div class="header-tag">STAGE ENERGY</div>
+            <h2>Live Performance Showcase</h2>
+            <p>Talent buyers book based on live energy. Watch our unedited live crowd response.</p>
+          </div>
+
+          <div class="video-container-card">
+            <div class="video-player-frame">
+              <img src="../pfp.jpg" alt="The Kins live performance reel video thumbnail" class="video-poster-img">
+              <div class="video-overlay-gradient"></div>
+              
+              <!-- Video Controls & Play Overlay -->
+              <div class="video-center-play" id="playVideoBtn">
+                <div class="play-pulse-ring"></div>
+                <button class="play-circle-btn" aria-label="Play Live Performance Reel">
+                  <i class="fa-solid fa-play"></i>
+                </button>
+                <span class="play-label">WATCH LIVE SHOWCASE (2:45)</span>
+              </div>
+
+              <div class="video-badges-row">
+                <span class="video-tag"><i class="fa-solid fa-tower-broadcast"></i> LIVE AT THE ESPY</span>
+                <span class="video-tag audio-tag"><i class="fa-solid fa-volume-high"></i> DIRECT SOUNDDESK AUDIO</span>
+              </div>
+            </div>
+
+            <!-- Custom Video Player Modal / Active Audio Player -->
+            <div class="video-info-strip">
+              <div class="video-meta">
+                <h4>"Boys Don't Cry / Original Medley" (Live at The Espy, Melbourne)</h4>
+                <p>Recorded live with zero studio overdubbing. Soundboard multitrack mix + ambient room mics.</p>
+              </div>
+              <div class="video-stats">
+                <span><i class="fa-solid fa-eye"></i> 14.8k Views</span>
+                <span><i class="fa-solid fa-heart"></i> 98.4% Booker Approval</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- AUDIO STREAMS & INTERACTIVE AUDIO PLAYER -->
+        <section class="section music-section" id="music">
+          <div class="section-header">
+            <div class="header-tag">RECORDINGS & STREAMS</div>
+            <h2>Music Catalogue & Audio Streamer</h2>
+            <p>Listen to our latest original singles or stream directly on your preferred platform.</p>
+          </div>
+
+          <!-- Embedded Interactive Audio Player -->
+          <div class="audio-player-card">
+            <div class="audio-track-display">
+              <div class="album-art-box">
+                <i class="fa-solid fa-compact-disc fa-spin-slow"></i>
+              </div>
+              <div class="track-info-group">
+                <span class="now-playing-badge">NOW STREAMING</span>
+                <h4 id="currentTrackTitle">Just Like Heaven (Kins Cover Edition)</h4>
+                <span id="currentTrackArtist">The Kins • Single Release</span>
+              </div>
+            </div>
+
+            <div class="audio-controls-row">
+              <button class="audio-btn" id="prevTrackBtn" title="Previous Track"><i class="fa-solid fa-backward-step"></i></button>
+              <button class="audio-btn play-main-btn" id="toggleAudioPlayBtn" title="Play/Pause Track"><i class="fa-solid fa-play" id="audioPlayIcon"></i></button>
+              <button class="audio-btn" id="nextTrackBtn" title="Next Track"><i class="fa-solid fa-forward-step"></i></button>
+              <div class="audio-progress-container">
+                <span id="audioCurrentTime">0:00</span>
+                <div class="audio-progress-bar" id="audioProgressBar">
+                  <div class="audio-progress-fill" id="audioProgressFill"></div>
+                </div>
+                <span id="audioTotalDuration">3:24</span>
+              </div>
+            </div>
+
+            <!-- Track Playlist Items -->
+            <div class="track-playlist" id="trackPlaylist">
+              <div class="playlist-item active" data-index="0" data-title="Just Like Heaven (Kins Cover)" data-artist="The Kins" data-duration="3:24">
+                <span class="track-num">01</span>
+                <div class="track-details">
+                  <span class="track-name">Just Like Heaven (Kins Cover)</span>
+                  <span class="track-genre">Alternative Rock • High Energy</span>
+                </div>
+                <span class="track-time">3:24</span>
+              </div>
+
+              <div class="playlist-item" data-index="1" data-title="Buddy Holly (Live Pub Mix)" data-artist="The Kins" data-duration="2:48">
+                <span class="track-num">02</span>
+                <div class="track-details">
+                  <span class="track-name">Buddy Holly (Live Pub Mix)</span>
+                  <span class="track-genre">Power Pop / Rock</span>
+                </div>
+                <span class="track-time">2:48</span>
+              </div>
+
+              <div class="playlist-item" data-index="2" data-title="Boys Don't Cry (Indie Rock Rendition)" data-artist="The Kins" data-duration="3:10">
+                <span class="track-num">03</span>
+                <div class="track-details">
+                  <span class="track-name">Boys Don't Cry (Indie Rock Rendition)</span>
+                  <span class="track-genre">Indie Rock • Crowd Favorite</span>
+                </div>
+                <span class="track-time">3:10</span>
+              </div>
+            </div>
+
+            <!-- Direct Streaming Platform Buttons -->
+            <div class="streaming-platforms-grid">
+              <a href="https://spotify.com" target="_blank" rel="noopener" class="platform-link-btn spotify">
+                <i class="fa-brands fa-spotify"></i>
+                <span>Spotify</span>
+              </a>
+              <a href="https://apple.com/music" target="_blank" rel="noopener" class="platform-link-btn apple">
+                <i class="fa-brands fa-apple"></i>
+                <span>Apple Music</span>
+              </a>
+              <a href="https://youtube.com/@KinsBandOfficial" target="_blank" rel="noopener" class="platform-link-btn youtube">
+                <i class="fa-brands fa-youtube"></i>
+                <span>YouTube Music</span>
+              </a>
+              <a href="https://bandcamp.com" target="_blank" rel="noopener" class="platform-link-btn bandcamp">
+                <i class="fa-brands fa-bandcamp"></i>
+                <span>Bandcamp</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ABOUT & SHORT BIO -->
+        <section class="section bio-section" id="bio">
+          <div class="section-header">
+            <div class="header-tag">THE STORY</div>
+            <h2>About The Kins</h2>
+            <p>Concise overview tailored for festival booklets and venue promotional flyers.</p>
+          </div>
+
+          <div class="bio-card-wrapper">
+            <div class="bio-body-text">
+              <p>Formed in the heart of Melbourne's bustling live music scene, <strong>The Kins</strong> are a four-piece indie rock outfit known for explosive stage energy, infectious guitar riffs, and setlists that keep pub crowds singing until last call.</p>
+              <p>Combining the post-punk urgency of classic 80s indie with modern alt-rock grit, The Kins have quickly established themselves as a reliable draw across Melbourne's premier live venues—including sold-out nights at <em>The Espy, The Tote, and Cherry Bar</em>. Whether headlining weekend pub slots or driving festival mainstages, the band delivers a seamless blend of original anthems and re-energized crowdspleasing covers.</p>
+            </div>
+
+            <div class="bio-highlights-box">
+              <h4>Key Milestones & Pitch Highlights</h4>
+              <ul class="highlights-list">
+                <li><i class="fa-solid fa-check-circle"></i> <strong>Consistent Local Draw:</strong> Average 200+ ticket sales in Melbourne inner-north venues.</li>
+                <li><i class="fa-solid fa-check-circle"></i> <strong>Flexible Set Durations:</strong> 30-min opening sets to 90-min multi-set pub headliners.</li>
+                <li><i class="fa-solid fa-check-circle"></i> <strong>Production Ready:</strong> In-ear monitors (IEMs), digital input snake, clean stage footprint.</li>
+                <li><i class="fa-solid fa-check-circle"></i> <strong>Active Marketing:</strong> Dedicated social promo campaign for every booked gig date.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- MEET THE BAND -->
+        <section class="section band-section" id="band">
+          <div class="section-header">
+            <div class="header-tag">THE LINEUP</div>
+            <h2>Meet The Band</h2>
+            <p>4 core musicians dedicated to delivering a flawless live production.</p>
+          </div>
+
+          <div class="band-members-grid">
+            <div class="member-card">
+              <div class="member-photo-frame">
+                <img src="../pfp.jpg" alt="Charlie - Lead Vocals & Rhythm Guitar" class="member-img">
+                <div class="member-role-badge">Lead Vocals / Gtr</div>
+              </div>
+              <div class="member-details">
+                <h3>Charlie</h3>
+                <span class="member-instrument"><i class="fa-solid fa-microphone-lines"></i> Fender Telecaster / Lead Vocals</span>
+                <p>Frontman driving the band's signature electric vocal delivery and rhythm hooks.</p>
+              </div>
+            </div>
+
+            <div class="member-card">
+              <div class="member-photo-frame">
+                <img src="../pfp.jpg" alt="Liam - Lead Guitar & Backing Vocals" class="member-img">
+                <div class="member-role-badge">Lead Guitar</div>
+              </div>
+              <div class="member-details">
+                <h3>Liam</h3>
+                <span class="member-instrument"><i class="fa-solid fa-guitar"></i> Gibson Les Paul / Backing Vox</span>
+                <p>Crafting soaring atmospheric leads and driving overdrive tone stacks.</p>
+              </div>
+            </div>
+
+            <div class="member-card">
+              <div class="member-photo-frame">
+                <img src="../pfp.jpg" alt="Jack - Bass Guitar" class="member-img">
+                <div class="member-role-badge">Bass Guitar</div>
+              </div>
+              <div class="member-details">
+                <h3>Jack</h3>
+                <span class="member-instrument"><i class="fa-solid fa-wave-square"></i> Fender Jazz Bass / Synths</span>
+                <p>Locking down the low-end groove with driving rhythm precision.</p>
+              </div>
+            </div>
+
+            <div class="member-card">
+              <div class="member-photo-frame">
+                <img src="../pfp.jpg" alt="Sam - Drums & Percussion" class="member-img">
+                <div class="member-role-badge">Drums & Percussion</div>
+              </div>
+              <div class="member-details">
+                <h3>Sam</h3>
+                <span class="member-instrument"><i class="fa-solid fa-drum"></i> Ludwig Classic Maple / Click Track</span>
+                <p>Pounding out tight rock beats with click-track precision for IEM sync.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LIVE GALLERY LIGHTBOX -->
+        <section class="section gallery-section" id="gallery">
+          <div class="section-header">
+            <div class="header-tag">MEDIA ASSETS</div>
+            <h2>Live Photo Gallery</h2>
+            <p>High-resolution promo and stage photography. Click any photo to preview or download.</p>
+          </div>
+
+          <!-- Gallery Filter Pills -->
+          <div class="gallery-filters">
+            <button class="filter-btn active" data-filter="all">All Photos</button>
+            <button class="filter-btn" data-filter="stage">Stage Performance</button>
+            <button class="filter-btn" data-filter="crowd">Crowd Energy</button>
+            <button class="filter-btn" data-filter="promo">Band Promo</button>
+          </div>
+
+          <div class="gallery-grid" id="galleryGrid">
+            <div class="gallery-item" data-category="stage">
+              <img src="../pfp.jpg" alt="The Kins stage performance shot" class="gallery-img">
+              <div class="gallery-hover-overlay">
+                <span class="gallery-tag">Stage Performance</span>
+                <i class="fa-solid fa-expand expand-icon"></i>
+              </div>
+            </div>
+
+            <div class="gallery-item" data-category="crowd">
+              <img src="../pfp.jpg" alt="Packed crowd at The Espy show" class="gallery-img">
+              <div class="gallery-hover-overlay">
+                <span class="gallery-tag">Packed Crowd • The Espy</span>
+                <i class="fa-solid fa-expand expand-icon"></i>
+              </div>
+            </div>
+
+            <div class="gallery-item" data-category="promo">
+              <img src="../pfp.jpg" alt="The Kins band promotional photoshoot" class="gallery-img">
+              <div class="gallery-hover-overlay">
+                <span class="gallery-tag">Landscape Promo Photo</span>
+                <i class="fa-solid fa-expand expand-icon"></i>
+              </div>
+            </div>
+
+            <div class="gallery-item" data-category="stage">
+              <img src="../pfp.jpg" alt="Guitarist solo live performance" class="gallery-img">
+              <div class="gallery-hover-overlay">
+                <span class="gallery-tag">Live Guitar Solo</span>
+                <i class="fa-solid fa-expand expand-icon"></i>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RECENT SHOWS & SOCIAL PROOF -->
+        <section class="section shows-section" id="shows">
+          <div class="section-header">
+            <div class="header-tag">SOCIAL PROOF</div>
+            <h2>Show History & Booker Testimonials</h2>
+            <p>Proven track record of drawing crowds and collaborating with venue production teams.</p>
+          </div>
+
+          <!-- Live Momentum Stats Grid -->
+          <div class="proof-stats-grid">
+            <div class="stat-card">
+              <i class="fa-solid fa-ticket stat-icon"></i>
+              <span class="stat-number" id="statShowsCount">48+</span>
+              <span class="stat-label">Shows Played</span>
+            </div>
+            <div class="stat-card">
+              <i class="fa-brands fa-spotify stat-icon"></i>
+              <span class="stat-number">42.5k</span>
+              <span class="stat-label">Monthly Listeners</span>
+            </div>
+            <div class="stat-card">
+              <i class="fa-brands fa-instagram stat-icon"></i>
+              <span class="stat-number">12.8k</span>
+              <span class="stat-label">Active Social Fans</span>
+            </div>
+            <div class="stat-card">
+              <i class="fa-solid fa-star stat-icon"></i>
+              <span class="stat-number">100%</span>
+              <span class="stat-label">Re-booking Rate</span>
+            </div>
+          </div>
+
+          <!-- Show History Table -->
+          <div class="shows-table-card">
+            <h3>Recent Venue History</h3>
+            <div class="table-responsive">
+              <table class="shows-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Venue</th>
+                    <th>Location</th>
+                    <th>Slot / Format</th>
+                    <th>Attendance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Jul 18, 2026</td>
+                    <td><strong>The Espy (Gershwin Room)</strong></td>
+                    <td>St Kilda, VIC</td>
+                    <td>Headliner (Full Electric)</td>
+                    <td><span class="badge sold-out">SOLD OUT (350)</span></td>
+                  </tr>
+                  <tr>
+                    <td>Jun 28, 2026</td>
+                    <td><strong>The Tote Hotel</strong></td>
+                    <td>Collingwood, VIC</td>
+                    <td>Co-Headliner</td>
+                    <td><span class="badge packed">PACKED (220)</span></td>
+                  </tr>
+                  <tr>
+                    <td>May 14, 2026</td>
+                    <td><strong>Cherry Bar</strong></td>
+                    <td>Melbourne CBD</td>
+                    <td>Weekend Headliner</td>
+                    <td><span class="badge sold-out">SOLD OUT (180)</span></td>
+                  </tr>
+                  <tr>
+                    <td>Apr 02, 2026</td>
+                    <td><strong>Corner Hotel</strong></td>
+                    <td>Richmond, VIC</td>
+                    <td>Tour Support Slot</td>
+                    <td><span class="badge packed">400+ Draw</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Testimonials Slider / Grid -->
+          <div class="testimonials-grid">
+            <div class="testimonial-card">
+              <div class="stars-row">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+              </div>
+              <p class="quote-text">"The Kins packed out our Friday night room and had the whole venue singing along. Professional on sound check, punctual, and effortless to work with. Already re-booked them!"</p>
+              <div class="quote-author">
+                <strong>Dave M.</strong>
+                <span>Talent Buyer • The Espy Melbourne</span>
+              </div>
+            </div>
+
+            <div class="testimonial-card">
+              <div class="stars-row">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+              </div>
+              <p class="quote-text">"One of the easiest bands we've hosted. They showed up with their stage plot printed, ran on time, and brought a huge crowd that stayed at the bar all night."</p>
+              <div class="quote-author">
+                <strong>Sarah T.</strong>
+                <span>Events Manager • The Tote</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SET LISTS & SEARCHABLE SONG CATALOGUE -->
+        <section class="section songs-section" id="song-catalogue">
+          <div class="section-header">
+            <div class="header-tag">REPERTOIRE</div>
+            <h2>Set Lists & Searchable Song Catalogue</h2>
+            <p>Pub bookers love knowing exactly what we play. Search our complete repertoire below.</p>
+          </div>
+
+          <!-- Tabbed Setlist Categories -->
+          <div class="setlist-tabs-row">
+            <button class="setlist-tab active" data-tab="covers">Cover Set (Pub Headliner)</button>
+            <button class="setlist-tab" data-tab="originals">Original Set</button>
+            <button class="setlist-tab" data-tab="acoustic">Acoustic Pub Set</button>
+            <button class="setlist-tab" data-tab="festival">Festival 45-Min Set</button>
+          </div>
+
+          <!-- Real-time Song Search & Filter Engine -->
+          <div class="catalogue-search-box">
+            <div class="search-input-wrapper">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="songSearchInput" placeholder="Search songs by title, artist, key, or energy..." aria-label="Search song catalogue">
+              <button id="clearSongSearchBtn" class="clear-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="filter-pills-wrapper">
+              <span class="filter-label">Quick Filters:</span>
+              <button class="pill-btn active" data-filter-genre="all">All Songs</button>
+              <button class="pill-btn" data-filter-genre="Classic Rock">Classic Rock</button>
+              <button class="pill-btn" data-filter-genre="Indie Rock">90s / 00s Indie</button>
+              <button class="pill-btn" data-filter-genre="Acoustic">Acoustic</button>
+              <button class="pill-btn" data-filter-genre="High Energy">High Energy</button>
+            </div>
+          </div>
+
+          <!-- Song Catalogue Results Table -->
+          <div class="song-results-card">
+            <div class="song-results-header">
+              <span id="songCountBadge">Showing 10 Songs</span>
+              <span class="song-hint">Click any song to highlight key & tempo details</span>
+            </div>
+
+            <div class="table-responsive">
+              <table class="songs-table" id="songsTable">
+                <thead>
+                  <tr>
+                    <th>Song Title</th>
+                    <th>Original Artist</th>
+                    <th>Genre Category</th>
+                    <th>Tempo / Energy</th>
+                    <th>Key</th>
+                  </tr>
+                </thead>
+                <tbody id="songTableBody">
+                  <!-- Injected via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TECHNICAL SPECS & INTERACTIVE STAGE PLOT -->
+        <section class="section tech-section" id="technical">
+          <div class="section-header">
+            <div class="header-tag">PRODUCTION LOGISTICS</div>
+            <h2>Technical Specs & Stage Plot</h2>
+            <p>House sound engineers: inspect our visual stage layout, input channel list, and power drops.</p>
+          </div>
+
+          <!-- Interactive SVG Stage Plot Visual Container -->
+          <div class="stage-plot-card">
+            <div class="stage-plot-header">
+              <div class="stage-title">
+                <i class="fa-solid fa-diagram-project"></i>
+                <span>VISUAL STAGE PLOT (FRONT OF HOUSE PERSPECTIVE)</span>
+              </div>
+              <div class="stage-dimensions">Stage Min: 5m W x 3m D • 240V Power Required</div>
+            </div>
+
+            <!-- SVG Stage Plot Diagram -->
+            <div class="stage-plot-diagram-wrapper">
+              <svg viewBox="0 0 800 450" class="stage-svg" id="stageSvg">
+                <!-- Stage Boundary -->
+                <rect x="20" y="20" width="760" height="410" rx="12" class="svg-stage-border" />
+                <text x="400" y="45" text-anchor="middle" class="svg-stage-text">BACKSTAGE / DRUM RISER AREA</text>
+
+                <!-- Drum Kit (Center Back) -->
+                <g class="svg-element" id="svgDrums" data-channel="1-4">
+                  <circle cx="400" cy="120" r="45" class="svg-drum-circle" />
+                  <text x="400" y="115" text-anchor="middle" class="svg-node-label">SAM (DRUMS)</text>
+                  <text x="400" y="132" text-anchor="middle" class="svg-sub-label">Ch 1-4 (Kick, Snare, OH)</text>
+                </g>
+
+                <!-- Bass Rig (Back Left) -->
+                <g class="svg-element" id="svgBass" data-channel="5-6">
+                  <rect x="80" y="90" width="90" height="60" rx="6" class="svg-amp-box" />
+                  <text x="125" y="120" text-anchor="middle" class="svg-node-label">JACK (BASS DI)</text>
+                  <text x="125" y="135" text-anchor="middle" class="svg-sub-label">Ch 5-6 (XLR DI)</text>
+                </g>
+
+                <!-- Guitar Amp (Back Right) -->
+                <g class="svg-element" id="svgGuitar2" data-channel="7-8">
+                  <rect x="630" y="90" width="90" height="60" rx="6" class="svg-amp-box" />
+                  <text x="675" y="120" text-anchor="middle" class="svg-node-label">LIAM (GUITAR)</text>
+                  <text x="675" y="135" text-anchor="middle" class="svg-sub-label">Ch 7-8 (Mic DI)</text>
+                </g>
+
+                <!-- Center Lead Vocals & Rhythm Guitar (Front Center) -->
+                <g class="svg-element" id="svgVocals" data-channel="9-10">
+                  <circle cx="400" cy="320" r="28" class="svg-mic-circle" />
+                  <text x="400" y="315" text-anchor="middle" class="svg-node-label">CHARLIE (LEAD VOX)</text>
+                  <text x="400" y="330" text-anchor="middle" class="svg-sub-label">Ch 9-10 (Vox + Gtr)</text>
+                </g>
+
+                <!-- Front Left Backing Vox -->
+                <g class="svg-element" id="svgVoxLeft" data-channel="11">
+                  <circle cx="180" cy="320" r="22" class="svg-mic-circle secondary" />
+                  <text x="180" y="325" text-anchor="middle" class="svg-sub-label">Jack Vox (Ch 11)</text>
+                </g>
+
+                <!-- Front Right Backing Vox -->
+                <g class="svg-element" id="svgVoxRight" data-channel="12">
+                  <circle cx="620" cy="320" r="22" class="svg-mic-circle secondary" />
+                  <text x="620" y="325" text-anchor="middle" class="svg-sub-label">Liam Vox (Ch 12)</text>
+                </g>
+
+                <!-- Monitor Wedges / IEM Lines -->
+                <rect x="350" y="380" width="100" height="24" rx="4" class="svg-wedge" />
+                <text x="400" y="396" text-anchor="middle" class="svg-wedge-text">MON MIX 1 (IEM)</text>
+
+                <!-- Power Drops -->
+                <polygon points="60,370 70,350 80,370" class="svg-power-icon" />
+                <text x="70" y="390" text-anchor="middle" class="svg-power-text">240V Power</text>
+
+                <polygon points="730,370 740,350 750,370" class="svg-power-icon" />
+                <text x="740" y="390" text-anchor="middle" class="svg-power-text">240V Power</text>
+
+                <!-- Audience Indicator -->
+                <text x="400" y="435" text-anchor="middle" class="svg-audience-text">▼ AUDIENCE / FRONT OF HOUSE ▼</text>
+              </svg>
+            </div>
+
+            <!-- Input List Table -->
+            <div class="input-list-wrapper">
+              <h4>Input Channel Patch List (12 Channels Total)</h4>
+              <div class="table-responsive">
+                <table class="input-table">
+                  <thead>
+                    <tr>
+                      <th>Ch #</th>
+                      <th>Instrument / Input</th>
+                      <th>Transducer / Mic Preference</th>
+                      <th>Stand Type</th>
+                      <th>Phantom (48V)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr id="inputRow1"><td>01</td><td>Kick Drum</td><td>Shure Beta 52A / Audix D6</td><td>Short Boom</td><td>No</td></tr>
+                    <tr id="inputRow2"><td>02</td><td>Snare Top</td><td>Shure SM57</td><td>Short Boom</td><td>No</td></tr>
+                    <tr id="inputRow3"><td>03</td><td>Hi-Hat / OH L</td><td>AKG C414 / Pencil Condenser</td><td>Tall Boom</td><td>Yes (+48V)</td></tr>
+                    <tr id="inputRow4"><td>04</td><td>OH Right</td><td>AKG C414 / Pencil Condenser</td><td>Tall Boom</td><td>Yes (+48V)</td></tr>
+                    <tr id="inputRow5"><td>05</td><td>Bass Guitar (Pre)</td><td>Active Radial DI (XLR Out)</td><td>N/A</td><td>No</td></tr>
+                    <tr id="inputRow6"><td>06</td><td>Bass Synth / Sub</td><td>Balanced TRS DI</td><td>N/A</td><td>No</td></tr>
+                    <tr id="inputRow7"><td>07</td><td>Rhythm Guitar</td><td>Sennheiser e906 / SM57</td><td>Short Boom</td><td>No</td></tr>
+                    <tr id="inputRow8"><td>08</td><td>Lead Guitar</td><td>Sennheiser e906 / Cab DI</td><td>Short Boom</td><td>No</td></tr>
+                    <tr id="inputRow9"><td>09</td><td>Lead Vocals (Charlie)</td><td>Shure Beta 58A (Wireless/Wired)</td><td>Tall Boom</td><td>No</td></tr>
+                    <tr id="inputRow10"><td>10</td><td>Acoustic Guitar DI</td><td>Active Radial DI</td><td>N/A</td><td>Yes (+48V)</td></tr>
+                    <tr id="inputRow11"><td>11</td><td>Backing Vox (Jack)</td><td>Shure SM58</td><td>Tall Boom</td><td>No</td></tr>
+                    <tr id="inputRow12"><td>12</td><td>Backing Vox (Liam)</td><td>Shure SM58</td><td>Tall Boom</td><td>No</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DOWNLOAD CENTRE -->
+        <section class="section downloads-section" id="downloads">
+          <div class="section-header">
+            <div class="header-tag">ASSET REPOSITORY</div>
+            <h2>Download Centre for Promoters</h2>
+            <p>One-click access to high-res press photos, transparent vector logos, and production specs.</p>
+          </div>
+
+          <div class="downloads-grid">
+            <div class="download-card">
+              <div class="download-icon"><i class="fa-solid fa-file-pdf"></i></div>
+              <div class="download-info">
+                <h4>Full Press Kit & Bio (PDF)</h4>
+                <span class="file-size">PDF Document • 2.4 MB</span>
+                <p>Complete 3-page band biography, press quotes, and tour specs.</p>
+              </div>
+              <button class="download-btn-trigger" data-file="The_Kins_Full_EPK_2026.pdf">
+                <i class="fa-solid fa-download"></i> Download
+              </button>
+            </div>
+
+            <div class="download-card">
+              <div class="download-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+              <div class="download-info">
+                <h4>Stage Plot & Tech Rider (PDF)</h4>
+                <span class="file-size">PDF Document • 1.8 MB</span>
+                <p>Detailed stage plot, 12-channel input list, and hospitality rider.</p>
+              </div>
+              <button class="download-btn-trigger" data-file="The_Kins_StagePlot_TechRider.pdf">
+                <i class="fa-solid fa-download"></i> Download
+              </button>
+            </div>
+
+            <div class="download-card">
+              <div class="download-icon"><i class="fa-solid fa-image"></i></div>
+              <div class="download-info">
+                <h4>High-Res Press Photos (ZIP)</h4>
+                <span class="file-size">ZIP Archive • 18.5 MB</span>
+                <p>300 DPI landscape and portrait photos for posters & flyers.</p>
+              </div>
+              <button class="download-btn-trigger" data-file="The_Kins_PressPhotos_HighRes.zip">
+                <i class="fa-solid fa-download"></i> Download
+              </button>
+            </div>
+
+            <div class="download-card">
+              <div class="download-icon"><i class="fa-solid fa-palette"></i></div>
+              <div class="download-info">
+                <h4>Band Logos & Brand Assets</h4>
+                <span class="file-size">PNG / SVG Package • 4.2 MB</span>
+                <p>Transparent vector logos, typography guidelines, and icons.</p>
+              </div>
+              <button class="download-btn-trigger" data-file="The_Kins_Logos_Vector.zip">
+                <i class="fa-solid fa-download"></i> Download
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- AVAILABILITY CALENDAR & INTERACTIVE BOOKING FORM -->
+        <section class="section booking-section" id="booking">
+          <div class="section-header">
+            <div class="header-tag">GET IN TOUCH</div>
+            <h2>Availability Calendar & Booking Inquiry</h2>
+            <p>Check our touring availability and submit your venue pitch directly to our booking manager.</p>
+          </div>
+
+          <div class="booking-flex-layout">
+
+            <!-- Availability Status Calendar Box -->
+            <div class="availability-card">
+              <h3><i class="fa-solid fa-calendar-days"></i> 2026 Tour Availability</h3>
+              <p class="avail-subtitle">Updated weekly by band management.</p>
+
+              <div class="calendar-months-grid">
+                <div class="month-status-pill available">
+                  <span class="month-name">AUG 2026</span>
+                  <span class="status-tag"><i class="fa-solid fa-circle-check"></i> Available</span>
+                </div>
+                <div class="month-status-pill limited">
+                  <span class="month-name">SEP 2026</span>
+                  <span class="status-tag"><i class="fa-solid fa-triangle-exclamation"></i> Limited Dates</span>
+                </div>
+                <div class="month-status-pill available">
+                  <span class="month-name">OCT 2026</span>
+                  <span class="status-tag"><i class="fa-solid fa-circle-check"></i> Available</span>
+                </div>
+                <div class="month-status-pill booked">
+                  <span class="month-name">NOV 2026</span>
+                  <span class="status-tag"><i class="fa-solid fa-circle-xmark"></i> Fully Booked</span>
+                </div>
+              </div>
+
+              <div class="direct-contacts-box">
+                <h4>Direct Management Contacts</h4>
+                <div class="contact-row">
+                  <span class="contact-role">General Bookings:</span>
+                  <button class="copy-email-chip" data-copy="bookings@thekins.au">
+                    bookings@thekins.au <i class="fa-regular fa-copy"></i>
+                  </button>
+                </div>
+                <div class="contact-row">
+                  <span class="contact-role">Press & Media:</span>
+                  <button class="copy-email-chip" data-copy="press@thekins.au">
+                    press@thekins.au <i class="fa-regular fa-copy"></i>
+                  </button>
+                </div>
+                <div class="contact-row">
+                  <span class="contact-role">Business & Legal:</span>
+                  <button class="copy-email-chip" data-copy="business@thekins.au">
+                    business@thekins.au <i class="fa-regular fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Booking Pitch Form -->
+            <div class="booking-form-card">
+              <h3><i class="fa-solid fa-paper-plane"></i> Submit Venue Pitch</h3>
+              <form id="bookingInquiryForm">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="venueName">Venue Name *</label>
+                    <input type="text" id="venueName" required placeholder="e.g. The Espy / The Tote">
+                  </div>
+                  <div class="form-group">
+                    <label for="contactName">Contact Name *</label>
+                    <input type="text" id="contactName" required placeholder="e.g. Dave Miller (Talent Buyer)">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="contactEmail">Email Address *</label>
+                    <input type="email" id="contactEmail" required placeholder="dave@venue.com">
+                  </div>
+                  <div class="form-group">
+                    <label for="eventDate">Target Event Date *</label>
+                    <input type="date" id="eventDate" required>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="eventType">Slot / Event Type</label>
+                    <select id="eventType">
+                      <option value="pub-headliner">Pub Headliner (2x 45m Sets)</option>
+                      <option value="support-slot">Tour Support Slot (45m Set)</option>
+                      <option value="festival">Festival Mainstage / Side Stage</option>
+                      <option value="private-corporate">Private / Campus Event</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="budgetRange">Guarantee / Deal Structure</label>
+                    <select id="budgetRange">
+                      <option value="door-split">Door Split (70/30 or 80/20)</option>
+                      <option value="guarantee-500-1000">$500 - $1,000 Guarantee</option>
+                      <option value="guarantee-1000-2500">$1,000 - $2,500 Guarantee</option>
+                      <option value="festival-custom">Festival / Custom Deal</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="bookingMessage">Pitch Notes / Stage Info</label>
+                  <textarea id="bookingMessage" rows="4" placeholder="Tell us about the slot, other bands on the bill, sound engineer availability, or load-in times..."></textarea>
+                </div>
+
+                <button type="submit" class="btn primary-btn submit-booking-btn">
+                  <i class="fa-solid fa-paper-plane"></i> Send Booking Pitch to The Kins
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="epk-footer">
+          <div class="footer-content">
+            <div class="footer-brand">
+              <span class="footer-logo-text">THE KINS</span>
+              <span class="footer-tagline">Melbourne Indie Rock • Official Venue EPK</span>
+            </div>
+            <div class="footer-links">
+              <a href="#hero">Back to Top</a>
+              <a href="#quick-facts">Quick Facts</a>
+              <a href="#technical">Tech Specs</a>
+              <a href="#downloads">Assets</a>
+            </div>
+            <div class="footer-copy">
+              &copy; 2026 The Kins. All rights reserved. Built for venue talent buyers and promoters.
+            </div>
+          </div>
+        </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- VIP PROMOTER PORTAL MODAL (`venue2026`) -->
+  <div class="modal-backdrop" id="vipModal">
+    <div class="modal-card vip-modal-card">
+      <button class="modal-close-btn" id="closeVipModalBtn" aria-label="Close VIP Modal"><i class="fa-solid fa-xmark"></i></button>
+
+      <div class="vip-locked-state" id="vipLockedState">
+        <div class="vip-icon-header">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3>VIP Promoter & Booker Portal</h3>
+        <p>Enter your access password to unlock unreleased live performance video clips, draft contract templates, and manager direct lines.</p>
+
+        <form id="vipPasswordForm" class="vip-form">
+          <div class="input-with-button">
+            <input type="password" id="vipPasswordInput" placeholder="Enter password (default: venue2026)" required>
+            <button type="submit" class="btn primary-btn">Unlock</button>
+          </div>
+          <span class="vip-error-msg" id="vipErrorMsg">Invalid password. Hint: venue2026</span>
+        </form>
+      </div>
+
+      <div class="vip-unlocked-state" id="vipUnlockedState" style="display: none;">
+        <div class="unlocked-header">
+          <span class="unlocked-badge"><i class="fa-solid fa-lock-open"></i> VIP ACCESS GRANTED</span>
+          <h3>Exclusive Venue & Contract Specs</h3>
+        </div>
+
+        <div class="vip-content-grid">
+          <div class="vip-item-card">
+            <i class="fa-solid fa-film vip-item-icon"></i>
+            <div class="vip-item-info">
+              <h4>Unreleased Single (Live Studio Recording)</h4>
+              <p>Private YouTube Unlisted Link for upcoming November release.</p>
+              <a href="https://youtube.com" target="_blank" class="vip-link-btn"><i class="fa-solid fa-play"></i> Watch Private Video</a>
+            </div>
+          </div>
+
+          <div class="vip-item-card">
+            <i class="fa-solid fa-file-contract vip-item-icon"></i>
+            <div class="vip-item-info">
+              <h4>Standard Performance Contract Rider Template</h4>
+              <p>Standard APRA AMCOS compliant performance agreement.</p>
+              <button class="vip-download-btn download-btn-trigger" data-file="Kins_Performance_Contract_Template.pdf"><i class="fa-solid fa-download"></i> Download Draft PDF</button>
+            </div>
+          </div>
+
+          <div class="vip-item-card">
+            <i class="fa-solid fa-phone vip-item-icon"></i>
+            <div class="vip-item-info">
+              <h4>Direct Tour Manager Hotline</h4>
+              <p>24/7 emergency contact during show day.</p>
+              <span class="hotline-number">+61 400 123 456 (Charlie - Tour Mgr)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REAL-TIME ANALYTICS MODAL -->
+  <div class="modal-backdrop" id="analyticsModal">
+    <div class="modal-card analytics-modal-card">
+      <button class="modal-close-btn" id="closeAnalyticsModalBtn" aria-label="Close Analytics Modal"><i class="fa-solid fa-xmark"></i></button>
+      
+      <div class="modal-header-group">
+        <i class="fa-solid fa-chart-pie analytics-icon"></i>
+        <h3>EPK Real-time Booker Analytics</h3>
+        <p>Live session telemetry tracking how talent buyers interact with this EPK page.</p>
+      </div>
+
+      <div class="analytics-metrics-grid">
+        <div class="metric-card">
+          <span class="metric-number" id="analyticsViewsCount">142</span>
+          <span class="metric-label">Total Venue Views</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-number" id="analyticsDownloadsCount">38</span>
+          <span class="metric-label">Asset Downloads</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-number" id="analyticsVideoPlaysCount">94</span>
+          <span class="metric-label">Live Video Plays</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-number" id="analyticsTimeOnPage">1m 45s</span>
+          <span class="metric-label">Avg. Booker Dwell Time</span>
+        </div>
+      </div>
+
+      <div class="analytics-log-box">
+        <h4>Recent Booker Interactions</h4>
+        <ul class="log-list" id="analyticsLogList">
+          <li><span class="log-time">Just now</span> — Viewed Quick Facts Summary</li>
+          <li><span class="log-time">2 mins ago</span> — Clicked Stage Plot & Tech Rider Download</li>
+          <li><span class="log-time">14 mins ago</span> — Searched Song Catalogue for "The Cure"</li>
+          <li><span class="log-time">1 hour ago</span> — Played Live Video Showcase (The Espy)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX IMAGE MODAL -->
+  <div class="modal-backdrop" id="lightboxModal">
+    <div class="lightbox-modal-content">
+      <button class="modal-close-btn" id="closeLightboxBtn" aria-label="Close Lightbox"><i class="fa-solid fa-xmark"></i></button>
+      <img src="" id="lightboxImg" alt="Expanded promo photo">
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Custom EPK JavaScript -->
+  <script src="script.js?v=1"></script>
+</body>
+</html>

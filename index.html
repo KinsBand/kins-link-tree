@@ -63,7 +63,7 @@
       <!-- Main Content Container -->
       <main class="container">
         
-        <!-- Header Actions: Subscribe (Left), Copy (Center), Share (Right) -->
+        <!-- Header Actions: Subscribe (Left), Share (Right) -->
         <header class="top-nav">
           <div class="top-subscribe-wrapper">
             <span class="free-badge-pill">FREE</span>
@@ -71,11 +71,6 @@
               <span>SUBSCRIBE</span>
             </button>
           </div>
-          
-          <button class="nav-pill-btn" id="handleCopyBtn" title="Click to copy @KinsBandOfficial" aria-label="Copy handle">
-            <i class="fa-regular fa-copy"></i>
-            <span>@KinsBandOfficial</span>
-          </button>
 
           <button class="nav-pill-btn" id="shareBtn" aria-label="Share page">
             <span>SHARE</span>
@@ -122,21 +117,6 @@
           </div>
         </div>
 
-        <!-- DISCORD FAN COMMUNITY CTA BANNER -->
-        <div class="community-banner-card">
-          <div class="community-left">
-            <i class="fa-brands fa-discord discord-banner-icon"></i>
-            <div class="community-info">
-              <h4>Join Kins Discord Server</h4>
-              <p>Exclusive updates, demo listening parties & VIP chat</p>
-            </div>
-          </div>
-          <a href="https://discord.gg" target="_blank" rel="noopener" class="join-community-btn">
-            <span>JOIN</span>
-            <i class="fa-solid fa-chevron-right"></i>
-          </a>
-        </div>
-
         <!-- MAIN DYNAMIC CONTENT SECTION WITH SEGMENTED SWITCHER (SOCIALS & STREAMS) -->
         <section class="tabbed-links-section">
           
@@ -154,6 +134,31 @@
           <div class="tab-content active" id="socialsTab">
             <div class="buttons-list">
               
+              <a href="https://tiktok.com/@KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="tiktok">
+                <div class="btn-icon"><i class="fa-brands fa-tiktok"></i></div>
+                <span class="btn-text">Tiktok</span>
+              </a>
+
+              <a href="https://youtube.com/@KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="youtube">
+                <div class="btn-icon"><i class="fa-brands fa-youtube"></i></div>
+                <span class="btn-text">Youtube</span>
+              </a>
+
+              <a href="https://x.com/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="twitter">
+                <div class="btn-icon"><i class="fa-brands fa-x-twitter"></i></div>
+                <span class="btn-text">Twitter</span>
+              </a>
+
+              <a href="https://twitch.tv/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="twitch">
+                <div class="btn-icon"><i class="fa-brands fa-twitch"></i></div>
+                <span class="btn-text">Twitch</span>
+              </a>
+
+              <a href="https://discord.gg" target="_blank" rel="noopener" class="green-link-btn" data-platform="discord">
+                <div class="btn-icon"><i class="fa-brands fa-discord"></i></div>
+                <span class="btn-text">Discord</span>
+              </a>
+
               <a href="https://instagram.com/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="instagram">
                 <div class="btn-icon"><i class="fa-brands fa-instagram"></i></div>
                 <span class="btn-text">Instagram</span>
@@ -162,26 +167,6 @@
               <a href="https://linkedin.com/company/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="linkedin">
                 <div class="btn-icon"><i class="fa-brands fa-linkedin-in"></i></div>
                 <span class="btn-text">Linkedin</span>
-              </a>
-
-              <a href="https://tiktok.com/@KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="tiktok">
-                <div class="btn-icon"><i class="fa-brands fa-tiktok"></i></div>
-                <span class="btn-text">Tiktok</span>
-              </a>
-
-              <a href="https://twitch.tv/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="twitch">
-                <div class="btn-icon"><i class="fa-brands fa-twitch"></i></div>
-                <span class="btn-text">Twitch</span>
-              </a>
-
-              <a href="https://x.com/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="twitter">
-                <div class="btn-icon"><i class="fa-brands fa-x-twitter"></i></div>
-                <span class="btn-text">Twitter</span>
-              </a>
-
-              <a href="https://youtube.com/@KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="youtube">
-                <div class="btn-icon"><i class="fa-brands fa-youtube"></i></div>
-                <span class="btn-text">Youtube</span>
               </a>
 
             </div>
@@ -521,34 +506,15 @@
 
       <div class="modal-body share-modal-body">
         
-        <!-- Native System Share Pill Button -->
-        <button class="native-share-btn" id="nativeSystemShareBtn">
-          <i class="fa-solid fa-arrow-up-from-bracket"></i>
-          <span>Share via System Options...</span>
-        </button>
-
-        <!-- Social Share Quick Action Grid -->
-        <div class="share-social-grid">
-          <a href="#" class="social-share-item" id="shareWhatsAppBtn" target="_blank" rel="noopener" title="Share on WhatsApp">
-            <div class="share-icon-box whatsapp"><i class="fa-brands fa-whatsapp"></i></div>
-            <span>WhatsApp</span>
-          </a>
-          <a href="#" class="social-share-item" id="shareTwitterBtn" target="_blank" rel="noopener" title="Share on X / Twitter">
-            <div class="share-icon-box twitter"><i class="fa-brands fa-x-twitter"></i></div>
-            <span>X / Twitter</span>
-          </a>
-          <a href="#" class="social-share-item" id="shareFacebookBtn" target="_blank" rel="noopener" title="Share on Facebook">
-            <div class="share-icon-box facebook"><i class="fa-brands fa-facebook-f"></i></div>
-            <span>Facebook</span>
-          </a>
-          <a href="#" class="social-share-item" id="shareLinkedInBtn" target="_blank" rel="noopener" title="Share on LinkedIn">
-            <div class="share-icon-box linkedin"><i class="fa-brands fa-linkedin-in"></i></div>
-            <span>LinkedIn</span>
-          </a>
-          <a href="#" class="social-share-item" id="shareEmailBtn" title="Share via Email">
-            <div class="share-icon-box email"><i class="fa-regular fa-envelope"></i></div>
-            <span>Email</span>
-          </a>
+        <!-- Copy Handle Row with Icon-Only Copy Button -->
+        <div class="share-copy-handle-wrapper">
+          <div class="handle-display-box">
+            <i class="fa-solid fa-at handle-at-icon"></i>
+            <span class="handle-handle-text">@KinsBandOfficial</span>
+          </div>
+          <button class="icon-only-copy-btn" id="handleCopyBtn" title="Copy handle @KinsBandOfficial" aria-label="Copy handle @KinsBandOfficial">
+            <i class="fa-regular fa-copy"></i>
+          </button>
         </div>
 
         <!-- Dynamic QR Code Container with Download Action -->
@@ -563,15 +529,14 @@
           </div>
         </div>
 
-        <!-- Direct Link Copy Input Group -->
+        <!-- Direct Link Copy Input Group with Icon-Only Copy Button -->
         <div class="copy-input-group">
           <div class="copy-input-wrapper">
             <i class="fa-solid fa-link link-input-icon"></i>
             <input type="text" id="shareUrlInput" value="https://beacons.ai/KinsBandOfficial" readonly>
           </div>
-          <button id="copyUrlBtn" class="copy-btn">
+          <button id="copyUrlBtn" class="icon-only-copy-btn" title="Copy website link" aria-label="Copy website link">
             <i class="fa-regular fa-copy"></i>
-            <span>Copy</span>
           </button>
         </div>
 
@@ -607,16 +572,17 @@
       </div>
     </div>
 
-    <!-- Fixed Floating Gig Pill Button (50% Width) -->
+    <!-- Fixed Floating Gig Pill Button (40% Width) -->
     <div class="floating-gig-pill-container" id="floatingGigPillBtn" role="button" aria-label="Open Tour & Gig Map">
       <div class="gig-pill-inner">
-        <span class="pulse-beacon-dot"></span>
         <i class="fa-solid fa-map-location-dot pill-map-icon"></i>
         <div class="gig-pill-text-box">
-          <span class="gig-pill-tag" id="gigPillTag">LIVE GIGS</span>
-          <span class="gig-pill-location" id="gigPillLocation">Tour Dates & Map</span>
+          <span class="gig-pill-tag" id="gigPillTag">Gigs</span>
+          <span class="gig-pill-location" id="gigPillLocation">Locations</span>
         </div>
-        <i class="fa-solid fa-chevron-up pill-arrow-icon"></i>
+        <div class="gig-pill-arrow-section">
+          <i class="fa-solid fa-chevron-right pill-arrow-icon"></i>
+        </div>
       </div>
     </div>
 

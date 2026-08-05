@@ -266,12 +266,24 @@ body.theme-light .hero-gradient-overlay {
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  padding: 0;
+  padding: 8px 12px;
   margin-top: 10px;
-  position: relative;
-  z-index: 10;
+  position: sticky;
+  top: 10px;
+  z-index: 100;
   width: 100%;
   box-sizing: border-box;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, filter, transform;
+}
+
+.top-nav.nav-hidden {
+  opacity: 0;
+  filter: blur(12px);
+  pointer-events: none;
+  transform: translateY(-12px);
 }
 
 .top-subscribe-wrapper {
@@ -637,15 +649,11 @@ body.theme-light .switcher-tab.active {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Buttons List Grid Layout (2-by-2 Rows) */
+/* Buttons List Vertical Stack Layout (1-by-1 Full Width) */
 .buttons-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
-}
-
-.buttons-list .green-link-btn:last-child:nth-child(odd) {
-  grid-column: span 2;
 }
 
 /* Green 3D Link Buttons */
@@ -1397,11 +1405,62 @@ body.modal-open {
   background: var(--btn-green-hover, #44b868);
 }
 
-.share-social-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
+.share-copy-handle-wrapper {
   width: 100%;
+  margin: 6px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(83, 198, 120, 0.1);
+  border: 1px solid rgba(83, 198, 120, 0.35);
+  border-radius: 18px;
+  padding: 10px 14px;
+}
+
+.handle-display-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+  font-family: var(--font-primary);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.handle-at-icon {
+  color: #53c678;
+  font-size: 1.1rem;
+}
+
+/* Icon-Only Copy Button styling for URL copy & Handle copy */
+.icon-only-copy-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--btn-green, #53c678);
+  color: #0b1f18;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.18s ease, 
+              box-shadow 0.18s ease;
+  box-shadow: 0 4px 12px rgba(83, 198, 120, 0.25);
+}
+
+.icon-only-copy-btn:hover {
+  background: var(--btn-green-hover, #44b868);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(83, 198, 120, 0.4);
+}
+
+.icon-only-copy-btn:active {
+  transform: scale(0.94);
 }
 
 .social-share-item {
@@ -1713,26 +1772,50 @@ body.modal-open {
 /* GIG MAP FLOATING PILL & BOTTOM SHEET MODAL                    */
 /* ------------------------------------------------------------- */
 
-/* Floating Gig Pill Button (Compact <= 45% Width, Animates to Right when Mini Player is Active) */
+/* Floating Gig Pill Button (Compact <= 40% Width, Bottom-Right) */
 .floating-gig-pill-container {
   position: relative;
   bottom: auto;
   right: auto;
-  order: 2;
-  flex: 0 1 45%;
-  width: 45%;
-  max-width: 180px;
+  order: 1;
+  flex: 0 0 40%;
+  width: 40%;
+  max-width: 140px;
+  margin-left: auto;
   z-index: 120;
   cursor: pointer;
-  transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), 
+              bottom 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              width 0.38s ease;
 }
 
-/* When Audio Player is Hidden, Gigs Pill Expands Smoothly to 100% Width */
+/* When Audio Player is Hidden/Unmounted, Gigs Pill sits compact in bottom-right corner */
 .bottom-audio-bar.hidden + .floating-gig-pill-container {
   order: 1;
+  flex: 0 0 40%;
+  width: 40%;
+  max-width: 140px;
+  transform: translateY(0);
+}
+
+/* When Audio Player is ACTIVE or PAUSED (visible): Player takes 100% width, Gig pill animates vertically upward directly above it */
+.bottom-audio-bar:not(.hidden) {
   flex: 1 1 100%;
   width: 100%;
-  max-width: 100%;
+}
+
+.bottom-audio-bar:not(.hidden) + .floating-gig-pill-container {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  flex: 0 0 40%;
+  width: 40%;
+  max-width: 140px;
+}
+
+/* Temporarily hide band member social links toggle button (code structure preserved) */
+.member-socials-toggle-btn {
+  display: none !important;
 }
 
 .gig-pill-inner {
@@ -1811,14 +1894,25 @@ body.modal-open {
   white-space: nowrap;
 }
 
+.gig-pill-arrow-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 10%;
+  min-width: 18px;
+  margin-left: auto;
+  padding-left: 6px;
+  border-left: 1px solid rgba(83, 198, 120, 0.3);
+}
+
 .pill-arrow-icon {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
-  transition: transform 0.25s ease;
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.75);
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .floating-gig-pill-container:hover .pill-arrow-icon {
-  transform: translateY(-2px);
+  transform: translateX(2px);
   color: #53c678;
 }
 
@@ -2812,15 +2906,15 @@ body.modal-open {
   pointer-events: auto;
 }
 
-/* Floating Bottom Audio Bar (55% Width, Positioned on Left) */
+/* Floating Bottom Audio Bar (60% Width Default, Positioned on Left) */
 .bottom-audio-bar {
   position: relative;
   bottom: auto;
   left: auto;
   transform: none;
   order: 1;
-  flex: 1 1 55%;
-  width: 55%;
+  flex: 1 1 60%;
+  width: 60%;
   max-width: none;
   background: rgba(11, 31, 24, 0.94);
   border: 1px solid rgba(83, 198, 120, 0.4);

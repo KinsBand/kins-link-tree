@@ -43,6 +43,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareModal = document.getElementById('shareModal');
   const closeShareModal = document.getElementById('closeShareModal');
   const copyUrlBtn = document.getElementById('copyUrlBtn');
+
+  // Smart Top Header Nav Scroll Behavior (Fade/Blur out on scroll down, smooth reveal on scroll up)
+  const topNav = document.querySelector('.top-nav');
+  let lastScrollY = window.scrollY;
+
+  window.addEventListener('scroll', () => {
+    const currentScrollY = window.scrollY;
+    if (!topNav) return;
+
+    if (currentScrollY <= 15) {
+      topNav.classList.remove('nav-hidden');
+    } else if (currentScrollY > lastScrollY && currentScrollY > 60) {
+      topNav.classList.add('nav-hidden');
+    } else if (currentScrollY < lastScrollY) {
+      topNav.classList.remove('nav-hidden');
+    }
+    lastScrollY = currentScrollY;
+  }, { passive: true });
   const shareUrlInput = document.getElementById('shareUrlInput');
   
   const toastContainer = document.getElementById('toastContainer');
@@ -361,26 +379,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let qrCodeInstance = null;
 
   if (shareBtn && shareModal && closeShareModal) {
-    shareBtn.addEventListener('click', () => {
+    shareBtn.addEventListener('click', async () => {
       shareModal.classList.add('active');
       lockScroll();
       trackClick('open_share_modal');
 
       const pageUrl = window.location.href;
       const shareTitle = "Kins Official | Link in Bio";
-
-      // Populate Social Share Links
-      const whatsappBtn = document.getElementById('shareWhatsAppBtn');
-      const twitterBtn = document.getElementById('shareTwitterBtn');
-      const facebookBtn = document.getElementById('shareFacebookBtn');
-      const linkedinBtn = document.getElementById('shareLinkedInBtn');
-      const emailBtn = document.getElementById('shareEmailBtn');
-
-      if (whatsappBtn) whatsappBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareTitle + ' ' + pageUrl)}`;
-      if (twitterBtn) twitterBtn.href = `https://x.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(pageUrl)}`;
-      if (facebookBtn) facebookBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
-      if (linkedinBtn) linkedinBtn.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`;
-      if (emailBtn) emailBtn.href = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(pageUrl)}`;
 
       // Generate dynamic QR code if qrcode.js is loaded
       const qrCanvasContainer = document.getElementById('qrcodeCanvas');
@@ -395,28 +400,21 @@ document.addEventListener('DOMContentLoaded', () => {
           correctLevel: QRCode.CorrectLevel.H
         });
       }
-    });
 
-    // Native System Share Sheet Trigger
-    const nativeShareBtn = document.getElementById('nativeSystemShareBtn');
-    if (nativeShareBtn) {
-      nativeShareBtn.addEventListener('click', async () => {
-        if (navigator.share) {
-          try {
-            await navigator.share({
-              title: 'Kins Official | Link in Bio',
-              text: 'Check out official music releases, merch, and tour dates for Kins!',
-              url: window.location.href
-            });
-            showToast('Shared successfully!', 'success');
-          } catch (err) {
-            console.log('Native share cancelled or failed', err);
-          }
-        } else {
-          showToast('System share not supported on this browser. Copy link below.', 'info');
+      // Automatically invoke Web Share API if supported by browser
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: 'Check out official music releases, merch, and tour dates for Kins!',
+            url: pageUrl
+          });
+        } catch (err) {
+          // Gracefully fallback to custom share modal on dismissal or error
+          console.log('Native share dismissed or failed:', err);
         }
-      });
-    }
+      }
+    });
 
     // QR Code Image Download Trigger
     const downloadQrBtn = document.getElementById('downloadQrBtn');
@@ -566,8 +564,8 @@ END:VCALENDAR`;
       gigPillTag.textContent = "NEXT GIG";
       gigPillLocation.textContent = `${GIG_DATA.upcoming.venue}, ${GIG_DATA.upcoming.city.split(',')[0]}`;
     } else {
-      gigPillTag.textContent = "LIVE GIGS";
-      gigPillLocation.textContent = "Tour Dates & Locations";
+      gigPillTag.textContent = "Gigs";
+      gigPillLocation.textContent = "Locations";
     }
   }
   updateFloatingPill();
@@ -1133,7 +1131,6 @@ END:VCALENDAR`;
             <div class="music-card-info">
               <div class="card-title-row">
                 <span class="song-title">${track.title}</span>
-                <span class="track-duration">${track.duration || ''}</span>
               </div>
               <span class="artist-name">${track.artist}</span>
               <div class="card-badge-row">
