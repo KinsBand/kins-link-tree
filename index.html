@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
 
@@ -78,7 +78,6 @@
           </button>
 
           <button class="nav-pill-btn" id="shareBtn" aria-label="Share page">
-            <i class="fa-solid fa-share-nodes"></i>
             <span>SHARE</span>
           </button>
         </header>
@@ -108,26 +107,7 @@
             <div class="followers-count" id="totalFollowersCount">0</div>
           </div>
 
-          <!-- PRE-SAVE RELEASE SMART LINK CTA CARD -->
-          <div class="hero-music-cta-card">
-            <div class="hero-cta-left">
-              <div class="studio-icon-box">
-                <span class="studio-live-pulse"></span>
-                <i class="fa-solid fa-compact-disc studio-icon spinning-vinyl"></i>
-                <span class="studio-tag">PRE-SAVE</span>
-              </div>
-            </div>
-            <div class="hero-cta-center">
-              <h3 class="hero-cta-title">New Single "Midnight City"</h3>
-              <p class="hero-cta-subtitle">Out Oct 31 • Pre-save on Spotify & Apple Music</p>
-            </div>
-            <div class="hero-cta-right">
-              <a href="https://distrokid.com" target="_blank" rel="noopener" class="inspired-cta-btn presave-btn" aria-label="Pre-Save Release">
-                <span>PRE-SAVE</span>
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              </a>
-            </div>
-          </div>
+
         </section>
 
         <!-- DISCORD FAN COMMUNITY CTA BANNER -->
@@ -533,13 +513,13 @@
   </div>
 
   <!-- FIXED FLOATING GIG PILL (BOTTOM RIGHT) -->
-  <div class="floating-gig-pill-container" id="floatingGigPillBtn" role="button" aria-label="Open Gig Map">
+  <div class="floating-gig-pill-container" id="floatingGigPillBtn" role="button" aria-label="Open Tour & Gig Map">
     <div class="gig-pill-inner">
       <span class="pulse-beacon-dot"></span>
       <i class="fa-solid fa-map-location-dot pill-map-icon"></i>
       <div class="gig-pill-text-box">
-        <span class="gig-pill-tag" id="gigPillTag">NEXT GIG</span>
-        <span class="gig-pill-location" id="gigPillLocation">Enmore Theatre, Sydney • OCT 24</span>
+        <span class="gig-pill-tag" id="gigPillTag">LIVE GIGS</span>
+        <span class="gig-pill-location" id="gigPillLocation">Tour Dates & Locations</span>
       </div>
       <i class="fa-solid fa-chevron-up pill-arrow-icon"></i>
     </div>
@@ -559,9 +539,9 @@
       <div class="gig-sheet-header">
         <div class="gig-banner-card" id="gigBannerCard">
           <div class="gig-banner-left">
-            <span class="gig-status-badge" id="gigStatusBadge"><i class="fa-solid fa-bolt"></i> UPCOMING GIG</span>
-            <h4 class="gig-banner-venue" id="gigBannerVenue">Enmore Theatre</h4>
-            <p class="gig-banner-meta" id="gigBannerMeta"><i class="fa-regular fa-calendar-days"></i> Fri Oct 24, 2026 • 8:00 PM | Sydney, AU</p>
+            <span class="gig-status-badge" id="gigStatusBadge"><i class="fa-solid fa-calendar-days"></i> TOUR DATES</span>
+            <h4 class="gig-banner-venue" id="gigBannerVenue">Kins Live Concerts</h4>
+            <p class="gig-banner-meta" id="gigBannerMeta"><i class="fa-solid fa-location-dot"></i> Check back for live show announcements & ticket releases</p>
           </div>
         </div>
         <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map">
@@ -582,48 +562,17 @@
         <div class="venue-card-header">
           <div class="venue-header-info">
             <div class="venue-title-row">
-              <h4 class="venue-card-name" id="venueCardName">Enmore Theatre</h4>
-              <div class="venue-rating-badge">
-                <i class="fa-solid fa-star"></i>
-                <span id="venueRatingText">5.0 / 5.0</span>
-              </div>
+              <h4 class="venue-card-name" id="venueCardName">Live Shows & Map</h4>
             </div>
-            <p class="venue-card-city" id="venueCardCity">Sydney, Australia • Live Music Venue</p>
+            <p class="venue-card-city" id="venueCardCity">Melbourne & Australian Tour Locations</p>
           </div>
           
           <div class="venue-action-buttons-group">
-            <a href="https://enmoretheatre.com.au" target="_blank" rel="noopener" class="venue-booking-btn" id="venueBookingBtn">
-              <i class="fa-solid fa-ticket"></i>
-              <span>TICKETS</span>
-            </a>
-            <a id="addToCalendarBtn" href="#" class="venue-action-pill-btn" title="Add to Calendar">
-              <i class="fa-regular fa-calendar-plus"></i>
-              <span>Calendar</span>
-            </a>
-            <a id="getDirectionsBtn" href="https://maps.google.com/?q=Enmore+Theatre+Sydney" target="_blank" rel="noopener" class="venue-action-pill-btn" title="Get Directions">
-              <i class="fa-solid fa-diamond-turn-right"></i>
-              <span>Directions</span>
+            <a href="https://www.bandsintown.com" target="_blank" rel="noopener" class="venue-booking-btn" id="venueBookingBtn">
+              <i class="fa-solid fa-bell"></i>
+              <span>GET NOTIFIED</span>
             </a>
           </div>
-        </div>
-
-        <!-- Live Show Photo/Video Recap Gallery -->
-        <div class="live-archive-header">
-          <span class="archive-title"><i class="fa-solid fa-camera-retro"></i> Recent Show Recaps</span>
-        </div>
-        <div class="live-recap-gallery">
-          <div class="recap-card"><img src="pfp.jpg" alt="Enmore Show 2026"><span class="recap-label">Sydney 2026</span></div>
-          <div class="recap-card"><img src="pfp.jpg" alt="Melbourne Forum 2026"><span class="recap-label">Melbourne 2026</span></div>
-          <div class="recap-card"><img src="pfp.jpg" alt="Brisbane Tivoli 2026"><span class="recap-label">Brisbane 2026</span></div>
-        </div>
-
-        <!-- Horizontal Scroll Gallery of Venue Features / Photos -->
-        <div class="venue-gallery-container" id="venueGalleryContainer">
-          <div class="gallery-chip"><i class="fa-solid fa-guitar"></i> Iconic Concert Hall</div>
-          <div class="gallery-chip"><i class="fa-solid fa-users"></i> 2,500 Capacity</div>
-          <div class="gallery-chip"><i class="fa-solid fa-martini-glass"></i> Full Bar & Lounge</div>
-          <div class="gallery-chip"><i class="fa-solid fa-wheelchair"></i> Accessible Venue</div>
-          <div class="gallery-chip"><i class="fa-solid fa-square-parking"></i> Nearby Transit</div>
         </div>
       </div>
 
@@ -670,6 +619,6 @@
   <!-- Ambient Wallpaper Background Container -->
   <div class="ambient-wallpaper-bg" id="ambientWallpaperBg"></div>
 
-  <script src="script.js?v=6"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>

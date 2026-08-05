@@ -440,21 +440,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 9. Interactive Gig Map & Bottom Sheet Modal Logic
   // -------------------------------------------------------------
   const GIG_DATA = {
-    hasUpcoming: true,
-    upcoming: {
-      venue: "Enmore Theatre",
-      city: "Sydney, AU",
-      date: "Fri, Oct 24, 2026",
-      time: "8:00 PM",
-      lat: -33.8986,
-      lng: 151.1764,
-      ticketUrl: "https://enmoretheatre.com.au",
-      statusText: "UPCOMING GIG"
-    },
+    hasUpcoming: false,
+    upcoming: null,
     pastGigs: [
-      { venue: "The Forum", city: "Melbourne, AU", date: "Aug 12, 2025", lat: -37.8166, lng: 144.9692, notes: "Sold Out Headline Show!" },
-      { venue: "The Tivoli", city: "Brisbane, AU", date: "Nov 05, 2025", lat: -27.4526, lng: 153.0334, notes: "Summer Festival Leg" },
-      { venue: "The Gov", city: "Adelaide, AU", date: "Mar 18, 2026", lat: -34.9082, lng: 138.5802, notes: "Acoustic & Electric Night" }
+      { venue: "Melbourne", city: "Victoria, AU", date: "Live Show", lat: -37.8136, lng: 144.9631, notes: "Kins Live Stage" },
+      { venue: "Sydney", city: "NSW, AU", date: "Live Show", lat: -33.8688, lng: 151.2093, notes: "Kins Live Stage" },
+      { venue: "Brisbane", city: "QLD, AU", date: "Live Show", lat: -27.4698, lng: 153.0251, notes: "Kins Live Stage" }
     ]
   };
 
@@ -462,6 +453,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (addToCalendarBtn) {
     addToCalendarBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      if (!GIG_DATA.hasUpcoming || !GIG_DATA.upcoming) {
+        showToast('No upcoming show currently scheduled!');
+        return;
+      }
       trackClick('add_to_calendar', { venue: GIG_DATA.upcoming.venue, date: GIG_DATA.upcoming.date });
       
       const icsData = `BEGIN:VCALENDAR
@@ -469,12 +464,9 @@ VERSION:2.0
 PRODID:-//Kins Band//NONSGML Live Gig//EN
 BEGIN:VEVENT
 UID:${Date.now()}@kins.au
-DTSTAMP:20261024T090000Z
-DTSTART:20261024T100000Z
-DTEND:20261024T130000Z
-SUMMARY:Kins Live at Enmore Theatre
-DESCRIPTION:Kins (@KinsBandOfficial) Live Concert at Enmore Theatre Sydney.
-LOCATION:Enmore Theatre, 118-132 Enmore Rd, Newtown NSW 2042
+SUMMARY:Kins Live at ${GIG_DATA.upcoming.venue}
+DESCRIPTION:Kins (@KinsBandOfficial) Live Concert.
+LOCATION:${GIG_DATA.upcoming.venue}, ${GIG_DATA.upcoming.city}
 STATUS:CONFIRMED
 END:VEVENT
 END:VCALENDAR`;
@@ -482,7 +474,7 @@ END:VCALENDAR`;
       const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = window.URL.createObjectURL(blob);
-      link.setAttribute('download', 'Kins_Enmore_Theatre_Gig.ics');
+      link.setAttribute('download', 'Kins_Live_Show.ics');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -497,10 +489,10 @@ END:VCALENDAR`;
     if (!gigPillTag || !gigPillLocation) return;
     if (GIG_DATA.hasUpcoming && GIG_DATA.upcoming) {
       gigPillTag.textContent = "NEXT GIG";
-      gigPillLocation.textContent = `${GIG_DATA.upcoming.venue}, ${GIG_DATA.upcoming.city.split(',')[0]} • OCT 24`;
+      gigPillLocation.textContent = `${GIG_DATA.upcoming.venue}, ${GIG_DATA.upcoming.city.split(',')[0]}`;
     } else {
-      gigPillTag.textContent = "TOUR HISTORY";
-      gigPillLocation.textContent = "Previous Gigs & Venues";
+      gigPillTag.textContent = "LIVE GIGS";
+      gigPillLocation.textContent = "Tour Dates & Locations";
     }
   }
   updateFloatingPill();
@@ -1062,12 +1054,11 @@ END:VCALENDAR`;
             <div class="music-card-info">
               <div class="card-title-row">
                 <span class="song-title">${track.title}</span>
-                <span class="track-duration">${track.duration}</span>
+                <span class="track-duration">${track.duration || ''}</span>
               </div>
               <span class="artist-name">${track.artist}</span>
               <div class="card-badge-row">
                 <span class="genre-tag">${track.genre}</span>
-                <span class="quote-tag" title="${track.quote}"><i class="fa-solid fa-quote-left"></i> ${track.quote}</span>
               </div>
             </div>
             <button class="play-btn" aria-label="Play song" data-song="${track.title}" data-artist="${track.artist}">
