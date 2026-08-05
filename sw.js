@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kins-link-bio-v22';
+const CACHE_NAME = 'kins-link-bio-v25';
 const ASSETS = [
   './',
   './index.html',

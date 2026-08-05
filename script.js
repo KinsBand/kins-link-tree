@@ -343,6 +343,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -------------------------------------------------------------
+  // Viewport Scroll Lock Helpers for Modals
+  // -------------------------------------------------------------
+  function lockScroll() {
+    document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
+  }
+
+  function unlockScroll() {
+    document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
+  }
+
+  // -------------------------------------------------------------
   // 7. Share Modal & Dynamic QR Code Generation
   // -------------------------------------------------------------
   let qrCodeInstance = null;
@@ -350,16 +363,33 @@ document.addEventListener('DOMContentLoaded', () => {
   if (shareBtn && shareModal && closeShareModal) {
     shareBtn.addEventListener('click', () => {
       shareModal.classList.add('active');
+      lockScroll();
       trackClick('open_share_modal');
+
+      const pageUrl = window.location.href;
+      const shareTitle = "Kins Official | Link in Bio";
+
+      // Populate Social Share Links
+      const whatsappBtn = document.getElementById('shareWhatsAppBtn');
+      const twitterBtn = document.getElementById('shareTwitterBtn');
+      const facebookBtn = document.getElementById('shareFacebookBtn');
+      const linkedinBtn = document.getElementById('shareLinkedInBtn');
+      const emailBtn = document.getElementById('shareEmailBtn');
+
+      if (whatsappBtn) whatsappBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareTitle + ' ' + pageUrl)}`;
+      if (twitterBtn) twitterBtn.href = `https://x.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(pageUrl)}`;
+      if (facebookBtn) facebookBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
+      if (linkedinBtn) linkedinBtn.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`;
+      if (emailBtn) emailBtn.href = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(pageUrl)}`;
 
       // Generate dynamic QR code if qrcode.js is loaded
       const qrCanvasContainer = document.getElementById('qrcodeCanvas');
       if (qrCanvasContainer && typeof QRCode !== 'undefined') {
         qrCanvasContainer.innerHTML = '';
         qrCodeInstance = new QRCode(qrCanvasContainer, {
-          text: window.location.href,
-          width: 130,
-          height: 130,
+          text: pageUrl,
+          width: 90,
+          height: 90,
           colorDark: "#0b1f18",
           colorLight: "#ffffff",
           correctLevel: QRCode.CorrectLevel.H
@@ -367,13 +397,58 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // Native System Share Sheet Trigger
+    const nativeShareBtn = document.getElementById('nativeSystemShareBtn');
+    if (nativeShareBtn) {
+      nativeShareBtn.addEventListener('click', async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'Kins Official | Link in Bio',
+              text: 'Check out official music releases, merch, and tour dates for Kins!',
+              url: window.location.href
+            });
+            showToast('Shared successfully!', 'success');
+          } catch (err) {
+            console.log('Native share cancelled or failed', err);
+          }
+        } else {
+          showToast('System share not supported on this browser. Copy link below.', 'info');
+        }
+      });
+    }
+
+    // QR Code Image Download Trigger
+    const downloadQrBtn = document.getElementById('downloadQrBtn');
+    if (downloadQrBtn) {
+      downloadQrBtn.addEventListener('click', () => {
+        const img = document.querySelector('#qrcodeCanvas img');
+        const canvas = document.querySelector('#qrcodeCanvas canvas');
+        let src = null;
+        if (img && img.src) src = img.src;
+        else if (canvas) src = canvas.toDataURL("image/png");
+
+        if (src) {
+          const a = document.createElement('a');
+          a.href = src;
+          a.download = 'kins-official-qrcode.png';
+          a.click();
+          showToast('QR Code image downloaded!', 'success');
+        } else {
+          showToast('Generating QR code...', 'info');
+        }
+      });
+    }
+
     closeShareModal.addEventListener('click', () => {
       shareModal.classList.remove('active');
+      unlockScroll();
     });
 
     shareModal.addEventListener('click', (e) => {
       if (e.target === shareModal) {
         shareModal.classList.remove('active');
+        unlockScroll();
       }
     });
   }
@@ -622,6 +697,7 @@ END:VCALENDAR`;
   if (floatingGigPillBtn && gigMapModal) {
     floatingGigPillBtn.addEventListener('click', () => {
       gigMapModal.classList.add('active');
+      lockScroll();
       initGigMap();
     });
   }
@@ -630,11 +706,13 @@ END:VCALENDAR`;
   if (closeGigMapSheet && gigMapModal) {
     closeGigMapSheet.addEventListener('click', () => {
       gigMapModal.classList.remove('active');
+      unlockScroll();
     });
 
     gigMapModal.addEventListener('click', (e) => {
       if (e.target === gigMapModal) {
         gigMapModal.classList.remove('active');
+        unlockScroll();
       }
     });
   }
@@ -677,6 +755,7 @@ END:VCALENDAR`;
       // If swiped down past 100px threshold, close modal
       if (deltaY > 100) {
         gigMapModal.classList.remove('active');
+        unlockScroll();
         setTimeout(() => {
           bottomSheetContainer.style.transform = '';
         }, 300);

@@ -1279,20 +1279,31 @@ body.theme-light .site-footer {
   color: rgba(0, 0, 0, 0.45);
 }
 
-/* SHARE MODAL */
+/* BODY & VIEWPORT SCROLL LOCK WHEN MODAL IS ACTIVE */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  height: 100vh !important;
+  touch-action: none !important;
+  position: relative !important;
+}
+
+/* SHARE MODAL BACKDROP */
 .modal-backdrop {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  z-index: 2000;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -1303,16 +1314,245 @@ body.theme-light .site-footer {
   pointer-events: auto;
 }
 
-.modal-content {
-  background: #ffffff;
-  width: 88%;
-  max-width: 360px;
+.modal-content.share-modal-enhanced {
+  background: linear-gradient(145deg, rgba(16, 38, 30, 0.96) 0%, rgba(8, 22, 17, 0.98) 100%);
+  border: 1px solid rgba(83, 198, 120, 0.35);
   border-radius: 28px;
-  padding: 22px;
-  color: var(--text-dark);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  transform: scale(0.9);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  padding: 24px;
+  color: #ffffff;
+  width: 92%;
+  max-width: 420px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 50px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.share-header-icon {
+  font-size: 1.2rem;
+  color: var(--btn-green, #53c678);
+}
+
+.modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title-group h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.close-modal-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.close-modal-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.modal-body.share-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.native-share-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--btn-green, #53c678);
+  color: #0b1f18;
+  border: none;
+  border-radius: 16px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(83, 198, 120, 0.3);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.native-share-btn:hover {
+  transform: translateY(-2px);
+  background: var(--btn-green-hover, #44b868);
+}
+
+.share-social-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.social-share-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.72rem;
+  font-weight: 600;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.social-share-item:hover {
+  transform: translateY(-3px);
+  color: #ffffff;
+}
+
+.share-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.share-icon-box.whatsapp { background: #25D366; }
+.share-icon-box.twitter { background: #000000; border: 1px solid rgba(255, 255, 255, 0.2); }
+.share-icon-box.facebook { background: #1877F2; }
+.share-icon-box.linkedin { background: #0A66C2; }
+.share-icon-box.email { background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2); }
+
+.qr-box-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 14px 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.qr-canvas-wrapper {
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.qr-info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.qr-label-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.qr-label-sub {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.3;
+}
+
+.download-qr-btn {
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  transition: background 0.15s ease;
+}
+
+.download-qr-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.copy-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.copy-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 10px 14px;
+}
+
+.link-input-icon {
+  color: var(--btn-green, #53c678);
+  font-size: 0.85rem;
+}
+
+.copy-input-wrapper input {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  outline: none;
+  width: 100%;
+}
+
+.copy-btn {
+  background: var(--btn-green, #53c678);
+  color: #0b1f18;
+  border: none;
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.copy-btn:hover {
+  background: var(--btn-green-hover, #44b868);
+  transform: translateY(-1px);
 }
 
 .modal-backdrop.active .modal-content {
@@ -1473,18 +1713,26 @@ body.theme-light .site-footer {
 /* GIG MAP FLOATING PILL & BOTTOM SHEET MODAL                    */
 /* ------------------------------------------------------------- */
 
-/* Floating Gig Pill Button (Bottom Right) */
+/* Floating Gig Pill Button (Compact <= 45% Width, Animates to Right when Mini Player is Active) */
 .floating-gig-pill-container {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
+  position: relative;
+  bottom: auto;
+  right: auto;
+  order: 2;
+  flex: 0 1 45%;
+  width: 45%;
+  max-width: 180px;
   z-index: 120;
   cursor: pointer;
-  transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-body.audio-bar-active .floating-gig-pill-container {
-  bottom: 84px;
+/* When Audio Player is Hidden, Gigs Pill Expands Smoothly to 100% Width */
+.bottom-audio-bar.hidden + .floating-gig-pill-container {
+  order: 1;
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: 100%;
 }
 
 .gig-pill-inner {
@@ -1492,14 +1740,17 @@ body.audio-bar-active .floating-gig-pill-container {
   border: 1px solid rgba(83, 198, 120, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-radius: 30px;
-  padding: 10px 18px;
+  border-radius: 24px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 6px;
   color: #ffffff;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(83, 198, 120, 0.2);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, background 0.25s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .floating-gig-pill-container:hover .gig-pill-inner {
@@ -1580,10 +1831,12 @@ body.audio-bar-active .floating-gig-pill-container {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 250;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 2500;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
@@ -2539,28 +2792,49 @@ body.audio-bar-active .floating-gig-pill-container {
   transform: scale(0.95);
 }
 
-/* Floating Bottom Audio Bar */
-.bottom-audio-bar {
+/* Persistent Floating Bottom Controls Row (Mini Player 50% | Gigs Map Button 50%) */
+.bottom-floating-controls-wrapper {
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
   max-width: 440px;
-  background: rgba(11, 31, 24, 0.94);
-  border: 1px solid rgba(83, 198, 120, 0.4);
-  border-radius: 24px;
-  padding: 10px 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(83, 198, 120, 0.2);
-  backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
   z-index: 999;
+  pointer-events: none;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.bottom-floating-controls-wrapper > * {
+  pointer-events: auto;
+}
+
+/* Floating Bottom Audio Bar (55% Width, Positioned on Left) */
+.bottom-audio-bar {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  order: 1;
+  flex: 1 1 55%;
+  width: 55%;
+  max-width: none;
+  background: rgba(11, 31, 24, 0.94);
+  border: 1px solid rgba(83, 198, 120, 0.4);
+  border-radius: 24px;
+  padding: 8px 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(83, 198, 120, 0.2);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
 .bottom-audio-bar.hidden {
-  bottom: -100px;
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 
 .audio-bar-content {

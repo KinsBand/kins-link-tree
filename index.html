@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=20">
 </head>
 <body>
 
@@ -504,37 +504,122 @@
     </div>
   </div>
 
-  <!-- SHARE MODAL -->
+  <!-- ENHANCED SHARE MODAL -->
   <div class="modal-backdrop" id="shareModal">
-    <div class="modal-content">
+    <div class="modal-content share-modal-enhanced">
+      
+      <!-- Modal Header -->
       <div class="modal-header">
-        <h3>Share this Page</h3>
-        <button class="close-modal-btn" id="closeShareModal"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title-group">
+          <i class="fa-solid fa-share-nodes share-header-icon"></i>
+          <h3>Share Kins Official Page</h3>
+        </div>
+        <button class="close-modal-btn" id="closeShareModal" aria-label="Close share modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
-      <div class="modal-body">
-        <div class="qr-box">
-          <div id="qrcodeCanvas"></div>
-          <span>Scan to view on mobile</span>
+
+      <div class="modal-body share-modal-body">
+        
+        <!-- Native System Share Pill Button -->
+        <button class="native-share-btn" id="nativeSystemShareBtn">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i>
+          <span>Share via System Options...</span>
+        </button>
+
+        <!-- Social Share Quick Action Grid -->
+        <div class="share-social-grid">
+          <a href="#" class="social-share-item" id="shareWhatsAppBtn" target="_blank" rel="noopener" title="Share on WhatsApp">
+            <div class="share-icon-box whatsapp"><i class="fa-brands fa-whatsapp"></i></div>
+            <span>WhatsApp</span>
+          </a>
+          <a href="#" class="social-share-item" id="shareTwitterBtn" target="_blank" rel="noopener" title="Share on X / Twitter">
+            <div class="share-icon-box twitter"><i class="fa-brands fa-x-twitter"></i></div>
+            <span>X / Twitter</span>
+          </a>
+          <a href="#" class="social-share-item" id="shareFacebookBtn" target="_blank" rel="noopener" title="Share on Facebook">
+            <div class="share-icon-box facebook"><i class="fa-brands fa-facebook-f"></i></div>
+            <span>Facebook</span>
+          </a>
+          <a href="#" class="social-share-item" id="shareLinkedInBtn" target="_blank" rel="noopener" title="Share on LinkedIn">
+            <div class="share-icon-box linkedin"><i class="fa-brands fa-linkedin-in"></i></div>
+            <span>LinkedIn</span>
+          </a>
+          <a href="#" class="social-share-item" id="shareEmailBtn" title="Share via Email">
+            <div class="share-icon-box email"><i class="fa-regular fa-envelope"></i></div>
+            <span>Email</span>
+          </a>
         </div>
+
+        <!-- Dynamic QR Code Container with Download Action -->
+        <div class="qr-box-container">
+          <div class="qr-canvas-wrapper" id="qrcodeCanvas"></div>
+          <div class="qr-info-column">
+            <span class="qr-label-title">Scan QR Code</span>
+            <span class="qr-label-sub">Point mobile camera to view page</span>
+            <button class="download-qr-btn" id="downloadQrBtn">
+              <i class="fa-solid fa-download"></i> Save QR
+            </button>
+          </div>
+        </div>
+
+        <!-- Direct Link Copy Input Group -->
         <div class="copy-input-group">
-          <input type="text" id="shareUrlInput" value="https://beacons.ai/KinsBandOfficial" readonly>
-          <button id="copyUrlBtn" class="copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+          <div class="copy-input-wrapper">
+            <i class="fa-solid fa-link link-input-icon"></i>
+            <input type="text" id="shareUrlInput" value="https://beacons.ai/KinsBandOfficial" readonly>
+          </div>
+          <button id="copyUrlBtn" class="copy-btn">
+            <i class="fa-regular fa-copy"></i>
+            <span>Copy</span>
+          </button>
         </div>
+
       </div>
     </div>
   </div>
 
-  <!-- FIXED FLOATING GIG PILL (BOTTOM RIGHT) -->
-  <div class="floating-gig-pill-container" id="floatingGigPillBtn" role="button" aria-label="Open Tour & Gig Map">
-    <div class="gig-pill-inner">
-      <span class="pulse-beacon-dot"></span>
-      <i class="fa-solid fa-map-location-dot pill-map-icon"></i>
-      <div class="gig-pill-text-box">
-        <span class="gig-pill-tag" id="gigPillTag">LIVE GIGS</span>
-        <span class="gig-pill-location" id="gigPillLocation">Tour Dates & Locations</span>
+  <!-- Persistent Floating Bottom Controls Row (Mini Player 50% | Gigs Map Button 50%) -->
+  <div class="bottom-floating-controls-wrapper" id="bottomFloatingControls">
+    
+    <!-- Minimised Mini Audio Player (50% Width) -->
+    <div class="bottom-audio-bar hidden" id="bottomAudioBar">
+      <audio id="vaultAudioPlayer" preload="none"></audio>
+      <div class="audio-bar-content">
+        <div class="audio-bar-left">
+          <div class="audio-bar-icon-box">
+            <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover">
+            <i class="fa-solid fa-music audio-icon-anim" id="audioBarFallbackIcon"></i>
+          </div>
+          <div class="audio-bar-details">
+            <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
+            <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
+          </div>
+        </div>
+        <div class="audio-bar-right">
+          <button class="audio-bar-toggle-btn" id="audioBarToggleBtn" aria-label="Toggle playback">
+            <i class="fa-solid fa-pause"></i>
+          </button>
+          <button class="audio-bar-close-btn" id="audioBarCloseBtn" aria-label="Close audio player">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
       </div>
-      <i class="fa-solid fa-chevron-up pill-arrow-icon"></i>
     </div>
+
+    <!-- Fixed Floating Gig Pill Button (50% Width) -->
+    <div class="floating-gig-pill-container" id="floatingGigPillBtn" role="button" aria-label="Open Tour & Gig Map">
+      <div class="gig-pill-inner">
+        <span class="pulse-beacon-dot"></span>
+        <i class="fa-solid fa-map-location-dot pill-map-icon"></i>
+        <div class="gig-pill-text-box">
+          <span class="gig-pill-tag" id="gigPillTag">LIVE GIGS</span>
+          <span class="gig-pill-location" id="gigPillLocation">Tour Dates & Map</span>
+        </div>
+        <i class="fa-solid fa-chevron-up pill-arrow-icon"></i>
+      </div>
+    </div>
+
   </div>
 
   <!-- BOTTOM SHEET GIG MAP MODAL (FULL WIDTH, 80% HEIGHT, BLUR BACKDROP, SWIPE TO CLOSE) -->
@@ -591,46 +676,12 @@
     </div>
   </div>
 
-  <!-- Persistent Audio Preview Bar (Floating at bottom) -->
-  <div class="bottom-audio-bar hidden" id="bottomAudioBar">
-    <audio id="vaultAudioPlayer" preload="none"></audio>
-    <div class="audio-bar-content">
-      <div class="audio-bar-left">
-        <div class="audio-bar-icon-box">
-          <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover">
-          <i class="fa-solid fa-music audio-icon-anim" id="audioBarFallbackIcon"></i>
-        </div>
-        <div class="audio-bar-details">
-          <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
-          <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
-        </div>
-      </div>
-      <div class="audio-bar-center">
-        <div class="equalizer-visualizer">
-          <span class="eq-bar bar-1"></span>
-          <span class="eq-bar bar-2"></span>
-          <span class="eq-bar bar-3"></span>
-          <span class="eq-bar bar-4"></span>
-          <span class="eq-bar bar-5"></span>
-        </div>
-      </div>
-      <div class="audio-bar-right">
-        <button class="audio-bar-toggle-btn" id="audioBarToggleBtn" aria-label="Toggle playback">
-          <i class="fa-solid fa-pause"></i>
-        </button>
-        <button class="audio-bar-close-btn" id="audioBarCloseBtn" aria-label="Close audio player">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- Ambient Wallpaper Background Container -->
   <div class="ambient-wallpaper-bg" id="ambientWallpaperBg"></div>
 
-  <script src="script.js?v=9"></script>
+  <script src="script.js?v=11"></script>
 </body>
 </html>
