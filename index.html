@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="styles.css?v=15">
+  <link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
 
@@ -109,6 +109,18 @@
 
 
         </section>
+
+        <!-- NEW MUSIC TEASER CARD -->
+        <div class="music-teaser-card">
+          <div class="music-teaser-icon-box">
+            <i class="fa-solid fa-compact-disc fa-spin"></i>
+          </div>
+          <div class="music-teaser-content">
+            <span class="music-teaser-badge">NEW MUSIC</span>
+            <h4 class="music-teaser-title">🎶 New music is on the way.</h4>
+            <p class="music-teaser-desc">🎸 First cover coming soon...</p>
+          </div>
+        </div>
 
         <!-- DISCORD FAN COMMUNITY CTA BANNER -->
         <div class="community-banner-card">
@@ -224,7 +236,7 @@
               <div class="member-info">
                 <h4 class="member-name">Vivian</h4>
                 <span class="member-role"><i class="fa-solid fa-microphone"></i> Lead Vocals & Guitar</span>
-                <p class="member-bio">Lead vocalist and rhythm guitarist driving Kins' signature melodies.</p>
+                <p class="member-bio">Shaping Kins' sound with signature melodies and driving rhythm.</p>
                 
                 <button class="member-socials-toggle-btn" data-target="socials-vivian">
                   <span>Social Links</span>
@@ -248,7 +260,7 @@
               <div class="member-info">
                 <h4 class="member-name">Charlie</h4>
                 <span class="member-role"><i class="fa-solid fa-guitar"></i> Guitar & Vocals</span>
-                <p class="member-bio">Lead guitarist and backing vocalist crafting energetic riffs and harmonies.</p>
+                <p class="member-bio">Bringing melodies, lyrics and the energy that ties everything together.</p>
                 
                 <button class="member-socials-toggle-btn" data-target="socials-charlie">
                   <span>Social Links</span>
@@ -272,7 +284,7 @@
               <div class="member-info">
                 <h4 class="member-name">Oscar</h4>
                 <span class="member-role"><i class="fa-solid fa-sliders"></i> Bass & Synth</span>
-                <p class="member-bio">Groove anchor blending punchy bass lines with rich analog synths.</p>
+                <p class="member-bio">Driving the groove with bass lines and vintage-inspired synth textures.</p>
                 
                 <button class="member-socials-toggle-btn" data-target="socials-oscar">
                   <span>Social Links</span>
@@ -296,7 +308,7 @@
               <div class="member-info">
                 <h4 class="member-name">Trai</h4>
                 <span class="member-role"><i class="fa-solid fa-drum"></i> Drums & Percussion</span>
-                <p class="member-bio">High-energy rhythm powerhouse driving Kins' live anthemic beats.</p>
+                <p class="member-bio">Laying down the heartbeat of the band with high-energy rhythms and anthemic beats.</p>
                 
                 <button class="member-socials-toggle-btn" data-target="socials-trai">
                   <span>Social Links</span>
@@ -345,21 +357,21 @@
           </div>
 
           <!-- Artist Navigation Filter Bar -->
-          <div class="artist-filter-bar" id="artistFilterBar">
-            <button class="filter-pill-btn active" data-artist-key="all">
-              <i class="fa-solid fa-layer-group"></i> All Artists
+          <div class="artist-filter-bar text-list-mode" id="artistFilterBar">
+            <button class="filter-pill-btn active" data-artist-key="the-cure">
+              The Cure
             </button>
-            <button class="filter-pill-btn" data-artist-key="the-cure">
-              <i class="fa-solid fa-heart"></i> The Cure
-            </button>
+            <span class="filter-divider">•</span>
             <button class="filter-pill-btn" data-artist-key="weezer">
-              <i class="fa-solid fa-glasses"></i> Weezer
+              Weezer
             </button>
+            <span class="filter-divider">•</span>
             <button class="filter-pill-btn" data-artist-key="pulp">
-              <i class="fa-solid fa-compact-disc"></i> Pulp
+              Pulp
             </button>
+            <span class="filter-divider">•</span>
             <button class="filter-pill-btn" data-artist-key="the-long-faces">
-              <i class="fa-solid fa-masks-theater"></i> The Long Faces
+              The Long Faces
             </button>
           </div>
 
@@ -619,6 +631,6 @@
   <!-- Ambient Wallpaper Background Container -->
   <div class="ambient-wallpaper-bg" id="ambientWallpaperBg"></div>
 
-  <script src="script.js?v=8"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>

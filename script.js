@@ -903,7 +903,7 @@ END:VCALENDAR`;
   }
 
   // State Management for Per-Artist Genre-Based Pagination
-  let currentArtistKey = 'all';
+  let currentArtistKey = 'the-cure';
   let currentPageIndex = 0;
 
   // DOM Elements
@@ -1289,8 +1289,8 @@ END:VCALENDAR`;
     });
   }
 
-  // Initial Render: Load 'all' artists page 0
-  renderArtistView('all', 0);
+  // Initial Render: Load 'the-cure' artists page 0
+  renderArtistView('the-cure', 0);
 
   // -------------------------------------------------------------
   // 12. Toast Notification Helper (Throttled Single Alert Instance)
