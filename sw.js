@@ -1,11 +1,17 @@
-const CACHE_NAME = 'kins-link-bio-v13';
+const CACHE_NAME = 'kins-link-bio-v22';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './script.js',
   './pfp.jpg',
-  './followers.json'
+  './followers.json',
+  './kins-studio/',
+  './kins-studio/index.html',
+  './kins-studio/dashboard.css',
+  './kins-studio/dashboard.js',
+  './kins-studio/styles.css',
+  './kins-studio/pfp.jpg'
 ];
 
 self.addEventListener('install', (event) => {

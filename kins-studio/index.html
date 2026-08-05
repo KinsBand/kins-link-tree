@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kins Studio - Control Centre</title>
+  <meta name="description" content="Kins Studio Internal Control Centre & Analytics Dashboard">
+  
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="dashboard.css?v=7">
+</head>
+<body class="studio-body">
+
+  <!-- MAIN DASHBOARD LAYOUT WRAPPER -->
+  <div class="studio-layout">
+    
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="studio-sidebar" id="studioSidebar">
+      
+      <!-- Brand Header -->
+      <div class="sidebar-brand">
+        <div class="brand-logo-box">
+          <i class="fa-solid fa-sliders"></i>
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-title">Kins Studio</span>
+          <span class="brand-version-badge">v2.4.0</span>
+        </div>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close Sidebar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">MAIN MENU</div>
+        
+        <button class="sidebar-nav-item active" data-view="overview">
+          <i class="fa-solid fa-chart-pie nav-icon"></i>
+          <span>Overview</span>
+        </button>
+
+        <button class="sidebar-nav-item" data-view="content">
+          <i class="fa-solid fa-calendar-days nav-icon"></i>
+          <span>Content & Calendar</span>
+        </button>
+
+        <button class="sidebar-nav-item" data-view="releases">
+          <i class="fa-solid fa-compact-disc nav-icon"></i>
+          <span>Release Manager</span>
+          <span class="nav-item-badge amber-badge">1 Next</span>
+        </button>
+
+        <div class="nav-section-label">MANAGEMENT</div>
+
+        <button class="sidebar-nav-item" data-view="media">
+          <i class="fa-solid fa-photo-film nav-icon"></i>
+          <span>Media Library</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer User Profile & System Status -->
+      <div class="sidebar-footer">
+        <div class="system-status-box">
+          <span class="status-dot-pulse"></span>
+          <div class="status-text-group">
+            <span class="status-label">SYSTEM ONLINE</span>
+            <span class="status-sub">All Services Operational</span>
+          </div>
+        </div>
+
+        <div class="sidebar-user-tile">
+          <div class="user-avatar-circle">
+            <span>C</span>
+          </div>
+          <div class="user-info-text">
+            <span class="user-name">Charlie</span>
+            <span class="user-role">Lead Architect</span>
+          </div>
+          <i class="fa-solid fa-ellipsis-vertical user-menu-icon"></i>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <div class="studio-main-wrapper">
+      
+      <!-- TOP HEADER BAR -->
+      <header class="studio-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
+            <i class="fa-solid fa-bars-staggered"></i>
+          </button>
+          
+          <!-- Command Palette Trigger Button -->
+          <div class="command-palette-trigger" id="cmdPaletteTrigger">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <span class="trigger-placeholder">Search or type command...</span>
+            <kbd class="kbd-shortcut"><i class="fa-solid fa-command"></i> K</kbd>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          
+          <!-- Real Time Live Sync Indicator Pill -->
+          <div class="realtime-live-pill">
+            <span class="live-pulse-dot"></span>
+            <span class="live-text">LIVE</span>
+            <span class="live-divider">•</span>
+            <span class="live-timer" id="liveSyncTimer">Updated 4s ago</span>
+          </div>
+
+          <!-- Notifications Bell Drawer Trigger -->
+          <div class="notif-wrapper">
+            <button class="topbar-icon-btn" id="notifBtn" aria-label="Notifications">
+              <i class="fa-regular fa-bell"></i>
+              <span class="notif-badge-count" id="notifBadgeCount">3</span>
+            </button>
+
+            <!-- Notifications Drawer Dropdown -->
+            <div class="notif-drawer hidden" id="notifDrawer">
+              <div class="notif-drawer-header">
+                <h3>Notifications</h3>
+                <button class="mark-read-btn" id="markReadBtn">Mark all as read</button>
+              </div>
+
+              <div class="notif-list">
+                <div class="notif-item unread">
+                  <div class="notif-icon red-icon"><i class="fa-solid fa-plug-circle-xmark"></i></div>
+                  <div class="notif-body">
+                    <p class="notif-title">Spotify API Disconnected</p>
+                    <p class="notif-desc">OAuth token expired. Re-authenticate in Settings.</p>
+                    <span class="notif-time">2 mins ago</span>
+                  </div>
+                </div>
+
+                <div class="notif-item unread">
+                  <div class="notif-icon green-icon"><i class="fa-solid fa-circle-check"></i></div>
+                  <div class="notif-body">
+                    <p class="notif-title">TikTok Sync Completed</p>
+                    <p class="notif-desc">Updated 14 recent posts and engagement metrics.</p>
+                    <span class="notif-time">14 mins ago</span>
+                  </div>
+                </div>
+
+                <div class="notif-item unread">
+                  <div class="notif-icon amber-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                  <div class="notif-body">
+                    <p class="notif-title">Instagram Token Expiring</p>
+                    <p class="notif-desc">Access token expires in 6 days.</p>
+                    <span class="notif-time">1 hour ago</span>
+                  </div>
+                </div>
+
+                <div class="notif-item">
+                  <div class="notif-icon green-icon"><i class="fa-solid fa-file-export"></i></div>
+                  <div class="notif-body">
+                    <p class="notif-title">CSV Export Complete</p>
+                    <p class="notif-desc">Q3 Followers report ready for download.</p>
+                    <span class="notif-time">3 hours ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="notif-drawer-footer">
+                <button class="view-all-notifs-btn">View All Logs</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Quick Menu Badge -->
+          <div class="topbar-user-badge">
+            <div class="user-avatar-circle mini">C</div>
+            <span class="topbar-user-name">Charlie</span>
+          </div>
+
+        </div>
+      </header>
+
+      <!-- DYNAMIC CONTENT VIEW AREA -->
+      <main class="studio-content-body">
+
+        <!-- SECTION 1: OVERVIEW DASHBOARD VIEW (MEDIA KIT & CREATOR ANALYTICS MODE) -->
+        <section class="view-container active" id="view-overview">
+          
+          <!-- MEDIA KIT PROFILE HEADER ROW WITH AI INSIGHTS CARD -->
+          <div class="media-kit-profile-row">
+            <div class="mk-profile-left">
+              <div class="mk-avatar-container">
+                <img src="pfp.jpg" alt="Kins Logo" class="mk-avatar-img">
+                <span class="mk-avatar-badge"><i class="fa-solid fa-circle-check"></i></span>
+              </div>
+              <div class="mk-profile-info">
+                <h1 class="mk-brand-title">Kins</h1>
+                
+                <div class="mk-followers-group">
+                  <span class="mk-followers-label">TOTAL FOLLOWERS</span>
+                  <div class="mk-followers-value-row">
+                    <span class="mk-followers-num" id="overviewTotalFollowers">428,590</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Growth Insights Card (Top Right Negative Space) -->
+            <div class="overview-ai-card">
+              <div class="ai-card-header">
+                <span class="ai-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> AI GROWTH INSIGHTS</span>
+              </div>
+              <div class="ai-compact-list">
+                <div class="ai-compact-tile">
+                  <div class="tile-ic"><i class="fa-solid fa-clock"></i></div>
+                  <div class="tile-txt">
+                    <strong>Optimal Post Window: 6-8:30 PM</strong>
+                    <span>64% listener engagement peak</span>
+                  </div>
+                </div>
+                <div class="ai-compact-tile">
+                  <div class="tile-ic"><i class="fa-solid fa-music"></i></div>
+                  <div class="tile-txt">
+                    <strong>Cover Song Traction</strong>
+                    <span>Prioritize The Cure acoustic reel snippet</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PLATFORM FILTERING TABS BAR (STARTING WITH ALL) -->
+          <div class="overview-platform-filter-bar" id="overviewPlatformFilterBar">
+            <button class="ov-filter-btn active" data-platform-filter="all">
+              <i class="fa-solid fa-layer-group"></i> All
+            </button>
+            <button class="ov-filter-btn" data-platform-filter="instagram">
+              <i class="fa-brands fa-instagram insta-color"></i> 142.4K
+            </button>
+            <button class="ov-filter-btn" data-platform-filter="tiktok">
+              <i class="fa-brands fa-tiktok tiktok-color"></i> 89.2K
+            </button>
+            <button class="ov-filter-btn" data-platform-filter="spotify">
+              <i class="fa-brands fa-spotify spotify-color"></i> 214.8K
+            </button>
+            <button class="ov-filter-btn" data-platform-filter="youtube">
+              <i class="fa-brands fa-youtube youtube-color"></i> 64.2K
+            </button>
+            <button class="ov-filter-btn" data-platform-filter="twitter">
+              <i class="fa-brands fa-x-twitter twitter-color"></i> 132.8K
+            </button>
+            <button class="ov-filter-btn" data-platform-filter="twitch">
+              <i class="fa-brands fa-twitch twitch-color"></i> 14.2K
+            </button>
+            <button class="ov-filter-btn add-channel-btn" id="openConnectModalBtn">
+              <i class="fa-solid fa-plus"></i> Add Channel
+            </button>
+          </div>
+
+          <!-- SELECTED PLATFORM HEADER & SYNC METADATA -->
+          <div class="selected-pf-header">
+            <div class="pf-title-group">
+              <h2 class="selected-pf-title" id="selectedPfTitle">All Platforms Summary</h2>
+              <span class="selected-pf-handle" id="selectedPfHandle">@KINSBANDOFFICIAL</span>
+            </div>
+            <div class="pf-sync-meta-box">
+              <span class="sync-check-icon"><i class="fa-solid fa-circle-check"></i></span>
+              <span class="sync-text-main" id="selectedPfSyncText">Synced across all platforms on Aug 5</span>
+              <span class="sync-text-sub">Data from last 30 days / Last updated 12s ago</span>
+            </div>
+          </div>
+
+          <!-- SUMMARY 3X3 METRICS GRID (9 KPI CARDS) -->
+          <div class="summary-9grid">
+            
+            <div class="summary-kpi-tile">
+              <div class="tile-head">
+                <span class="tile-title"><i class="fa-solid fa-users icon"></i> FOLLOWERS</span>
+                <i class="fa-solid fa-clock-rotate-left time-icon"></i>
+              </div>
+              <span class="tile-val" id="sumFollowers">428,590</span>
+            </div>
+
+            <div class="summary-kpi-tile">
+              <div class="tile-head">
+                <span class="tile-title"><i class="fa-solid fa-chart-line icon"></i> ENGAGEMENT</span>
+                <i class="fa-solid fa-clock-rotate-left time-icon"></i>
+              </div>
+              <span class="tile-val" id="sumEngagement">16.4%</span>
+            </div>
+
+            <div class="summary-kpi-tile">
+              <div class="tile-head">
+                <span class="tile-title"><i class="fa-solid fa-user-check icon"></i> FOLLOWER ENGAGEMENT</span>
+                <i class="fa-solid fa-clock-rotate-left time-icon"></i>
+              </div>
+              <span class="tile-val" id="sumFollowerEng">4.8%</span>
+            </div>
+
+            <div class="summary-kpi-tile">
+              <div class="tile-head">
+                <span class="tile-title"><i class="fa-solid fa-video icon"></i> TOTAL VIDEOS</span>
+                <i class="fa-solid fa-clock-rotate-left time-icon"></i>
+              </div>
+              <span class="tile-val" id="sumTotalVideos">42</span>
+            </div>
+
+            <div class="summary-kpi-tile">
+              <div class="tile-head">
+                <span class="tile-title"><i class="fa-solid fa-eye icon"></i> TOTAL IMPRESSIONS</span>
+                <i class="fa-solid fa-clock-rotate-left time-icon"></i>
+              </div>
+              <span class="tile-val" id="sumImpressions">3,920,400</span>
+            </div>
+
+            <div class="summary-kpi-tile">
+              <div class="tile-head">
+                <span class="tile-title"><i class="fa-solid fa-heart icon"></i> TOTAL ENGAGEMENTS</span>
+                <i class="fa-solid fa-clock-rotate-left time-icon"></i>
+              </div>
+              <span class="tile-val" id="sumTotalEngagements">642,800</span>
+            </div>
+
+            <div class="summary-kpi-tile">
+              <div class="tile-head">
+                <span class="tile-title"><i class="fa-solid fa-circle-play icon"></i> AVG VIEWS</span>
+                <i class="fa-solid fa-clock-rotate-left time-icon"></i>
+              </div>
+              <span class="tile-val" id="sumAvgViews">42,800</span>
+            </div>
+
+            <div class="summary-kpi-tile">
+              <div class="tile-head">
+                <span class="tile-title"><i class="fa-solid fa-thumbs-up icon"></i> AVG LIKES</span>
+                <i class="fa-solid fa-clock-rotate-left time-icon"></i>
+              </div>
+              <span class="tile-val" id="sumAvgLikes">8,420</span>
+            </div>
+
+            <div class="summary-kpi-tile">
+              <div class="tile-head">
+                <span class="tile-title"><i class="fa-solid fa-comment icon"></i> AVG COMMENTS</span>
+                <i class="fa-solid fa-clock-rotate-left time-icon"></i>
+              </div>
+              <span class="tile-val" id="sumAvgComments">1,240</span>
+            </div>
+
+          </div>
+
+          <!-- AUDIENCE DEMOGRAPHICS 2X2 GRID -->
+          <div class="demographics-section">
+            <h3 class="section-block-title">Audience Demographics</h3>
+            
+            <div class="demographics-2grid">
+              
+              <div class="demo-card">
+                <div class="demo-card-head">
+                  <span class="lbl">GENDER</span>
+                  <span class="demo-badge">LIVE DATA</span>
+                </div>
+                <div class="demo-bars-group">
+                  <div class="demo-bar-row">
+                    <span class="demo-bar-label">Female (54%)</span>
+                    <div class="demo-bar-track"><div class="demo-bar-fill female-fill" style="width: 54%;"></div></div>
+                  </div>
+                  <div class="demo-bar-row">
+                    <span class="demo-bar-label">Male (42%)</span>
+                    <div class="demo-bar-track"><div class="demo-bar-fill male-fill" style="width: 42%;"></div></div>
+                  </div>
+                  <div class="demo-bar-row">
+                    <span class="demo-bar-label">Other (4%)</span>
+                    <div class="demo-bar-track"><div class="demo-bar-fill other-fill" style="width: 4%;"></div></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="demo-card">
+                <div class="demo-card-head">
+                  <span class="lbl">AGE AND GENDER</span>
+                  <span class="demo-badge">LIVE DATA</span>
+                </div>
+                <div class="demo-bars-group">
+                  <div class="demo-bar-row">
+                    <span class="demo-bar-label">18 - 24 yrs (48%)</span>
+                    <div class="demo-bar-track"><div class="demo-bar-fill green-fill" style="width: 48%;"></div></div>
+                  </div>
+                  <div class="demo-bar-row">
+                    <span class="demo-bar-label">25 - 34 yrs (36%)</span>
+                    <div class="demo-bar-track"><div class="demo-bar-fill blue-fill" style="width: 36%;"></div></div>
+                  </div>
+                  <div class="demo-bar-row">
+                    <span class="demo-bar-label">35 - 44 yrs (12%)</span>
+                    <div class="demo-bar-track"><div class="demo-bar-fill purple-fill" style="width: 12%;"></div></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="demo-card">
+                <div class="demo-card-head">
+                  <span class="lbl">TOP COUNTRIES</span>
+                  <span class="demo-badge">LIVE DATA</span>
+                </div>
+                <div class="demo-list">
+                  <div class="demo-list-item"><span>🇦🇺 Australia</span><strong>64%</strong></div>
+                  <div class="demo-list-item"><span>🇺🇸 United States</span><strong>18%</strong></div>
+                  <div class="demo-list-item"><span>🇬🇧 United Kingdom</span><strong>12%</strong></div>
+                  <div class="demo-list-item"><span>🇩🇪 Germany</span><strong>6%</strong></div>
+                </div>
+              </div>
+
+              <div class="demo-card">
+                <div class="demo-card-head">
+                  <span class="lbl">TOP CITIES</span>
+                  <span class="demo-badge">LIVE DATA</span>
+                </div>
+                <div class="demo-list">
+                  <div class="demo-list-item"><span>📍 Melbourne</span><strong>42%</strong></div>
+                  <div class="demo-list-item"><span>📍 Sydney</span><strong>22%</strong></div>
+                  <div class="demo-list-item"><span>📍 London</span><strong>14%</strong></div>
+                  <div class="demo-list-item"><span>📍 Los Angeles</span><strong>12%</strong></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- MOST RECENT POSTS GRID -->
+          <div class="recent-posts-section">
+            <h3 class="section-block-title">Most Recent Posts</h3>
+            
+            <div class="recent-posts-grid">
+              
+              <div class="post-preview-card">
+                <div class="post-thumb-box">
+                  <img src="pfp.jpg" alt="Post thumbnail" class="post-thumb-img">
+                  <span class="post-platform-badge insta"><i class="fa-brands fa-instagram"></i> Instagram</span>
+                </div>
+                <div class="post-card-body">
+                  <h4>Just Like Heaven Acoustic Cover Teaser Reel</h4>
+                  <p class="post-meta">287.4k Views • 18.2% CTR • Published 3 days ago</p>
+                </div>
+              </div>
+
+              <div class="post-preview-card">
+                <div class="post-thumb-box">
+                  <img src="pfp.jpg" alt="Post thumbnail" class="post-thumb-img">
+                  <span class="post-platform-badge tiktok"><i class="fa-brands fa-tiktok"></i> TikTok</span>
+                </div>
+                <div class="post-card-body">
+                  <h4>Analog Synth Sound Design & Patches Session</h4>
+                  <p class="post-meta">194.2k Views • 14.8% CTR • Published 5 days ago</p>
+                </div>
+              </div>
+
+              <div class="post-preview-card">
+                <div class="post-thumb-box">
+                  <img src="pfp.jpg" alt="Post thumbnail" class="post-thumb-img">
+                  <span class="post-platform-badge youtube"><i class="fa-brands fa-youtube"></i> YouTube</span>
+                </div>
+                <div class="post-card-body">
+                  <h4>Live at Enmore Theatre Rehearsal Highlights</h4>
+                  <p class="post-meta">142.8k Views • 11.4% CTR • Published 12 days ago</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </section>
+
+        <!-- SECTION 2: COMBINED CONTENT & CALENDAR VIEW -->
+        <section class="view-container" id="view-content">
+          <div class="view-header">
+            <div>
+              <h1 class="view-title">Content & Calendar</h1>
+              <p class="view-subtitle">Schedule upcoming releases, draft posts, and analyze video retention & CTR metrics.</p>
+            </div>
+            <div class="view-header-actions">
+              <button class="action-3d-btn primary-3d" id="newScheduleBtn">
+                <i class="fa-solid fa-plus"></i> Schedule New Post
+              </button>
+            </div>
+          </div>
+
+          <!-- Calendar Controls Toolbar -->
+          <div class="calendar-toolbar">
+            <div class="calendar-month-selector">
+              <button class="cal-nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
+              <span class="cal-current-month">September 2026</span>
+              <button class="cal-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <div class="calendar-filter-pills">
+              <button class="cal-filter-pill active">All Platforms</button>
+              <button class="cal-filter-pill">Instagram</button>
+              <button class="cal-filter-pill">TikTok</button>
+              <button class="cal-filter-pill">YouTube</button>
+            </div>
+          </div>
+
+          <!-- Scheduled Items Grid Board -->
+          <div class="calendar-scheduled-grid">
+            
+            <div class="cal-card scheduled">
+              <div class="cal-card-top">
+                <span class="platform-tag insta"><i class="fa-brands fa-instagram"></i> Instagram Reel</span>
+                <span class="status-pill scheduled"><i class="fa-solid fa-clock"></i> Sept 10 • 5:30 PM</span>
+              </div>
+              <h4 class="cal-card-title">"Just Like Heaven" Acoustic Cover Teaser Reel</h4>
+              <p class="cal-card-desc">Short 25s snippet featuring Vivian & Charlie harmonizing in studio.</p>
+              <div class="cal-card-footer">
+                <span class="author">By Charlie</span>
+                <button class="text-link-btn">Edit Post →</button>
+              </div>
+            </div>
+
+            <div class="cal-card published">
+              <div class="cal-card-top">
+                <span class="platform-tag tiktok"><i class="fa-brands fa-tiktok"></i> TikTok Video</span>
+                <span class="status-pill published"><i class="fa-solid fa-circle-check"></i> Published Sept 5</span>
+              </div>
+              <h4 class="cal-card-title">Behind The Scenes: Synthesizer Recording Session</h4>
+              <p class="cal-card-desc">Oscar walking through vintage Roland Juno-106 analog synth patches.</p>
+              <div class="cal-card-footer">
+                <span class="author">By Oscar • 287k Views</span>
+                <button class="text-link-btn">View Stats →</button>
+              </div>
+            </div>
+
+            <div class="cal-card draft">
+              <div class="cal-card-top">
+                <span class="platform-tag youtube"><i class="fa-brands fa-youtube"></i> YouTube Shorts</span>
+                <span class="status-pill draft"><i class="fa-solid fa-file-lines"></i> Draft</span>
+              </div>
+              <h4 class="cal-card-title">Kins Live Gear Setup Breakdown</h4>
+              <p class="cal-card-desc">Trai explaining drum kit mic placements and trigger setup for live shows.</p>
+              <div class="cal-card-footer">
+                <span class="author">By Trai</span>
+                <button class="text-link-btn">Edit Draft →</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Content Performance Table -->
+          <div class="section-block-title-row">
+            <h3 class="section-block-title">Performance Analytics</h3>
+            <input type="text" placeholder="Filter content title..." class="table-search-input" id="contentSearchInput">
+          </div>
+
+          <div class="table-card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Content Title</th>
+                  <th>Platform</th>
+                  <th>Total Views</th>
+                  <th>CTR Rate</th>
+                  <th>Publish Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Just Like Heaven Cover Reel</strong></td>
+                  <td><span class="platform-tag insta"><i class="fa-brands fa-instagram"></i> Instagram</span></td>
+                  <td>287,400</td>
+                  <td><span class="metric-high">18.2%</span></td>
+                  <td>3 days ago</td>
+                  <td><span class="status-pill published">Active</span></td>
+                  <td><button class="action-3d-btn secondary-3d small-btn">Analytics</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Analog Synth Sound Design Vlog</strong></td>
+                  <td><span class="platform-tag tiktok"><i class="fa-brands fa-tiktok"></i> TikTok</span></td>
+                  <td>194,200</td>
+                  <td><span class="metric-high">14.8%</span></td>
+                  <td>5 days ago</td>
+                  <td><span class="status-pill published">Active</span></td>
+                  <td><button class="action-3d-btn secondary-3d small-btn">Analytics</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Live at Enmore Theatre Recap</strong></td>
+                  <td><span class="platform-tag youtube"><i class="fa-brands fa-youtube"></i> YouTube</span></td>
+                  <td>142,800</td>
+                  <td><span class="metric-med">11.4%</span></td>
+                  <td>12 days ago</td>
+                  <td><span class="status-pill published">Active</span></td>
+                  <td><button class="action-3d-btn secondary-3d small-btn">Analytics</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Kins Rehearsal Session Jam #4</strong></td>
+                  <td><span class="platform-tag soundcloud"><i class="fa-brands fa-soundcloud"></i> SoundCloud</span></td>
+                  <td>48,900</td>
+                  <td><span class="metric-med">9.1%</span></td>
+                  <td>18 days ago</td>
+                  <td><span class="status-pill published">Active</span></td>
+                  <td><button class="action-3d-btn secondary-3d small-btn">Analytics</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+        <!-- SECTION 3: RELEASE MANAGER VIEW -->
+        <section class="view-container" id="view-releases">
+          <div class="view-header">
+            <div>
+              <h1 class="view-title">Release Manager</h1>
+              <p class="view-subtitle">Music distribution checklist, pre-save tracking, and launch timeline.</p>
+            </div>
+            <button class="action-3d-btn primary-3d" id="newReleaseBtn">
+              <i class="fa-solid fa-plus"></i> Add New Release
+            </button>
+          </div>
+
+          <!-- Featured Upcoming Release Card -->
+          <div class="featured-release-card">
+            <div class="release-left">
+              <div class="release-cover-art">
+                <i class="fa-solid fa-compact-disc release-disc-icon"></i>
+                <span class="cover-label">COVER ART APPROVED</span>
+              </div>
+              <div class="release-meta">
+                <span class="release-badge">UPCOMING SINGLE</span>
+                <h2 class="release-title">Midnight Echoes</h2>
+                <p class="release-date"><i class="fa-solid fa-calendar-day"></i> Target Launch Date: <strong>September 12, 2026</strong></p>
+                <p class="release-desc">Debut lead single produced in Melbourne studio featuring analog synth basslines and dual guitar riffs.</p>
+              </div>
+            </div>
+            <div class="release-right">
+              <h4>Platform Checklist Status</h4>
+              <div class="checklist-items">
+                <div class="chk-item ready"><i class="fa-solid fa-circle-check"></i> Spotify Distribution (Ready)</div>
+                <div class="chk-item ready"><i class="fa-solid fa-circle-check"></i> Apple Music Lossless (Ready)</div>
+                <div class="chk-item pending"><i class="fa-solid fa-clock"></i> YouTube Music Video (Pending Edit)</div>
+                <div class="chk-item ready"><i class="fa-solid fa-circle-check"></i> Instagram Audio Library (Submitted)</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: MEDIA LIBRARY VIEW -->
+        <section class="view-container" id="view-media">
+          <div class="view-header">
+            <div>
+              <h1 class="view-title">Media Library</h1>
+              <p class="view-subtitle">Official band assets, high-res logos, press photos, and cover art URLs.</p>
+            </div>
+            <button class="action-3d-btn primary-3d" id="uploadMediaBtn">
+              <i class="fa-solid fa-upload"></i> Upload Asset
+            </button>
+          </div>
+
+          <div class="media-grid">
+            
+            <div class="media-card">
+              <div class="media-thumb-box">
+                <img src="pfp.jpg" alt="Band Hero Banner" class="media-thumb-img">
+              </div>
+              <div class="media-card-body">
+                <h4>Kins Official Band Photo 2026.jpg</h4>
+                <p class="media-meta">3840 x 2160 • 2.4 MB • JPG</p>
+                <button class="action-3d-btn secondary-3d small-btn copy-url-btn" data-url="https://kinsbandofficial.com/assets/kins-photo-2026.jpg">
+                  <i class="fa-solid fa-copy"></i> Copy Direct URL
+                </button>
+              </div>
+            </div>
+
+            <div class="media-card">
+              <div class="media-thumb-box logo-bg">
+                <i class="fa-solid fa-sliders media-icon-large"></i>
+              </div>
+              <div class="media-card-body">
+                <h4>Kins Logo Vector (Transparent).png</h4>
+                <p class="media-meta">1080 x 1080 • 140 KB • PNG</p>
+                <button class="action-3d-btn secondary-3d small-btn copy-url-btn" data-url="https://kinsbandofficial.com/assets/kins-logo-transparent.png">
+                  <i class="fa-solid fa-copy"></i> Copy Direct URL
+                </button>
+              </div>
+            </div>
+
+            <div class="media-card">
+              <div class="media-thumb-box art-bg">
+                <i class="fa-solid fa-compact-disc media-icon-large"></i>
+              </div>
+              <div class="media-card-body">
+                <h4>Midnight Echoes Single Cover Art.jpg</h4>
+                <p class="media-meta">3000 x 3000 • 4.1 MB • JPG</p>
+                <button class="action-3d-btn secondary-3d small-btn copy-url-btn" data-url="https://kinsbandofficial.com/assets/midnight-echoes-cover.jpg">
+                  <i class="fa-solid fa-copy"></i> Copy Direct URL
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- SCHEDULE / EDIT POST MODAL -->
+  <div class="cmd-palette-modal hidden" id="schedulePostModal">
+    <div class="cmd-palette-backdrop" id="schedulePostBackdrop"></div>
+    <div class="cmd-palette-box connect-modal-box">
+      <div class="cmd-input-row modal-header-row">
+        <h3 class="connect-modal-title" id="scheduleModalTitle"><i class="fa-solid fa-calendar-plus connect-modal-icon"></i> Schedule New Post</h3>
+        <button class="action-3d-btn secondary-3d small-btn" id="closeScheduleModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <form id="schedulePostForm" class="modal-form-body">
+        <div class="form-group">
+          <label>Post Title</label>
+          <input type="text" id="postTitleInput" class="form-input" placeholder="e.g. Just Like Heaven Acoustic Reel" required>
+        </div>
+        <div class="form-group">
+          <label>Target Platform</label>
+          <select id="postPlatformSelect" class="form-select">
+            <option value="Instagram">Instagram Reel</option>
+            <option value="TikTok">TikTok Video</option>
+            <option value="YouTube">YouTube Shorts</option>
+            <option value="SoundCloud">SoundCloud Track</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Publish Date & Time</label>
+          <input type="datetime-local" id="postDateTimeInput" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label>Caption & Details</label>
+          <textarea id="postCaptionInput" class="form-textarea" rows="3" placeholder="Write caption or short notes..."></textarea>
+        </div>
+        <div class="modal-actions-row">
+          <button type="submit" class="action-3d-btn primary-3d full-width-btn" id="saveScheduleBtn">
+            <i class="fa-solid fa-floppy-disk"></i> Save & Schedule Post
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- POST STATS ANALYTICS MODAL -->
+  <div class="cmd-palette-modal hidden" id="statsModal">
+    <div class="cmd-palette-backdrop" id="statsBackdrop"></div>
+    <div class="cmd-palette-box connect-modal-box">
+      <div class="cmd-input-row modal-header-row">
+        <h3 class="connect-modal-title"><i class="fa-solid fa-chart-line connect-modal-icon"></i> Post Analytics & Stats</h3>
+        <button class="action-3d-btn secondary-3d small-btn" id="closeStatsModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div class="modal-form-body">
+        <h4 id="statsPostTitle" style="color: #fff; margin: 0 0 10px 0; font-size: 1rem;">Behind The Scenes: Synthesizer Recording Session</h4>
+        <div class="pf-metrics-grid" style="margin-bottom: 16px;">
+          <div class="pf-metric"><span class="lbl">Total Views</span><span class="val" id="statsViews">287.4K</span></div>
+          <div class="pf-metric"><span class="lbl">CTR Rate</span><span class="val green" id="statsCtr">18.2%</span></div>
+          <div class="pf-metric"><span class="lbl">Avg Watch Time</span><span class="val">22 secs</span></div>
+          <div class="pf-metric"><span class="lbl">Shares</span><span class="val">4,820</span></div>
+        </div>
+        <button class="action-3d-btn primary-3d full-width-btn" id="closeStatsOkBtn">
+          Close Analytics
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD NEW RELEASE MODAL -->
+  <div class="cmd-palette-modal hidden" id="releaseModal">
+    <div class="cmd-palette-backdrop" id="releaseBackdrop"></div>
+    <div class="cmd-palette-box connect-modal-box">
+      <div class="cmd-input-row modal-header-row">
+        <h3 class="connect-modal-title"><i class="fa-solid fa-compact-disc connect-modal-icon"></i> Add New Release</h3>
+        <button class="action-3d-btn secondary-3d small-btn" id="closeReleaseModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <form id="releaseForm" class="modal-form-body">
+        <div class="form-group">
+          <label>Release Title</label>
+          <input type="text" id="releaseTitleInput" class="form-input" placeholder="e.g. Midnight Echoes" required>
+        </div>
+        <div class="form-group">
+          <label>Release Type</label>
+          <select id="releaseTypeSelect" class="form-select">
+            <option value="Single">Upcoming Single</option>
+            <option value="EP">Upcoming EP</option>
+            <option value="Album">Full Album</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Target Launch Date</label>
+          <input type="date" id="releaseDateInput" class="form-input" required>
+        </div>
+        <div class="modal-actions-row">
+          <button type="submit" class="action-3d-btn primary-3d full-width-btn">
+            <i class="fa-solid fa-plus"></i> Create Release Pipeline
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CONNECT CHANNEL MODAL -->
+  <div class="cmd-palette-modal hidden" id="connectChannelModal">
+    <div class="cmd-palette-backdrop" id="connectChannelBackdrop"></div>
+    <div class="cmd-palette-box connect-modal-box">
+      <div class="cmd-input-row modal-header-row">
+        <h3 class="connect-modal-title"><i class="fa-solid fa-plus connect-modal-icon"></i> Connect New Channel</h3>
+        <button class="action-3d-btn secondary-3d small-btn" id="closeConnectModalBtn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div class="connect-channel-list">
+        <button class="connect-platform-item-btn" data-connect-pf="Instagram">
+          <i class="fa-brands fa-instagram insta-color"></i>
+          <span>Connect Instagram Profile</span>
+          <i class="fa-solid fa-chevron-right arrow"></i>
+        </button>
+        <button class="connect-platform-item-btn" data-connect-pf="TikTok">
+          <i class="fa-brands fa-tiktok tiktok-color"></i>
+          <span>Connect TikTok Account</span>
+          <i class="fa-solid fa-chevron-right arrow"></i>
+        </button>
+        <button class="connect-platform-item-btn" data-connect-pf="Spotify">
+          <i class="fa-brands fa-spotify spotify-color"></i>
+          <span>Connect Spotify for Artists</span>
+          <i class="fa-solid fa-chevron-right arrow"></i>
+        </button>
+        <button class="connect-platform-item-btn" data-connect-pf="YouTube">
+          <i class="fa-brands fa-youtube youtube-color"></i>
+          <span>Connect YouTube Channel</span>
+          <i class="fa-solid fa-chevron-right arrow"></i>
+        </button>
+        <button class="connect-platform-item-btn" data-connect-pf="Twitch">
+          <i class="fa-brands fa-twitch twitch-color"></i>
+          <span>Connect Twitch Channel</span>
+          <i class="fa-solid fa-chevron-right arrow"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMAND PALETTE OVERLAY MODAL -->
+  <div class="cmd-palette-modal hidden" id="cmdPaletteModal">
+    <div class="cmd-palette-backdrop" id="cmdPaletteBackdrop"></div>
+    <div class="cmd-palette-box">
+      <div class="cmd-input-row">
+        <i class="fa-solid fa-magnifying-glass cmd-search-icon"></i>
+        <input type="text" id="cmdSearchInput" placeholder="Type a command or search sections..." autocomplete="off">
+        <kbd class="esc-badge">ESC</kbd>
+      </div>
+
+      <div class="cmd-results-list" id="cmdResultsList">
+        
+        <div class="cmd-group-title">NAVIGATION SECTIONS</div>
+        
+        <div class="cmd-item" data-action="nav" data-target="overview">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Go to Overview Dashboard</span>
+          <kbd>Jump</kbd>
+        </div>
+
+        <div class="cmd-item" data-action="nav" data-target="content">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>Go to Content & Calendar</span>
+          <kbd>Jump</kbd>
+        </div>
+
+        <div class="cmd-item" data-action="nav" data-target="releases">
+          <i class="fa-solid fa-compact-disc"></i>
+          <span>Go to Release Manager</span>
+          <kbd>Jump</kbd>
+        </div>
+
+        <div class="cmd-item" data-action="nav" data-target="media">
+          <i class="fa-solid fa-photo-film"></i>
+          <span>Go to Media Library</span>
+          <kbd>Jump</kbd>
+        </div>
+
+        <div class="cmd-item" data-action="nav" data-target="insights">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Go to AI Insights</span>
+          <kbd>Jump</kbd>
+        </div>
+
+        <div class="cmd-item" data-action="export">
+          <i class="fa-solid fa-download"></i>
+          <span>Export Followers CSV Data</span>
+          <kbd>Action</kbd>
+        </div>
+
+      </div>
+
+      <div class="cmd-palette-footer">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> to navigate</span>
+        <span><kbd>↵</kbd> to select</span>
+        <span><kbd>ESC</kbd> to dismiss</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- JS SCRIPT -->
+  <script src="dashboard.js?v=7"></script>
+</body>
+</html>
