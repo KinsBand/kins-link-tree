@@ -63,29 +63,28 @@
       <!-- Main Content Container -->
       <main class="container">
         
-        <!-- Header Actions: Subscribe & Share -->
+        <!-- Header Actions: Subscribe (Left), Copy (Center), Share (Right) -->
         <header class="top-nav">
           <div class="top-subscribe-wrapper">
             <span class="free-badge-pill">FREE</span>
             <button class="nav-pill-btn" id="topSubscribeBtn" aria-label="Subscribe to updates">
-              <i class="fa-regular fa-bell"></i>
               <span>SUBSCRIBE</span>
             </button>
           </div>
           
-          <button class="icon-circle-btn" id="shareBtn" aria-label="Share page">
+          <button class="nav-pill-btn" id="handleCopyBtn" title="Click to copy @KinsBandOfficial" aria-label="Copy handle">
+            <i class="fa-regular fa-copy"></i>
+            <span>@KinsBandOfficial</span>
+          </button>
+
+          <button class="nav-pill-btn" id="shareBtn" aria-label="Share page">
             <i class="fa-solid fa-share-nodes"></i>
+            <span>SHARE</span>
           </button>
         </header>
 
         <!-- Band Profile Section -->
         <section class="profile-section">
-          <!-- Pressable Kins Title with subtle small copy icon -->
-          <button class="pressable-title-btn" id="handleCopyBtn" title="Click to copy @KinsBandOfficial" aria-label="Copy handle">
-            <h1 class="profile-title">Kins</h1>
-            <i class="fa-regular fa-copy small-copy-icon"></i>
-          </button>
-
           <!-- Short Bio Description -->
           <p class="profile-bio-text">Rock band 4 friends making music together</p>
 
@@ -338,62 +337,19 @@
         <section class="merch-section">
           <div class="members-section-header">
             <h3 class="members-section-title"><i class="fa-solid fa-shirt"></i> Official Merch</h3>
-            <a href="https://bandcamp.com" target="_blank" rel="noopener" class="scroll-hint-pill merch-store-link">
-              <i class="fa-solid fa-bag-shopping"></i> Bandcamp Shop
-            </a>
+            <span class="scroll-hint-pill merch-status-pill">
+              <i class="fa-solid fa-clock"></i> Stay Tuned
+            </span>
           </div>
 
-          <div class="merch-scroll-container">
-            <!-- Merch Item 1 -->
-            <div class="merch-card">
-              <div class="merch-img-box">
-                <i class="fa-solid fa-shirt merch-icon"></i>
-                <span class="merch-badge">NEW</span>
-              </div>
-              <div class="merch-info">
-                <h4 class="merch-title">Kins World Tour Tee</h4>
-                <p class="merch-price">$35.00 AUD</p>
-                <a href="https://bandcamp.com" target="_blank" rel="noopener" class="buy-merch-btn">Buy Now</a>
-              </div>
+          <div class="merch-coming-soon-card">
+            <div class="merch-cs-icon-box">
+              <i class="fa-solid fa-box-open"></i>
             </div>
-
-            <!-- Merch Item 2 -->
-            <div class="merch-card">
-              <div class="merch-img-box">
-                <i class="fa-solid fa-compact-disc merch-icon"></i>
-                <span class="merch-badge">VINYL</span>
-              </div>
-              <div class="merch-info">
-                <h4 class="merch-title">Debut EP Limited Vinyl</h4>
-                <p class="merch-price">$45.00 AUD</p>
-                <a href="https://bandcamp.com" target="_blank" rel="noopener" class="buy-merch-btn">Buy Now</a>
-              </div>
-            </div>
-
-            <!-- Merch Item 3 -->
-            <div class="merch-card">
-              <div class="merch-img-box">
-                <i class="fa-solid fa-note-sticky merch-icon"></i>
-                <span class="merch-badge">STICKER</span>
-              </div>
-              <div class="merch-info">
-                <h4 class="merch-title">Logo Sticker Pack (5x)</h4>
-                <p class="merch-price">$10.00 AUD</p>
-                <a href="https://bandcamp.com" target="_blank" rel="noopener" class="buy-merch-btn">Buy Now</a>
-              </div>
-            </div>
-
-            <!-- Merch Item 4 -->
-            <div class="merch-card">
-              <div class="merch-img-box">
-                <i class="fa-solid fa-tape merch-icon"></i>
-                <span class="merch-badge">CASSETTE</span>
-              </div>
-              <div class="merch-info">
-                <h4 class="merch-title">Demo Tapes Cassette</h4>
-                <p class="merch-price">$20.00 AUD</p>
-                <a href="https://bandcamp.com" target="_blank" rel="noopener" class="buy-merch-btn">Buy Now</a>
-              </div>
+            <div class="merch-cs-content">
+              <span class="merch-cs-badge">COMING SOON</span>
+              <h4 class="merch-cs-title">Official Kins Store Drop</h4>
+              <p class="merch-cs-desc">Exclusive apparel, vinyl & limited accessories dropping soon. Stay tuned for release announcements.</p>
             </div>
           </div>
         </section>

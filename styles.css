@@ -194,7 +194,8 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 20%;
+  object-position: center 0%;
+  transform: translateY(-22px) scale(1.05);
   display: block;
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
   mask-image: linear-gradient(
@@ -264,140 +265,124 @@ body.theme-light .hero-gradient-overlay {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
+  padding: 0;
   margin-top: 10px;
   position: relative;
   z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .top-subscribe-wrapper {
   position: relative;
   display: inline-flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 0 0 auto;
 }
 
 .free-badge-pill {
   position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -9px;
+  left: 6px;
+  transform: none;
   background: var(--btn-green, #53c678);
   color: var(--btn-text-color, #0b1f18);
   font-family: var(--font-primary, 'Outfit', sans-serif);
   font-weight: 800;
-  font-size: 0.58rem;
-  padding: 3px 8px;
-  border-radius: 10px;
-  letter-spacing: 0.6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 1.5px solid var(--bg-dark, #002217);
+  font-size: 0.54rem;
+  padding: 2px 6px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border: 1.2px solid var(--bg-dark, #002217);
   z-index: 15;
   text-transform: uppercase;
   pointer-events: none;
   white-space: nowrap;
 }
 
-/* Subscribe Pill Button top left */
+/* Header Action Pill Buttons (SUBSCRIBE, COPY, SHARE) */
 .nav-pill-btn {
-  background: rgba(255, 255, 255, 0.95);
-  border: none;
-  color: #0f172a;
-  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  padding: 6px 11px;
   border-radius: 20px;
-  font-family: var(--font-primary);
-  font-size: 0.8rem;
+  font-family: var(--font-primary, 'Outfit', sans-serif);
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(8px);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  justify-content: center;
+  gap: 5px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .nav-pill-btn:hover {
-  background: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .nav-pill-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Share Circle Button top right */
-.icon-circle-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  font-size: 1.1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+/* Centralized Copy Button - Responsive Fit */
+#handleCopyBtn {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 0.68rem;
+  padding: 6px 9px;
+  letter-spacing: 0.2px;
 }
 
-.icon-circle-btn:hover {
-  background: rgba(0, 0, 0, 0.55);
-  transform: scale(1.08);
+#handleCopyBtn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Band Profile Section */
+/* Share Button Right Alignment */
+#shareBtn {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+}
+
+/* Band Profile Section - Spacing for Background Logo */
 .profile-section {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-top: 76px;
-}
-
-/* Pressable Kins Title Container */
-.pressable-title-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 24px;
-  padding: 6px 20px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.pressable-title-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 6px 20px rgba(0, 168, 107, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.pressable-title-btn:active {
-  transform: scale(0.96);
+  margin-top: 145px;
 }
 
 /* Profile Title - Centered Kins Brand Logo Gradient */
 .profile-title {
-  font-size: 2.3rem;
+  font-size: 2.4rem;
   font-weight: 800;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, var(--btn-green, #00a86b) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin: 0;
+  margin: 0 0 8px 0;
+  line-height: 1.1;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
   text-align: center;
   white-space: nowrap;
@@ -856,21 +841,29 @@ body.theme-light .switcher-tab.active {
   pointer-events: none;
 }
 
-/* Individual Member Gradient Colors */
+/* Refined Band Member UI Card Gradients */
 .avatar-vivian {
-  background: linear-gradient(135deg, #013b29 0%, #026947 50%, #00a86b 100%);
+  background: linear-gradient(135deg, rgba(1, 59, 41, 0.95) 0%, rgba(2, 105, 71, 0.8) 50%, rgba(83, 198, 120, 0.6) 100%),
+              radial-gradient(circle at 80% 20%, rgba(83, 198, 120, 0.25) 0%, transparent 60%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .avatar-charlie {
-  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+  background: linear-gradient(135deg, rgba(15, 32, 39, 0.95) 0%, rgba(32, 58, 67, 0.8) 50%, rgba(56, 189, 248, 0.55) 100%),
+              radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.25) 0%, transparent 60%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .avatar-oscar {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.95) 0%, rgba(49, 46, 129, 0.8) 50%, rgba(129, 140, 248, 0.55) 100%),
+              radial-gradient(circle at 80% 20%, rgba(129, 140, 248, 0.25) 0%, transparent 60%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .avatar-trai {
-  background: linear-gradient(135deg, #31102f 0%, #581c87 50%, #7e22ce 100%);
+  background: linear-gradient(135deg, rgba(49, 16, 47, 0.95) 0%, rgba(88, 28, 135, 0.8) 50%, rgba(192, 132, 252, 0.55) 100%),
+              radial-gradient(circle at 80% 20%, rgba(192, 132, 252, 0.25) 0%, transparent 60%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .member-img {
@@ -1883,8 +1876,8 @@ body.audio-bar-active .floating-gig-pill-container {
 /* ============================================================= */
 .hero-music-cta-card {
   width: 100%;
-  background: var(--card-bg, rgba(11, 31, 24, 0.94));
-  border: 1px solid var(--btn-green, #53c678);
+  background: linear-gradient(135deg, rgba(17, 34, 27, 0.95) 0%, rgba(11, 26, 20, 0.9) 100%);
+  border: 1px solid rgba(83, 198, 120, 0.4);
   border-radius: 20px;
   padding: 16px;
   margin-top: 14px;
@@ -1893,8 +1886,9 @@ body.audio-bar-active .floating-gig-pill-container {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   box-sizing: border-box;
 }
 
@@ -2132,11 +2126,11 @@ body.audio-bar-active .floating-gig-pill-container {
 
 .artist-filter-bar .filter-pill-btn.active,
 .artist-filter-bar .filter-pill-btn:hover {
-  background: var(--btn-green, #72cf7b);
+  background: linear-gradient(135deg, #53c678 0%, #34d399 100%);
   color: var(--text-dark, #002b1e);
-  border-color: var(--btn-green, #72cf7b);
+  border-color: #53c678;
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(114, 207, 123, 0.4);
+  box-shadow: 0 4px 16px rgba(83, 198, 120, 0.35);
   transform: translateY(-1px);
 }
 
@@ -2184,14 +2178,16 @@ body.audio-bar-active .floating-gig-pill-container {
 
 .music-card.paginated-card {
   width: 100%;
-  background: var(--card-bg, rgba(11, 31, 24, 0.94));
-  border: 2px solid var(--btn-green, #53c678);
+  background: linear-gradient(135deg, rgba(11, 31, 24, 0.95) 0%, rgba(16, 44, 34, 0.88) 100%);
+  border: 1px solid rgba(83, 198, 120, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 18px;
   padding: 12px 14px;
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), 0 0 12px var(--btn-green-shadow, rgba(83, 198, 120, 0.2));
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   position: relative;
   overflow: hidden;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background 0.3s ease, border-color 0.3s ease;
@@ -2199,7 +2195,8 @@ body.audio-bar-active .floating-gig-pill-container {
 
 .music-card.paginated-card:hover {
   transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  border-color: rgba(83, 198, 120, 0.7);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.32), 0 0 16px rgba(83, 198, 120, 0.25);
 }
 
 .music-card-thumb {
@@ -3095,96 +3092,92 @@ body.theme-light .reset-theme-btn {
   transform: scale(1.05);
 }
 
-/* Official Merch Section */
+/* Official Merch Section - Minimalist Coming Soon State */
 .merch-section {
   width: 100%;
   margin-top: 10px;
   margin-bottom: 10px;
 }
 
-.merch-scroll-container {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding: 4px 4px 16px 4px;
-  scrollbar-width: none;
-}
-
-.merch-scroll-container::-webkit-scrollbar {
-  display: none;
-}
-
-.merch-card {
-  min-width: 150px;
-  width: 150px;
-  background: var(--card-bg, rgba(11, 31, 24, 0.9));
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 18px;
-  padding: 12px;
-  scroll-snap-align: start;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease;
-}
-
-.merch-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--btn-green);
-}
-
-.merch-img-box {
-  width: 100%;
-  height: 100px;
-  background: rgba(255, 255, 255, 0.05);
+.merch-status-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--btn-green, #53c678);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
   border-radius: 12px;
+}
+
+.merch-coming-soon-card {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-sizing: border-box;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.merch-coming-soon-card:hover {
+  border-color: rgba(83, 198, 120, 0.4);
+  transform: translateY(-2px);
+}
+
+.merch-cs-icon-box {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  background: rgba(83, 198, 120, 0.12);
+  border: 1px solid rgba(83, 198, 120, 0.25);
+  color: var(--btn-green, #53c678);
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  margin-bottom: 10px;
+  font-size: 1.25rem;
 }
 
-.merch-icon {
-  font-size: 2.2rem;
-  color: var(--btn-green, #53c678);
-}
-
-.merch-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: var(--btn-green, #53c678);
-  color: #0b1f18;
-  font-size: 0.58rem;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 6px;
-}
-
-.merch-info {
-  width: 100%;
-  text-align: center;
+.merch-cs-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: flex-start;
+  gap: 3px;
 }
 
-.merch-title {
-  font-size: 0.82rem;
+.merch-cs-badge {
+  background: var(--btn-green, #53c678);
+  color: #0b1f18;
+  font-family: var(--font-primary, 'Outfit', sans-serif);
+  font-weight: 800;
+  font-size: 0.56rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.merch-cs-title {
+  font-family: var(--font-primary, 'Outfit', sans-serif);
+  font-size: 0.92rem;
   font-weight: 700;
   color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 2px 0 0 0;
 }
 
-.merch-price {
-  font-size: 0.78rem;
-  color: var(--btn-green, #53c678);
-  font-weight: 800;
+.merch-cs-desc {
+  font-family: var(--font-secondary, 'Plus Jakarta Sans', sans-serif);
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.35;
+}
 }
 
 .buy-merch-btn {
