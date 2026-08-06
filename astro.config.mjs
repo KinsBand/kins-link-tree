@@ -2,9 +2,10 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   output: 'static',
-  site: 'https://KinsBandOfficial.github.io',
-  base: process.env.GITHUB_ACTIONS ? '/kins-link-in-bio/' : '/',
+  site: 'https://trapjgpjrfsdteg.github.io',
+  base: '/kins-official-website/',
   build: {
     format: 'directory'
   }
 });
+
