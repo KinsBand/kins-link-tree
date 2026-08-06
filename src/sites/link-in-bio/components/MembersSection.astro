@@ -7,11 +7,7 @@ const members = [
     icon: "fa-microphone",
     initial: "V",
     badge: "VOCALS & GUITAR",
-    bio: "Shaping Kins' sound with signature melodies and driving rhythm.",
-    socials: [
-      { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com" },
-      { name: "Twitter/X", icon: "fa-brands fa-x-twitter", url: "https://x.com" }
-    ]
+    bio: "Shaping Kins' sound with signature melodies and driving rhythm."
   },
   {
     id: "charlie",
@@ -20,11 +16,7 @@ const members = [
     icon: "fa-guitar",
     initial: "C",
     badge: "GUITAR & VOCALS",
-    bio: "Bringing melodies, lyrics and the energy that ties everything together.",
-    socials: [
-      { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com" },
-      { name: "TikTok", icon: "fa-brands fa-tiktok", url: "https://tiktok.com" }
-    ]
+    bio: "Bringing melodies, lyrics and the energy that ties everything together."
   },
   {
     id: "oscar",
@@ -33,11 +25,7 @@ const members = [
     icon: "fa-sliders",
     initial: "O",
     badge: "BASS",
-    bio: "Driving the groove with bass lines and vintage-inspired synth textures.",
-    socials: [
-      { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com" },
-      { name: "SoundCloud", icon: "fa-brands fa-soundcloud", url: "https://soundcloud.com" }
-    ]
+    bio: "Driving the groove with bass lines and vintage-inspired synth textures."
   },
   {
     id: "trai",
@@ -46,11 +34,7 @@ const members = [
     icon: "fa-drum",
     initial: "T",
     badge: "DRUMS",
-    bio: "Laying down the heartbeat of the band with high-energy rhythms and anthemic beats.",
-    socials: [
-      { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com" },
-      { name: "YouTube", icon: "fa-brands fa-youtube", url: "https://youtube.com" }
-    ]
+    bio: "Laying down the heartbeat of the band with high-energy rhythms and anthemic beats."
   }
 ];
 ---
@@ -73,17 +57,6 @@ const members = [
           <h4 class="member-name">{member.name}</h4>
           <span class="member-role"><i class={`fa-solid ${member.icon}`}></i> {member.role}</span>
           <p class="member-bio">{member.bio}</p>
-          
-          <button class="member-socials-toggle-btn" data-target={`socials-${member.id}`}>
-            <span>Social Links</span>
-            <i class="fa-solid fa-chevron-down toggle-icon"></i>
-          </button>
-
-          <div class="member-socials-dropdown hidden" id={`socials-${member.id}`}>
-            {member.socials.map((s) => (
-              <a href={s.url} target="_blank" rel="noopener" class="member-social-link"><i class={s.icon}></i> {s.name}</a>
-            ))}
-          </div>
         </div>
       </div>
     ))}
@@ -144,7 +117,7 @@ const members = [
   }
 
   .member-card {
-    flex: 0 0 260px;
+    flex: 0 0 220px;
     scroll-snap-align: start;
     background: var(--card-bg, rgba(11, 31, 24, 0.94));
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -156,10 +129,12 @@ const members = [
     box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
   }
 
+  /* 1:1 Aspect Ratio Headshot Container */
   .member-avatar-box {
     width: 100%;
-    height: 120px;
-    border-radius: 18px;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    border-radius: 20px;
     background: linear-gradient(135deg, #11382b 0%, #0b1f18 100%);
     position: relative;
     display: flex;
@@ -170,7 +145,7 @@ const members = [
   }
 
   .avatar-initials {
-    font-size: 3rem;
+    font-size: 3.2rem;
     font-weight: 900;
     color: rgba(255, 255, 255, 0.9);
     z-index: 2;
@@ -225,61 +200,4 @@ const members = [
     color: rgba(255, 255, 255, 0.75);
     line-height: 1.35;
   }
-
-  .member-socials-toggle-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-    padding: 8px 12px;
-    border-radius: 12px;
-    font-size: 0.76rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 4px;
-  }
-
-  .member-socials-dropdown {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 6px;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 8px;
-    border-radius: 12px;
-  }
-
-  .member-social-link {
-    color: rgba(255, 255, 255, 0.9);
-    text-decoration: none;
-    font-size: 0.78rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 6px;
-  }
 </style>
-
-<script>
-  const memberSocialBtns = document.querySelectorAll('.member-socials-toggle-btn');
-  memberSocialBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const targetId = btn.getAttribute('data-target');
-      const targetDropdown = document.getElementById(targetId!);
-      
-      if (targetDropdown) {
-        const isHidden = targetDropdown.classList.contains('hidden');
-        document.querySelectorAll('.member-socials-dropdown').forEach(dropdown => {
-          dropdown.classList.add('hidden');
-        });
-        if (isHidden) {
-          targetDropdown.classList.remove('hidden');
-        }
-      }
-    });
-  });
-</script>
