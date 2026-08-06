@@ -1,0 +1,193 @@
+---
+---
+
+<header class="top-nav">
+  <div class="top-subscribe-wrapper">
+    <span class="free-badge-pill">FREE</span>
+    <button class="nav-pill-btn" id="topSubscribeBtn" aria-label="Subscribe to updates">
+      <span>SUBSCRIBE</span>
+    </button>
+  </div>
+
+  <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label="Search cover videos">
+    <i class="fa-solid fa-magnifying-glass search-pill-icon"></i>
+    <span class="search-pill-placeholder">search covers...</span>
+  </button>
+
+  <button class="nav-pill-btn" id="shareBtn" aria-label="Share page">
+    <span>SHARE</span>
+  </button>
+</header>
+
+<style>
+  .top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-top: 10px;
+    position: sticky;
+    top: 10px;
+    z-index: 100;
+    width: 100%;
+    box-sizing: border-box;
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .top-nav:global(.nav-hidden) {
+    opacity: 0;
+    filter: blur(12px);
+    pointer-events: none;
+    transform: translateY(-12px);
+  }
+
+  .top-subscribe-wrapper {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  .free-badge-pill {
+    position: absolute;
+    top: -10px;
+    left: 6px;
+    background: #ffffff;
+    color: #002217;
+    font-family: var(--font-primary, 'Outfit', sans-serif);
+    font-weight: 900;
+    font-size: 0.55rem;
+    padding: 2px 7px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    border: 1.5px solid #002217;
+    z-index: 15;
+    text-transform: uppercase;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .nav-pill-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 8px 14px;
+    border-radius: 9999px;
+    font-family: var(--font-primary, 'Outfit', sans-serif);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+    box-shadow: 0 3.5px 0 rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+    box-sizing: border-box;
+    user-select: none;
+    flex: 0 0 auto;
+  }
+
+  .nav-pill-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 5.5px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  #topSubscribeBtn {
+    background-color: var(--btn-green);
+    color: var(--btn-text-color, #0b1f18);
+    border-color: transparent;
+    box-shadow: 0 3.5px 0 var(--btn-green-shadow, rgba(0, 0, 0, 0.25));
+    font-weight: 800;
+  }
+
+  #topSubscribeBtn:hover {
+    background-color: var(--btn-green-hover);
+    box-shadow: 0 5.5px 0 var(--btn-green-shadow, rgba(0, 0, 0, 0.25));
+  }
+
+  /* Header Central Search Pill Button */
+  .header-search-pill-btn {
+    flex: 1 1 auto;
+    max-width: 220px;
+    background: rgba(17, 36, 27, 0.85);
+    border: 1px solid rgba(83, 198, 120, 0.35);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 7px 14px;
+    border-radius: 9999px;
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .header-search-pill-btn:hover {
+    background: rgba(25, 50, 38, 0.95);
+    border-color: var(--btn-green);
+    color: #ffffff;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(83, 198, 120, 0.25);
+  }
+
+  .search-pill-icon {
+    font-size: 0.8rem;
+    color: var(--btn-green);
+  }
+
+  .search-pill-placeholder {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+
+<script>
+  const topNav = document.querySelector('.top-nav');
+  let lastScrollY = window.scrollY;
+
+  window.addEventListener('scroll', () => {
+    const currentScrollY = window.scrollY;
+    if (!topNav) return;
+
+    if (currentScrollY <= 15) {
+      topNav.classList.remove('nav-hidden');
+    } else if (currentScrollY > lastScrollY && currentScrollY > 60) {
+      topNav.classList.add('nav-hidden');
+    } else if (currentScrollY < lastScrollY) {
+      topNav.classList.remove('nav-hidden');
+    }
+    lastScrollY = currentScrollY;
+  }, { passive: true });
+
+  const topSubscribeBtn = document.getElementById('topSubscribeBtn');
+  const subscribeFormSection = document.getElementById('subscribeFormSection');
+  if (topSubscribeBtn && subscribeFormSection) {
+    topSubscribeBtn.addEventListener('click', () => {
+      subscribeFormSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const subTabBtn = document.getElementById('tabSubBtn');
+      if (subTabBtn) subTabBtn.click();
+      const emailInput = document.getElementById('emailInput') as HTMLInputElement;
+      if (emailInput) {
+        setTimeout(() => emailInput.focus(), 600);
+      }
+    });
+  }
+</script>

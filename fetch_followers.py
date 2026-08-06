@@ -52,7 +52,14 @@ CONFIG = {
     "linkedin_org_id":      "00000000",                   # org ID from LinkedIn URL
 }
 
-FOLLOWERS_FILE = os.path.join(os.path.dirname(__file__), "followers.json")
+FOLLOWERS_FILE = os.path.join(os.path.dirname(__file__), "public", "followers.json")
+FOLLOWERS_FILE_ROOT = os.path.join(os.path.dirname(__file__), "followers.json")
+
+def save_followers(data: dict):
+    with open(FOLLOWERS_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+    with open(FOLLOWERS_FILE_ROOT, "w") as f:
+        json.dump(data, f, indent=2)
 
 
 def load_current() -> dict:
@@ -380,8 +387,7 @@ def main():
         "platforms": current,
     }
 
-    with open(FOLLOWERS_FILE, "w") as f:
-        json.dump(output, f, indent=2)
+    save_followers(output)
 
     print(f"\n✅ followers.json updated at {output['last_updated']}")
 

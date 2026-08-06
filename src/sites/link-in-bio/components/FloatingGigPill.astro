@@ -1,0 +1,62 @@
+---
+---
+
+<div class="floating-gig-pill-container" id="floatingGigPillBtn" role="button" aria-label="Open Tour & Gig Map">
+  <div class="gig-pill-inner">
+    <i class="fa-solid fa-map-location-dot pill-map-icon"></i>
+    <div class="gig-pill-text-box">
+      <span class="gig-pill-tag" id="gigPillTag">Gigs</span>
+      <span class="gig-pill-location" id="gigPillLocation">Locations</span>
+    </div>
+    <div class="gig-pill-arrow-section">
+      <i class="fa-solid fa-chevron-right pill-arrow-icon"></i>
+    </div>
+  </div>
+</div>
+
+<style>
+  .floating-gig-pill-container {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 800;
+    cursor: pointer;
+  }
+
+  .gig-pill-inner {
+    background: var(--btn-green);
+    color: #0b1f18;
+    padding: 10px 16px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    font-family: var(--font-primary);
+  }
+
+  .pill-map-icon {
+    font-size: 1.1rem;
+  }
+
+  .gig-pill-text-box {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .gig-pill-tag {
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .gig-pill-location {
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  .pill-arrow-icon {
+    font-size: 0.8rem;
+  }
+</style>

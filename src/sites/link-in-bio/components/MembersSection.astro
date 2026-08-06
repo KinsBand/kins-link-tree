@@ -1,0 +1,285 @@
+---
+const members = [
+  {
+    id: "vivian",
+    name: "Vivian",
+    role: "Lead Vocals & Guitar",
+    icon: "fa-microphone",
+    initial: "V",
+    badge: "VOCALS & GUITAR",
+    bio: "Shaping Kins' sound with signature melodies and driving rhythm.",
+    socials: [
+      { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com" },
+      { name: "Twitter/X", icon: "fa-brands fa-x-twitter", url: "https://x.com" }
+    ]
+  },
+  {
+    id: "charlie",
+    name: "Charlie",
+    role: "Guitar & Vocals",
+    icon: "fa-guitar",
+    initial: "C",
+    badge: "GUITAR & VOCALS",
+    bio: "Bringing melodies, lyrics and the energy that ties everything together.",
+    socials: [
+      { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com" },
+      { name: "TikTok", icon: "fa-brands fa-tiktok", url: "https://tiktok.com" }
+    ]
+  },
+  {
+    id: "oscar",
+    name: "Oscar",
+    role: "Bass & Synth",
+    icon: "fa-sliders",
+    initial: "O",
+    badge: "BASS",
+    bio: "Driving the groove with bass lines and vintage-inspired synth textures.",
+    socials: [
+      { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com" },
+      { name: "SoundCloud", icon: "fa-brands fa-soundcloud", url: "https://soundcloud.com" }
+    ]
+  },
+  {
+    id: "trai",
+    name: "Trai",
+    role: "Drums & Percussion",
+    icon: "fa-drum",
+    initial: "T",
+    badge: "DRUMS",
+    bio: "Laying down the heartbeat of the band with high-energy rhythms and anthemic beats.",
+    socials: [
+      { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com" },
+      { name: "YouTube", icon: "fa-brands fa-youtube", url: "https://youtube.com" }
+    ]
+  }
+];
+---
+
+<section class="members-section">
+  <div class="members-section-header">
+    <h3 class="members-section-title"><i class="fa-solid fa-user-group"></i> Band Members</h3>
+    <span class="scroll-hint-pill" id="scrollHintPill"><i class="fa-solid fa-arrow-right-long"></i> Scroll</span>
+  </div>
+
+  <div class="members-scroll-container">
+    {members.map((member) => (
+      <div class="member-card">
+        <div class={`member-img-wrapper member-avatar-box avatar-${member.id}`}>
+          <div class="avatar-initials">{member.initial}</div>
+          <i class={`fa-solid ${member.icon} avatar-bg-icon`}></i>
+          <span class="member-badge">{member.badge}</span>
+        </div>
+        <div class="member-info">
+          <h4 class="member-name">{member.name}</h4>
+          <span class="member-role"><i class={`fa-solid ${member.icon}`}></i> {member.role}</span>
+          <p class="member-bio">{member.bio}</p>
+          
+          <button class="member-socials-toggle-btn" data-target={`socials-${member.id}`}>
+            <span>Social Links</span>
+            <i class="fa-solid fa-chevron-down toggle-icon"></i>
+          </button>
+
+          <div class="member-socials-dropdown hidden" id={`socials-${member.id}`}>
+            {member.socials.map((s) => (
+              <a href={s.url} target="_blank" rel="noopener" class="member-social-link"><i class={s.icon}></i> {s.name}</a>
+            ))}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .members-section {
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .members-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+
+  .members-section-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-white, #ffffff);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .members-section-title i {
+    color: var(--btn-green);
+  }
+
+  .scroll-hint-pill {
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: var(--btn-text-color, #0b1f18);
+    background-color: var(--btn-green);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 0 var(--btn-green-shadow, rgba(0, 0, 0, 0.25));
+  }
+
+  .members-scroll-container {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 4px 4px 16px 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .member-card {
+    flex: 0 0 260px;
+    scroll-snap-align: start;
+    background: var(--card-bg, rgba(11, 31, 24, 0.94));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .member-avatar-box {
+    width: 100%;
+    height: 120px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #11382b 0%, #0b1f18 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .avatar-initials {
+    font-size: 3rem;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.9);
+    z-index: 2;
+  }
+
+  .avatar-bg-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    font-size: 5rem;
+    color: rgba(83, 198, 120, 0.12);
+    z-index: 1;
+  }
+
+  .member-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--btn-green);
+    color: #0b1f18;
+    font-size: 0.58rem;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+    z-index: 3;
+  }
+
+  .member-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .member-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .member-role {
+    font-size: 0.78rem;
+    color: var(--btn-green);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .member-bio {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.35;
+  }
+
+  .member-socials-toggle-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  .member-socials-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .member-social-link {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+  }
+</style>
+
+<script>
+  const memberSocialBtns = document.querySelectorAll('.member-socials-toggle-btn');
+  memberSocialBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetId = btn.getAttribute('data-target');
+      const targetDropdown = document.getElementById(targetId!);
+      
+      if (targetDropdown) {
+        const isHidden = targetDropdown.classList.contains('hidden');
+        document.querySelectorAll('.member-socials-dropdown').forEach(dropdown => {
+          dropdown.classList.add('hidden');
+        });
+        if (isHidden) {
+          targetDropdown.classList.remove('hidden');
+        }
+      }
+    });
+  });
+</script>

@@ -1,0 +1,158 @@
+---
+const socials = [
+  { name: "Tiktok", icon: "fa-brands fa-tiktok", url: "https://tiktok.com/@KinsBandOfficial", platform: "tiktok" },
+  { name: "Youtube", icon: "fa-brands fa-youtube", url: "https://youtube.com/@KinsBandOfficial", platform: "youtube" },
+  { name: "Twitter", icon: "fa-brands fa-x-twitter", url: "https://x.com/KinsBandOfficial", platform: "twitter" },
+  { name: "Twitch", icon: "fa-brands fa-twitch", url: "https://twitch.tv/KinsBandOfficial", platform: "twitch" },
+  { name: "Discord", icon: "fa-brands fa-discord", url: "https://discord.gg", platform: "discord" },
+  { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com/KinsBandOfficial", platform: "instagram" },
+  { name: "Linkedin", icon: "fa-brands fa-linkedin-in", url: "https://linkedin.com/company/KinsBandOfficial", platform: "linkedin" }
+];
+
+const streams = [
+  { name: "YT Music", icon: "fa-regular fa-circle-play", url: "https://music.youtube.com/search?q=KinsBandOfficial", platform: "ytmusic" },
+  { name: "SoundCloud", icon: "fa-brands fa-soundcloud", url: "https://soundcloud.com/KinsBandOfficial", platform: "soundcloud" },
+  { name: "Spotify", icon: "fa-brands fa-spotify", url: "https://open.spotify.com/search/KinsBandOfficial", platform: "spotify" }
+];
+---
+
+<section class="tabbed-links-section">
+  <div class="segmented-switcher-box">
+    <button class="switcher-tab active" id="tabSocialsBtn" data-target="socialsTab">
+      Socials
+    </button>
+    <button class="switcher-tab" id="tabStreamsBtn" data-target="streamsTab">
+      Streams
+    </button>
+  </div>
+
+  <div class="tab-content active" id="socialsTab">
+    <div class="buttons-list">
+      {socials.map((link) => (
+        <a href={link.url} target="_blank" rel="noopener" class="green-link-btn" data-platform={link.platform}>
+          <div class="btn-icon"><i class={link.icon}></i></div>
+          <span class="btn-text">{link.name}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <div class="tab-content" id="streamsTab">
+    <div class="buttons-list">
+      {streams.map((link) => (
+        <a href={link.url} target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform={link.platform}>
+          <div class="btn-icon"><i class={link.icon}></i></div>
+          <span class="btn-text">{link.name}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .tabbed-links-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .segmented-switcher-box {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    backdrop-filter: blur(8px);
+  }
+
+  .switcher-tab {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.75);
+    font-family: var(--font-primary);
+    font-size: 0.98rem;
+    font-weight: 700;
+    padding: 10px 0;
+    border-radius: 16px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.25s ease;
+  }
+
+  .switcher-tab.active {
+    background: var(--btn-green, #53c678);
+    color: var(--btn-text-color, #0b1f18);
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content:global(.active) {
+    display: block;
+    animation: fadeInTab 0.3s ease forwards;
+  }
+
+  @keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .buttons-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .green-link-btn {
+    background-color: var(--btn-green);
+    color: var(--btn-text-color, #0b1f18);
+    border-radius: 16px;
+    padding: 14px 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    box-shadow: 0 6px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    user-select: none;
+  }
+
+  .green-link-btn:hover {
+    background-color: var(--btn-green-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
+  }
+
+  .btn-icon {
+    font-size: 1.35rem;
+    width: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    color: var(--btn-text-color, #0b1f18);
+    flex-shrink: 0;
+  }
+
+  .btn-text {
+    font-family: var(--font-secondary);
+    font-size: 0.95rem;
+    font-weight: 700;
+    flex: 1;
+    text-align: left;
+    color: var(--btn-text-color, #0b1f18);
+  }
+</style>
+
+<script>
+  import { setupSegmentedSwitcher } from '../scripts/tabs.js';
+  setupSegmentedSwitcher('.tabbed-links-section .switcher-tab', '.tabbed-links-section .tab-content');
+</script>

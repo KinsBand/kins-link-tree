@@ -1,0 +1,121 @@
+---
+---
+
+<div class="bottom-floating-controls-wrapper" id="bottomFloatingControls">
+  <div class="bottom-audio-bar hidden" id="bottomAudioBar">
+    <audio id="vaultAudioPlayer" preload="none"></audio>
+    <div class="audio-bar-content">
+      <div class="audio-bar-left">
+        <div class="audio-bar-icon-box">
+          <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover">
+          <i class="fa-solid fa-compact-disc fa-spin audio-icon-anim" id="audioBarFallbackIcon"></i>
+        </div>
+        <div class="audio-bar-details">
+          <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
+          <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
+        </div>
+      </div>
+      <div class="audio-bar-right">
+        <button class="audio-bar-toggle-btn" id="audioBarToggleBtn" aria-label="Toggle playback">
+          <i class="fa-solid fa-pause"></i>
+        </button>
+        <button class="audio-bar-close-btn" id="audioBarCloseBtn" aria-label="Close audio player">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bottom-floating-controls-wrapper {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 900;
+    width: 90%;
+    max-width: 400px;
+    pointer-events: none;
+  }
+
+  .bottom-audio-bar {
+    pointer-events: auto;
+    background: rgba(11, 31, 24, 0.95);
+    border: 1px solid rgba(83, 198, 120, 0.4);
+    border-radius: 20px;
+    padding: 10px 14px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .audio-bar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .audio-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .audio-bar-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--btn-green);
+  }
+
+  .audio-bar-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .audio-bar-details {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .audio-bar-title {
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .audio-bar-artist {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .audio-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .audio-bar-toggle-btn, .audio-bar-close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #ffffff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+
+<script>
+  import { initAudioPlayer } from '../scripts/audioPlayer.js';
+  initAudioPlayer();
+</script>

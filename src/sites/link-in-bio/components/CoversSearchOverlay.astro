@@ -1,0 +1,279 @@
+---
+const categories = [
+  { key: "all", label: "All Covers", active: true },
+  { key: "full-band", label: "Full Band", active: false },
+  { key: "acoustic", label: "Acoustic", active: false },
+  { key: "shorts", label: "Shorts", active: false }
+];
+---
+
+<div class="covers-search-overlay" id="coversSearchOverlay">
+  <div class="search-overlay-header">
+    <div class="expanded-search-input-box">
+      <i class="fa-solid fa-magnifying-glass search-box-icon"></i>
+      <input type="text" id="overlaySearchInput" placeholder="Search covers by title or artist..." autocomplete="off">
+    </div>
+    <button class="close-overlay-btn" id="closeSearchOverlayBtn" aria-label="Close cover search">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <div class="search-overlay-body">
+    <!-- Category Filter Pills Row -->
+    <div class="category-pills-row">
+      {categories.map((cat) => (
+        <button class={`cover-category-pill ${cat.active ? 'active' : ''}`} data-category={cat.key}>
+          {cat.label}
+        </button>
+      ))}
+    </div>
+
+    <!-- Section Title -->
+    <div class="covers-results-header">
+      <h3 class="covers-section-title" id="coversSectionTitle">Latest Releases</h3>
+    </div>
+
+    <!-- Cover Results Cards List -->
+    <div class="covers-results-list" id="coversResultsList">
+      <!-- Populated dynamically by coversSearchEngine.js -->
+    </div>
+  </div>
+</div>
+
+<style>
+  .covers-search-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 20, 16, 0.96);
+    backdrop-filter: blur(16px);
+    z-index: 950;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px) scale(0.98);
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .covers-search-overlay:global(.active) {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  .search-overlay-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    margin-top: 8px;
+  }
+
+  .expanded-search-input-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(17, 36, 27, 0.95);
+    border: 1px solid var(--btn-green);
+    border-radius: 9999px;
+    padding: 10px 18px;
+    box-shadow: 0 4px 16px rgba(83, 198, 120, 0.25);
+  }
+
+  .search-box-icon {
+    font-size: 1rem;
+    color: var(--btn-green);
+  }
+
+  .expanded-search-input-box input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.92rem;
+    font-weight: 600;
+    width: 100%;
+  }
+
+  .close-overlay-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .close-overlay-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.08);
+  }
+
+  .search-overlay-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    max-width: 440px;
+    width: 100%;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+
+  .category-pills-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px 0;
+  }
+
+  .cover-category-pill {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  .cover-category-pill.active {
+    background: var(--btn-green);
+    color: #0b1f18;
+    border-color: var(--btn-green);
+    font-weight: 800;
+  }
+
+  .covers-section-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-top: 4px;
+  }
+
+  .covers-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .covers-results-list :global(.cover-result-card) {
+    background: var(--card-bg, rgba(11, 31, 24, 0.94));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 64px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .covers-results-list :global(.cover-result-card:hover) {
+    transform: translateY(-2px);
+    border-color: var(--btn-green);
+    box-shadow: 0 6px 18px rgba(83, 198, 120, 0.2);
+  }
+
+  .covers-results-list :global(.cover-card-thumb-box) {
+    width: 60px;
+    height: 44px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    background: #000;
+  }
+
+  .covers-results-list :global(.cover-card-thumb-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .covers-results-list :global(.thumb-play-overlay) {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 0.8rem;
+  }
+
+  .covers-results-list :global(.cover-card-info) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .covers-results-list :global(.cover-card-title) {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .covers-results-list :global(.cover-card-sub) {
+    font-size: 0.74rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .covers-results-list :global(.artist-highlight) {
+    color: var(--btn-green);
+    font-weight: 700;
+  }
+
+  .covers-results-list :global(.cover-card-action-btn) {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--btn-green);
+    color: #0b1f18;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .covers-results-list :global(.no-covers-found) {
+    text-align: center;
+    padding: 30px 20px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.88rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .covers-results-list :global(.no-covers-found i) {
+    font-size: 2rem;
+    color: var(--btn-green);
+  }
+</style>
+
+<script>
+  import { initCoversSearchEngine } from '../scripts/coversSearchEngine.js';
+  initCoversSearchEngine();
+</script>

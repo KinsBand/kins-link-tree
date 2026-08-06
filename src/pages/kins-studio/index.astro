@@ -1,0 +1,318 @@
+---
+import StudioLayout from '../../shared/layouts/StudioLayout.astro';
+---
+
+<StudioLayout title="Kins Studio - Control Centre">
+  <div class="studio-layout">
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="studio-sidebar" id="studioSidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo-box">
+          <i class="fa-solid fa-sliders"></i>
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-title">Kins Studio</span>
+          <span class="brand-version-badge">v2.4.0</span>
+        </div>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close Sidebar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">MAIN MENU</div>
+        <button class="sidebar-nav-item active" data-view="overview">
+          <i class="fa-solid fa-chart-pie nav-icon"></i>
+          <span>Overview</span>
+        </button>
+        <button class="sidebar-nav-item" data-view="content">
+          <i class="fa-solid fa-calendar-days nav-icon"></i>
+          <span>Content & Calendar</span>
+        </button>
+        <button class="sidebar-nav-item" data-view="releases">
+          <i class="fa-solid fa-compact-disc nav-icon"></i>
+          <span>Release Manager</span>
+          <span class="nav-item-badge amber-badge">1 Next</span>
+        </button>
+        <div class="nav-section-label">MANAGEMENT</div>
+        <button class="sidebar-nav-item" data-view="media">
+          <i class="fa-solid fa-photo-film nav-icon"></i>
+          <span>Media Library</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status-box">
+          <span class="status-dot-pulse"></span>
+          <div class="status-text-group">
+            <span class="status-label">SYSTEM ONLINE</span>
+            <span class="status-sub">All Services Operational</span>
+          </div>
+        </div>
+        <div class="sidebar-user-tile">
+          <div class="user-avatar-circle">
+            <span>C</span>
+          </div>
+          <div class="user-info-text">
+            <span class="user-name">Charlie</span>
+            <span class="user-role">Lead Architect</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <div class="studio-main-wrapper">
+      <header class="studio-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
+            <i class="fa-solid fa-bars-staggered"></i>
+          </button>
+          <div class="command-palette-trigger" id="cmdPaletteTrigger">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <span class="trigger-placeholder">Search or type command...</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="realtime-live-pill">
+            <span class="live-pulse-dot"></span>
+            <span class="live-text">LIVE</span>
+            <span class="live-divider">•</span>
+            <span class="live-timer" id="liveSyncTimer">Updated 4s ago</span>
+          </div>
+          <div class="topbar-user-badge">
+            <div class="user-avatar-circle mini">C</div>
+            <span class="topbar-user-name">Charlie</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="studio-content-body">
+        <section class="view-container active" id="view-overview">
+          <div class="media-kit-profile-row">
+            <div class="mk-profile-left">
+              <div class="mk-avatar-container">
+                <img src="/kins-studio/pfp.jpg" alt="Kins Logo" class="mk-avatar-img">
+              </div>
+              <div class="mk-profile-meta">
+                <h1 class="mk-band-name">Kins Band</h1>
+                <p class="mk-band-tagline">Melbourne Alt-Rock / Power Pop Quartet</p>
+                <div class="mk-meta-pills">
+                  <span class="mk-meta-pill"><i class="fa-solid fa-location-dot"></i> Melbourne, AU</span>
+                  <span class="mk-meta-pill"><i class="fa-solid fa-record-vinyl"></i> Independent</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view-container" id="view-content">
+          <h2>Content & Calendar</h2>
+          <p>Upcoming releases, social posts, and tour dates planner.</p>
+        </section>
+
+        <section class="view-container" id="view-releases">
+          <h2>Release Manager</h2>
+          <p>Track single drops, EP progress, and mastering statuses.</p>
+        </section>
+
+        <section class="view-container" id="view-media">
+          <h2>Media Library</h2>
+          <p>High-resolution press kit assets, logos, and promo videos.</p>
+        </section>
+      </main>
+    </div>
+  </div>
+</StudioLayout>
+
+<style>
+  .studio-body {
+    background-color: #0b1410;
+    color: #ffffff;
+    font-family: var(--font-primary);
+  }
+
+  .studio-layout {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .studio-sidebar {
+    width: 260px;
+    background: #070d0a;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 16px;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .brand-logo-box {
+    width: 38px;
+    height: 38px;
+    background: var(--btn-green);
+    color: #0b1f18;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+
+  .brand-title {
+    font-weight: 800;
+    font-size: 1.1rem;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .nav-section-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 14px 8px 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .sidebar-nav-item {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-nav-item.active, .sidebar-nav-item:hover {
+    background: rgba(83, 198, 120, 0.15);
+    color: var(--btn-green);
+  }
+
+  .sidebar-close-btn {
+    display: none;
+  }
+
+  .studio-main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .studio-topbar {
+    height: 64px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+  }
+
+  .topbar-left, .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .sidebar-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  .command-palette-trigger {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .realtime-live-pill {
+    background: rgba(83, 198, 120, 0.15);
+    border: 1px solid rgba(83, 198, 120, 0.3);
+    color: var(--btn-green);
+    font-size: 0.76rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .studio-content-body {
+    padding: 24px;
+    flex: 1;
+  }
+
+  .view-container {
+    display: none;
+  }
+
+  .view-container.active {
+    display: block;
+  }
+
+  .media-kit-profile-row {
+    background: #0e1a14;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .mk-avatar-img {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--btn-green);
+  }
+</style>
+
+<script>
+  const navItems = document.querySelectorAll('.sidebar-nav-item');
+  const viewContainers = document.querySelectorAll('.view-container');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const targetView = item.getAttribute('data-view');
+      navItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+
+      viewContainers.forEach(view => {
+        if (view.id === `view-${targetView}`) {
+          view.classList.add('active');
+        } else {
+          view.classList.remove('active');
+        }
+      });
+    });
+  });
+</script>

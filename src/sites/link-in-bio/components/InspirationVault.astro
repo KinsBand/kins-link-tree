@@ -1,0 +1,348 @@
+---
+const artists = [
+  { key: "the-cure", label: "The Cure", active: true },
+  { key: "weezer", label: "Weezer", active: false },
+  { key: "pulp", label: "Pulp", active: false },
+  { key: "the-long-faces", label: "The Long Faces", active: false }
+];
+---
+
+<section class="inspired-section" id="inspired-section">
+  <div class="inspired-header">
+    <h2 class="inspired-title">
+      <i class="fa-solid fa-record-vinyl inspired-title-icon fa-spin"></i>
+      <span>What Inspires Us</span>
+    </h2>
+  </div>
+
+  <!-- Horizontal Scroll Row for Artists -->
+  <div class="artist-filter-scroll-container" id="artistFilterBar">
+    {artists.map((art) => (
+      <button class={`filter-pill-btn ${art.active ? 'active' : ''}`} data-artist-key={art.key}>
+        {art.label}
+      </button>
+    ))}
+  </div>
+
+  <div class="inspired-tracks-container" id="inspiredTracksContainer">
+    <!-- Populated dynamically -->
+  </div>
+
+  <div class="dots-pagination-container" id="dotsPaginationContainer">
+    <!-- Pagination dots populated dynamically -->
+  </div>
+</section>
+
+<style>
+  .inspired-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .inspired-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .inspired-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .inspired-title-icon {
+    color: var(--btn-green);
+  }
+
+  /* Horizontal Scroll Row Styling */
+  .artist-filter-scroll-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 6px 4px 10px 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .artist-filter-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-pill-btn {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    white-space: nowrap;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .filter-pill-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .filter-pill-btn.active {
+    color: #0b1f18;
+    background: var(--btn-green);
+    border-color: var(--btn-green);
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(83, 198, 120, 0.35);
+  }
+
+  .inspired-tracks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 220px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .inspired-tracks-container :global(.music-card) {
+    background: var(--card-bg, rgba(11, 31, 24, 0.94));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .inspired-tracks-container :global(.music-card:hover) {
+    transform: translateY(-2px);
+    border-color: rgba(83, 198, 120, 0.4);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  }
+
+  .inspired-tracks-container :global(.music-card-thumb) {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .inspired-tracks-container :global(.fallback-disc-icon) {
+    font-size: 1.4rem;
+    color: var(--btn-green);
+  }
+
+  .inspired-tracks-container :global(.track-artwork-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+  }
+
+  .inspired-tracks-container :global(.music-card-info) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .inspired-tracks-container :global(.song-title) {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .inspired-tracks-container :global(.artist-name) {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .inspired-tracks-container :global(.genre-tag) {
+    font-size: 0.65rem;
+    color: var(--btn-green);
+    font-weight: 700;
+  }
+
+  .inspired-tracks-container :global(.play-btn) {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--btn-green);
+    color: #0b1f18;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.88rem;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .inspired-tracks-container :global(.play-btn:hover) {
+    transform: scale(1.1);
+    background-color: var(--btn-green-hover);
+    box-shadow: 0 5px 12px rgba(83, 198, 120, 0.4);
+  }
+
+  .dots-pagination-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .dots-pagination-container :global(.inspired-dot) {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .dots-pagination-container :global(.inspired-dot:hover) {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .dots-pagination-container :global(.inspired-dot.active) {
+    background: var(--btn-green);
+    width: 24px;
+    border-radius: 10px;
+  }
+</style>
+
+<script>
+  import { INSPIRED_ARTISTS_DATA, getITunesTrackData } from '../scripts/inspirationVault.js';
+
+  const container = document.getElementById('inspiredTracksContainer');
+  const dotsContainer = document.getElementById('dotsPaginationContainer');
+  const filterBtns = document.querySelectorAll('#artistFilterBar .filter-pill-btn');
+
+  let currentArtistKey = 'the-cure';
+  let currentPageIndex = 0;
+
+  function renderArtistPage(artistKey: string, pageIndex: number = 0) {
+    if (!container) return;
+
+    currentArtistKey = artistKey;
+    const artistData = (INSPIRED_ARTISTS_DATA as any)[artistKey] || INSPIRED_ARTISTS_DATA['the-cure'];
+    const totalPages = artistData.pages.length;
+    currentPageIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
+
+    // Render Pagination Dots
+    if (dotsContainer) {
+      dotsContainer.innerHTML = '';
+      if (totalPages > 1) {
+        dotsContainer.style.display = 'flex';
+        for (let i = 0; i < totalPages; i++) {
+          const dot = document.createElement('button');
+          dot.className = `inspired-dot ${i === currentPageIndex ? 'active' : ''}`;
+          dot.setAttribute('aria-label', `Page ${i + 1}`);
+          dot.addEventListener('click', () => renderArtistPage(currentArtistKey, i));
+          dotsContainer.appendChild(dot);
+        }
+      } else {
+        dotsContainer.style.display = 'none';
+      }
+    }
+
+    // Slide out animation
+    container.style.opacity = '0';
+    container.style.transform = 'translateY(6px)';
+
+    setTimeout(() => {
+      container.innerHTML = '';
+      // Max 4 songs visible per page
+      const rawTracks = artistData.pages[currentPageIndex] || [];
+      const tracks = rawTracks.slice(0, 4);
+
+      tracks.forEach((track: any) => {
+        const card = document.createElement('div');
+        card.className = 'music-card';
+        card.innerHTML = `
+          <div class="music-card-thumb">
+            <i class="fa-solid fa-compact-disc fa-spin fallback-disc-icon"></i>
+            <img class="track-artwork-img hidden" alt="${track.title}">
+          </div>
+          <div class="music-card-info">
+            <span class="song-title">${track.title}</span>
+            <span class="artist-name">${track.artist}</span>
+            <span class="genre-tag">${track.genre}</span>
+          </div>
+          <button class="play-btn" aria-label="Play song">
+            <i class="fa-solid fa-play"></i>
+          </button>
+        `;
+
+        const fallbackDisc = card.querySelector('.fallback-disc-icon') as HTMLElement;
+        const img = card.querySelector('.track-artwork-img') as HTMLImageElement;
+
+        getITunesTrackData(track.artist, track.title).then((meta: any) => {
+          if (meta && meta.artworkUrl) {
+            img.src = meta.artworkUrl;
+            img.onload = () => {
+              img.classList.remove('hidden');
+              if (fallbackDisc) {
+                fallbackDisc.style.display = 'none';
+              }
+            };
+            track.coverUrl = meta.artworkUrl;
+          }
+          if (meta && meta.previewUrl) {
+            track.previewUrl = meta.previewUrl;
+          }
+        });
+
+        const playBtn = card.querySelector('.play-btn');
+        if (playBtn) {
+          playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if ((window as any).playTrackPreview) {
+              (window as any).playTrackPreview(track);
+            }
+          });
+        }
+
+        container.appendChild(card);
+      });
+
+      container.style.opacity = '1';
+      container.style.transform = 'translateY(0)';
+    }, 180);
+  }
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const key = btn.getAttribute('data-artist-key') || 'the-cure';
+      renderArtistPage(key, 0);
+    });
+  });
+
+  renderArtistPage('the-cure', 0);
+</script>

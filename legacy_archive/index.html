@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kins | Link in Bio</title>
+  <meta name="description" content="Official link in bio for Kins (@KinsBandOfficial). Stream latest music, follow on social media, buy merch, and get gig updates.">
+
+  <!-- Open Graph / Facebook Meta Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://beacons.ai/KinsBandOfficial">
+  <meta property="og:title" content="Kins Official | Link in Bio">
+  <meta property="og:description" content="Stream latest singles, buy official merch, and get live tour updates from Melbourne rock band Kins.">
+  <meta property="og:image" content="pfp.jpg">
+
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kins Official | Link in Bio">
+  <meta name="twitter:description" content="Stream latest singles, buy official merch, and get live tour updates from Melbourne rock band Kins.">
+  <meta name="twitter:image" content="pfp.jpg">
+
+  <!-- PWA Manifest & Theme Color -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#53c678">
+
+  <!-- QRCode.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Leaflet CSS & JS for Interactive Gig Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="styles.css?v=20">
+</head>
+<body>
+
+  <!-- Viewport Switcher for Desktop Previewing (Mobile / Full View) -->
+  <div class="view-toggle-bar">
+    <span><i class="fa-solid fa-mobile-screen-button"></i> View Mode:</span>
+    <button id="toggleMobileView" class="toggle-btn active"><i class="fa-solid fa-mobile"></i> Mobile Phone</button>
+    <button id="toggleFullView" class="toggle-btn"><i class="fa-solid fa-desktop"></i> Full Width</button>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Mobile Frame Outer Box (when in mobile mode) -->
+    <div class="phone-frame" id="phoneFrame">
+      <div class="phone-notch"></div>
+
+      <!-- Full Width Hero Banner Image with Gradient Fade -->
+      <div class="hero-banner-container">
+        <img src="pfp.jpg" alt="Kins hero banner" class="hero-banner-img">
+        <div class="hero-gradient-overlay"></div>
+      </div>
+      
+      <!-- Main Content Container -->
+      <main class="container">
+        
+        <!-- Header Actions: Subscribe (Left), Share (Right) -->
+        <header class="top-nav">
+          <div class="top-subscribe-wrapper">
+            <span class="free-badge-pill">FREE</span>
+            <button class="nav-pill-btn" id="topSubscribeBtn" aria-label="Subscribe to updates">
+              <span>SUBSCRIBE</span>
+            </button>
+          </div>
+
+          <button class="nav-pill-btn" id="shareBtn" aria-label="Share page">
+            <span>SHARE</span>
+          </button>
+        </header>
+
+        <!-- Band Profile Section -->
+        <section class="profile-section">
+          <!-- Short Bio Description -->
+          <p class="profile-bio-text">Rock band 4 friends making music together</p>
+
+          <!-- Hometown Location Badge & Theme Customizer Button -->
+          <div class="profile-actions-row">
+            <div class="location-badge">
+              <i class="fa-solid fa-location-dot location-pin-icon"></i>
+              <span>Melbourne, Australia</span>
+            </div>
+          </div>
+
+          <!-- Total Followers Card -->
+          <div class="total-followers-card">
+            <div class="followers-left">
+              <i class="fa-solid fa-users"></i>
+              <div class="followers-label-group">
+                <span>Total Followers</span>
+                <span class="followers-last-updated" id="followersLastUpdated"></span>
+              </div>
+            </div>
+            <div class="followers-count" id="totalFollowersCount">0</div>
+          </div>
+
+
+        </section>
+
+        <!-- NEW MUSIC TEASER CARD -->
+        <div class="music-teaser-card">
+          <div class="music-teaser-icon-box">
+            <i class="fa-solid fa-compact-disc fa-spin"></i>
+          </div>
+          <div class="music-teaser-content">
+            <span class="music-teaser-badge">NEW MUSIC</span>
+            <h4 class="music-teaser-title">🎶 New music is on the way.</h4>
+            <p class="music-teaser-desc">🎸 First cover coming soon...</p>
+          </div>
+        </div>
+
+        <!-- MAIN DYNAMIC CONTENT SECTION WITH SEGMENTED SWITCHER (SOCIALS & STREAMS) -->
+        <section class="tabbed-links-section">
+          
+          <!-- Single Segmented Switcher Button (Socials on Left | Streams on Right) -->
+          <div class="segmented-switcher-box">
+            <button class="switcher-tab active" id="tabSocialsBtn" data-target="socialsTab">
+              Socials
+            </button>
+            <button class="switcher-tab" id="tabStreamsBtn" data-target="streamsTab">
+              Streams
+            </button>
+          </div>
+
+          <!-- Tab Content 1: SOCIALS PLATFORMS -->
+          <div class="tab-content active" id="socialsTab">
+            <div class="buttons-list">
+              
+              <a href="https://tiktok.com/@KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="tiktok">
+                <div class="btn-icon"><i class="fa-brands fa-tiktok"></i></div>
+                <span class="btn-text">Tiktok</span>
+              </a>
+
+              <a href="https://youtube.com/@KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="youtube">
+                <div class="btn-icon"><i class="fa-brands fa-youtube"></i></div>
+                <span class="btn-text">Youtube</span>
+              </a>
+
+              <a href="https://x.com/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="twitter">
+                <div class="btn-icon"><i class="fa-brands fa-x-twitter"></i></div>
+                <span class="btn-text">Twitter</span>
+              </a>
+
+              <a href="https://twitch.tv/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="twitch">
+                <div class="btn-icon"><i class="fa-brands fa-twitch"></i></div>
+                <span class="btn-text">Twitch</span>
+              </a>
+
+              <a href="https://discord.gg" target="_blank" rel="noopener" class="green-link-btn" data-platform="discord">
+                <div class="btn-icon"><i class="fa-brands fa-discord"></i></div>
+                <span class="btn-text">Discord</span>
+              </a>
+
+              <a href="https://instagram.com/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="instagram">
+                <div class="btn-icon"><i class="fa-brands fa-instagram"></i></div>
+                <span class="btn-text">Instagram</span>
+              </a>
+
+              <a href="https://linkedin.com/company/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn" data-platform="linkedin">
+                <div class="btn-icon"><i class="fa-brands fa-linkedin-in"></i></div>
+                <span class="btn-text">Linkedin</span>
+              </a>
+
+            </div>
+          </div>
+
+          <!-- Tab Content 2: STREAMS PLATFORMS -->
+          <div class="tab-content" id="streamsTab">
+            <div class="buttons-list">
+
+              <a href="https://music.youtube.com/search?q=KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform="ytmusic">
+                <div class="btn-icon">
+                  <i class="fa-regular fa-circle-play"></i>
+                </div>
+                <span class="btn-text">YT Music</span>
+              </a>
+
+              <a href="https://soundcloud.com/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform="soundcloud">
+                <div class="btn-icon">
+                  <i class="fa-brands fa-soundcloud"></i>
+                </div>
+                <span class="btn-text">SoundCloud</span>
+              </a>
+
+              <a href="https://open.spotify.com/search/KinsBandOfficial" target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform="spotify">
+                <div class="btn-icon">
+                  <i class="fa-brands fa-spotify"></i>
+                </div>
+                <span class="btn-text">Spotify</span>
+              </a>
+
+            </div>
+          </div>
+
+        </section>
+
+        <!-- BAND MEMBERS HORIZONTAL SCROLL SECTION (BELOW SOCIALS/STREAMS, ABOVE SUBSCRIBE/EMAILS) -->
+        <section class="members-section">
+          <div class="members-section-header">
+            <h3 class="members-section-title"><i class="fa-solid fa-user-group"></i> Band Members</h3>
+            <span class="scroll-hint-pill" id="scrollHintPill"><i class="fa-solid fa-arrow-right-long"></i> Scroll</span>
+          </div>
+
+          <div class="members-scroll-container">
+            
+            <!-- Member 1: Vivian -->
+            <div class="member-card">
+              <div class="member-img-wrapper member-avatar-box avatar-vivian">
+                <div class="avatar-initials">V</div>
+                <i class="fa-solid fa-microphone avatar-bg-icon"></i>
+                <span class="member-badge">VOCALS & GUITAR</span>
+              </div>
+              <div class="member-info">
+                <h4 class="member-name">Vivian</h4>
+                <span class="member-role"><i class="fa-solid fa-microphone"></i> Lead Vocals & Guitar</span>
+                <p class="member-bio">Shaping Kins' sound with signature melodies and driving rhythm.</p>
+                
+                <button class="member-socials-toggle-btn" data-target="socials-vivian">
+                  <span>Social Links</span>
+                  <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                </button>
+
+                <div class="member-socials-dropdown hidden" id="socials-vivian">
+                  <a href="https://instagram.com" target="_blank" rel="noopener" class="member-social-link"><i class="fa-brands fa-instagram"></i> Instagram</a>
+                  <a href="https://x.com" target="_blank" rel="noopener" class="member-social-link"><i class="fa-brands fa-x-twitter"></i> Twitter/X</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Member 2: Charlie -->
+            <div class="member-card">
+              <div class="member-img-wrapper member-avatar-box avatar-charlie">
+                <div class="avatar-initials">C</div>
+                <i class="fa-solid fa-guitar avatar-bg-icon"></i>
+                <span class="member-badge">GUITAR & VOCALS</span>
+              </div>
+              <div class="member-info">
+                <h4 class="member-name">Charlie</h4>
+                <span class="member-role"><i class="fa-solid fa-guitar"></i> Guitar & Vocals</span>
+                <p class="member-bio">Bringing melodies, lyrics and the energy that ties everything together.</p>
+                
+                <button class="member-socials-toggle-btn" data-target="socials-charlie">
+                  <span>Social Links</span>
+                  <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                </button>
+
+                <div class="member-socials-dropdown hidden" id="socials-charlie">
+                  <a href="https://instagram.com" target="_blank" rel="noopener" class="member-social-link"><i class="fa-brands fa-instagram"></i> Instagram</a>
+                  <a href="https://tiktok.com" target="_blank" rel="noopener" class="member-social-link"><i class="fa-brands fa-tiktok"></i> TikTok</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Member 3: Oscar -->
+            <div class="member-card">
+              <div class="member-img-wrapper member-avatar-box avatar-oscar">
+                <div class="avatar-initials">O</div>
+                <i class="fa-solid fa-sliders avatar-bg-icon"></i>
+                <span class="member-badge">BASS</span>
+              </div>
+              <div class="member-info">
+                <h4 class="member-name">Oscar</h4>
+                <span class="member-role"><i class="fa-solid fa-sliders"></i> Bass & Synth</span>
+                <p class="member-bio">Driving the groove with bass lines and vintage-inspired synth textures.</p>
+                
+                <button class="member-socials-toggle-btn" data-target="socials-oscar">
+                  <span>Social Links</span>
+                  <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                </button>
+
+                <div class="member-socials-dropdown hidden" id="socials-oscar">
+                  <a href="https://instagram.com" target="_blank" rel="noopener" class="member-social-link"><i class="fa-brands fa-instagram"></i> Instagram</a>
+                  <a href="https://soundcloud.com" target="_blank" rel="noopener" class="member-social-link"><i class="fa-brands fa-soundcloud"></i> SoundCloud</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Member 4: Trai -->
+            <div class="member-card">
+              <div class="member-img-wrapper member-avatar-box avatar-trai">
+                <div class="avatar-initials">T</div>
+                <i class="fa-solid fa-drum avatar-bg-icon"></i>
+                <span class="member-badge">DRUMS</span>
+              </div>
+              <div class="member-info">
+                <h4 class="member-name">Trai</h4>
+                <span class="member-role"><i class="fa-solid fa-drum"></i> Drums & Percussion</span>
+                <p class="member-bio">Laying down the heartbeat of the band with high-energy rhythms and anthemic beats.</p>
+                
+                <button class="member-socials-toggle-btn" data-target="socials-trai">
+                  <span>Social Links</span>
+                  <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                </button>
+
+                <div class="member-socials-dropdown hidden" id="socials-trai">
+                  <a href="https://instagram.com" target="_blank" rel="noopener" class="member-social-link"><i class="fa-brands fa-instagram"></i> Instagram</a>
+                  <a href="https://youtube.com" target="_blank" rel="noopener" class="member-social-link"><i class="fa-brands fa-youtube"></i> YouTube</a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- OFFICIAL BAND MERCHANDISE SECTION -->
+        <section class="merch-section">
+          <div class="members-section-header">
+            <h3 class="members-section-title"><i class="fa-solid fa-shirt"></i> Official Merch</h3>
+            <span class="scroll-hint-pill merch-status-pill">
+              <i class="fa-solid fa-clock"></i> Stay Tuned
+            </span>
+          </div>
+
+          <div class="merch-coming-soon-card">
+            <div class="merch-cs-icon-box">
+              <i class="fa-solid fa-box-open"></i>
+            </div>
+            <div class="merch-cs-content">
+              <span class="merch-cs-badge">COMING SOON</span>
+              <h4 class="merch-cs-title">Official Kins Store Drop</h4>
+              <p class="merch-cs-desc">Exclusive apparel, vinyl & limited accessories dropping soon. Stay tuned for release announcements.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- WHAT INSPIRES US - GENRE BASED INSPIRATION VAULT -->
+        <section class="inspired-section" id="inspired-section">
+          <!-- Section Header -->
+          <div class="inspired-header">
+            <h2 class="inspired-title">
+              <i class="fa-solid fa-record-vinyl inspired-title-icon"></i>
+              <span>What Inspires Us</span>
+            </h2>
+          </div>
+
+          <!-- Artist Navigation Filter Bar -->
+          <div class="artist-filter-bar text-list-mode" id="artistFilterBar">
+            <button class="filter-pill-btn active" data-artist-key="the-cure">
+              The Cure
+            </button>
+            <span class="filter-divider">•</span>
+            <button class="filter-pill-btn" data-artist-key="weezer">
+              Weezer
+            </button>
+            <span class="filter-divider">•</span>
+            <button class="filter-pill-btn" data-artist-key="pulp">
+              Pulp
+            </button>
+            <span class="filter-divider">•</span>
+            <button class="filter-pill-btn" data-artist-key="the-long-faces">
+              The Long Faces
+            </button>
+          </div>
+
+          <!-- Paginated Track Cards Grid Container -->
+          <div class="inspired-tracks-container" id="inspiredTracksContainer">
+            <!-- Dynamically populated track cards -->
+          </div>
+
+          <!-- Dots Pagination Container at Bottom -->
+          <div class="dots-pagination-container" id="dotsPaginationContainer">
+            <!-- Dots dynamically populated by JS -->
+          </div>
+        </section>
+
+        <!-- SUBSCRIBE & EMAILS SECTION WITH SEGMENTED SWITCHER -->
+        <section class="subscribe-section" id="subscribeFormSection">
+          
+          <!-- Segmented Switcher: Subscribe | Emails -->
+          <div class="segmented-switcher-box subscribe-switcher">
+            <button class="switcher-tab active" id="tabSubBtn" data-target="subscribeTab">
+              Subscribe
+            </button>
+            <button class="switcher-tab" id="tabEmailBtn" data-target="emailsTab">
+              Emails
+            </button>
+          </div>
+
+          <!-- Sub Tab Content 1: SUBSCRIBE FORM -->
+          <div class="sub-tab-content active" id="subscribeTab">
+            <div class="subscribe-card">
+              <h3>Subscribe to Kins!</h3>
+              <p class="subscribe-subtext">Sign up to get exclusive email updates directly from us.</p>
+
+              <form id="subscribeForm" class="subscribe-form">
+                <div class="form-group">
+                  <input type="email" id="emailInput" placeholder="Email" required autocomplete="email">
+                </div>
+                <button type="submit" class="green-submit-btn">
+                  <span>Subscribe</span>
+                </button>
+              </form>
+              
+              <div id="subscribeSuccess" class="subscribe-success hidden">
+                <i class="fa-solid fa-circle-check"></i>
+                <p>You're subscribed! Thanks for joining the Kins crew.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub Tab Content 2: ROW-BY-ROW EMAILS LIST -->
+          <div class="sub-tab-content" id="emailsTab">
+            <div class="emails-card">
+              <h3>Official Contacts</h3>
+              <p class="emails-subtext">Reach out to the Kins team for inquiries & partnerships.</p>
+
+              <div class="emails-list">
+
+                <!-- Email Row 1: Fan & General -->
+                <div class="email-row-item">
+                  <div class="email-icon"><i class="fa-regular fa-paper-plane"></i></div>
+                  <div class="email-details">
+                    <span class="email-address">Hello@Kins.au</span>
+                    <span class="email-desc">Fan Updates & General Chat</span>
+                  </div>
+                  <button class="copy-email-btn" data-email="Hello@Kins.au" title="Copy Email">
+                    <i class="fa-regular fa-copy"></i>
+                  </button>
+                  <a href="mailto:Hello@Kins.au" class="send-email-btn" title="Send Email">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </a>
+                </div>
+
+                <!-- Email Row 2: Bookings -->
+                <div class="email-row-item">
+                  <div class="email-icon"><i class="fa-regular fa-calendar-check"></i></div>
+                  <div class="email-details">
+                    <span class="email-address">Bookings@Kins.au</span>
+                    <span class="email-desc">Shows, Tours & Live Booking</span>
+                  </div>
+                  <button class="copy-email-btn" data-email="Bookings@Kins.au" title="Copy Email">
+                    <i class="fa-regular fa-copy"></i>
+                  </button>
+                  <a href="mailto:Bookings@Kins.au" class="send-email-btn" title="Send Email">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </a>
+                </div>
+
+                <!-- Email Row 3: Press -->
+                <div class="email-row-item">
+                  <div class="email-icon"><i class="fa-solid fa-newspaper"></i></div>
+                  <div class="email-details">
+                    <span class="email-address">Press@Kins.au</span>
+                    <span class="email-desc">Media, PR & Interviews</span>
+                  </div>
+                  <button class="copy-email-btn" data-email="Press@Kins.au" title="Copy Email">
+                    <i class="fa-regular fa-copy"></i>
+                  </button>
+                  <a href="mailto:Press@Kins.au" class="send-email-btn" title="Send Email">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </a>
+                </div>
+
+                <!-- Email Row 4: Business -->
+                <div class="email-row-item">
+                  <div class="email-icon"><i class="fa-solid fa-briefcase"></i></div>
+                  <div class="email-details">
+                    <span class="email-address">Business@Kins.au</span>
+                    <span class="email-desc">Brand Deals & Partnerships</span>
+                  </div>
+                  <button class="copy-email-btn" data-email="Business@Kins.au" title="Copy Email">
+                    <i class="fa-regular fa-copy"></i>
+                  </button>
+                  <a href="mailto:Business@Kins.au" class="send-email-btn" title="Send Email">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </a>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+          <p>© 2026 Kins (@KinsBandOfficial). All rights reserved.</p>
+        </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ENHANCED SHARE MODAL -->
+  <div class="modal-backdrop" id="shareModal">
+    <div class="modal-content share-modal-enhanced">
+      
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-share-nodes share-header-icon"></i>
+          <h3>Share Kins Official Page</h3>
+        </div>
+        <button class="close-modal-btn" id="closeShareModal" aria-label="Close share modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body share-modal-body">
+        
+        <!-- Copy Handle Row with Icon-Only Copy Button -->
+        <div class="share-copy-handle-wrapper">
+          <div class="handle-display-box">
+            <i class="fa-solid fa-at handle-at-icon"></i>
+            <span class="handle-handle-text">@KinsBandOfficial</span>
+          </div>
+          <button class="icon-only-copy-btn" id="handleCopyBtn" title="Copy handle @KinsBandOfficial" aria-label="Copy handle @KinsBandOfficial">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        </div>
+
+        <!-- Dynamic QR Code Container with Download Action -->
+        <div class="qr-box-container">
+          <div class="qr-canvas-wrapper" id="qrcodeCanvas"></div>
+          <div class="qr-info-column">
+            <span class="qr-label-title">Scan QR Code</span>
+            <span class="qr-label-sub">Point mobile camera to view page</span>
+            <button class="download-qr-btn" id="downloadQrBtn">
+              <i class="fa-solid fa-download"></i> Save QR
+            </button>
+          </div>
+        </div>
+
+        <!-- Direct Link Copy Input Group with Icon-Only Copy Button -->
+        <div class="copy-input-group">
+          <div class="copy-input-wrapper">
+            <i class="fa-solid fa-link link-input-icon"></i>
+            <input type="text" id="shareUrlInput" value="https://beacons.ai/KinsBandOfficial" readonly>
+          </div>
+          <button id="copyUrlBtn" class="icon-only-copy-btn" title="Copy website link" aria-label="Copy website link">
+            <i class="fa-regular fa-copy"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Persistent Floating Bottom Controls Row (Mini Player 50% | Gigs Map Button 50%) -->
+  <div class="bottom-floating-controls-wrapper" id="bottomFloatingControls">
+    
+    <!-- Minimised Mini Audio Player (50% Width) -->
+    <div class="bottom-audio-bar hidden" id="bottomAudioBar">
+      <audio id="vaultAudioPlayer" preload="none"></audio>
+      <div class="audio-bar-content">
+        <div class="audio-bar-left">
+          <div class="audio-bar-icon-box">
+            <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover">
+            <i class="fa-solid fa-compact-disc fa-spin audio-icon-anim" id="audioBarFallbackIcon"></i>
+          </div>
+          <div class="audio-bar-details">
+            <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
+            <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
+          </div>
+        </div>
+        <div class="audio-bar-right">
+          <button class="audio-bar-toggle-btn" id="audioBarToggleBtn" aria-label="Toggle playback">
+            <i class="fa-solid fa-pause"></i>
+          </button>
+          <button class="audio-bar-close-btn" id="audioBarCloseBtn" aria-label="Close audio player">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fixed Floating Gig Pill Button (40% Width) -->
+    <div class="floating-gig-pill-container" id="floatingGigPillBtn" role="button" aria-label="Open Tour & Gig Map">
+      <div class="gig-pill-inner">
+        <i class="fa-solid fa-map-location-dot pill-map-icon"></i>
+        <div class="gig-pill-text-box">
+          <span class="gig-pill-tag" id="gigPillTag">Gigs</span>
+          <span class="gig-pill-location" id="gigPillLocation">Locations</span>
+        </div>
+        <div class="gig-pill-arrow-section">
+          <i class="fa-solid fa-chevron-right pill-arrow-icon"></i>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM SHEET GIG MAP MODAL (FULL WIDTH, 80% HEIGHT, BLUR BACKDROP, SWIPE TO CLOSE) -->
+  <div class="bottom-sheet-backdrop" id="gigMapModal">
+    <div class="bottom-sheet-container" id="bottomSheetContainer">
+      
+      <!-- Swipe Drag Handle Header -->
+      <div class="sheet-drag-area" id="sheetDragArea">
+        <div class="sheet-drag-handle"></div>
+        <span class="swipe-hint-text"><i class="fa-solid fa-chevron-down"></i> Swipe down to close</span>
+      </div>
+
+      <!-- Sheet Header & Gig Banner -->
+      <div class="gig-sheet-header">
+        <div class="gig-banner-card" id="gigBannerCard">
+          <div class="gig-banner-left">
+            <span class="gig-status-badge" id="gigStatusBadge"><i class="fa-solid fa-calendar-days"></i> TOUR DATES</span>
+            <h4 class="gig-banner-venue" id="gigBannerVenue">Kins Live Concerts</h4>
+            <p class="gig-banner-meta" id="gigBannerMeta"><i class="fa-solid fa-location-dot"></i> Check back for live show announcements & ticket releases</p>
+          </div>
+        </div>
+        <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Bandsintown Widget Integration Container -->
+      <div class="bandsintown-widget-container">
+        <a class="bit-widget-initializer" data-artist-name="Kins" data-background-color="transparent" data-text-color="#ffffff" data-link-color="#53c678">Automated Tour Dates (Bandsintown)</a>
+      </div>
+
+      <!-- 80% Height Interactive Map -->
+      <div class="gig-map-view" id="gigMapView"></div>
+
+      <!-- VENUE DETAIL CARD OVERLAY AT BOTTOM OF MAP SHEET -->
+      <div class="venue-detail-bottom-card" id="venueDetailBottomCard">
+        <div class="venue-card-header">
+          <div class="venue-header-info">
+            <div class="venue-title-row">
+              <h4 class="venue-card-name" id="venueCardName">Live Shows & Map</h4>
+            </div>
+            <p class="venue-card-city" id="venueCardCity">Melbourne & Australian Tour Locations</p>
+          </div>
+          
+          <div class="venue-action-buttons-group">
+            <a href="https://www.bandsintown.com" target="_blank" rel="noopener" class="venue-booking-btn" id="venueBookingBtn">
+              <i class="fa-solid fa-bell"></i>
+              <span>GET NOTIFIED</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Ambient Wallpaper Background Container -->
+  <div class="ambient-wallpaper-bg" id="ambientWallpaperBg"></div>
+
+  <script src="script.js?v=11"></script>
+</body>
+</html>

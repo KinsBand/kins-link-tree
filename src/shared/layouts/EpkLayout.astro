@@ -1,0 +1,33 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+}
+
+const { title = "The Kins | Official Venue EPK & Booking Portal" } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <meta name="description" content="Official Electronic Press Kit & Booking Portal for Kins (@KinsBandOfficial). Venue specs, live video clips, technical riders, setlists, and booking contact.">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content="Everything venue talent buyers and promoters need to book The Kins. Instant audio/video, stage plots, setlists, and tech riders.">
+  <meta property="og:image" content="/pfp.jpg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="epk-body">
+  <slot />
+</body>
+</html>

@@ -1,0 +1,262 @@
+---
+const emails = [
+  { address: "Hello@Kins.au", desc: "Fan Updates & General Chat", icon: "fa-regular fa-paper-plane" },
+  { address: "Bookings@Kins.au", desc: "Shows, Tours & Live Booking", icon: "fa-regular fa-calendar-check" },
+  { address: "Press@Kins.au", desc: "Media, PR & Interviews", icon: "fa-solid fa-newspaper" },
+  { address: "Business@Kins.au", desc: "Brand Deals & Partnerships", icon: "fa-solid fa-briefcase" }
+];
+---
+
+<section class="subscribe-section" id="subscribeFormSection">
+  <div class="segmented-switcher-box subscribe-switcher">
+    <button class="switcher-tab active" id="tabSubBtn" data-target="subscribeTab">
+      Subscribe
+    </button>
+    <button class="switcher-tab" id="tabEmailBtn" data-target="emailsTab">
+      Emails
+    </button>
+  </div>
+
+  <div class="sub-tab-content active" id="subscribeTab">
+    <div class="subscribe-card">
+      <h3>Subscribe to Kins!</h3>
+      <p class="subscribe-subtext">Sign up to get exclusive email updates directly from us.</p>
+
+      <form id="subscribeForm" class="subscribe-form">
+        <div class="form-group">
+          <input type="email" id="emailInput" placeholder="Email" required autocomplete="email">
+        </div>
+        <button type="submit" class="green-submit-btn">
+          <span>Subscribe</span>
+        </button>
+      </form>
+      
+      <div id="subscribeSuccess" class="subscribe-success hidden">
+        <i class="fa-solid fa-circle-check"></i>
+        <p>You're subscribed! Thanks for joining the Kins crew.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub-tab-content" id="emailsTab">
+    <div class="emails-card">
+      <h3>Official Contacts</h3>
+      <p class="emails-subtext">Reach out to the Kins team for inquiries & partnerships.</p>
+
+      <div class="emails-list">
+        {emails.map((item) => (
+          <div class="email-row-item">
+            <div class="email-icon"><i class={item.icon}></i></div>
+            <div class="email-details">
+              <span class="email-address">{item.address}</span>
+              <span class="email-desc">{item.desc}</span>
+            </div>
+            <button class="copy-email-btn" data-email={item.address} title="Copy Email">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+            <a href={`mailto:${item.address}`} class="send-email-btn" title="Send Email">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .subscribe-section {
+    width: 100%;
+    margin-top: 10px;
+
+  }
+
+  .segmented-switcher-box {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .switcher-tab {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.75);
+    font-family: var(--font-primary);
+    font-size: 0.98rem;
+    font-weight: 700;
+    padding: 10px 0;
+    border-radius: 16px;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .switcher-tab.active {
+    background: var(--btn-green);
+    color: #0b1f18;
+  }
+
+  .sub-tab-content {
+    display: none;
+  }
+
+  .sub-tab-content:global(.active) {
+    display: block;
+  }
+
+  .subscribe-card, .emails-card {
+    background: var(--card-bg, rgba(11, 31, 24, 0.94));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .subscribe-card h3, .emails-card h3 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .subscribe-subtext, .emails-subtext {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .subscribe-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .form-group input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    padding: 12px 14px;
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.9rem;
+    outline: none;
+  }
+
+  .green-submit-btn {
+    background: var(--btn-green);
+    color: #0b1f18;
+    border: none;
+    border-radius: 14px;
+    padding: 12px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .subscribe-success {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--btn-green);
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+
+  .emails-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .email-row-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+
+  .email-icon {
+    font-size: 1.1rem;
+    color: var(--btn-green);
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .email-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .email-address {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .email-desc {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .copy-email-btn, .send-email-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #ffffff;
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.8rem;
+  }
+</style>
+
+<script>
+  import { setupSegmentedSwitcher } from '../scripts/tabs.js';
+  import { copyToClipboard } from '../../../shared/scripts/clipboard.js';
+
+  setupSegmentedSwitcher('.subscribe-switcher .switcher-tab', '.sub-tab-content');
+
+  const subscribeForm = document.getElementById('subscribeForm') as HTMLFormElement;
+  const subscribeSuccess = document.getElementById('subscribeSuccess');
+
+  if (subscribeForm) {
+    if (localStorage.getItem('kins_subscribed') === 'true') {
+      subscribeForm.classList.add('hidden');
+      subscribeSuccess?.classList.remove('hidden');
+    }
+
+    subscribeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const emailInput = document.getElementById('emailInput') as HTMLInputElement;
+      if (emailInput && emailInput.value) {
+        localStorage.setItem('kins_subscribed', 'true');
+        subscribeForm.classList.add('hidden');
+        subscribeSuccess?.classList.remove('hidden');
+      }
+    });
+  }
+
+  document.querySelectorAll('.copy-email-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const email = btn.getAttribute('data-email');
+      if (email) copyToClipboard(email);
+    });
+  });
+</script>

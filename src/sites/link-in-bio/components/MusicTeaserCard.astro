@@ -1,0 +1,73 @@
+---
+---
+
+<div class="music-teaser-card">
+  <div class="music-teaser-icon-box">
+    <i class="fa-solid fa-compact-disc fa-spin"></i>
+  </div>
+  <div class="music-teaser-content">
+    <span class="music-teaser-badge">NEW MUSIC</span>
+    <h4 class="music-teaser-title">🎶 New music is on the way.</h4>
+    <p class="music-teaser-desc">🎸 First cover coming soon...</p>
+  </div>
+</div>
+
+<style>
+  .music-teaser-card {
+    background: rgba(17, 56, 43, 0.7);
+    border: 1px solid rgba(83, 198, 120, 0.3);
+    border-radius: 20px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .music-teaser-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(83, 198, 120, 0.6);
+    box-shadow: 0 8px 20px rgba(83, 198, 120, 0.2);
+  }
+
+  .music-teaser-icon-box {
+    font-size: 1.6rem;
+    color: var(--btn-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: iconPulse 2.5s infinite ease-in-out;
+  }
+
+  @keyframes iconPulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px var(--btn-green)); }
+    50% { transform: scale(1.08); filter: drop-shadow(0 0 6px var(--btn-green)); }
+  }
+
+  .music-teaser-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .music-teaser-badge {
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: var(--btn-green);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .music-teaser-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .music-teaser-desc {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+</style>

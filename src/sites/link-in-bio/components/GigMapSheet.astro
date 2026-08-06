@@ -1,0 +1,180 @@
+---
+---
+
+<div class="bottom-sheet-backdrop" id="gigMapModal">
+  <div class="bottom-sheet-container" id="bottomSheetContainer">
+    
+    <div class="sheet-drag-area" id="sheetDragArea">
+      <div class="sheet-drag-handle"></div>
+      <span class="swipe-hint-text"><i class="fa-solid fa-chevron-down"></i> Swipe down to close</span>
+    </div>
+
+    <div class="gig-sheet-header">
+      <div class="gig-banner-card" id="gigBannerCard">
+        <div class="gig-banner-left">
+          <span class="gig-status-badge" id="gigStatusBadge"><i class="fa-solid fa-calendar-days"></i> TOUR DATES</span>
+          <h4 class="gig-banner-venue" id="gigBannerVenue">Kins Live Concerts</h4>
+          <p class="gig-banner-meta" id="gigBannerMeta"><i class="fa-solid fa-location-dot"></i> Check back for live show announcements & ticket releases</p>
+        </div>
+      </div>
+      <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="gig-map-view" id="gigMapView"></div>
+
+    <div class="venue-detail-bottom-card" id="venueDetailBottomCard">
+      <div class="venue-card-header">
+        <div class="venue-header-info">
+          <div class="venue-title-row">
+            <h4 class="venue-card-name" id="venueCardName">Live Shows & Map</h4>
+          </div>
+          <p class="venue-card-city" id="venueCardCity">Melbourne & Australian Tour Locations</p>
+        </div>
+        
+        <div class="venue-action-buttons-group">
+          <a href="https://www.bandsintown.com" target="_blank" rel="noopener" class="venue-booking-btn" id="venueBookingBtn">
+            <i class="fa-solid fa-bell"></i>
+            <span>GET NOTIFIED</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .bottom-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .bottom-sheet-backdrop:global(.active) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .bottom-sheet-container {
+    width: 100%;
+    height: 85vh;
+    background: #0b1f18;
+    border-top-left-radius: 32px;
+    border-top-right-radius: 32px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .bottom-sheet-backdrop:global(.active) .bottom-sheet-container {
+    transform: translateY(0);
+  }
+
+  .sheet-drag-area {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: grab;
+  }
+
+  .sheet-drag-handle {
+    width: 48px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+  }
+
+  .swipe-hint-text {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .gig-sheet-header {
+    padding: 0 18px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .gig-banner-venue {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .gig-banner-meta {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .close-sheet-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #ffffff;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .gig-map-view {
+    flex: 1;
+    width: 100%;
+    background: #000;
+  }
+
+  .venue-detail-bottom-card {
+    padding: 16px;
+    background: #0b1410;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .venue-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .venue-card-name {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .venue-card-city {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .venue-booking-btn {
+    background: var(--btn-green);
+    color: #0b1f18;
+    padding: 8px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+
+<script>
+  import { initGigMapModule } from '../scripts/gigMap.js';
+  initGigMapModule();
+</script>

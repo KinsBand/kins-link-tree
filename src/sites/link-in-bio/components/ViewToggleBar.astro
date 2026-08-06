@@ -1,0 +1,64 @@
+---
+---
+
+<div class="view-toggle-bar">
+  <span><i class="fa-solid fa-mobile-screen-button"></i> View Mode:</span>
+  <button id="toggleMobileView" class="toggle-btn active"><i class="fa-solid fa-mobile"></i> Mobile Phone</button>
+  <button id="toggleFullView" class="toggle-btn"><i class="fa-solid fa-desktop"></i> Full Width</button>
+</div>
+
+<style>
+  .view-toggle-bar {
+    width: 100%;
+    background-color: #0b1410;
+    color: #a0aec0;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    font-size: 0.9rem;
+    z-index: 100;
+    border-bottom: 1px solid #1a2a22;
+  }
+
+  .view-toggle-bar span {
+    font-weight: 500;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .toggle-btn {
+    background: #1a2a22;
+    border: 1px solid #2d4538;
+    color: #cbd5e1;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: var(--font-primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .toggle-btn:hover {
+    background: #253d30;
+    color: #ffffff;
+  }
+
+  .toggle-btn.active {
+    background: var(--btn-green);
+    color: var(--text-dark);
+    border-color: var(--btn-green);
+  }
+</style>
+
+<script>
+  import { initViewToggle } from '../scripts/viewToggle.js';
+  initViewToggle();
+</script>

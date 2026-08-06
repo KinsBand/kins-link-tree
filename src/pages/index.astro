@@ -1,0 +1,115 @@
+---
+import BaseLayout from '../shared/layouts/BaseLayout.astro';
+import ViewToggleBar from '../sites/link-in-bio/components/ViewToggleBar.astro';
+import HeroBanner from '../sites/link-in-bio/components/HeroBanner.astro';
+import TopNav from '../sites/link-in-bio/components/TopNav.astro';
+import ProfileSection from '../sites/link-in-bio/components/ProfileSection.astro';
+import MusicTeaserCard from '../sites/link-in-bio/components/MusicTeaserCard.astro';
+import TabbedLinks from '../sites/link-in-bio/components/TabbedLinks.astro';
+import MembersSection from '../sites/link-in-bio/components/MembersSection.astro';
+import MerchSection from '../sites/link-in-bio/components/MerchSection.astro';
+import InspirationVault from '../sites/link-in-bio/components/InspirationVault.astro';
+import SubscribeSection from '../sites/link-in-bio/components/SubscribeSection.astro';
+import ShareModal from '../sites/link-in-bio/components/ShareModal.astro';
+import GigMapSheet from '../sites/link-in-bio/components/GigMapSheet.astro';
+import AudioPlayer from '../sites/link-in-bio/components/AudioPlayer.astro';
+import FloatingGigPill from '../sites/link-in-bio/components/FloatingGigPill.astro';
+import ToastContainer from '../sites/link-in-bio/components/ToastContainer.astro';
+import CoversSearchOverlay from '../sites/link-in-bio/components/CoversSearchOverlay.astro';
+import CoverVideoModal from '../sites/link-in-bio/components/CoverVideoModal.astro';
+---
+
+<BaseLayout title="Kins | Link in Bio">
+  <ViewToggleBar />
+
+  <div class="app-wrapper">
+    <div class="phone-frame" id="phoneFrame">
+      <div class="phone-notch"></div>
+      <HeroBanner />
+
+      <main class="container">
+        <TopNav />
+        <ProfileSection />
+        <MusicTeaserCard />
+        <TabbedLinks />
+        <MembersSection />
+        <MerchSection />
+        <InspirationVault />
+        <SubscribeSection />
+
+        <footer class="site-footer">
+          <p>© 2026 Kins (@KinsBandOfficial). All rights reserved.</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <CoversSearchOverlay />
+  <CoverVideoModal />
+  <ShareModal />
+  <GigMapSheet />
+  <AudioPlayer />
+  <FloatingGigPill />
+  <ToastContainer />
+</BaseLayout>
+
+<style>
+  .app-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px 10px;
+    flex: 1;
+  }
+
+  .phone-frame {
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg-dark-green-gradient);
+    min-height: 850px;
+    border-radius: 40px;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 10px #0b1410;
+    overflow: hidden;
+    transition: max-width 0.4s ease, border-radius 0.4s ease, box-shadow 0.4s ease;
+  }
+
+  .phone-frame:global(.full-width-mode) {
+    max-width: 680px;
+    border-radius: 0px;
+    box-shadow: none;
+  }
+
+  .phone-notch {
+    width: 140px;
+    height: 24px;
+    background-color: #0b1410;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    z-index: 50;
+  }
+
+  .phone-frame:global(.full-width-mode) .phone-notch {
+    display: none;
+  }
+
+  .container {
+    padding: 36px 22px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .site-footer {
+    text-align: center;
+    padding: 20px 0;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.78rem;
+  }
+</style>
