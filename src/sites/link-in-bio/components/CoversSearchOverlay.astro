@@ -52,14 +52,14 @@ const categories = [
     padding: 16px 20px;
     opacity: 0;
     pointer-events: none;
-    transform: translateY(-20px) scale(0.98);
-    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(0.92);
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .covers-search-overlay:global(.active) {
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0) scale(1);
+    transform: scale(1);
   }
 
   .search-overlay-header {
@@ -256,20 +256,290 @@ const categories = [
     font-size: 0.85rem;
   }
 
-  .covers-results-list :global(.no-covers-found) {
-    text-align: center;
-    padding: 30px 20px;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.88rem;
+  /* Request a Song Card & Form Styles */
+  .covers-results-list :global(.request-song-card-container) {
+    width: 100%;
+  }
+
+  .covers-results-list :global(.cant-find-card) {
+    background: rgba(17, 42, 32, 0.95);
+    border: 1px solid rgba(83, 198, 120, 0.4);
+    border-radius: 20px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .covers-results-list :global(.cant-find-header) {
+    display: flex;
     align-items: center;
+    gap: 12px;
+  }
+
+  .covers-results-list :global(.cant-find-icon-badge) {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--btn-green);
+    color: #0b1f18;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .covers-results-list :global(.cant-find-title) {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .covers-results-list :global(.cant-find-sub) {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .covers-results-list :global(.request-song-form) {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
   }
 
-  .covers-results-list :global(.no-covers-found i) {
-    font-size: 2rem;
+  .covers-results-list :global(.form-group) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .covers-results-list :global(.form-group label) {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .covers-results-list :global(.req-star) {
     color: var(--btn-green);
+  }
+
+  .covers-results-list :global(.opt-label) {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+    font-size: 0.7rem;
+  }
+
+  .covers-results-list :global(.form-group input),
+  .covers-results-list :global(.form-group textarea) {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 8px 12px;
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.84rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .covers-results-list :global(.form-group input:focus),
+  .covers-results-list :global(.form-group textarea:focus) {
+    border-color: var(--btn-green);
+  }
+
+  .covers-results-list :global(.artist-suggestions-box) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .covers-results-list :global(.suggestions-label) {
+    font-size: 0.66rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 1px;
+    letter-spacing: 0.2px;
+  }
+
+  .covers-results-list :global(.suggestions-loading-text) {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+  }
+
+  .covers-results-list :global(.artist-pills-scroll-row) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px 0 4px 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .covers-results-list :global(.artist-pills-scroll-row::-webkit-scrollbar) {
+    display: none;
+  }
+
+  .covers-results-list :global(.artist-suggestion-pill) {
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+    font-family: var(--font-primary);
+    font-size: 0.73rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  .covers-results-list :global(.artist-suggestion-pill:hover) {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .covers-results-list :global(.artist-suggestion-pill.active) {
+    background: var(--btn-green);
+    color: #0b1f18;
+    border-color: var(--btn-green);
+    font-weight: 800;
+  }
+
+  .covers-results-list :global(.request-form-actions) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .covers-results-list :global(.submit-request-btn) {
+    background: var(--btn-green);
+    color: #0b1f18;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-family: var(--font-primary);
+    font-size: 0.86rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .covers-results-list :global(.submit-request-btn:hover) {
+    background: var(--btn-green-hover);
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 12px rgba(83, 198, 120, 0.3);
+  }
+
+  .covers-results-list :global(.cancel-request-btn) {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-family: var(--font-primary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+
+  .covers-results-list :global(.cancel-request-btn:hover) {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+  }
+
+  /* Inline Success Card */
+  .covers-results-list :global(.song-request-success-card) {
+    background: rgba(17, 42, 32, 0.95);
+    border: 1px solid var(--btn-green);
+    border-radius: 20px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .covers-results-list :global(.success-icon-box) {
+    font-size: 2.2rem;
+    color: var(--btn-green);
+  }
+
+  .covers-results-list :global(.success-title) {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .covers-results-list :global(.success-desc) {
+    font-size: 0.84rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .covers-results-list :global(.request-another-btn) {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Bottom Permanent Request Button */
+  .covers-results-list :global(.bottom-request-trigger-box) {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .covers-results-list :global(.bottom-request-pill-btn) {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px dashed rgba(83, 198, 120, 0.5);
+    color: var(--btn-green);
+    padding: 8px 16px;
+    border-radius: 9999px;
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+
+  .covers-results-list :global(.bottom-request-pill-btn:hover) {
+    background: rgba(83, 198, 120, 0.15);
+    border-color: var(--btn-green);
+    color: #ffffff;
   }
 </style>
 

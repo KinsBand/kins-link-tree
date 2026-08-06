@@ -1,8 +1,34 @@
 import { KINS_COVERS_DATA } from './coversData.js';
 import { openCoverVideoModal } from './videoModalController.js';
+import { handleSongRequestSubmit } from './requestSongController.js';
 
 let activeCategory = 'all';
 let searchDebounceTimeout = null;
+let artistFetchDebounceTimeout = null;
+
+// Live iTunes API fetch for song title -> real original artist suggestions
+export async function fetchLiveArtistSuggestions(songTitle) {
+  if (!songTitle || songTitle.trim().length < 2) return [];
+
+  try {
+    const cleanTitle = songTitle.replace(/[!?"\']/g, '').trim();
+    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanTitle)}&entity=song&limit=8`);
+    const data = await res.json();
+
+    if (data.results && data.results.length > 0) {
+      const uniqueArtists = [];
+      data.results.forEach(item => {
+        if (item.artistName && !uniqueArtists.includes(item.artistName)) {
+          uniqueArtists.push(item.artistName);
+        }
+      });
+      return uniqueArtists;
+    }
+  } catch (err) {
+    console.warn('Error fetching live artist suggestions:', err);
+  }
+  return [];
+}
 
 function renderCoverCard(cover) {
   const card = document.createElement('div');
@@ -29,15 +55,160 @@ function renderCoverCard(cover) {
   return card;
 }
 
+function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
+  const container = document.createElement('div');
+  container.className = 'request-song-card-container';
+  
+  const displayTitle = rawQuery.trim() ? rawQuery.trim() : '';
+
+  container.innerHTML = `
+    <div class="cant-find-card">
+      <div class="cant-find-header">
+        <div class="cant-find-icon-badge">
+          <i class="fa-solid fa-music"></i>
+        </div>
+        <div class="cant-find-header-text">
+          <h4 class="cant-find-title">Can't Find Your Song?</h4>
+          <p class="cant-find-sub">${displayTitle ? `We haven't covered "${displayTitle}" yet — request it below!` : 'Tell Kins which song to cover next!'}</p>
+        </div>
+      </div>
+
+      <form class="request-song-form" id="requestSongForm">
+        <div class="form-group">
+          <label for="reqSongTitle">Song Title <span class="req-star">*</span></label>
+          <input type="text" id="reqSongTitle" value="${displayTitle}" placeholder="e.g. Wonderwall" required>
+        </div>
+
+        <div class="form-group">
+          <label for="reqArtist">Original Artist <span class="req-star">*</span></label>
+          <input type="text" id="reqArtist" value="" placeholder="Fetching most likely artist..." required>
+          
+          <!-- Live API Artist Suggestions Horizontal Scroll Row -->
+          <div class="artist-suggestions-box" id="artistSuggestionsBox">
+            <span class="suggestions-label"><i class="fa-solid fa-wand-magic-sparkles" style="font-size: 0.65rem; opacity: 0.7;"></i> Artist Match</span>
+            <div class="artist-pills-scroll-row" id="artistPillsScrollRow">
+              <span class="suggestions-loading-text"><i class="fa-solid fa-compact-disc fa-spin"></i> Searching artist database...</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reqReason">Why should Kins cover this? <span class="opt-label">(optional)</span></label>
+          <textarea id="reqReason" rows="2" placeholder="e.g. Your style would sound amazing on this!"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="reqEmail">Email Address <span class="opt-label">(optional, for release update)</span></label>
+          <input type="email" id="reqEmail" placeholder="fan@example.com">
+        </div>
+
+        <div class="request-form-actions">
+          <button type="submit" class="submit-request-btn">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Submit Cover Request</span>
+          </button>
+          <button type="button" class="cancel-request-btn" id="cancelRequestBtn">
+            <i class="fa-solid fa-arrow-left"></i> Back to Search
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  const form = container.querySelector('#requestSongForm');
+  const songTitleInput = container.querySelector('#reqSongTitle');
+  const artistInput = container.querySelector('#reqArtist');
+  const pillsContainer = container.querySelector('#artistPillsScrollRow');
+
+  function updatePillsUI(artists) {
+    if (!pillsContainer) return;
+
+    if (!artists || artists.length === 0) {
+      pillsContainer.innerHTML = `<span class="suggestions-loading-text">Type a song title above to auto-detect artists</span>`;
+      return;
+    }
+
+    // Auto-select #1 most likely artist returned by API
+    if (artistInput && (!artistInput.value || artistInput.value === 'Fetching most likely artist...')) {
+      artistInput.value = artists[0];
+    }
+
+    pillsContainer.innerHTML = artists.map((art, idx) => `
+      <button type="button" class="artist-suggestion-pill ${idx === 0 ? 'active' : ''}" data-artist="${art}">
+        ${idx === 0 ? '★ ' : '+ '}${art}
+      </button>
+    `).join('');
+
+    const pills = pillsContainer.querySelectorAll('.artist-suggestion-pill');
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        pills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const selectedArtist = pill.getAttribute('data-artist') || '';
+        if (artistInput) {
+          artistInput.value = selectedArtist;
+        }
+      });
+    });
+  }
+
+  // Fetch live suggestions on initial render
+  if (displayTitle) {
+    fetchLiveArtistSuggestions(displayTitle).then(artists => updatePillsUI(artists));
+  } else {
+    updatePillsUI([]);
+  }
+
+  // Dynamic live fetch as user types song title
+  if (songTitleInput && artistInput && pillsContainer) {
+    songTitleInput.addEventListener('input', () => {
+      clearTimeout(artistFetchDebounceTimeout);
+      const currentTitle = songTitleInput.value.trim();
+
+      if (!currentTitle) {
+        artistInput.value = '';
+        updatePillsUI([]);
+        return;
+      }
+
+      pillsContainer.innerHTML = `<span class="suggestions-loading-text"><i class="fa-solid fa-compact-disc fa-spin"></i> Searching artist database...</span>`;
+
+      artistFetchDebounceTimeout = setTimeout(() => {
+        fetchLiveArtistSuggestions(currentTitle).then(artists => {
+          if (artists.length > 0) {
+            artistInput.value = artists[0]; // Auto select #1 most likely artist!
+          }
+          updatePillsUI(artists);
+        });
+      }, 300);
+    });
+  }
+
+  if (form) {
+    form.addEventListener('submit', (e) => handleSongRequestSubmit(e, songTitleInput?.value || displayTitle));
+  }
+
+  const cancelBtn = container.querySelector('#cancelRequestBtn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      const overlayInput = document.getElementById('overlaySearchInput');
+      if (overlayInput) overlayInput.value = '';
+      filterAndRenderCovers();
+    });
+  }
+
+  return container;
+}
+
 export function filterAndRenderCovers() {
-  const input = document.getElementById('headerSearchInput');
   const overlayInput = document.getElementById('overlaySearchInput');
   const resultsContainer = document.getElementById('coversResultsList');
   const sectionTitleEl = document.getElementById('coversSectionTitle');
 
   if (!resultsContainer) return;
 
-  const query = (overlayInput?.value || input?.value || '').trim().toLowerCase();
+  const rawQuery = (overlayInput?.value || '').trim();
+  const query = rawQuery.toLowerCase();
 
   let filtered = KINS_COVERS_DATA;
 
@@ -48,7 +219,7 @@ export function filterAndRenderCovers() {
 
   // Filter by search query if non-empty
   if (query) {
-    if (sectionTitleEl) sectionTitleEl.textContent = `Search Results for "${query}"`;
+    if (sectionTitleEl) sectionTitleEl.textContent = `Search Results for "${rawQuery}"`;
     filtered = filtered.filter(item => 
       item.title.toLowerCase().includes(query) || 
       item.originalArtist.toLowerCase().includes(query)
@@ -60,43 +231,74 @@ export function filterAndRenderCovers() {
   resultsContainer.innerHTML = '';
 
   if (filtered.length === 0) {
-    resultsContainer.innerHTML = `
-      <div class="no-covers-found">
-        <i class="fa-solid fa-compact-disc fa-spin"></i>
-        <p>No cover videos found matching your search.</p>
-      </div>
-    `;
+    // 0 covers found -> render auto-filled Request a Song Card!
+    resultsContainer.appendChild(renderRequestSongCard(rawQuery));
     return;
   }
 
+  // Render matching cover cards
   filtered.forEach(cover => {
     resultsContainer.appendChild(renderCoverCard(cover));
   });
+
+  // Append permanent Request a Song button at bottom of results
+  const requestTriggerBox = document.createElement('div');
+  requestTriggerBox.className = 'bottom-request-trigger-box';
+  requestTriggerBox.innerHTML = `
+    <button class="bottom-request-pill-btn" id="bottomRequestPillBtn">
+      <i class="fa-solid fa-plus-circle"></i>
+      <span>Don't see your favorite song? Request a Cover</span>
+    </button>
+  `;
+
+  requestTriggerBox.querySelector('#bottomRequestPillBtn')?.addEventListener('click', () => {
+    resultsContainer.innerHTML = '';
+    resultsContainer.appendChild(renderRequestSongCard(rawQuery, true));
+    if (sectionTitleEl) sectionTitleEl.textContent = 'Request a Cover Song';
+  });
+
+  resultsContainer.appendChild(requestTriggerBox);
 }
 
 export function initCoversSearchEngine() {
+  const topNav = document.querySelector('.top-nav');
   const searchPillBtn = document.getElementById('headerSearchPillBtn');
   const searchOverlay = document.getElementById('coversSearchOverlay');
   const closeSearchOverlayBtn = document.getElementById('closeSearchOverlayBtn');
   const overlayInput = document.getElementById('overlaySearchInput');
   const categoryBtns = document.querySelectorAll('.cover-category-pill');
 
-  if (searchPillBtn && searchOverlay) {
-    searchPillBtn.addEventListener('click', () => {
-      searchOverlay.classList.add('active');
-      document.body.classList.add('modal-open');
-      if (overlayInput) {
-        setTimeout(() => overlayInput.focus(), 200);
-      }
-      filterAndRenderCovers();
-    });
+  function openOverlay() {
+    if (!searchPillBtn || !searchOverlay) return;
+
+    const rect = searchPillBtn.getBoundingClientRect();
+    const originX = rect.left + rect.width / 2;
+    const originY = rect.top + rect.height / 2;
+
+    searchOverlay.style.transformOrigin = `${originX}px ${originY}px`;
+    searchOverlay.classList.add('active');
+    if (topNav) topNav.classList.add('search-active');
+    document.body.classList.add('modal-open');
+
+    if (overlayInput) {
+      setTimeout(() => overlayInput.focus(), 150);
+    }
+    filterAndRenderCovers();
   }
 
-  if (closeSearchOverlayBtn && searchOverlay) {
-    closeSearchOverlayBtn.addEventListener('click', () => {
-      searchOverlay.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    });
+  function closeOverlay() {
+    if (!searchOverlay) return;
+    searchOverlay.classList.remove('active');
+    if (topNav) topNav.classList.remove('search-active');
+    document.body.classList.remove('modal-open');
+  }
+
+  if (searchPillBtn) {
+    searchPillBtn.addEventListener('click', openOverlay);
+  }
+
+  if (closeSearchOverlayBtn) {
+    closeSearchOverlayBtn.addEventListener('click', closeOverlay);
   }
 
   if (overlayInput) {
