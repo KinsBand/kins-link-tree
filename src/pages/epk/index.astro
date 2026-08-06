@@ -36,7 +36,7 @@ import EpkLayout from '../../shared/layouts/EpkLayout.astro';
       <main class="epk-container">
         <section class="hero-section" id="hero">
           <div class="hero-bg-media">
-            <img src="/pfp.jpg" alt="The Kins live performance" class="hero-img">
+            <img src={`${import.meta.env.BASE_URL}pfp.jpg`} alt="The Kins live performance" class="hero-img">
             <div class="hero-overlay"></div>
           </div>
           <div class="hero-content">

@@ -10,8 +10,10 @@ interface Props {
 const {
   title = "Kins | Link in Bio",
   description = "Official link in bio for Kins (@KinsBandOfficial). Stream latest music, follow on social media, buy merch, and get gig updates.",
-  image = "/pfp.jpg"
+  image = `${import.meta.env.BASE_URL}pfp.jpg`
 } = Astro.props;
+
+const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <!DOCTYPE html>
@@ -36,7 +38,7 @@ const {
   <meta name="twitter:image" content={image}>
 
   <!-- PWA Manifest & Theme Color -->
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href={`${baseUrl}manifest.json`}>
   <meta name="theme-color" content="#53c678">
 
   <!-- QRCode.js Library -->
@@ -57,11 +59,11 @@ const {
 <body>
   <slot />
 
-  <script>
+  <script define:vars={{ baseUrl }}>
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => {
+        navigator.serviceWorker.register(`${baseUrl}sw.js`).catch(err => {
           console.log('ServiceWorker registration failed: ', err);
         });
       });

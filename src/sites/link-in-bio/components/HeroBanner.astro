@@ -3,7 +3,7 @@ interface Props {
   image?: string;
 }
 
-const { image = "/pfp.jpg" } = Astro.props;
+const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
 ---
 
 <div class="hero-banner-container">
