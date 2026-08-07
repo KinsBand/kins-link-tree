@@ -175,6 +175,7 @@ export function initAudioPlayer() {
   const audioBarStreamBtn = document.getElementById('audioBarStreamBtn');
   const audioBarCoverImg = document.getElementById('audioBarCoverImg');
   const audioBarFallbackIcon = document.getElementById('audioBarFallbackIcon');
+  const audioBarIconBox = document.getElementById('audioBarIconBox');
   const vaultAudioPlayer = document.getElementById('vaultAudioPlayer');
 
   const audioBarTimelineProgress = document.getElementById('audioBarTimelineProgress');
@@ -367,6 +368,15 @@ export function initAudioPlayer() {
       audioBarToggleBtn.innerHTML = `<i class="fa-solid ${playing ? 'fa-pause' : 'fa-play'}"></i>`;
       audioBarToggleBtn.classList.add('icon-morph');
     }
+
+    if (audioBarIconBox) {
+      if (playing) {
+        audioBarIconBox.classList.add('vinyl-spin-anim');
+      } else {
+        audioBarIconBox.classList.remove('vinyl-spin-anim');
+      }
+    }
+
     notifyPlaybackState();
   }
 
@@ -399,6 +409,9 @@ export function initAudioPlayer() {
     bottomAudioBar.classList.remove('active-player');
     bottomAudioBar.classList.add('player-exiting');
     document.body.classList.remove('audio-bar-active');
+    if (audioBarIconBox) {
+      audioBarIconBox.classList.remove('vinyl-spin-anim');
+    }
     setTimeout(() => {
       bottomAudioBar.classList.add('hidden');
       bottomAudioBar.classList.remove('player-exiting');

@@ -45,31 +45,26 @@ const emails = [
             <span>Subscribe</span>
           </button>
         </form>
-
-        <div class="feedback-help-box">
-          <i class="fa-solid fa-lightbulb feedback-icon"></i>
-          <div class="feedback-text">
-            <span>Need help or have suggestions?</span>
-            <p>We'd love your feedback to improve the site & experience! Email us at <a href="mailto:HelpKinsBand@gmail.com?subject=Kins%20Site%20Feedback%20%26%20Help">HelpKinsBand@gmail.com</a>.</p>
-          </div>
-        </div>
       </div>
       
       <!-- Prominent VIP Welcome Card + Welcome Email Message Preview -->
-      <!-- Prominent VIP Welcome Card + Welcome Email Message Preview -->
       <div id="subscribeSuccess" class="subscribe-success-card hidden">
-        <div class="welcome-header">
+        <div class="subscribed-card-header">
           <div class="welcome-icon-circle">
             <i class="fa-solid fa-circle-check"></i>
           </div>
-          <span class="subscriber-vip-tag">KINSCREW VIP MEMBER</span>
+          <div class="subscribed-header-content">
+            <div class="subscribed-badge-row">
+              <span class="subscriber-vip-tag">KINSCREW VIP MEMBER</span>
+            </div>
+            <h4 class="welcome-headline" id="subscribedHeadline">You're Subscribed! 🎉</h4>
+          </div>
         </div>
         
-        <h4 class="welcome-headline" id="subscribedHeadline">Welcome to The Kins! 🎉</h4>
-        <p class="subscribed-status-subtext hidden" id="subscribedStatusSubtext">You'll receive new music drops, gig announcements, and exclusive covers straight to your inbox.</p>
+        <p class="subscribed-status-subtext" id="subscribedStatusSubtext">You'll receive new music drops, gig announcements, and exclusive covers straight to your inbox.</p>
         
         <!-- Official Welcome Email Message Container (Collapsible) -->
-        <div class="welcome-email-preview-box" id="welcomeEmailBox">
+        <div class="welcome-email-preview-box hidden" id="welcomeEmailBox">
           <div class="email-preview-header">
             <div class="email-preview-title">
               <i class="fa-solid fa-envelope-open-text"></i>
@@ -91,12 +86,21 @@ const emails = [
         </div>
 
         <div class="post-sub-actions">
-          <button id="toggleWelcomeEmailBtn" class="secondary-sub-btn hidden" type="button">
+          <button id="toggleWelcomeEmailBtn" class="secondary-sub-btn" type="button">
             <i class="fa-solid fa-envelope-open-text"></i> View Welcome Email
           </button>
           <button id="unsubscribeBtn" class="unsubscribe-link-btn" type="button">
             <i class="fa-solid fa-user-minus"></i> Unsubscribe
           </button>
+        </div>
+      </div>
+
+      <!-- Shared Feedback/Help Card (anchored at bottom whether subbed or unsubbed) -->
+      <div class="feedback-help-box">
+        <i class="fa-solid fa-lightbulb feedback-icon"></i>
+        <div class="feedback-text">
+          <span>Need help or have suggestions?</span>
+          <p>We'd love your feedback to improve the site & experience! Email us at <a href="mailto:HelpKinsBand@gmail.com?subject=Kins%20Site%20Feedback%20%26%20Help">HelpKinsBand@gmail.com</a>.</p>
         </div>
       </div>
     </div>
@@ -334,38 +338,51 @@ const emails = [
     background: rgba(24, 24, 28, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 6px;
-    padding: 18px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
+    gap: 10px;
+  }
+
+  .subscribed-card-header {
+    display: flex;
+    align-items: center;
     gap: 12px;
   }
 
-  .welcome-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
   .welcome-icon-circle {
-    width: 36px;
-    height: 36px;
-    border-radius: 4px;
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
     background: var(--btn-green);
     color: var(--btn-text-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .subscribed-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+  }
+
+  .subscribed-badge-row {
+    display: flex;
+    align-items: center;
   }
 
   .subscriber-vip-tag {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--text-white);
+    color: var(--btn-green);
     font-family: var(--font-secondary);
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     font-weight: 800;
-    padding: 4px 8px;
+    padding: 2px 7px;
     border-radius: 4px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -373,17 +390,19 @@ const emails = [
 
   .welcome-headline {
     font-family: var(--font-heading);
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 800;
     color: var(--text-white);
+    line-height: 1.2;
+    margin: 0;
   }
 
   .subscribed-status-subtext {
     font-family: var(--font-secondary);
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     color: var(--text-muted);
-    line-height: 1.45;
-    margin: -4px 0 4px 0;
+    line-height: 1.4;
+    margin: 0;
   }
 
   .welcome-email-preview-box {
@@ -601,7 +620,7 @@ const emails = [
   const subscribedHeadline = document.getElementById('subscribedHeadline');
   const subscribedStatusSubtext = document.getElementById('subscribedStatusSubtext');
 
-  function updateSubscribedUI(isSubscribed: boolean, isDismissed: boolean = false) {
+  function updateSubscribedUI(isSubscribed: boolean, isDismissed: boolean = true) {
     if (!isSubscribed) {
       subscribeFormContainer?.classList.remove('hidden');
       subscribeSuccess?.classList.add('hidden');
@@ -616,18 +635,23 @@ const emails = [
       welcomeEmailBox?.classList.add('hidden');
       if (subscribedHeadline) subscribedHeadline.textContent = "You're Subscribed!";
       subscribedStatusSubtext?.classList.remove('hidden');
-      toggleWelcomeEmailBtn?.classList.remove('hidden');
+      if (toggleWelcomeEmailBtn) {
+        toggleWelcomeEmailBtn.classList.remove('hidden');
+        toggleWelcomeEmailBtn.innerHTML = `<i class="fa-solid fa-envelope-open-text"></i> View Welcome Email`;
+      }
     } else {
       // Full Welcome Email Sent State
       welcomeEmailBox?.classList.remove('hidden');
       if (subscribedHeadline) subscribedHeadline.textContent = "Welcome to The Kins! 🎉";
-      subscribedStatusSubtext?.classList.add('hidden');
-      toggleWelcomeEmailBtn?.classList.add('hidden');
+      if (toggleWelcomeEmailBtn) {
+        toggleWelcomeEmailBtn.classList.remove('hidden');
+        toggleWelcomeEmailBtn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Hide Welcome Email`;
+      }
     }
   }
 
   const isSubbed = localStorage.getItem('kins_subscribed') === 'true';
-  const isDismissed = localStorage.getItem('kins_welcome_dismissed') === 'true';
+  const isDismissed = localStorage.getItem('kins_welcome_dismissed') !== 'false';
 
   if (isSubbed) {
     updateSubscribedUI(true, isDismissed);
@@ -661,8 +685,8 @@ const emails = [
         const data = await res.json().catch(() => ({}));
 
         localStorage.setItem('kins_subscribed', 'true');
-        localStorage.removeItem('kins_welcome_dismissed');
-        updateSubscribedUI(true, false);
+        localStorage.setItem('kins_welcome_dismissed', 'true');
+        updateSubscribedUI(true, true);
 
         if (res.ok || data.status === 'success') {
           showToast(data.message || "🎉 Welcome to The Kins! You are now subscribed.");
@@ -671,8 +695,8 @@ const emails = [
         }
       } catch (err) {
         localStorage.setItem('kins_subscribed', 'true');
-        localStorage.removeItem('kins_welcome_dismissed');
-        updateSubscribedUI(true, false);
+        localStorage.setItem('kins_welcome_dismissed', 'true');
+        updateSubscribedUI(true, true);
         showToast("🎉 Welcome to The Kins! You are now subscribed.");
       } finally {
         if (submitBtn) {

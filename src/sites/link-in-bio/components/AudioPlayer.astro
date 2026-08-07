@@ -73,7 +73,7 @@
 
     <div class="audio-bar-content">
       <div class="audio-bar-left">
-        <div class="audio-bar-icon-box">
+        <div class="audio-bar-icon-box" id="audioBarIconBox">
           <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover">
           <i class="fa-solid fa-compact-disc audio-icon-anim" id="audioBarFallbackIcon"></i>
         </div>
@@ -349,12 +349,40 @@
     justify-content: center;
     overflow: hidden;
     color: var(--text-white);
+    position: relative;
+    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1),
+                box-shadow 0.4s ease,
+                border-color 0.4s ease;
   }
 
   .audio-bar-cover-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: inherit;
+    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1);
+  }
+
+  .audio-bar-icon-box.vinyl-spin-anim {
+    border-radius: 50%;
+    border-color: rgba(29, 185, 84, 0.6);
+    box-shadow: 0 0 12px rgba(29, 185, 84, 0.4), 0 0 4px rgba(255, 255, 255, 0.25);
+  }
+
+  .audio-bar-icon-box.vinyl-spin-anim::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: #121214;
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    border-radius: 50%;
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.9);
+    z-index: 5;
+    pointer-events: none;
   }
 
   .audio-bar-details {
