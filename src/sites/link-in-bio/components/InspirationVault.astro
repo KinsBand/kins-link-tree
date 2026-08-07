@@ -40,6 +40,8 @@ const artists = [
     gap: 14px;
     width: 100%;
     margin-top: 14px;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 420px;
   }
 
   .inspired-header {
@@ -333,7 +335,7 @@ const artists = [
         card.innerHTML = `
           <div class="music-card-thumb">
             <i class="fa-solid fa-compact-disc fallback-disc-icon"></i>
-            <img class="track-artwork-img hidden" alt="${track.title}">
+            <img class="track-artwork-img hidden" alt="${track.title}" loading="lazy" decoding="async">
           </div>
           <div class="music-card-info">
             <span class="song-title">${track.title}</span>
@@ -350,13 +352,31 @@ const artists = [
 
         getITunesTrackData(track.artist, track.title).then((meta: any) => {
           if (meta && meta.artworkUrl) {
-            img.src = meta.artworkUrl;
-            img.onload = () => {
+            const showImage = () => {
               img.classList.remove('hidden');
               if (fallbackDisc) {
                 fallbackDisc.style.display = 'none';
               }
             };
+
+            img.onload = showImage;
+            img.onerror = () => {
+              if (meta.rawArtworkUrl && img.src !== meta.rawArtworkUrl) {
+                img.src = meta.rawArtworkUrl;
+              } else {
+                img.classList.add('hidden');
+                if (fallbackDisc) {
+                  fallbackDisc.style.display = 'flex';
+                }
+              }
+            };
+
+            img.src = meta.artworkUrl;
+
+            if (img.complete && img.naturalWidth > 0) {
+              showImage();
+            }
+
             track.coverUrl = meta.artworkUrl;
             track.artworkUrl = meta.artworkUrl;
           }

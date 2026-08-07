@@ -181,6 +181,17 @@
 </style>
 
 <script>
+  function triggerAnim(el: Element | null, animClass: string, duration = 800) {
+    if (!el) return;
+    el.classList.remove(animClass);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.classList.add(animClass);
+        setTimeout(() => el.classList.remove(animClass), duration);
+      });
+    });
+  }
+
   function initQuickNavInteractions() {
     const quickNavLinks = document.querySelectorAll('.quick-nav-link');
 
@@ -199,48 +210,25 @@
 
         // 2. General Navigation: Spin/Bounce section logo icon
         const titleIcon = targetSection.querySelector('.members-section-title i, .inspired-title-icon, h3 i, h2 i');
-        if (titleIcon) {
-          titleIcon.classList.remove('section-icon-bounce');
-          void titleIcon.offsetWidth; // Force reflow
-          titleIcon.classList.add('section-icon-bounce');
-          setTimeout(() => titleIcon.classList.remove('section-icon-bounce'), 800);
-        }
+        triggerAnim(titleIcon, 'section-icon-bounce', 800);
 
         // 3. Section-Specific Rich Animations
         if (targetId === '#members-section') {
           const memberAvatars = targetSection.querySelectorAll('.member-avatar-box');
           memberAvatars.forEach((avatar, index) => {
-            avatar.classList.remove('head-bop-anim');
-            void avatar.offsetWidth; // Force reflow
             (avatar as HTMLElement).style.animationDelay = `${index * 80}ms`;
-            avatar.classList.add('head-bop-anim');
-            setTimeout(() => {
-              avatar.classList.remove('head-bop-anim');
-              (avatar as HTMLElement).style.animationDelay = '';
-            }, 1100 + index * 80);
+            triggerAnim(avatar, 'head-bop-anim', 1100 + index * 80);
           });
         } else if (targetId === '#merch-section') {
           const merchCard = targetSection.querySelector('.merch-coming-soon-card');
-          if (merchCard) {
-            merchCard.classList.remove('merch-pop-anim');
-            void (merchCard as HTMLElement).offsetWidth;
-            merchCard.classList.add('merch-pop-anim');
-            setTimeout(() => merchCard.classList.remove('merch-pop-anim'), 1000);
-          }
+          triggerAnim(merchCard, 'merch-pop-anim', 1000);
         } else if (targetId === '#inspired-section') {
           const vinylHeaderIcon = targetSection.querySelector('.inspired-title-icon');
-          if (vinylHeaderIcon) {
-            vinylHeaderIcon.classList.remove('vinyl-spin-once');
-            void (vinylHeaderIcon as HTMLElement).offsetWidth;
-            vinylHeaderIcon.classList.add('vinyl-spin-once');
-            setTimeout(() => vinylHeaderIcon.classList.remove('vinyl-spin-once'), 1200);
-          }
+          triggerAnim(vinylHeaderIcon, 'vinyl-spin-once', 1200);
+
           const thumbs = targetSection.querySelectorAll('.music-card-thumb, .fallback-disc-icon');
           thumbs.forEach((thumb) => {
-            thumb.classList.remove('vinyl-spin-once');
-            void (thumb as HTMLElement).offsetWidth;
-            thumb.classList.add('vinyl-spin-once');
-            setTimeout(() => thumb.classList.remove('vinyl-spin-once'), 1200);
+            triggerAnim(thumb, 'vinyl-spin-once', 1200);
           });
         }
       });

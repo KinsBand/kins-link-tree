@@ -28,6 +28,11 @@
     transform: translateY(-64px);
   }
 
+  :global(body.modal-open) .floating-gig-pill-container {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
   .gig-pill-inner {
     background: var(--btn-green);
     color: var(--btn-text-color);

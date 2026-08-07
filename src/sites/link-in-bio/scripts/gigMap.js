@@ -484,6 +484,29 @@ export function initGigMapModule() {
     });
   }
 
+  async function ensureLeafletLoaded() {
+    if (window.L) return;
+
+    if (!document.getElementById('leaflet-css-dyn')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css-dyn';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+
+    if (!document.getElementById('leaflet-js-dyn')) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.id = 'leaflet-js-dyn';
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+  }
+
   function initGigMap() {
     const mapContainer = document.getElementById('gigMapView');
     if (!mapContainer || typeof window.L === 'undefined') return;
@@ -557,9 +580,10 @@ export function initGigMapModule() {
   }
 
   if (floatingGigPillBtn && gigMapModal) {
-    floatingGigPillBtn.addEventListener('click', () => {
+    floatingGigPillBtn.addEventListener('click', async () => {
       gigMapModal.classList.add('active');
       lockScroll();
+      await ensureLeafletLoaded();
       initGigMap();
     });
   }

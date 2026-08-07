@@ -6,12 +6,18 @@ let activeCategory = 'all';
 let searchDebounceTimeout = null;
 let artistFetchDebounceTimeout = null;
 
+const ARTIST_SUGGESTIONS_CACHE = {};
+
 // Live iTunes API fetch for song title -> real original artist suggestions
 export async function fetchLiveArtistSuggestions(songTitle) {
   if (!songTitle || songTitle.trim().length < 2) return [];
 
+  const cleanTitle = songTitle.replace(/[!?"\']/g, '').trim().toLowerCase();
+  if (ARTIST_SUGGESTIONS_CACHE[cleanTitle]) {
+    return ARTIST_SUGGESTIONS_CACHE[cleanTitle];
+  }
+
   try {
-    const cleanTitle = songTitle.replace(/[!?"\']/g, '').trim();
     const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanTitle)}&entity=song&limit=8`);
     const data = await res.json();
 
@@ -22,12 +28,15 @@ export async function fetchLiveArtistSuggestions(songTitle) {
           uniqueArtists.push(item.artistName);
         }
       });
+      ARTIST_SUGGESTIONS_CACHE[cleanTitle] = uniqueArtists;
       return uniqueArtists;
     }
   } catch (err) {
     console.warn('Error fetching live artist suggestions:', err);
   }
-  return [];
+  const fallback = [];
+  ARTIST_SUGGESTIONS_CACHE[cleanTitle] = fallback;
+  return fallback;
 }
 
 function renderCoverCard(cover) {

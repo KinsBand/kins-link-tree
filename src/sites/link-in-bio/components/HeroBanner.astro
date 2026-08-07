@@ -7,7 +7,7 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
 ---
 
 <div class="hero-banner-container">
-  <img src={image} alt="Kins hero banner" class="hero-banner-img">
+  <img src={image} alt="Kins hero banner" class="hero-banner-img" decoding="async" fetchpriority="high">
   <div class="hero-gradient-overlay"></div>
 </div>
 

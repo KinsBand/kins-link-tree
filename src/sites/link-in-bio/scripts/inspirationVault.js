@@ -23,7 +23,7 @@ export async function getITunesTrackData(artist, title) {
       const rawArt = item.artworkUrl100 || item.artworkUrl60 || null;
       const artworkUrl = rawArt ? rawArt.replace(/100x100bb?\./, '600x600bb.').replace(/100x100/, '600x600') : null;
       const previewUrl = item.previewUrl || null;
-      const result = { artworkUrl, previewUrl };
+      const result = { artworkUrl, rawArtworkUrl: rawArt, previewUrl };
       ITUNES_CACHE[cacheKey] = result;
       return result;
     }

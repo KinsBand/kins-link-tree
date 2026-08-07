@@ -37,6 +37,12 @@
     width: 90%;
     max-width: 400px;
     pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  :global(body.modal-open) .bottom-floating-controls-wrapper {
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
   .bottom-audio-bar {
