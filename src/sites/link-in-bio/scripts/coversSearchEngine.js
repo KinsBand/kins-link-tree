@@ -1,17 +1,24 @@
 import { KINS_COVERS_DATA } from './coversData.js';
 import { openCoverVideoModal } from './videoModalController.js';
 import { handleSongRequestSubmit } from './requestSongController.js';
+import { getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from './inspirationVault.js';
 
 let activeCategory = 'all';
 let searchDebounceTimeout = null;
 let artistFetchDebounceTimeout = null;
 
+const ARTIST_SUGGESTIONS_CACHE = {};
+
 // Live iTunes API fetch for song title -> real original artist suggestions
 export async function fetchLiveArtistSuggestions(songTitle) {
   if (!songTitle || songTitle.trim().length < 2) return [];
 
+  const cleanTitle = songTitle.replace(/[!?"\']/g, '').trim().toLowerCase();
+  if (ARTIST_SUGGESTIONS_CACHE[cleanTitle]) {
+    return ARTIST_SUGGESTIONS_CACHE[cleanTitle];
+  }
+
   try {
-    const cleanTitle = songTitle.replace(/[!?"\']/g, '').trim();
     const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanTitle)}&entity=song&limit=8`);
     const data = await res.json();
 
@@ -22,21 +29,29 @@ export async function fetchLiveArtistSuggestions(songTitle) {
           uniqueArtists.push(item.artistName);
         }
       });
+      ARTIST_SUGGESTIONS_CACHE[cleanTitle] = uniqueArtists;
       return uniqueArtists;
     }
   } catch (err) {
     console.warn('Error fetching live artist suggestions:', err);
   }
-  return [];
+  const fallback = [];
+  ARTIST_SUGGESTIONS_CACHE[cleanTitle] = fallback;
+  return fallback;
 }
 
 function renderCoverCard(cover) {
   const card = document.createElement('div');
   card.className = 'cover-result-card';
   card.setAttribute('data-id', cover.id);
+  
+  // Check if cover already has artworkUrl from prefetch
+  const hasArtwork = !!(cover.artworkUrl || cover.coverUrl);
+  const thumbSrc = hasArtwork ? (cover.artworkUrl || cover.coverUrl) : cover.thumbnail;
+  
   card.innerHTML = `
     <div class="cover-card-thumb-box">
-      <img src="${cover.thumbnail}" alt="${cover.title} thumbnail" class="cover-card-thumb-img">
+      <img src="${thumbSrc}" alt="${cover.title} thumbnail" class="cover-card-thumb-img" loading="lazy" decoding="async">
       <div class="thumb-play-overlay"><i class="fa-solid fa-play"></i></div>
     </div>
     <div class="cover-card-info">
@@ -47,6 +62,18 @@ function renderCoverCard(cover) {
       <i class="${cover.platformIcon || 'fa-solid fa-play'}"></i>
     </button>
   `;
+
+  // Optimized: Load high-res artwork progressively if not already present
+  if (!hasArtwork && cover.originalArtist && cover.title) {
+    const imgEl = card.querySelector('.cover-card-thumb-img');
+    getITunesTrackData(cover.originalArtist, cover.title).then(meta => {
+      if (meta && meta.artworkUrl) {
+        cover.artworkUrl = meta.artworkUrl;
+        cover.coverUrl = meta.artworkUrl;
+        loadAlbumArt(imgEl, meta.artworkUrl, meta.rawArtworkUrl);
+      }
+    });
+  }
 
   card.addEventListener('click', () => {
     openCoverVideoModal(cover);
@@ -235,6 +262,9 @@ export function filterAndRenderCovers() {
     resultsContainer.appendChild(renderRequestSongCard(rawQuery));
     return;
   }
+
+  // Prefetch artwork for all visible covers in parallel
+  prefetchTrackArtwork(filtered.slice(0, 10)); // Prefetch first 10 for speed
 
   // Render matching cover cards
   filtered.forEach(cover => {

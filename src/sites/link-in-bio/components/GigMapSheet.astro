@@ -212,6 +212,8 @@
     align-items: center;
     gap: 8px;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
     scrollbar-width: none;
     padding: 4px 16px;
     background: rgba(10, 10, 12, 0.9);
@@ -277,6 +279,8 @@
     flex-direction: column;
     gap: 12px;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
     scrollbar-width: thin;
   }
 
@@ -367,6 +371,8 @@
     align-items: center;
     gap: 8px;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
     scrollbar-width: none;
     padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;

@@ -21,6 +21,20 @@
     right: 20px;
     z-index: 800;
     cursor: pointer;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  :global(body.audio-bar-active) .floating-gig-pill-container {
+    transform: translateY(-64px);
+  }
+
+  :global(body.audio-bar-active.stream-panel-open) .floating-gig-pill-container {
+    transform: translateY(-128px);
+  }
+
+  :global(body.modal-open) .floating-gig-pill-container {
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
   .gig-pill-inner {

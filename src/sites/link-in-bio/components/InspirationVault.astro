@@ -40,6 +40,8 @@ const artists = [
     gap: 14px;
     width: 100%;
     margin-top: 14px;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 420px;
   }
 
   .inspired-header {
@@ -245,7 +247,7 @@ const artists = [
 </style>
 
 <script>
-  import { INSPIRED_ARTISTS_DATA, getITunesTrackData } from '../scripts/inspirationVault.js';
+  import { INSPIRED_ARTISTS_DATA, getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from '../scripts/inspirationVault.js';
 
   const container = document.getElementById('inspiredTracksContainer');
   const dotsContainer = document.getElementById('dotsPaginationContainer');
@@ -326,6 +328,9 @@ const artists = [
       const rawTracks = artistData.pages[currentPageIndex] || [];
       const tracks = rawTracks.slice(0, 4);
 
+      // Prefetch artwork for all tracks in parallel
+      prefetchTrackArtwork(tracks);
+
       tracks.forEach((track: any) => {
         const card = document.createElement('div');
         card.className = 'music-card';
@@ -333,7 +338,7 @@ const artists = [
         card.innerHTML = `
           <div class="music-card-thumb">
             <i class="fa-solid fa-compact-disc fallback-disc-icon"></i>
-            <img class="track-artwork-img hidden" alt="${track.title}">
+            <img class="track-artwork-img hidden" alt="${track.title}" loading="lazy" decoding="async">
           </div>
           <div class="music-card-info">
             <span class="song-title">${track.title}</span>
@@ -348,16 +353,18 @@ const artists = [
         const fallbackDisc = card.querySelector('.fallback-disc-icon') as HTMLElement;
         const img = card.querySelector('.track-artwork-img') as HTMLImageElement;
 
+        // Optimized: Use progressive image loading
         getITunesTrackData(track.artist, track.title).then((meta: any) => {
           if (meta && meta.artworkUrl) {
-            img.src = meta.artworkUrl;
-            img.onload = () => {
-              img.classList.remove('hidden');
-              if (fallbackDisc) {
-                fallbackDisc.style.display = 'none';
-              }
-            };
             track.coverUrl = meta.artworkUrl;
+            track.artworkUrl = meta.artworkUrl;
+            loadAlbumArt(img, meta.artworkUrl, meta.rawArtworkUrl).then(() => {
+              if (fallbackDisc) fallbackDisc.style.display = 'none';
+            }).catch(() => {
+              if (fallbackDisc) fallbackDisc.style.display = 'flex';
+            });
+          } else if (fallbackDisc) {
+            fallbackDisc.style.display = 'flex';
           }
           if (meta && meta.previewUrl) {
             track.previewUrl = meta.previewUrl;

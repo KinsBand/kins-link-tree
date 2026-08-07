@@ -10,170 +10,7 @@ function unlockScroll() {
   document.documentElement.classList.remove('modal-open');
 }
 
-const LOCAL_GIGS = [
-  {
-    id: "gig-newcastle-1",
-    bandName: "KINS",
-    venue: "King St Bandroom",
-    city: "Newcastle, NSW",
-    region: "Hunter Region",
-    type: "upcoming",
-    isNextShow: true,
-    targetDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 5 * 60 * 60 * 1000), // 3 days away
-    dateText: "10/08/2026",
-    capacity: "350 Cap",
-    supportActs: "Sunbleached, Indigo Youth",
-    rating: "4.9",
-    ticketUrl: "https://www.bandsintown.com",
-    amenities: [
-      { icon: "fa-wheelchair", label: "Accessible" },
-      { icon: "fa-user-check", label: "18+ Event" },
-      { icon: "fa-beer-mug-empty", label: "Craft Bar" },
-      { icon: "fa-square-parking", label: "Parking" }
-    ],
-    snapshot: {
-      vibe: "Sweaty, high-octane, intimate",
-      highlight: "The entire room jumping as one during the final breakdown chorus of 'Jane!'.",
-      videoYoutubeId: "dQw4w9WgXcQ"
-    },
-    setlistDetails: {
-      songs: [
-        { name: "Just Like Heaven (The Cure)", tag: "Cover Opener" },
-        { name: "Jane! (The Long Faces)", tag: "Fan Favorite" },
-        { name: "First Light", tag: "Original Debut" },
-        { name: "Everlong (Foo Fighters)", tag: "Extended Outro Jam" },
-        { name: "Common People (Pulp)", tag: "Encore" }
-      ],
-      audioRecording: "Live Desk Audio Recording (24-bit Stereo Board Capture)",
-      stageNotes: "Vivian switched to vintage Fender Telecaster for 'Jane!'; crowd energy triggered dynamic tempo bump on final encore."
-    },
-    venueAndFood: {
-      venueDesc: "Classic underground bandroom with pristine acoustics, low-ceiling intimate vibe, and crystal-clear PA setup.",
-      foodRecommendation: "Post-show late night feed at King Street Maccas & Rascal Burgers around the corner."
-    },
-    crowdAndGallery: {
-      energyScore: "10/10 🔥",
-      photos: [
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop"
-      ],
-      stageToCrowdShot: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&auto=format&fit=crop"
-    },
-    btsAndArtifacts: {
-      roadStory: "Trai snapped a drumstick during soundcheck, but local legend sound tech hooked up a spare Oak stick just in time for doors!",
-      artifactsNotes: "Paper setlist signed by band, official gig poster, and gold-foil entry wristbands."
-    },
-    lat: -32.9283,
-    lng: 151.7817
-  },
-  {
-    id: "gig-maitland-1",
-    bandName: "KINS",
-    venue: "The Junkyard",
-    city: "Maitland, NSW",
-    region: "Hunter Region",
-    type: "upcoming",
-    isNextShow: false,
-    targetDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 9 days away
-    dateText: "16/08/2026",
-    capacity: "200 Cap",
-    supportActs: "The Valley Echoes",
-    rating: "4.8",
-    ticketUrl: "https://www.bandsintown.com",
-    amenities: [
-      { icon: "fa-wheelchair", label: "Accessible" },
-      { icon: "fa-ticket", label: "All Ages" },
-      { icon: "fa-beer-mug-empty", label: "Beer Garden" }
-    ],
-    snapshot: {
-      vibe: "Sunlit, gritty, electric",
-      highlight: "Sun setting over the open courtyard beer garden as the crowd sang along to 'Buddy Holly'.",
-      videoYoutubeId: "dQw4w9WgXcQ"
-    },
-    setlistDetails: {
-      songs: [
-        { name: "Buddy Holly (Weezer)", tag: "Courtyard Singalong" },
-        { name: "Cadillac (The Long Faces)", tag: "High Energy" },
-        { name: "Ocean Drive", tag: "Kins Original" },
-        { name: "Boys Don't Cry (The Cure)", tag: "Encore" }
-      ],
-      audioRecording: "Live Beer Garden Stereo Recording",
-      stageNotes: "Acoustic-electric hybrid setup used to fit the outdoor courtyard reverberation."
-    },
-    venueAndFood: {
-      venueDesc: "Iconic Maitland live music venue with open-air courtyard stage, vintage rock posters, and legendary local atmosphere.",
-      foodRecommendation: "Smoked brisket burgers and craft pale ales served fresh from The Junkyard bistro kitchen."
-    },
-    crowdAndGallery: {
-      energyScore: "9.8/10 ⚡",
-      photos: [
-        "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop"
-      ],
-      stageToCrowdShot: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop"
-    },
-    btsAndArtifacts: {
-      roadStory: "Drove down the New England Highway in the van listening to early 2000s indie rock on full blast.",
-      artifactsNotes: "Original hand-drawn setlist on pub coaster."
-    },
-    lat: -32.7333,
-    lng: 151.5500
-  },
-  {
-    id: "gig-sydney-past",
-    bandName: "KINS",
-    venue: "The Lansdowne Hotel",
-    city: "Sydney, NSW",
-    region: "Greater Sydney",
-    type: "past",
-    isNextShow: false,
-    dateText: "18/07/2026",
-    capacity: "280 Sold Out",
-    supportActs: "Velvet Bloom, Static Waves",
-    rating: "5.0",
-    ticketUrl: "https://www.bandsintown.com",
-    amenities: [
-      { icon: "fa-wheelchair", label: "Accessible" },
-      { icon: "fa-user-check", label: "18+ Event" },
-      { icon: "fa-utensils", label: "Pub Food" }
-    ],
-    snapshot: {
-      vibe: "Raw, electric, wall-to-wall",
-      highlight: "Unbelievable wall-to-wall crowd chorus echoing across Chippendale on 'Oberon'!",
-      videoYoutubeId: "dQw4w9WgXcQ"
-    },
-    setlistDetails: {
-      songs: [
-        { name: "Oberon (The Long Faces)", tag: "Sold Out Opener" },
-        { name: "Do You Wanna Get High (Weezer)", tag: "Crowd Favorite" },
-        { name: "Shadows", tag: "Kins Original" },
-        { name: "Everlong (Foo Fighters)", tag: "Encore Finale" }
-      ],
-      audioRecording: "Official Desk Board Audio Recording (Full Stereo Master)",
-      stageNotes: "Charlie's guitar solo on 'Oberon' had the front row singing every single note!"
-    },
-    venueAndFood: {
-      venueDesc: "Sydney's iconic multi-level live rock venue in Chippendale with sticky floors and legendary sound history.",
-      foodRecommendation: "Lansdowne woodfired pizzas & craft brews right at the pub bar before showtime."
-    },
-    crowdAndGallery: {
-      energyScore: "10/10 🔥",
-      photos: [
-        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=300&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&auto=format&fit=crop"
-      ],
-      stageToCrowdShot: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop"
-    },
-    btsAndArtifacts: {
-      roadStory: "Soundcheck ran long, but the green room pizza delivery arrived right as doors opened!",
-      artifactsNotes: "Signed Lansdowne gig poster, paper setlist, and commemorative ticket stub."
-    },
-    lat: -33.8850,
-    lng: 151.1980
-  }
-];
+const LOCAL_GIGS = [];
 
 // Refined Coastal Land Polygon for Newcastle, Maitland & Sydney
 const COASTAL_LAND_POLYGON = [
@@ -277,7 +114,6 @@ function parseSetlistTrackInfo(fullName) {
 }
 
 function displayVenueDetails(gig) {
-  activeGigId = gig.id;
   const venueNameEl = document.getElementById('venueCardName');
   const venueRatingEl = document.getElementById('venueRatingBadge');
   const venueCapacityEl = document.getElementById('venueCapacityBadge');
@@ -286,6 +122,27 @@ function displayVenueDetails(gig) {
   const countdownBanner = document.getElementById('gigCountdownBanner');
   const richBreakdown = document.getElementById('richShowBreakdown');
   const venueBookingBtn = document.getElementById('venueBookingBtn');
+
+  if (!gig) {
+    if (venueNameEl) venueNameEl.textContent = "No Scheduled Gigs";
+    if (venueRatingEl) venueRatingEl.style.display = "none";
+    if (venueCapacityEl) venueCapacityEl.style.display = "none";
+    if (venueCityEl) venueCityEl.textContent = "Newcastle & Sydney";
+    if (amenitiesRow) amenitiesRow.innerHTML = "";
+    if (countdownBanner) countdownBanner.classList.add("hidden");
+    if (venueBookingBtn) venueBookingBtn.style.display = "none";
+    if (richBreakdown) {
+      richBreakdown.innerHTML = `
+        <div class="show-section-card" style="text-align: center; padding: 32px 16px;">
+          <i class="fa-solid fa-calendar-xmark" style="font-size: 2.2rem; color: var(--text-muted); margin-bottom: 12px; display: block;"></i>
+          <h4 style="font-family: var(--font-heading); color: var(--text-white); font-size: 1.05rem; margin-bottom: 8px;">No Gigs Announced Yet</h4>
+          <p style="font-size: 0.8rem; color: var(--text-muted); max-width: 300px; margin: 0 auto 16px auto;">Kins hasn't scheduled any upcoming shows right now. Check back soon for upcoming Newcastle & Sydney tour dates!</p>
+        </div>
+      `;
+    }
+    return;
+  }
+  activeGigId = gig.id;
 
   if (venueNameEl) venueNameEl.textContent = gig.venue;
   if (venueRatingEl) venueRatingEl.innerHTML = `<i class="fa-solid fa-star"></i> ${gig.rating}`;
@@ -462,26 +319,58 @@ export function initGigMapModule() {
 
   function updateFloatingPill() {
     if (!gigPillTag || !gigPillLocation) return;
-    gigPillTag.textContent = "NEXT GIG";
-    gigPillLocation.textContent = `${nextGig.venue}, Newcastle`;
+    if (nextGig) {
+      gigPillTag.textContent = "NEXT GIG";
+      gigPillLocation.textContent = `${nextGig.venue}, Newcastle`;
+    } else {
+      gigPillTag.textContent = "GIGS";
+      gigPillLocation.textContent = "Locations";
+    }
   }
   updateFloatingPill();
 
   // Render Selector Pills
   if (selectorPillsRow) {
-    selectorPillsRow.innerHTML = LOCAL_GIGS.map(g => `
-      <button class="gig-select-pill ${g.id === nextGig.id ? 'active' : ''}" data-gig-id="${g.id}">
-        ${g.isNextShow ? '🔥 NEXT: ' : ''}${g.venue} (${g.city.split(',')[0]})
-      </button>
-    `).join('');
+    if (LOCAL_GIGS.length > 0) {
+      selectorPillsRow.innerHTML = LOCAL_GIGS.map(g => `
+        <button class="gig-select-pill ${nextGig && g.id === nextGig.id ? 'active' : ''}" data-gig-id="${g.id}">
+          ${g.isNextShow ? '🔥 NEXT: ' : ''}${g.venue} (${g.city.split(',')[0]})
+        </button>
+      `).join('');
 
-    selectorPillsRow.querySelectorAll('.gig-select-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        const id = pill.getAttribute('data-gig-id');
-        const targetGig = LOCAL_GIGS.find(g => g.id === id);
-        if (targetGig) displayVenueDetails(targetGig);
+      selectorPillsRow.querySelectorAll('.gig-select-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          const id = pill.getAttribute('data-gig-id');
+          const targetGig = LOCAL_GIGS.find(g => g.id === id);
+          if (targetGig) displayVenueDetails(targetGig);
+        });
       });
-    });
+    } else {
+      selectorPillsRow.innerHTML = `<span style="color: var(--text-muted); font-size: 0.76rem; padding: 6px 12px; display: inline-block;">No upcoming gig dates currently announced</span>`;
+    }
+  }
+
+  async function ensureLeafletLoaded() {
+    if (window.L) return;
+
+    if (!document.getElementById('leaflet-css-dyn')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css-dyn';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+
+    if (!document.getElementById('leaflet-js-dyn')) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.id = 'leaflet-js-dyn';
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
   }
 
   function initGigMap() {
@@ -546,7 +435,7 @@ export function initGigMapModule() {
         `);
       });
 
-      displayVenueDetails(nextGig);
+      displayVenueDetails(nextGig || null);
     }
 
     setTimeout(() => {
@@ -557,9 +446,10 @@ export function initGigMapModule() {
   }
 
   if (floatingGigPillBtn && gigMapModal) {
-    floatingGigPillBtn.addEventListener('click', () => {
+    floatingGigPillBtn.addEventListener('click', async () => {
       gigMapModal.classList.add('active');
       lockScroll();
+      await ensureLeafletLoaded();
       initGigMap();
     });
   }
