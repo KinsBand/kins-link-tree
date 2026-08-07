@@ -29,7 +29,17 @@ const artists = [
   </div>
 
   <div class="dots-pagination-container" id="dotsPaginationContainer">
-    <!-- Pagination dots populated dynamically -->
+    <button class="page-nav-arrow prev-page-btn" id="prevPageBtn" aria-label="Previous Page">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    
+    <div class="dots-wrapper" id="dotsWrapper">
+      <!-- Pagination dots populated dynamically -->
+    </div>
+
+    <button class="page-nav-arrow next-page-btn" id="nextPageBtn" aria-label="Next Page">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
   </div>
 </section>
 
@@ -257,9 +267,49 @@ const artists = [
 
   .dots-pagination-container {
     display: flex;
+    align-items: center;
     justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .dots-wrapper {
+    display: flex;
+    align-items: center;
     gap: 6px;
-    margin-top: 6px;
+  }
+
+  .page-nav-arrow {
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-white);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s var(--ease-snappy);
+  }
+
+  .page-nav-arrow:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .page-nav-arrow:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .page-nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.03);
   }
 
   .dots-pagination-container :global(.inspired-dot) {
@@ -338,17 +388,38 @@ const artists = [
     const totalPages = artistData.pages.length;
     currentPageIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
 
-    // Render Pagination Dots
+    // Render Pagination Dots & Controls
     if (dotsContainer) {
-      dotsContainer.innerHTML = '';
+      const dotsWrapper = document.getElementById('dotsWrapper');
+      const prevBtn = document.getElementById('prevPageBtn') as HTMLButtonElement;
+      const nextBtn = document.getElementById('nextPageBtn') as HTMLButtonElement;
+
       if (totalPages > 1) {
         dotsContainer.style.display = 'flex';
-        for (let i = 0; i < totalPages; i++) {
-          const dot = document.createElement('button');
-          dot.className = `inspired-dot ${i === currentPageIndex ? 'active' : ''}`;
-          dot.setAttribute('aria-label', `Page ${i + 1}`);
-          dot.addEventListener('click', () => renderArtistPage(currentArtistKey, i));
-          dotsContainer.appendChild(dot);
+
+        if (dotsWrapper) {
+          dotsWrapper.innerHTML = '';
+          for (let i = 0; i < totalPages; i++) {
+            const dot = document.createElement('button');
+            dot.className = `inspired-dot ${i === currentPageIndex ? 'active' : ''}`;
+            dot.setAttribute('aria-label', `Page ${i + 1}`);
+            dot.addEventListener('click', () => renderArtistPage(currentArtistKey, i));
+            dotsWrapper.appendChild(dot);
+          }
+        }
+
+        if (prevBtn) {
+          prevBtn.disabled = (currentPageIndex === 0);
+          prevBtn.onclick = () => {
+            if (currentPageIndex > 0) renderArtistPage(currentArtistKey, currentPageIndex - 1);
+          };
+        }
+
+        if (nextBtn) {
+          nextBtn.disabled = (currentPageIndex === totalPages - 1);
+          nextBtn.onclick = () => {
+            if (currentPageIndex < totalPages - 1) renderArtistPage(currentArtistKey, currentPageIndex + 1);
+          };
         }
       } else {
         dotsContainer.style.display = 'none';
