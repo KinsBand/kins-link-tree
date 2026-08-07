@@ -4,11 +4,6 @@
 <div class="bottom-sheet-backdrop" id="gigMapModal">
   <div class="bottom-sheet-container" id="bottomSheetContainer">
     
-    <div class="sheet-drag-area" id="sheetDragArea">
-      <div class="sheet-drag-handle"></div>
-      <span class="swipe-hint-text"><i class="fa-solid fa-chevron-down"></i> Swipe down to view map / close</span>
-    </div>
-
     <!-- Header & Region Copywriting -->
     <div class="gig-sheet-header">
       <div class="gig-header-titles">
@@ -22,6 +17,7 @@
       </div>
       <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map">
         <i class="fa-solid fa-xmark"></i>
+        <span>CLOSE</span>
       </button>
     </div>
 
@@ -89,11 +85,12 @@
   .bottom-sheet-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.88);
-    backdrop-filter: blur(14px);
+    background: rgba(10, 10, 12, 0.98);
+    backdrop-filter: blur(20px);
     z-index: 1000;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: center;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s var(--ease-snappy);
@@ -104,52 +101,34 @@
     pointer-events: auto;
   }
 
+  /* Full Screen Menu Container */
   .bottom-sheet-container {
     width: 100%;
-    height: 94vh;
+    height: 100vh;
+    height: 100dvh;
     background: #0a0a0c;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 0;
+    border: none;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transform: translateY(100%);
-    transition: transform 0.3s var(--ease-snappy);
+    transform: scale(0.98);
+    transition: transform 0.25s var(--ease-snappy);
   }
 
   .bottom-sheet-backdrop:global(.active) .bottom-sheet-container {
-    transform: translateY(0);
-  }
-
-  .sheet-drag-area {
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    cursor: grab;
-  }
-
-  .sheet-drag-handle {
-    width: 44px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 2px;
-  }
-
-  .swipe-hint-text {
-    font-family: var(--font-secondary);
-    font-size: 0.66rem;
-    color: var(--text-muted);
+    transform: scale(1);
   }
 
   .gig-sheet-header {
-    padding: 0 16px 8px;
+    padding: 14px 16px 10px;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
+    background: rgba(18, 18, 20, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
   }
 
   .gig-header-titles {
@@ -199,33 +178,38 @@
 
   .close-sheet-btn {
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     color: var(--text-white);
-    width: 34px;
-    height: 34px;
+    padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     flex-shrink: 0;
     transition: background-color 0.18s ease;
   }
 
   .close-sheet-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.18);
   }
 
-  /* Quick Gig Selector Pills Row */
+  /* Quick Gig Selector Pills Row (Un-squished) */
   .gig-selector-pills-row {
     display: flex;
     align-items: center;
     gap: 8px;
     overflow-x: auto;
     scrollbar-width: none;
-    padding: 4px 16px 8px 16px;
-    background: rgba(10, 10, 12, 0.6);
+    padding: 8px 16px;
+    background: rgba(10, 10, 12, 0.8);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+    width: 100%;
   }
 
   .gig-selector-pills-row::-webkit-scrollbar {
@@ -233,16 +217,17 @@
   }
 
   .gig-selector-pills-row :global(.gig-select-pill) {
-    flex: 0 0 auto;
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
     background: rgba(18, 18, 20, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     color: var(--text-muted);
     font-family: var(--font-secondary);
     font-size: 0.74rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 5px 12px;
+    padding: 6px 14px;
     border-radius: 4px;
     cursor: pointer;
     white-space: nowrap;
@@ -262,7 +247,7 @@
   }
 
   .gig-map-view {
-    height: 200px;
+    height: 220px;
     width: 100%;
     background: #000;
     flex-shrink: 0;
@@ -297,7 +282,7 @@
 
   .venue-card-name {
     font-family: var(--font-heading);
-    font-size: 1.15rem;
+    font-size: 1.18rem;
     font-weight: 800;
     color: var(--text-white);
     line-height: 1.25;
@@ -361,15 +346,17 @@
     transform: translateY(-1px);
   }
 
-  /* Venue Real-World Amenities Horizontal Scroll Row */
+  /* Venue Real-World Amenities Horizontal Scroll Row (Un-squished) */
   .venue-amenities-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     overflow-x: auto;
     scrollbar-width: none;
-    padding-bottom: 2px;
+    padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
+    width: 100%;
   }
 
   .venue-amenities-row::-webkit-scrollbar {
@@ -377,22 +364,23 @@
   }
 
   .venue-amenities-row :global(.amenity-chip) {
-    flex: 0 0 auto;
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
     background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     color: var(--text-muted);
     font-family: var(--font-secondary);
-    font-size: 0.66rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    padding: 4px 8px;
+    padding: 5px 10px;
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     white-space: nowrap;
   }
 
-  /* Gig Countdown Banner (Fixed Minimum Height & Uncrushed Layout) */
+  /* Gig Countdown Banner */
   .gig-countdown-banner {
     background: rgba(24, 24, 28, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -549,6 +537,36 @@
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  /* Proper CSS for Request a Song Button */
+  .rich-show-breakdown :global(.request-song-mailto-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    min-height: 44px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s var(--ease-snappy);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .rich-show-breakdown :global(.request-song-mailto-btn:hover) {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border-color: var(--btn-green);
+    transform: translateY(-1px);
   }
 </style>
 
