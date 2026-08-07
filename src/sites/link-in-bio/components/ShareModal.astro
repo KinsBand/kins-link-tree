@@ -52,8 +52,8 @@
   .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -61,7 +61,7 @@
     padding: 20px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s var(--ease-snappy);
   }
 
   .modal-backdrop:global(.active) {
@@ -70,16 +70,16 @@
   }
 
   .modal-content {
-    background: #0b1f18;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 28px;
+    background: rgba(18, 18, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
     width: 100%;
     max-width: 400px;
     padding: 22px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
   }
 
   .modal-header {
@@ -92,26 +92,34 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #ffffff;
-    font-size: 1rem;
+    color: var(--text-white);
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
     font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .share-header-icon {
-    color: var(--btn-green);
+    color: var(--text-muted);
   }
 
   .close-modal-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
     width: 32px;
     height: 32px;
-    border-radius: 50%;
+    border-radius: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background-color 0.18s ease;
+  }
+
+  .close-modal-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
   }
 
   .modal-body {
@@ -124,10 +132,10 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
-    padding: 10px 14px;
+    background: rgba(10, 10, 12, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 10px 12px;
   }
 
   .handle-display-box, .copy-input-wrapper {
@@ -135,15 +143,17 @@
     align-items: center;
     gap: 8px;
     flex: 1;
-    color: #ffffff;
-    font-size: 0.88rem;
-    font-weight: 700;
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
   }
 
   .copy-input-wrapper input {
     background: transparent;
     border: none;
-    color: #ffffff;
+    color: var(--text-white);
+    font-family: var(--font-secondary);
     width: 100%;
     outline: none;
     font-size: 0.82rem;
@@ -151,31 +161,36 @@
 
   .icon-only-copy-btn {
     background: var(--btn-green);
-    color: #0b1f18;
+    color: var(--btn-text-color);
     border: none;
     width: 32px;
     height: 32px;
-    border-radius: 10px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: background-color 0.18s ease;
+  }
+
+  .icon-only-copy-btn:hover {
+    background: var(--btn-green-hover);
   }
 
   .qr-box-container {
     display: flex;
     align-items: center;
     gap: 16px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    background: rgba(10, 10, 12, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
     padding: 14px;
   }
 
   .qr-canvas-wrapper {
     background: #ffffff;
     padding: 8px;
-    border-radius: 14px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -188,29 +203,37 @@
   }
 
   .qr-label-title {
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-white);
   }
 
   .qr-label-sub {
+    font-family: var(--font-secondary);
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-muted);
   }
 
   .download-qr-btn {
     margin-top: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-white);
+    border-radius: 4px;
     padding: 6px 12px;
-    font-size: 0.76rem;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
     font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    transition: background-color 0.18s ease;
+  }
+
+  .download-qr-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
   }
 </style>
 

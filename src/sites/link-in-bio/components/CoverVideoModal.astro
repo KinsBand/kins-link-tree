@@ -58,7 +58,7 @@
     padding: 16px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s var(--ease-snappy);
   }
 
   .cover-video-modal-backdrop:global(.active) {
@@ -67,18 +67,18 @@
   }
 
   .cover-video-modal-container {
-    background: #0b1f18;
-    border: 1px solid rgba(83, 198, 120, 0.3);
-    border-radius: 28px;
+    background: rgba(18, 18, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
     width: 100%;
     max-width: 440px;
     padding: 18px;
     display: flex;
     flex-direction: column;
     gap: 14px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
     transform: scale(0.95);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.25s var(--ease-snappy);
   }
 
   .cover-video-modal-backdrop:global(.active) .cover-video-modal-container {
@@ -91,32 +91,33 @@
   }
 
   .close-video-modal-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    padding: 6px 14px;
-    border-radius: 9999px;
-    font-family: var(--font-primary);
-    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
     font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.18s ease;
   }
 
   .close-video-modal-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.16);
   }
 
   .video-iframe-wrapper {
     width: 100%;
     aspect-ratio: 16 / 9;
-    border-radius: 16px;
+    border-radius: 4px;
     overflow: hidden;
     background: #000000;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .video-iframe-wrapper iframe {
@@ -132,14 +133,16 @@
   }
 
   .cover-modal-headline {
-    font-size: 0.98rem;
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-white);
   }
 
   .cover-modal-subline {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.75);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -149,11 +152,11 @@
   .social-action-bar-container {
     display: grid;
     grid-template-columns: 1.2fr 1fr 1.1fr;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.4);
+    gap: 6px;
+    background: rgba(10, 10, 12, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.12);
     padding: 6px;
-    border-radius: 16px;
+    border-radius: 4px;
     margin-top: 4px;
   }
 
@@ -163,46 +166,46 @@
     justify-content: center;
     gap: 6px;
     padding: 9px 8px;
-    border-radius: 12px;
+    border-radius: 4px;
     text-decoration: none;
-    font-family: var(--font-primary);
-    font-size: 0.75rem;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
     font-weight: 800;
-    transition: all 0.2s ease;
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease;
     white-space: nowrap;
   }
 
   .primary-action {
     background: var(--btn-green);
-    color: #0b1f18;
+    color: var(--btn-text-color);
   }
 
   .primary-action:hover {
     background: var(--btn-green-hover);
-    transform: translateY(-1.5px);
+    transform: translateY(-1px);
   }
 
   .secondary-action {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
-  .secondary-action:hover {
-    background: rgba(255, 255, 255, 0.18);
-    transform: translateY(-1.5px);
-  }
-
-  .tertiary-action {
     background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-white);
     border: 1px solid rgba(255, 255, 255, 0.12);
   }
 
+  .secondary-action:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+  }
+
+  .tertiary-action {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
   .tertiary-action:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-    transform: translateY(-1.5px);
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    transform: translateY(-1px);
   }
 </style>
 

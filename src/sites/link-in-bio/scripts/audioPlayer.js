@@ -14,6 +14,46 @@ export function initAudioPlayer() {
   const audioBarFallbackIcon = document.getElementById('audioBarFallbackIcon');
   const vaultAudioPlayer = document.getElementById('vaultAudioPlayer');
 
+  function notifyPlaybackState() {
+    window.dispatchEvent(new CustomEvent('trackPlaybackStateChanged', {
+      detail: { track: currentPlayingTrack, isPlaying: isPlayingAudio }
+    }));
+  }
+
+  function updateToggleBtnState(playing, loading = false) {
+    if (!audioBarToggleBtn) return;
+    audioBarToggleBtn.classList.remove('icon-morph');
+    void audioBarToggleBtn.offsetWidth; // Force reflow to re-trigger CSS keyframe
+    if (loading) {
+      audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+    } else {
+      audioBarToggleBtn.innerHTML = `<i class="fa-solid ${playing ? 'fa-pause' : 'fa-play'}"></i>`;
+      audioBarToggleBtn.classList.add('icon-morph');
+    }
+    notifyPlaybackState();
+  }
+
+  function openMiniPlayer() {
+    if (!bottomAudioBar) return;
+    bottomAudioBar.classList.remove('hidden', 'player-exiting');
+    void bottomAudioBar.offsetWidth; // Force reflow for slide-up transition
+    bottomAudioBar.classList.add('active-player');
+    document.body.classList.add('audio-bar-active');
+  }
+
+  function closeMiniPlayer() {
+    if (!bottomAudioBar) return;
+    bottomAudioBar.classList.remove('active-player');
+    bottomAudioBar.classList.add('player-exiting');
+    setTimeout(() => {
+      bottomAudioBar.classList.add('hidden');
+      bottomAudioBar.classList.remove('player-exiting');
+    }, 350);
+    isPlayingAudio = false;
+    currentPlayingTrack = null;
+    notifyPlaybackState();
+  }
+
   window.playTrackPreview = async function(trackObj) {
     if (currentPlayingTrack && currentPlayingTrack.title === trackObj.title) {
       isPlayingAudio = !isPlayingAudio;
@@ -21,27 +61,20 @@ export function initAudioPlayer() {
         if (isPlayingAudio) vaultAudioPlayer.play();
         else vaultAudioPlayer.pause();
       }
-      if (audioBarToggleBtn) {
-        audioBarToggleBtn.innerHTML = `<i class="fa-solid ${isPlayingAudio ? 'fa-pause' : 'fa-play'}"></i>`;
-      }
+      updateToggleBtnState(isPlayingAudio);
       showToast(isPlayingAudio ? `Resumed: "${trackObj.title}"` : `Paused: "${trackObj.title}"`);
       return;
     }
 
     currentPlayingTrack = trackObj;
-
-    if (bottomAudioBar) {
-      bottomAudioBar.classList.remove('hidden');
-      bottomAudioBar.classList.add('active-player');
-      document.body.classList.add('audio-bar-active');
-    }
+    openMiniPlayer();
 
     if (audioBarTitle) audioBarTitle.textContent = trackObj.title;
     if (audioBarArtist) audioBarArtist.textContent = trackObj.artist;
 
     let previewUrl = trackObj.previewUrl;
     if (!previewUrl) {
-      if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+      updateToggleBtnState(false, true);
       const meta = await getITunesTrackData(trackObj.artist, trackObj.title);
       if (meta) {
         if (meta.previewUrl) previewUrl = meta.previewUrl;
@@ -57,11 +90,11 @@ export function initAudioPlayer() {
       vaultAudioPlayer.src = previewUrl;
       vaultAudioPlayer.play().then(() => {
         isPlayingAudio = true;
-        if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+        updateToggleBtnState(true);
         showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
       }).catch(err => {
         isPlayingAudio = false;
-        if (audioBarToggleBtn) audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+        updateToggleBtnState(false);
       });
     }
   };
@@ -73,17 +106,15 @@ export function initAudioPlayer() {
         if (isPlayingAudio) vaultAudioPlayer.play();
         else vaultAudioPlayer.pause();
       }
-      audioBarToggleBtn.innerHTML = `<i class="fa-solid ${isPlayingAudio ? 'fa-pause' : 'fa-play'}"></i>`;
+      updateToggleBtnState(isPlayingAudio);
     });
   }
 
   if (audioBarCloseBtn) {
     audioBarCloseBtn.addEventListener('click', () => {
       if (vaultAudioPlayer) vaultAudioPlayer.pause();
-      if (bottomAudioBar) bottomAudioBar.classList.add('hidden');
+      closeMiniPlayer();
       document.body.classList.remove('audio-bar-active');
-      isPlayingAudio = false;
-      currentPlayingTrack = null;
     });
   }
 }

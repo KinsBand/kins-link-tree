@@ -54,19 +54,19 @@ import CoverVideoModal from '../sites/link-in-bio/components/CoverVideoModal.ast
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: 20px 10px;
+    padding: 24px 12px;
     flex: 1;
     box-sizing: border-box;
   }
 
   .site-container {
     width: 100%;
-    max-width: 520px;
+    max-width: 500px;
     background: var(--bg-dark-green-gradient);
     min-height: 850px;
-    border-radius: 32px;
+    border-radius: 12px;
     position: relative;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
     overflow: hidden;
   }
 
@@ -79,6 +79,7 @@ import CoverVideoModal from '../sites/link-in-bio/components/CoverVideoModal.ast
       border-radius: 0;
       box-shadow: none;
       min-height: 100vh;
+      border: none;
     }
   }
 
@@ -93,8 +94,13 @@ import CoverVideoModal from '../sites/link-in-bio/components/CoverVideoModal.ast
 
   .site-footer {
     text-align: center;
-    padding: 20px 0;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.78rem;
+    padding: 32px 0 20px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: var(--font-secondary);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: 12px;
   }
 </style>

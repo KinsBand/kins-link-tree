@@ -2,7 +2,7 @@ name: 🚀 Deploy Astro Site to GitHub Pages
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, new-ui-and-ux ]
   workflow_dispatch:
 
 permissions:

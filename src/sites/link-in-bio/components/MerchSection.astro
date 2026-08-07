@@ -1,7 +1,7 @@
 ---
 ---
 
-<section class="merch-section">
+<section class="merch-section" id="merch-section">
   <div class="members-section-header">
     <h3 class="members-section-title"><i class="fa-solid fa-shirt"></i> Official Merch</h3>
     <span class="scroll-hint-pill merch-status-pill">
@@ -24,7 +24,7 @@
 <style>
   .merch-section {
     width: 100%;
-    margin-top: 10px;
+    margin-top: 14px;
     margin-bottom: 10px;
   }
 
@@ -32,54 +32,68 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
-    padding: 0 4px;
+    margin-bottom: 14px;
+    padding: 0 2px;
   }
 
   .members-section-title {
-    font-size: 1.05rem;
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
     font-weight: 800;
-    color: var(--text-white, #ffffff);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-white);
     display: flex;
     align-items: center;
     gap: 8px;
-    letter-spacing: -0.3px;
   }
 
   .members-section-title i {
-    color: var(--btn-green);
+    color: var(--text-muted);
+    font-size: 0.85rem;
   }
 
   .scroll-hint-pill {
-    font-size: 0.74rem;
-    font-weight: 800;
-    color: var(--btn-text-color, #0b1f18);
-    background-color: var(--btn-green);
-    border: none;
-    padding: 6px 14px;
-    border-radius: 14px;
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 10px;
+    border-radius: 4px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
   }
 
   .merch-coming-soon-card {
-    background: var(--card-bg, rgba(11, 31, 24, 0.94));
-    border: 1px dashed rgba(83, 198, 120, 0.4);
-    border-radius: 24px;
-    padding: 20px;
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 18px;
     display: flex;
     align-items: center;
     gap: 16px;
+    backdrop-filter: blur(12px);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .merch-coming-soon-card:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    background: rgba(24, 24, 28, 0.9);
   }
 
   .merch-cs-icon-box {
-    font-size: 2.2rem;
-    color: var(--btn-green);
-    width: 56px;
-    height: 56px;
-    background: rgba(83, 198, 120, 0.12);
-    border-radius: 16px;
+    font-size: 1.6rem;
+    color: var(--text-white);
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -89,25 +103,30 @@
   .merch-cs-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
 
   .merch-cs-badge {
-    font-size: 0.65rem;
-    font-weight: 900;
-    color: var(--btn-green);
-    letter-spacing: 0.6px;
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   .merch-cs-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
   }
 
   .merch-cs-desc {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.75);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    color: var(--text-muted);
     line-height: 1.35;
   }
 </style>

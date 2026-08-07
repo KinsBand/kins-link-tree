@@ -10,7 +10,7 @@ const artists = [
 <section class="inspired-section" id="inspired-section">
   <div class="inspired-header">
     <h2 class="inspired-title">
-      <i class="fa-solid fa-record-vinyl inspired-title-icon fa-spin"></i>
+      <i class="fa-solid fa-record-vinyl inspired-title-icon"></i>
       <span>What Inspires Us</span>
     </h2>
   </div>
@@ -39,7 +39,7 @@ const artists = [
     flex-direction: column;
     gap: 14px;
     width: 100%;
-    margin-top: 10px;
+    margin-top: 14px;
   }
 
   .inspired-header {
@@ -49,26 +49,30 @@ const artists = [
   }
 
   .inspired-title {
-    font-size: 1.1rem;
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
     font-weight: 800;
-    color: #ffffff;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-white);
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
   .inspired-title-icon {
-    color: var(--btn-green);
+    color: var(--text-muted);
+    font-size: 0.85rem;
   }
 
   /* Horizontal Scroll Row Styling */
   .artist-filter-scroll-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    padding: 6px 4px 10px 4px;
+    padding: 2px 2px 8px 2px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
@@ -80,31 +84,32 @@ const artists = [
   .filter-pill-btn {
     flex: 0 0 auto;
     scroll-snap-align: start;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.8);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
     font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     cursor: pointer;
-    padding: 8px 16px;
-    border-radius: 9999px;
+    padding: 7px 14px;
+    border-radius: 4px;
     white-space: nowrap;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.2s var(--ease-snappy);
   }
 
   .filter-pill-btn:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--text-white);
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(26, 26, 30, 0.95);
   }
 
   .filter-pill-btn.active {
-    color: #0b1f18;
+    color: var(--btn-text-color);
     background: var(--btn-green);
     border-color: var(--btn-green);
     font-weight: 800;
-    box-shadow: 0 4px 12px rgba(83, 198, 120, 0.35);
   }
 
   .inspired-tracks-container {
@@ -116,27 +121,28 @@ const artists = [
   }
 
   .inspired-tracks-container :global(.music-card) {
-    background: var(--card-bg, rgba(11, 31, 24, 0.94));
+    background: rgba(18, 18, 20, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 12px 14px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    gap: 14px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s var(--ease-snappy), border-color 0.2s ease, background-color 0.2s ease;
   }
 
   .inspired-tracks-container :global(.music-card:hover) {
     transform: translateY(-2px);
-    border-color: rgba(83, 198, 120, 0.4);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(26, 26, 30, 0.95);
   }
 
   .inspired-tracks-container :global(.music-card-thumb) {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    background: rgba(0, 0, 0, 0.4);
+    width: 44px;
+    height: 44px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -147,8 +153,8 @@ const artists = [
   }
 
   .inspired-tracks-container :global(.fallback-disc-icon) {
-    font-size: 1.4rem;
-    color: var(--btn-green);
+    font-size: 1.2rem;
+    color: var(--text-muted);
   }
 
   .inspired-tracks-container :global(.track-artwork-img) {
@@ -157,7 +163,7 @@ const artists = [
     object-fit: cover;
     position: absolute;
     inset: 0;
-    border-radius: 12px;
+    border-radius: 4px;
   }
 
   .inspired-tracks-container :global(.music-card-info) {
@@ -168,60 +174,64 @@ const artists = [
   }
 
   .inspired-tracks-container :global(.song-title) {
+    font-family: var(--font-heading);
     font-size: 0.92rem;
-    font-weight: 800;
-    color: #ffffff;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
   }
 
   .inspired-tracks-container :global(.artist-name) {
+    font-family: var(--font-secondary);
     font-size: 0.76rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-muted);
   }
 
   .inspired-tracks-container :global(.genre-tag) {
-    font-size: 0.65rem;
-    color: var(--btn-green);
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    color: var(--text-muted);
     font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .inspired-tracks-container :global(.play-btn) {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
     background: var(--btn-green);
-    color: #0b1f18;
+    color: var(--btn-text-color);
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.88rem;
-    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    font-size: 0.82rem;
+    transition: transform 0.2s var(--ease-snappy), background-color 0.2s ease;
   }
 
   .inspired-tracks-container :global(.play-btn:hover) {
-    transform: scale(1.1);
+    transform: scale(1.08);
     background-color: var(--btn-green-hover);
-    box-shadow: 0 5px 12px rgba(83, 198, 120, 0.4);
   }
 
   .dots-pagination-container {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     margin-top: 6px;
   }
 
   .dots-pagination-container :global(.inspired-dot) {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.25);
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.2);
     border: none;
     cursor: pointer;
     padding: 0;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.2s var(--ease-snappy);
   }
 
   .dots-pagination-container :global(.inspired-dot:hover) {
@@ -230,8 +240,7 @@ const artists = [
 
   .dots-pagination-container :global(.inspired-dot.active) {
     background: var(--btn-green);
-    width: 24px;
-    border-radius: 10px;
+    width: 18px;
   }
 </style>
 
@@ -244,6 +253,43 @@ const artists = [
 
   let currentArtistKey = 'the-cure';
   let currentPageIndex = 0;
+
+  let currentPlaybackTrack: any = null;
+  let isCurrentlyPlaying = false;
+
+  function updateCardStates(currentTrack: any, isPlaying: boolean) {
+    if (!container) return;
+    const cards = container.querySelectorAll('.music-card');
+    cards.forEach((card: any) => {
+      const songTitle = card.dataset.songTitle;
+      const playBtn = card.querySelector('.play-btn');
+      const thumb = card.querySelector('.music-card-thumb');
+      if (!playBtn) return;
+
+      const isCurrent = currentTrack && currentTrack.title === songTitle;
+      const playingThis = isCurrent && isPlaying;
+
+      playBtn.classList.remove('card-icon-morph');
+      void playBtn.offsetWidth; // Force reflow
+      playBtn.innerHTML = `<i class="fa-solid ${playingThis ? 'fa-pause' : 'fa-play'}"></i>`;
+      playBtn.classList.add('card-icon-morph');
+
+      if (playingThis) {
+        card.classList.add('is-playing');
+        if (thumb) thumb.classList.add('vinyl-spin-anim');
+      } else {
+        card.classList.remove('is-playing');
+        if (thumb) thumb.classList.remove('vinyl-spin-anim');
+      }
+    });
+  }
+
+  window.addEventListener('trackPlaybackStateChanged', (e: any) => {
+    const { track, isPlaying } = e.detail || {};
+    currentPlaybackTrack = track;
+    isCurrentlyPlaying = isPlaying;
+    updateCardStates(track, isPlaying);
+  });
 
   function renderArtistPage(artistKey: string, pageIndex: number = 0) {
     if (!container) return;
@@ -283,9 +329,10 @@ const artists = [
       tracks.forEach((track: any) => {
         const card = document.createElement('div');
         card.className = 'music-card';
+        card.dataset.songTitle = track.title;
         card.innerHTML = `
           <div class="music-card-thumb">
-            <i class="fa-solid fa-compact-disc fa-spin fallback-disc-icon"></i>
+            <i class="fa-solid fa-compact-disc fallback-disc-icon"></i>
             <img class="track-artwork-img hidden" alt="${track.title}">
           </div>
           <div class="music-card-info">
@@ -293,7 +340,7 @@ const artists = [
             <span class="artist-name">${track.artist}</span>
             <span class="genre-tag">${track.genre}</span>
           </div>
-          <button class="play-btn" aria-label="Play song">
+          <button class="play-btn card-icon-morph" aria-label="Play song">
             <i class="fa-solid fa-play"></i>
           </button>
         `;
@@ -329,6 +376,9 @@ const artists = [
 
         container.appendChild(card);
       });
+
+      // Update card states for newly rendered tracks
+      updateCardStates(currentPlaybackTrack, isCurrentlyPlaying);
 
       container.style.opacity = '1';
       container.style.transform = 'translateY(0)';
