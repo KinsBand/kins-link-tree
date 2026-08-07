@@ -46,6 +46,31 @@
 
   <div class="bottom-audio-bar hidden" id="bottomAudioBar">
     <audio id="vaultAudioPlayer" preload="none"></audio>
+
+    <!-- Vinyl Stylus riding on top of the card timeline -->
+    <div class="vinyl-stylus-wrapper" id="vinylStylusWrapper">
+      <svg class="vinyl-stylus-svg" viewBox="0 0 28 45" width="28" height="45">
+        <defs>
+          <linearGradient id="kins_aluminum" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#a1a1aa" />
+            <stop offset="50%" stop-color="#f4f4f5" />
+            <stop offset="100%" stop-color="#71717a" />
+          </linearGradient>
+        </defs>
+        <!-- Brushed Metal Stem -->
+        <line x1="14" y1="2" x2="14" y2="23" stroke="url(#kins_aluminum)" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Minimalist Dark Cartridge Head -->
+        <rect x="7" y="23" width="14" height="11" rx="2" fill="#09090b" stroke="#3f3f46" stroke-width="1"/>
+        <rect x="9" y="25" width="10" height="2.5" fill="#ffffff" rx="1"/>
+        <!-- Stylus Needle Pointer -->
+        <line x1="14" y1="34" x2="14" y2="39" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+        <polygon points="14,41 12,38 16,38" fill="#ffffff"/>
+      </svg>
+    </div>
+
+    <!-- Setlist-style Card Timeline Fill Progress -->
+    <div class="audio-bar-timeline-progress" id="audioBarTimelineProgress"></div>
+
     <div class="audio-bar-content">
       <div class="audio-bar-left">
         <div class="audio-bar-icon-box">
@@ -54,7 +79,10 @@
         </div>
         <div class="audio-bar-details">
           <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
-          <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
+          <div class="audio-bar-meta-row">
+            <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
+            <span class="audio-bar-time" id="audioBarTime">0:00 / 0:30</span>
+          </div>
         </div>
       </div>
       <div class="audio-bar-right">
@@ -221,12 +249,21 @@
     padding: 10px 14px;
     backdrop-filter: blur(16px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+    position: relative;
+    overflow: visible;
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
     
     /* Fluid entrance and exit transition */
     opacity: 0;
     transform: translateY(32px) scale(0.96);
     transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
                 transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .bottom-audio-bar:hover {
+    border-color: rgba(255, 255, 255, 0.28);
   }
 
   .bottom-audio-bar.active-player {
@@ -239,10 +276,60 @@
     transform: translateY(32px) scale(0.96);
   }
 
+  /* Setlist Card Style Progress Fill */
+  .audio-bar-timeline-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(242, 240, 235, 0.22) 0%, rgba(242, 240, 235, 0.12) 100%);
+    border-radius: 5px 0 0 5px;
+    pointer-events: none;
+    will-change: width;
+    z-index: 1;
+  }
+
+  .bottom-audio-bar.is-scrubbing .audio-bar-timeline-progress {
+    background: linear-gradient(90deg, rgba(242, 240, 235, 0.35) 0%, rgba(242, 240, 235, 0.2) 100%);
+  }
+
+  /* Vinyl Stylus Riding on Top of the Mini Player Card */
+  .vinyl-stylus-wrapper {
+    position: absolute;
+    top: -36px;
+    left: 0%;
+    transform: translateX(-50%);
+    z-index: 10;
+    pointer-events: none;
+    will-change: left;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+  }
+
+  .vinyl-stylus-svg {
+    display: block;
+    transform-origin: 14px 2px; /* Stem top center */
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), filter 0.15s ease;
+  }
+
+  .bottom-audio-bar.is-scrubbing .vinyl-stylus-svg {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+  }
+
+  .vinyl-stylus-wrapper.tilt-forward .vinyl-stylus-svg {
+    transform: rotate(14deg) scale(1.05);
+  }
+
+  .vinyl-stylus-wrapper.tilt-backward .vinyl-stylus-svg {
+    transform: rotate(-14deg) scale(1.05);
+  }
+
   .audio-bar-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: relative;
+    z-index: 2;
   }
 
   .audio-bar-left {
@@ -282,10 +369,25 @@
     color: var(--text-white);
   }
 
+  .audio-bar-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1px;
+  }
+
   .audio-bar-artist {
     font-family: var(--font-secondary);
     font-size: 0.7rem;
     color: var(--text-muted);
+  }
+
+  .audio-bar-time {
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.04em;
   }
 
   .audio-bar-right {
