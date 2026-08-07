@@ -1,13 +1,22 @@
 ---
-const socials = [
-  { name: "Substack", icon: "fa-solid fa-bookmark", url: "https://kinsbandoffical.substack.com", platform: "substack" },
-  { name: "Tiktok", icon: "fa-brands fa-tiktok", url: "https://tiktok.com/@KinsBandOfficial", platform: "tiktok" },
-  { name: "Youtube", icon: "fa-brands fa-youtube", url: "https://youtube.com/@KinsBandOfficial", platform: "youtube" },
-  { name: "Twitter", icon: "fa-brands fa-x-twitter", url: "https://x.com/KinsBandOfficial", platform: "twitter" },
-  { name: "Twitch", icon: "fa-brands fa-twitch", url: "https://twitch.tv/KinsBandOfficial", platform: "twitch" },
-  { name: "Discord", icon: "fa-brands fa-discord", url: "https://discord.gg", platform: "discord" },
+const primarySocials = [
   { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com/KinsBandOfficial", platform: "instagram" },
-  { name: "Linkedin", icon: "fa-brands fa-linkedin-in", url: "https://linkedin.com/company/KinsBandOfficial", platform: "linkedin" }
+  { name: "TikTok", icon: "fa-brands fa-tiktok", url: "https://tiktok.com/@KinsBandOfficial", platform: "tiktok" },
+  { name: "YouTube", icon: "fa-brands fa-youtube", url: "https://youtube.com/@KinsBandOfficial", platform: "youtube" },
+  { name: "Facebook", icon: "fa-brands fa-facebook", url: "https://facebook.com/KinsBandOfficial", platform: "facebook" },
+  { name: "Substack", icon: "fa-solid fa-bookmark", url: "https://kinsbandoffical.substack.com", platform: "substack" },
+  { name: "Threads", icon: "fa-brands fa-threads", url: "https://threads.net/@KinsBandOfficial", platform: "threads" }
+];
+
+const secondarySocials = [
+  { name: "Twitter / X", icon: "fa-brands fa-x-twitter", url: "https://x.com/KinsBandOfficial", platform: "twitter" },
+  { name: "Snapchat", icon: "fa-brands fa-snapchat", url: "https://snapchat.com/add/KinsBandOfficial", platform: "snapchat" },
+  { name: "Reddit", icon: "fa-brands fa-reddit-alien", url: "https://reddit.com/r/KinsBand", platform: "reddit" },
+  { name: "Discord", icon: "fa-brands fa-discord", url: "https://discord.gg", platform: "discord" },
+  { name: "Patreon", icon: "fa-brands fa-patreon", url: "https://patreon.com/KinsBand", platform: "patreon" },
+  { name: "Twitch", icon: "fa-brands fa-twitch", url: "https://twitch.tv/KinsBandOfficial", platform: "twitch" },
+  { name: "Pinterest", icon: "fa-brands fa-pinterest", url: "https://pinterest.com/KinsBandOfficial", platform: "pinterest" },
+  { name: "LinkedIn", icon: "fa-brands fa-linkedin-in", url: "https://linkedin.com/company/KinsBandOfficial", platform: "linkedin" }
 ];
 
 const streams = [
@@ -36,7 +45,7 @@ const streams = [
 
   <div class="tab-content active" id="socialsTab">
     <div class="buttons-list">
-      {socials.map((link) => (
+      {primarySocials.map((link) => (
         <a href={link.url} target="_blank" rel="noopener" class="green-link-btn" data-platform={link.platform}>
           <div class="btn-icon"><i class={link.icon}></i></div>
           <span class="btn-text">{link.name}</span>
@@ -44,6 +53,24 @@ const streams = [
         </a>
       ))}
     </div>
+
+    <!-- Expandable Drawer for Extended Socials -->
+    <div class="more-socials-container" id="moreSocialsContainer">
+      <div class="buttons-list more-socials-list">
+        {secondarySocials.map((link) => (
+          <a href={link.url} target="_blank" rel="noopener" class="green-link-btn" data-platform={link.platform}>
+            <div class="btn-icon"><i class={link.icon}></i></div>
+            <span class="btn-text">{link.name}</span>
+            <i class="fa-solid fa-arrow-up-right-from-square btn-arrow"></i>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <button class="toggle-more-socials-btn" id="toggleMoreSocialsBtn" type="button" aria-label="Toggle all social channels">
+      <span id="toggleSocialsText">Show All Channels (+8)</span>
+      <i class="fa-solid fa-chevron-down" id="toggleSocialsIcon"></i>
+    </button>
   </div>
 
   <div class="tab-content" id="streamsTab">
@@ -84,6 +111,54 @@ const streams = [
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+
+  .more-socials-container {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    margin-top: 0;
+    transition: max-height 0.4s var(--ease-snappy), opacity 0.3s ease, margin-top 0.3s ease;
+  }
+
+  .more-socials-container.active-drawer {
+    max-height: 800px;
+    opacity: 1;
+    margin-top: 10px;
+  }
+
+  .toggle-more-socials-btn {
+    width: 100%;
+    margin-top: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
+    padding: 11px 16px;
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .toggle-more-socials-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .toggle-more-socials-btn i {
+    font-size: 0.75rem;
+    transition: transform 0.3s ease;
+  }
+
+  .toggle-more-socials-btn.active i {
+    transform: rotate(180deg);
   }
 
   .green-link-btn {
@@ -157,4 +232,23 @@ const streams = [
 <script>
   import { setupSegmentedSwitcher } from '../scripts/tabs.js';
   setupSegmentedSwitcher('.tabbed-links-section .switcher-tab', '.tabbed-links-section .tab-content');
+
+  const toggleBtn = document.getElementById('toggleMoreSocialsBtn');
+  const drawer = document.getElementById('moreSocialsContainer');
+  const textEl = document.getElementById('toggleSocialsText');
+
+  if (toggleBtn && drawer) {
+    toggleBtn.addEventListener('click', () => {
+      const isOpen = drawer.classList.contains('active-drawer');
+      if (isOpen) {
+        drawer.classList.remove('active-drawer');
+        toggleBtn.classList.remove('active');
+        if (textEl) textEl.textContent = 'Show All Channels (+8)';
+      } else {
+        drawer.classList.add('active-drawer');
+        toggleBtn.classList.add('active');
+        if (textEl) textEl.textContent = 'Show Less';
+      }
+    });
+  }
 </script>
