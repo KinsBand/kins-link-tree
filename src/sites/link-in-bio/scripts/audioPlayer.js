@@ -1,5 +1,5 @@
 import { showToast } from './toast.js';
-import { getITunesTrackData } from './inspirationVault.js';
+import { getITunesTrackData, loadAlbumArt } from './inspirationVault.js';
 
 let isPlayingAudio = false;
 let currentPlayingTrack = null;
@@ -35,9 +35,12 @@ export function initAudioPlayer() {
 
   function setMiniPlayerCover(url) {
     if (url && audioBarCoverImg) {
-      audioBarCoverImg.src = url;
-      audioBarCoverImg.classList.remove('hidden');
-      if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'none';
+      // Use progressive loading for mini player too
+      loadAlbumArt(audioBarCoverImg, url).then(() => {
+        if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'none';
+      }).catch(() => {
+        if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'flex';
+      });
     } else if (audioBarCoverImg) {
       audioBarCoverImg.src = '';
       audioBarCoverImg.classList.add('hidden');

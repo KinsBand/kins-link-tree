@@ -1,36 +1,138 @@
 import { showToast } from './toast.js';
 
 const ITUNES_CACHE = {};
+const IMAGE_PRELOAD_CACHE = new Map();
+
+// Optimized image loader with progressive quality for low-end devices
+export function loadAlbumArt(imgElement, artworkUrl, highResUrl = null) {
+  if (!imgElement) return Promise.resolve(false);
+  
+  // Check if already cached in memory
+  if (IMAGE_PRELOAD_CACHE.has(artworkUrl)) {
+    imgElement.src = artworkUrl;
+    imgElement.classList.remove('hidden');
+    return Promise.resolve(true);
+  }
+  
+  return new Promise((resolve) => {
+    const tempImg = new Image();
+    
+    // For low-end devices: use smaller thumbnail first (100x100)
+    const thumbUrl = artworkUrl ? artworkUrl.replace(/600x600bb\./, '100x100bb.').replace(/600x600/, '100x100') : artworkUrl;
+    
+    tempImg.onload = () => {
+      IMAGE_PRELOAD_CACHE.set(thumbUrl, tempImg);
+      imgElement.src = thumbUrl;
+      imgElement.classList.remove('hidden');
+      
+      // Progressive enhancement: load high-res in background if available
+      if (highResUrl && highResUrl !== thumbUrl) {
+        const highResImg = new Image();
+        highResImg.onload = () => {
+          IMAGE_PRELOAD_CACHE.set(highResUrl, highResImg);
+          if (imgElement.parentNode && imgElement.parentNode.contains(imgElement)) {
+            imgElement.src = highResUrl;
+          }
+        };
+        highResImg.onerror = () => resolve(true);
+        highResImg.src = highResUrl;
+      }
+      resolve(true);
+    };
+    
+    tempImg.onerror = () => {
+      // Fallback to original URL
+      imgElement.src = artworkUrl;
+      imgElement.classList.remove('hidden');
+      resolve(false);
+    };
+    
+    tempImg.src = thumbUrl;
+  });
+}
+
+// Bulk prefetch for multiple tracks - fires all requests in parallel
+export async function prefetchTrackArtwork(tracks) {
+  if (!tracks || tracks.length === 0) return;
+  
+  const promises = tracks.map(async (track) => {
+    if (track.coverUrl || track.artworkUrl) {
+      const url = track.coverUrl || track.artworkUrl;
+      if (!IMAGE_PRELOAD_CACHE.has(url)) {
+        const img = new Image();
+        img.src = url;
+        IMAGE_PRELOAD_CACHE.set(url, img);
+      }
+    } else if (track.artist && track.title) {
+      // Fetch metadata in background
+      getITunesTrackData(track.artist, track.title).then(meta => {
+        if (meta && meta.artworkUrl) {
+          track.coverUrl = meta.artworkUrl;
+          track.artworkUrl = meta.artworkUrl;
+          const img = new Image();
+          img.src = meta.artworkUrl;
+          IMAGE_PRELOAD_CACHE.set(meta.artworkUrl, img);
+        }
+      });
+    }
+  });
+  
+  // Don't wait for completion - fire and forget for speed
+  Promise.allSettled(promises);
+}
 
 export async function getITunesTrackData(artist, title) {
   const cacheKey = `${artist} - ${title}`.toLowerCase();
   if (ITUNES_CACHE[cacheKey]) return ITUNES_CACHE[cacheKey];
-
+  
   try {
-    const cleanTitle = title.replace(/[!?"\']/g, '').trim();
+    const cleanTitle = title.replace(/[!?"\\']/g, '').trim();
     const query = encodeURIComponent(`${artist} ${cleanTitle}`);
-    let res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`);
+    
+    // Use AbortController for timeout on slow connections
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+    
+    let res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(timeoutId);
     let data = await res.json();
 
     if (!data.results || data.results.length === 0) {
       const fallbackQuery = encodeURIComponent(cleanTitle);
-      res = await fetch(`https://itunes.apple.com/search?term=${fallbackQuery}&entity=song&limit=1`);
+      const fallbackController = new AbortController();
+      const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 3000);
+      
+      res = await fetch(`https://itunes.apple.com/search?term=${fallbackQuery}&entity=song&limit=1`, {
+        signal: fallbackController.signal,
+        headers: { 'Accept': 'application/json' }
+      });
+      clearTimeout(fallbackTimeoutId);
       data = await res.json();
     }
 
     if (data.results && data.results.length > 0) {
       const item = data.results[0];
       const rawArt = item.artworkUrl100 || item.artworkUrl60 || null;
-      const artworkUrl = rawArt ? rawArt.replace(/100x100bb?\./, '600x600bb.').replace(/100x100/, '600x600') : null;
+      // Get both low-res (for instant display) and high-res (for retina/zoom)
+      const lowResUrl = rawArt;
+      const highResUrl = rawArt ? rawArt.replace(/100x100bb?\./, '600x600bb.').replace(/100x100/, '600x600') : null;
       const previewUrl = item.previewUrl || null;
-      const result = { artworkUrl, rawArtworkUrl: rawArt, previewUrl };
+      const result = { 
+        artworkUrl: highResUrl, 
+        rawArtworkUrl: lowResUrl, 
+        previewUrl,
+        isHighResAvailable: !!highResUrl
+      };
       ITUNES_CACHE[cacheKey] = result;
       return result;
     }
   } catch (e) {
     console.warn('iTunes API fetch error:', e);
   }
-  const fallback = { artworkUrl: null, previewUrl: null };
+  const fallback = { artworkUrl: null, rawArtworkUrl: null, previewUrl: null, isHighResAvailable: false };
   ITUNES_CACHE[cacheKey] = fallback;
   return fallback;
 }
