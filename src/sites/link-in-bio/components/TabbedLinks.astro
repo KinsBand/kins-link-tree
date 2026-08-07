@@ -32,6 +32,7 @@ const streams = [
         <a href={link.url} target="_blank" rel="noopener" class="green-link-btn" data-platform={link.platform}>
           <div class="btn-icon"><i class={link.icon}></i></div>
           <span class="btn-text">{link.name}</span>
+          <i class="fa-solid fa-arrow-up-right-from-square btn-arrow"></i>
         </a>
       ))}
     </div>
@@ -43,6 +44,7 @@ const streams = [
         <a href={link.url} target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform={link.platform}>
           <div class="btn-icon"><i class={link.icon}></i></div>
           <span class="btn-text">{link.name}</span>
+          <i class="fa-solid fa-arrow-up-right-from-square btn-arrow"></i>
         </a>
       ))}
     </div>
@@ -57,35 +59,37 @@ const streams = [
   }
 
   .segmented-switcher-box {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(18, 18, 20, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 20px;
-    padding: 4px;
+    border-radius: 6px;
+    padding: 3px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 4px;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(12px);
   }
 
   .switcher-tab {
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.75);
-    font-family: var(--font-primary);
-    font-size: 0.98rem;
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
     font-weight: 700;
-    padding: 10px 0;
-    border-radius: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 9px 0;
+    border-radius: 4px;
     cursor: pointer;
     text-align: center;
-    transition: all 0.25s ease;
+    transition: all 0.2s var(--ease-snappy);
   }
 
   .switcher-tab.active {
-    background: var(--btn-green, #53c678);
-    color: var(--btn-text-color, #0b1f18);
+    background: var(--btn-green);
+    color: var(--btn-text-color);
     font-weight: 800;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
   .tab-content {
@@ -94,61 +98,85 @@ const streams = [
 
   .tab-content:global(.active) {
     display: block;
-    animation: fadeInTab 0.3s ease forwards;
+    animation: fadeInTab 0.25s var(--ease-snappy) forwards;
   }
 
   @keyframes fadeInTab {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   .buttons-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
   .green-link-btn {
-    background-color: var(--btn-green);
-    color: var(--btn-text-color, #0b1f18);
-    border-radius: 16px;
-    padding: 14px 14px;
+    background: rgba(18, 18, 20, 0.85);
+    color: var(--text-white);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 14px 18px;
+    min-height: 52px;
     text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     position: relative;
-    box-shadow: 0 6px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
     cursor: pointer;
     overflow: hidden;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s var(--ease-snappy), border-color 0.2s ease, background-color 0.2s ease;
     user-select: none;
   }
 
   .green-link-btn:hover {
-    background-color: var(--btn-green-hover);
+    background: rgba(26, 26, 30, 0.95);
+    border-color: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
-    box-shadow: 0 8px 0 var(--btn-green-shadow, rgba(0,0,0,0.25));
+  }
+
+  .green-link-btn:active {
+    transform: translateY(0);
+    background: rgba(35, 35, 40, 1);
   }
 
   .btn-icon {
-    font-size: 1.35rem;
+    font-size: 1.15rem;
     width: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 10px;
-    color: var(--btn-text-color, #0b1f18);
+    margin-right: 12px;
+    color: var(--text-white);
     flex-shrink: 0;
+    transition: transform 0.2s var(--ease-snappy);
+  }
+
+  .green-link-btn:hover .btn-icon {
+    transform: scale(1.1);
   }
 
   .btn-text {
     font-family: var(--font-secondary);
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     flex: 1;
     text-align: left;
-    color: var(--btn-text-color, #0b1f18);
+    color: var(--text-white);
+  }
+
+  .btn-arrow {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    transition: transform 0.2s var(--ease-snappy), color 0.2s ease;
+  }
+
+  .green-link-btn:hover .btn-arrow {
+    color: var(--text-white);
+    transform: translate(2px, -2px);
   }
 </style>
 

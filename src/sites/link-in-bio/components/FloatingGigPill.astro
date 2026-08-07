@@ -25,18 +25,25 @@
 
   .gig-pill-inner {
     background: var(--btn-green);
-    color: #0b1f18;
+    color: var(--btn-text-color);
     padding: 10px 16px;
-    border-radius: 9999px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    font-family: var(--font-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    font-family: var(--font-secondary);
+    transition: transform 0.2s var(--ease-snappy), background-color 0.2s ease;
+  }
+
+  .floating-gig-pill-container:hover .gig-pill-inner {
+    transform: translateY(-2px);
+    background: var(--btn-green-hover);
   }
 
   .pill-map-icon {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .gig-pill-text-box {
@@ -45,18 +52,24 @@
   }
 
   .gig-pill-tag {
-    font-size: 0.65rem;
-    font-weight: 900;
+    font-size: 0.58rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.08em;
   }
 
   .gig-pill-location {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 800;
+    letter-spacing: -0.01em;
   }
 
   .pill-arrow-icon {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
+    transition: transform 0.2s var(--ease-snappy);
+  }
+
+  .floating-gig-pill-container:hover .pill-arrow-icon {
+    transform: translateX(2px);
   }
 </style>

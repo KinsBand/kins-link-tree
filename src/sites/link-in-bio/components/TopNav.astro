@@ -24,35 +24,35 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    margin-top: 10px;
+    gap: 10px;
+    padding: 10px 14px;
+    margin-top: 6px;
     position: sticky;
     top: 10px;
     z-index: 100;
     width: 100%;
     box-sizing: border-box;
-    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                filter 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.3s var(--ease-snappy),
+                filter 0.3s var(--ease-snappy),
+                transform 0.3s var(--ease-snappy);
   }
 
   .top-nav:global(.nav-hidden) {
     opacity: 0;
-    filter: blur(12px);
+    filter: blur(8px);
     pointer-events: none;
-    transform: translateY(-12px);
+    transform: translateY(-10px);
   }
 
   .top-subscribe-wrapper, #shareBtn {
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
 
   .top-nav.search-active .top-subscribe-wrapper,
   .top-nav.search-active #shareBtn {
     opacity: 0;
     pointer-events: none;
-    transform: scale(0.9);
+    transform: scale(0.92);
   }
 
   .top-subscribe-wrapper {
@@ -66,18 +66,17 @@
 
   .free-badge-pill {
     position: absolute;
-    top: -10px;
-    left: 6px;
-    background: #ffffff;
-    color: #002217;
-    font-family: var(--font-primary, 'Outfit', sans-serif);
-    font-weight: 900;
-    font-size: 0.55rem;
-    padding: 2px 7px;
-    border-radius: 8px;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-    border: 1.5px solid #002217;
+    top: -8px;
+    left: 4px;
+    background: var(--text-white);
+    color: var(--text-dark);
+    font-family: var(--font-secondary);
+    font-weight: 800;
+    font-size: 0.52rem;
+    padding: 1px 5px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    border: 1px solid rgba(0, 0, 0, 0.4);
     z-index: 15;
     text-transform: uppercase;
     pointer-events: none;
@@ -85,84 +84,88 @@
   }
 
   .nav-pill-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.9);
-    padding: 8px 14px;
-    border-radius: 9999px;
-    font-family: var(--font-primary, 'Outfit', sans-serif);
-    font-size: 0.76rem;
+    background: rgba(18, 18, 20, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-white);
+    padding: 7px 14px;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.08em;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     text-align: center;
-    box-shadow: 0 3.5px 0 rgba(0, 0, 0, 0.3);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    backdrop-filter: blur(12px);
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease, border-color 0.18s ease;
     white-space: nowrap;
     box-sizing: border-box;
     user-select: none;
     flex: 0 0 auto;
+    min-height: 38px;
   }
 
   .nav-pill-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.35);
     color: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 5.5px 0 rgba(0, 0, 0, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .nav-pill-btn:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.2);
   }
 
   #topSubscribeBtn,
   #shareBtn {
     background-color: var(--btn-green);
-    color: var(--btn-text-color, #0b1f18);
+    color: var(--btn-text-color);
     border-color: transparent;
-    box-shadow: 0 3.5px 0 var(--btn-green-shadow, rgba(0, 0, 0, 0.25));
     font-weight: 800;
   }
 
   #topSubscribeBtn:hover,
   #shareBtn:hover {
     background-color: var(--btn-green-hover);
-    box-shadow: 0 5.5px 0 var(--btn-green-shadow, rgba(0, 0, 0, 0.25));
+    color: #000000;
   }
 
   /* Header Central Search Pill Button */
   .header-search-pill-btn {
     flex: 1 1 auto;
-    max-width: 220px;
-    background: rgba(17, 36, 27, 0.85);
-    border: 1px solid rgba(83, 198, 120, 0.35);
-    color: rgba(255, 255, 255, 0.7);
-    padding: 7px 14px;
-    border-radius: 9999px;
-    font-family: var(--font-primary);
-    font-size: 0.78rem;
-    font-weight: 600;
+    max-width: 200px;
+    background: rgba(18, 18, 20, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
     gap: 8px;
-    backdrop-filter: blur(10px);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(12px);
+    transition: all 0.2s var(--ease-snappy);
+    min-height: 38px;
   }
 
   .header-search-pill-btn:hover {
-    background: rgba(25, 50, 38, 0.95);
-    border-color: var(--btn-green);
-    color: #ffffff;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(83, 198, 120, 0.25);
+    background: rgba(28, 28, 32, 0.9);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--text-white);
   }
 
   .search-pill-icon {
-    font-size: 0.8rem;
-    color: var(--btn-green);
+    font-size: 0.75rem;
+    color: var(--text-muted);
   }
 
   .search-pill-placeholder {

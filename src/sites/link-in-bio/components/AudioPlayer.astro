@@ -8,7 +8,7 @@
       <div class="audio-bar-left">
         <div class="audio-bar-icon-box">
           <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover">
-          <i class="fa-solid fa-compact-disc fa-spin audio-icon-anim" id="audioBarFallbackIcon"></i>
+          <i class="fa-solid fa-compact-disc audio-icon-anim" id="audioBarFallbackIcon"></i>
         </div>
         <div class="audio-bar-details">
           <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
@@ -41,12 +41,28 @@
 
   .bottom-audio-bar {
     pointer-events: auto;
-    background: rgba(11, 31, 24, 0.95);
-    border: 1px solid rgba(83, 198, 120, 0.4);
-    border-radius: 20px;
+    background: rgba(18, 18, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
     padding: 10px 14px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+    
+    /* Fluid entrance and exit transition */
+    opacity: 0;
+    transform: translateY(32px) scale(0.96);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .bottom-audio-bar.active-player {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .bottom-audio-bar.player-exiting {
+    opacity: 0;
+    transform: translateY(32px) scale(0.96);
   }
 
   .audio-bar-content {
@@ -64,13 +80,14 @@
   .audio-bar-icon-box {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    color: var(--btn-green);
+    color: var(--text-white);
   }
 
   .audio-bar-cover-img {
@@ -85,14 +102,16 @@
   }
 
   .audio-bar-title {
-    font-size: 0.84rem;
-    font-weight: 800;
-    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-white);
   }
 
   .audio-bar-artist {
-    font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    color: var(--text-muted);
   }
 
   .audio-bar-right {
@@ -102,16 +121,47 @@
   }
 
   .audio-bar-toggle-btn, .audio-bar-close-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #ffffff;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 0.78rem;
+    transition: background-color 0.18s ease;
+  }
+
+  .audio-bar-toggle-btn:hover, .audio-bar-close-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  /* Animated Icon Morph Transition for Play/Pause */
+  .audio-bar-toggle-btn i {
+    display: inline-block;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  }
+
+  .audio-bar-toggle-btn.icon-morph i {
+    animation: iconMorphAnim 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes iconMorphAnim {
+    0% {
+      transform: scale(0.4) rotate(-90deg);
+      opacity: 0.2;
+    }
+    60% {
+      transform: scale(1.18) rotate(15deg);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
   }
 </style>
 

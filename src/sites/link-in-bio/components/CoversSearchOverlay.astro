@@ -44,7 +44,7 @@ const categories = [
   .covers-search-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(11, 20, 16, 0.96);
+    background: rgba(10, 10, 12, 0.96);
     backdrop-filter: blur(16px);
     z-index: 950;
     display: flex;
@@ -52,8 +52,8 @@ const categories = [
     padding: 16px 20px;
     opacity: 0;
     pointer-events: none;
-    transform: scale(0.92);
-    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(0.95);
+    transition: opacity 0.25s var(--ease-snappy), transform 0.25s var(--ease-snappy);
   }
 
   .covers-search-overlay:global(.active) {
@@ -75,47 +75,50 @@ const categories = [
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(17, 36, 27, 0.95);
-    border: 1px solid var(--btn-green);
-    border-radius: 9999px;
-    padding: 10px 18px;
-    box-shadow: 0 4px 16px rgba(83, 198, 120, 0.25);
+    background: rgba(18, 18, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 4px;
+    padding: 10px 14px;
+    transition: border-color 0.2s ease;
+  }
+
+  .expanded-search-input-box:focus-within {
+    border-color: rgba(255, 255, 255, 0.35);
   }
 
   .search-box-icon {
-    font-size: 1rem;
-    color: var(--btn-green);
+    font-size: 0.9rem;
+    color: var(--text-muted);
   }
 
   .expanded-search-input-box input {
     background: transparent;
     border: none;
     outline: none;
-    color: #ffffff;
-    font-family: var(--font-primary);
-    font-size: 0.92rem;
-    font-weight: 600;
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 500;
     width: 100%;
   }
 
   .close-overlay-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    transition: background-color 0.18s ease;
   }
 
   .close-overlay-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.08);
+    background: rgba(255, 255, 255, 0.16);
   }
 
   .search-overlay-body {
@@ -140,30 +143,35 @@ const categories = [
   }
 
   .cover-category-pill {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.8);
-    font-family: var(--font-primary);
-    font-size: 0.78rem;
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.75rem;
     font-weight: 700;
-    padding: 6px 14px;
-    border-radius: 9999px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 4px;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: all 0.18s var(--ease-snappy);
   }
 
   .cover-category-pill.active {
     background: var(--btn-green);
-    color: #0b1f18;
+    color: var(--btn-text-color);
     border-color: var(--btn-green);
     font-weight: 800;
   }
 
   .covers-section-title {
-    font-size: 1rem;
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
     font-weight: 800;
-    color: #ffffff;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-white);
     margin-top: 4px;
   }
 
@@ -174,28 +182,28 @@ const categories = [
   }
 
   .covers-results-list :global(.cover-result-card) {
-    background: var(--card-bg, rgba(11, 31, 24, 0.94));
+    background: rgba(18, 18, 20, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 10px 12px;
     display: flex;
     align-items: center;
     gap: 12px;
     height: 64px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    backdrop-filter: blur(12px);
+    transition: transform 0.18s var(--ease-snappy), border-color 0.18s ease;
   }
 
   .covers-results-list :global(.cover-result-card:hover) {
     transform: translateY(-2px);
-    border-color: var(--btn-green);
-    box-shadow: 0 6px 18px rgba(83, 198, 120, 0.2);
+    border-color: rgba(255, 255, 255, 0.28);
   }
 
   .covers-results-list :global(.cover-card-thumb-box) {
     width: 60px;
     height: 44px;
-    border-radius: 10px;
+    border-radius: 4px;
     overflow: hidden;
     position: relative;
     flex-shrink: 0;
@@ -215,7 +223,7 @@ const categories = [
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
+    color: var(--text-white);
     font-size: 0.8rem;
   }
 
@@ -227,33 +235,35 @@ const categories = [
   }
 
   .covers-results-list :global(.cover-card-title) {
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-white);
   }
 
   .covers-results-list :global(.cover-card-sub) {
-    font-size: 0.74rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    color: var(--text-muted);
   }
 
   .covers-results-list :global(.artist-highlight) {
-    color: var(--btn-green);
+    color: var(--text-white);
     font-weight: 700;
   }
 
   .covers-results-list :global(.cover-card-action-btn) {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
     background: var(--btn-green);
-    color: #0b1f18;
+    color: var(--btn-text-color);
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   /* Request a Song Card & Form Styles */
@@ -262,14 +272,14 @@ const categories = [
   }
 
   .covers-results-list :global(.cant-find-card) {
-    background: rgba(17, 42, 32, 0.95);
-    border: 1px solid rgba(83, 198, 120, 0.4);
-    border-radius: 20px;
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 14px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px);
   }
 
   .covers-results-list :global(.cant-find-header) {
@@ -279,27 +289,29 @@ const categories = [
   }
 
   .covers-results-list :global(.cant-find-icon-badge) {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
     background: var(--btn-green);
-    color: #0b1f18;
+    color: var(--btn-text-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     flex-shrink: 0;
   }
 
   .covers-results-list :global(.cant-find-title) {
-    font-size: 1rem;
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-white);
   }
 
   .covers-results-list :global(.cant-find-sub) {
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.75);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    color: var(--text-muted);
   }
 
   .covers-results-list :global(.request-song-form) {
@@ -315,29 +327,32 @@ const categories = [
   }
 
   .covers-results-list :global(.form-group label) {
-    font-size: 0.76rem;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-white);
   }
 
   .covers-results-list :global(.req-star) {
-    color: var(--btn-green);
+    color: var(--accent-crimson);
   }
 
   .covers-results-list :global(.opt-label) {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
     font-weight: 500;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
   }
 
   .covers-results-list :global(.form-group input),
   .covers-results-list :global(.form-group textarea) {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
+    background: rgba(10, 10, 12, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
     padding: 8px 12px;
-    color: #ffffff;
-    font-family: var(--font-primary);
+    color: var(--text-white);
+    font-family: var(--font-secondary);
     font-size: 0.84rem;
     outline: none;
     transition: border-color 0.2s ease;
@@ -345,7 +360,7 @@ const categories = [
 
   .covers-results-list :global(.form-group input:focus),
   .covers-results-list :global(.form-group textarea:focus) {
-    border-color: var(--btn-green);
+    border-color: rgba(255, 255, 255, 0.3);
   }
 
   .covers-results-list :global(.artist-suggestions-box) {
@@ -356,19 +371,17 @@ const categories = [
   }
 
   .covers-results-list :global(.suggestions-label) {
-    font-size: 0.66rem;
-    color: rgba(255, 255, 255, 0.5);
+    font-family: var(--font-secondary);
+    font-size: 0.64rem;
+    color: var(--text-muted);
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-bottom: 1px;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .covers-results-list :global(.suggestions-loading-text) {
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -385,34 +398,29 @@ const categories = [
     -webkit-overflow-scrolling: touch;
   }
 
-  .covers-results-list :global(.artist-pills-scroll-row::-webkit-scrollbar) {
-    display: none;
-  }
-
   .covers-results-list :global(.artist-suggestion-pill) {
     flex: 0 0 auto;
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.8);
-    font-family: var(--font-primary);
-    font-size: 0.73rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
     font-weight: 700;
     padding: 4px 10px;
-    border-radius: 9999px;
+    border-radius: 4px;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
   }
 
   .covers-results-list :global(.artist-suggestion-pill:hover) {
-    background: rgba(255, 255, 255, 0.18);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.16);
+    color: var(--text-white);
   }
 
   .covers-results-list :global(.artist-suggestion-pill.active) {
     background: var(--btn-green);
-    color: #0b1f18;
+    color: var(--btn-text-color);
     border-color: var(--btn-green);
     font-weight: 800;
   }
@@ -426,55 +434,56 @@ const categories = [
 
   .covers-results-list :global(.submit-request-btn) {
     background: var(--btn-green);
-    color: #0b1f18;
+    color: var(--btn-text-color);
     border: none;
     padding: 10px 16px;
-    border-radius: 12px;
-    font-family: var(--font-primary);
-    font-size: 0.86rem;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
     font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: all 0.2s ease;
+    transition: transform 0.18s var(--ease-snappy);
   }
 
   .covers-results-list :global(.submit-request-btn:hover) {
     background: var(--btn-green-hover);
-    transform: translateY(-1.5px);
-    box-shadow: 0 4px 12px rgba(83, 198, 120, 0.3);
+    transform: translateY(-1px);
   }
 
   .covers-results-list :global(.cancel-request-btn) {
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
     padding: 8px 14px;
-    border-radius: 12px;
-    font-family: var(--font-primary);
-    font-size: 0.8rem;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
   }
 
   .covers-results-list :global(.cancel-request-btn:hover) {
     background: rgba(255, 255, 255, 0.16);
-    color: #ffffff;
+    color: var(--text-white);
   }
 
   /* Inline Success Card */
   .covers-results-list :global(.song-request-success-card) {
-    background: rgba(17, 42, 32, 0.95);
-    border: 1px solid var(--btn-green);
-    border-radius: 20px;
-    padding: 24px 16px;
+    background: rgba(18, 18, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    padding: 20px 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -483,28 +492,30 @@ const categories = [
   }
 
   .covers-results-list :global(.success-icon-box) {
-    font-size: 2.2rem;
-    color: var(--btn-green);
+    font-size: 2rem;
+    color: var(--text-white);
   }
 
   .covers-results-list :global(.success-title) {
-    font-size: 1.1rem;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--text-white);
   }
 
   .covers-results-list :global(.success-desc) {
-    font-size: 0.84rem;
-    color: rgba(255, 255, 255, 0.8);
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    color: var(--text-muted);
   }
 
   .covers-results-list :global(.request-another-btn) {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-white);
     padding: 8px 16px;
-    border-radius: 9999px;
-    font-size: 0.8rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
     margin-top: 6px;
@@ -521,24 +532,26 @@ const categories = [
   }
 
   .covers-results-list :global(.bottom-request-pill-btn) {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px dashed rgba(83, 198, 120, 0.5);
-    color: var(--btn-green);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    color: var(--text-white);
     padding: 8px 16px;
-    border-radius: 9999px;
-    font-family: var(--font-primary);
-    font-size: 0.78rem;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
     font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
   }
 
   .covers-results-list :global(.bottom-request-pill-btn:hover) {
-    background: rgba(83, 198, 120, 0.15);
-    border-color: var(--btn-green);
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.4);
     color: #ffffff;
   }
 </style>
