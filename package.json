@@ -7,11 +7,15 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "deploy": "astro build && gh-pages -d dist",
     "astro": "astro"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
     "astro": "^4.15.0",
     "resend": "^6.18.1"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
