@@ -10,14 +10,60 @@ export function initAudioPlayer() {
   const audioBarArtist = document.getElementById('audioBarArtist');
   const audioBarToggleBtn = document.getElementById('audioBarToggleBtn');
   const audioBarCloseBtn = document.getElementById('audioBarCloseBtn');
+  const audioBarStreamBtn = document.getElementById('audioBarStreamBtn');
   const audioBarCoverImg = document.getElementById('audioBarCoverImg');
   const audioBarFallbackIcon = document.getElementById('audioBarFallbackIcon');
   const vaultAudioPlayer = document.getElementById('vaultAudioPlayer');
+
+  const streamDrawerPanel = document.getElementById('streamDrawerPanel');
+  const streamDrawerSongName = document.getElementById('streamDrawerSongName');
+  const streamLinkSpotify = document.getElementById('streamLinkSpotify');
+  const streamLinkApple = document.getElementById('streamLinkApple');
+  const streamLinkYoutube = document.getElementById('streamLinkYoutube');
+  const streamLinkSoundcloud = document.getElementById('streamLinkSoundcloud');
+  const streamLinkAmazon = document.getElementById('streamLinkAmazon');
+  const streamLinkTidal = document.getElementById('streamLinkTidal');
 
   function notifyPlaybackState() {
     window.dispatchEvent(new CustomEvent('trackPlaybackStateChanged', {
       detail: { track: currentPlayingTrack, isPlaying: isPlayingAudio }
     }));
+  }
+
+  function updateStreamLinks(trackObj) {
+    if (!trackObj) return;
+    const query = encodeURIComponent(`${trackObj.artist || 'Kins'} ${trackObj.title}`);
+    if (streamDrawerSongName) streamDrawerSongName.textContent = `"${trackObj.title}"`;
+
+    if (streamLinkSpotify) streamLinkSpotify.href = `https://open.spotify.com/search/${query}`;
+    if (streamLinkApple) streamLinkApple.href = `https://music.apple.com/us/search?term=${query}`;
+    if (streamLinkYoutube) streamLinkYoutube.href = `https://music.youtube.com/search?q=${query}`;
+    if (streamLinkSoundcloud) streamLinkSoundcloud.href = `https://soundcloud.com/search?q=${query}`;
+    if (streamLinkAmazon) streamLinkAmazon.href = `https://music.amazon.com/search/${query}`;
+    if (streamLinkTidal) streamLinkTidal.href = `https://listen.tidal.com/search?q=${query}`;
+  }
+
+  function toggleStreamDrawer(forceOpen) {
+    if (!streamDrawerPanel || !audioBarStreamBtn) return;
+    const shouldOpen = forceOpen !== undefined ? forceOpen : streamDrawerPanel.classList.contains('hidden');
+
+    if (shouldOpen) {
+      if (currentPlayingTrack) updateStreamLinks(currentPlayingTrack);
+      streamDrawerPanel.classList.remove('hidden');
+      void streamDrawerPanel.offsetWidth; // Force reflow
+      streamDrawerPanel.classList.add('active-drawer');
+      audioBarStreamBtn.classList.add('active');
+      document.body.classList.add('stream-panel-open');
+    } else {
+      streamDrawerPanel.classList.remove('active-drawer');
+      audioBarStreamBtn.classList.remove('active');
+      document.body.classList.remove('stream-panel-open');
+      setTimeout(() => {
+        if (!audioBarStreamBtn.classList.contains('active')) {
+          streamDrawerPanel.classList.add('hidden');
+        }
+      }, 300);
+    }
   }
 
   function updateToggleBtnState(playing, loading = false) {
@@ -58,6 +104,7 @@ export function initAudioPlayer() {
 
   function closeMiniPlayer() {
     if (!bottomAudioBar) return;
+    toggleStreamDrawer(false);
     bottomAudioBar.classList.remove('active-player');
     bottomAudioBar.classList.add('player-exiting');
     document.body.classList.remove('audio-bar-active');
@@ -87,6 +134,7 @@ export function initAudioPlayer() {
 
     currentPlayingTrack = trackObj;
     openMiniPlayer();
+    updateStreamLinks(currentPlayingTrack);
 
     if (audioBarTitle) audioBarTitle.textContent = trackObj.title;
     if (audioBarArtist) audioBarArtist.textContent = trackObj.artist || 'Kins';
@@ -144,6 +192,13 @@ export function initAudioPlayer() {
     vaultAudioPlayer.addEventListener('ended', () => {
       isPlayingAudio = false;
       updateToggleBtnState(false);
+    });
+  }
+
+  if (audioBarStreamBtn) {
+    audioBarStreamBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleStreamDrawer();
     });
   }
 
