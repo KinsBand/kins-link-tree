@@ -20,9 +20,13 @@ export function initAudioPlayer() {
   const streamLinkSpotify = document.getElementById('streamLinkSpotify');
   const streamLinkApple = document.getElementById('streamLinkApple');
   const streamLinkYoutube = document.getElementById('streamLinkYoutube');
-  const streamLinkSoundcloud = document.getElementById('streamLinkSoundcloud');
   const streamLinkAmazon = document.getElementById('streamLinkAmazon');
+  const streamLinkSoundcloud = document.getElementById('streamLinkSoundcloud');
+  const streamLinkDeezer = document.getElementById('streamLinkDeezer');
   const streamLinkTidal = document.getElementById('streamLinkTidal');
+  const streamLinkBandcamp = document.getElementById('streamLinkBandcamp');
+  const streamLinkAudiomack = document.getElementById('streamLinkAudiomack');
+  const streamLinkQobuz = document.getElementById('streamLinkQobuz');
 
   function notifyPlaybackState() {
     window.dispatchEvent(new CustomEvent('trackPlaybackStateChanged', {
@@ -38,9 +42,13 @@ export function initAudioPlayer() {
     if (streamLinkSpotify) streamLinkSpotify.href = `https://open.spotify.com/search/${query}`;
     if (streamLinkApple) streamLinkApple.href = `https://music.apple.com/us/search?term=${query}`;
     if (streamLinkYoutube) streamLinkYoutube.href = `https://music.youtube.com/search?q=${query}`;
-    if (streamLinkSoundcloud) streamLinkSoundcloud.href = `https://soundcloud.com/search?q=${query}`;
     if (streamLinkAmazon) streamLinkAmazon.href = `https://music.amazon.com/search/${query}`;
+    if (streamLinkSoundcloud) streamLinkSoundcloud.href = `https://soundcloud.com/search?q=${query}`;
+    if (streamLinkDeezer) streamLinkDeezer.href = `https://www.deezer.com/search/${query}`;
     if (streamLinkTidal) streamLinkTidal.href = `https://listen.tidal.com/search?q=${query}`;
+    if (streamLinkBandcamp) streamLinkBandcamp.href = `https://bandcamp.com/search?q=${query}`;
+    if (streamLinkAudiomack) streamLinkAudiomack.href = `https://audiomack.com/search?q=${query}`;
+    if (streamLinkQobuz) streamLinkQobuz.href = `https://www.qobuz.com/search?q=${query}`;
   }
 
   function toggleStreamDrawer(forceOpen) {
