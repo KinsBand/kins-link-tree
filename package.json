@@ -10,6 +10,8 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^4.15.0"
+    "@supabase/supabase-js": "^2.112.2",
+    "astro": "^4.15.0",
+    "resend": "^6.18.1"
   }
 }

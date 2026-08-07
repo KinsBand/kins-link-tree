@@ -32,16 +32,16 @@
     z-index: 100;
     width: 100%;
     box-sizing: border-box;
-    transition: opacity 0.3s var(--ease-snappy),
-                filter 0.3s var(--ease-snappy),
-                transform 0.3s var(--ease-snappy);
+    transition: opacity 0.35s ease,
+                filter 0.35s ease,
+                transform 0.35s ease;
   }
 
   .top-nav:global(.nav-hidden) {
     opacity: 0;
     filter: blur(8px);
     pointer-events: none;
-    transform: translateY(-10px);
+    transform: translateY(-12px);
   }
 
   .top-subscribe-wrapper, #shareBtn {
@@ -183,11 +183,14 @@
     const currentScrollY = window.scrollY;
     if (!topNav) return;
 
-    if (currentScrollY <= 15) {
+    if (currentScrollY <= 20) {
+      // Near top: Always fully visible
       topNav.classList.remove('nav-hidden');
-    } else if (currentScrollY > lastScrollY && currentScrollY > 60) {
+    } else if (currentScrollY > lastScrollY && currentScrollY > 40) {
+      // Scrolling down past threshold: Fade out smoothly
       topNav.classList.add('nav-hidden');
     } else if (currentScrollY < lastScrollY) {
+      // Scrolling back up: Fade back in smoothly
       topNav.classList.remove('nav-hidden');
     }
     lastScrollY = currentScrollY;

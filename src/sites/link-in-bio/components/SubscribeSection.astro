@@ -28,13 +28,21 @@ const emails = [
         <h3>Subscribe to The Kins!</h3>
         <p class="subscribe-subtext">Join our Substack to receive new music, behind-the-scenes moments & gig drops.</p>
 
-        <form id="subscribeForm" class="subscribe-form" action="https://kins.substack.com/api/v1/free" method="POST" target="_blank">
+        <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
           <div class="form-group">
             <input type="email" name="email" id="emailInput" placeholder="Enter your email..." required autocomplete="email">
+            <!-- Quick Email Domain Shortcuts Row -->
+            <div class="email-domain-shortcuts-row" id="emailDomainShortcutsRow">
+              <button type="button" class="domain-shortcut-btn" data-domain="@gmail.com">@gmail.com</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@outlook.com">@outlook.com</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@yahoo.com">@yahoo.com</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@icloud.com">@icloud.com</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@hotmail.com">@hotmail.com</button>
+            </div>
           </div>
           <button type="submit" class="green-submit-btn">
             <i class="fa-solid fa-envelope"></i>
-            <span>Subscribe on Substack</span>
+            <span>Subscribe</span>
           </button>
         </form>
 
@@ -48,6 +56,7 @@ const emails = [
       </div>
       
       <!-- Prominent VIP Welcome Card + Welcome Email Message Preview -->
+      <!-- Prominent VIP Welcome Card + Welcome Email Message Preview -->
       <div id="subscribeSuccess" class="subscribe-success-card hidden">
         <div class="welcome-header">
           <div class="welcome-icon-circle">
@@ -56,13 +65,19 @@ const emails = [
           <span class="subscriber-vip-tag">KINSCREW VIP MEMBER</span>
         </div>
         
-        <h4 class="welcome-headline">Welcome to The Kins! 🎉</h4>
+        <h4 class="welcome-headline" id="subscribedHeadline">Welcome to The Kins! 🎉</h4>
+        <p class="subscribed-status-subtext hidden" id="subscribedStatusSubtext">You'll receive new music drops, gig announcements, and exclusive covers straight to your inbox.</p>
         
-        <!-- Official Welcome Email Message Container -->
-        <div class="welcome-email-preview-box">
+        <!-- Official Welcome Email Message Container (Collapsible) -->
+        <div class="welcome-email-preview-box" id="welcomeEmailBox">
           <div class="email-preview-header">
-            <i class="fa-solid fa-envelope-open-text"></i>
-            <span>Welcome Email Sent:</span>
+            <div class="email-preview-title">
+              <i class="fa-solid fa-envelope-open-text"></i>
+              <span>Welcome Email Sent:</span>
+            </div>
+            <button class="dismiss-welcome-btn" id="dismissWelcomeBtn" type="button" title="Minimize email preview">
+              <i class="fa-solid fa-xmark"></i> Got It
+            </button>
           </div>
           <div class="welcome-email-body">
             <p>Hey,</p>
@@ -76,6 +91,9 @@ const emails = [
         </div>
 
         <div class="post-sub-actions">
+          <button id="toggleWelcomeEmailBtn" class="secondary-sub-btn hidden" type="button">
+            <i class="fa-solid fa-envelope-open-text"></i> View Welcome Email
+          </button>
           <button id="unsubscribeBtn" class="unsubscribe-link-btn" type="button">
             <i class="fa-solid fa-user-minus"></i> Unsubscribe
           </button>
@@ -196,6 +214,43 @@ const emails = [
 
   .form-group input:focus {
     border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  .email-domain-shortcuts-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 6px 2px 2px 2px;
+    margin-top: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .email-domain-shortcuts-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .domain-shortcut-btn {
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+  }
+
+  .domain-shortcut-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: var(--text-white);
+    transform: translateY(-1px);
   }
 
   .green-submit-btn {
@@ -323,6 +378,14 @@ const emails = [
     color: var(--text-white);
   }
 
+  .subscribed-status-subtext {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin: -4px 0 4px 0;
+  }
+
   .welcome-email-preview-box {
     background: rgba(10, 10, 12, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -335,16 +398,70 @@ const emails = [
 
   .email-preview-header {
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-white);
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding-bottom: 6px;
+  }
+
+  .email-preview-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .dismiss-welcome-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .dismiss-welcome-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .secondary-sub-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  .secondary-sub-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.25);
   }
 
   .welcome-email-body {
@@ -369,26 +486,35 @@ const emails = [
 
   .post-sub-actions {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 2px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    width: 100%;
   }
 
   .unsubscribe-link-btn {
-    background: transparent;
-    border: none;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--text-muted);
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 4px;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 5px;
-    transition: color 0.2s ease;
+    white-space: nowrap;
+    transition: all 0.2s ease;
   }
 
   .unsubscribe-link-btn:hover {
-    color: var(--accent-crimson);
+    color: var(--accent-crimson, #ff4d4d);
+    background: rgba(255, 77, 77, 0.12);
+    border-color: rgba(255, 77, 77, 0.25);
   }
 
   .emails-list {
@@ -469,29 +595,111 @@ const emails = [
   const subscribeForm = document.getElementById('subscribeForm') as HTMLFormElement;
   const subscribeSuccess = document.getElementById('subscribeSuccess');
   const unsubscribeBtn = document.getElementById('unsubscribeBtn');
+  const dismissWelcomeBtn = document.getElementById('dismissWelcomeBtn');
+  const toggleWelcomeEmailBtn = document.getElementById('toggleWelcomeEmailBtn');
+  const welcomeEmailBox = document.getElementById('welcomeEmailBox');
+  const subscribedHeadline = document.getElementById('subscribedHeadline');
+  const subscribedStatusSubtext = document.getElementById('subscribedStatusSubtext');
 
-  function updateSubscribedUI(isSubscribed: boolean) {
-    if (isSubscribed) {
-      subscribeFormContainer?.classList.add('hidden');
-      subscribeSuccess?.classList.remove('hidden');
-    } else {
+  function updateSubscribedUI(isSubscribed: boolean, isDismissed: boolean = false) {
+    if (!isSubscribed) {
       subscribeFormContainer?.classList.remove('hidden');
       subscribeSuccess?.classList.add('hidden');
+      return;
+    }
+
+    subscribeFormContainer?.classList.add('hidden');
+    subscribeSuccess?.classList.remove('hidden');
+
+    if (isDismissed) {
+      // Compact VIP Member State (Welcome email collapsed)
+      welcomeEmailBox?.classList.add('hidden');
+      if (subscribedHeadline) subscribedHeadline.textContent = "You're Subscribed!";
+      subscribedStatusSubtext?.classList.remove('hidden');
+      toggleWelcomeEmailBtn?.classList.remove('hidden');
+    } else {
+      // Full Welcome Email Sent State
+      welcomeEmailBox?.classList.remove('hidden');
+      if (subscribedHeadline) subscribedHeadline.textContent = "Welcome to The Kins! 🎉";
+      subscribedStatusSubtext?.classList.add('hidden');
+      toggleWelcomeEmailBtn?.classList.add('hidden');
     }
   }
 
-  if (localStorage.getItem('kins_subscribed') === 'true') {
-    updateSubscribedUI(true);
+  const isSubbed = localStorage.getItem('kins_subscribed') === 'true';
+  const isDismissed = localStorage.getItem('kins_welcome_dismissed') === 'true';
+
+  if (isSubbed) {
+    updateSubscribedUI(true, isDismissed);
   }
 
   if (subscribeForm) {
-    subscribeForm.addEventListener('submit', (e) => {
+    subscribeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const emailInput = document.getElementById('emailInput') as HTMLInputElement;
-      if (emailInput && emailInput.value) {
+      const submitBtn = subscribeForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+      if (!emailInput || !emailInput.value) return;
+
+      const email = emailInput.value.trim();
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i> <span>Subscribing...</span>`;
+      }
+
+      const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
+      const endpoint = `${baseUrl}/api/subscribe`;
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
         localStorage.setItem('kins_subscribed', 'true');
-        updateSubscribedUI(true);
-        showToast("🎉 Welcome to The Kins! Substack confirmation sent.");
+        localStorage.removeItem('kins_welcome_dismissed');
+        updateSubscribedUI(true, false);
+
+        if (res.ok || data.status === 'success') {
+          showToast(data.message || "🎉 Welcome to The Kins! You are now subscribed.");
+        } else {
+          showToast(data.message || "🎉 Welcome to The Kins!");
+        }
+      } catch (err) {
+        localStorage.setItem('kins_subscribed', 'true');
+        localStorage.removeItem('kins_welcome_dismissed');
+        updateSubscribedUI(true, false);
+        showToast("🎉 Welcome to The Kins! You are now subscribed.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<i class="fa-solid fa-envelope"></i> <span>Subscribe</span>`;
+        }
+      }
+    });
+  }
+
+  if (dismissWelcomeBtn) {
+    dismissWelcomeBtn.addEventListener('click', () => {
+      localStorage.setItem('kins_welcome_dismissed', 'true');
+      updateSubscribedUI(true, true);
+      showToast("Email preview collapsed.");
+    });
+  }
+
+  if (toggleWelcomeEmailBtn) {
+    toggleWelcomeEmailBtn.addEventListener('click', () => {
+      const isCurrentlyHidden = welcomeEmailBox?.classList.contains('hidden');
+      if (isCurrentlyHidden) {
+        welcomeEmailBox?.classList.remove('hidden');
+        toggleWelcomeEmailBtn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Hide Welcome Email`;
+      } else {
+        welcomeEmailBox?.classList.add('hidden');
+        toggleWelcomeEmailBtn.innerHTML = `<i class="fa-solid fa-envelope-open-text"></i> View Welcome Email`;
       }
     });
   }
@@ -499,10 +707,44 @@ const emails = [
   if (unsubscribeBtn) {
     unsubscribeBtn.addEventListener('click', () => {
       localStorage.removeItem('kins_subscribed');
+      localStorage.removeItem('kins_welcome_dismissed');
       updateSubscribedUI(false);
       showToast("You have unsubscribed from Kins updates.");
     });
   }
+
+  document.querySelectorAll('.domain-shortcut-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const emailInput = document.getElementById('emailInput') as HTMLInputElement;
+      if (!emailInput) return;
+
+      const domain = btn.getAttribute('data-domain') || '';
+      const currentVal = emailInput.value.trim();
+
+      if (!currentVal) {
+        // Empty input -> set to domain and place cursor at start (index 0)
+        emailInput.value = domain;
+        emailInput.focus();
+        emailInput.setSelectionRange(0, 0);
+      } else {
+        // Extract handle portion prior to any @
+        const handle = currentVal.includes('@') ? currentVal.split('@')[0] : currentVal;
+        
+        if (handle && handle.length > 0) {
+          emailInput.value = handle + domain;
+          emailInput.focus();
+          emailInput.setSelectionRange(emailInput.value.length, emailInput.value.length);
+        } else {
+          // If input only contained "@" or empty handle
+          emailInput.value = domain;
+          emailInput.focus();
+          emailInput.setSelectionRange(0, 0);
+        }
+      }
+    });
+  });
 
   document.querySelectorAll('.copy-email-btn').forEach(btn => {
     btn.addEventListener('click', () => {
