@@ -21,6 +21,11 @@
     right: 20px;
     z-index: 800;
     cursor: pointer;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  :global(body.audio-bar-active) .floating-gig-pill-container {
+    transform: translateY(-64px);
   }
 
   .gig-pill-inner {

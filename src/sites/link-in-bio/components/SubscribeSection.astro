@@ -1,6 +1,7 @@
 ---
 const emails = [
   { address: "HelloKinsBand@gmail.com", desc: "Fan Updates & General Chat", icon: "fa-regular fa-paper-plane" },
+  { address: "HelpKinsBand@gmail.com", desc: "Help, Feedback & Site Suggestions", icon: "fa-solid fa-circle-question" },
   { address: "BookingsKinsBand@gmail.com", desc: "Shows, Tours & Live Booking", icon: "fa-regular fa-calendar-check" },
   { address: "PressKinsBand@gmail.com", desc: "Media, PR & Interviews", icon: "fa-solid fa-newspaper" },
   { address: "BusinessKinsBand@gmail.com", desc: "Brand Deals & Partnerships", icon: "fa-solid fa-briefcase" }
@@ -36,6 +37,14 @@ const emails = [
             <span>Subscribe on Substack</span>
           </button>
         </form>
+
+        <div class="feedback-help-box">
+          <i class="fa-solid fa-lightbulb feedback-icon"></i>
+          <div class="feedback-text">
+            <span>Need help or have suggestions?</span>
+            <p>We'd love your feedback to improve the site & experience! Email us at <a href="mailto:HelpKinsBand@gmail.com?subject=Kins%20Site%20Feedback%20%26%20Help">HelpKinsBand@gmail.com</a>.</p>
+          </div>
+        </div>
       </div>
       
       <!-- Prominent VIP Welcome Card + Welcome Email Message Preview -->
@@ -107,38 +116,8 @@ const emails = [
     margin-top: 14px;
   }
 
-  .segmented-switcher-box {
-    background: rgba(18, 18, 20, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 6px;
-    padding: 3px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
+  .subscribe-switcher {
     margin-bottom: 12px;
-    backdrop-filter: blur(12px);
-  }
-
-  .switcher-tab {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 9px 0;
-    border-radius: 4px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s var(--ease-snappy);
-  }
-
-  .switcher-tab.active {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    font-weight: 800;
   }
 
   .sub-tab-content {
@@ -240,6 +219,57 @@ const emails = [
   .green-submit-btn:hover {
     background: var(--btn-green-hover);
     transform: translateY(-1px);
+  }
+
+  .feedback-help-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-top: 12px;
+  }
+
+  .feedback-icon {
+    color: var(--btn-green);
+    font-size: 0.9rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .feedback-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .feedback-text span {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: 0.02em;
+  }
+
+  .feedback-text p {
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .feedback-text a {
+    color: var(--text-white);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s ease;
+  }
+
+  .feedback-text a:hover {
+    color: var(--btn-green);
   }
 
   /* Prominent VIP Welcome Card & Welcome Email Container */

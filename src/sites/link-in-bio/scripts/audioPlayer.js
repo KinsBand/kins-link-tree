@@ -23,7 +23,7 @@ export function initAudioPlayer() {
   function updateToggleBtnState(playing, loading = false) {
     if (!audioBarToggleBtn) return;
     audioBarToggleBtn.classList.remove('icon-morph');
-    void audioBarToggleBtn.offsetWidth; // Force reflow to re-trigger CSS keyframe
+    void audioBarToggleBtn.offsetWidth; // Force reflow
     if (loading) {
       audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
     } else {
@@ -33,10 +33,22 @@ export function initAudioPlayer() {
     notifyPlaybackState();
   }
 
+  function setMiniPlayerCover(url) {
+    if (url && audioBarCoverImg) {
+      audioBarCoverImg.src = url;
+      audioBarCoverImg.classList.remove('hidden');
+      if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'none';
+    } else if (audioBarCoverImg) {
+      audioBarCoverImg.src = '';
+      audioBarCoverImg.classList.add('hidden');
+      if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'flex';
+    }
+  }
+
   function openMiniPlayer() {
     if (!bottomAudioBar) return;
     bottomAudioBar.classList.remove('hidden', 'player-exiting');
-    void bottomAudioBar.offsetWidth; // Force reflow for slide-up transition
+    void bottomAudioBar.offsetWidth; // Force reflow
     bottomAudioBar.classList.add('active-player');
     document.body.classList.add('audio-bar-active');
   }
@@ -45,6 +57,7 @@ export function initAudioPlayer() {
     if (!bottomAudioBar) return;
     bottomAudioBar.classList.remove('active-player');
     bottomAudioBar.classList.add('player-exiting');
+    document.body.classList.remove('audio-bar-active');
     setTimeout(() => {
       bottomAudioBar.classList.add('hidden');
       bottomAudioBar.classList.remove('player-exiting');
@@ -55,10 +68,13 @@ export function initAudioPlayer() {
   }
 
   window.playTrackPreview = async function(trackObj) {
+    if (!trackObj || !trackObj.title) return;
+
+    // Toggle play/pause if user clicks the currently active song
     if (currentPlayingTrack && currentPlayingTrack.title === trackObj.title) {
       isPlayingAudio = !isPlayingAudio;
       if (vaultAudioPlayer) {
-        if (isPlayingAudio) vaultAudioPlayer.play();
+        if (isPlayingAudio) vaultAudioPlayer.play().catch(() => {});
         else vaultAudioPlayer.pause();
       }
       updateToggleBtnState(isPlayingAudio);
@@ -70,22 +86,37 @@ export function initAudioPlayer() {
     openMiniPlayer();
 
     if (audioBarTitle) audioBarTitle.textContent = trackObj.title;
-    if (audioBarArtist) audioBarArtist.textContent = trackObj.artist;
+    if (audioBarArtist) audioBarArtist.textContent = trackObj.artist || 'Kins';
 
+    // 1. Immediately set existing gathered coverUrl / artworkUrl if present
+    let coverUrl = trackObj.coverUrl || trackObj.artworkUrl;
     let previewUrl = trackObj.previewUrl;
-    if (!previewUrl) {
+
+    if (coverUrl) {
+      setMiniPlayerCover(coverUrl);
+    } else {
+      setMiniPlayerCover(null);
+    }
+
+    // 2. Fetch missing meta (cover artwork or 30s preview URL) if not yet gathered
+    if (!previewUrl || !coverUrl) {
       updateToggleBtnState(false, true);
       const meta = await getITunesTrackData(trackObj.artist, trackObj.title);
       if (meta) {
-        if (meta.previewUrl) previewUrl = meta.previewUrl;
-        if (meta.artworkUrl && audioBarCoverImg) {
-          audioBarCoverImg.src = meta.artworkUrl;
-          audioBarCoverImg.classList.remove('hidden');
-          if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'none';
+        if (meta.previewUrl) {
+          previewUrl = meta.previewUrl;
+          trackObj.previewUrl = previewUrl;
+        }
+        if (meta.artworkUrl) {
+          coverUrl = meta.artworkUrl;
+          trackObj.coverUrl = coverUrl;
+          trackObj.artworkUrl = coverUrl;
+          setMiniPlayerCover(coverUrl);
         }
       }
     }
 
+    // 3. Play track audio
     if (vaultAudioPlayer && previewUrl) {
       vaultAudioPlayer.src = previewUrl;
       vaultAudioPlayer.play().then(() => {
@@ -93,17 +124,32 @@ export function initAudioPlayer() {
         updateToggleBtnState(true);
         showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
       }).catch(err => {
+        console.warn('Playback error:', err);
         isPlayingAudio = false;
         updateToggleBtnState(false);
+        showToast(`Unable to play preview for "${trackObj.title}"`);
       });
+    } else {
+      isPlayingAudio = false;
+      updateToggleBtnState(false);
+      showToast(`Audio preview unavailable for "${trackObj.title}"`);
     }
   };
 
+  // Sync native audio events
+  if (vaultAudioPlayer) {
+    vaultAudioPlayer.addEventListener('ended', () => {
+      isPlayingAudio = false;
+      updateToggleBtnState(false);
+    });
+  }
+
   if (audioBarToggleBtn) {
     audioBarToggleBtn.addEventListener('click', () => {
+      if (!currentPlayingTrack) return;
       isPlayingAudio = !isPlayingAudio;
       if (vaultAudioPlayer) {
-        if (isPlayingAudio) vaultAudioPlayer.play();
+        if (isPlayingAudio) vaultAudioPlayer.play().catch(() => {});
         else vaultAudioPlayer.pause();
       }
       updateToggleBtnState(isPlayingAudio);
@@ -114,7 +160,6 @@ export function initAudioPlayer() {
     audioBarCloseBtn.addEventListener('click', () => {
       if (vaultAudioPlayer) vaultAudioPlayer.pause();
       closeMiniPlayer();
-      document.body.classList.remove('audio-bar-active');
     });
   }
 }
