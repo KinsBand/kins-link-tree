@@ -101,7 +101,7 @@
     pointer-events: auto;
   }
 
-  /* Full Screen Menu Container */
+  /* Full Screen Container with 15% Top / 45% Map / 40% Bottom Details Proportions */
   .bottom-sheet-container {
     width: 100%;
     height: 100vh;
@@ -112,29 +112,35 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transform: scale(0.98);
-    transition: transform 0.25s var(--ease-snappy);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 0.3s var(--ease-snappy), opacity 0.25s ease;
   }
 
   .bottom-sheet-backdrop:global(.active) .bottom-sheet-container {
-    transform: scale(1);
+    transform: translateY(0);
+    opacity: 1;
   }
 
+  /* 15% Top Header & Quick Selector Section */
   .gig-sheet-header {
-    padding: 14px 16px 10px;
+    height: 8vh;
+    min-height: 52px;
+    padding: 8px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    background: rgba(18, 18, 20, 0.9);
+    background: rgba(18, 18, 20, 0.95);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
+    box-sizing: border-box;
   }
 
   .gig-header-titles {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
 
   .gig-status-row {
@@ -198,18 +204,21 @@
     background: rgba(255, 255, 255, 0.18);
   }
 
-  /* Quick Gig Selector Pills Row (Un-squished) */
+  /* Quick Gig Selector Pills Row (7vh / Un-squished) */
   .gig-selector-pills-row {
+    height: 7vh;
+    min-height: 44px;
     display: flex;
     align-items: center;
     gap: 8px;
     overflow-x: auto;
     scrollbar-width: none;
-    padding: 8px 16px;
-    background: rgba(10, 10, 12, 0.8);
+    padding: 4px 16px;
+    background: rgba(10, 10, 12, 0.9);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     flex-shrink: 0;
     width: 100%;
+    box-sizing: border-box;
   }
 
   .gig-selector-pills-row::-webkit-scrollbar {
@@ -246,21 +255,27 @@
     font-weight: 800;
   }
 
+  /* 45% Interactive Map View */
   .gig-map-view {
-    height: 220px;
+    height: 45vh;
     width: 100%;
     background: #000;
     flex-shrink: 0;
   }
 
+  /* 40% Venue Detail Bottom Card */
   .venue-detail-bottom-card {
+    height: 40vh;
+    flex: 1;
     padding: 16px;
     background: #0d0d0f;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     gap: 12px;
-    flex: 1;
     overflow-y: auto;
     scrollbar-width: thin;
   }
