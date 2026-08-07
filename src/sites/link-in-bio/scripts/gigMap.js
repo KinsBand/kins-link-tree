@@ -21,15 +21,15 @@ const LOCAL_GIGS = [
     isNextShow: true,
     targetDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 5 * 60 * 60 * 1000), // 3 days away
     dateText: "10/08/2026",
-    capacity: "350 packed",
+    capacity: "350 Cap",
     supportActs: "Sunbleached, Indigo Youth",
-    rating: "4.9 ★ (48 Reviews)",
+    rating: "4.9",
     ticketUrl: "https://www.bandsintown.com",
     amenities: [
-      { icon: "fa-wheelchair", label: "Wheelchair Accessible ♿" },
-      { icon: "fa-user-check", label: "18+ Event 🔞" },
-      { icon: "fa-beer-mug-empty", label: "Craft Bar & Kitchen 🍺" },
-      { icon: "fa-square-parking", label: "Onsite Parking 🅿️" }
+      { icon: "fa-wheelchair", label: "Accessible" },
+      { icon: "fa-user-check", label: "18+ Event" },
+      { icon: "fa-beer-mug-empty", label: "Craft Bar" },
+      { icon: "fa-square-parking", label: "Parking" }
     ],
     snapshot: {
       vibe: "Sweaty, high-octane, intimate",
@@ -70,21 +70,21 @@ const LOCAL_GIGS = [
   {
     id: "gig-maitland-1",
     bandName: "KINS",
-    venue: "The Junkyard (Grand Junction)",
+    venue: "The Junkyard",
     city: "Maitland, NSW",
     region: "Hunter Region",
     type: "upcoming",
     isNextShow: false,
     targetDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 9 days away
     dateText: "16/08/2026",
-    capacity: "200 courtyard crew",
+    capacity: "200 Cap",
     supportActs: "The Valley Echoes",
-    rating: "4.8 ★ (32 Reviews)",
+    rating: "4.8",
     ticketUrl: "https://www.bandsintown.com",
     amenities: [
-      { icon: "fa-wheelchair", label: "Wheelchair Accessible ♿" },
-      { icon: "fa-ticket", label: "All Ages 🎟️" },
-      { icon: "fa-beer-mug-empty", label: "Beer Garden & Bistro 🍺" }
+      { icon: "fa-wheelchair", label: "Accessible" },
+      { icon: "fa-ticket", label: "All Ages" },
+      { icon: "fa-beer-mug-empty", label: "Beer Garden" }
     ],
     snapshot: {
       vibe: "Sunlit, gritty, electric",
@@ -129,14 +129,14 @@ const LOCAL_GIGS = [
     type: "past",
     isNextShow: false,
     dateText: "18/07/2026",
-    capacity: "280 sold out",
+    capacity: "280 Sold Out",
     supportActs: "Velvet Bloom, Static Waves",
-    rating: "5.0 ★ (Sold Out Show)",
+    rating: "5.0",
     ticketUrl: "https://www.bandsintown.com",
     amenities: [
-      { icon: "fa-wheelchair", label: "Ground Level Access ♿" },
-      { icon: "fa-user-check", label: "18+ Event 🔞" },
-      { icon: "fa-utensils", label: "Pub Food & Bar 🍔" }
+      { icon: "fa-wheelchair", label: "Accessible" },
+      { icon: "fa-user-check", label: "18+ Event" },
+      { icon: "fa-utensils", label: "Pub Food" }
     ],
     snapshot: {
       vibe: "Raw, electric, wall-to-wall",
@@ -230,10 +230,57 @@ function updateCountdownTimer(targetDate) {
   countdownInterval = setInterval(tick, 1000);
 }
 
+function updateSetlistPlaybackState(currentTrack, isPlaying) {
+  const setlistRows = document.querySelectorAll('.setlist-item-row');
+  setlistRows.forEach(row => {
+    const songFullName = row.getAttribute('data-song-fullname') || '';
+    const icon = row.querySelector('.setlist-play-icon');
+    
+    let isMatch = false;
+    if (currentTrack && currentTrack.title) {
+      const cleanName = songFullName.replace(/\(.*\)/, '').trim().toLowerCase();
+      const playingTitle = currentTrack.title.toLowerCase();
+      if (cleanName.includes(playingTitle) || playingTitle.includes(cleanName)) {
+        isMatch = true;
+      }
+    }
+
+    if (isMatch && isPlaying) {
+      row.classList.add('is-playing');
+      if (icon) {
+        icon.className = 'fa-solid fa-pause setlist-play-icon';
+      }
+    } else {
+      row.classList.remove('is-playing');
+      if (icon) {
+        icon.className = 'fa-solid fa-play setlist-play-icon';
+      }
+    }
+  });
+}
+
+// Global listener for audio state changes
+window.addEventListener('trackPlaybackStateChanged', (e) => {
+  const { track, isPlaying } = e.detail || {};
+  updateSetlistPlaybackState(track, isPlaying);
+});
+
+function parseSetlistTrackInfo(fullName) {
+  let title = fullName.replace(/\(.*\)/, '').trim();
+  let artist = "Kins";
+  if (fullName.includes('(The Cure)')) artist = "The Cure";
+  else if (fullName.includes('(Weezer)')) artist = "Weezer";
+  else if (fullName.includes('(The Long Faces)')) artist = "The Long Faces";
+  else if (fullName.includes('(Foo Fighters)')) artist = "Foo Fighters";
+  else if (fullName.includes('(Pulp)')) artist = "Pulp";
+  return { title, artist };
+}
+
 function displayVenueDetails(gig) {
   activeGigId = gig.id;
   const venueNameEl = document.getElementById('venueCardName');
   const venueRatingEl = document.getElementById('venueRatingBadge');
+  const venueCapacityEl = document.getElementById('venueCapacityBadge');
   const venueCityEl = document.getElementById('venueCardCity');
   const amenitiesRow = document.getElementById('venueAmenitiesRow');
   const countdownBanner = document.getElementById('gigCountdownBanner');
@@ -242,16 +289,17 @@ function displayVenueDetails(gig) {
 
   if (venueNameEl) venueNameEl.textContent = gig.venue;
   if (venueRatingEl) venueRatingEl.innerHTML = `<i class="fa-solid fa-star"></i> ${gig.rating}`;
-  if (venueCityEl) venueCityEl.textContent = `${gig.city} • Date: ${gig.dateText}`;
+  if (venueCapacityEl) venueCapacityEl.innerHTML = `<i class="fa-solid fa-users"></i> ${gig.capacity}`;
+  if (venueCityEl) venueCityEl.textContent = `${gig.city} • ${gig.dateText}`;
 
   // Update primary CTA button text and icon depending on upcoming vs past gig
   if (venueBookingBtn) {
     if (gig.type === 'upcoming') {
-      venueBookingBtn.innerHTML = `<i class="fa-solid fa-ticket"></i><span>GET TICKETS 🎟️</span>`;
+      venueBookingBtn.innerHTML = `<i class="fa-solid fa-ticket"></i><span>GET TICKETS</span>`;
       venueBookingBtn.href = gig.ticketUrl || "https://www.bandsintown.com";
       venueBookingBtn.target = "_blank";
     } else {
-      venueBookingBtn.innerHTML = `<i class="fa-solid fa-headphones"></i><span>LISTEN TO AUDIO 🎵</span>`;
+      venueBookingBtn.innerHTML = `<i class="fa-solid fa-headphones"></i><span>LIVE AUDIO</span>`;
       venueBookingBtn.href = "javascript:void(0);";
       venueBookingBtn.target = "_self";
       venueBookingBtn.onclick = (e) => {
@@ -295,89 +343,84 @@ function displayVenueDetails(gig) {
     const mailtoUrl = `mailto:HelloKinsBand@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
 
     richBreakdown.innerHTML = `
-      <!-- Main Show Title Headline -->
-      <div class="show-meta-headline-box">
-        <h4 class="show-main-title">${gig.bandName} Live at ${gig.venue}, ${gig.city.split(',')[0]}</h4>
-        <p class="show-sub-stats">
-          📅 Date: ${gig.dateText} &nbsp;|&nbsp; 👥 Capacity: ${gig.capacity} &nbsp;|&nbsp; 🎸 Support: ${gig.supportActs}
-        </p>
-      </div>
-
       ${isUpcoming ? `
         <!-- UPCOMING SHOW: PRE-SHOW INFO & TENTATIVE SETLIST -->
         <div class="show-section-card">
-          <h5 class="section-heading"><i class="fa-solid fa-calendar-check"></i> 🎟️ Pre-Show Info & Teaser</h5>
+          <h5 class="section-heading"><i class="fa-solid fa-calendar-check"></i> Pre-Show Info & Teaser</h5>
           <p class="snapshot-item"><strong>Expected Vibe:</strong> ${gig.snapshot.vibe}</p>
-          <p class="snapshot-item"><strong>Show Highlight Teaser:</strong> ${gig.snapshot.highlight}</p>
+          <p class="snapshot-item"><strong>Support Acts:</strong> ${gig.supportActs}</p>
+          <p class="snapshot-item"><strong>Show Teaser:</strong> ${gig.snapshot.highlight}</p>
         </div>
 
         <div class="show-section-card">
-          <h5 class="section-heading"><i class="fa-solid fa-music"></i> 🎵 Tentative Setlist & Song Requests</h5>
+          <h5 class="section-heading"><i class="fa-solid fa-music"></i> Setlist & Song Preview</h5>
           <div class="setlist-list">
             ${gig.setlistDetails.songs.map((song, i) => `
-              <div class="setlist-item-row">
-                <span><strong>${i + 1}.</strong> ${song.name}</span>
-                <span class="setlist-tag">${song.tag}</span>
+              <div class="setlist-item-row" data-song-fullname="${song.name}">
+                <div class="setlist-row-progress"></div>
+                <div class="setlist-row-content">
+                  <span class="setlist-song-name">
+                    <i class="fa-solid fa-play setlist-play-icon"></i>
+                    <strong>${i + 1}.</strong> ${song.name}
+                  </span>
+                  <span class="setlist-tag">${song.tag}</span>
+                </div>
               </div>
             `).join('')}
           </div>
           <div class="song-request-container" style="margin-top: 10px; text-align: center;">
             <p class="snapshot-item" style="margin-bottom: 8px;">Want a specific song added to the setlist?</p>
             <a href="${mailtoUrl}" class="request-song-mailto-btn">
-              <i class="fa-solid fa-envelope"></i> Request a Song via Email ✉️
+              <i class="fa-solid fa-envelope"></i> Request a Song via Email
             </a>
           </div>
         </div>
 
-        <!-- 🏟️ Venue & Access Scene -->
+        <!-- Venue & Access Scene -->
         <div class="show-section-card">
-          <h5 class="section-heading"><i class="fa-solid fa-building-columns"></i> 🏟️ Venue & Food Scene</h5>
+          <h5 class="section-heading"><i class="fa-solid fa-building-columns"></i> Venue & Food Scene</h5>
           <p class="scene-item"><strong>The Venue:</strong> ${gig.venueAndFood.venueDesc}</p>
-          <p class="scene-item"><strong>Pre/Post-Show Food:</strong> 🍔 ${gig.venueAndFood.foodRecommendation}</p>
+          <p class="scene-item"><strong>Pre/Post-Show Food:</strong> ${gig.venueAndFood.foodRecommendation}</p>
         </div>
       ` : `
         <!-- PAST SHOW: FULL ARCHIVE RECAP -->
         <div class="show-section-card">
-          <h5 class="section-heading"><i class="fa-solid fa-camera-retro"></i> 📸 Quick Snapshot (Post-Show Recap)</h5>
-          <p class="snapshot-item"><strong>Vibe in 3 words:</strong> ${gig.snapshot.vibe}</p>
+          <h5 class="section-heading"><i class="fa-solid fa-camera-retro"></i> Post-Show Recap</h5>
+          <p class="snapshot-item"><strong>Vibe:</strong> ${gig.snapshot.vibe}</p>
           <p class="snapshot-item"><strong>Show Highlight:</strong> ${gig.snapshot.highlight}</p>
-          
-          <div class="video-preview-embed">
-            <iframe 
-              src="https://www.youtube.com/embed/${gig.snapshot.videoYoutubeId}?autoplay=0&controls=1" 
-              title="${gig.bandName} Live Clip"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-              allowfullscreen>
-            </iframe>
-          </div>
         </div>
 
         <div class="show-section-card">
-          <h5 class="section-heading"><i class="fa-solid fa-music"></i> 🎵 Performed Setlist & Audio</h5>
+          <h5 class="section-heading"><i class="fa-solid fa-music"></i> Performed Setlist & Audio</h5>
           <div class="setlist-list">
             ${gig.setlistDetails.songs.map((song, i) => `
-              <div class="setlist-item-row">
-                <span><strong>${i + 1}.</strong> ${song.name}</span>
-                <span class="setlist-tag">${song.tag}</span>
+              <div class="setlist-item-row" data-song-fullname="${song.name}">
+                <div class="setlist-row-progress"></div>
+                <div class="setlist-row-content">
+                  <span class="setlist-song-name">
+                    <i class="fa-solid fa-play setlist-play-icon"></i>
+                    <strong>${i + 1}.</strong> ${song.name}
+                  </span>
+                  <span class="setlist-tag">${song.tag}</span>
+                </div>
               </div>
             `).join('')}
           </div>
-          <p class="snapshot-item" style="margin-top: 6px;"><strong>Audio Recording:</strong> 🎧 ${gig.setlistDetails.audioRecording}</p>
-          <p class="snapshot-item"><strong>Stage Notes:</strong> 🎛️ ${gig.setlistDetails.stageNotes}</p>
+          <p class="snapshot-item" style="margin-top: 6px;"><strong>Audio Recording:</strong> ${gig.setlistDetails.audioRecording}</p>
+          <p class="snapshot-item"><strong>Stage Notes:</strong> ${gig.setlistDetails.stageNotes}</p>
         </div>
 
-        <!-- 🏟️ Venue & Food Scene -->
+        <!-- Venue & Food Scene -->
         <div class="show-section-card">
-          <h5 class="section-heading"><i class="fa-solid fa-building-columns"></i> 🏟️ Venue & Food Scene</h5>
+          <h5 class="section-heading"><i class="fa-solid fa-building-columns"></i> Venue & Food Scene</h5>
           <p class="scene-item"><strong>The Venue:</strong> ${gig.venueAndFood.venueDesc}</p>
-          <p class="scene-item"><strong>Pre/Post-Show Food:</strong> 🍔 ${gig.venueAndFood.foodRecommendation}</p>
+          <p class="scene-item"><strong>Pre/Post Food:</strong> ${gig.venueAndFood.foodRecommendation}</p>
         </div>
 
-        <!-- 👥 Crowd & Fan Gallery -->
+        <!-- Crowd & Fan Gallery -->
         <div class="show-section-card">
-          <h5 class="section-heading"><i class="fa-solid fa-users"></i> 👥 Crowd & Fan Gallery</h5>
-          <p class="snapshot-item"><strong>Crowd Energy Score:</strong> ${gig.crowdAndGallery.energyScore}</p>
-          
+          <h5 class="section-heading"><i class="fa-solid fa-users"></i> Crowd Energy & Gallery</h5>
+          <p class="snapshot-item"><strong>Energy Score:</strong> ${gig.crowdAndGallery.energyScore}</p>
           <p class="snapshot-item" style="margin-top: 4px;"><strong>Fan Photo Wall:</strong></p>
           <div class="gallery-grid">
             ${gig.crowdAndGallery.photos.map(img => `
@@ -386,19 +429,20 @@ function displayVenueDetails(gig) {
               </div>
             `).join('')}
           </div>
-
-          <p class="snapshot-item" style="margin-top: 6px;"><strong>Stage-to-Crowd Shot:</strong></p>
-          <img src="${gig.crowdAndGallery.stageToCrowdShot}" alt="Stage to Crowd" class="stage-crowd-photo" loading="lazy">
-        </div>
-
-        <!-- 🚚 Behind the Scenes & Artifacts -->
-        <div class="show-section-card">
-          <h5 class="section-heading"><i class="fa-solid fa-truck-ramp-box"></i> 🚚 Behind the Scenes & Artifacts</h5>
-          <p class="bts-item"><strong>Road Story:</strong> ${gig.btsAndArtifacts.roadStory}</p>
-          <p class="bts-item"><strong>Artifacts:</strong> 📄 ${gig.btsAndArtifacts.artifactsNotes}</p>
         </div>
       `}
     `;
+
+    // Attach click listeners to setlist rows for 30s iTunes audio previewing
+    richBreakdown.querySelectorAll('.setlist-item-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const fullName = row.getAttribute('data-song-fullname') || '';
+        const trackObj = parseSetlistTrackInfo(fullName);
+        if (window.playTrackPreview) {
+          window.playTrackPreview(trackObj);
+        }
+      });
+    });
   }
 
   if (leafletMapInstance) {

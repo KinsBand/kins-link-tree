@@ -11,17 +11,14 @@
 
     <!-- Header & Region Copywriting -->
     <div class="gig-sheet-header">
-      <div class="gig-banner-card" id="gigBannerCard">
-        <div class="gig-banner-left">
-          <div class="gig-status-row">
-            <span class="gig-status-badge" id="gigStatusBadge"><i class="fa-solid fa-guitar"></i> LOCAL GIGS</span>
-            <span class="region-pill-tag"><i class="fa-solid fa-map-pin"></i> SYDNEY • NEWCASTLE • MAITLAND</span>
-          </div>
-          <h4 class="gig-banner-venue" id="gigBannerVenue">Kins Live Gigs</h4>
-          <p class="gig-banner-meta" id="gigBannerMeta">
-            <i class="fa-solid fa-location-dot"></i> Up-and-coming indie rock band playing local venues across Newcastle, Maitland & Sydney
-          </p>
+      <div class="gig-header-titles">
+        <div class="gig-status-row">
+          <span class="gig-status-badge"><i class="fa-solid fa-guitar"></i> LOCAL GIGS</span>
+          <span class="region-pill-tag"><i class="fa-solid fa-map-pin"></i> SYDNEY • NEWCASTLE</span>
         </div>
+        <p class="gig-banner-meta">
+          Indie rock band playing local venues across Sydney & Newcastle.
+        </p>
       </div>
       <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map">
         <i class="fa-solid fa-xmark"></i>
@@ -42,11 +39,14 @@
       <!-- Top Title & Ticket Bar -->
       <div class="venue-card-header">
         <div class="venue-header-info">
-          <div class="venue-title-row">
-            <h4 class="venue-card-name" id="venueCardName">Select a venue on the map</h4>
-            <span class="venue-rating-badge" id="venueRatingBadge"><i class="fa-solid fa-star"></i> 4.9 (48 Shows)</span>
+          <h4 class="venue-card-name" id="venueCardName">Select a venue on the map</h4>
+          <div class="venue-submeta-row">
+            <p class="venue-card-city" id="venueCardCity">Newcastle & Sydney Region</p>
+            <div class="venue-stats-badges">
+              <span class="venue-rating-badge" id="venueRatingBadge"><i class="fa-solid fa-star"></i> 4.9</span>
+              <span class="venue-capacity-badge" id="venueCapacityBadge"><i class="fa-solid fa-users"></i> 350 Cap</span>
+            </div>
           </div>
-          <p class="venue-card-city" id="venueCardCity">Newcastle, Maitland & Sydney Region</p>
         </div>
         
         <div class="venue-action-buttons-group">
@@ -152,11 +152,16 @@
     gap: 10px;
   }
 
+  .gig-header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
   .gig-status-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 4px;
     flex-wrap: wrap;
   }
 
@@ -185,19 +190,11 @@
     text-transform: uppercase;
   }
 
-  .gig-banner-venue {
-    font-family: var(--font-heading);
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--text-white);
-  }
-
   .gig-banner-meta {
     font-family: var(--font-secondary);
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     line-height: 1.3;
-    margin-top: 2px;
   }
 
   .close-sheet-btn {
@@ -265,7 +262,7 @@
   }
 
   .gig-map-view {
-    height: 220px;
+    height: 200px;
     width: 100%;
     background: #000;
     flex-shrink: 0;
@@ -285,25 +282,48 @@
 
   .venue-card-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
+    width: 100%;
   }
 
-  .venue-title-row {
+  .venue-header-info {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
   }
 
   .venue-card-name {
     font-family: var(--font-heading);
-    font-size: 0.98rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: var(--text-white);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
   }
 
-  .venue-rating-badge {
+  .venue-submeta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .venue-card-city {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+  }
+
+  .venue-stats-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .venue-rating-badge, .venue-capacity-badge {
     font-family: var(--font-secondary);
     font-size: 0.65rem;
     font-weight: 800;
@@ -312,12 +332,9 @@
     border: 1px solid rgba(255, 255, 255, 0.14);
     padding: 2px 6px;
     border-radius: 4px;
-  }
-
-  .venue-card-city {
-    font-family: var(--font-secondary);
-    font-size: 0.74rem;
-    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .venue-booking-btn {
@@ -336,6 +353,7 @@
     gap: 6px;
     white-space: nowrap;
     transition: transform 0.18s var(--ease-snappy);
+    flex-shrink: 0;
   }
 
   .venue-booking-btn:hover {
@@ -343,37 +361,50 @@
     transform: translateY(-1px);
   }
 
-  /* Venue Real-World Amenities */
+  /* Venue Real-World Amenities Horizontal Scroll Row */
   .venue-amenities-row {
     display: flex;
     align-items: center;
     gap: 6px;
-    flex-wrap: wrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .venue-amenities-row::-webkit-scrollbar {
+    display: none;
   }
 
   .venue-amenities-row :global(.amenity-chip) {
+    flex: 0 0 auto;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
     font-family: var(--font-secondary);
     font-size: 0.66rem;
     font-weight: 700;
-    padding: 3px 8px;
+    padding: 4px 8px;
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
+    white-space: nowrap;
   }
 
-  /* Gig Countdown Banner */
+  /* Gig Countdown Banner (Fixed Minimum Height & Uncrushed Layout) */
   .gig-countdown-banner {
     background: rgba(24, 24, 28, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 4px;
-    padding: 8px 12px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-shrink: 0;
+    min-height: 46px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .countdown-label {
@@ -390,7 +421,7 @@
 
   .countdown-timer-digits {
     font-family: monospace;
-    font-size: 0.86rem;
+    font-size: 0.88rem;
     font-weight: 900;
     color: var(--text-white);
     letter-spacing: 1px;
@@ -402,30 +433,6 @@
     flex-direction: column;
     gap: 14px;
     margin-top: 4px;
-  }
-
-  .rich-show-breakdown :global(.show-meta-headline-box) {
-    background: rgba(18, 18, 20, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 6px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .rich-show-breakdown :global(.show-main-title) {
-    font-family: var(--font-heading);
-    font-size: 0.98rem;
-    font-weight: 800;
-    color: var(--text-white);
-  }
-
-  .rich-show-breakdown :global(.show-sub-stats) {
-    font-family: var(--font-secondary);
-    font-size: 0.74rem;
-    color: var(--text-muted);
-    font-weight: 600;
   }
 
   .rich-show-breakdown :global(.show-section-card) {
@@ -461,22 +468,6 @@
     line-height: 1.4;
   }
 
-  .rich-show-breakdown :global(.video-preview-embed) {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: #000;
-    border-radius: 4px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    position: relative;
-  }
-
-  .rich-show-breakdown :global(.video-preview-embed iframe) {
-    width: 100%;
-    height: 100%;
-    border: none;
-  }
-
   .rich-show-breakdown :global(.setlist-list) {
     display: flex;
     flex-direction: column;
@@ -489,11 +480,67 @@
     font-size: 0.78rem;
     color: var(--text-white);
     background: rgba(255, 255, 255, 0.05);
-    padding: 6px 10px;
+    padding: 8px 12px;
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.18s ease, border-color 0.18s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    user-select: none;
+  }
+
+  .rich-show-breakdown :global(.setlist-item-row:hover) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+
+  .rich-show-breakdown :global(.setlist-row-progress) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(242, 240, 235, 0.2) 0%, rgba(242, 240, 235, 0.12) 100%);
+    pointer-events: none;
+    transition: width 0.25s linear;
+  }
+
+  .rich-show-breakdown :global(.setlist-item-row.is-playing .setlist-row-progress) {
+    animation: setlistProgressFill 30s linear forwards;
+  }
+
+  @keyframes setlistProgressFill {
+    from { width: 0%; }
+    to { width: 100%; }
+  }
+
+  .rich-show-breakdown :global(.setlist-row-content) {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .rich-show-breakdown :global(.setlist-song-name) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rich-show-breakdown :global(.setlist-play-icon) {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    transition: color 0.18s ease, transform 0.18s ease;
+  }
+
+  .rich-show-breakdown :global(.setlist-item-row.is-playing .setlist-play-icon) {
+    color: var(--text-white);
   }
 
   .rich-show-breakdown :global(.setlist-tag) {
@@ -502,61 +549,6 @@
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-  }
-
-  .rich-show-breakdown :global(.gallery-grid) {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-  }
-
-  .rich-show-breakdown :global(.gallery-img-box) {
-    aspect-ratio: 1 / 1;
-    border-radius: 4px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .rich-show-breakdown :global(.gallery-img-box img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .rich-show-breakdown :global(.stage-crowd-photo) {
-    width: 100%;
-    height: 130px;
-    object-fit: cover;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-  }
-
-  .rich-show-breakdown :global(.request-song-mailto-btn) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px dashed rgba(255, 255, 255, 0.25);
-    color: var(--text-white);
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    transition: all 0.18s ease;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .rich-show-breakdown :global(.request-song-mailto-btn:hover) {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    border-style: solid;
   }
 </style>
 
