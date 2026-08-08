@@ -6,9 +6,17 @@ interface Props {
 const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
 ---
 
-<div class="hero-banner-container">
-  <img src={image} alt="Kins hero banner" class="hero-banner-img" decoding="async" fetchpriority="high">
+<div class="hero-banner-container" id="heroBannerContainer">
+  <img src={image} alt="Kins hero banner" class="hero-banner-img" id="heroBannerImg" decoding="async" fetchpriority="high">
   <div class="hero-gradient-overlay"></div>
+</div>
+
+<!-- Floating Logo Download Popup -->
+<div class="hero-download-popup hidden" id="heroDownloadPopup">
+  <button class="hero-download-btn" id="heroDownloadBtn" aria-label="Download Logo">
+    <i class="fa-solid fa-download"></i>
+    <span>DOWNLOAD LOGO</span>
+  </button>
 </div>
 
 <style>
@@ -20,7 +28,11 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     height: 420px;
     z-index: 0;
     overflow: hidden;
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .hero-banner-img {
@@ -72,4 +84,160 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
       );
     pointer-events: none;
   }
+
+  .hero-download-popup {
+    position: fixed;
+    z-index: 9999;
+    transition: opacity 0.2s var(--ease-snappy), transform 0.2s var(--ease-snappy);
+    transform-origin: right center;
+    pointer-events: auto;
+  }
+
+  .hero-download-popup.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.9) translateX(8px);
+  }
+
+  .hero-download-btn {
+    background: rgba(18, 18, 20, 0.92);
+    color: var(--text-white);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 7px 13px;
+    border-radius: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(29, 185, 84, 0.25);
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    white-space: nowrap;
+  }
+
+  .hero-download-btn:hover {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border-color: var(--btn-green);
+    transform: translateY(-1px);
+  }
 </style>
+
+<script>
+  const container = document.getElementById('heroBannerContainer');
+  const img = document.getElementById('heroBannerImg') as HTMLImageElement;
+  const popup = document.getElementById('heroDownloadPopup');
+  const downloadBtn = document.getElementById('heroDownloadBtn');
+
+  let pressTimer: any = null;
+  let startX = 0;
+  let startY = 0;
+  const HOLD_DURATION = 380; // 380ms hold time
+
+  function isTopLogoArea(clientY: number) {
+    if (!container) return false;
+    const rect = container.getBoundingClientRect();
+    const relativeY = clientY - rect.top;
+    return relativeY >= 0 && relativeY <= 210; // Top logo region only
+  }
+
+  function showPopupAt(clientX: number, clientY: number) {
+    if (!popup) return;
+
+    const popupWidth = 145;
+    const popupHeight = 36;
+
+    let leftPos = clientX - popupWidth - 12; // Positioned to the LEFT of hold press
+    let topPos = clientY - (popupHeight / 2);
+
+    if (leftPos < 12) {
+      leftPos = clientX + 14; // Flip to right if too close to left viewport edge
+    }
+    if (topPos < 12) topPos = 12;
+    if (topPos + popupHeight > window.innerHeight - 12) {
+      topPos = window.innerHeight - popupHeight - 12;
+    }
+
+    popup.style.left = `${leftPos}px`;
+    popup.style.top = `${topPos}px`;
+    popup.classList.remove('hidden');
+  }
+
+  function hidePopup() {
+    if (popup) popup.classList.add('hidden');
+  }
+
+  function startHold(e: MouseEvent | TouchEvent) {
+    const point = 'touches' in e ? e.touches[0] : e;
+    startX = point.clientX;
+    startY = point.clientY;
+
+    if (!isTopLogoArea(startY)) return;
+
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(() => {
+      showPopupAt(startX, startY);
+    }, HOLD_DURATION);
+  }
+
+  function cancelHold() {
+    clearTimeout(pressTimer);
+  }
+
+  function moveHold(e: MouseEvent | TouchEvent) {
+    const point = 'touches' in e ? e.touches[0] : (e as MouseEvent);
+    const diffX = Math.abs(point.clientX - startX);
+    const diffY = Math.abs(point.clientY - startY);
+    if (diffX > 8 || diffY > 8) {
+      cancelHold();
+    }
+  }
+
+  if (container) {
+    container.addEventListener('mousedown', startHold);
+    container.addEventListener('mouseup', cancelHold);
+    container.addEventListener('mouseleave', cancelHold);
+    container.addEventListener('mousemove', moveHold);
+
+    container.addEventListener('touchstart', startHold, { passive: true });
+    container.addEventListener('touchend', cancelHold);
+    container.addEventListener('touchcancel', cancelHold);
+    container.addEventListener('touchmove', moveHold, { passive: true });
+
+    container.addEventListener('contextmenu', (e) => {
+      if (isTopLogoArea(e.clientY)) {
+        e.preventDefault();
+        showPopupAt(e.clientX, e.clientY);
+      }
+    });
+  }
+
+  if (downloadBtn && img) {
+    downloadBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hidePopup();
+
+      const imageSrc = img.src || `${import.meta.env.BASE_URL}pfp.jpg`;
+      const a = document.createElement('a');
+      a.href = imageSrc;
+      a.download = 'kins-logo.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (popup && !popup.contains(e.target as Node) && container && !container.contains(e.target as Node)) {
+      hidePopup();
+    }
+  });
+
+  window.addEventListener('scroll', hidePopup, { passive: true });
+</script>

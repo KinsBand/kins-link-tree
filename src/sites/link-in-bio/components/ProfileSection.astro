@@ -56,8 +56,8 @@
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    background: linear-gradient(135deg, rgba(0, 36, 125, 0.45) 0%, rgba(18, 18, 20, 0.85) 50%, rgba(207, 20, 43, 0.4) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(18, 18, 22, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     padding: 8px 16px;
     border-radius: 8px;
     font-family: var(--font-secondary);
@@ -66,27 +66,17 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-white);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     position: relative;
     overflow: hidden;
-    transition: all 0.25s var(--ease-snappy);
-    box-shadow: 0 4px 16px rgba(0, 36, 125, 0.35), inset 0 0 12px rgba(255, 255, 255, 0.08);
-  }
-
-  .aus-flag-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #00247D 0%, #FFFFFF 50%, #CF142B 100%);
-    opacity: 0.95;
+    transition: transform 0.25s var(--ease-snappy), border-color 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   }
 
   .aus-flag-card:hover {
-    border-color: rgba(255, 255, 255, 0.45);
-    box-shadow: 0 6px 20px rgba(0, 36, 125, 0.5), 0 0 16px rgba(207, 20, 43, 0.4);
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
     transform: translateY(-2px);
   }
 
