@@ -140,12 +140,14 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
   let startY = 0;
   const HOLD_DURATION = 350; // 350ms snappy hold time
 
+  const siteRoot = document.getElementById('siteContainer') || document.body;
+
   function isTopLogoArea(clientY: number) {
-    if (!container) return false;
-    const rect = container.getBoundingClientRect();
+    const rootEl = document.getElementById('siteContainer') || container;
+    if (!rootEl) return false;
+    const rect = rootEl.getBoundingClientRect();
     const relativeY = clientY - rect.top;
-    // Allow hold-press on top 280px of hero banner where logo is displayed
-    return relativeY >= 0 && relativeY <= 280;
+    return relativeY >= 0 && relativeY <= 260;
   }
 
   function showPopupAt(clientX: number, clientY: number) {
@@ -184,7 +186,7 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
 
     // Prevent browser text selection & default image context popups
     window.getSelection()?.removeAllRanges();
-    if (e.cancelable) {
+    if (e.cancelable && 'touches' in e) {
       e.preventDefault();
     }
 
@@ -208,18 +210,18 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     }
   }
 
-  if (container) {
-    container.addEventListener('mousedown', startHold);
-    container.addEventListener('mouseup', cancelHold);
-    container.addEventListener('mouseleave', cancelHold);
-    container.addEventListener('mousemove', moveHold);
+  if (siteRoot) {
+    siteRoot.addEventListener('mousedown', startHold);
+    siteRoot.addEventListener('mouseup', cancelHold);
+    siteRoot.addEventListener('mouseleave', cancelHold);
+    siteRoot.addEventListener('mousemove', moveHold);
 
-    container.addEventListener('touchstart', startHold, { passive: false });
-    container.addEventListener('touchend', cancelHold);
-    container.addEventListener('touchcancel', cancelHold);
-    container.addEventListener('touchmove', moveHold, { passive: true });
+    siteRoot.addEventListener('touchstart', startHold, { passive: false });
+    siteRoot.addEventListener('touchend', cancelHold);
+    siteRoot.addEventListener('touchcancel', cancelHold);
+    siteRoot.addEventListener('touchmove', moveHold, { passive: true });
 
-    container.addEventListener('contextmenu', (e) => {
+    siteRoot.addEventListener('contextmenu', (e) => {
       if (isTopLogoArea(e.clientY)) {
         e.preventDefault();
         showPopupAt(e.clientX, e.clientY);
