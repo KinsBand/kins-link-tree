@@ -138,26 +138,28 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
   let pressTimer: any = null;
   let startX = 0;
   let startY = 0;
-  const HOLD_DURATION = 380; // 380ms hold time
+  const HOLD_DURATION = 350; // 350ms snappy hold time
 
   function isTopLogoArea(clientY: number) {
     if (!container) return false;
     const rect = container.getBoundingClientRect();
     const relativeY = clientY - rect.top;
-    return relativeY >= 0 && relativeY <= 210; // Top logo region only
+    // Allow hold-press on top 280px of hero banner where logo is displayed
+    return relativeY >= 0 && relativeY <= 280;
   }
 
   function showPopupAt(clientX: number, clientY: number) {
     if (!popup) return;
 
-    const popupWidth = 145;
-    const popupHeight = 36;
+    const popupWidth = 150;
+    const popupHeight = 38;
 
-    let leftPos = clientX - popupWidth - 12; // Positioned to the LEFT of hold press
+    // Position to the LEFT of touch/hold location
+    let leftPos = clientX - popupWidth - 14;
     let topPos = clientY - (popupHeight / 2);
 
     if (leftPos < 12) {
-      leftPos = clientX + 14; // Flip to right if too close to left viewport edge
+      leftPos = clientX + 16; // Flip to right if too close to left screen boundary
     }
     if (topPos < 12) topPos = 12;
     if (topPos + popupHeight > window.innerHeight - 12) {
@@ -180,9 +182,9 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
 
     if (!isTopLogoArea(startY)) return;
 
-    // Clear any text selection and prevent browser text highlight
+    // Prevent browser text selection & default image context popups
     window.getSelection()?.removeAllRanges();
-    if (e.cancelable && 'touches' in e) {
+    if (e.cancelable) {
       e.preventDefault();
     }
 
@@ -201,7 +203,7 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     const point = 'touches' in e ? e.touches[0] : (e as MouseEvent);
     const diffX = Math.abs(point.clientX - startX);
     const diffY = Math.abs(point.clientY - startY);
-    if (diffX > 8 || diffY > 8) {
+    if (diffX > 10 || diffY > 10) {
       cancelHold();
     }
   }
@@ -225,18 +227,88 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     });
   }
 
-  if (downloadBtn && img) {
+  // Robust Multi-Stage Logo Download Function with Fallbacks & Error Handling
+  async function downloadLogoFile() {
+    const imageSrc = img?.src || `${import.meta.env.BASE_URL}pfp.jpg`;
+
+    const notify = (msg: string) => {
+      if ((window as any).showToast) {
+        (window as any).showToast(msg);
+      }
+    };
+
+    notify("Downloading logo...");
+
+    // Strategy 1: Fetch as Blob for guaranteed native browser download
+    try {
+      const response = await fetch(imageSrc);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = 'kins-logo.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+      notify("Logo saved!");
+      return;
+    } catch (err) {
+      console.warn("Direct blob download failed, trying Canvas DataURL fallback...", err);
+    }
+
+    // Strategy 2: Canvas DataURL fallback for CORS / local file restrictions
+    try {
+      const tempImg = new Image();
+      tempImg.crossOrigin = "anonymous";
+      tempImg.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = tempImg.naturalWidth || 800;
+          canvas.height = tempImg.naturalHeight || 800;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(tempImg, 0, 0);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'kins-logo.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            notify("Logo saved!");
+            return;
+          }
+        } catch (canvasErr) {
+          console.warn("Canvas conversion failed, resorting to direct anchor trigger", canvasErr);
+          triggerDirectLink(imageSrc);
+        }
+      };
+      tempImg.onerror = () => triggerDirectLink(imageSrc);
+      tempImg.src = imageSrc;
+    } catch (fallbackErr) {
+      triggerDirectLink(imageSrc);
+    }
+  }
+
+  function triggerDirectLink(url: string) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.download = 'kins-logo.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  if (downloadBtn) {
     downloadBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       hidePopup();
-
-      const imageSrc = img.src || `${import.meta.env.BASE_URL}pfp.jpg`;
-      const a = document.createElement('a');
-      a.href = imageSrc;
-      a.download = 'kins-logo.jpg';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      downloadLogoFile();
     });
   }
 
