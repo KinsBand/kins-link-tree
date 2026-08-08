@@ -278,10 +278,15 @@ class PhysicsParticleRain {
     for (let p of this.particles) {
       const dx = p.x - this.mouse.x;
       const dy = p.y - this.mouse.y;
-      const touchRadius = Math.max(p.radius * 2.2, 45); // Enlarged hit area for easy finger touch
+      const touchRadius = Math.max(p.radius * 2.5, 50); // Responsive hit area for finger touch
       if (Math.sqrt(dx * dx + dy * dy) < touchRadius) {
         this.isDragging = true;
         this.draggedParticle = p;
+
+        // Touch kick spin and spark burst when touched
+        p.vRot += (Math.random() - 0.5) * 0.5;
+        p.vy -= Math.random() * 2 + 1.5;
+        this.spawnSparks(p.x, p.y, 6);
         break;
       }
     }
@@ -295,8 +300,8 @@ class PhysicsParticleRain {
     if (this.isDragging && this.draggedParticle) {
       this.draggedParticle.x = point.clientX;
       this.draggedParticle.y = point.clientY;
-      this.draggedParticle.vx = this.mouseVel.x * 0.7;
-      this.draggedParticle.vy = this.mouseVel.y * 0.7;
+      this.draggedParticle.vx = this.mouseVel.x * 0.75;
+      this.draggedParticle.vy = this.mouseVel.y * 0.75;
     }
 
     this.mouse.x = point.clientX;
@@ -307,8 +312,8 @@ class PhysicsParticleRain {
 
   handlePointerUp() {
     if (this.isDragging && this.draggedParticle) {
-      this.draggedParticle.vx = this.mouseVel.x * 0.85;
-      this.draggedParticle.vy = this.mouseVel.y * 0.85;
+      this.draggedParticle.vx = this.mouseVel.x * 0.9;
+      this.draggedParticle.vy = this.mouseVel.y * 0.9;
     }
     this.isDragging = false;
     this.draggedParticle = null;
@@ -319,6 +324,17 @@ class PhysicsParticleRain {
     this.ctx.translate(p.x, p.y);
     this.ctx.rotate(p.rotation);
 
+    const isTouched = this.draggedParticle === p;
+    if (isTouched) {
+      this.ctx.scale(1.25, 1.25);
+    }
+
+    // Touch Glow Aura
+    if (isTouched) {
+      this.ctx.shadowColor = '#1DB854';
+      this.ctx.shadowBlur = 18;
+    }
+
     // Pick Body Gradient
     const pickGrad = this.ctx.createLinearGradient(0, -p.radius, 0, p.radius);
     pickGrad.addColorStop(0, '#24242A');
@@ -326,8 +342,8 @@ class PhysicsParticleRain {
 
     // Pick Bevel Outline
     this.ctx.fillStyle = pickGrad;
-    this.ctx.strokeStyle = p.accentColor;
-    this.ctx.lineWidth = 1.8;
+    this.ctx.strokeStyle = isTouched ? '#1DB854' : p.accentColor;
+    this.ctx.lineWidth = isTouched ? 2.5 : 1.8;
 
     // Curved Triangle Pick Path
     this.ctx.beginPath();
@@ -361,13 +377,20 @@ class PhysicsParticleRain {
     this.ctx.translate(p.x, p.y);
     this.ctx.rotate(p.rotation);
 
+    const isTouched = this.draggedParticle === p;
+    if (isTouched) {
+      this.ctx.scale(1.25, 1.25);
+      this.ctx.shadowColor = '#1DB854';
+      this.ctx.shadowBlur = 18;
+    }
+
     // Outer Vinyl Disc
     this.ctx.beginPath();
     this.ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
     this.ctx.fillStyle = '#111115';
     this.ctx.fill();
-    this.ctx.strokeStyle = '#282830';
-    this.ctx.lineWidth = 1.4;
+    this.ctx.strokeStyle = isTouched ? '#1DB854' : '#282830';
+    this.ctx.lineWidth = isTouched ? 2 : 1.4;
     this.ctx.stroke();
 
     // Shiny Vinyl Reflection Sheen
@@ -442,7 +465,7 @@ class PhysicsParticleRain {
       if (rect.top > 0) return rect.top;
     }
     const vpHeight = this.getEffectiveViewportHeight();
-    const bottomSafeArea = window.innerWidth < 768 ? 95 : 30;
+    const bottomSafeArea = window.innerWidth < 768 ? 85 : 30;
     return vpHeight - bottomSafeArea;
   }
 
@@ -480,56 +503,6 @@ class PhysicsParticleRain {
         p.x = window.innerWidth - p.radius;
         if (Math.abs(p.vx) > 2) this.spawnSparks(p.x, p.y, 3);
         p.vx *= -p.bounce;
-      }
-    }
-
-    // Resolve particle-to-particle collisions when picks and vinyls touch each other
-    this.resolveParticleCollisions();
-  }
-
-  resolveParticleCollisions() {
-    for (let i = 0; i < this.particles.length; i++) {
-      for (let j = i + 1; j < this.particles.length; j++) {
-        const p1 = this.particles[i];
-        const p2 = this.particles[j];
-
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const minDist = p1.radius + p2.radius;
-
-        if (dist < minDist && dist > 0) {
-          const overlap = minDist - dist;
-          const nx = dx / dist;
-          const ny = dy / dist;
-
-          const ratio1 = p1 === this.draggedParticle ? 0 : (p2 === this.draggedParticle ? 1 : 0.5);
-          const ratio2 = p2 === this.draggedParticle ? 0 : (p1 === this.draggedParticle ? 1 : 0.5);
-
-          p1.x -= nx * overlap * ratio1;
-          p1.y -= ny * overlap * ratio1;
-          p2.x += nx * overlap * ratio2;
-          p2.y += ny * overlap * ratio2;
-
-          const kx = p1.vx - p2.vx;
-          const ky = p1.vy - p2.vy;
-          const impulse = nx * kx + ny * ky;
-
-          if (impulse > 0) {
-            if (p1 !== this.draggedParticle) {
-              p1.vx -= impulse * nx * 0.72;
-              p1.vy -= impulse * ny * 0.72;
-            }
-            if (p2 !== this.draggedParticle) {
-              p2.vx += impulse * nx * 0.72;
-              p2.vy += impulse * ny * 0.72;
-            }
-
-            if (impulse > 2.5) {
-              this.spawnSparks((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, 2);
-            }
-          }
-        }
       }
     }
   }
