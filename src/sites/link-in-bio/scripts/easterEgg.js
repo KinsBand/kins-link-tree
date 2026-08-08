@@ -67,7 +67,7 @@ class PhysicsParticleRain {
     window.addEventListener('mouseup', this.boundPointerUp);
     window.addEventListener('touchend', this.boundPointerUp);
 
-    this.createCloseButton();
+    this.createPlaygroundHeader();
     this.loop();
   }
 
@@ -111,51 +111,104 @@ class PhysicsParticleRain {
     }
   }
 
-  createCloseButton() {
-    const btn = document.createElement('button');
-    btn.id = 'easter-egg-close';
-    btn.innerHTML = `<i class="fa-solid fa-xmark"></i> <span>CLOSE PLAYGROUND</span>`;
-    Object.assign(btn.style, {
+  createPlaygroundHeader() {
+    const header = document.createElement('div');
+    header.id = 'easter-egg-header';
+    header.innerHTML = `
+      <div class="easter-pill-left">
+        <span class="easter-live-dot"></span>
+        <span class="easter-title">🎸 KINS PLAYGROUND</span>
+      </div>
+      <button class="easter-close-btn" id="easter-egg-close" aria-label="Exit Playground">
+        <i class="fa-solid fa-xmark"></i>
+        <span>EXIT</span>
+      </button>
+    `;
+
+    Object.assign(header.style, {
       position: 'fixed',
-      bottom: '36px',
+      top: '24px',
       left: '50%',
       transform: 'translateX(-50%)',
-      zIndex: '10000',
-      padding: '11px 24px',
-      background: 'rgba(16, 16, 20, 0.94)',
+      zIndex: '10002',
+      padding: '8px 14px 8px 18px',
+      background: 'rgba(14, 14, 18, 0.94)',
       color: '#FFFFFF',
-      border: '1px solid rgba(255, 255, 255, 0.22)',
-      borderRadius: '24px',
+      border: '1px solid rgba(29, 185, 84, 0.4)',
+      borderRadius: '30px',
       fontFamily: 'var(--font-secondary, sans-serif)',
       fontWeight: '800',
       fontSize: '0.74rem',
       letterSpacing: '0.08em',
-      textTransform: 'uppercase',
-      cursor: 'pointer',
       backdropFilter: 'blur(16px)',
       webkitBackdropFilter: 'blur(16px)',
-      boxShadow: '0 10px 32px rgba(0,0,0,0.75), 0 0 20px rgba(29,185,84,0.35)',
+      boxShadow: '0 10px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(29, 185, 84, 0.35)',
       display: 'inline-flex',
       alignItems: 'center',
-      gap: '8px',
-      transition: 'all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      gap: '16px',
+      whiteSpace: 'nowrap',
+      userSelect: 'none',
+      webkitUserSelect: 'none',
     });
 
-    btn.onmouseenter = () => {
-      btn.style.background = '#1DB854';
-      btn.style.color = '#000000';
-      btn.style.borderColor = '#1DB854';
-      btn.style.transform = 'translateX(-50%) scale(1.06)';
-    };
-    btn.onmouseleave = () => {
-      btn.style.background = 'rgba(16, 16, 20, 0.94)';
-      btn.style.color = '#FFFFFF';
-      btn.style.borderColor = 'rgba(255, 255, 255, 0.22)';
-      btn.style.transform = 'translateX(-50%) scale(1)';
-    };
+    if (!document.getElementById('easter-egg-styles')) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'easter-egg-styles';
+      styleEl.innerHTML = `
+        .easter-pill-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .easter-live-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #1DB854;
+          box-shadow: 0 0 10px #1DB854;
+          animation: easterDotPulse 1.4s ease-in-out infinite alternate;
+        }
+        @keyframes easterDotPulse {
+          from { transform: scale(0.85); opacity: 0.7; }
+          to { transform: scale(1.25); opacity: 1; box-shadow: 0 0 14px #1DB854; }
+        }
+        .easter-title {
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          color: #FFFFFF;
+        }
+        .easter-close-btn {
+          background: rgba(255, 255, 255, 0.1);
+          color: #FFFFFF;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          padding: 6px 14px;
+          border-radius: 18px;
+          font-family: inherit;
+          font-weight: 800;
+          font-size: 0.7rem;
+          letter-spacing: 0.06em;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .easter-close-btn:hover {
+          background: #CF142B;
+          color: #FFFFFF;
+          border-color: #CF142B;
+          transform: scale(1.05);
+          box-shadow: 0 0 12px rgba(207, 20, 43, 0.5);
+        }
+      `;
+      document.head.appendChild(styleEl);
+    }
 
-    btn.onclick = () => this.destroy();
-    document.body.appendChild(btn);
+    document.body.appendChild(header);
+    const closeBtn = document.getElementById('easter-egg-close');
+    if (closeBtn) {
+      closeBtn.onclick = () => this.destroy();
+    }
   }
 
   handlePointerDown(point) {
@@ -394,8 +447,8 @@ class PhysicsParticleRain {
       window.removeEventListener('touchend', this.boundPointerUp);
     }
     if (this.canvas) this.canvas.remove();
-    const btn = document.getElementById('easter-egg-close');
-    if (btn) btn.remove();
+    const header = document.getElementById('easter-egg-header');
+    if (header) header.remove();
 
     this.canvas = null;
     this.ctx = null;

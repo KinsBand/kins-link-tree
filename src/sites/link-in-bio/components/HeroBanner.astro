@@ -150,7 +150,6 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
   let startY = 0;
   const HOLD_DURATION = 350; // 350ms snappy hold time
 
-  // 5-Tap Counter for Physics Rain Easter Egg
   let clickCount = 0;
   let clickResetTimer: any = null;
   let popupWasOpenOnPress = false;
@@ -159,8 +158,17 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     return popup && !popup.classList.contains('hidden');
   }
 
+  const siteRoot = document.getElementById('siteContainer') || document.body;
+
+  function isTopLogoArea(clientY: number) {
+    const rootEl = document.getElementById('siteContainer') || container;
+    if (!rootEl) return false;
+    const rect = rootEl.getBoundingClientRect();
+    const relativeY = clientY - rect.top;
+    return relativeY >= 0 && relativeY <= 260;
+  }
+
   function trackLogoTaps(clientY: number) {
-    // If popup was open during press/dismiss, do NOT count towards 5 taps
     if (popupWasOpenOnPress || isPopupOpen()) {
       popupWasOpenOnPress = false;
       hidePopup();
@@ -175,22 +183,20 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
       clickCount = 0;
     }, 1500);
 
-    if (clickCount >= 5) {
+    const remainingHits = 5 - clickCount;
+
+    if (remainingHits === 3) {
+      showToast("🔥 3 more hits until 🎸 Kins Physics Playground!");
+    } else if (remainingHits === 2) {
+      showToast("⚡ 2 more hits until 🎸 Kins Physics Playground!");
+    } else if (remainingHits === 1) {
+      showToast("🚀 1 more hit until 🎸 Kins Physics Playground!");
+    } else if (clickCount >= 5) {
       clickCount = 0;
       hidePopup();
       rainEffect.init();
-      showToast("🎸 You unlocked the Kins Physics Playground!");
+      showToast("🎉 🎸 Kins Physics Playground Unlocked!");
     }
-  }
-
-  const siteRoot = document.getElementById('siteContainer') || document.body;
-
-  function isTopLogoArea(clientY: number) {
-    const rootEl = document.getElementById('siteContainer') || container;
-    if (!rootEl) return false;
-    const rect = rootEl.getBoundingClientRect();
-    const relativeY = clientY - rect.top;
-    return relativeY >= 0 && relativeY <= 260;
   }
 
   function showPopupAt(clientX: number, clientY: number) {
@@ -199,12 +205,11 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     const popupWidth = 150;
     const popupHeight = 38;
 
-    // Position to the LEFT of touch/hold location
     let leftPos = clientX - popupWidth - 14;
     let topPos = clientY - (popupHeight / 2);
 
     if (leftPos < 12) {
-      leftPos = clientX + 16; // Flip to right if too close to left screen boundary
+      leftPos = clientX + 16;
     }
     if (topPos < 12) topPos = 12;
     if (topPos + popupHeight > window.innerHeight - 12) {
@@ -221,7 +226,6 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
   }
 
   function startHold(e: MouseEvent | TouchEvent) {
-    // Ignore presses originating inside the popup or download button itself
     if (popup && (popup.contains(e.target as Node) || popup === e.target)) {
       return;
     }
@@ -229,7 +233,7 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     popupWasOpenOnPress = isPopupOpen();
     if (popupWasOpenOnPress) {
       hidePopup();
-      return; // 1-press dismiss: do not start new hold timer
+      return;
     }
 
     const point = 'touches' in e ? e.touches[0] : e;
@@ -238,7 +242,6 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
 
     if (!isTopLogoArea(startY)) return;
 
-    // Prevent browser text selection & default image context popups on top logo area
     window.getSelection()?.removeAllRanges();
     if (e.cancelable && 'touches' in e) {
       e.preventDefault();
@@ -275,7 +278,6 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     siteRoot.addEventListener('touchcancel', cancelHold);
     siteRoot.addEventListener('touchmove', moveHold, { passive: true });
 
-    // Click & Touch Tap handler for 5-tap Easter Egg trigger
     siteRoot.addEventListener('click', (e) => {
       if (popup && popup.contains(e.target as Node)) return;
       trackLogoTaps(e.clientY);
@@ -297,7 +299,6 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     });
   }
 
-  // Guaranteed Logo Download Trigger with Toast Notification
   function triggerLogoDownload(e?: Event) {
     if (e) {
       e.preventDefault();
@@ -307,10 +308,8 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
 
     const imageSrc = img?.src || `${import.meta.env.BASE_URL}pfp.jpg`;
 
-    // Trigger toast notification
     showToast("⚡ Kins Logo Downloaded!");
 
-    // Synchronous native browser download link
     try {
       const link = document.createElement('a');
       link.href = imageSrc;
@@ -334,7 +333,6 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     });
   }
 
-  // 1-Press Dismiss anywhere on document
   document.addEventListener('pointerdown', (e) => {
     if (isPopupOpen() && popup && !popup.contains(e.target as Node)) {
       hidePopup();
