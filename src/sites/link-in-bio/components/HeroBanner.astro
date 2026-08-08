@@ -138,6 +138,7 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
 
 <script>
   import { showToast } from '../scripts/toast.js';
+  import { rainEffect } from '../scripts/easterEgg.js';
 
   const container = document.getElementById('heroBannerContainer');
   const img = document.getElementById('heroBannerImg') as HTMLImageElement;
@@ -148,6 +149,27 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
   let startX = 0;
   let startY = 0;
   const HOLD_DURATION = 350; // 350ms snappy hold time
+
+  // 5-Tap Counter for Physics Rain Easter Egg
+  let clickCount = 0;
+  let clickResetTimer: any = null;
+
+  function trackLogoTaps(clientY: number) {
+    if (!isTopLogoArea(clientY)) return;
+
+    clickCount++;
+    clearTimeout(clickResetTimer);
+    clickResetTimer = setTimeout(() => {
+      clickCount = 0;
+    }, 1500);
+
+    if (clickCount >= 5) {
+      clickCount = 0;
+      hidePopup();
+      rainEffect.init();
+      showToast("🎸 You unlocked the Kins Physics Playground!");
+    }
+  }
 
   const siteRoot = document.getElementById('siteContainer') || document.body;
 
@@ -234,6 +256,19 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     siteRoot.addEventListener('touchend', cancelHold);
     siteRoot.addEventListener('touchcancel', cancelHold);
     siteRoot.addEventListener('touchmove', moveHold, { passive: true });
+
+    // Click & Touch Tap handler for 5-tap Easter Egg trigger
+    siteRoot.addEventListener('click', (e) => {
+      if (popup && popup.contains(e.target as Node)) return;
+      trackLogoTaps(e.clientY);
+    });
+
+    siteRoot.addEventListener('touchend', (e) => {
+      if (popup && popup.contains(e.target as Node)) return;
+      if (e.changedTouches && e.changedTouches.length) {
+        trackLogoTaps(e.changedTouches[0].clientY);
+      }
+    });
 
     siteRoot.addEventListener('contextmenu', (e) => {
       if (popup && popup.contains(e.target as Node)) return;
