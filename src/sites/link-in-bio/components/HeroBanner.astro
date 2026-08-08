@@ -180,8 +180,15 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
 
     if (!isTopLogoArea(startY)) return;
 
+    // Clear any text selection and prevent browser text highlight
+    window.getSelection()?.removeAllRanges();
+    if (e.cancelable && 'touches' in e) {
+      e.preventDefault();
+    }
+
     clearTimeout(pressTimer);
     pressTimer = setTimeout(() => {
+      window.getSelection()?.removeAllRanges();
       showPopupAt(startX, startY);
     }, HOLD_DURATION);
   }
@@ -205,7 +212,7 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     container.addEventListener('mouseleave', cancelHold);
     container.addEventListener('mousemove', moveHold);
 
-    container.addEventListener('touchstart', startHold, { passive: true });
+    container.addEventListener('touchstart', startHold, { passive: false });
     container.addEventListener('touchend', cancelHold);
     container.addEventListener('touchcancel', cancelHold);
     container.addEventListener('touchmove', moveHold, { passive: true });
