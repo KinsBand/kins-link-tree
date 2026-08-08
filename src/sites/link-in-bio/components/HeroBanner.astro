@@ -186,16 +186,16 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     const remainingHits = 5 - clickCount;
 
     if (remainingHits === 3) {
-      showToast("🔥 3 more hits until 🎸 Kins Physics Playground!");
+      showToast("3 more hits 🎸");
     } else if (remainingHits === 2) {
-      showToast("⚡ 2 more hits until 🎸 Kins Physics Playground!");
+      showToast("2 more hits 🎸");
     } else if (remainingHits === 1) {
-      showToast("🚀 1 more hit until 🎸 Kins Physics Playground!");
+      showToast("1 more hit 🎸");
     } else if (clickCount >= 5) {
       clickCount = 0;
       hidePopup();
       rainEffect.init();
-      showToast("🎉 🎸 Kins Physics Playground Unlocked!");
+      showToast("🎉 Kins Physics Playground Unlocked 🎸");
     }
   }
 

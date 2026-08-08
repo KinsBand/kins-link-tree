@@ -42,6 +42,10 @@ class PhysicsParticleRain {
 
     this.resizeHandler = () => this.resize();
     window.addEventListener('resize', this.resizeHandler);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', this.resizeHandler);
+      window.visualViewport.addEventListener('scroll', this.resizeHandler);
+    }
 
     // Spawn 45 Kins physics particles
     this.particles = [];
@@ -71,10 +75,17 @@ class PhysicsParticleRain {
     this.loop();
   }
 
+  getEffectiveViewportHeight() {
+    if (window.visualViewport) {
+      return window.visualViewport.height;
+    }
+    return window.innerHeight;
+  }
+
   resize() {
     if (!this.canvas) return;
     this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    this.canvas.height = this.getEffectiveViewportHeight();
   }
 
   createParticle() {
@@ -416,9 +427,10 @@ class PhysicsParticleRain {
       p.y += p.vy;
       p.rotation += p.vRot;
 
-      // Floor bounce - accounts for mobile gesture bar / home indicator safe area
-      const bottomSafeArea = window.innerWidth < 640 ? 38 : 22;
-      const floorY = window.innerHeight - bottomSafeArea;
+      // Floor bounce - accounts for mobile viewports and dynamic address bar / home indicator insets
+      const effectiveHeight = this.getEffectiveViewportHeight();
+      const bottomSafeArea = window.innerWidth < 768 ? 64 : 26;
+      const floorY = effectiveHeight - bottomSafeArea;
 
       if (p.y + p.radius > floorY) {
         p.y = floorY - p.radius;
@@ -465,7 +477,13 @@ class PhysicsParticleRain {
 
   destroy() {
     if (this.animId) cancelAnimationFrame(this.animId);
-    if (this.resizeHandler) window.removeEventListener('resize', this.resizeHandler);
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', this.resizeHandler);
+        window.visualViewport.removeEventListener('scroll', this.resizeHandler);
+      }
+    }
     if (this.boundPointerMove) {
       window.removeEventListener('mousemove', this.boundPointerMove);
       window.removeEventListener('touchmove', this.boundPointerMove);
