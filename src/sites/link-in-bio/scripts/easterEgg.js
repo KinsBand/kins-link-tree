@@ -119,10 +119,16 @@ class PhysicsParticleRain {
         <span class="easter-live-dot"></span>
         <span class="easter-title">🎸 KINS PLAYGROUND</span>
       </div>
-      <button class="easter-close-btn" id="easter-egg-close" aria-label="Exit Playground">
-        <i class="fa-solid fa-xmark"></i>
-        <span>EXIT</span>
-      </button>
+      <div class="easter-pill-right">
+        <button class="easter-action-btn easter-redo-btn" id="easter-egg-redo" aria-label="Redo Particle Rain">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span>REDO</span>
+        </button>
+        <button class="easter-action-btn easter-close-btn" id="easter-egg-close" aria-label="Exit Playground">
+          <i class="fa-solid fa-xmark"></i>
+          <span>EXIT</span>
+        </button>
+      </div>
     `;
 
     Object.assign(header.style, {
@@ -155,7 +161,7 @@ class PhysicsParticleRain {
       const styleEl = document.createElement('style');
       styleEl.id = 'easter-egg-styles';
       styleEl.innerHTML = `
-        .easter-pill-left {
+        .easter-pill-left, .easter-pill-right {
           display: flex;
           align-items: center;
           gap: 10px;
@@ -177,11 +183,11 @@ class PhysicsParticleRain {
           letter-spacing: 0.08em;
           color: #FFFFFF;
         }
-        .easter-close-btn {
+        .easter-action-btn {
           background: rgba(255, 255, 255, 0.1);
           color: #FFFFFF;
           border: 1px solid rgba(255, 255, 255, 0.2);
-          padding: 6px 14px;
+          padding: 6px 13px;
           border-radius: 18px;
           font-family: inherit;
           font-weight: 800;
@@ -192,6 +198,13 @@ class PhysicsParticleRain {
           align-items: center;
           gap: 6px;
           transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .easter-redo-btn:hover {
+          background: #1DB854;
+          color: #000000;
+          border-color: #1DB854;
+          transform: scale(1.05);
+          box-shadow: 0 0 12px rgba(29, 185, 84, 0.5);
         }
         .easter-close-btn:hover {
           background: #CF142B;
@@ -205,9 +218,21 @@ class PhysicsParticleRain {
     }
 
     document.body.appendChild(header);
+
     const closeBtn = document.getElementById('easter-egg-close');
     if (closeBtn) {
       closeBtn.onclick = () => this.destroy();
+    }
+
+    const redoBtn = document.getElementById('easter-egg-redo');
+    if (redoBtn) {
+      redoBtn.onclick = () => {
+        this.particles = [];
+        this.sparks = [];
+        for (let i = 0; i < 45; i++) {
+          this.particles.push(this.createParticle());
+        }
+      };
     }
   }
 
@@ -391,9 +416,12 @@ class PhysicsParticleRain {
       p.y += p.vy;
       p.rotation += p.vRot;
 
-      // Floor bounce
-      if (p.y + p.radius > window.innerHeight) {
-        p.y = window.innerHeight - p.radius;
+      // Floor bounce - accounts for mobile gesture bar / home indicator safe area
+      const bottomSafeArea = window.innerWidth < 640 ? 38 : 22;
+      const floorY = window.innerHeight - bottomSafeArea;
+
+      if (p.y + p.radius > floorY) {
+        p.y = floorY - p.radius;
         if (Math.abs(p.vy) > 2) {
           this.spawnSparks(p.x, p.y + p.radius, 4);
         }
