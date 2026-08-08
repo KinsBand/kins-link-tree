@@ -38,6 +38,27 @@ class PhysicsParticleRain {
 
     document.body.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
+
+    // Floor sentinel element for exact mobile safe-area ground measurement
+    if (!document.getElementById('easter-egg-floor-sentinel')) {
+      this.sentinel = document.createElement('div');
+      this.sentinel.id = 'easter-egg-floor-sentinel';
+      Object.assign(this.sentinel.style, {
+        position: 'fixed',
+        bottom: '0',
+        left: '0',
+        width: '100%',
+        height: '1px',
+        paddingBottom: 'max(90px, env(safe-area-inset-bottom, 90px))',
+        pointerEvents: 'none',
+        zIndex: '9998',
+        visibility: 'hidden',
+      });
+      document.body.appendChild(this.sentinel);
+    } else {
+      this.sentinel = document.getElementById('easter-egg-floor-sentinel');
+    }
+
     this.resize();
 
     this.resizeHandler = () => this.resize();
@@ -414,6 +435,16 @@ class PhysicsParticleRain {
     }
   }
 
+  getFloorLimit() {
+    if (this.sentinel) {
+      const rect = this.sentinel.getBoundingClientRect();
+      if (rect.top > 0) return rect.top;
+    }
+    const vpHeight = this.getEffectiveViewportHeight();
+    const bottomSafeArea = window.innerWidth < 768 ? 95 : 30;
+    return vpHeight - bottomSafeArea;
+  }
+
   update() {
     const gravity = 0.3;
     const friction = 0.985;
@@ -427,10 +458,8 @@ class PhysicsParticleRain {
       p.y += p.vy;
       p.rotation += p.vRot;
 
-      // Floor bounce - accounts for mobile viewports and dynamic address bar / home indicator insets
-      const effectiveHeight = this.getEffectiveViewportHeight();
-      const bottomSafeArea = window.innerWidth < 768 ? 64 : 26;
-      const floorY = effectiveHeight - bottomSafeArea;
+      // Floor bounce - exact mobile ground measurement via sentinel bounding rect
+      const floorY = this.getFloorLimit();
 
       if (p.y + p.radius > floorY) {
         p.y = floorY - p.radius;
@@ -495,11 +524,14 @@ class PhysicsParticleRain {
     if (this.canvas) this.canvas.remove();
     const header = document.getElementById('easter-egg-header');
     if (header) header.remove();
+    const sentinel = document.getElementById('easter-egg-floor-sentinel');
+    if (sentinel) sentinel.remove();
 
     this.canvas = null;
     this.ctx = null;
     this.particles = [];
     this.sparks = [];
+    this.sentinel = null;
   }
 }
 
