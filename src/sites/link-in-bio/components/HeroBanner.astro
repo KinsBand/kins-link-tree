@@ -88,48 +88,57 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
   .hero-download-popup {
     position: fixed;
     z-index: 9999;
-    transition: opacity 0.2s var(--ease-snappy), transform 0.2s var(--ease-snappy);
+    transition: opacity 0.26s cubic-bezier(0.34, 1.56, 0.64, 1),
+                transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1),
+                filter 0.26s ease;
     transform-origin: right center;
     pointer-events: auto;
+    filter: blur(0px);
   }
 
   .hero-download-popup.hidden {
     opacity: 0;
+    filter: blur(6px);
     pointer-events: none;
-    transform: scale(0.9) translateX(8px);
+    transform: scale(0.72) translateX(-10px) translateY(-2px);
   }
 
   .hero-download-btn {
-    background: rgba(18, 18, 20, 0.92);
+    background: rgba(16, 16, 20, 0.94);
     color: var(--text-white);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    padding: 7px 13px;
-    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 15px;
+    border-radius: 8px;
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
     cursor: pointer;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(29, 185, 84, 0.25);
-    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(29, 185, 84, 0.3);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                background-color 0.18s ease,
+                border-color 0.18s ease,
+                color 0.18s ease;
     white-space: nowrap;
   }
 
   .hero-download-btn:hover {
     background: var(--btn-green);
-    color: var(--btn-text-color);
+    color: #000000;
     border-color: var(--btn-green);
-    transform: translateY(-1px);
+    transform: scale(1.05) translateY(-1px);
   }
 </style>
 
 <script>
+  import { showToast } from '../scripts/toast.js';
+
   const container = document.getElementById('heroBannerContainer');
   const img = document.getElementById('heroBannerImg') as HTMLImageElement;
   const popup = document.getElementById('heroDownloadPopup');
@@ -235,7 +244,7 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     });
   }
 
-  // Guaranteed Logo Download Trigger
+  // Guaranteed Logo Download Trigger with Toast Notification
   function triggerLogoDownload(e?: Event) {
     if (e) {
       e.preventDefault();
@@ -243,15 +252,10 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     }
     hidePopup();
 
-    const notify = (msg: string) => {
-      if ((window as any).showToast) {
-        (window as any).showToast(msg);
-      }
-    };
-
     const imageSrc = img?.src || `${import.meta.env.BASE_URL}pfp.jpg`;
 
-    notify("Downloading logo...");
+    // Trigger toast notification
+    showToast("⚡ Kins Logo Downloaded!");
 
     // Synchronous native browser download link
     try {
@@ -262,7 +266,6 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      notify("Logo saved!");
     } catch (err) {
       console.warn("Direct download link error, opening fallback image tab...", err);
       window.open(imageSrc, '_blank');
