@@ -278,7 +278,8 @@ class PhysicsParticleRain {
     for (let p of this.particles) {
       const dx = p.x - this.mouse.x;
       const dy = p.y - this.mouse.y;
-      if (Math.sqrt(dx * dx + dy * dy) < p.radius * 1.5) {
+      const touchRadius = Math.max(p.radius * 2.2, 45); // Enlarged hit area for easy finger touch
+      if (Math.sqrt(dx * dx + dy * dy) < touchRadius) {
         this.isDragging = true;
         this.draggedParticle = p;
         break;
@@ -479,6 +480,56 @@ class PhysicsParticleRain {
         p.x = window.innerWidth - p.radius;
         if (Math.abs(p.vx) > 2) this.spawnSparks(p.x, p.y, 3);
         p.vx *= -p.bounce;
+      }
+    }
+
+    // Resolve particle-to-particle collisions when picks and vinyls touch each other
+    this.resolveParticleCollisions();
+  }
+
+  resolveParticleCollisions() {
+    for (let i = 0; i < this.particles.length; i++) {
+      for (let j = i + 1; j < this.particles.length; j++) {
+        const p1 = this.particles[i];
+        const p2 = this.particles[j];
+
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const minDist = p1.radius + p2.radius;
+
+        if (dist < minDist && dist > 0) {
+          const overlap = minDist - dist;
+          const nx = dx / dist;
+          const ny = dy / dist;
+
+          const ratio1 = p1 === this.draggedParticle ? 0 : (p2 === this.draggedParticle ? 1 : 0.5);
+          const ratio2 = p2 === this.draggedParticle ? 0 : (p1 === this.draggedParticle ? 1 : 0.5);
+
+          p1.x -= nx * overlap * ratio1;
+          p1.y -= ny * overlap * ratio1;
+          p2.x += nx * overlap * ratio2;
+          p2.y += ny * overlap * ratio2;
+
+          const kx = p1.vx - p2.vx;
+          const ky = p1.vy - p2.vy;
+          const impulse = nx * kx + ny * ky;
+
+          if (impulse > 0) {
+            if (p1 !== this.draggedParticle) {
+              p1.vx -= impulse * nx * 0.72;
+              p1.vy -= impulse * ny * 0.72;
+            }
+            if (p2 !== this.draggedParticle) {
+              p2.vx += impulse * nx * 0.72;
+              p2.vy += impulse * ny * 0.72;
+            }
+
+            if (impulse > 2.5) {
+              this.spawnSparks((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, 2);
+            }
+          }
+        }
       }
     }
   }
