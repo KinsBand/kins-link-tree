@@ -78,7 +78,9 @@
           <i class="fa-solid fa-compact-disc audio-icon-anim" id="audioBarFallbackIcon"></i>
         </div>
         <div class="audio-bar-details">
-          <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
+          <div class="audio-bar-title-container">
+            <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
+          </div>
           <div class="audio-bar-meta-row">
             <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
             <span class="audio-bar-time" id="audioBarTime">0:00 / 0:30</span>
@@ -336,11 +338,17 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .audio-bar-icon-box {
     width: 36px;
     height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    flex-shrink: 0;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -388,6 +396,18 @@
   .audio-bar-details {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .audio-bar-title-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
   }
 
   .audio-bar-title {
@@ -395,6 +415,20 @@
     font-size: 0.82rem;
     font-weight: 700;
     color: var(--text-white);
+    display: inline-block;
+    white-space: nowrap;
+    will-change: transform;
+  }
+
+  .audio-bar-title.is-scrolling {
+    animation: marqueeScroll 8s linear infinite;
+  }
+
+  @keyframes marqueeScroll {
+    0% { transform: translateX(0); }
+    15% { transform: translateX(0); }
+    85% { transform: translateX(var(--scroll-dist, -50%)); }
+    100% { transform: translateX(0); }
   }
 
   .audio-bar-meta-row {
@@ -402,12 +436,18 @@
     align-items: center;
     gap: 8px;
     margin-top: 1px;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .audio-bar-artist {
     font-family: var(--font-secondary);
     font-size: 0.7rem;
     color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
   }
 
   .audio-bar-time {
@@ -416,12 +456,15 @@
     font-weight: 700;
     color: rgba(255, 255, 255, 0.55);
     letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .audio-bar-right {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
   }
 
   .audio-bar-stream-btn, .audio-bar-toggle-btn, .audio-bar-close-btn {

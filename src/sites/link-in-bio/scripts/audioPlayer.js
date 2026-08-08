@@ -444,7 +444,18 @@ export function initAudioPlayer() {
     openMiniPlayer();
     updateStreamLinks(currentPlayingTrack);
 
-    if (audioBarTitle) audioBarTitle.textContent = trackObj.title;
+    if (audioBarTitle) {
+      audioBarTitle.textContent = trackObj.title;
+      audioBarTitle.classList.remove('is-scrolling');
+      requestAnimationFrame(() => {
+        const parent = audioBarTitle.parentElement;
+        if (parent && audioBarTitle.scrollWidth > parent.clientWidth + 2) {
+          const scrollDist = -(audioBarTitle.scrollWidth - parent.clientWidth + 16);
+          audioBarTitle.style.setProperty('--scroll-dist', `${scrollDist}px`);
+          audioBarTitle.classList.add('is-scrolling');
+        }
+      });
+    }
     if (audioBarArtist) audioBarArtist.textContent = trackObj.artist || 'Kins';
 
     let coverUrl = trackObj.coverUrl || trackObj.artworkUrl;

@@ -150,9 +150,18 @@ const artists = [
     background: rgba(26, 26, 30, 0.95);
   }
 
+  .inspired-tracks-container :global(.music-card) {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
   .inspired-tracks-container :global(.music-card-thumb) {
     width: 46px;
     height: 46px;
+    min-width: 46px;
+    min-height: 46px;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.05);
     display: flex;
@@ -171,7 +180,6 @@ const artists = [
     border-radius: 50%;
     border-color: rgba(29, 185, 84, 0.6);
     box-shadow: 0 0 14px rgba(29, 185, 84, 0.4), 0 0 4px rgba(255, 255, 255, 0.25);
-    animation: spinVinylDisc 4s linear infinite;
   }
 
   .inspired-tracks-container :global(.music-card-thumb.vinyl-spin-anim::after) {
@@ -206,20 +214,22 @@ const artists = [
     transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1);
   }
 
-  @keyframes spinVinylDisc {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
   .inspired-tracks-container :global(.music-card-info) {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  .inspired-tracks-container :global(.song-title-container) {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
   }
 
   .inspired-tracks-container :global(.song-title) {
@@ -228,12 +238,29 @@ const artists = [
     font-weight: 700;
     color: var(--text-white);
     letter-spacing: -0.01em;
+    display: inline-block;
+    white-space: nowrap;
+    will-change: transform;
+  }
+
+  .inspired-tracks-container :global(.song-title.is-scrolling) {
+    animation: inspiredTitleScroll 8s linear infinite;
+  }
+
+  @keyframes inspiredTitleScroll {
+    0% { transform: translateX(0); }
+    15% { transform: translateX(0); }
+    85% { transform: translateX(var(--title-scroll-dist, -50%)); }
+    100% { transform: translateX(0); }
   }
 
   .inspired-tracks-container :global(.artist-name) {
     font-family: var(--font-secondary);
     font-size: 0.76rem;
     color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .inspired-tracks-container :global(.genre-tag) {
@@ -248,6 +275,7 @@ const artists = [
   .inspired-tracks-container :global(.play-btn) {
     width: 36px;
     height: 36px;
+    flex-shrink: 0;
     border-radius: 4px;
     background: var(--btn-green);
     color: var(--btn-text-color);
@@ -449,7 +477,9 @@ const artists = [
             <img class="track-artwork-img hidden" alt="${track.title}" loading="lazy" decoding="async">
           </div>
           <div class="music-card-info">
-            <span class="song-title">${track.title}</span>
+            <div class="song-title-container">
+              <span class="song-title">${track.title}</span>
+            </div>
             <span class="artist-name">${track.artist}</span>
             <span class="genre-tag">${track.genre}</span>
           </div>
@@ -490,6 +520,18 @@ const artists = [
         }
 
         container.appendChild(card);
+      });
+
+      // Enable horizontal marquee scrolling for overflowed titles
+      requestAnimationFrame(() => {
+        container.querySelectorAll('.song-title').forEach((titleEl: any) => {
+          const parent = titleEl.parentElement;
+          if (parent && titleEl.scrollWidth > parent.clientWidth + 2) {
+            const dist = -(titleEl.scrollWidth - parent.clientWidth + 16);
+            titleEl.style.setProperty('--title-scroll-dist', `${dist}px`);
+            titleEl.classList.add('is-scrolling');
+          }
+        });
       });
 
       // Update card states for newly rendered tracks
