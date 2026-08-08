@@ -3,12 +3,16 @@ class PhysicsParticleRain {
     this.canvas = null;
     this.ctx = null;
     this.particles = [];
+    this.sparks = [];
     this.animId = null;
     this.isDragging = false;
     this.draggedParticle = null;
     this.mouse = { x: 0, y: 0 };
+    this.lastMouse = { x: 0, y: 0 };
+    this.mouseVel = { x: 0, y: 0 };
     this.boundPointerMove = null;
     this.boundPointerUp = null;
+    this.resizeHandler = null;
   }
 
   init() {
@@ -25,9 +29,9 @@ class PhysicsParticleRain {
       height: '100vh',
       zIndex: '9999',
       pointerEvents: 'auto',
-      background: 'rgba(10, 10, 14, 0.45)',
-      backdropFilter: 'blur(4px)',
-      webkitBackdropFilter: 'blur(4px)',
+      background: 'rgba(8, 8, 12, 0.55)',
+      backdropFilter: 'blur(5px)',
+      webkitBackdropFilter: 'blur(5px)',
       userSelect: 'none',
       webkitUserSelect: 'none',
     });
@@ -39,9 +43,10 @@ class PhysicsParticleRain {
     this.resizeHandler = () => this.resize();
     window.addEventListener('resize', this.resizeHandler);
 
-    // Spawn 42 physics particles
+    // Spawn 45 Kins physics particles
     this.particles = [];
-    for (let i = 0; i < 42; i++) {
+    this.sparks = [];
+    for (let i = 0; i < 45; i++) {
       this.particles.push(this.createParticle());
     }
 
@@ -73,19 +78,37 @@ class PhysicsParticleRain {
   }
 
   createParticle() {
-    const isPick = Math.random() > 0.4; // 60% picks, 40% vinyl records
+    const isPick = Math.random() > 0.45; // 55% picks, 45% vinyl records
+    const colorThemes = ['#1DB854', '#00E5FF', '#F59E0B', '#E5E5E5'];
+    const accentColor = colorThemes[Math.floor(Math.random() * colorThemes.length)];
+
     return {
-      x: Math.random() * (window.innerWidth - 60) + 30,
-      y: -Math.random() * 400 - 50,
-      vx: (Math.random() - 0.5) * 6,
-      vy: Math.random() * 3 + 2,
-      radius: isPick ? 16 : 20,
+      x: Math.random() * (window.innerWidth - 80) + 40,
+      y: -Math.random() * 450 - 60,
+      vx: (Math.random() - 0.5) * 7,
+      vy: Math.random() * 3.5 + 2,
+      radius: isPick ? 22 : 26,
       rotation: Math.random() * Math.PI * 2,
-      vRot: (Math.random() - 0.5) * 0.12,
+      vRot: (Math.random() - 0.5) * 0.15,
       type: isPick ? 'pick' : 'vinyl',
-      color: isPick ? '#E2E8F0' : '#111115',
-      bounce: 0.68,
+      accentColor: accentColor,
+      bounce: 0.72,
     };
+  }
+
+  spawnSparks(x, y, count = 6) {
+    for (let i = 0; i < count; i++) {
+      this.sparks.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 0.5) * 6 - 1.5,
+        life: 1.0,
+        decay: Math.random() * 0.05 + 0.03,
+        size: Math.random() * 2.5 + 1.5,
+        color: Math.random() > 0.5 ? '#1DB854' : '#FFFFFF',
+      });
+    }
   }
 
   createCloseButton() {
@@ -98,24 +121,24 @@ class PhysicsParticleRain {
       left: '50%',
       transform: 'translateX(-50%)',
       zIndex: '10000',
-      padding: '10px 22px',
-      background: 'rgba(18, 18, 22, 0.92)',
+      padding: '11px 24px',
+      background: 'rgba(16, 16, 20, 0.94)',
       color: '#FFFFFF',
-      border: '1px solid rgba(255, 255, 255, 0.25)',
+      border: '1px solid rgba(255, 255, 255, 0.22)',
       borderRadius: '24px',
-      fontFamily: 'var(--font-secondary, monospace)',
+      fontFamily: 'var(--font-secondary, sans-serif)',
       fontWeight: '800',
-      fontSize: '0.72rem',
+      fontSize: '0.74rem',
       letterSpacing: '0.08em',
       textTransform: 'uppercase',
       cursor: 'pointer',
-      backdropFilter: 'blur(12px)',
-      webkitBackdropFilter: 'blur(12px)',
-      boxShadow: '0 8px 30px rgba(0,0,0,0.7), 0 0 16px rgba(29,185,84,0.3)',
+      backdropFilter: 'blur(16px)',
+      webkitBackdropFilter: 'blur(16px)',
+      boxShadow: '0 10px 32px rgba(0,0,0,0.75), 0 0 20px rgba(29,185,84,0.35)',
       display: 'inline-flex',
       alignItems: 'center',
       gap: '8px',
-      transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      transition: 'all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
     });
 
     btn.onmouseenter = () => {
@@ -125,9 +148,9 @@ class PhysicsParticleRain {
       btn.style.transform = 'translateX(-50%) scale(1.06)';
     };
     btn.onmouseleave = () => {
-      btn.style.background = 'rgba(18, 18, 22, 0.92)';
+      btn.style.background = 'rgba(16, 16, 20, 0.94)';
       btn.style.color = '#FFFFFF';
-      btn.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+      btn.style.borderColor = 'rgba(255, 255, 255, 0.22)';
       btn.style.transform = 'translateX(-50%) scale(1)';
     };
 
@@ -139,11 +162,13 @@ class PhysicsParticleRain {
     if (!point) return;
     this.mouse.x = point.clientX;
     this.mouse.y = point.clientY;
+    this.lastMouse.x = point.clientX;
+    this.lastMouse.y = point.clientY;
 
     for (let p of this.particles) {
       const dx = p.x - this.mouse.x;
       const dy = p.y - this.mouse.y;
-      if (Math.sqrt(dx * dx + dy * dy) < p.radius * 1.6) {
+      if (Math.sqrt(dx * dx + dy * dy) < p.radius * 1.5) {
         this.isDragging = true;
         this.draggedParticle = p;
         break;
@@ -153,17 +178,27 @@ class PhysicsParticleRain {
 
   handlePointerMove(point) {
     if (!point) return;
+    this.mouseVel.x = point.clientX - this.lastMouse.x;
+    this.mouseVel.y = point.clientY - this.lastMouse.y;
+
     if (this.isDragging && this.draggedParticle) {
-      this.draggedParticle.vx = (point.clientX - this.mouse.x) * 0.65;
-      this.draggedParticle.vy = (point.clientY - this.mouse.y) * 0.65;
       this.draggedParticle.x = point.clientX;
       this.draggedParticle.y = point.clientY;
+      this.draggedParticle.vx = this.mouseVel.x * 0.7;
+      this.draggedParticle.vy = this.mouseVel.y * 0.7;
     }
+
     this.mouse.x = point.clientX;
     this.mouse.y = point.clientY;
+    this.lastMouse.x = point.clientX;
+    this.lastMouse.y = point.clientY;
   }
 
   handlePointerUp() {
+    if (this.isDragging && this.draggedParticle) {
+      this.draggedParticle.vx = this.mouseVel.x * 0.85;
+      this.draggedParticle.vy = this.mouseVel.y * 0.85;
+    }
     this.isDragging = false;
     this.draggedParticle = null;
   }
@@ -172,26 +207,40 @@ class PhysicsParticleRain {
     this.ctx.save();
     this.ctx.translate(p.x, p.y);
     this.ctx.rotate(p.rotation);
-    this.ctx.fillStyle = p.color;
-    this.ctx.strokeStyle = '#222225';
-    this.ctx.lineWidth = 1.5;
 
-    // Curved Triangle Pick
+    // Pick Body Gradient
+    const pickGrad = this.ctx.createLinearGradient(0, -p.radius, 0, p.radius);
+    pickGrad.addColorStop(0, '#24242A');
+    pickGrad.addColorStop(1, '#121216');
+
+    // Pick Bevel Outline
+    this.ctx.fillStyle = pickGrad;
+    this.ctx.strokeStyle = p.accentColor;
+    this.ctx.lineWidth = 1.8;
+
+    // Curved Triangle Pick Path
     this.ctx.beginPath();
-    this.ctx.moveTo(0, -p.radius);
-    this.ctx.quadraticCurveTo(p.radius, -p.radius * 0.5, p.radius * 0.72, p.radius * 0.82);
-    this.ctx.quadraticCurveTo(0, p.radius * 1.35, -p.radius * 0.72, p.radius * 0.82);
-    this.ctx.quadraticCurveTo(-p.radius, -p.radius * 0.5, 0, -p.radius);
+    this.ctx.moveTo(0, -p.radius * 1.05);
+    this.ctx.quadraticCurveTo(p.radius * 1.05, -p.radius * 0.45, p.radius * 0.75, p.radius * 0.85);
+    this.ctx.quadraticCurveTo(0, p.radius * 1.35, -p.radius * 0.75, p.radius * 0.85);
+    this.ctx.quadraticCurveTo(-p.radius * 1.05, -p.radius * 0.45, 0, -p.radius * 1.05);
     this.ctx.closePath();
+
     this.ctx.fill();
     this.ctx.stroke();
 
-    // Center K logo mark
-    this.ctx.fillStyle = '#0F0F12';
-    this.ctx.font = '900 9px Montserrat, sans-serif';
+    // Top Gloss Highlight
+    this.ctx.beginPath();
+    this.ctx.arc(0, -p.radius * 0.3, p.radius * 0.4, 0, Math.PI * 2);
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    this.ctx.fill();
+
+    // KINS Brand Mark printed on Pick
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.font = '900 10px Montserrat, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-    this.ctx.fillText('K', 0, 1);
+    this.ctx.fillText('KINS', 0, 1);
 
     this.ctx.restore();
   }
@@ -204,28 +253,46 @@ class PhysicsParticleRain {
     // Outer Vinyl Disc
     this.ctx.beginPath();
     this.ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
-    this.ctx.fillStyle = p.color;
+    this.ctx.fillStyle = '#111115';
     this.ctx.fill();
-    this.ctx.strokeStyle = '#2A2A30';
-    this.ctx.lineWidth = 1.2;
+    this.ctx.strokeStyle = '#282830';
+    this.ctx.lineWidth = 1.4;
     this.ctx.stroke();
 
-    // Inner Concentric Grooves
+    // Shiny Vinyl Reflection Sheen
+    const sheenGrad = this.ctx.createLinearGradient(-p.radius, -p.radius, p.radius, p.radius);
+    sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+    sheenGrad.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
+    sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0.12)');
+    this.ctx.fillStyle = sheenGrad;
+    this.ctx.fill();
+
+    // Grooves
     this.ctx.beginPath();
-    this.ctx.arc(0, 0, p.radius * 0.72, 0, Math.PI * 2);
-    this.ctx.strokeStyle = '#222228';
+    this.ctx.arc(0, 0, p.radius * 0.78, 0, Math.PI * 2);
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.arc(0, 0, p.radius * 0.5, 0, Math.PI * 2);
-    this.ctx.strokeStyle = '#1D1D22';
+    this.ctx.arc(0, 0, p.radius * 0.58, 0, Math.PI * 2);
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
     this.ctx.stroke();
 
     // Red Center Label
     this.ctx.beginPath();
-    this.ctx.arc(0, 0, p.radius * 0.36, 0, Math.PI * 2);
+    this.ctx.arc(0, 0, p.radius * 0.4, 0, Math.PI * 2);
     this.ctx.fillStyle = '#CF142B';
     this.ctx.fill();
+    this.ctx.strokeStyle = '#FFD700'; // Gold ring around red label
+    this.ctx.lineWidth = 1;
+    this.ctx.stroke();
+
+    // KINS Text on Vinyl Label
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.font = '900 8px Montserrat, sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillText('KINS', 0, 0);
 
     // Center Spindle Hole
     this.ctx.beginPath();
@@ -236,8 +303,30 @@ class PhysicsParticleRain {
     this.ctx.restore();
   }
 
+  drawSparks() {
+    for (let i = this.sparks.length - 1; i >= 0; i--) {
+      const s = this.sparks[i];
+      s.x += s.vx;
+      s.y += s.vy;
+      s.life -= s.decay;
+
+      if (s.life <= 0) {
+        this.sparks.splice(i, 1);
+        continue;
+      }
+
+      this.ctx.save();
+      this.ctx.globalAlpha = s.life;
+      this.ctx.fillStyle = s.color;
+      this.ctx.beginPath();
+      this.ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.restore();
+    }
+  }
+
   update() {
-    const gravity = 0.28;
+    const gravity = 0.3;
     const friction = 0.985;
 
     for (let p of this.particles) {
@@ -252,6 +341,9 @@ class PhysicsParticleRain {
       // Floor bounce
       if (p.y + p.radius > window.innerHeight) {
         p.y = window.innerHeight - p.radius;
+        if (Math.abs(p.vy) > 2) {
+          this.spawnSparks(p.x, p.y + p.radius, 4);
+        }
         p.vy *= -p.bounce;
         p.vx *= 0.82;
       }
@@ -259,9 +351,11 @@ class PhysicsParticleRain {
       // Wall bounce
       if (p.x - p.radius < 0) {
         p.x = p.radius;
+        if (Math.abs(p.vx) > 2) this.spawnSparks(p.x, p.y, 3);
         p.vx *= -p.bounce;
       } else if (p.x + p.radius > window.innerWidth) {
         p.x = window.innerWidth - p.radius;
+        if (Math.abs(p.vx) > 2) this.spawnSparks(p.x, p.y, 3);
         p.vx *= -p.bounce;
       }
     }
@@ -278,6 +372,8 @@ class PhysicsParticleRain {
         this.drawVinyl(p);
       }
     }
+
+    this.drawSparks();
   }
 
   loop() {
@@ -304,6 +400,7 @@ class PhysicsParticleRain {
     this.canvas = null;
     this.ctx = null;
     this.particles = [];
+    this.sparks = [];
   }
 }
 

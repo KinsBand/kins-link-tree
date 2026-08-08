@@ -153,8 +153,20 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
   // 5-Tap Counter for Physics Rain Easter Egg
   let clickCount = 0;
   let clickResetTimer: any = null;
+  let popupWasOpenOnPress = false;
+
+  function isPopupOpen() {
+    return popup && !popup.classList.contains('hidden');
+  }
 
   function trackLogoTaps(clientY: number) {
+    // If popup was open during press/dismiss, do NOT count towards 5 taps
+    if (popupWasOpenOnPress || isPopupOpen()) {
+      popupWasOpenOnPress = false;
+      hidePopup();
+      return;
+    }
+
     if (!isTopLogoArea(clientY)) return;
 
     clickCount++;
@@ -212,6 +224,12 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     // Ignore presses originating inside the popup or download button itself
     if (popup && (popup.contains(e.target as Node) || popup === e.target)) {
       return;
+    }
+
+    popupWasOpenOnPress = isPopupOpen();
+    if (popupWasOpenOnPress) {
+      hidePopup();
+      return; // 1-press dismiss: do not start new hold timer
     }
 
     const point = 'touches' in e ? e.touches[0] : e;
@@ -316,11 +334,12 @@ const { image = `${import.meta.env.BASE_URL}pfp.jpg` } = Astro.props;
     });
   }
 
-  document.addEventListener('click', (e) => {
-    if (popup && !popup.contains(e.target as Node) && siteRoot && !siteRoot.contains(e.target as Node)) {
+  // 1-Press Dismiss anywhere on document
+  document.addEventListener('pointerdown', (e) => {
+    if (isPopupOpen() && popup && !popup.contains(e.target as Node)) {
       hidePopup();
     }
-  });
+  }, { capture: true });
 
   window.addEventListener('scroll', hidePopup, { passive: true });
 </script>
