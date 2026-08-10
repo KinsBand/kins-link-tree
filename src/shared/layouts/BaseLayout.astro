@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import PagePreloader from '../../sites/link-in-bio/components/PagePreloader.astro';
 
 interface Props {
   title?: string;
@@ -54,6 +55,7 @@ const baseUrl = import.meta.env.BASE_URL;
 
 </head>
 <body>
+  <PagePreloader />
   <slot />
 
   <script define:vars={{ baseUrl }}>
