@@ -19,21 +19,21 @@ export function openCoverVideoModal(coverData) {
 
   if (watchNativeBtn) {
     watchNativeBtn.href = coverData.watchUrl;
-    watchNativeBtn.onclick = (e) => {
+    watchNativeBtn.onclick = () => {
       showToast(`↗ Opening ${coverData.platformLabel || 'YouTube'} App...`);
     };
   }
 
   if (commentBtn) {
     commentBtn.href = coverData.commentUrl;
-    commentBtn.onclick = (e) => {
+    commentBtn.onclick = () => {
       showToast(`↗ Opening Comments in ${coverData.platformLabel || 'YouTube'}...`);
     };
   }
 
   if (followBtn) {
     followBtn.href = coverData.followUrl;
-    followBtn.onclick = (e) => {
+    followBtn.onclick = () => {
       showToast(`↗ Opening Kins Channel...`);
     };
   }
