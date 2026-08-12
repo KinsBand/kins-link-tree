@@ -1,5 +1,5 @@
 import { showToast } from './toast.js';
-import { getITunesTrackData, loadAlbumArt } from './inspirationVault.js';
+import { getITunesTrackData, loadAlbumArt, INSPIRED_ARTISTS_DATA } from './inspirationVault.js';
 
 let isPlayingAudio = false;
 let currentPlayingTrack = null;
@@ -22,7 +22,6 @@ class VinylScratchSynthesizer {
     if (!AudioCtx) return;
     this.ctx = new AudioCtx();
 
-    // Create 2-second white noise buffer with vinyl crackle pops
     const sampleRate = this.ctx.sampleRate;
     const bufferSize = sampleRate * 2;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
@@ -105,10 +104,9 @@ class VinylScratchSynthesizer {
   updateScratch(velocity) {
     if (!this.isPlaying || !this.ctx) return;
     const now = this.ctx.currentTime;
-    const speed = Math.abs(velocity); // px/ms
+    const speed = Math.abs(velocity);
     const direction = velocity >= 0 ? 1 : -1;
 
-    // Gain scales with scrub speed
     const targetGain = Math.min(0.42, Math.max(0.02, speed * 0.3));
     this.gainNode.gain.cancelScheduledValues(now);
     this.gainNode.gain.setTargetAtTime(targetGain, now, 0.015);
@@ -163,12 +161,28 @@ function formatTime(seconds) {
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
+function getAllInspiredTracks() {
+  const tracks = [];
+  if (!INSPIRED_ARTISTS_DATA) return tracks;
+  Object.values(INSPIRED_ARTISTS_DATA).forEach(artistObj => {
+    if (artistObj.pages) {
+      artistObj.pages.forEach(page => {
+        page.forEach(track => tracks.push(track));
+      });
+    }
+  });
+  return tracks;
+}
+
 export function initAudioPlayer() {
   const bottomAudioBar = document.getElementById('bottomAudioBar');
+  const deckIdleView = document.getElementById('deckIdleView');
+  const deckActiveView = document.getElementById('deckActiveView');
+  const idlePlayBtn = document.getElementById('idlePlayBtn');
+
   const audioBarTitle = document.getElementById('audioBarTitle');
   const audioBarArtist = document.getElementById('audioBarArtist');
   const audioBarToggleBtn = document.getElementById('audioBarToggleBtn');
-  const audioBarCloseBtn = document.getElementById('audioBarCloseBtn');
   const audioBarStreamBtn = document.getElementById('audioBarStreamBtn');
   const audioBarCoverImg = document.getElementById('audioBarCoverImg');
   const audioBarFallbackIcon = document.getElementById('audioBarFallbackIcon');
@@ -198,6 +212,75 @@ export function initAudioPlayer() {
   let lastTime = 0;
   let animFrameId = null;
 
+  // Load stacked album covers in the idle view on initialization
+  async function loadStackedAlbumCovers() {
+    const cover1 = document.getElementById('stackCover1');
+    const cover2 = document.getElementById('stackCover2');
+    const cover3 = document.getElementById('stackCover3');
+
+    const featured = [
+      { artist: 'The Cure', title: 'Just Like Heaven' },
+      { artist: 'Weezer', title: 'Do You Wanna Get High?' },
+      { artist: 'Pulp', title: 'Common People' }
+    ];
+
+    const elements = [cover1, cover2, cover3];
+
+    featured.forEach(async (item, index) => {
+      const imgEl = elements[index];
+      if (!imgEl) return;
+      try {
+        const meta = await getITunesTrackData(item.artist, item.title);
+        if (meta && meta.artworkUrl) {
+          await loadAlbumArt(imgEl, meta.artworkUrl, meta.rawArtworkUrl);
+          const fallback = imgEl.parentElement ? imgEl.parentElement.querySelector('.stack-fallback-icon') : null;
+          if (fallback) fallback.style.display = 'none';
+        }
+      } catch (err) {
+        console.warn('Failed to load stacked album cover:', err);
+      }
+    });
+  }
+
+  loadStackedAlbumCovers();
+
+  let hasTransitionedToActive = false;
+
+  function showActiveView() {
+    if (hasTransitionedToActive) return;
+    hasTransitionedToActive = true;
+
+    const deckMusicSection = document.getElementById('deckMusicSection');
+
+    // Trigger synchronized curtain-wipe animation from left to right
+    if (deckMusicSection) {
+      deckMusicSection.classList.remove('is-transitioning');
+      void deckMusicSection.offsetWidth; // force reflow
+      deckMusicSection.classList.add('is-transitioning');
+    }
+
+    // At the end of the wipe animation (850ms), finalize DOM state & show stylus
+    setTimeout(() => {
+      if (deckIdleView) deckIdleView.classList.add('hidden');
+      if (deckActiveView) deckActiveView.classList.remove('hidden');
+      if (deckMusicSection) deckMusicSection.classList.remove('is-transitioning');
+
+      // Show the vinyl stylus after the active view has revealed
+      if (vinylStylusWrapper) {
+        vinylStylusWrapper.classList.add('stylus-visible');
+      }
+    }, 850);
+  }
+
+  function showIdleView() {
+    hasTransitionedToActive = false;
+    const deckMusicSection = document.getElementById('deckMusicSection');
+    if (deckMusicSection) deckMusicSection.classList.remove('is-transitioning');
+    if (deckIdleView) deckIdleView.classList.remove('hidden');
+    if (deckActiveView) deckActiveView.classList.add('hidden');
+    if (vinylStylusWrapper) vinylStylusWrapper.classList.remove('stylus-visible');
+  }
+
   function notifyPlaybackState() {
     window.dispatchEvent(new CustomEvent('trackPlaybackStateChanged', {
       detail: { track: currentPlayingTrack, isPlaying: isPlayingAudio }
@@ -211,7 +294,7 @@ export function initAudioPlayer() {
     const pct = Math.min(100, Math.max(0, (currentTime / duration) * 100));
 
     if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `${pct}%`;
-    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${pct}%`;
+    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${Math.max(4, Math.min(96, pct))}%`;
     if (audioBarTime) {
       audioBarTime.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
     }
@@ -237,8 +320,9 @@ export function initAudioPlayer() {
   }
 
   function seekToPosition(clientX) {
-    if (!bottomAudioBar || !vaultAudioPlayer) return;
-    const rect = bottomAudioBar.getBoundingClientRect();
+    const musicSection = document.getElementById('deckMusicSection');
+    if (!musicSection || !vaultAudioPlayer) return;
+    const rect = musicSection.getBoundingClientRect();
     const pctRatio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const pct = pctRatio * 100;
     const duration = vaultAudioPlayer.duration || 30;
@@ -249,16 +333,17 @@ export function initAudioPlayer() {
     }
 
     if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `${pct}%`;
-    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${pct}%`;
+    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${Math.max(4, Math.min(96, pct))}%`;
     if (audioBarTime) {
       audioBarTime.textContent = `${formatTime(newTime)} / ${formatTime(duration)}`;
     }
   }
 
-  // Interactive Timeline Scrubbing with Vinyl Screech SFX
+  // Interactive Timeline Scrubbing
   if (bottomAudioBar) {
     bottomAudioBar.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('button') || !currentPlayingTrack) return;
+      if (!e.target || !e.target.closest) return;
+      if (e.target.closest('button, .deck-gig-section, .deck-divider') || !currentPlayingTrack) return;
 
       isScrubbing = true;
       bottomAudioBar.classList.add('is-scrubbing');
@@ -391,31 +476,50 @@ export function initAudioPlayer() {
     }
   }
 
-  function openMiniPlayer() {
-    if (!bottomAudioBar) return;
-    bottomAudioBar.classList.remove('hidden', 'player-exiting');
-    void bottomAudioBar.offsetWidth;
-    bottomAudioBar.classList.add('active-player');
-    document.body.classList.add('audio-bar-active');
+  function playRandomInspirationSong() {
+    const allTracks = getAllInspiredTracks();
+    if (allTracks.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * allTracks.length);
+    const randomTrack = allTracks[randomIndex];
+    if (window.playTrackPreview) {
+      window.playTrackPreview(randomTrack);
+    }
   }
 
-  function closeMiniPlayer() {
-    if (!bottomAudioBar) return;
-    stopTimelineAnimation();
-    toggleStreamDrawer(false);
-    bottomAudioBar.classList.remove('active-player');
-    bottomAudioBar.classList.add('player-exiting');
-    document.body.classList.remove('audio-bar-active');
-    if (audioBarIconBox) {
-      audioBarIconBox.classList.remove('vinyl-spin-anim');
+  // Click on idle view triggers random song
+  if (deckIdleView) {
+    deckIdleView.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playRandomInspirationSong();
+    });
+  }
+
+  if (idlePlayBtn) {
+    idlePlayBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playRandomInspirationSong();
+    });
+  }
+
+  function triggerSongChangeWipe() {
+    const deckMusicSection = document.getElementById('deckMusicSection');
+    if (!deckMusicSection) return;
+
+    deckMusicSection.classList.remove('is-song-changing');
+    void deckMusicSection.offsetWidth; // force reflow
+    deckMusicSection.classList.add('is-song-changing');
+
+    // Needle lift micro-interaction on song change
+    if (vinylStylusWrapper) {
+      vinylStylusWrapper.classList.add('tilt-backward');
+      setTimeout(() => {
+        vinylStylusWrapper.classList.remove('tilt-backward');
+      }, 450);
     }
+
     setTimeout(() => {
-      bottomAudioBar.classList.add('hidden');
-      bottomAudioBar.classList.remove('player-exiting');
-    }, 350);
-    isPlayingAudio = false;
-    currentPlayingTrack = null;
-    notifyPlaybackState();
+      deckMusicSection.classList.remove('is-song-changing');
+    }, 850);
   }
 
   window.playTrackPreview = async function(trackObj) {
@@ -437,8 +541,13 @@ export function initAudioPlayer() {
       return;
     }
 
+    if (!hasTransitionedToActive) {
+      showActiveView();
+    } else {
+      triggerSongChangeWipe();
+    }
+
     currentPlayingTrack = trackObj;
-    openMiniPlayer();
     updateStreamLinks(currentPlayingTrack);
 
     if (audioBarTitle) {
@@ -549,14 +658,6 @@ export function initAudioPlayer() {
         }
       }
       updateToggleBtnState(isPlayingAudio);
-    });
-  }
-
-  if (audioBarCloseBtn) {
-    audioBarCloseBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (vaultAudioPlayer) vaultAudioPlayer.pause();
-      closeMiniPlayer();
     });
   }
 }

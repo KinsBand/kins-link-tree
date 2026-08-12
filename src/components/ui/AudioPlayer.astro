@@ -44,60 +44,102 @@
     </div>
   </div>
 
-  <div class="bottom-audio-bar hidden" id="bottomAudioBar">
+  <!-- Unified Combined Bottom Deck Bar -->
+  <div class="bottom-deck-bar" id="bottomAudioBar">
     <audio id="vaultAudioPlayer" preload="none"></audio>
 
-    <!-- Vinyl Stylus riding on top of the card timeline -->
-    <div class="vinyl-stylus-wrapper" id="vinylStylusWrapper">
-      <svg class="vinyl-stylus-svg" viewBox="0 0 28 45" width="28" height="45">
-        <defs>
-          <linearGradient id="kins_aluminum" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#a1a1aa" />
-            <stop offset="50%" stop-color="#f4f4f5" />
-            <stop offset="100%" stop-color="#71717a" />
-          </linearGradient>
-        </defs>
-        <!-- Brushed Metal Stem -->
-        <line x1="14" y1="2" x2="14" y2="23" stroke="url(#kins_aluminum)" stroke-width="2.5" stroke-linecap="round"/>
-        <!-- Minimalist Dark Cartridge Head -->
-        <rect x="7" y="23" width="14" height="11" rx="2" fill="#09090b" stroke="#3f3f46" stroke-width="1"/>
-        <rect x="9" y="25" width="10" height="2.5" fill="#ffffff" rx="1"/>
-        <!-- Stylus Needle Pointer -->
-        <line x1="14" y1="34" x2="14" y2="39" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-        <polygon points="14,41 12,38 16,38" fill="#ffffff"/>
-      </svg>
+    <!-- Music Player Section -->
+    <div class="deck-music-section" id="deckMusicSection">
+      <!-- Vinyl Stylus riding on top of the music section timeline -->
+      <div class="vinyl-stylus-wrapper" id="vinylStylusWrapper">
+        <svg class="vinyl-stylus-svg" viewBox="0 0 28 45" width="28" height="45">
+          <defs>
+            <linearGradient id="kins_aluminum" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#a1a1aa" />
+              <stop offset="50%" stop-color="#f4f4f5" />
+              <stop offset="100%" stop-color="#71717a" />
+            </linearGradient>
+          </defs>
+          <line x1="14" y1="2" x2="14" y2="23" stroke="url(#kins_aluminum)" stroke-width="2.5" stroke-linecap="round"/>
+          <rect x="7" y="23" width="14" height="11" rx="2" fill="#09090b" stroke="#3f3f46" stroke-width="1"/>
+          <rect x="9" y="25" width="10" height="2.5" fill="#ffffff" rx="1"/>
+          <line x1="14" y1="34" x2="14" y2="39" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+          <polygon points="14,41 12,38 16,38" fill="#ffffff"/>
+        </svg>
+      </div>
+
+      <!-- Strictly Clipped Card Container (Timeline Progress & Wave Sheen) -->
+      <div class="deck-timeline-clip-box">
+        <div class="audio-bar-timeline-progress" id="audioBarTimelineProgress"></div>
+        <div class="wave-wipe-overlay" id="waveWipeOverlay"></div>
+      </div>
+
+      <!-- IDLE STATE: INSPIRATION MIX -->
+      <div class="deck-idle-view" id="deckIdleView">
+        <div class="stacked-album-covers" id="stackedAlbumCovers">
+          <div class="cover-stack-item item-1">
+            <img class="stack-cover-img hidden" id="stackCover1" alt="Album 1">
+            <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
+          </div>
+          <div class="cover-stack-item item-2">
+            <img class="stack-cover-img hidden" id="stackCover2" alt="Album 2">
+            <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
+          </div>
+          <div class="cover-stack-item item-3">
+            <img class="stack-cover-img hidden" id="stackCover3" alt="Album 3">
+            <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
+          </div>
+        </div>
+
+        <div class="idle-text-info">
+          <span class="idle-mix-title">INSPIRATION MIX</span>
+          <span class="idle-mix-subtitle">listen to what inspires the kins!</span>
+        </div>
+
+        <button class="idle-play-btn" id="idlePlayBtn" aria-label="Play random inspiration song">
+          <i class="fa-solid fa-play"></i>
+        </button>
+      </div>
+
+      <!-- ACTIVE STATE: NOW PLAYING TRACK -->
+      <div class="deck-active-view hidden" id="deckActiveView">
+        <div class="audio-bar-left">
+          <div class="audio-bar-icon-box" id="audioBarIconBox">
+            <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover">
+            <i class="fa-solid fa-compact-disc audio-icon-anim" id="audioBarFallbackIcon"></i>
+          </div>
+          <div class="audio-bar-details">
+            <div class="audio-bar-title-container">
+              <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
+            </div>
+            <div class="audio-bar-meta-row">
+              <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
+              <span class="audio-bar-time" id="audioBarTime">0:00 / 0:30</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="audio-bar-right">
+          <button class="audio-bar-stream-btn" id="audioBarStreamBtn" aria-label="Streaming options" title="Stream or Add to Playlist">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </button>
+          <button class="audio-bar-toggle-btn" id="audioBarToggleBtn" aria-label="Toggle playback">
+            <i class="fa-solid fa-pause"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Setlist-style Card Timeline Fill Progress -->
-    <div class="audio-bar-timeline-progress" id="audioBarTimelineProgress"></div>
+    <!-- Visual Separator Divider -->
+    <div class="deck-divider"></div>
 
-    <div class="audio-bar-content">
-      <div class="audio-bar-left">
-        <div class="audio-bar-icon-box" id="audioBarIconBox">
-          <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover">
-          <i class="fa-solid fa-compact-disc audio-icon-anim" id="audioBarFallbackIcon"></i>
-        </div>
-        <div class="audio-bar-details">
-          <div class="audio-bar-title-container">
-            <span class="audio-bar-title" id="audioBarTitle">Just Like Heaven</span>
-          </div>
-          <div class="audio-bar-meta-row">
-            <span class="audio-bar-artist" id="audioBarArtist">The Cure</span>
-            <span class="audio-bar-time" id="audioBarTime">0:00 / 0:30</span>
-          </div>
-        </div>
+    <!-- Gig Location Button Section -->
+    <div class="deck-gig-section" id="floatingGigPillBtn" role="button" aria-label="Open Tour & Gig Map">
+      <div class="gig-pill-text-box">
+        <span class="gig-pill-tag" id="gigPillTag">Gigs</span>
+        <i class="fa-solid fa-map-location-dot pill-map-icon"></i>
       </div>
-      <div class="audio-bar-right">
-        <button class="audio-bar-stream-btn" id="audioBarStreamBtn" aria-label="Streaming options / Add to playlist" title="Stream or Add to Playlist">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i>
-        </button>
-        <button class="audio-bar-toggle-btn" id="audioBarToggleBtn" aria-label="Toggle playback">
-          <i class="fa-solid fa-pause"></i>
-        </button>
-        <button class="audio-bar-close-btn" id="audioBarCloseBtn" aria-label="Close audio player">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
+      <i class="fa-solid fa-chevron-right pill-arrow-icon"></i>
     </div>
   </div>
 </div>
@@ -111,12 +153,12 @@
     left: 0;
     right: 0;
     width: 100%;
-    height: 80px;
+    height: 95px;
     pointer-events: none;
     z-index: 750;
     background: linear-gradient(to top, 
-      rgba(10, 10, 12, 0.92) 0%, 
-      rgba(10, 10, 12, 0.7) 45%, 
+      rgba(10, 10, 12, 0.94) 0%, 
+      rgba(10, 10, 12, 0.72) 45%, 
       rgba(10, 10, 12, 0.25) 75%, 
       rgba(10, 10, 12, 0) 100%
     );
@@ -127,12 +169,8 @@
     transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
   }
 
-  :global(body.audio-bar-active) .bottom-gradient-blur-overlay {
-    height: 145px;
-  }
-
-  :global(body.audio-bar-active.stream-panel-open) .bottom-gradient-blur-overlay {
-    height: 215px;
+  :global(body.stream-panel-open) .bottom-gradient-blur-overlay {
+    height: 220px;
   }
 
   :global(body.modal-open) .bottom-gradient-blur-overlay {
@@ -141,12 +179,12 @@
 
   .bottom-floating-controls-wrapper {
     position: fixed;
-    bottom: 20px;
+    bottom: 18px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 900;
-    width: 90%;
-    max-width: 400px;
+    width: calc(100% - 24px);
+    max-width: 480px;
     pointer-events: none;
     transition: opacity 0.25s ease;
   }
@@ -165,7 +203,6 @@
     margin-bottom: 6px;
     backdrop-filter: blur(16px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
-    
     opacity: 0;
     transform: translateY(12px) scale(0.97);
     transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
@@ -277,38 +314,361 @@
     box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
   }
 
-  .bottom-audio-bar {
+  /* Combined Deck Bar */
+  .bottom-deck-bar {
     pointer-events: auto;
-    background: rgba(18, 18, 20, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 6px;
-    padding: 10px 14px;
-    backdrop-filter: blur(16px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+    background: rgba(18, 18, 22, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    padding: 0;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
     position: relative;
     overflow: visible;
-    cursor: pointer;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
     user-select: none;
     touch-action: none;
-    
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .bottom-deck-bar:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.8), 0 0 14px rgba(255, 255, 255, 0.06);
+  }
+
+  .deck-music-section {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    overflow-x: clip;
+    overflow-y: visible;
+    border-radius: 7px 0 0 7px;
+  }
+
+  /* Strictly Clipped Card Container for Timeline Fill & Sheen */
+  .deck-timeline-clip-box {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    border-radius: 7px 0 0 7px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Soft Translucent Wipe Sheen — Contained strictly inside Clip Box */
+  .wave-wipe-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    width: 32px;
+    z-index: 30;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      rgba(255, 255, 255, 0.35) 50%,
+      rgba(255, 255, 255, 0.12) 70%,
+      transparent 100%
+    );
     opacity: 0;
-    transform: translateY(32px) scale(0.96);
-    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
-                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateX(-50%);
   }
 
-  .bottom-audio-bar:hover {
-    border-color: rgba(255, 255, 255, 0.28);
+  /* Synchronized Curved Curtain Wipe Animation (Left -> Right) */
+  .deck-music-section.is-transitioning .wave-wipe-overlay,
+  .deck-music-section.is-song-changing .wave-wipe-overlay {
+    animation: waveLineSweep 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
-  .bottom-audio-bar.active-player {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+  @keyframes waveLineSweep {
+    0% {
+      left: 0%;
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      left: 100%;
+      opacity: 0;
+    }
   }
 
-  .bottom-audio-bar.player-exiting {
-    opacity: 0;
-    transform: translateY(32px) scale(0.96);
+  .deck-music-section.is-transitioning .deck-idle-view {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    animation: wipeOutIdleView 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes wipeOutIdleView {
+    0% {
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 50%);
+    }
+    50% {
+      clip-path: polygon(45% 0, 100% 0, 100% 100%, 45% 100%, 52% 50%);
+    }
+    100% {
+      clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%, 100% 50%);
+    }
+  }
+
+  .deck-music-section.is-transitioning .deck-active-view {
+    display: flex !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    animation: revealActiveView 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes revealActiveView {
+    0% {
+      clip-path: polygon(0 0, 0 0, 0 50%, 0 100%, 0 100%);
+    }
+    50% {
+      clip-path: polygon(0 0, 45% 0, 52% 50%, 45% 100%, 0 100%);
+    }
+    100% {
+      clip-path: polygon(0 0, 100% 0, 100% 50%, 100% 100%, 0 100%);
+    }
+  }
+
+  /* Song -> Song Curved Wipe Reveal Animation */
+  .deck-music-section.is-song-changing .deck-active-view {
+    animation: songChangeWipe 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes songChangeWipe {
+    0% {
+      filter: blur(4px);
+      clip-path: polygon(0 0, 0 0, 0 50%, 0 100%, 0 100%);
+    }
+    50% {
+      filter: blur(2px);
+      clip-path: polygon(0 0, 45% 0, 52% 50%, 45% 100%, 0 100%);
+    }
+    100% {
+      filter: blur(0px);
+      clip-path: polygon(0 0, 100% 0, 100% 50%, 100% 100%, 0 100%);
+    }
+  }
+
+  .deck-divider {
+    width: 1px;
+    align-self: center;
+    height: 34px;
+    background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.22) 30%, rgba(255, 255, 255, 0.22) 70%, transparent 100%);
+    flex-shrink: 0;
+  }
+
+  /* Gig Section */
+  .deck-gig-section {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    align-self: center;
+    gap: 5px;
+    padding: 6px 8px;
+    margin: 4px 5px 4px 4px;
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-secondary);
+    transition: transform 0.2s var(--ease-snappy), background-color 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .deck-gig-section:hover {
+    background: var(--btn-green-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+
+  .gig-pill-text-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    line-height: 1.1;
+  }
+
+  .gig-pill-tag {
+    font-size: 0.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+  }
+
+  .pill-map-icon {
+    font-size: 0.8rem;
+    color: var(--btn-text-color);
+  }
+
+  .pill-arrow-icon {
+    font-size: 0.58rem;
+    opacity: 0.7;
+    transition: transform 0.2s var(--ease-snappy);
+  }
+
+  .deck-gig-section:hover .pill-arrow-icon {
+    transform: translateX(2px);
+  }
+
+  /* IDLE VIEW STYLING */
+  .deck-idle-view {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    cursor: pointer;
+    position: relative;
+    z-index: 5;
+  }
+
+  .stacked-album-covers {
+    position: relative;
+    width: 44px;
+    height: 38px;
+    flex-shrink: 0;
+  }
+
+  .cover-stack-item {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    background: #1a1a1e;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+    transition: transform 0.25s var(--ease-snappy);
+  }
+
+  .cover-stack-item.item-1 {
+    left: 0;
+    top: 4px;
+    transform: rotate(-10deg);
+    z-index: 1;
+  }
+
+  .cover-stack-item.item-2 {
+    left: 6px;
+    top: 2px;
+    transform: rotate(0deg);
+    z-index: 2;
+  }
+
+  .cover-stack-item.item-3 {
+    left: 12px;
+    top: 4px;
+    transform: rotate(10deg);
+    z-index: 3;
+  }
+
+  .deck-idle-view:hover .cover-stack-item.item-1 {
+    transform: rotate(-14deg) translateX(-2px);
+  }
+
+  .deck-idle-view:hover .cover-stack-item.item-3 {
+    transform: rotate(14deg) translateX(2px);
+  }
+
+  .stack-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .stack-fallback-icon {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .idle-text-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.15;
+    overflow: hidden;
+  }
+
+  .idle-mix-title {
+    font-family: var(--font-heading);
+    font-size: clamp(0.64rem, 3.2vw, 0.78rem);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--text-white);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .idle-mix-subtitle {
+    font-family: var(--font-secondary);
+    font-size: clamp(0.5rem, 2.4vw, 0.62rem);
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .idle-play-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    transition: transform 0.2s var(--ease-snappy), background-color 0.2s ease;
+  }
+
+  .idle-play-btn:hover {
+    transform: scale(1.08);
+    background: var(--btn-green-hover);
+  }
+
+  /* ACTIVE VIEW STYLING */
+  .deck-active-view {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    position: relative;
+    z-index: 5;
   }
 
   .audio-bar-timeline-progress {
@@ -316,16 +676,12 @@
     top: 0;
     left: 0;
     bottom: 0;
+    height: 100%;
     width: 0%;
     background: linear-gradient(90deg, rgba(242, 240, 235, 0.22) 0%, rgba(242, 240, 235, 0.12) 100%);
-    border-radius: 5px 0 0 5px;
     pointer-events: none;
     will-change: width;
     z-index: 1;
-  }
-
-  .bottom-audio-bar.is-scrubbing .audio-bar-timeline-progress {
-    background: linear-gradient(90deg, rgba(242, 240, 235, 0.35) 0%, rgba(242, 240, 235, 0.2) 100%);
   }
 
   .vinyl-stylus-wrapper {
@@ -337,6 +693,14 @@
     pointer-events: none;
     will-change: left;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+    display: none;
+    opacity: 0;
+    transition: opacity 0.35s ease 0.2s;
+  }
+
+  .vinyl-stylus-wrapper.stylus-visible {
+    display: block;
+    opacity: 1;
   }
 
   .vinyl-stylus-svg {
@@ -345,8 +709,8 @@
     transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), filter 0.15s ease;
   }
 
-  .bottom-audio-bar.is-scrubbing .vinyl-stylus-svg {
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+  .bottom-deck-bar.is-scrubbing .vinyl-stylus-svg {
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
   }
 
   .vinyl-stylus-wrapper.tilt-forward .vinyl-stylus-svg {
@@ -357,12 +721,8 @@
     transform: rotate(-14deg) scale(1.05);
   }
 
-  .audio-bar-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
-    z-index: 2;
+  .bottom-deck-bar.is-scrubbing .audio-bar-timeline-progress {
+    background: linear-gradient(90deg, rgba(242, 240, 235, 0.35) 0%, rgba(242, 240, 235, 0.2) 100%);
   }
 
   .audio-bar-left {
@@ -375,10 +735,10 @@
   }
 
   .audio-bar-icon-box {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
     flex-shrink: 0;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.05);
@@ -389,9 +749,7 @@
     overflow: hidden;
     color: var(--text-white);
     position: relative;
-    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1),
-                box-shadow 0.4s ease,
-                border-color 0.4s ease;
+    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1), box-shadow 0.4s ease;
   }
 
   .audio-bar-cover-img {
@@ -399,7 +757,6 @@
     height: 100%;
     object-fit: cover;
     border-radius: inherit;
-    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1);
   }
 
   .audio-bar-icon-box.vinyl-spin-anim {
@@ -447,7 +804,7 @@
 
   .audio-bar-title {
     font-family: var(--font-heading);
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 700;
     color: var(--text-white);
     display: inline-block;
@@ -469,7 +826,7 @@
   .audio-bar-meta-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin-top: 1px;
     min-width: 0;
     overflow: hidden;
@@ -477,17 +834,17 @@
 
   .audio-bar-artist {
     font-family: var(--font-secondary);
-    font-size: 0.7rem;
+    font-size: 0.66rem;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 110px;
+    max-width: 90px;
   }
 
   .audio-bar-time {
     font-family: var(--font-secondary);
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.55);
     letter-spacing: 0.04em;
@@ -502,7 +859,7 @@
     flex-shrink: 0;
   }
 
-  .audio-bar-stream-btn, .audio-bar-toggle-btn, .audio-bar-close-btn {
+  .audio-bar-stream-btn, .audio-bar-toggle-btn {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: var(--text-white);
@@ -513,11 +870,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     transition: all 0.18s ease;
   }
 
-  .audio-bar-stream-btn:hover, .audio-bar-toggle-btn:hover, .audio-bar-close-btn:hover {
+  .audio-bar-stream-btn:hover, .audio-bar-toggle-btn:hover {
     background: rgba(255, 255, 255, 0.16);
   }
 
@@ -538,18 +895,9 @@
   }
 
   @keyframes iconMorphAnim {
-    0% {
-      transform: scale(0.4) rotate(-90deg);
-      opacity: 0.2;
-    }
-    60% {
-      transform: scale(1.18) rotate(15deg);
-      opacity: 1;
-    }
-    100% {
-      transform: scale(1) rotate(0deg);
-      opacity: 1;
-    }
+    0% { transform: scale(0.4) rotate(-90deg); opacity: 0.2; }
+    60% { transform: scale(1.18) rotate(15deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
   }
 </style>
 
