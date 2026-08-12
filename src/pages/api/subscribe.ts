@@ -20,19 +20,21 @@ export const POST: APIRoute = async ({ request }) => {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // 1. Insert email into Supabase database
-    const { error } = await supabase
-      .from('subscribers')
-      .insert([{ email: cleanEmail }]);
+    // 1. Insert email into Supabase database (if configured)
+    if (supabase) {
+      const { error } = await supabase
+        .from('subscribers')
+        .insert([{ email: cleanEmail }]);
 
-    if (error) {
-      if (error.code === '23505') {
-        return new Response(
-          JSON.stringify({ status: 'success', message: "You're already on the list!" }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
+      if (error) {
+        if (error.code === '23505') {
+          return new Response(
+            JSON.stringify({ status: 'success', message: "You're already on the list!" }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        console.warn('Supabase insert warning/error:', error);
       }
-      console.warn('Supabase insert warning/error:', error);
     }
 
     // 2. Send Automated Instant Welcome Email via Resend API
