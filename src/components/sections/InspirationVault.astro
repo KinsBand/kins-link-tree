@@ -1,0 +1,546 @@
+---
+const artists = [
+  { key: "the-cure", label: "The Cure", active: true },
+  { key: "weezer", label: "Weezer", active: false },
+  { key: "pulp", label: "Pulp", active: false },
+  { key: "the-long-faces", label: "The Long Faces", active: false }
+];
+---
+
+<section class="inspired-section" id="inspired-section">
+  <div class="inspired-header">
+    <h2 class="inspired-title">
+      <i class="fa-solid fa-record-vinyl inspired-title-icon"></i>
+      <span>What Inspires Us</span>
+    </h2>
+  </div>
+
+  <div class="artist-filter-scroll-container" id="artistFilterBar">
+    {artists.map((art) => (
+      <button class={`filter-pill-btn ${art.active ? 'active' : ''}`} data-artist-key={art.key}>
+        {art.label}
+      </button>
+    ))}
+  </div>
+
+  <div class="inspired-tracks-container" id="inspiredTracksContainer">
+    <!-- Populated dynamically -->
+  </div>
+
+  <div class="dots-pagination-container" id="dotsPaginationContainer">
+    <button class="page-nav-arrow prev-page-btn" id="prevPageBtn" aria-label="Previous Page">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    
+    <div class="dots-wrapper" id="dotsWrapper">
+      <!-- Pagination dots populated dynamically -->
+    </div>
+
+    <button class="page-nav-arrow next-page-btn" id="nextPageBtn" aria-label="Next Page">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+</section>
+
+<style>
+  .inspired-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    margin-top: 14px;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 420px;
+  }
+
+  .inspired-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .inspired-title {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .inspired-title-icon {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .artist-filter-scroll-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 2px 2px 8px 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .artist-filter-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-pill-btn {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 7px 14px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: all 0.2s var(--ease-snappy);
+  }
+
+  .filter-pill-btn:hover {
+    color: var(--text-white);
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(26, 26, 30, 0.95);
+  }
+
+  .filter-pill-btn.active {
+    color: var(--btn-text-color);
+    background: var(--btn-green);
+    border-color: var(--btn-green);
+    font-weight: 800;
+  }
+
+  .inspired-tracks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 220px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .inspired-tracks-container :global(.music-card) {
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s var(--ease-snappy), border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .inspired-tracks-container :global(.music-card:hover) {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(26, 26, 30, 0.95);
+  }
+
+  .inspired-tracks-container :global(.music-card) {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .inspired-tracks-container :global(.music-card-thumb) {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1),
+                box-shadow 0.4s ease,
+                border-color 0.4s ease;
+  }
+
+  .inspired-tracks-container :global(.music-card-thumb.vinyl-spin-anim) {
+    border-radius: 50%;
+    border-color: rgba(29, 185, 84, 0.6);
+    box-shadow: 0 0 14px rgba(29, 185, 84, 0.4), 0 0 4px rgba(255, 255, 255, 0.25);
+  }
+
+  .inspired-tracks-container :global(.music-card-thumb.vinyl-spin-anim::after) {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: #121214;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.8);
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .inspired-tracks-container :global(.fallback-disc-icon) {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    transition: transform 0.3s ease;
+  }
+
+  .inspired-tracks-container :global(.track-artwork-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1);
+  }
+
+  .inspired-tracks-container :global(.music-card-info) {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .inspired-tracks-container :global(.song-title-container) {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+  }
+
+  .inspired-tracks-container :global(.song-title) {
+    font-family: var(--font-heading);
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
+    display: inline-block;
+    white-space: nowrap;
+    will-change: transform;
+  }
+
+  .inspired-tracks-container :global(.song-title.is-scrolling) {
+    animation: inspiredTitleScroll 8s linear infinite;
+  }
+
+  @keyframes inspiredTitleScroll {
+    0% { transform: translateX(0); }
+    15% { transform: translateX(0); }
+    85% { transform: translateX(var(--title-scroll-dist, -50%)); }
+    100% { transform: translateX(0); }
+  }
+
+  .inspired-tracks-container :global(.artist-name) {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .inspired-tracks-container :global(.genre-tag) {
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .inspired-tracks-container :global(.play-btn) {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.82rem;
+    transition: transform 0.2s var(--ease-snappy), background-color 0.2s ease;
+  }
+
+  .inspired-tracks-container :global(.play-btn:hover) {
+    transform: scale(1.08);
+    background-color: var(--btn-green-hover);
+  }
+
+  .dots-pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .dots-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .page-nav-arrow {
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-white);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s var(--ease-snappy);
+  }
+
+  .page-nav-arrow:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .page-nav-arrow:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .page-nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .dots-pagination-container :global(.inspired-dot) {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.2s var(--ease-snappy);
+  }
+
+  .dots-pagination-container :global(.inspired-dot:hover) {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .dots-pagination-container :global(.inspired-dot.active) {
+    background: var(--btn-green);
+    width: 18px;
+  }
+</style>
+
+<script>
+  import { INSPIRED_ARTISTS_DATA, getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from '../../scripts/controllers/inspirationVault.js';
+
+  const container = document.getElementById('inspiredTracksContainer');
+  const dotsContainer = document.getElementById('dotsPaginationContainer');
+  const filterBtns = document.querySelectorAll('#artistFilterBar .filter-pill-btn');
+
+  let currentArtistKey = 'the-cure';
+  let currentPageIndex = 0;
+
+  let currentPlaybackTrack: any = null;
+  let isCurrentlyPlaying = false;
+
+  function updateCardStates(currentTrack: any, isPlaying: boolean) {
+    if (!container) return;
+    const cards = container.querySelectorAll('.music-card');
+    cards.forEach((card: any) => {
+      const songTitle = card.dataset.songTitle;
+      const playBtn = card.querySelector('.play-btn');
+      const thumb = card.querySelector('.music-card-thumb');
+      if (!playBtn) return;
+
+      const isCurrent = currentTrack && currentTrack.title === songTitle;
+      const playingThis = isCurrent && isPlaying;
+
+      playBtn.classList.remove('card-icon-morph');
+      void playBtn.offsetWidth;
+      playBtn.innerHTML = `<i class="fa-solid ${playingThis ? 'fa-pause' : 'fa-play'}"></i>`;
+      playBtn.classList.add('card-icon-morph');
+
+      if (playingThis) {
+        card.classList.add('is-playing');
+        if (thumb) thumb.classList.add('vinyl-spin-anim');
+      } else {
+        card.classList.remove('is-playing');
+        if (thumb) thumb.classList.remove('vinyl-spin-anim');
+      }
+    });
+  }
+
+  window.addEventListener('trackPlaybackStateChanged', (e: any) => {
+    const { track, isPlaying } = e.detail || {};
+    currentPlaybackTrack = track;
+    isCurrentlyPlaying = isPlaying;
+    updateCardStates(track, isPlaying);
+  });
+
+  function renderArtistPage(artistKey: string, pageIndex: number = 0) {
+    if (!container) return;
+
+    currentArtistKey = artistKey;
+    const artistData = (INSPIRED_ARTISTS_DATA as any)[artistKey] || INSPIRED_ARTISTS_DATA['the-cure'];
+    const totalPages = artistData.pages.length;
+    currentPageIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
+
+    if (dotsContainer) {
+      const dotsWrapper = document.getElementById('dotsWrapper');
+      const prevBtn = document.getElementById('prevPageBtn') as HTMLButtonElement;
+      const nextBtn = document.getElementById('nextPageBtn') as HTMLButtonElement;
+
+      if (totalPages > 1) {
+        dotsContainer.style.display = 'flex';
+
+        if (dotsWrapper) {
+          dotsWrapper.innerHTML = '';
+          for (let i = 0; i < totalPages; i++) {
+            const dot = document.createElement('button');
+            dot.className = `inspired-dot ${i === currentPageIndex ? 'active' : ''}`;
+            dot.setAttribute('aria-label', `Page ${i + 1}`);
+            dot.addEventListener('click', () => renderArtistPage(currentArtistKey, i));
+            dotsWrapper.appendChild(dot);
+          }
+        }
+
+        if (prevBtn) {
+          prevBtn.disabled = (currentPageIndex === 0);
+          prevBtn.onclick = () => {
+            if (currentPageIndex > 0) renderArtistPage(currentArtistKey, currentPageIndex - 1);
+          };
+        }
+
+        if (nextBtn) {
+          nextBtn.disabled = (currentPageIndex === totalPages - 1);
+          nextBtn.onclick = () => {
+            if (currentPageIndex < totalPages - 1) renderArtistPage(currentArtistKey, currentPageIndex + 1);
+          };
+        }
+      } else {
+        dotsContainer.style.display = 'none';
+      }
+    }
+
+    container.style.opacity = '0';
+    container.style.transform = 'translateY(6px)';
+
+    setTimeout(() => {
+      container.innerHTML = '';
+      const rawTracks = artistData.pages[currentPageIndex] || [];
+      const tracks = rawTracks.slice(0, 4);
+
+      prefetchTrackArtwork(tracks);
+
+      tracks.forEach((track: any) => {
+        const card = document.createElement('div');
+        card.className = 'music-card';
+        card.dataset.songTitle = track.title;
+        card.innerHTML = `
+          <div class="music-card-thumb">
+            <i class="fa-solid fa-compact-disc fallback-disc-icon"></i>
+            <img class="track-artwork-img hidden" alt="${track.title}" loading="lazy" decoding="async">
+          </div>
+          <div class="music-card-info">
+            <div class="song-title-container">
+              <span class="song-title">${track.title}</span>
+            </div>
+            <span class="artist-name">${track.artist}</span>
+            <span class="genre-tag">${track.genre}</span>
+          </div>
+          <button class="play-btn card-icon-morph" aria-label="Play song">
+            <i class="fa-solid fa-play"></i>
+          </button>
+        `;
+
+        const fallbackDisc = card.querySelector('.fallback-disc-icon') as HTMLElement;
+        const img = card.querySelector('.track-artwork-img') as HTMLImageElement;
+
+        getITunesTrackData(track.artist, track.title).then((meta: any) => {
+          if (meta && meta.artworkUrl) {
+            track.coverUrl = meta.artworkUrl;
+            track.artworkUrl = meta.artworkUrl;
+            loadAlbumArt(img, meta.artworkUrl, meta.rawArtworkUrl).then(() => {
+              if (fallbackDisc) fallbackDisc.style.display = 'none';
+            }).catch(() => {
+              if (fallbackDisc) fallbackDisc.style.display = 'flex';
+            });
+          } else if (fallbackDisc) {
+            fallbackDisc.style.display = 'flex';
+          }
+          if (meta && meta.previewUrl) {
+            track.previewUrl = meta.previewUrl;
+          }
+        });
+
+        const playBtn = card.querySelector('.play-btn');
+        if (playBtn) {
+          playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if ((window as any).playTrackPreview) {
+              (window as any).playTrackPreview(track);
+            }
+          });
+        }
+
+        container.appendChild(card);
+      });
+
+      requestAnimationFrame(() => {
+        container.querySelectorAll('.song-title').forEach((titleEl: any) => {
+          const parent = titleEl.parentElement;
+          if (parent && titleEl.scrollWidth > parent.clientWidth + 2) {
+            const dist = -(titleEl.scrollWidth - parent.clientWidth + 16);
+            titleEl.style.setProperty('--title-scroll-dist', `${dist}px`);
+            titleEl.classList.add('is-scrolling');
+          }
+        });
+      });
+
+      updateCardStates(currentPlaybackTrack, isCurrentlyPlaying);
+
+      container.style.opacity = '1';
+      container.style.transform = 'translateY(0)';
+    }, 180);
+  }
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const key = btn.getAttribute('data-artist-key') || 'the-cure';
+      renderArtistPage(key, 0);
+    });
+  });
+
+  renderArtistPage('the-cure', 0);
+</script>

@@ -1,0 +1,239 @@
+---
+---
+
+<div class="music-teaser-wrapper">
+  <div class="music-teaser-card">
+    <div class="music-teaser-icon-box">
+      <i class="fa-solid fa-compact-disc"></i>
+    </div>
+    <div class="music-teaser-content">
+      <span class="music-teaser-badge">UPCOMING RELEASE</span>
+      <h4 class="music-teaser-title">New music is on the way</h4>
+      <p class="music-teaser-desc">First official cover coming soon...</p>
+    </div>
+  </div>
+
+  <div class="quick-nav-row">
+    <a href="#merch-section" class="quick-nav-link" title="Jump to Official Merch">
+      <i class="fa-solid fa-shirt nav-link-icon"></i>
+      <span class="nav-link-text">Merch</span>
+      <i class="fa-solid fa-arrow-down nav-link-arrow"></i>
+    </a>
+    <a href="#members-section" class="quick-nav-link" title="Jump to Band Members">
+      <i class="fa-solid fa-user-group nav-link-icon"></i>
+      <span class="nav-link-text">Members</span>
+      <i class="fa-solid fa-arrow-down nav-link-arrow"></i>
+    </a>
+    <a href="#inspired-section" class="quick-nav-link" title="Jump to What Inspires Us">
+      <i class="fa-solid fa-record-vinyl nav-link-icon"></i>
+      <span class="nav-link-text">Inspires</span>
+      <i class="fa-solid fa-arrow-down nav-link-arrow"></i>
+    </a>
+  </div>
+</div>
+
+<style>
+  .music-teaser-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .music-teaser-card {
+    width: 100%;
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s var(--ease-snappy), border-color 0.2s ease, background-color 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .music-teaser-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(26, 26, 30, 0.95);
+  }
+
+  .music-teaser-icon-box {
+    font-size: 1.4rem;
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s var(--ease-snappy);
+    flex-shrink: 0;
+  }
+
+  .music-teaser-card:hover .music-teaser-icon-box {
+    transform: rotate(45deg);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .music-teaser-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  .music-teaser-badge {
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .music-teaser-title {
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .music-teaser-desc {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .quick-nav-row {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .quick-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: var(--text-white);
+    text-decoration: none;
+    font-family: var(--font-secondary);
+    backdrop-filter: blur(12px);
+    flex: 1;
+    min-width: 0;
+    transition: transform 0.18s var(--ease-snappy), border-color 0.18s ease, background-color 0.18s ease;
+    user-select: none;
+  }
+
+  .quick-nav-link:hover {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(26, 26, 30, 0.95);
+    transform: translateY(-1px);
+  }
+
+  .quick-nav-link:hover .nav-link-arrow {
+    transform: translateY(2px);
+    color: var(--text-white);
+  }
+
+  .nav-link-icon {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .nav-link-text {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0 4px;
+  }
+
+  .nav-link-arrow {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: transform 0.18s var(--ease-snappy), color 0.18s ease;
+  }
+</style>
+
+<script>
+  function triggerAnim(el: Element | null, animClass: string, duration = 800) {
+    if (!el) return;
+    el.classList.remove(animClass);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.classList.add(animClass);
+        setTimeout(() => el.classList.remove(animClass), duration);
+      });
+    });
+  }
+
+  function initQuickNavInteractions() {
+    const quickNavLinks = document.querySelectorAll('.quick-nav-link');
+
+    quickNavLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        const targetId = link.getAttribute('href');
+        if (!targetId || !targetId.startsWith('#')) return;
+
+        const targetSection = document.querySelector(targetId);
+        if (!targetSection) return;
+
+        e.preventDefault();
+
+        targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const titleIcon = targetSection.querySelector('.members-section-title i, .inspired-title-icon, h3 i, h2 i');
+        triggerAnim(titleIcon, 'section-icon-bounce', 800);
+
+        if (targetId === '#members-section') {
+          const memberAvatars = targetSection.querySelectorAll('.member-avatar-box');
+          memberAvatars.forEach((avatar, index) => {
+            (avatar as HTMLElement).style.animationDelay = `${index * 80}ms`;
+            triggerAnim(avatar, 'head-bop-anim', 1100 + index * 80);
+          });
+        } else if (targetId === '#merch-section') {
+          const merchCard = targetSection.querySelector('.merch-coming-soon-card');
+          triggerAnim(merchCard, 'merch-pop-anim', 1000);
+        } else if (targetId === '#inspired-section') {
+          const vinylHeaderIcon = targetSection.querySelector('.inspired-title-icon');
+          triggerAnim(vinylHeaderIcon, 'vinyl-spin-once', 1200);
+
+          const thumbs = targetSection.querySelectorAll('.music-card-thumb, .fallback-disc-icon');
+          thumbs.forEach((thumb) => {
+            triggerAnim(thumb, 'vinyl-spin-once', 1200);
+          });
+        }
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initQuickNavInteractions);
+  } else {
+    initQuickNavInteractions();
+  }
+</script>

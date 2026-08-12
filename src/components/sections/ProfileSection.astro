@@ -1,0 +1,106 @@
+---
+---
+
+<section class="profile-section">
+  <p class="profile-bio-text">Rock band 4 friends making music together</p>
+
+  <div class="profile-actions-row">
+    <div class="location-badge aus-flag-card">
+      <i class="fa-solid fa-location-dot location-pin-icon"></i>
+      <span>Newcastle, Australia</span>
+      <img src="https://flagcdn.com/w40/au.png" alt="Australia Flag" class="aus-flag-img" loading="eager" width="20" height="13" />
+    </div>
+  </div>
+
+  <div class="total-followers-card">
+    <div class="followers-left">
+      <i class="fa-solid fa-users"></i>
+      <div class="followers-label-group">
+        <span>Total Followers</span>
+        <span class="followers-last-updated" id="followersLastUpdated"></span>
+      </div>
+    </div>
+    <div class="followers-count" id="totalFollowersCount">0</div>
+  </div>
+</section>
+
+<style>
+  .profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 140px;
+  }
+
+  .profile-bio-text {
+    font-family: var(--font-heading);
+    font-size: 0.98rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text-white);
+    margin: 8px 0 14px 0;
+    text-transform: uppercase;
+  }
+
+  .profile-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .location-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    background: rgba(18, 18, 22, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-white);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s var(--ease-snappy), border-color 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .aus-flag-card:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+  }
+
+  .aus-flag-img {
+    width: 20px;
+    height: 13px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    margin-left: 2px;
+  }
+
+  .location-pin-icon {
+    color: #ff4d4d;
+    font-size: 0.82rem;
+  }
+
+  .total-followers-card {
+    display: none !important;
+  }
+</style>
+
+<script>
+  import { initFollowersTracker } from '../../scripts/controllers/followers.js';
+  initFollowersTracker();
+</script>

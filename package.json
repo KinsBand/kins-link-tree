@@ -11,8 +11,12 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/react": "^3.6.3",
     "@supabase/supabase-js": "^2.112.2",
     "astro": "^4.15.0",
+    "lucide-react": "^1.31.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "resend": "^6.18.1"
   },
   "devDependencies": {

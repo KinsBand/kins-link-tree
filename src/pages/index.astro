@@ -1,24 +1,33 @@
+---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import HeroBanner from '../components/HeroBanner.astro';
-import TopNav from '../components/TopNav.astro';
-import ProfileSection from '../components/ProfileSection.astro';
-import MusicTeaserCard from '../components/MusicTeaserCard.astro';
-import TabbedLinks from '../components/TabbedLinks.astro';
-import MembersSection from '../components/MembersSection.astro';
-import KinsCrewSpotlight from '../components/KinsCrewSpotlight.astro';
-import MerchSection from '../components/MerchSection.astro';
-import InspirationVault from '../components/InspirationVault.astro';
-import SubscribeSection from '../components/SubscribeSection.astro';
-import ShareModal from '../components/ShareModal.astro';
-import GigMapSheet from '../components/GigMapSheet.astro';
-import AudioPlayer from '../components/AudioPlayer.astro';
-import FloatingGigPill from '../components/FloatingGigPill.astro';
-import ToastContainer from '../components/ToastContainer.astro';
-import CoversSearchOverlay from '../components/CoversSearchOverlay.astro';
-import CoverVideoModal from '../components/CoverVideoModal.astro';
+
+// Section Components
+import HeroBanner from '../components/sections/HeroBanner.astro';
+import ProfileSection from '../components/sections/ProfileSection.astro';
+import MusicTeaserCard from '../components/sections/MusicTeaserCard.astro';
+import TabbedLinks from '../components/sections/TabbedLinks.astro';
+import MerchSection from '../components/sections/MerchSection.astro';
+import MembersSection from '../components/sections/MembersSection.astro';
+import KinsCrewSpotlight from '../components/sections/KinsCrewSpotlight.astro';
+import InspirationVault from '../components/sections/InspirationVault.astro';
+import SubscribeSection from '../components/sections/SubscribeSection.astro';
+
+// Navigation Components
+import TopNav from '../components/navigation/TopNav.astro';
+import FloatingGigPill from '../components/navigation/FloatingGigPill.astro';
+
+// Modal Components
+import ShareModal from '../components/modals/ShareModal.astro';
+import GigMapSheet from '../components/modals/GigMapSheet.astro';
+import CoversSearchOverlay from '../components/modals/CoversSearchOverlay.astro';
+import CoverVideoModal from '../components/modals/CoverVideoModal.astro';
+
+// UI Components
+import AudioPlayer from '../components/ui/AudioPlayer.astro';
+import ToastContainer from '../components/ui/ToastContainer.astro';
 ---
 
-<BaseLayout title="Kins | Link in Bio">
+<BaseLayout title="Kins | Official Link in Bio">
   <div class="app-wrapper">
     <div class="site-container" id="siteContainer">
       <HeroBanner />

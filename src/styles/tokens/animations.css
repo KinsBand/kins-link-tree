@@ -1,0 +1,36 @@
+/* Micro-Interaction Animations & Keyframes */
+.section-icon-bounce {
+  animation: sectionIconSpinBounce 0.75s var(--ease-snappy) forwards;
+}
+
+@keyframes sectionIconSpinBounce {
+  0% { transform: scale(1) rotate(0deg); }
+  40% { transform: scale(1.4) rotate(180deg); color: var(--text-white); }
+  75% { transform: scale(0.9) rotate(360deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+.head-bop-anim {
+  animation: headBop 1.1s var(--ease-snappy) forwards;
+}
+
+@keyframes headBop {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  20% { transform: translateY(-14px) rotate(-6deg); }
+  40% { transform: translateY(5px) rotate(4deg); }
+  60% { transform: translateY(-7px) rotate(-3deg); }
+  80% { transform: translateY(2px) rotate(1deg); }
+}
+
+.merch-pop-anim {
+  animation: merchCardPop 1s var(--ease-snappy) forwards;
+}
+
+@keyframes merchCardPop {
+  0% { transform: scale(1) rotate(0deg); }
+  20% { transform: scale(1.05) translateY(-10px) rotate(-3deg); border-color: rgba(255, 255, 255, 0.4); }
+  40% { transform: scale(0.97) translateY(4px) rotate(2deg); }
+  60% { transform: scale(1.02) translateY(-4px) rotate(-1deg); }
+  80% { transform: scale(0.99) translateY(1px) rotate(0deg); }
+  100% { transform: scale(1) translateY(0) rotate(0deg); }
+}

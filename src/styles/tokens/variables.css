@@ -1,0 +1,43 @@
+/* ==========================================================================
+   Kins (@KinsBandOfficial) - Visual System Design Tokens & Variables
+   ========================================================================== */
+
+:root {
+  /* System Color Tokens - Tactile Editorial Dark Mode */
+  --md-sys-color-primary: #f2f0eb;
+  --md-sys-color-on-primary: #0a0a0a;
+  --md-sys-color-primary-container: #1a1a1a;
+  --md-sys-color-surface: #0a0a0c;
+  --md-sys-color-surface-container: #121214;
+  --md-sys-color-surface-container-high: #1c1c1f;
+  --md-sys-color-on-surface: #f2f0eb;
+  --md-sys-color-on-surface-variant: #a1a1aa;
+  --md-sys-color-outline: rgba(255, 255, 255, 0.12);
+  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.06);
+  --md-sys-color-inverse-surface: #f2f0eb;
+
+  /* Theme Colors & Gradients */
+  --bg-dark-green: #0d0d0f;
+  --bg-dark-green-gradient: linear-gradient(180deg, #141417 0%, #0a0a0c 100%);
+  --btn-green: #f2f0eb;
+  --btn-green-hover: #ffffff;
+  --btn-green-shadow: rgba(0, 0, 0, 0.6);
+  --btn-text-color: #0a0a0c;
+  --card-white: #f2f0eb;
+  --card-bg: rgba(18, 18, 20, 0.85);
+  --card-white-shadow: rgba(0, 0, 0, 0.5);
+  --text-dark: #0a0a0c;
+  --text-white: #f2f0eb;
+  --text-muted: #8e8e93;
+  --accent-crimson: #d93838;
+  
+  /* Typographic Hierarchy */
+  --font-display: 'Cinzel', 'Syne', Georgia, serif;
+  --font-heading: 'Syne', 'Outfit', sans-serif;
+  --font-primary: 'Space Grotesk', 'Outfit', sans-serif;
+  --font-secondary: 'Space Grotesk', -apple-system, sans-serif;
+  
+  /* Micro-interaction Spring & Curves */
+  --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-tactile: cubic-bezier(0.25, 1, 0.5, 1);
+}
