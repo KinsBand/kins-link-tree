@@ -1,12 +1,14 @@
 ---
 ---
 
-<div class="modal-backdrop" id="shareModal">
+<!-- Share Modal Backdrop -->
+<div class="modal-backdrop hidden" id="shareModal" role="dialog" aria-modal="true" aria-label="Share Kins Official Page">
   <div class="modal-content share-modal-enhanced">
+    <!-- Header -->
     <div class="modal-header">
       <div class="modal-title-group">
-        <i class="fa-solid fa-share-nodes share-header-icon"></i>
-        <h3>Share Kins Official Page</h3>
+        <span class="brand-mini-badge">Kins • Official Link Tree</span>
+        <h3>Share Official Page</h3>
       </div>
       <button class="close-modal-btn" id="closeShareModal" aria-label="Close share modal">
         <i class="fa-solid fa-xmark"></i>
@@ -14,37 +16,101 @@
     </div>
 
     <div class="modal-body share-modal-body">
-      <div class="share-copy-handle-wrapper">
-        <div class="handle-display-box">
-          <i class="fa-solid fa-at handle-at-icon"></i>
-          <span class="handle-handle-text">@KinsBandOfficial</span>
+      <!-- 1. Native Web Share CTA -->
+      <button type="button" class="native-share-primary-btn" id="nativeShareCtaBtn">
+        <i class="fa-solid fa-arrow-up-from-bracket"></i>
+        <span>Share via App...</span>
+      </button>
+
+      <!-- 2. One-Tap Quick Share Shortcuts -->
+      <div class="quick-share-section">
+        <span class="share-section-label">Quick Share</span>
+        <div class="quick-share-grid">
+          <a href="#" id="shareWhatsappBtn" target="_blank" rel="noopener noreferrer" class="quick-share-chip whatsapp" aria-label="Share on WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span>WhatsApp</span>
+          </a>
+          <a href="#" id="shareSmsBtn" class="quick-share-chip sms" aria-label="Share via Messages">
+            <i class="fa-solid fa-comment-sms"></i>
+            <span>Messages</span>
+          </a>
+          <a href="#" id="shareTwitterBtn" target="_blank" rel="noopener noreferrer" class="quick-share-chip twitter" aria-label="Share on X / Twitter">
+            <i class="fa-brands fa-x-twitter"></i>
+            <span>X / Twitter</span>
+          </a>
+          <a href="#" id="shareFacebookBtn" target="_blank" rel="noopener noreferrer" class="quick-share-chip facebook" aria-label="Share on Facebook">
+            <i class="fa-brands fa-facebook-f"></i>
+            <span>Facebook</span>
+          </a>
         </div>
-        <button class="icon-only-copy-btn" id="handleCopyBtn" title="Copy handle @KinsBandOfficial" aria-label="Copy handle @KinsBandOfficial">
-          <i class="fa-regular fa-copy"></i>
-        </button>
       </div>
 
-      <div class="qr-box-container">
-        <div class="qr-canvas-wrapper" id="qrcodeCanvas"></div>
-        <div class="qr-info-column">
-          <span class="qr-label-title">Scan QR Code</span>
-          <span class="qr-label-sub">Point mobile camera to view page</span>
-          <button class="download-qr-btn" id="downloadQrBtn">
-            <i class="fa-solid fa-download"></i> Save QR
+      <!-- 3. Direct Link Input Box -->
+      <div class="share-field-group">
+        <label class="share-field-label" for="shareUrlInput">Direct Link</label>
+        <div class="copy-input-group">
+          <div class="copy-input-wrapper">
+            <i class="fa-solid fa-link link-input-icon"></i>
+            <input type="text" id="shareUrlInput" value="https://kinsband.com/?utm_source=share_modal&utm_medium=direct_link" readonly>
+          </div>
+          <button id="copyUrlBtn" class="icon-only-copy-btn" title="Copy website link" aria-label="Copy website link">
+            <i class="fa-regular fa-copy"></i>
           </button>
         </div>
       </div>
 
-      <div class="copy-input-group">
-        <div class="copy-input-wrapper">
-          <i class="fa-solid fa-link link-input-icon"></i>
-          <input type="text" id="shareUrlInput" value="https://beacons.ai/KinsBandOfficial" readonly>
+      <!-- 4. Band Handle Box -->
+      <div class="share-field-group">
+        <label class="share-field-label">Band Handle</label>
+        <div class="share-copy-handle-wrapper">
+          <div class="handle-display-box">
+            <i class="fa-solid fa-at handle-at-icon"></i>
+            <span class="handle-handle-text">@KinsBandOfficial</span>
+          </div>
+          <button class="icon-only-copy-btn" id="handleCopyBtn" title="Copy handle @KinsBandOfficial" aria-label="Copy handle @KinsBandOfficial">
+            <i class="fa-regular fa-copy"></i>
+          </button>
         </div>
-        <button id="copyUrlBtn" class="icon-only-copy-btn" title="Copy website link" aria-label="Copy website link">
-          <i class="fa-regular fa-copy"></i>
-        </button>
+      </div>
+
+      <!-- 5. Interactive QR Code Box (Click to Fullscreen) -->
+      <div class="qr-box-container">
+        <div class="qr-canvas-clickable" id="qrcodeCanvasWrapper" title="Click to view full screen QR code">
+          <div class="qr-canvas-inner" id="qrcodeCanvas"></div>
+          <div class="qr-hover-tap-badge">
+            <i class="fa-solid fa-expand"></i>
+            <span>Tap Fullscreen</span>
+          </div>
+        </div>
+        <div class="qr-info-column">
+          <span class="qr-label-title">Scan QR Code</span>
+          <span class="qr-label-sub">Tap QR to enlarge & scan</span>
+          <div class="qr-download-btns-row">
+            <button type="button" class="download-qr-btn" id="downloadQrPngBtn">
+              <i class="fa-solid fa-download"></i> PNG
+            </button>
+            <button type="button" class="download-qr-btn secondary" id="downloadQrSvgBtn">
+              <i class="fa-solid fa-file-code"></i> SVG
+            </button>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- 6. Fullscreen QR Code Lightbox Modal -->
+<div class="modal-backdrop hidden" id="qrFullscreenModal" role="dialog" aria-modal="true" aria-label="Full screen QR Code">
+  <div class="qr-fullscreen-content">
+    <button class="close-modal-btn qr-fullscreen-close" id="closeQrFullscreenBtn" aria-label="Close full screen QR code">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="qr-fullscreen-header">
+      <span class="brand-mini-badge">Kins Official</span>
+      <h2>Scan to Open Link in Bio</h2>
+    </div>
+    <div class="qr-fullscreen-canvas-wrapper" id="qrcodeFullscreenCanvas"></div>
+    <p class="qr-fullscreen-sub">Point mobile camera to view Kins official website</p>
   </div>
 </div>
 
@@ -53,7 +119,8 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -64,53 +131,73 @@
     transition: opacity 0.25s var(--ease-snappy);
   }
 
+  .modal-backdrop:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .modal-backdrop:global(.active) {
     opacity: 1;
     pointer-events: auto;
   }
 
-  .modal-content {
-    background: rgba(18, 18, 20, 0.95);
+  .share-modal-enhanced {
+    background: rgba(14, 14, 17, 0.96);
     border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 6px;
+    border-radius: 12px;
     width: 100%;
-    max-width: 400px;
-    padding: 22px;
+    max-width: 440px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9);
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .modal-title-group {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-white);
-    font-family: var(--font-heading);
-    font-size: 0.95rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-mini-badge {
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--btn-green);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
-  .share-header-icon {
-    color: var(--text-muted);
+  .modal-title-group h3 {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 0;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 
   .close-modal-btn {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: var(--text-white);
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -119,23 +206,123 @@
   }
 
   .close-modal-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.18);
   }
 
-  .modal-body {
+  .share-modal-body {
     display: flex;
     flex-direction: column;
     gap: 14px;
   }
 
+  .native-share-primary-btn {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border: none;
+    padding: 12px 18px;
+    font-family: var(--font-secondary);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease;
+  }
+
+  .native-share-primary-btn:hover {
+    background: var(--btn-green-hover);
+    transform: translateY(-1px);
+  }
+
+  .quick-share-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .share-section-label, .share-field-label {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .quick-share-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .quick-share-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 10px 6px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-decoration: none;
+    min-height: 48px;
+    transition: all 0.18s ease;
+  }
+
+  .quick-share-chip:hover {
+    background: rgba(255, 255, 255, 0.14);
+    transform: translateY(-2px);
+  }
+
+  .quick-share-chip.whatsapp:hover {
+    color: #25D366;
+    border-color: rgba(37, 211, 102, 0.4);
+  }
+
+  .quick-share-chip.sms:hover {
+    color: #34B7F1;
+    border-color: rgba(52, 183, 241, 0.4);
+  }
+
+  .quick-share-chip.twitter:hover {
+    color: #1DA1F2;
+    border-color: rgba(29, 161, 242, 0.4);
+  }
+
+  .quick-share-chip.facebook:hover {
+    color: #1877F2;
+    border-color: rgba(24, 119, 242, 0.4);
+  }
+
+  .quick-share-chip i {
+    font-size: 1rem;
+  }
+
+  .share-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
   .share-copy-handle-wrapper, .copy-input-group {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(10, 10, 12, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 4px;
-    padding: 10px 12px;
+    gap: 8px;
+    background: rgba(10, 10, 12, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    padding: 6px 8px 6px 12px;
   }
 
   .handle-display-box, .copy-input-wrapper {
@@ -143,9 +330,10 @@
     align-items: center;
     gap: 8px;
     flex: 1;
+    min-width: 0;
     color: var(--text-white);
     font-family: var(--font-secondary);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
   }
 
@@ -156,20 +344,24 @@
     font-family: var(--font-secondary);
     width: 100%;
     outline: none;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
   }
 
   .icon-only-copy-btn {
     background: var(--btn-green);
     color: var(--btn-text-color);
     border: none;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    flex-shrink: 0;
     transition: background-color 0.18s ease;
   }
 
@@ -181,32 +373,64 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    background: rgba(10, 10, 12, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 4px;
-    padding: 14px;
+    background: rgba(10, 10, 12, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    padding: 12px 14px;
   }
 
-  .qr-canvas-wrapper {
+  .qr-canvas-clickable {
+    position: relative;
     background: #ffffff;
-    padding: 8px;
-    border-radius: 4px;
+    padding: 6px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .qr-canvas-clickable:hover {
+    transform: scale(1.04);
+    box-shadow: 0 0 16px rgba(0, 230, 153, 0.4);
+  }
+
+  .qr-hover-tap-badge {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    color: var(--text-white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .qr-canvas-clickable:hover .qr-hover-tap-badge {
+    opacity: 1;
   }
 
   .qr-info-column {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
   }
 
   .qr-label-title {
     font-family: var(--font-heading);
     font-size: 0.88rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text-white);
+    text-transform: uppercase;
   }
 
   .qr-label-sub {
@@ -215,25 +439,93 @@
     color: var(--text-muted);
   }
 
-  .download-qr-btn {
+  .qr-download-btns-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin-top: 6px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .download-qr-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     color: var(--text-white);
     border-radius: 4px;
-    padding: 6px 12px;
+    padding: 7px 12px;
     font-family: var(--font-secondary);
     font-size: 0.74rem;
     font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     transition: background-color 0.18s ease;
+    min-height: 36px;
   }
 
   .download-qr-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+
+  .download-qr-btn.secondary {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+  }
+
+  .download-qr-btn.secondary:hover {
+    color: var(--text-white);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  /* Fullscreen QR Lightbox Modal */
+  .qr-fullscreen-content {
+    background: rgba(14, 14, 17, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95);
+    position: relative;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .qr-fullscreen-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+  }
+
+  .qr-fullscreen-header h2 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-white);
+    text-transform: uppercase;
+    margin: 4px 0 0 0;
+  }
+
+  .qr-fullscreen-canvas-wrapper {
+    background: #ffffff;
+    padding: 14px;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0, 230, 153, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .qr-fullscreen-sub {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin: 0;
   }
 </style>
 

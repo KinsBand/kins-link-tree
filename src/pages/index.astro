@@ -22,6 +22,8 @@ import GigMapSheet from '../components/modals/GigMapSheet.astro';
 import CoversSearchOverlay from '../components/modals/CoversSearchOverlay.astro';
 import CoverVideoModal from '../components/modals/CoverVideoModal.astro';
 import CommunitySubmissionModal from '../components/modals/CommunitySubmissionModal.astro';
+import PrivacyModal from '../components/modals/PrivacyModal.astro';
+import TermsModal from '../components/modals/TermsModal.astro';
 
 // UI Components
 import AudioPlayer from '../components/ui/AudioPlayer.astro';
@@ -49,7 +51,12 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
         <InspirationVault />
 
         <footer class="site-footer">
-          <p>© 2026 Kins (@KinsBandOfficial). All rights reserved.</p>
+          <p>© <span id="copyrightYear">2026</span> KINS (@KINSBANDOFFICIAL). ALL RIGHTS RESERVED.</p>
+          <div class="footer-legal-links">
+            <button type="button" id="openPrivacyFooterBtn" class="footer-legal-btn">Privacy Policy</button>
+            <span class="legal-bullet">•</span>
+            <button type="button" id="openTermsFooterBtn" class="footer-legal-btn">Fan Submission Terms</button>
+          </div>
         </footer>
       </main>
     </div>
@@ -58,6 +65,8 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
   <CoversSearchOverlay />
   <CoverVideoModal />
   <CommunitySubmissionModal />
+  <PrivacyModal />
+  <TermsModal />
   <ShareModal />
   <GigMapSheet />
   <AudioPlayer />
@@ -211,4 +220,53 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     margin-top: 12px;
   }
+
+  .footer-legal-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .footer-legal-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0;
+    transition: color 0.18s ease;
+  }
+
+  .footer-legal-btn:hover {
+    color: var(--text-white);
+    text-decoration: underline;
+  }
+
+  .legal-bullet {
+    color: rgba(255, 255, 255, 0.2);
+  }
 </style>
+
+<script>
+  const yearEl = document.getElementById('copyrightYear');
+  if (yearEl) yearEl.textContent = new Date().getFullYear().toString();
+
+  const privacyModal = document.getElementById('privacyModal');
+  const termsModal = document.getElementById('termsModal');
+
+  document.getElementById('openPrivacyFooterBtn')?.addEventListener('click', () => {
+    privacyModal?.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  });
+
+  document.getElementById('openTermsFooterBtn')?.addEventListener('click', () => {
+    termsModal?.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  });
+</script>

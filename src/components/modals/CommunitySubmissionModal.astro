@@ -7,6 +7,9 @@
       <div class="modal-title-group">
         <i class="fa-solid fa-clapperboard modal-header-icon"></i>
         <h3>Submit Fan Clip</h3>
+        <button type="button" class="disclaimer-info-btn" id="openTermsInfoBtn" title="View Fan Submission Agreement" aria-label="View Fan Submission Agreement">
+          <i class="fa-solid fa-circle-info"></i>
+        </button>
       </div>
       <button class="close-modal-btn" id="closeCommunityModal" aria-label="Close modal">
         <i class="fa-solid fa-xmark"></i>
@@ -47,12 +50,18 @@
         <!-- Video / Media URL Field -->
         <div class="form-group">
           <label class="form-label" for="clipUrlInput">Video or Post Link</label>
-          <div class="input-with-detected-badge">
-            <i class="fa-solid fa-link input-left-icon"></i>
-            <input type="url" id="clipUrlInput" name="url" placeholder="https://tiktok.com/@... or instagram/reel/..." required autocomplete="off">
-            <span class="detected-platform-badge hidden" id="detectedPlatformBadge">
-              <i class="fa-solid fa-circle-check"></i> <span id="detectedPlatformName">Link</span>
-            </span>
+          <div class="input-with-paste-row">
+            <div class="input-with-detected-badge">
+              <i class="fa-solid fa-link input-left-icon"></i>
+              <input type="url" id="clipUrlInput" name="url" placeholder="https://tiktok.com/@... or instagram/reel/..." required autocomplete="off">
+              <span class="detected-platform-badge hidden" id="detectedPlatformBadge">
+                <i class="fa-solid fa-circle-check"></i> <span id="detectedPlatformName">Link</span>
+              </span>
+            </div>
+            <button type="button" class="paste-url-btn" id="pasteClipUrlBtn" title="Paste link from clipboard">
+              <i class="fa-solid fa-paste"></i>
+              <span>Paste</span>
+            </button>
           </div>
           <span class="input-validation-msg" id="urlValidationMsg">Paste a link from TikTok, Instagram, YouTube, or web.</span>
         </div>
@@ -74,6 +83,12 @@
             <input type="text" id="clipTitleInput" name="title" placeholder="e.g. Everlong Cover, Live in Sydney..." autocomplete="off">
           </div>
         </div>
+
+        <!-- Submission Micro Disclaimer -->
+        <p class="submission-disclaimer-text">
+          By submitting, you agree to our 
+          <button type="button" class="disclaimer-terms-link" id="openTermsModalLink">Fan Content Terms</button>.
+        </p>
 
         <!-- Submit Button -->
         <button type="submit" class="green-submit-clip-btn" id="submitCommunityClipBtn">
@@ -252,6 +267,44 @@
     font-weight: 800;
   }
 
+  .input-with-paste-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .input-with-paste-row .input-with-detected-badge {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .paste-url-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 10px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+    flex-shrink: 0;
+  }
+
+  .paste-url-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--btn-green);
+    transform: translateY(-1px);
+  }
+
   .input-with-icon, .input-with-detected-badge {
     position: relative;
     display: flex;
@@ -378,12 +431,59 @@
     margin: 0;
   }
 
+  .disclaimer-info-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--btn-green);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.72rem;
+    padding: 0;
+    margin-left: 4px;
+    transition: all 0.18s ease;
+  }
+
+  .disclaimer-info-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: var(--text-white);
+    transform: scale(1.08);
+  }
+
+  .submission-disclaimer-text {
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin: 4px 0 0 0;
+  }
+
+  .disclaimer-terms-link {
+    background: transparent;
+    border: none;
+    color: var(--btn-green);
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .disclaimer-terms-link:hover {
+    color: var(--btn-green-hover);
+  }
+
   .reset-submission-btn {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.14);
     color: var(--text-white);
     font-family: var(--font-secondary);
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     font-weight: 700;
     padding: 8px 16px;
     border-radius: 4px;
@@ -409,6 +509,41 @@
   const detectedBadge = document.getElementById('detectedPlatformBadge');
   const detectedName = document.getElementById('detectedPlatformName');
   const selectedCategoryInput = document.getElementById('selectedCategoryInput') as HTMLInputElement;
+
+  const termsModal = document.getElementById('termsModal');
+  const openTermsInfoBtn = document.getElementById('openTermsInfoBtn');
+  const openTermsModalLink = document.getElementById('openTermsModalLink');
+
+  function openTermsModal() {
+    termsModal?.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
+
+  openTermsInfoBtn?.addEventListener('click', openTermsModal);
+  openTermsModalLink?.addEventListener('click', openTermsModal);
+
+  const pasteBtn = document.getElementById('pasteClipUrlBtn');
+
+  pasteBtn?.addEventListener('click', async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && clipUrlInput) {
+          clipUrlInput.value = text.trim();
+          clipUrlInput.dispatchEvent(new Event('input'));
+          showToast("Pasted link from clipboard!");
+        } else {
+          showToast("Clipboard is empty.");
+        }
+      } else {
+        clipUrlInput?.focus();
+        showToast("Press Ctrl+V to paste.");
+      }
+    } catch (err) {
+      clipUrlInput?.focus();
+      showToast("Press Ctrl+V to paste link.");
+    }
+  });
 
   // Close modal
   closeBtn?.addEventListener('click', () => {

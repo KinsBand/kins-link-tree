@@ -42,9 +42,17 @@ const members = [
 <section class="members-section" id="members-section">
   <div class="members-section-header">
     <h3 class="members-section-title"><i class="fa-solid fa-user-group"></i> Band Members</h3>
+    <div class="section-scroll-controls">
+      <button type="button" class="scroll-arrow-btn" id="membersScrollPrev" aria-label="Scroll members left">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button type="button" class="scroll-arrow-btn" id="membersScrollNext" aria-label="Scroll members right">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
   </div>
 
-  <div class="members-scroll-container">
+  <div class="members-scroll-container" id="membersScrollContainer">
     {members.map((member) => (
       <div class="member-card">
         <div class={`member-img-wrapper member-avatar-box avatar-${member.id}`}>
@@ -95,20 +103,32 @@ const members = [
     font-size: 0.85rem;
   }
 
-  .scroll-hint-pill {
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 4px 10px;
-    border-radius: 4px;
-    display: inline-flex;
+  .section-scroll-controls {
+    display: flex;
     align-items: center;
     gap: 6px;
+  }
+
+  .scroll-arrow-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.72rem;
+    transition: all 0.18s ease;
+  }
+
+  .scroll-arrow-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: var(--btn-green);
+    transform: translateY(-1px);
   }
 
   .members-scroll-container {
@@ -116,9 +136,28 @@ const members = [
     gap: 14px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    padding: 2px 2px 14px 2px;
+    padding: 2px 2px 12px 2px;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+
+  .members-scroll-container::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .members-scroll-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 2px;
+  }
+
+  .members-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+
+  .members-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--btn-green);
   }
 
   .member-card {
@@ -138,6 +177,18 @@ const members = [
   .member-card:hover {
     transform: translateY(-2px);
     border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  @media (min-width: 768px) {
+    .member-card {
+      flex: 0 0 240px;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .member-card {
+      flex: 0 0 260px;
+    }
   }
 
   .member-avatar-box {
@@ -219,18 +270,27 @@ const members = [
     color: var(--text-muted);
     line-height: 1.35;
   }
-
-  @media (min-width: 1320px) {
-    .members-scroll-container {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      overflow-x: visible;
-    }
-
-    .member-card {
-      flex: 1 1 auto;
-      width: 100%;
-    }
-  }
 </style>
+
+<script>
+  const container = document.getElementById('membersScrollContainer');
+  const prevBtn = document.getElementById('membersScrollPrev');
+  const nextBtn = document.getElementById('membersScrollNext');
+
+  if (container) {
+    container.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        container.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    prevBtn?.addEventListener('click', () => {
+      container.scrollBy({ left: -260, behavior: 'smooth' });
+    });
+
+    nextBtn?.addEventListener('click', () => {
+      container.scrollBy({ left: 260, behavior: 'smooth' });
+    });
+  }
+</script>

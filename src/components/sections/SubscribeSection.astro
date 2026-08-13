@@ -29,6 +29,12 @@
             <button type="button" class="domain-shortcut-btn" data-domain="@proton.me">@proton.me</button>
             <button type="button" class="domain-shortcut-btn" data-domain="@live.com">@live.com</button>
           </div>
+          <!-- Subscription Consent Micro-Text -->
+          <p class="subscribe-consent-text">
+            By subscribing, you agree to our 
+            <button type="button" id="openPrivacyFormBtn" class="privacy-consent-link">Privacy Policy</button>. 
+            Unsubscribe anytime.
+          </p>
         </div>
       </form>
     </div>
@@ -222,6 +228,30 @@
     transform: translateY(-1px);
   }
 
+  .subscribe-consent-text {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    margin-bottom: 0;
+  }
+
+  .privacy-consent-link {
+    background: transparent;
+    border: none;
+    color: var(--btn-green);
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .privacy-consent-link:hover {
+    color: var(--btn-green-hover);
+  }
+
   .green-submit-btn {
     flex: 0 0 auto;
     background: var(--btn-green);
@@ -406,7 +436,7 @@
 </style>
 
 <script>
-  import { copyToClipboard } from '../../scripts/controllers/clipboard.js';
+  import { copyToClipboard, animateCopySuccess } from '../../scripts/controllers/clipboard.js';
   import { showToast } from '../../scripts/controllers/toast.js';
 
   const formContainer = document.getElementById('subscribeFormContainer');
@@ -516,12 +546,23 @@
     }, { passive: false });
   }
 
+  const privacyModal = document.getElementById('privacyModal');
+  const openPrivacyFormBtn = document.getElementById('openPrivacyFormBtn');
+
+  openPrivacyFormBtn?.addEventListener('click', () => {
+    privacyModal?.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  });
+
   document.querySelectorAll('.copy-email-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const email = btn.getAttribute('data-email');
       if (email) {
-        await copyToClipboard(email);
-        showToast(`Copied ${email} to clipboard!`);
+        const ok = await copyToClipboard(email);
+        if (ok) {
+          animateCopySuccess(btn);
+          showToast(`Copied ${email} to clipboard!`);
+        }
       }
     });
   });

@@ -54,10 +54,18 @@ const mockClips = [
       <h3 class="spotlight-title"><i class="fa-solid fa-users"></i> Community</h3>
       <p class="spotlight-subtitle">Covers, edits, and live clips from the Kins community.</p>
     </div>
+    <div class="section-scroll-controls">
+      <button type="button" class="scroll-arrow-btn" id="spotlightScrollPrev" aria-label="Scroll community clips left">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button type="button" class="scroll-arrow-btn" id="spotlightScrollNext" aria-label="Scroll community clips right">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
   </div>
 
   <!-- Snap-Scroll Horizontal Video Row -->
-  <div class="spotlight-scroll-container">
+  <div class="spotlight-scroll-container" id="spotlightScrollContainer">
     {mockClips.map((clip) => (
       <div class="spotlight-card" data-clip-id={clip.id}>
         <div class="card-media-wrapper" style={`background: ${clip.bgGradient}`}>
@@ -171,19 +179,63 @@ const mockClips = [
     margin-top: 4px;
   }
 
+  .section-scroll-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .scroll-arrow-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.72rem;
+    transition: all 0.18s ease;
+  }
+
+  .scroll-arrow-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: var(--btn-green);
+    transform: translateY(-1px);
+  }
+
   /* Snap-Scroll Container */
   .spotlight-scroll-container {
     display: flex;
     gap: 16px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    padding: 4px 2px 16px 2px;
+    padding: 4px 2px 14px 2px;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   }
 
   .spotlight-scroll-container::-webkit-scrollbar {
-    display: none;
+    height: 4px;
+    display: block;
+  }
+
+  .spotlight-scroll-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 2px;
+  }
+
+  .spotlight-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+
+  .spotlight-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--btn-green);
   }
 
   /* Individual 9:16 Card */
@@ -449,31 +501,54 @@ const mockClips = [
     }
   }
 
-  @media (min-width: 1320px) {
-    .spotlight-scroll-container {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      overflow-x: visible;
-    }
-
+  @media (min-width: 768px) {
     .spotlight-card {
-      flex: 1 1 auto;
-      width: 100%;
-      height: 330px;
+      flex: 0 0 240px;
+      height: 340px;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .spotlight-card {
+      flex: 0 0 260px;
+      height: 350px;
     }
   }
 </style>
 
 <script>
-  import { copyToClipboard } from '../../scripts/controllers/clipboard.js';
+  import { copyToClipboard, animateCopySuccess } from '../../scripts/controllers/clipboard.js';
   import { showToast } from '../../scripts/controllers/toast.js';
 
+  const spotlightContainer = document.getElementById('spotlightScrollContainer');
+  const spotlightPrevBtn = document.getElementById('spotlightScrollPrev');
+  const spotlightNextBtn = document.getElementById('spotlightScrollNext');
+
+  if (spotlightContainer) {
+    spotlightContainer.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        spotlightContainer.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    spotlightPrevBtn?.addEventListener('click', () => {
+      spotlightContainer.scrollBy({ left: -260, behavior: 'smooth' });
+    });
+
+    spotlightNextBtn?.addEventListener('click', () => {
+      spotlightContainer.scrollBy({ left: 260, behavior: 'smooth' });
+    });
+  }
+
   const copyPill = document.getElementById('copyHandlePill');
-  copyPill?.addEventListener('click', (e) => {
+  copyPill?.addEventListener('click', async (e) => {
     e.stopPropagation();
-    copyToClipboard('@KinsBandOfficial');
-    showToast("Copied @KinsBandOfficial handle!");
+    const ok = await copyToClipboard('@KinsBandOfficial');
+    if (ok) {
+      animateCopySuccess(copyPill);
+      showToast("Copied @KinsBandOfficial handle!");
+    }
   });
 
   const openModalBtn = document.getElementById('openCommunityModalBtn');

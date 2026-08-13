@@ -1,0 +1,228 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="privacyModal">
+  <div class="modal-content legal-modal-content">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <i class="fa-solid fa-shield-halved modal-header-icon"></i>
+        <h3>Privacy Policy</h3>
+      </div>
+      <button class="close-modal-btn" id="closePrivacyModal" aria-label="Close Privacy Policy">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="legal-modal-body">
+      <p class="legal-last-updated"><strong>Last Updated:</strong> August 2026</p>
+
+      <p class="legal-intro">
+        <strong>Kins</strong> ("we", "our", or "us") respects your privacy. This policy outlines how we handle personal information collected through our official link-in-bio page and website.
+      </p>
+
+      <div class="legal-section">
+        <h4>1. Information We Collect</h4>
+        <ul>
+          <li><strong>Email Addresses:</strong> When you subscribe to our mailing list, we collect your email address to send updates, release announcements, behind-the-scenes content, and show/tour dates.</li>
+          <li><strong>Fan Submissions:</strong> If you submit a fan clip, video link, or message, we collect the link and public handle you provide.</li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h4>2. How We Use Your Data</h4>
+        <p>We only use your email address to send official band updates. We do not sell, rent, or trade your personal information to third parties.</p>
+      </div>
+
+      <div class="legal-section">
+        <h4>3. Service Providers</h4>
+        <p>We may use trusted third-party email service providers (e.g., Mailchimp, ConvertKit, or SendGrid) to deliver newsletters. These services process your data solely on our behalf and in compliance with privacy laws.</p>
+      </div>
+
+      <div class="legal-section">
+        <h4>4. Unsubscribing</h4>
+        <p>You can opt out of emails at any time by clicking the "Unsubscribe" link at the bottom of any update, or by contacting us directly at <a href="mailto:HelloKinsBand@gmail.com" class="legal-email-link">HelloKinsBand@gmail.com</a>.</p>
+      </div>
+
+      <div class="legal-section">
+        <h4>5. Contact Us</h4>
+        <p>For privacy inquiries or data requests, reach out to us at:</p>
+        <p><strong>Email:</strong> <a href="mailto:HelloKinsBand@gmail.com" class="legal-email-link">HelloKinsBand@gmail.com</a></p>
+      </div>
+    </div>
+
+    <div class="legal-modal-footer">
+      <button type="button" class="close-legal-btn" id="closePrivacyFooterBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s var(--ease-snappy);
+  }
+
+  .modal-backdrop:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .legal-modal-content {
+    background: rgba(14, 14, 17, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85);
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-white);
+  }
+
+  .modal-header-icon {
+    color: var(--btn-green);
+    font-size: 1rem;
+  }
+
+  .modal-title-group h3 {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .close-modal-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+  }
+
+  .close-modal-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .legal-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .legal-last-updated {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+  }
+
+  .legal-intro {
+    color: var(--text-white);
+  }
+
+  .legal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .legal-section h4 {
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 4px 0 2px 0;
+  }
+
+  .legal-section ul {
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .legal-email-link {
+    color: var(--btn-green);
+    text-decoration: underline;
+  }
+
+  .legal-modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .close-legal-btn {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 7px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+  }
+
+  .close-legal-btn:hover {
+    background: var(--btn-green-hover);
+  }
+</style>
+
+<script>
+  const privacyModal = document.getElementById('privacyModal');
+  const closePrivacyModal = document.getElementById('closePrivacyModal');
+  const closePrivacyFooterBtn = document.getElementById('closePrivacyFooterBtn');
+
+  function hideModal() {
+    privacyModal?.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  }
+
+  closePrivacyModal?.addEventListener('click', hideModal);
+  closePrivacyFooterBtn?.addEventListener('click', hideModal);
+  privacyModal?.addEventListener('click', (e) => {
+    if (e.target === privacyModal) hideModal();
+  });
+</script>

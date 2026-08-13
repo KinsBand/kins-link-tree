@@ -57,6 +57,21 @@ body.modal-open {
   display: none !important;
 }
 
+/* Copy Button Spring Micro-Animation */
+.copied-animating {
+  background: var(--btn-green) !important;
+  color: var(--btn-text-color) !important;
+  border-color: var(--btn-green) !important;
+  transform: scale(1.06) !important;
+  box-shadow: 0 0 14px rgba(0, 230, 153, 0.4) !important;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.text-check-success {
+  color: #0b1f18 !important;
+  font-weight: 900 !important;
+}
+
 /* Custom Leaflet Map Pins */
 .custom-map-pin {
   display: flex;

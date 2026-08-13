@@ -1,0 +1,214 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="termsModal">
+  <div class="modal-content legal-modal-content">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <i class="fa-solid fa-file-contract modal-header-icon"></i>
+        <h3>Fan Submission Terms</h3>
+      </div>
+      <button class="close-modal-btn" id="closeTermsModal" aria-label="Close Fan Submission Terms">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="legal-modal-body">
+      <div class="agreement-highlight-box">
+        <i class="fa-solid fa-circle-info agreement-icon"></i>
+        <p class="agreement-main-text">
+          <strong>Submission Agreement:</strong> By sharing your link or clip with Kins, you confirm that you own or have rights to the content and grant Kins permission to feature, repost, or embed your clip on our official website and social media channels. You maintain full ownership of your original video.
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h4>1. Ownership & License</h4>
+        <p>You retain 100% ownership and copyright of your original video or audio. Submitting a link grants Kins a non-exclusive, royalty-free license to display, feature, or embed your clip across our official website, social media, and digital channels.</p>
+      </div>
+
+      <div class="legal-section">
+        <h4>2. Content Responsibilities</h4>
+        <p>You represent that your submission does not violate any third-party copyrights, trademarks, or privacy rights. Kins reserves the right to remove any featured clip at our discretion.</p>
+      </div>
+    </div>
+
+    <div class="legal-modal-footer">
+      <button type="button" class="close-legal-btn" id="closeTermsFooterBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s var(--ease-snappy);
+  }
+
+  .modal-backdrop:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .legal-modal-content {
+    background: rgba(14, 14, 17, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85);
+    width: 100%;
+    max-width: 520px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-white);
+  }
+
+  .modal-header-icon {
+    color: var(--btn-green);
+    font-size: 1rem;
+  }
+
+  .modal-title-group h3 {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .close-modal-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+  }
+
+  .close-modal-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .legal-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .agreement-highlight-box {
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-left: 3px solid var(--btn-green);
+    padding: 14px 16px;
+    border-radius: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .agreement-icon {
+    color: var(--btn-green);
+    font-size: 1.1rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .agreement-main-text {
+    color: var(--text-white);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .legal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .legal-section h4 {
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 4px 0 2px 0;
+  }
+
+  .legal-modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .close-legal-btn {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 7px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+  }
+
+  .close-legal-btn:hover {
+    background: var(--btn-green-hover);
+  }
+</style>
+
+<script>
+  const termsModal = document.getElementById('termsModal');
+  const closeTermsModal = document.getElementById('closeTermsModal');
+  const closeTermsFooterBtn = document.getElementById('closeTermsFooterBtn');
+
+  function hideModal() {
+    termsModal?.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  }
+
+  closeTermsModal?.addEventListener('click', hideModal);
+  closeTermsFooterBtn?.addEventListener('click', hideModal);
+  termsModal?.addEventListener('click', (e) => {
+    if (e.target === termsModal) hideModal();
+  });
+</script>
