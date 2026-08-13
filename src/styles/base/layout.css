@@ -19,33 +19,18 @@ html, body {
 /* Common App Layout Containers */
 .app-wrapper {
   width: 100%;
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
-  padding: 24px 12px;
-  flex: 1;
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-dark-green-gradient);
 }
 
 .site-container {
   width: 100%;
-  max-width: 500px;
-  background: var(--bg-dark-green-gradient);
-  min-height: 850px;
-  border-radius: 12px;
+  max-width: 100%;
   position: relative;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  overflow: hidden;
+  min-height: 100vh;
 }
 
-@media (max-width: 600px) {
-  .app-wrapper {
-    padding: 0;
-  }
-  .site-container {
-    max-width: 100%;
-    border-radius: 0;
-    box-shadow: none;
-    min-height: 100vh;
-    border: none;
-  }
-}

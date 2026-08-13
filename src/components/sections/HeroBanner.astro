@@ -1,26 +1,33 @@
 ---
+import { Image } from 'astro:assets';
+import kinsLogoNew from '../../assets/kins-logo-new.jpg';
+
 interface Props {
-  image?: string;
+  image?: ImageMetadata | string;
 }
 
-const { image = `${import.meta.env.BASE_URL}kins-logo-new.jpg` } = Astro.props;
+const { image = kinsLogoNew } = Astro.props;
 ---
 
 <div class="hero-banner-container" id="heroBannerContainer">
   <div class="hero-banner-glow"></div>
-  <img src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" fetchpriority="high">
+  {
+    typeof image === 'string' ? (
+      <img src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" fetchpriority="high" width="600" height="140" />
+    ) : (
+      <Image src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" loading="eager" width={600} height={140} />
+    )
+  }
   <div class="hero-gradient-overlay"></div>
 </div>
 
 <style>
   .hero-banner-container {
-    position: absolute;
-    top: 92px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 32px);
-    max-width: 460px;
-    height: 150px;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: 140px;
+    margin: 4px 0;
     z-index: 1;
     overflow: visible;
     pointer-events: none;

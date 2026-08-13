@@ -54,7 +54,6 @@ const mockClips = [
       <h3 class="spotlight-title"><i class="fa-solid fa-users"></i> Community</h3>
       <p class="spotlight-subtitle">Covers, edits, and live clips from the Kins community.</p>
     </div>
-    <span class="scroll-hint-pill"><i class="fa-solid fa-arrow-right-long"></i> Scroll</span>
   </div>
 
   <!-- Snap-Scroll Horizontal Video Row -->
@@ -91,13 +90,18 @@ const mockClips = [
   <!-- Bottom Submission Banner -->
   <div class="submission-banner">
     <div class="banner-text-content">
-      <h4 class="banner-title"><i class="fa-solid fa-sparkles banner-sparkle-icon"></i> Made something for Kins?</h4>
-      <p class="banner-desc">Tag <strong>@KinsBandOfficial</strong> on social media or send a link to our email to get featured on the site.</p>
+      <h4 class="banner-title"><i class="fa-solid fa-sparkles banner-sparkle-icon"></i> SUBMISSIONS</h4>
+      <p class="banner-desc">
+        Tag <button type="button" class="copy-handle-pill" id="copyHandlePill" title="Copy @KinsBandOfficial handle">
+          <span>@KinsBandOfficial</span>
+          <i class="fa-regular fa-copy"></i>
+        </button> or share your link to get featured.
+      </p>
     </div>
-    <a href="mailto:contact@kinsband.com" target="_blank" rel="noopener noreferrer" class="submit-clip-btn">
-      <span>Submit Your Clip</span>
-      <i class="fa-solid fa-arrow-up-right-from-square"></i>
-    </a>
+    <button type="button" class="submit-fan-clip-btn" id="openCommunityModalBtn">
+      <span>Submit Fan Clip</span>
+      <i class="fa-solid fa-plus"></i>
+    </button>
   </div>
 </section>
 
@@ -328,10 +332,9 @@ const mockClips = [
     background: rgba(18, 18, 20, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 12px;
-    padding: 14px 16px;
+    padding: 16px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 14px;
     backdrop-filter: blur(12px);
     transition: border-color 0.2s ease, background-color 0.2s ease;
@@ -345,17 +348,20 @@ const mockClips = [
   .banner-text-content {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 6px;
   }
 
   .banner-title {
     font-family: var(--font-heading);
-    font-size: 0.86rem;
+    font-size: 0.84rem;
     font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--text-white);
     display: flex;
     align-items: center;
     gap: 6px;
+    margin: 0;
   }
 
   .banner-sparkle-icon {
@@ -365,48 +371,114 @@ const mockClips = [
 
   .banner-desc {
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    font-size: 0.76rem;
     color: var(--text-muted);
-    line-height: 1.35;
+    line-height: 1.5;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
-  .banner-desc strong {
+  .copy-handle-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--text-white);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
   }
 
-  .submit-clip-btn {
+  .copy-handle-pill:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .submit-fan-clip-btn {
     background: var(--btn-green);
     color: var(--btn-text-color);
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     font-weight: 800;
     letter-spacing: 0.04em;
-    padding: 9px 13px;
+    padding: 12px 20px;
     border-radius: 6px;
-    text-decoration: none;
-    display: flex;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-    flex-shrink: 0;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
     transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease;
   }
 
-  .submit-clip-btn:hover {
+  .submit-fan-clip-btn:hover {
     background: var(--btn-green-hover);
     transform: translateY(-1px);
   }
 
-  @media (max-width: 440px) {
+  @media (min-width: 768px) {
     .submission-banner {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
     }
 
-    .submit-clip-btn {
+    .banner-text-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .submit-fan-clip-btn {
+      width: auto;
+      max-width: 320px;
+      padding: 12px 24px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+  }
+
+  @media (min-width: 1320px) {
+    .spotlight-scroll-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      overflow-x: visible;
+    }
+
+    .spotlight-card {
+      flex: 1 1 auto;
       width: 100%;
-      justify-content: center;
+      height: 330px;
     }
   }
 </style>
+
+<script>
+  import { copyToClipboard } from '../../scripts/controllers/clipboard.js';
+  import { showToast } from '../../scripts/controllers/toast.js';
+
+  const copyPill = document.getElementById('copyHandlePill');
+  copyPill?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    copyToClipboard('@KinsBandOfficial');
+    showToast("Copied @KinsBandOfficial handle!");
+  });
+
+  const openModalBtn = document.getElementById('openCommunityModalBtn');
+  openModalBtn?.addEventListener('click', () => {
+    const modal = document.getElementById('communitySubmissionModal');
+    modal?.classList.remove('hidden');
+  });
+</script>

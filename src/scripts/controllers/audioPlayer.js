@@ -154,6 +154,47 @@ class VinylScratchSynthesizer {
   }
 }
 
+export function stopVinylSpinSmoothly(element, shouldSpin) {
+  if (!element) return;
+
+  if (shouldSpin) {
+    element.classList.remove('vinyl-spin-decelerate');
+    element.style.transform = '';
+    element.classList.add('vinyl-spin-anim');
+  } else {
+    if (element.classList.contains('vinyl-spin-anim')) {
+      let currentAngle = 0;
+      try {
+        const style = window.getComputedStyle(element);
+        const transform = style.transform || style.webkitTransform;
+        if (transform && transform !== 'none') {
+          const values = transform.split('(')[1].split(')')[0].split(',');
+          const a = parseFloat(values[0]);
+          const b = parseFloat(values[1]);
+          currentAngle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
+          if (currentAngle < 0) currentAngle += 360;
+        }
+      } catch (e) {}
+
+      element.classList.remove('vinyl-spin-anim');
+      element.style.transform = `rotate(${currentAngle}deg)`;
+
+      void element.offsetWidth; // Force reflow
+
+      element.classList.add('vinyl-spin-decelerate');
+      element.style.transform = `rotate(${currentAngle + 35}deg)`;
+
+      setTimeout(() => {
+        element.classList.remove('vinyl-spin-decelerate');
+        element.style.transform = '';
+      }, 650);
+    } else {
+      element.classList.remove('vinyl-spin-decelerate');
+      element.style.transform = '';
+    }
+  }
+}
+
 function formatTime(seconds) {
   if (isNaN(seconds) || seconds < 0) return '0:00';
   const mins = Math.floor(seconds / 60);
@@ -294,7 +335,7 @@ export function initAudioPlayer() {
     const pct = Math.min(100, Math.max(0, (currentTime / duration) * 100));
 
     if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `${pct}%`;
-    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${Math.max(4, Math.min(96, pct))}%`;
+    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${pct}%`;
     if (audioBarTime) {
       audioBarTime.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
     }
@@ -333,7 +374,7 @@ export function initAudioPlayer() {
     }
 
     if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `${pct}%`;
-    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${Math.max(4, Math.min(96, pct))}%`;
+    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${pct}%`;
     if (audioBarTime) {
       audioBarTime.textContent = `${formatTime(newTime)} / ${formatTime(duration)}`;
     }
@@ -393,6 +434,19 @@ export function initAudioPlayer() {
       }
 
       vinylScratchSynth.stopScratch();
+
+      if (vaultAudioPlayer) {
+        const duration = vaultAudioPlayer.duration || 30;
+        if (vaultAudioPlayer.currentTime >= duration - 0.05) {
+          vaultAudioPlayer.currentTime = duration;
+          isPlayingAudio = false;
+          stopTimelineAnimation();
+          updateTimelineUI();
+          updateToggleBtnState(false);
+          return;
+        }
+      }
+
       if (isPlayingAudio) startTimelineAnimation();
     };
 
@@ -442,21 +496,24 @@ export function initAudioPlayer() {
 
   function updateToggleBtnState(playing, loading = false) {
     if (!audioBarToggleBtn) return;
-    audioBarToggleBtn.classList.remove('icon-morph');
-    void audioBarToggleBtn.offsetWidth;
-    if (loading) {
+
+    const currentIsPause = audioBarToggleBtn.querySelector('.fa-pause') !== null;
+    const currentIsSpinner = audioBarToggleBtn.querySelector('.fa-circle-notch') !== null;
+
+    if (loading && !currentIsSpinner) {
+      audioBarToggleBtn.classList.remove('icon-morph');
+      void audioBarToggleBtn.offsetWidth;
       audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
-    } else {
+    } else if (!loading && (currentIsPause !== playing || currentIsSpinner)) {
+      audioBarToggleBtn.classList.remove('icon-morph');
+      void audioBarToggleBtn.offsetWidth;
       audioBarToggleBtn.innerHTML = `<i class="fa-solid ${playing ? 'fa-pause' : 'fa-play'}"></i>`;
       audioBarToggleBtn.classList.add('icon-morph');
+      setTimeout(() => audioBarToggleBtn.classList.remove('icon-morph'), 350);
     }
 
     if (audioBarIconBox) {
-      if (playing) {
-        audioBarIconBox.classList.add('vinyl-spin-anim');
-      } else {
-        audioBarIconBox.classList.remove('vinyl-spin-anim');
-      }
+      stopVinylSpinSmoothly(audioBarIconBox, playing);
     }
 
     notifyPlaybackState();
@@ -626,6 +683,7 @@ export function initAudioPlayer() {
     });
 
     vaultAudioPlayer.addEventListener('ended', () => {
+      if (isScrubbing) return;
       isPlayingAudio = false;
       stopTimelineAnimation();
       updateTimelineUI();

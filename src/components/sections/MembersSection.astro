@@ -7,7 +7,7 @@ const members = [
     icon: "fa-microphone",
     initial: "V",
     badge: "VOCALS & GUITAR",
-    bio: "Shaping Kins' sound with signature melodies and driving rhythm."
+    bio: "Melodies & guitar hooks."
   },
   {
     id: "charlie",
@@ -16,7 +16,7 @@ const members = [
     icon: "fa-guitar",
     initial: "C",
     badge: "GUITAR & VOCALS",
-    bio: "Bringing melodies, lyrics and the energy that ties everything together."
+    bio: "Lyrics, guitar & band energy."
   },
   {
     id: "oscar",
@@ -25,7 +25,7 @@ const members = [
     icon: "fa-sliders",
     initial: "O",
     badge: "BASS",
-    bio: "Driving the groove with bass lines and vintage-inspired synth textures."
+    bio: "Basslines & vintage synths."
   },
   {
     id: "trai",
@@ -34,7 +34,7 @@ const members = [
     icon: "fa-drum",
     initial: "T",
     badge: "DRUMS",
-    bio: "Laying down the heartbeat of the band with high-energy rhythms and anthemic beats."
+    bio: "Drums & driving heartbeat."
   }
 ];
 ---
@@ -42,7 +42,6 @@ const members = [
 <section class="members-section" id="members-section">
   <div class="members-section-header">
     <h3 class="members-section-title"><i class="fa-solid fa-user-group"></i> Band Members</h3>
-    <span class="scroll-hint-pill" id="scrollHintPill"><i class="fa-solid fa-arrow-right-long"></i> Scroll</span>
   </div>
 
   <div class="members-scroll-container">
@@ -55,7 +54,6 @@ const members = [
         </div>
         <div class="member-info">
           <h4 class="member-name">{member.name}</h4>
-          <span class="member-role"><i class={`fa-solid ${member.icon}`}></i> {member.role}</span>
           <p class="member-bio">{member.bio}</p>
         </div>
       </div>
@@ -220,5 +218,19 @@ const members = [
     font-size: 0.78rem;
     color: var(--text-muted);
     line-height: 1.35;
+  }
+
+  @media (min-width: 1320px) {
+    .members-scroll-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      overflow-x: visible;
+    }
+
+    .member-card {
+      flex: 1 1 auto;
+      width: 100%;
+    }
   }
 </style>

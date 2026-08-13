@@ -139,6 +139,8 @@ const artists = [
     align-items: center;
     gap: 14px;
     backdrop-filter: blur(12px);
+    cursor: pointer;
+    user-select: none;
     transition: transform 0.2s var(--ease-snappy), border-color 0.2s ease, background-color 0.2s ease;
   }
 
@@ -357,10 +359,19 @@ const artists = [
     background: var(--btn-green);
     width: 18px;
   }
+
+  @media (min-width: 545px) {
+    .inspired-tracks-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+  }
 </style>
 
 <script>
   import { INSPIRED_ARTISTS_DATA, getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from '../../scripts/controllers/inspirationVault.js';
+  import { stopVinylSpinSmoothly } from '../../scripts/controllers/audioPlayer.js';
 
   const container = document.getElementById('inspiredTracksContainer');
   const dotsContainer = document.getElementById('dotsPaginationContainer');
@@ -384,17 +395,25 @@ const artists = [
       const isCurrent = currentTrack && currentTrack.title === songTitle;
       const playingThis = isCurrent && isPlaying;
 
-      playBtn.classList.remove('card-icon-morph');
-      void playBtn.offsetWidth;
-      playBtn.innerHTML = `<i class="fa-solid ${playingThis ? 'fa-pause' : 'fa-play'}"></i>`;
-      playBtn.classList.add('card-icon-morph');
+      const currentlyShowingPause = playBtn.querySelector('.fa-pause') !== null;
+
+      if (currentlyShowingPause !== playingThis) {
+        playBtn.classList.remove('card-icon-morph');
+        void playBtn.offsetWidth;
+        playBtn.innerHTML = `<i class="fa-solid ${playingThis ? 'fa-pause' : 'fa-play'}"></i>`;
+        playBtn.classList.add('card-icon-morph');
+
+        setTimeout(() => {
+          playBtn.classList.remove('card-icon-morph');
+        }, 350);
+      }
 
       if (playingThis) {
         card.classList.add('is-playing');
-        if (thumb) thumb.classList.add('vinyl-spin-anim');
+        stopVinylSpinSmoothly(thumb, true);
       } else {
         card.classList.remove('is-playing');
-        if (thumb) thumb.classList.remove('vinyl-spin-anim');
+        stopVinylSpinSmoothly(thumb, false);
       }
     });
   }
@@ -468,7 +487,7 @@ const artists = [
         card.innerHTML = `
           <div class="music-card-thumb">
             <i class="fa-solid fa-compact-disc fallback-disc-icon"></i>
-            <img class="track-artwork-img hidden" alt="${track.title}" loading="lazy" decoding="async">
+            <img class="track-artwork-img hidden" alt="${track.title}" width="48" height="48" loading="lazy" decoding="async">
           </div>
           <div class="music-card-info">
             <div class="song-title-container">
@@ -499,6 +518,12 @@ const artists = [
           }
           if (meta && meta.previewUrl) {
             track.previewUrl = meta.previewUrl;
+          }
+        });
+
+        card.addEventListener('click', () => {
+          if ((window as any).playTrackPreview) {
+            (window as any).playTrackPreview(track);
           }
         });
 

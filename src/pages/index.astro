@@ -6,9 +6,9 @@ import HeroBanner from '../components/sections/HeroBanner.astro';
 import ProfileSection from '../components/sections/ProfileSection.astro';
 import MusicTeaserCard from '../components/sections/MusicTeaserCard.astro';
 import TabbedLinks from '../components/sections/TabbedLinks.astro';
-import MerchSection from '../components/sections/MerchSection.astro';
 import MembersSection from '../components/sections/MembersSection.astro';
 import KinsCrewSpotlight from '../components/sections/KinsCrewSpotlight.astro';
+import MerchSection from '../components/sections/MerchSection.astro';
 import InspirationVault from '../components/sections/InspirationVault.astro';
 import SubscribeSection from '../components/sections/SubscribeSection.astro';
 
@@ -21,6 +21,7 @@ import ShareModal from '../components/modals/ShareModal.astro';
 import GigMapSheet from '../components/modals/GigMapSheet.astro';
 import CoversSearchOverlay from '../components/modals/CoversSearchOverlay.astro';
 import CoverVideoModal from '../components/modals/CoverVideoModal.astro';
+import CommunitySubmissionModal from '../components/modals/CommunitySubmissionModal.astro';
 
 // UI Components
 import AudioPlayer from '../components/ui/AudioPlayer.astro';
@@ -30,18 +31,22 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
 <BaseLayout title="Kins | Official Link in Bio">
   <div class="app-wrapper">
     <div class="site-container" id="siteContainer">
-      <HeroBanner />
-
-      <main class="container">
+      <!-- Fixed Left Sidebar for Desktop / Top Portion for Mobile -->
+      <aside class="left-sidebar" id="leftSidebar">
         <TopNav />
+        <HeroBanner />
         <ProfileSection />
         <MusicTeaserCard />
         <TabbedLinks />
-        <MerchSection />
+        <SubscribeSection />
+      </aside>
+
+      <!-- Scrollable Right Main View for Desktop / Bottom Portion for Mobile -->
+      <main class="right-main-content" id="rightMainContent">
         <MembersSection />
         <KinsCrewSpotlight />
+        <MerchSection />
         <InspirationVault />
-        <SubscribeSection />
 
         <footer class="site-footer">
           <p>© 2026 Kins (@KinsBandOfficial). All rights reserved.</p>
@@ -52,6 +57,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
 
   <CoversSearchOverlay />
   <CoverVideoModal />
+  <CommunitySubmissionModal />
   <ShareModal />
   <GigMapSheet />
   <AudioPlayer />
@@ -62,45 +68,136 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
 <style>
   .app-wrapper {
     width: 100%;
+    min-height: 100vh;
     display: flex;
-    justify-content: center;
-    padding: 24px 12px;
-    flex: 1;
     box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    background: var(--bg-dark-green-gradient);
   }
 
   .site-container {
     width: 100%;
-    max-width: 500px;
-    background: var(--bg-dark-green-gradient);
-    min-height: 850px;
-    border-radius: 12px;
-    position: relative;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
-    overflow: hidden;
-  }
-
-  @media (max-width: 600px) {
-    .app-wrapper {
-      padding: 0;
-    }
-    .site-container {
-      max-width: 100%;
-      border-radius: 0;
-      box-shadow: none;
-      min-height: 100vh;
-      border: none;
-    }
-  }
-
-  .container {
-    padding: 24px 20px 95px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    max-width: 100%;
     position: relative;
     z-index: 2;
-    transition: padding-bottom 0.3s ease;
+  }
+
+  /* Split Viewport (≥ 768px): Fullscreen Split with Fluid Left Sidebar & Right Main Content */
+  @media (min-width: 768px) {
+    .app-wrapper {
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    .site-container {
+      width: 100%;
+      max-width: 100%;
+      min-height: 100vh;
+      display: flex;
+      background: transparent;
+      box-shadow: none;
+      border: none;
+      border-radius: 0;
+    }
+
+    /* Fixed Left Sidebar - Fluid clamp scaling, spans 100% height of viewport */
+    .left-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: clamp(300px, 30vw, 420px);
+      height: 100vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+      padding: 24px 20px 40px;
+      background: rgba(14, 14, 17, 0.94);
+      border-right: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 100;
+      box-sizing: border-box;
+    }
+
+    .left-sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .left-sidebar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .left-sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    /* Scrollable Right Main Content - Fills 100% remaining width */
+    .right-main-content {
+      margin-left: clamp(300px, 30vw, 420px);
+      width: calc(100% - clamp(300px, 30vw, 420px));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      padding: 32px 36px 120px;
+      background: rgba(10, 10, 12, 0.5);
+      box-sizing: border-box;
+    }
+  }
+
+  /* Ultra-wide Displays (≥ 1400px): Expand right padding */
+  @media (min-width: 1400px) {
+    .right-main-content {
+      padding: 40px 60px 120px;
+    }
+  }
+
+  /* Mobile Stacked Edge-to-Edge View (< 768px) */
+  @media (max-width: 767px) {
+    .app-wrapper {
+      padding: 0;
+      margin: 0;
+    }
+
+    .site-container {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      background: transparent;
+      border-radius: 0;
+      padding: 16px 16px 100px;
+      box-shadow: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .left-sidebar, .right-main-content {
+      display: contents;
+    }
+
+    /* Mobile Flow Order */
+    .left-sidebar > :global(.top-nav) { order: 1; }
+    .left-sidebar > :global(.hero-banner-container) { order: 2; }
+    .left-sidebar > :global(.profile-section) { order: 3; }
+    .left-sidebar > :global(.music-teaser-wrapper) { order: 4; }
+    .left-sidebar > :global(.tabbed-links-section) { order: 5; }
+
+    .right-main-content > :global(.members-section) { order: 6; }
+    .right-main-content > :global(.spotlight-section) { order: 7; }
+    .right-main-content > :global(.inspired-section) { order: 8; }
+
+    .left-sidebar > :global(.subscribe-section) { order: 9; }
+    .right-main-content > :global(.site-footer) { order: 10; }
   }
 
   .site-footer {

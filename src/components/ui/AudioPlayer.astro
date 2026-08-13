@@ -11,35 +11,45 @@
       <span class="stream-drawer-song" id="streamDrawerSongName"></span>
     </div>
     <div class="stream-platforms-row">
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn spotify" id="streamLinkSpotify" title="Spotify" aria-label="Spotify">
-        <i class="fa-brands fa-spotify"></i>
+      <a href="https://open.spotify.com/artist/57aKk67k5L7iL13C0d7g5Y" target="_blank" rel="noopener noreferrer" class="stream-platform-btn spotify" id="streamLinkSpotify" title="Spotify" aria-label="Spotify">
+        <i class="fa-brands fa-spotify" aria-hidden="true"></i>
+        <span class="sr-only">Stream on Spotify</span>
       </a>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn apple" id="streamLinkApple" title="Apple Music" aria-label="Apple Music">
-        <i class="fa-brands fa-apple"></i>
+      <a href="https://music.apple.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn apple" id="streamLinkApple" title="Apple Music" aria-label="Apple Music">
+        <i class="fa-brands fa-apple" aria-hidden="true"></i>
+        <span class="sr-only">Stream on Apple Music</span>
       </a>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn youtube" id="streamLinkYoutube" title="YouTube Music" aria-label="YouTube Music">
-        <i class="fa-brands fa-youtube"></i>
+      <a href="https://music.youtube.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn youtube" id="streamLinkYoutube" title="YouTube Music" aria-label="YouTube Music">
+        <i class="fa-brands fa-youtube" aria-hidden="true"></i>
+        <span class="sr-only">Stream on YouTube Music</span>
       </a>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn amazon" id="streamLinkAmazon" title="Amazon Music" aria-label="Amazon Music">
-        <i class="fa-brands fa-amazon"></i>
+      <a href="https://music.amazon.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn amazon" id="streamLinkAmazon" title="Amazon Music" aria-label="Amazon Music">
+        <i class="fa-brands fa-amazon" aria-hidden="true"></i>
+        <span class="sr-only">Stream on Amazon Music</span>
       </a>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn soundcloud" id="streamLinkSoundcloud" title="SoundCloud" aria-label="SoundCloud">
-        <i class="fa-brands fa-soundcloud"></i>
+      <a href="https://soundcloud.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn soundcloud" id="streamLinkSoundcloud" title="SoundCloud" aria-label="SoundCloud">
+        <i class="fa-brands fa-soundcloud" aria-hidden="true"></i>
+        <span class="sr-only">Stream on SoundCloud</span>
       </a>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn deezer" id="streamLinkDeezer" title="Deezer" aria-label="Deezer">
-        <i class="fa-brands fa-deezer"></i>
+      <a href="https://www.deezer.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn deezer" id="streamLinkDeezer" title="Deezer" aria-label="Deezer">
+        <i class="fa-brands fa-deezer" aria-hidden="true"></i>
+        <span class="sr-only">Stream on Deezer</span>
       </a>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn tidal" id="streamLinkTidal" title="Tidal" aria-label="Tidal">
-        <i class="fa-solid fa-water"></i>
+      <a href="https://tidal.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn tidal" id="streamLinkTidal" title="Tidal" aria-label="Tidal">
+        <i class="fa-solid fa-water" aria-hidden="true"></i>
+        <span class="sr-only">Stream on Tidal</span>
       </a>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn bandcamp" id="streamLinkBandcamp" title="Bandcamp" aria-label="Bandcamp">
-        <i class="fa-brands fa-bandcamp"></i>
+      <a href="https://bandcamp.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn bandcamp" id="streamLinkBandcamp" title="Bandcamp" aria-label="Bandcamp">
+        <i class="fa-brands fa-bandcamp" aria-hidden="true"></i>
+        <span class="sr-only">Stream on Bandcamp</span>
       </a>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn audiomack" id="streamLinkAudiomack" title="Audiomack" aria-label="Audiomack">
-        <i class="fa-solid fa-headphones"></i>
+      <a href="https://audiomack.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn audiomack" id="streamLinkAudiomack" title="Audiomack" aria-label="Audiomack">
+        <i class="fa-solid fa-headphones" aria-hidden="true"></i>
+        <span class="sr-only">Stream on Audiomack</span>
       </a>
-      <a href="#" target="_blank" rel="noopener noreferrer" class="stream-platform-btn qobuz" id="streamLinkQobuz" title="Qobuz" aria-label="Qobuz">
-        <i class="fa-solid fa-compact-disc"></i>
+      <a href="https://www.qobuz.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn qobuz" id="streamLinkQobuz" title="Qobuz" aria-label="Qobuz">
+        <i class="fa-solid fa-compact-disc" aria-hidden="true"></i>
+        <span class="sr-only">Stream on Qobuz</span>
       </a>
     </div>
   </div>
@@ -78,15 +88,15 @@
       <div class="deck-idle-view" id="deckIdleView">
         <div class="stacked-album-covers" id="stackedAlbumCovers">
           <div class="cover-stack-item item-1">
-            <img class="stack-cover-img hidden" id="stackCover1" alt="Album 1">
+            <img class="stack-cover-img hidden" id="stackCover1" alt="Album cover 1" width="48" height="48" loading="lazy" decoding="async">
             <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
           </div>
           <div class="cover-stack-item item-2">
-            <img class="stack-cover-img hidden" id="stackCover2" alt="Album 2">
+            <img class="stack-cover-img hidden" id="stackCover2" alt="Album cover 2" width="48" height="48" loading="lazy" decoding="async">
             <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
           </div>
           <div class="cover-stack-item item-3">
-            <img class="stack-cover-img hidden" id="stackCover3" alt="Album 3">
+            <img class="stack-cover-img hidden" id="stackCover3" alt="Album cover 3" width="48" height="48" loading="lazy" decoding="async">
             <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
           </div>
         </div>
@@ -105,7 +115,7 @@
       <div class="deck-active-view hidden" id="deckActiveView">
         <div class="audio-bar-left">
           <div class="audio-bar-icon-box" id="audioBarIconBox">
-            <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover">
+            <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover" width="48" height="48" loading="lazy" decoding="async">
             <i class="fa-solid fa-compact-disc audio-icon-anim" id="audioBarFallbackIcon"></i>
           </div>
           <div class="audio-bar-details">
@@ -346,8 +356,7 @@
     display: flex;
     align-items: center;
     min-height: 48px;
-    overflow-x: clip;
-    overflow-y: visible;
+    overflow: visible;
     border-radius: 7px 0 0 7px;
   }
 

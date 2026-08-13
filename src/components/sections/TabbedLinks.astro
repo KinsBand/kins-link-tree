@@ -4,27 +4,30 @@ const primarySocials = [
   { name: "TikTok", icon: "fa-brands fa-tiktok", url: "https://tiktok.com/@KinsBandOfficial", platform: "tiktok" },
   { name: "YouTube", icon: "fa-brands fa-youtube", url: "https://youtube.com/@KinsBandOfficial", platform: "youtube" },
   { name: "Facebook", icon: "fa-brands fa-facebook", url: "https://facebook.com/KinsBandOfficial", platform: "facebook" },
-  { name: "Substack", icon: "fa-solid fa-bookmark", url: "https://kinsbandoffical.substack.com", platform: "substack" },
-  { name: "Threads", icon: "fa-brands fa-threads", url: "https://threads.net/@KinsBandOfficial", platform: "threads" }
+  { name: "Twitter / X", icon: "fa-brands fa-x-twitter", url: "https://x.com/KinsBandOfficial", platform: "twitter" },
+  { name: "Discord", icon: "fa-brands fa-discord", url: "https://discord.gg", platform: "discord" }
 ];
 
 const secondarySocials = [
-  { name: "Twitter / X", icon: "fa-brands fa-x-twitter", url: "https://x.com/KinsBandOfficial", platform: "twitter" },
+  { name: "Substack", icon: "fa-solid fa-bookmark", url: "https://kinsbandoffical.substack.com", platform: "substack" },
+  { name: "Threads", icon: "fa-brands fa-threads", url: "https://threads.net/@KinsBandOfficial", platform: "threads" },
   { name: "Snapchat", icon: "fa-brands fa-snapchat", url: "https://snapchat.com/add/KinsBandOfficial", platform: "snapchat" },
   { name: "Reddit", icon: "fa-brands fa-reddit-alien", url: "https://reddit.com/r/KinsBand", platform: "reddit" },
-  { name: "Discord", icon: "fa-brands fa-discord", url: "https://discord.gg", platform: "discord" },
   { name: "Patreon", icon: "fa-brands fa-patreon", url: "https://patreon.com/KinsBand", platform: "patreon" },
   { name: "Twitch", icon: "fa-brands fa-twitch", url: "https://twitch.tv/KinsBandOfficial", platform: "twitch" },
   { name: "Pinterest", icon: "fa-brands fa-pinterest", url: "https://pinterest.com/KinsBandOfficial", platform: "pinterest" },
   { name: "LinkedIn", icon: "fa-brands fa-linkedin-in", url: "https://linkedin.com/company/KinsBandOfficial", platform: "linkedin" }
 ];
 
-const streams = [
+const primaryStreams = [
   { name: "Spotify", icon: "fa-brands fa-spotify", url: "https://open.spotify.com/search/KinsBandOfficial", platform: "spotify" },
   { name: "Apple Music", icon: "fa-brands fa-apple", url: "https://music.apple.com/search?term=KinsBandOfficial", platform: "apple" },
   { name: "YT Music", icon: "fa-brands fa-youtube", url: "https://music.youtube.com/search?q=KinsBandOfficial", platform: "ytmusic" },
   { name: "Amazon Music", icon: "fa-brands fa-amazon", url: "https://music.amazon.com/search/KinsBandOfficial", platform: "amazon" },
-  { name: "SoundCloud", icon: "fa-brands fa-soundcloud", url: "https://soundcloud.com/KinsBandOfficial", platform: "soundcloud" },
+  { name: "SoundCloud", icon: "fa-brands fa-soundcloud", url: "https://soundcloud.com/KinsBandOfficial", platform: "soundcloud" }
+];
+
+const secondaryStreams = [
   { name: "Deezer", icon: "fa-brands fa-deezer", url: "https://www.deezer.com/search/KinsBandOfficial", platform: "deezer" },
   { name: "Tidal", icon: "fa-solid fa-water", url: "https://listen.tidal.com/search?q=KinsBandOfficial", platform: "tidal" },
   { name: "Bandcamp", icon: "fa-brands fa-bandcamp", url: "https://bandcamp.com/search?q=KinsBandOfficial", platform: "bandcamp" },
@@ -68,14 +71,14 @@ const streams = [
     </div>
 
     <button class="toggle-more-socials-btn" id="toggleMoreSocialsBtn" type="button" aria-label="Toggle all social channels">
-      <span id="toggleSocialsText">Show All Channels (+8)</span>
+      <span id="toggleSocialsText">Other (+{secondarySocials.length})</span>
       <i class="fa-solid fa-chevron-down" id="toggleSocialsIcon"></i>
     </button>
   </div>
 
   <div class="tab-content" id="streamsTab">
     <div class="buttons-list">
-      {streams.map((link) => (
+      {primaryStreams.map((link) => (
         <a href={link.url} target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform={link.platform}>
           <div class="btn-icon"><i class={link.icon}></i></div>
           <span class="btn-text">{link.name}</span>
@@ -83,6 +86,24 @@ const streams = [
         </a>
       ))}
     </div>
+
+    <!-- Expandable Drawer for Extended Streams -->
+    <div class="more-socials-container" id="moreStreamsContainer">
+      <div class="buttons-list more-socials-list">
+        {secondaryStreams.map((link) => (
+          <a href={link.url} target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform={link.platform}>
+            <div class="btn-icon"><i class={link.icon}></i></div>
+            <span class="btn-text">{link.name}</span>
+            <i class="fa-solid fa-arrow-up-right-from-square btn-arrow"></i>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <button class="toggle-more-socials-btn" id="toggleMoreStreamsBtn" type="button" aria-label="Toggle all streaming services">
+      <span id="toggleStreamsText">Other (+{secondaryStreams.length})</span>
+      <i class="fa-solid fa-chevron-down" id="toggleStreamsIcon"></i>
+    </button>
   </div>
 </section>
 
@@ -233,21 +254,40 @@ const streams = [
   import { setupSegmentedSwitcher } from '../../scripts/controllers/tabs.js';
   setupSegmentedSwitcher('.tabbed-links-section .switcher-tab', '.tabbed-links-section .tab-content');
 
-  const toggleBtn = document.getElementById('toggleMoreSocialsBtn');
-  const drawer = document.getElementById('moreSocialsContainer');
-  const textEl = document.getElementById('toggleSocialsText');
+  const toggleSocialsBtn = document.getElementById('toggleMoreSocialsBtn');
+  const socialsDrawer = document.getElementById('moreSocialsContainer');
+  const socialsTextEl = document.getElementById('toggleSocialsText');
 
-  if (toggleBtn && drawer) {
-    toggleBtn.addEventListener('click', () => {
-      const isOpen = drawer.classList.contains('active-drawer');
+  if (toggleSocialsBtn && socialsDrawer) {
+    toggleSocialsBtn.addEventListener('click', () => {
+      const isOpen = socialsDrawer.classList.contains('active-drawer');
       if (isOpen) {
-        drawer.classList.remove('active-drawer');
-        toggleBtn.classList.remove('active');
-        if (textEl) textEl.textContent = 'Show All Channels (+8)';
+        socialsDrawer.classList.remove('active-drawer');
+        toggleSocialsBtn.classList.remove('active');
+        if (socialsTextEl) socialsTextEl.textContent = 'Other (+8)';
       } else {
-        drawer.classList.add('active-drawer');
-        toggleBtn.classList.add('active');
-        if (textEl) textEl.textContent = 'Show Less';
+        socialsDrawer.classList.add('active-drawer');
+        toggleSocialsBtn.classList.add('active');
+        if (socialsTextEl) socialsTextEl.textContent = 'Show Less';
+      }
+    });
+  }
+
+  const toggleStreamsBtn = document.getElementById('toggleMoreStreamsBtn');
+  const streamsDrawer = document.getElementById('moreStreamsContainer');
+  const streamsTextEl = document.getElementById('toggleStreamsText');
+
+  if (toggleStreamsBtn && streamsDrawer) {
+    toggleStreamsBtn.addEventListener('click', () => {
+      const isOpen = streamsDrawer.classList.contains('active-drawer');
+      if (isOpen) {
+        streamsDrawer.classList.remove('active-drawer');
+        toggleStreamsBtn.classList.remove('active');
+        if (streamsTextEl) streamsTextEl.textContent = 'Other (+5)';
+      } else {
+        streamsDrawer.classList.add('active-drawer');
+        toggleStreamsBtn.classList.add('active');
+        if (streamsTextEl) streamsTextEl.textContent = 'Show Less';
       }
     });
   }

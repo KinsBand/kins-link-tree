@@ -2,14 +2,14 @@
 ---
 
 <section class="profile-section">
-  <p class="profile-bio-text">Rock band 4 friends making music together</p>
+  <p class="profile-bio-text">INDEPENDENT 4-PIECE ROCK BAND</p>
 
   <div class="profile-actions-row">
-    <div class="location-badge aus-flag-card">
+    <span class="profile-inline-item location-item">
       <i class="fa-solid fa-location-dot location-pin-icon"></i>
       <span>Newcastle, Australia</span>
-      <img src="https://flagcdn.com/w40/au.png" alt="Australia Flag" class="aus-flag-img" loading="eager" width="20" height="13" />
-    </div>
+      <img src="https://flagcdn.com/w40/au.png" alt="Australia Flag" class="aus-flag-img" loading="eager" decoding="async" width="20" height="13" />
+    </span>
   </div>
 
   <div class="total-followers-card">
@@ -30,59 +30,45 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    margin-top: 170px;
+    margin-top: 0;
+    padding: 0 4px;
   }
 
   .profile-bio-text {
-    font-family: var(--font-heading);
-    font-size: 0.98rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--text-white);
-    margin: 2px 0 14px 0;
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+    color: var(--text-white);
+    margin: 0 0 6px 0;
+    white-space: nowrap;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
   }
 
   .profile-actions-row {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+    gap: 10px;
   }
 
-  .location-badge {
+  .profile-inline-item {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    background: rgba(18, 18, 22, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    padding: 8px 16px;
-    border-radius: 8px;
+    gap: 7px;
     font-family: var(--font-secondary);
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--text-white);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.25s var(--ease-snappy), border-color 0.25s ease, box-shadow 0.25s ease;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  }
-
-  .aus-flag-card:hover {
-    border-color: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-    transform: translateY(-2px);
+    color: var(--text-muted);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
   }
 
   .aus-flag-img {
-    width: 20px;
-    height: 13px;
+    width: 18px;
+    height: 12px;
     object-fit: cover;
     border-radius: 2px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
@@ -92,7 +78,7 @@
 
   .location-pin-icon {
     color: #ff4d4d;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
   .total-followers-card {

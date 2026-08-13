@@ -1,0 +1,475 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="communitySubmissionModal">
+  <div class="modal-content community-modal-enhanced">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <i class="fa-solid fa-clapperboard modal-header-icon"></i>
+        <h3>Submit Fan Clip</h3>
+      </div>
+      <button class="close-modal-btn" id="closeCommunityModal" aria-label="Close modal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="modal-body community-modal-body">
+      <!-- Form View -->
+      <form id="communitySubmissionForm" class="community-submission-form">
+        <p class="modal-intro-text">Share your cover, live clip, or fan edit URL to get featured on Kins official site.</p>
+
+        <!-- Category Tags Selection -->
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <div class="category-tags-grid" id="categoryTagsGrid">
+            <button type="button" class="category-tag-btn active" data-category="Drum Cover">
+              <i class="fa-solid fa-drum tag-icon"></i> Drum Cover
+            </button>
+            <button type="button" class="category-tag-btn" data-category="Guitar & Bass">
+              <i class="fa-solid fa-guitar tag-icon"></i> Guitar & Bass
+            </button>
+            <button type="button" class="category-tag-btn" data-category="Vocal Cover">
+              <i class="fa-solid fa-microphone tag-icon"></i> Vocal Cover
+            </button>
+            <button type="button" class="category-tag-btn" data-category="Fan Edit">
+              <i class="fa-solid fa-film tag-icon"></i> Fan Edit
+            </button>
+            <button type="button" class="category-tag-btn" data-category="Live Show Clip">
+              <i class="fa-solid fa-ticket tag-icon"></i> Live Clip
+            </button>
+            <button type="button" class="category-tag-btn" data-category="Other">
+              <i class="fa-solid fa-plus tag-icon"></i> Other
+            </button>
+          </div>
+          <input type="hidden" name="category" id="selectedCategoryInput" value="Drum Cover">
+        </div>
+
+        <!-- Video / Media URL Field -->
+        <div class="form-group">
+          <label class="form-label" for="clipUrlInput">Video or Post Link</label>
+          <div class="input-with-detected-badge">
+            <i class="fa-solid fa-link input-left-icon"></i>
+            <input type="url" id="clipUrlInput" name="url" placeholder="https://tiktok.com/@... or instagram/reel/..." required autocomplete="off">
+            <span class="detected-platform-badge hidden" id="detectedPlatformBadge">
+              <i class="fa-solid fa-circle-check"></i> <span id="detectedPlatformName">Link</span>
+            </span>
+          </div>
+          <span class="input-validation-msg" id="urlValidationMsg">Paste a link from TikTok, Instagram, YouTube, or web.</span>
+        </div>
+
+        <!-- Creator Handle Field -->
+        <div class="form-group">
+          <label class="form-label" for="creatorHandleInput">Your Social Handle</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-at input-left-icon"></i>
+            <input type="text" id="creatorHandleInput" name="handle" placeholder="e.g. @yourhandle" required autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Optional Song / Title Field -->
+        <div class="form-group">
+          <label class="form-label" for="clipTitleInput">Song / Title (Optional)</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-music input-left-icon"></i>
+            <input type="text" id="clipTitleInput" name="title" placeholder="e.g. Everlong Cover, Live in Sydney..." autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="green-submit-clip-btn" id="submitCommunityClipBtn">
+          <span>Submit Clip</span>
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+
+      <!-- Feedback / Success State View -->
+      <div class="submission-success-view hidden" id="communitySubmissionSuccess">
+        <div class="success-icon-circle">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h4>Clip Submitted</h4>
+        <p>Thanks for sharing your clip with Kins! We'll review your link and feature it on the community spotlight.</p>
+        <button type="button" class="reset-submission-btn" id="submitAnotherClipBtn">
+          Submit Another Clip
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.25s ease;
+  }
+
+  .modal-backdrop.hidden {
+    display: none !important;
+  }
+
+  .community-modal-enhanced {
+    background: rgba(18, 18, 22, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    width: calc(100% - 32px);
+    max-width: 440px;
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    position: relative;
+    backdrop-filter: blur(16px);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-white);
+  }
+
+  .modal-header-icon {
+    color: var(--btn-green);
+    font-size: 0.95rem;
+  }
+
+  .modal-title-group h3 {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .close-modal-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+  }
+
+  .close-modal-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .community-modal-body {
+    padding-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal-intro-text {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0 0 4px 0;
+  }
+
+  .community-submission-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-label {
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-white);
+  }
+
+  .category-tags-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .category-tag-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 7px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.18s ease;
+  }
+
+  .tag-icon {
+    font-size: 0.68rem;
+  }
+
+  .category-tag-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+  }
+
+  .category-tag-btn.active {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border-color: transparent;
+    font-weight: 800;
+  }
+
+  .input-with-icon, .input-with-detected-badge {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-left-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    pointer-events: none;
+  }
+
+  .form-group input {
+    width: 100%;
+    background: rgba(10, 10, 12, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 4px;
+    padding: 10px 12px 10px 34px;
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .form-group input:focus {
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  .detected-platform-badge {
+    position: absolute;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--btn-green);
+    font-family: var(--font-secondary);
+    font-size: 0.64rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+  }
+
+  .detected-platform-badge.hidden {
+    display: none !important;
+  }
+
+  .input-validation-msg {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+  }
+
+  .green-submit-clip-btn {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border: none;
+    border-radius: 4px;
+    padding: 12px;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease;
+    margin-top: 4px;
+  }
+
+  .green-submit-clip-btn:hover {
+    background: var(--btn-green-hover);
+    transform: translateY(-1px);
+  }
+
+  /* Success View */
+  .submission-success-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px 8px;
+    gap: 10px;
+  }
+
+  .submission-success-view.hidden {
+    display: none !important;
+  }
+
+  .success-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--btn-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+  }
+
+  .submission-success-view h4 {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  .submission-success-view p {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .reset-submission-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background-color 0.18s ease;
+  }
+
+  .reset-submission-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+</style>
+
+<script>
+  import { showToast } from '../../scripts/controllers/toast.js';
+
+  const modal = document.getElementById('communitySubmissionModal');
+  const closeBtn = document.getElementById('closeCommunityModal');
+  const form = document.getElementById('communitySubmissionForm') as HTMLFormElement;
+  const successView = document.getElementById('communitySubmissionSuccess');
+  const submitAnotherBtn = document.getElementById('submitAnotherClipBtn');
+  const clipUrlInput = document.getElementById('clipUrlInput') as HTMLInputElement;
+  const detectedBadge = document.getElementById('detectedPlatformBadge');
+  const detectedName = document.getElementById('detectedPlatformName');
+  const selectedCategoryInput = document.getElementById('selectedCategoryInput') as HTMLInputElement;
+
+  // Close modal
+  closeBtn?.addEventListener('click', () => {
+    modal?.classList.add('hidden');
+  });
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.add('hidden');
+    }
+  });
+
+  // Category Tag Selection
+  document.querySelectorAll('.category-tag-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.category-tag-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cat = btn.getAttribute('data-category') || 'Other';
+      if (selectedCategoryInput) selectedCategoryInput.value = cat;
+    });
+  });
+
+  // Platform Detection
+  clipUrlInput?.addEventListener('input', () => {
+    const val = clipUrlInput.value.toLowerCase();
+    if (!val) {
+      detectedBadge?.classList.add('hidden');
+      return;
+    }
+
+    if (val.includes('tiktok.com')) {
+      detectedBadge?.classList.remove('hidden');
+      if (detectedName) detectedName.textContent = 'TikTok';
+    } else if (val.includes('instagram.com')) {
+      detectedBadge?.classList.remove('hidden');
+      if (detectedName) detectedName.textContent = 'Instagram';
+    } else if (val.includes('youtube.com') || val.includes('youtu.be')) {
+      detectedBadge?.classList.remove('hidden');
+      if (detectedName) detectedName.textContent = 'YouTube';
+    } else {
+      detectedBadge?.classList.remove('hidden');
+      if (detectedName) detectedName.textContent = 'Web Link';
+    }
+  });
+
+  // Form Submission
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const url = clipUrlInput?.value.trim();
+    if (!url) return;
+
+    // Show success view
+    form.classList.add('hidden');
+    successView?.classList.remove('hidden');
+    showToast("Clip submitted! Thanks for sharing with Kins.");
+  });
+
+  submitAnotherBtn?.addEventListener('click', () => {
+    form?.reset();
+    detectedBadge?.classList.add('hidden');
+    successView?.classList.add('hidden');
+    form?.classList.remove('hidden');
+  });
+</script>

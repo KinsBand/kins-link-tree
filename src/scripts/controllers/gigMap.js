@@ -271,7 +271,7 @@ function displayVenueDetails(gig) {
           <div class="gallery-grid">
             ${gig.crowdAndGallery.photos.map(img => `
               <div class="gallery-img-box">
-                <img src="${img}" alt="Fan Photo" loading="lazy">
+                <img src="${img}" alt="Fan Photo from ${gig.venue}" width="120" height="90" loading="lazy" decoding="async">
               </div>
             `).join('')}
           </div>

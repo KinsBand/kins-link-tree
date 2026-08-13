@@ -50,7 +50,7 @@ function renderCoverCard(cover) {
   
   card.innerHTML = `
     <div class="cover-card-thumb-box">
-      <img src="${thumbSrc}" alt="${cover.title} thumbnail" class="cover-card-thumb-img" loading="lazy" decoding="async">
+      <img src="${thumbSrc}" alt="${cover.title} thumbnail" class="cover-card-thumb-img" width="160" height="90" loading="lazy" decoding="async">
       <div class="thumb-play-overlay"><i class="fa-solid fa-play"></i></div>
     </div>
     <div class="cover-card-info">
@@ -282,18 +282,37 @@ export function initCoversSearchEngine() {
   const topNav = document.querySelector('.top-nav');
   const searchPillBtn = document.getElementById('headerSearchPillBtn');
   const searchOverlay = document.getElementById('coversSearchOverlay');
+  const paletteContainer = document.getElementById('commandPaletteContainer');
   const closeSearchOverlayBtn = document.getElementById('closeSearchOverlayBtn');
   const overlayInput = document.getElementById('overlaySearchInput');
+  const clearSearchInputBtn = document.getElementById('clearSearchInputBtn');
+  const zeroStateSuggestions = document.getElementById('zeroStateSuggestions');
   const categoryBtns = document.querySelectorAll('.cover-category-pill');
+  const suggestionBtns = document.querySelectorAll('.suggestion-chip-btn');
+
+  function updateSearchUI() {
+    if (!overlayInput) return;
+    const hasVal = !!overlayInput.value.trim();
+    if (clearSearchInputBtn) {
+      if (hasVal) clearSearchInputBtn.classList.remove('hidden');
+      else clearSearchInputBtn.classList.add('hidden');
+    }
+    if (zeroStateSuggestions) {
+      if (hasVal) zeroStateSuggestions.classList.add('hidden');
+      else zeroStateSuggestions.classList.remove('hidden');
+    }
+  }
 
   function openOverlay() {
-    if (!searchPillBtn || !searchOverlay) return;
+    if (!searchOverlay) return;
 
-    const rect = searchPillBtn.getBoundingClientRect();
-    const originX = rect.left + rect.width / 2;
-    const originY = rect.top + rect.height / 2;
+    if (searchPillBtn) {
+      const rect = searchPillBtn.getBoundingClientRect();
+      const originX = rect.left + rect.width / 2;
+      const originY = rect.top + rect.height / 2;
+      searchOverlay.style.transformOrigin = `${originX}px ${originY}px`;
+    }
 
-    searchOverlay.style.transformOrigin = `${originX}px ${originY}px`;
     searchOverlay.classList.add('active');
     if (topNav) topNav.classList.add('search-active');
     document.body.classList.add('modal-open');
@@ -301,6 +320,7 @@ export function initCoversSearchEngine() {
     if (overlayInput) {
       setTimeout(() => overlayInput.focus(), 150);
     }
+    updateSearchUI();
     filterAndRenderCovers();
   }
 
@@ -319,14 +339,57 @@ export function initCoversSearchEngine() {
     closeSearchOverlayBtn.addEventListener('click', closeOverlay);
   }
 
+  if (searchOverlay) {
+    searchOverlay.addEventListener('click', (e) => {
+      if (e.target === searchOverlay) {
+        closeOverlay();
+      }
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (searchOverlay?.classList.contains('active')) {
+        closeOverlay();
+      } else {
+        openOverlay();
+      }
+    } else if (e.key === 'Escape' && searchOverlay?.classList.contains('active')) {
+      closeOverlay();
+    }
+  });
+
+  if (clearSearchInputBtn && overlayInput) {
+    clearSearchInputBtn.addEventListener('click', () => {
+      overlayInput.value = '';
+      updateSearchUI();
+      filterAndRenderCovers();
+      overlayInput.focus();
+    });
+  }
+
   if (overlayInput) {
     overlayInput.addEventListener('input', () => {
+      updateSearchUI();
       clearTimeout(searchDebounceTimeout);
       searchDebounceTimeout = setTimeout(() => {
         filterAndRenderCovers();
       }, 150);
     });
   }
+
+  suggestionBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const query = btn.getAttribute('data-search');
+      if (query && overlayInput) {
+        overlayInput.value = query;
+        updateSearchUI();
+        filterAndRenderCovers();
+        overlayInput.focus();
+      }
+    });
+  });
 
   categoryBtns.forEach(btn => {
     btn.addEventListener('click', () => {

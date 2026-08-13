@@ -2,20 +2,17 @@
 ---
 
 <header class="top-nav">
-  <div class="top-subscribe-wrapper">
-    <span class="free-badge-pill">FREE</span>
-    <button class="nav-pill-btn" id="topSubscribeBtn" aria-label="Subscribe to updates">
-      <span>SUBSCRIBE</span>
-    </button>
-  </div>
+  <button class="nav-pill-btn nav-icon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates" title="Subscribe">
+    <i class="fa-solid fa-bell nav-icon"></i>
+  </button>
 
   <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label="Search cover videos">
     <i class="fa-solid fa-magnifying-glass search-pill-icon"></i>
     <span class="search-pill-placeholder">search covers...</span>
   </button>
 
-  <button class="nav-pill-btn" id="shareBtn" aria-label="Share page">
-    <span>SHARE</span>
+  <button class="nav-pill-btn nav-icon-btn" id="shareBtn" aria-label="Share page" title="Share">
+    <i class="fa-solid fa-share-nodes nav-icon"></i>
   </button>
 </header>
 
@@ -24,11 +21,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    margin-top: 6px;
-    position: sticky;
-    top: 10px;
+    gap: 8px;
+    padding: 0;
+    margin-top: 0;
+    position: relative;
     z-index: 100;
     width: 100%;
     box-sizing: border-box;
@@ -44,43 +40,15 @@
     transform: translateY(-12px);
   }
 
-  .top-subscribe-wrapper, #shareBtn {
-    transition: opacity 0.2s ease, transform 0.2s ease;
+  #topSubscribeBtn, #shareBtn {
+    transition: opacity 0.2s ease, transform 0.18s var(--ease-snappy), background-color 0.18s ease, border-color 0.18s ease;
   }
 
-  .top-nav.search-active .top-subscribe-wrapper,
+  .top-nav.search-active #topSubscribeBtn,
   .top-nav.search-active #shareBtn {
     opacity: 0;
     pointer-events: none;
     transform: scale(0.92);
-  }
-
-  .top-subscribe-wrapper {
-    position: relative;
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    flex: 0 0 auto;
-  }
-
-  .free-badge-pill {
-    position: absolute;
-    top: -8px;
-    left: 4px;
-    background: var(--text-white);
-    color: var(--text-dark);
-    font-family: var(--font-secondary);
-    font-weight: 800;
-    font-size: 0.52rem;
-    padding: 1px 5px;
-    border-radius: 2px;
-    letter-spacing: 0.08em;
-    border: 1px solid rgba(0, 0, 0, 0.4);
-    z-index: 15;
-    text-transform: uppercase;
-    pointer-events: none;
-    white-space: nowrap;
   }
 
   .nav-pill-btn {
@@ -106,6 +74,19 @@
     user-select: none;
     flex: 0 0 auto;
     min-height: 38px;
+  }
+
+  .nav-icon-btn {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    padding: 0;
+    border-radius: 4px;
+  }
+
+  .nav-icon-btn .nav-icon {
+    font-size: 0.88rem;
+    display: inline-block;
   }
 
   .nav-pill-btn:hover {
@@ -136,12 +117,13 @@
 
   .header-search-pill-btn {
     flex: 1 1 auto;
-    max-width: 200px;
-    background: rgba(18, 18, 20, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 0;
     color: var(--text-muted);
-    padding: 6px 12px;
-    border-radius: 4px;
+    padding: 6px 10px;
     font-family: var(--font-secondary);
     font-size: 0.75rem;
     font-weight: 500;
@@ -157,8 +139,8 @@
   }
 
   .header-search-pill-btn:hover {
-    background: rgba(28, 28, 32, 0.9);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom-color: rgba(255, 255, 255, 0.5);
     color: var(--text-white);
   }
 
@@ -176,21 +158,52 @@
 
 <script>
   const topNav = document.querySelector('.top-nav');
-  let lastScrollY = window.scrollY;
+  const leftSidebar = document.getElementById('leftSidebar');
 
-  window.addEventListener('scroll', () => {
+  let lastWindowScrollY = window.scrollY;
+  let lastSidebarScrollY = 0;
+
+  function handleWindowScroll() {
+    // When sidebar mode is active (≥ 768px), scrolling main view (window) should NOT blur topNav
+    if (window.innerWidth >= 768) {
+      topNav?.classList.remove('nav-hidden');
+      return;
+    }
+
     const currentScrollY = window.scrollY;
     if (!topNav) return;
 
     if (currentScrollY <= 20) {
       topNav.classList.remove('nav-hidden');
-    } else if (currentScrollY > lastScrollY && currentScrollY > 40) {
+    } else if (currentScrollY > lastWindowScrollY && currentScrollY > 40) {
       topNav.classList.add('nav-hidden');
-    } else if (currentScrollY < lastScrollY) {
+    } else if (currentScrollY < lastWindowScrollY) {
       topNav.classList.remove('nav-hidden');
     }
-    lastScrollY = currentScrollY;
-  }, { passive: true });
+    lastWindowScrollY = currentScrollY;
+  }
+
+  function handleSidebarScroll() {
+    // Only handle sidebar scroll in split sidebar view (≥ 768px)
+    if (window.innerWidth < 768 || !leftSidebar || !topNav) return;
+
+    const currentScrollY = leftSidebar.scrollTop;
+
+    if (currentScrollY <= 20) {
+      topNav.classList.remove('nav-hidden');
+    } else if (currentScrollY > lastSidebarScrollY && currentScrollY > 40) {
+      topNav.classList.add('nav-hidden');
+    } else if (currentScrollY < lastSidebarScrollY) {
+      topNav.classList.remove('nav-hidden');
+    }
+    lastSidebarScrollY = currentScrollY;
+  }
+
+  window.addEventListener('scroll', handleWindowScroll, { passive: true });
+
+  if (leftSidebar) {
+    leftSidebar.addEventListener('scroll', handleSidebarScroll, { passive: true });
+  }
 
   const topSubscribeBtn = document.getElementById('topSubscribeBtn');
   const subscribeFormSection = document.getElementById('subscribeFormSection');
