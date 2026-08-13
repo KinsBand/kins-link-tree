@@ -3,13 +3,13 @@
 
 <section class="subscribe-section" id="subscribeFormSection">
   <div class="subscribe-card">
-    <div class="subscribe-header">
-      <h3>Subscribe to Kins!</h3>
-      <p class="subscribe-subtext">Receive new music, behind-the-scenes moments & gig drops.</p>
-    </div>
-
     <!-- Form State -->
     <div id="subscribeFormContainer" class="subscribe-form-container">
+      <div class="subscribe-header">
+        <h3>Subscribe to Kins!</h3>
+        <p class="subscribe-subtext">Receive new music, behind-the-scenes moments & gig drops.</p>
+      </div>
+
       <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
         <div class="form-group">
           <div class="inline-input-row">
@@ -43,7 +43,7 @@
     <div id="subscribeSuccessContainer" class="subscribe-success-container hidden">
       <div class="subscribed-success-badge">
         <i class="fa-solid fa-circle-check"></i>
-        <span>You're Subscribed!</span>
+        <h3>You're Subscribed!</h3>
       </div>
       <p class="subscribed-subtext">You'll receive exclusive drops & gig alerts straight to your inbox.</p>
       <button type="button" id="unsubscribeBtn" class="unsubscribe-link-btn">
@@ -283,9 +283,19 @@
     align-items: center;
     gap: 8px;
     color: var(--btn-green);
+  }
+
+  .subscribed-success-badge h3 {
     font-family: var(--font-heading);
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+
+  .subscribed-success-badge i {
+    font-size: 1.2rem;
   }
 
   .subscribed-subtext {

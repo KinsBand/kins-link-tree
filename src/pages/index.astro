@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 // Section Components
 import HeroBanner from '../components/sections/HeroBanner.astro';
 import ProfileSection from '../components/sections/ProfileSection.astro';
-import MusicTeaserCard from '../components/sections/MusicTeaserCard.astro';
+import HeroFeatureCard from '../components/sections/HeroFeatureCard.astro';
 import TabbedLinks from '../components/sections/TabbedLinks.astro';
 import MembersSection from '../components/sections/MembersSection.astro';
 import KinsCrewSpotlight from '../components/sections/KinsCrewSpotlight.astro';
@@ -38,7 +38,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
         <TopNav />
         <HeroBanner />
         <ProfileSection />
-        <MusicTeaserCard />
+        <HeroFeatureCard />
         <TabbedLinks />
         <SubscribeSection />
       </aside>
@@ -198,7 +198,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     .left-sidebar > :global(.top-nav) { order: 1; }
     .left-sidebar > :global(.hero-banner-container) { order: 2; }
     .left-sidebar > :global(.profile-section) { order: 3; }
-    .left-sidebar > :global(.music-teaser-wrapper) { order: 4; }
+    .left-sidebar > :global(.hero-feature-card-wrapper) { order: 4; }
     .left-sidebar > :global(.tabbed-links-section) { order: 5; }
 
     .right-main-content > :global(.members-section) { order: 6; }

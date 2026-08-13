@@ -1,0 +1,1844 @@
+---
+import { heroConfig } from '../../settings/hero.config';
+
+const {
+  activeState,
+  activeUpcomingVar,
+  activeReleaseVar,
+  activePollVar,
+  activePreviewVar,
+  activeTourVar,
+  activeMilestoneVar,
+  activeLivestreamVar,
+  activeSpotlightVar,
+  activeCollabVar,
+  upcoming,
+  release,
+  poll,
+  preview,
+  tour,
+  milestones,
+  livestream,
+  spotlight,
+  collab
+} = heroConfig;
+
+// Determine active sub-variation based on active main state
+const activeSubvarMap = {
+  upcoming: activeUpcomingVar,
+  release: activeReleaseVar,
+  poll: activePollVar,
+  preview: activePreviewVar,
+  tour: activeTourVar,
+  milestones: activeMilestoneVar,
+  livestream: activeLivestreamVar,
+  spotlight: activeSpotlightVar,
+  collab: activeCollabVar
+};
+
+const activeSubvar = activeSubvarMap[activeState] || '';
+
+// Calculate total votes for poll variations
+const recordingTotalVotes = poll.recording_cover.options.reduce((acc, opt) => acc + opt.votes, 0);
+const setlistTotalVotes = poll.setlist_song.options.reduce((acc, opt) => acc + opt.votes, 0);
+const merchTotalVotes = poll.merch_design.options.reduce((acc, opt) => acc + opt.votes, 0);
+const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.votes, 0);
+---
+
+<div class="hero-feature-card-wrapper" id="heroFeatureCardWrapper">
+  <!-- Main Hero Card Container -->
+  <div class="hero-feature-card" id="heroFeatureCard" data-active-state={activeState} data-active-var={activeSubvar}>
+
+    <!-- ==================== STATE 0: UPCOMING ==================== -->
+    <div class="hero-card-state state-upcoming hidden" id="stateUpcoming">
+      <!-- Sub-Var 0A: Minimal Teaser -->
+      <div class="sub-var-panel var-upcoming-minimal_teaser" id="varUpcomingMinimalTeaser">
+        <div class="upcoming-teaser-card">
+          <div class="upcoming-icon-box">
+            <i class="fa-solid fa-compact-disc"></i>
+          </div>
+          <div class="upcoming-teaser-content">
+            <span class="upcoming-teaser-badge">{upcoming.minimal_teaser.badge}</span>
+            <h4 class="upcoming-teaser-title">{upcoming.minimal_teaser.title}</h4>
+            <p class="upcoming-teaser-desc">{upcoming.minimal_teaser.desc}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 0B: Mystery Countdown -->
+      <div class="sub-var-panel var-upcoming-mystery_countdown hidden" id="varUpcomingMysteryCountdown">
+        <div class="mystery-countdown-card">
+          <span class="upcoming-teaser-badge">{upcoming.mystery_countdown.badge}</span>
+          <h4 class="upcoming-teaser-title">{upcoming.mystery_countdown.title}</h4>
+          <div class="mystery-timer-digits" id="mysteryTimerDigits">
+            <span class="cd-unit"><strong id="mysteryCdDays">03</strong>d</span> :
+            <span class="cd-unit"><strong id="mysteryCdHours">14</strong>h</span> :
+            <span class="cd-unit"><strong id="mysteryCdMins">22</strong>m</span> :
+            <span class="cd-unit"><strong id="mysteryCdSecs">00</strong>s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 1: RELEASES ==================== -->
+    <div class="hero-card-state state-release" id="stateRelease">
+      <!-- Sub-Var 1A: Cover Video Release -->
+      <div class="sub-var-panel var-release-cover_video" id="varReleaseCoverVideo">
+        <div class="hero-card-media-bg">
+          <div class="hero-media-overlay"></div>
+          <div class="hero-card-header">
+            <div class="hero-header-text">
+              <h3 class="hero-release-title">{release.cover_video.title}</h3>
+              <p class="hero-release-subtitle">{release.cover_video.subtitle}</p>
+              <div class="hero-badge-row">
+                <span class="hero-genre-badge">{release.cover_video.badge}</span>
+              </div>
+            </div>
+            <button type="button" class="hero-platform-btn release-play-trigger" aria-label="Play cover video">
+              <i class={`fa-brands ${release.cover_video.platformIcon}`}></i>
+            </button>
+          </div>
+
+          <button type="button" class="hero-center-play-btn release-play-trigger" aria-label="Play cover video">
+            <i class="fa-solid fa-play"></i>
+          </button>
+
+          <div class="hero-action-buttons-row">
+            <button type="button" class="hero-btn-primary release-play-trigger">
+              <i class="fa-solid fa-play"></i>
+              <span>PLAY NOW</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+            <button type="button" class="hero-btn-secondary hero-share-trigger">
+              <i class="fa-solid fa-share-nodes"></i>
+              <span>SHARE</span>
+            </button>
+          </div>
+        </div>
+        <div class="hero-card-footer">
+          <span class="hero-footer-text">{release.cover_video.footerText}</span>
+        </div>
+      </div>
+
+      <!-- Sub-Var 1B: Original Single Release -->
+      <div class="sub-var-panel var-release-original_single hidden" id="varReleaseOriginalSingle">
+        <div class="hero-card-media-bg single-bg">
+          <div class="hero-media-overlay"></div>
+          <div class="hero-card-header">
+            <div class="hero-header-text">
+              <h3 class="hero-release-title">{release.original_single.title}</h3>
+              <p class="hero-release-subtitle">{release.original_single.subtitle}</p>
+              <div class="hero-badge-row">
+                <span class="hero-genre-badge">{release.original_single.badge}</span>
+              </div>
+            </div>
+            <button type="button" class="hero-platform-btn single-stream-trigger" aria-label="Stream on Spotify">
+              <i class={`fa-brands ${release.original_single.platformIcon}`}></i>
+            </button>
+          </div>
+
+          <button type="button" class="hero-center-play-btn single-stream-trigger" aria-label="Stream single">
+            <i class="fa-solid fa-play"></i>
+          </button>
+
+          <div class="hero-action-buttons-row">
+            <button type="button" class="hero-btn-primary single-stream-trigger">
+              <i class="fa-solid fa-music"></i>
+              <span>LISTEN NOW</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+            <button type="button" class="hero-btn-secondary hero-share-trigger">
+              <i class="fa-solid fa-share-nodes"></i>
+              <span>SHARE</span>
+            </button>
+          </div>
+        </div>
+        <div class="hero-card-footer">
+          <span class="hero-footer-text">{release.original_single.footerText}</span>
+        </div>
+      </div>
+
+      <!-- Sub-Var 1C: EP Pre-Order -->
+      <div class="sub-var-panel var-release-ep_preorder hidden" id="varReleaseEpPreorder">
+        <div class="hero-card-media-bg ep-bg">
+          <div class="hero-media-overlay"></div>
+          <div class="hero-card-header">
+            <div class="hero-header-text">
+              <h3 class="hero-release-title">{release.ep_preorder.title}</h3>
+              <p class="hero-release-subtitle">{release.ep_preorder.subtitle}</p>
+              <div class="hero-badge-row">
+                <span class="hero-genre-badge">{release.ep_preorder.badge}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-action-buttons-row ep-action-row">
+            <button type="button" class="hero-btn-primary ep-preorder-trigger">
+              <i class="fa-solid fa-cart-shopping"></i>
+              <span>PRE-ORDER VINYL</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+            <button type="button" class="hero-btn-secondary hero-share-trigger">
+              <i class="fa-solid fa-share-nodes"></i>
+              <span>SHARE</span>
+            </button>
+          </div>
+        </div>
+        <div class="hero-card-footer">
+          <span class="hero-footer-text">{release.ep_preorder.footerText}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 2: POLLS ==================== -->
+    <div class="hero-card-state state-poll hidden" id="statePoll">
+      <!-- Sub-Var 2A: Recording Cover Poll -->
+      <div class="sub-var-panel var-poll-recording_cover" id="varPollRecordingCover">
+        <div class="poll-card-header">
+          <div class="poll-header-top-row">
+            <span class="poll-status-tag poll-status-recording"><i class="fa-solid fa-vote-yea"></i> Voting Open</span>
+          </div>
+          <h3 class="poll-question">{poll.recording_cover.question}</h3>
+        </div>
+        <div class="poll-options-list">
+          {poll.recording_cover.options.map((opt) => {
+            const pct = Math.round((opt.votes / recordingTotalVotes) * 100);
+            return (
+              <button type="button" class="poll-option-btn" data-poll-type="recording" data-option-id={opt.id} data-votes={opt.votes}>
+                <div class="poll-progress-fill" style="width: 0%"></div>
+                <div class="poll-option-content">
+                  <span class="poll-option-text">{opt.text}</span>
+                  <span class="poll-option-pct hidden">{pct}%</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <!-- Sub-Var 2B: Setlist Song Poll + Gig Countdown -->
+      <div class="sub-var-panel var-poll-setlist_song hidden" id="varPollSetlistSong">
+        <div class="poll-card-header">
+          <div class="poll-header-top-row">
+            <span class="poll-status-tag poll-status-setlist"><i class="fa-solid fa-vote-yea"></i> Voting Open</span>
+          </div>
+          <h3 class="poll-question">{poll.setlist_song.question}</h3>
+        </div>
+        <div class="poll-options-list">
+          {poll.setlist_song.options.map((opt) => {
+            const pct = Math.round((opt.votes / setlistTotalVotes) * 100);
+            return (
+              <button type="button" class="poll-option-btn" data-poll-type="setlist" data-option-id={opt.id} data-votes={opt.votes}>
+                <div class="poll-progress-fill" style="width: 0%"></div>
+                <div class="poll-option-content">
+                  <span class="poll-option-text">{opt.text}</span>
+                  <span class="poll-option-pct hidden">{pct}%</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {poll.setlist_song.showCountdown && (
+          <div class="hero-gig-countdown-banner">
+            <div class="countdown-info">
+              <i class="fa-solid fa-location-dot"></i>
+              <span>NEXT SHOW: <strong>{poll.setlist_song.gigName}</strong></span>
+            </div>
+            <div class="countdown-digits-row">
+              <span class="cd-unit"><strong id="heroCdDays">04</strong>d</span> :
+              <span class="cd-unit"><strong id="heroCdHours">12</strong>h</span> :
+              <span class="cd-unit"><strong id="heroCdMins">30</strong>m</span> :
+              <span class="cd-unit"><strong id="heroCdSecs">15</strong>s</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <!-- Sub-Var 2C: Merch Design Vote (3-in-a-row Visual Cards) -->
+      <div class="sub-var-panel var-poll-merch_design hidden" id="varPollMerchDesign">
+        <div class="poll-card-header">
+          <div class="poll-header-top-row">
+            <span class="poll-status-tag poll-status-merch"><i class="fa-solid fa-shirt"></i> Merch Vote Open</span>
+          </div>
+          <h3 class="poll-question">{poll.merch_design.question}</h3>
+        </div>
+
+        <div class="merch-poll-grid">
+          {poll.merch_design.options.map((opt) => {
+            const pct = Math.round((opt.votes / merchTotalVotes) * 100);
+            return (
+              <button type="button" class="merch-card-item poll-option-btn" data-poll-type="merch" data-option-id={opt.id} data-votes={opt.votes}>
+                <div class="merch-card-thumb-box">
+                  <img src={opt.img || '/pfp.jpg'} alt={opt.text} class="merch-card-img" />
+                  <div class="merch-card-icon-badge">
+                    <i class={`fa-solid ${opt.icon || 'fa-shirt'}`}></i>
+                  </div>
+                  <div class="merch-card-voted-check">
+                    <i class="fa-solid fa-check"></i>
+                  </div>
+                </div>
+
+                <div class="merch-card-info">
+                  <span class="merch-card-title">{opt.text}</span>
+                  <div class="merch-card-progress-bar">
+                    <div class="poll-progress-fill" style="width: 0%"></div>
+                  </div>
+                  <span class="poll-option-pct hidden">{pct}%</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <!-- Sub-Var 2D: Tour City Request Poll -->
+      <div class="sub-var-panel var-poll-city_request hidden" id="varPollCityRequest">
+        <div class="poll-card-header">
+          <div class="poll-header-top-row">
+            <span class="poll-status-tag poll-status-city"><i class="fa-solid fa-map-location-dot"></i> City Request</span>
+          </div>
+          <h3 class="poll-question">{poll.city_request.question}</h3>
+        </div>
+        <div class="poll-options-list">
+          {poll.city_request.options.map((opt) => {
+            const pct = Math.round((opt.votes / cityTotalVotes) * 100);
+            return (
+              <button type="button" class="poll-option-btn" data-poll-type="city" data-option-id={opt.id} data-votes={opt.votes}>
+                <div class="poll-progress-fill" style="width: 0%"></div>
+                <div class="poll-option-content">
+                  <span class="poll-option-text">{opt.text}</span>
+                  <span class="poll-option-pct hidden">{pct}%</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 3: PREVIEWS ==================== -->
+    <div class="hero-card-state state-preview hidden" id="statePreview">
+      <!-- Sub-Var 3A: Inspired-Style Demo Preview -->
+      <div class="sub-var-panel var-preview-inspired_demo" id="varPreviewInspiredDemo">
+        <div class="inspired-style-preview-card">
+          <div class="preview-thumb-box" id="previewDiscBox">
+            <img src={preview.inspired_demo.coverImg} alt={preview.inspired_demo.title} class="preview-thumb-img" />
+            <i class="fa-solid fa-compact-disc preview-fallback-icon"></i>
+          </div>
+
+          <div class="preview-card-info">
+            <div class="preview-title-row">
+              <span class="preview-song-title">{preview.inspired_demo.title}</span>
+            </div>
+            <span class="preview-artist-name">{preview.inspired_demo.artist}</span>
+
+            <div class="preview-timeline-box">
+              <div class="preview-progress-track" id="previewProgressTrack">
+                <div class="preview-progress-fill" id="previewProgressFill" style="width: 0%"></div>
+              </div>
+              <div class="preview-time-row">
+                <span id="previewTimeCurrent">0:00</span>
+                <span id="previewTimeTotal">0:30</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="preview-play-toggle-btn" id="previewPlayToggleBtn" aria-label="Toggle preview playback">
+            <i class="fa-solid fa-play"></i>
+          </button>
+        </div>
+
+        <div class="preview-actions-row">
+          <button type="button" class="hero-btn-primary" id="previewPreSaveBtn">
+            <i class="fa-solid fa-bookmark"></i>
+            <span>PRE-SAVE SINGLE</span>
+          </button>
+          <button type="button" class="hero-btn-secondary hero-share-trigger">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>SHARE DEMO</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sub-Var 3B: Studio BTS Vlog Teaser -->
+      <div class="sub-var-panel var-preview-studio_bts hidden" id="varPreviewStudioBts">
+        <div class="inspired-style-preview-card">
+          <div class="preview-thumb-box">
+            <i class="fa-solid fa-video preview-fallback-icon"></i>
+          </div>
+          <div class="preview-card-info">
+            <span class="preview-song-title">{preview.studio_bts.title}</span>
+            <span class="preview-artist-name">{preview.studio_bts.artist}</span>
+          </div>
+          <button type="button" class="preview-play-toggle-btn release-play-trigger" aria-label="Watch Studio Vlog">
+            <i class="fa-solid fa-play"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 4: TOUR SPOTLIGHT ==================== -->
+    <div class="hero-card-state state-tour hidden" id="stateTour">
+      <!-- Sub-Var 4A: Next Show & Ticket Drop -->
+      <div class="sub-var-panel var-tour-next_show" id="varTourNextShow">
+        <div class="tour-card-content">
+          <div class="tour-header-badge-row">
+            <span class="tour-badge"><i class="fa-solid fa-guitar"></i> {tour.next_show.badge}</span>
+          </div>
+          <h3 class="tour-title">{tour.next_show.title}</h3>
+          <p class="tour-venue-line"><i class="fa-solid fa-location-dot"></i> {tour.next_show.venue}</p>
+          <p class="tour-date-line">{tour.next_show.dateText}</p>
+
+          <div class="tour-actions-row">
+            <a href={tour.next_show.ticketsUrl} target="_blank" rel="noopener noreferrer" class="hero-btn-primary tour-ticket-link">
+              <i class="fa-solid fa-ticket"></i>
+              <span>GET TICKETS</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </a>
+            <button type="button" class="hero-btn-secondary" id="heroOpenGigMapBtn">
+              <i class="fa-solid fa-map-location-dot"></i>
+              <span>VIEW GIG MAP</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 4B: Concert Aftermovie -->
+      <div class="sub-var-panel var-tour-aftermovie hidden" id="varTourAftermovie">
+        <div class="tour-card-content">
+          <span class="tour-badge">{tour.aftermovie.badge}</span>
+          <h3 class="tour-title">{tour.aftermovie.title}</h3>
+          <p class="tour-venue-line">{tour.aftermovie.venue}</p>
+          <div class="tour-actions-row">
+            <button type="button" class="hero-btn-primary release-play-trigger">
+              <i class="fa-solid fa-play"></i>
+              <span>WATCH AFTERMOVIE</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 4C: Sold Out Alert -->
+      <div class="sub-var-panel var-tour-sold_out hidden" id="varTourSoldOut">
+        <div class="tour-card-content">
+          <span class="tour-badge sold-out-badge">{tour.sold_out.badge}</span>
+          <h3 class="tour-title">{tour.sold_out.title}</h3>
+          <p class="tour-venue-line">{tour.sold_out.dateText}</p>
+          <div class="tour-actions-row">
+            <a href={tour.sold_out.ticketsUrl} target="_blank" rel="noopener noreferrer" class="hero-btn-primary tour-ticket-link">
+              <i class="fa-solid fa-ticket"></i>
+              <span>GET 2ND SHOW TICKETS</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 5: MILESTONES ==================== -->
+    <div class="hero-card-state state-milestones hidden" id="stateMilestones">
+      <!-- Sub-Var 5A: Follower Milestone -->
+      <div class="sub-var-panel var-milestones-follower_milestone" id="varMilestonesFollower">
+        <div class="milestone-card-content">
+          <!-- Top Row: Icon + Meta Column -->
+          <div class="milestone-top-row">
+            <div class="milestone-icon-circle">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="milestone-top-meta">
+              <span class="milestone-badge">{milestones.follower_milestone.badge}</span>
+              <h3 class="milestone-title">{milestones.follower_milestone.title}</h3>
+            </div>
+          </div>
+
+          <!-- Second Row: Message Subtext -->
+          <p class="milestone-desc">{milestones.follower_milestone.message}</p>
+
+          <!-- Action Button -->
+          <div class="milestone-actions-row">
+            <button type="button" class="hero-btn-primary milestone-celebrate-btn hero-share-trigger">
+              <i class="fa-solid fa-heart"></i>
+              <span>CELEBRATE WITH KINS</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 5B: Stream Milestone -->
+      <div class="sub-var-panel var-milestones-stream_milestone hidden" id="varMilestonesStream">
+        <div class="milestone-card-content spotify-theme">
+          <!-- Top Row: Spotify Icon + Meta Column -->
+          <div class="milestone-top-row">
+            <div class="milestone-icon-circle spotify-icon">
+              <i class="fa-brands fa-spotify"></i>
+            </div>
+            <div class="milestone-top-meta">
+              <span class="milestone-badge">{milestones.stream_milestone.badge}</span>
+              <h3 class="milestone-title spotify-green-text">{milestones.stream_milestone.streamCount}</h3>
+            </div>
+          </div>
+
+          <!-- Second Row: Track Subtext -->
+          <p class="milestone-desc">{milestones.stream_milestone.songTitle} • Out now on Spotify & Apple Music</p>
+
+          <!-- Action Button -->
+          <div class="milestone-actions-row">
+            <button type="button" class="hero-btn-primary spotify-btn single-stream-trigger">
+              <i class="fa-brands fa-spotify"></i>
+              <span>STREAM ON SPOTIFY</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 5C: Press / Blog Quote -->
+      <div class="sub-var-panel var-milestones-press_quote hidden" id="varMilestonesPress">
+        <div class="milestone-card-content quote-theme">
+          <i class="fa-solid fa-quote-left press-quote-icon"></i>
+          <p class="press-quote-text">"{milestones.press_quote.quote}"</p>
+          <span class="press-pub-name">— {milestones.press_quote.publication}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 6: LIVESTREAM & EVENTS ==================== -->
+    <div class="hero-card-state state-livestream hidden" id="stateLivestream">
+      <!-- Sub-Var 6A: Live Now -->
+      <div class="sub-var-panel var-livestream-live_now" id="varLivestreamLiveNow">
+        <div class="livestream-card-content">
+          <div class="live-pulse-badge-row">
+            <span class="live-pulse-badge"><span class="live-dot"></span> LIVE NOW</span>
+            <span class="live-viewers-count"><i class="fa-solid fa-eye"></i> {livestream.live_now.viewerCount}</span>
+          </div>
+          <h3 class="livestream-title">{livestream.live_now.title}</h3>
+          <div class="livestream-actions-row">
+            <button type="button" class="hero-btn-primary live-join-btn release-play-trigger">
+              <i class="fa-solid fa-tower-broadcast"></i>
+              <span>JOIN STREAM NOW</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 6B: Upcoming Stream -->
+      <div class="sub-var-panel var-livestream-upcoming_stream hidden" id="varLivestreamUpcoming">
+        <div class="livestream-card-content">
+          <span class="tour-badge"><i class="fa-solid fa-clock"></i> {livestream.upcoming_stream.badge}</span>
+          <h3 class="livestream-title">{livestream.upcoming_stream.title}</h3>
+          <p class="tour-date-line"><i class="fa-solid fa-calendar-day"></i> {livestream.upcoming_stream.scheduledTime}</p>
+          <div class="livestream-actions-row">
+            <button type="button" class="hero-btn-primary livestream-reminder-btn hero-share-trigger">
+              <i class="fa-solid fa-bell"></i>
+              <span>SET REMINDER</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 6C: Listening Party -->
+      <div class="sub-var-panel var-livestream-listening_party hidden" id="varLivestreamParty">
+        <div class="livestream-card-content">
+          <span class="tour-badge party-badge"><i class="fa-solid fa-headphones"></i> {livestream.listening_party.badge}</span>
+          <h3 class="livestream-title">{livestream.listening_party.title}</h3>
+          <p class="tour-date-line">{livestream.listening_party.eventDetails}</p>
+          <div class="livestream-actions-row">
+            <button type="button" class="hero-btn-primary discord-btn hero-share-trigger">
+              <i class="fa-brands fa-discord"></i>
+              <span>JOIN DISCORD PARTY</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 7: SPOTLIGHT ==================== -->
+    <div class="hero-card-state state-spotlight hidden" id="stateSpotlight">
+      <!-- Sub-Var 7A: Member Spotlight -->
+      <div class="sub-var-panel var-spotlight-member_spotlight" id="varSpotlightMember">
+        <div class="spotlight-card-content">
+          <div class="spotlight-thumb-box">
+            <img src={spotlight.member_spotlight.img} alt={spotlight.member_spotlight.name} class="spotlight-img" />
+          </div>
+          <div class="spotlight-details">
+            <span class="tour-badge">{spotlight.member_spotlight.role}</span>
+            <h3 class="spotlight-name">{spotlight.member_spotlight.name}</h3>
+            <p class="spotlight-quote">"{spotlight.member_spotlight.quote}"</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 7B: Origin Story -->
+      <div class="sub-var-panel var-spotlight-origin_story hidden" id="varSpotlightOrigin">
+        <div class="spotlight-card-content origin-theme">
+          <span class="tour-badge">{spotlight.origin_story.yearFormed}</span>
+          <h3 class="spotlight-name">{spotlight.origin_story.title}</h3>
+          <p class="spotlight-quote">{spotlight.origin_story.snippet}</p>
+        </div>
+      </div>
+
+      <!-- Sub-Var 7C: Gear Showcase (3-in-a-row) -->
+      <div class="sub-var-panel var-spotlight-gear_showcase hidden" id="varSpotlightGear">
+        <div class="poll-card-header">
+          <h3 class="poll-question">{spotlight.gear_showcase.title}</h3>
+        </div>
+        <div class="merch-poll-grid">
+          {spotlight.gear_showcase.items.map((item) => (
+            <div class="merch-card-item">
+              <div class="merch-card-thumb-box">
+                <img src={item.img} alt={item.name} class="merch-card-img" />
+                <div class="merch-card-icon-badge">
+                  <i class={`fa-solid ${item.icon}`}></i>
+                </div>
+              </div>
+              <div class="merch-card-info">
+                <span class="merch-card-title">{item.name}</span>
+                <span class="tour-date-line">{item.category}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 8: COLLAB ==================== -->
+    <div class="hero-card-state state-collab hidden" id="stateCollab">
+      <!-- Sub-Var 8A: Collab Single -->
+      <div class="sub-var-panel var-collab-collab_single" id="varCollabSingle">
+        <div class="tour-card-content">
+          <span class="tour-badge">{collab.collab_single.badge}</span>
+          <h3 class="tour-title">{collab.collab_single.title}</h3>
+          <p class="tour-venue-line">{collab.collab_single.featuredArtist}</p>
+          <div class="tour-actions-row">
+            <button type="button" class="hero-btn-primary single-stream-trigger">
+              <i class="fa-solid fa-play"></i>
+              <span>LISTEN NOW</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 8B: Featured Playlist -->
+      <div class="sub-var-panel var-collab-featured_playlist hidden" id="varCollabPlaylist">
+        <div class="tour-card-content spotify-theme">
+          <span class="tour-badge">{collab.featured_playlist.badge}</span>
+          <h3 class="tour-title">{collab.featured_playlist.playlistName}</h3>
+          <p class="tour-venue-line">{collab.featured_playlist.curator} • {collab.featured_playlist.followers}</p>
+          <div class="tour-actions-row">
+            <button type="button" class="hero-btn-primary single-stream-trigger">
+              <i class="fa-brands fa-spotify"></i>
+              <span>OPEN PLAYLIST</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 8C: TikTok Challenge -->
+      <div class="sub-var-panel var-collab-tiktok_challenge hidden" id="varCollabTiktok">
+        <div class="tour-card-content">
+          <span class="tour-badge">{collab.tiktok_challenge.badge}</span>
+          <h3 class="tour-title">{collab.tiktok_challenge.title}</h3>
+          <p class="tour-venue-line">{collab.tiktok_challenge.hashtag}</p>
+          <p class="tour-date-line">{collab.tiktok_challenge.desc}</p>
+          <div class="tour-actions-row">
+            <button type="button" class="hero-btn-primary hero-share-trigger">
+              <i class="fa-brands fa-tiktok"></i>
+              <span>JOIN CHALLENGE</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .hero-feature-card-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+    margin-bottom: 12px;
+  }
+
+  /* Selector Deck for Testing & Previewing */
+  .hero-state-selector-deck {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(10, 10, 12, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    padding: 6px 8px;
+    backdrop-filter: blur(12px);
+  }
+
+  .hero-selector-primary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 8px;
+  }
+
+  .hero-selector-primary-row::-webkit-scrollbar,
+  .hero-selector-subvars-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .selector-label {
+    font-family: var(--font-secondary);
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .selector-tabs-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .hero-selector-subvars-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-top: 4px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  }
+
+  .state-tab-btn, :global(.subvar-pill-btn) {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+
+  .state-tab-btn:hover, :global(.subvar-pill-btn:hover) {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
+  }
+
+  .state-tab-btn.active, :global(.subvar-pill-btn.active) {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border-color: transparent;
+    font-weight: 800;
+  }
+
+  /* Main Hero Feature Card Container */
+  .hero-feature-card {
+    width: 100%;
+    background: rgba(18, 18, 20, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+    transition: border-color 0.25s ease;
+  }
+
+  .hero-feature-card:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .hero-card-state, .sub-var-panel {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.25s ease;
+  }
+
+  .hero-card-state.hidden, .sub-var-panel.hidden {
+    display: none !important;
+  }
+
+  /* STATE 0: UPCOMING & MYSTERY */
+  .state-upcoming {
+    padding: 14px 16px;
+    box-sizing: border-box;
+  }
+
+  .upcoming-teaser-card, .mystery-countdown-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .mystery-countdown-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .upcoming-icon-box {
+    font-size: 1.4rem;
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+  }
+
+  .upcoming-teaser-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .upcoming-teaser-badge {
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .upcoming-teaser-title {
+    font-family: var(--font-heading);
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-white);
+    margin: 0;
+  }
+
+  .upcoming-teaser-desc {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .mystery-timer-digits {
+    font-family: var(--font-secondary);
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--btn-green);
+    letter-spacing: 0.04em;
+  }
+
+  /* STATE 1: RELEASES */
+  .hero-card-media-bg {
+    position: relative;
+    width: 100%;
+    min-height: 240px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    background-image: url('/pfp.jpg');
+    background-size: cover;
+    background-position: center 30%;
+  }
+
+  .hero-media-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.25) 45%, rgba(0, 0, 0, 0.88) 100%);
+    z-index: 1;
+  }
+
+  .hero-card-header {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .hero-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .hero-release-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .hero-release-subtitle {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 4px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  .hero-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .hero-genre-badge {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .hero-platform-btn {
+    position: relative;
+    z-index: 2;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    color: #000000;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: transform 0.2s var(--ease-snappy), background-color 0.2s ease;
+  }
+
+  .hero-platform-btn:hover {
+    transform: scale(1.08);
+    background: #ffffff;
+  }
+
+  .hero-center-play-btn {
+    position: relative;
+    z-index: 2;
+    align-self: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    color: #000000;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    padding-left: 4px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    transition: transform 0.22s var(--ease-snappy), background-color 0.2s ease;
+    margin: 12px 0;
+  }
+
+  .hero-center-play-btn:hover {
+    transform: scale(1.12);
+    background: #ffffff;
+  }
+
+  .hero-action-buttons-row {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .hero-btn-primary {
+    flex: 1;
+    height: 40px;
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .hero-btn-primary:hover {
+    background: #f4f4f5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
+  }
+
+  .hero-launch-icon {
+    font-size: 0.68rem;
+    margin-left: 1px;
+    opacity: 0.9;
+  }
+
+  .hero-btn-secondary {
+    flex: 1;
+    height: 40px;
+    background: rgba(10, 10, 12, 0.75);
+    color: var(--text-white);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease, border-color 0.18s ease;
+  }
+
+  .hero-btn-secondary:hover {
+    background: rgba(20, 20, 24, 0.9);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+  }
+
+  .hero-card-footer {
+    padding: 8px 16px;
+    background: rgba(10, 10, 12, 0.95);
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .hero-footer-text {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* STATE 2: POLLS */
+  .state-poll {
+    padding: 16px;
+    gap: 14px;
+    box-sizing: border-box;
+  }
+
+  .poll-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .poll-header-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .poll-status-tag {
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.25s ease;
+  }
+
+  .poll-status-tag.voted {
+    background: rgba(30, 215, 96, 0.15);
+    border-color: rgba(30, 215, 96, 0.4);
+    color: var(--btn-green);
+    font-weight: 800;
+    box-shadow: 0 0 10px rgba(30, 215, 96, 0.2);
+  }
+
+  .poll-question {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 2px 0 0 0;
+    line-height: 1.25;
+  }
+
+  .poll-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* 3-in-a-row Merch Poll Visual Grid */
+  .merch-poll-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+  }
+
+  .merch-card-item {
+    position: relative;
+    background: rgba(10, 10, 12, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    transition: border-color 0.2s ease, transform 0.2s var(--ease-snappy), box-shadow 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .merch-card-item:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: translateY(-2px);
+  }
+
+  .merch-card-item.selected {
+    border-color: var(--btn-green);
+    box-shadow: 0 0 14px rgba(30, 215, 96, 0.3);
+  }
+
+  .merch-card-thumb-box {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #121214;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .merch-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .merch-card-item:hover .merch-card-img {
+    transform: scale(1.06);
+  }
+
+  .merch-card-icon-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: rgba(10, 10, 12, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(6px);
+    color: var(--text-white);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+  }
+
+  .merch-card-voted-check {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  .merch-card-item.selected .merch-card-voted-check {
+    display: flex;
+  }
+
+  .merch-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: center;
+    width: 100%;
+  }
+
+  .merch-card-title {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-white);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
+  .merch-card-progress-bar {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .merch-card-info .poll-option-pct {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--btn-green);
+  }
+
+  .poll-option-btn {
+    position: relative;
+    width: 100%;
+    min-height: 42px;
+    background: rgba(10, 10, 12, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    transition: border-color 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
+  }
+
+  .poll-option-btn:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .poll-option-btn.selected {
+    border-color: var(--btn-green);
+    box-shadow: 0 0 12px rgba(30, 215, 96, 0.25);
+  }
+
+  .poll-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(30, 215, 96, 0.35) 0%, rgba(30, 215, 96, 0.18) 100%);
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .poll-option-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .poll-option-text {
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-white);
+    line-height: 1.2;
+  }
+
+  .poll-option-pct {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--btn-green);
+  }
+
+  .hero-gig-countdown-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .countdown-info {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .countdown-info i {
+    color: var(--btn-green);
+  }
+
+  .countdown-digits-row {
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: 0.04em;
+  }
+
+  .cd-unit strong {
+    color: var(--text-white);
+    font-weight: 800;
+  }
+
+  /* STATE 3: PREVIEWS (INSPIRED CARD STYLE) */
+  .state-preview {
+    padding: 16px;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  .inspired-style-preview-card {
+    width: 100%;
+    background: rgba(18, 18, 20, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s var(--ease-snappy), border-color 0.2s ease, background-color 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .inspired-style-preview-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(26, 26, 30, 0.95);
+  }
+
+  .preview-thumb-box {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+  }
+
+  .preview-thumb-box.spinning {
+    border-radius: 50%;
+    border-color: rgba(30, 215, 96, 0.6);
+    box-shadow: 0 0 14px rgba(30, 215, 96, 0.4), 0 0 4px rgba(255, 255, 255, 0.25);
+  }
+
+  .preview-thumb-box.spinning .preview-fallback-icon {
+    animation: vinylSpin 3s linear infinite;
+    color: var(--btn-green);
+  }
+
+  @keyframes vinylSpin {
+    100% { transform: rotate(360deg); }
+  }
+
+  .preview-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .preview-fallback-icon {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+  }
+
+  .preview-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+  }
+
+  .preview-title-row {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .preview-song-title {
+    font-family: var(--font-heading);
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .preview-artist-name {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .preview-timeline-box {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .preview-progress-track {
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .preview-progress-fill {
+    height: 100%;
+    background: var(--btn-green);
+    border-radius: 3px;
+    transition: width 0.1s linear;
+  }
+
+  .preview-time-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-secondary);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+
+  .preview-play-toggle-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 4px;
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    padding-left: 2px;
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease;
+  }
+
+  .preview-play-toggle-btn:hover {
+    transform: scale(1.06);
+    background: var(--btn-green-hover);
+  }
+
+  .preview-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  /* STATE 4: TOUR SPOTLIGHT */
+  .state-tour {
+    padding: 16px;
+    gap: 14px;
+    box-sizing: border-box;
+  }
+
+  .tour-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tour-badge {
+    align-self: flex-start;
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .tour-badge.sold-out-badge {
+    background: #ff4d4d;
+    color: #ffffff;
+  }
+
+  .tour-title {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 2px 0 0 0;
+  }
+
+  .tour-venue-line {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    color: var(--text-white);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+  }
+
+  .tour-venue-line i {
+    color: var(--btn-green);
+  }
+
+  .tour-date-line {
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .tour-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .tour-ticket-link {
+    text-decoration: none;
+  }
+
+  /* STATE 5: MILESTONES */
+  .state-milestones, .state-livestream, .state-spotlight, .state-collab {
+    padding: 16px;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  .milestone-card-content, .livestream-card-content, .spotlight-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .milestone-top-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .milestone-top-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .milestone-icon-circle {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--btn-green);
+    flex-shrink: 0;
+  }
+
+  .milestone-icon-circle.spotify-icon {
+    color: #1db954;
+    border-color: rgba(29, 185, 84, 0.4);
+    background: rgba(29, 185, 84, 0.1);
+  }
+
+  .milestone-badge {
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .milestone-title {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .spotify-green-text {
+    color: #1db954;
+  }
+
+  .milestone-desc {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .milestone-actions-row, .livestream-actions-row {
+    width: 100%;
+    margin-top: 4px;
+    display: flex;
+  }
+
+  .spotify-btn {
+    background: #1db954;
+    color: #000000;
+  }
+
+  .spotify-btn:hover {
+    background: #1ed760;
+    box-shadow: 0 4px 14px rgba(29, 185, 84, 0.35);
+  }
+
+  .discord-btn {
+    background: #5865f2;
+    color: #ffffff;
+  }
+
+  .discord-btn:hover {
+    background: #4752c4;
+    box-shadow: 0 4px 14px rgba(88, 101, 242, 0.35);
+  }
+
+  .live-join-btn {
+    background: #ff3b30;
+    color: #ffffff;
+  }
+
+  .live-join-btn:hover {
+    background: #ff453a;
+    box-shadow: 0 4px 14px rgba(255, 59, 48, 0.4);
+  }
+
+  .press-quote-icon {
+    font-size: 1.6rem;
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  .press-quote-text {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--text-white);
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .press-pub-name {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: var(--btn-green);
+  }
+
+  /* STATE 6: LIVESTREAM */
+  .live-pulse-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .live-pulse-badge {
+    background: #ff3b30;
+    color: #ffffff;
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.08em;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ffffff;
+    animation: livePulse 1.2s infinite;
+  }
+
+  @keyframes livePulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .live-viewers-count {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .livestream-title {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 0;
+  }
+
+  /* STATE 7: SPOTLIGHT */
+  .spotlight-card-content {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .spotlight-card-content.origin-theme {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .spotlight-thumb-box {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--btn-green);
+    flex-shrink: 0;
+  }
+
+  .spotlight-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .spotlight-details {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .spotlight-name {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 0;
+  }
+
+  .spotlight-quote {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+</style>
+
+<script>
+  import { initHeroFeatureController } from '../../scripts/controllers/heroFeatureController.js';
+  initHeroFeatureController();
+</script>
