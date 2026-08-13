@@ -423,14 +423,11 @@ const mockClips = [
 
   .banner-desc {
     font-family: var(--font-secondary);
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
     line-height: 1.5;
     margin: 0;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
+    display: block;
   }
 
   .copy-handle-pill {
@@ -443,9 +440,11 @@ const mockClips = [
     padding: 3px 8px;
     border-radius: 4px;
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    font-size: 0.74rem;
     font-weight: 700;
     cursor: pointer;
+    vertical-align: middle;
+    margin: 0 3px;
     transition: all 0.18s ease;
   }
 
@@ -484,6 +483,7 @@ const mockClips = [
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
+      gap: 24px;
       padding: 18px 24px;
     }
 
@@ -492,10 +492,19 @@ const mockClips = [
       min-width: 0;
     }
 
+    .banner-title {
+      font-size: 0.9rem;
+    }
+
+    .banner-desc {
+      font-size: 0.82rem;
+    }
+
     .submit-fan-clip-btn {
       width: auto;
       max-width: 320px;
       padding: 12px 24px;
+      font-size: 0.82rem;
       flex-shrink: 0;
       white-space: nowrap;
     }
