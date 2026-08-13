@@ -1,5 +1,6 @@
 import { openCoverVideoModal } from './videoModalController.js';
 import { showToast } from './toast.js';
+import { stopVinylSpinSmoothly } from './audioPlayer.js';
 
 export function initHeroFeatureController() {
   const card = document.getElementById('heroFeatureCard');
@@ -271,7 +272,7 @@ export function initHeroFeatureController() {
 
     if (isPreviewPlaying) {
       previewPlayBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-      previewDiscBox?.classList.add('spinning');
+      stopVinylSpinSmoothly(previewDiscBox, true);
 
       previewTimer = setInterval(() => {
         previewSeconds += 1;
@@ -280,7 +281,7 @@ export function initHeroFeatureController() {
           isPreviewPlaying = false;
           clearInterval(previewTimer);
           previewPlayBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-          previewDiscBox?.classList.remove('spinning');
+          stopVinylSpinSmoothly(previewDiscBox, false);
           if (previewProgressFill) previewProgressFill.style.width = '0%';
           if (previewTimeCurrent) previewTimeCurrent.textContent = '0:00';
           return;
@@ -295,7 +296,7 @@ export function initHeroFeatureController() {
     } else {
       clearInterval(previewTimer);
       previewPlayBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
-      previewDiscBox?.classList.remove('spinning');
+      stopVinylSpinSmoothly(previewDiscBox, false);
     }
   });
 

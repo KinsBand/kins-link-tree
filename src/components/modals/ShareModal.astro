@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import kinsLogoImg from '../../assets/kins-logo-new.png';
 ---
 
 <!-- Share Modal Backdrop -->
@@ -73,25 +75,35 @@
         </div>
       </div>
 
-      <!-- 5. Interactive QR Code Box (Click to Fullscreen) -->
-      <div class="qr-box-container">
-        <div class="qr-canvas-clickable" id="qrcodeCanvasWrapper" title="Click to view full screen QR code">
-          <div class="qr-canvas-inner" id="qrcodeCanvas"></div>
-          <div class="qr-hover-tap-badge">
-            <i class="fa-solid fa-expand"></i>
-            <span>Tap Fullscreen</span>
+      <!-- 5. Dual Asset Box: QR Code (Left) | Band Logo (Right) -->
+      <div class="dual-asset-box">
+        <!-- Left Asset: QR Code -->
+        <div class="asset-column">
+          <span class="asset-col-label">QR CODE</span>
+          <div class="asset-img-row">
+            <button type="button" class="icon-only-download-btn qr-btn" id="openQrDownloadModalBtn" title="Download QR Code Asset" aria-label="Download QR Code">
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <div class="qr-canvas-clickable" id="qrcodeCanvasWrapper" title="Click to view full screen QR code">
+              <div class="qr-canvas-inner" id="qrcodeCanvas"></div>
+              <div class="qr-hover-tap-badge">
+                <i class="fa-solid fa-expand"></i>
+                <span>Fullscreen</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="qr-info-column">
-          <span class="qr-label-title">Scan QR Code</span>
-          <span class="qr-label-sub">Tap QR to enlarge & scan</span>
-          <div class="qr-download-btns-row">
-            <button type="button" class="download-qr-btn" id="downloadQrPngBtn">
-              <i class="fa-solid fa-download"></i> PNG
+
+        <!-- Right Asset: Band Logo -->
+        <div class="asset-column">
+          <span class="asset-col-label">LOGO</span>
+          <div class="asset-img-row">
+            <button type="button" class="icon-only-download-btn logo-btn" id="openLogoDownloadModalBtn" title="Download Band Logo Asset" aria-label="Download Band Logo">
+              <i class="fa-solid fa-download"></i>
             </button>
-            <button type="button" class="download-qr-btn secondary" id="downloadQrSvgBtn">
-              <i class="fa-solid fa-file-code"></i> SVG
-            </button>
+            <div class="band-logo-preview-box" id="bandLogoPreviewBox" title="Kins Official Logo Asset">
+              <Image src={kinsLogoImg} alt="Kins Band Official Logo" class="band-logo-asset-img" width={100} height={100} />
+            </div>
           </div>
         </div>
       </div>
@@ -111,6 +123,104 @@
     </div>
     <div class="qr-fullscreen-canvas-wrapper" id="qrcodeFullscreenCanvas"></div>
     <p class="qr-fullscreen-sub">Point mobile camera to view Kins official website</p>
+  </div>
+</div>
+
+<!-- 7. QR Format Selection Download Modal -->
+<div class="modal-backdrop hidden" id="qrDownloadFormatModal" role="dialog" aria-modal="true" aria-label="Select QR Code Download Format">
+  <div class="qr-format-modal-content">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="brand-mini-badge">Export Vector & HD Assets</span>
+        <h3>Download QR Code</h3>
+      </div>
+      <button class="close-modal-btn" id="closeQrFormatModalBtn" aria-label="Close format selector">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="format-options-grid">
+      <button type="button" class="format-option-card" data-format="jpeg">
+        <div class="format-badge-icon jpeg">JPG</div>
+        <div class="format-details">
+          <span class="format-name">JPEG Image</span>
+          <span class="format-desc">High resolution 300 DPI image</span>
+        </div>
+        <i class="fa-solid fa-download format-action-icon"></i>
+      </button>
+      <button type="button" class="format-option-card" data-format="png">
+        <div class="format-badge-icon png">PNG</div>
+        <div class="format-details">
+          <span class="format-name">PNG Image</span>
+          <span class="format-desc">Ultra HD 300 DPI crisp raster</span>
+        </div>
+        <i class="fa-solid fa-download format-action-icon"></i>
+      </button>
+      <button type="button" class="format-option-card" data-format="eps">
+        <div class="format-badge-icon eps">EPS</div>
+        <div class="format-details">
+          <span class="format-name">EPS Vector</span>
+          <span class="format-desc">Professional print shop vector</span>
+        </div>
+        <i class="fa-solid fa-download format-action-icon"></i>
+      </button>
+      <button type="button" class="format-option-card" data-format="svg">
+        <div class="format-badge-icon svg">SVG</div>
+        <div class="format-details">
+          <span class="format-name">SVG Vector</span>
+          <span class="format-desc">Scalable vector graphics</span>
+        </div>
+        <i class="fa-solid fa-download format-action-icon"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 8. Band Logo Format Selection Download Modal -->
+<div class="modal-backdrop hidden" id="logoDownloadFormatModal" role="dialog" aria-modal="true" aria-label="Select Band Logo Download Format">
+  <div class="qr-format-modal-content">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="brand-mini-badge">Kins Official Brand Asset</span>
+        <h3>Download Band Logo</h3>
+      </div>
+      <button class="close-modal-btn" id="closeLogoFormatModalBtn" aria-label="Close format selector">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="format-options-grid">
+      <button type="button" class="format-option-card" data-logo-format="png">
+        <div class="format-badge-icon png">PNG</div>
+        <div class="format-details">
+          <span class="format-name">PNG Transparent</span>
+          <span class="format-desc">High resolution transparent logo</span>
+        </div>
+        <i class="fa-solid fa-download format-action-icon"></i>
+      </button>
+      <button type="button" class="format-option-card" data-logo-format="jpeg">
+        <div class="format-badge-icon jpeg">JPG</div>
+        <div class="format-details">
+          <span class="format-name">JPEG Image</span>
+          <span class="format-desc">High contrast dark background image</span>
+        </div>
+        <i class="fa-solid fa-download format-action-icon"></i>
+      </button>
+      <button type="button" class="format-option-card" data-logo-format="svg">
+        <div class="format-badge-icon svg">SVG</div>
+        <div class="format-details">
+          <span class="format-name">SVG Vector</span>
+          <span class="format-desc">Scalable vector graphics logo</span>
+        </div>
+        <i class="fa-solid fa-download format-action-icon"></i>
+      </button>
+      <button type="button" class="format-option-card" data-logo-format="webp">
+        <div class="format-badge-icon eps">WEBP</div>
+        <div class="format-details">
+          <span class="format-name">WebP Image</span>
+          <span class="format-desc">Optimized web format logo</span>
+        </div>
+        <i class="fa-solid fa-download format-action-icon"></i>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -369,38 +479,74 @@
     background: var(--btn-green-hover);
   }
 
-  .qr-box-container {
+  .dual-asset-box {
     display: flex;
-    align-items: center;
-    gap: 16px;
-    background: rgba(10, 10, 12, 0.8);
+    align-items: stretch;
+    gap: 6px;
+    background: rgba(10, 10, 12, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 8px;
-    padding: 12px 14px;
+    border-radius: 12px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
+  /* Each asset column takes equal width */
+  .asset-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  /* Big label above each image — offset past the 36px button + 5px gap */
+  .asset-col-label {
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-white);
+    line-height: 1;
+    margin-left: 41px;
+  }
+
+  /* Row: download button on left, image on right */
+  .asset-img-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+  }
+
+  /* QR Code Image Card */
   .qr-canvas-clickable {
     position: relative;
     background: #ffffff;
-    padding: 6px;
-    border-radius: 6px;
+    flex: 1;
+    aspect-ratio: 1;
+    padding: 5px;
+    box-sizing: border-box;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s var(--ease-snappy), box-shadow 0.2s ease;
   }
 
   .qr-canvas-clickable:hover {
-    transform: scale(1.04);
-    box-shadow: 0 0 16px rgba(0, 230, 153, 0.4);
+    transform: scale(1.03);
+    box-shadow: 0 0 14px rgba(0, 230, 153, 0.35);
   }
 
   .qr-hover-tap-badge {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.78);
     color: var(--text-white);
     display: flex;
     flex-direction: column;
@@ -408,7 +554,7 @@
     justify-content: center;
     gap: 4px;
     font-family: var(--font-secondary);
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 700;
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -418,14 +564,148 @@
     opacity: 1;
   }
 
-  .qr-info-column {
+  /* Download Buttons — tall pill, flush with image height */
+  .icon-only-download-btn {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border: none;
+    width: 36px;
+    min-width: 36px;
+    align-self: stretch;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.18s var(--ease-snappy);
+    box-shadow: 0 3px 10px rgba(0, 230, 153, 0.25);
+    flex-shrink: 0;
+  }
+
+  .icon-only-download-btn:hover {
+    background: var(--btn-green-hover);
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 5px 16px rgba(0, 230, 153, 0.4);
+  }
+
+  .icon-only-download-btn.logo-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--text-white);
+    box-shadow: none;
+  }
+
+  .icon-only-download-btn.logo-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: var(--text-white);
+    transform: translateY(-1px) scale(1.04);
+  }
+
+  /* Band Logo Container — matches QR sizing via flex */
+  .band-logo-preview-box {
+    flex: 1;
+    aspect-ratio: 1;
+    box-sizing: border-box;
+    background: #0a0a0c;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .band-logo-asset-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+  }
+
+  /* Format Selector Modal */
+  .qr-format-modal-content {
+    background: rgba(14, 14, 17, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 380px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 16px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95);
+  }
+
+  .format-options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .format-option-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s var(--ease-snappy);
+    width: 100%;
+  }
+
+  .format-option-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--btn-green);
+    transform: translateX(4px);
+  }
+
+  .format-badge-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: #0a0a0c;
+  }
+
+  .format-badge-icon.jpeg {
+    background: #f59e0b;
+  }
+
+  .format-badge-icon.png {
+    background: var(--btn-green);
+  }
+
+  .format-badge-icon.eps {
+    background: #3b82f6;
+    color: #ffffff;
+  }
+
+  .format-badge-icon.svg {
+    background: #ec4899;
+    color: #ffffff;
+  }
+
+  .format-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     flex: 1;
   }
 
-  .qr-label-title {
+  .format-name {
     font-family: var(--font-heading);
     font-size: 0.88rem;
     font-weight: 800;
@@ -433,50 +713,20 @@
     text-transform: uppercase;
   }
 
-  .qr-label-sub {
+  .format-desc {
     font-family: var(--font-secondary);
     font-size: 0.72rem;
     color: var(--text-muted);
   }
 
-  .qr-download-btns-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 6px;
-  }
-
-  .download-qr-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    color: var(--text-white);
-    border-radius: 4px;
-    padding: 7px 12px;
-    font-family: var(--font-secondary);
-    font-size: 0.74rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: background-color 0.18s ease;
-    min-height: 36px;
-  }
-
-  .download-qr-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.32);
-  }
-
-  .download-qr-btn.secondary {
-    background: transparent;
-    border-color: rgba(255, 255, 255, 0.12);
+  .format-action-icon {
     color: var(--text-muted);
+    font-size: 0.9rem;
+    transition: color 0.18s ease;
   }
 
-  .download-qr-btn.secondary:hover {
-    color: var(--text-white);
-    border-color: rgba(255, 255, 255, 0.25);
+  .format-option-card:hover .format-action-icon {
+    color: var(--btn-green);
   }
 
   /* Fullscreen QR Lightbox Modal */

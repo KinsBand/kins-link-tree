@@ -58,16 +58,16 @@ export function showToast(message, explicitType = null) {
     <div class="toast-progress-bar"></div>
   `;
 
-  const closeBtn = toast.querySelector('.toast-close-btn');
-  closeBtn?.addEventListener('click', (e) => {
-    e.stopPropagation();
+  const dismissToast = () => {
     clearTimeout(activeToastTimeout);
     toast.classList.add('toast-fade-out');
     setTimeout(() => {
       toast.remove();
       if (activeToast === toast) activeToast = null;
     }, 240);
-  });
+  };
+
+  toast.addEventListener('click', dismissToast);
 
   toastContainer.appendChild(toast);
   activeToast = toast;

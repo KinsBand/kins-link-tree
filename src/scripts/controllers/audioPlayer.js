@@ -162,7 +162,11 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
     element.style.transform = '';
     element.classList.add('vinyl-spin-anim');
   } else {
-    if (element.classList.contains('vinyl-spin-anim')) {
+    const isSpinning = element.classList.contains('vinyl-spin-anim') || 
+                       element.classList.contains('spinning') || 
+                       element.classList.contains('vinyl-spin-once');
+
+    if (isSpinning || (element.style.transform && element.style.transform !== 'rotate(0deg)')) {
       let currentAngle = 0;
       try {
         const style = window.getComputedStyle(element);
@@ -176,21 +180,32 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
         }
       } catch (e) {}
 
-      element.classList.remove('vinyl-spin-anim');
+      // Remove active continuous spin classes and pin element at current exact angle
+      element.classList.remove('vinyl-spin-anim', 'spinning', 'vinyl-spin-once');
       element.style.transform = `rotate(${currentAngle}deg)`;
 
-      void element.offsetWidth; // Force reflow
+      // Force reflow so browser commits initial angle before transitioning
+      void element.offsetWidth;
+
+      // Calculate forward deceleration arc to the next upright 360° position (0°)
+      let remainder = currentAngle % 360;
+      let extraDeg = 360 - remainder;
+      if (extraDeg < 90) {
+        extraDeg += 360; // guarantee a realistic momentum friction deceleration curve
+      }
+      const targetAngle = currentAngle + extraDeg;
 
       element.classList.add('vinyl-spin-decelerate');
-      element.style.transform = `rotate(${currentAngle + 35}deg)`;
+      element.style.transform = `rotate(${targetAngle}deg)`;
 
       setTimeout(() => {
+        // Once deceleration completes, finalize inline style to upright 0deg smoothly without snapping
         element.classList.remove('vinyl-spin-decelerate');
-        element.style.transform = '';
-      }, 650);
+        element.style.transform = 'rotate(0deg)';
+      }, 720);
     } else {
-      element.classList.remove('vinyl-spin-decelerate');
-      element.style.transform = '';
+      element.classList.remove('vinyl-spin-decelerate', 'vinyl-spin-anim', 'spinning');
+      element.style.transform = 'rotate(0deg)';
     }
   }
 }
@@ -716,6 +731,7 @@ export function initAudioPlayer() {
         }
       }
       updateToggleBtnState(isPlayingAudio);
+      showToast(isPlayingAudio ? `Resumed: "${currentPlayingTrack.title}"` : `Paused: "${currentPlayingTrack.title}"`, 'music');
     });
   }
 }
