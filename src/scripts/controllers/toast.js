@@ -52,8 +52,22 @@ export function showToast(message, explicitType = null) {
   toast.innerHTML = `
     <div class="toast-icon-box">${iconMarkup}</div>
     <span class="toast-text-content">${message}</span>
+    <button type="button" class="toast-close-btn" aria-label="Dismiss notification">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
     <div class="toast-progress-bar"></div>
   `;
+
+  const closeBtn = toast.querySelector('.toast-close-btn');
+  closeBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearTimeout(activeToastTimeout);
+    toast.classList.add('toast-fade-out');
+    setTimeout(() => {
+      toast.remove();
+      if (activeToast === toast) activeToast = null;
+    }, 240);
+  });
 
   toastContainer.appendChild(toast);
   activeToast = toast;

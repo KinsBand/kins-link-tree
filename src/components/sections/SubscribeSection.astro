@@ -59,14 +59,14 @@
       </div>
 
       <div class="emails-list">
-        <div class="email-row-item">
+        <div class="email-row-item copy-email-card" data-email="HelloKinsBand@gmail.com" role="button" tabindex="0" title="Click to copy HelloKinsBand@gmail.com">
           <div class="email-icon"><i class="fa-regular fa-paper-plane"></i></div>
           <div class="email-details">
             <span class="email-address">HelloKinsBand@gmail.com</span>
             <span class="email-desc">General Chat, Help & Site Suggestions</span>
           </div>
           <div class="email-actions-group">
-            <button class="copy-email-btn" data-email="HelloKinsBand@gmail.com" title="Copy Email" aria-label="Copy email HelloKinsBand@gmail.com">
+            <button type="button" class="copy-email-btn" data-email="HelloKinsBand@gmail.com" title="Copy Email" aria-label="Copy email HelloKinsBand@gmail.com">
               <i class="fa-regular fa-copy" aria-hidden="true"></i>
               <span class="sr-only">Copy email</span>
             </button>
@@ -77,14 +77,14 @@
           </div>
         </div>
 
-        <div class="email-row-item">
+        <div class="email-row-item copy-email-card" data-email="BookingsKinsBand@gmail.com" role="button" tabindex="0" title="Click to copy BookingsKinsBand@gmail.com">
           <div class="email-icon"><i class="fa-regular fa-calendar-check"></i></div>
           <div class="email-details">
             <span class="email-address">BookingsKinsBand@gmail.com</span>
             <span class="email-desc">Shows, Tours & Live Booking</span>
           </div>
           <div class="email-actions-group">
-            <button class="copy-email-btn" data-email="BookingsKinsBand@gmail.com" title="Copy Email" aria-label="Copy Bookings Email">
+            <button type="button" class="copy-email-btn" data-email="BookingsKinsBand@gmail.com" title="Copy Email" aria-label="Copy Bookings Email">
               <i class="fa-regular fa-copy" aria-hidden="true"></i>
               <span class="sr-only">Copy email</span>
             </button>
@@ -360,8 +360,16 @@
     gap: 10px;
     background: rgba(10, 10, 12, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 10px 12px;
+    cursor: pointer;
+    transition: transform 0.18s var(--ease-snappy, cubic-bezier(0.16, 1.25, 0.3, 1)), border-color 0.18s ease, background-color 0.18s ease;
+  }
+
+  .email-row-item:hover {
+    background: rgba(20, 20, 26, 0.85);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
   }
 
   .email-icon {
@@ -564,16 +572,40 @@
     document.body.classList.add('modal-open');
   });
 
-  document.querySelectorAll('.copy-email-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const email = btn.getAttribute('data-email');
+  async function copyEmailHandler(email: string, targetEl: HTMLElement) {
+    const ok = await copyToClipboard(email);
+    if (ok) {
+      const copyBtn = targetEl.querySelector('.copy-email-btn') || targetEl;
+      animateCopySuccess(copyBtn);
+      showToast(`Copied ${email} to clipboard!`);
+    }
+  }
+
+  document.querySelectorAll('.copy-email-card').forEach(card => {
+    card.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.send-email-btn')) return;
+
+      const email = card.getAttribute('data-email');
       if (email) {
-        const ok = await copyToClipboard(email);
-        if (ok) {
-          animateCopySuccess(btn);
-          showToast(`Copied ${email} to clipboard!`);
+        await copyEmailHandler(email, card as HTMLElement);
+      }
+    });
+
+    card.addEventListener('keydown', async (e: any) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const email = card.getAttribute('data-email');
+        if (email) {
+          await copyEmailHandler(email, card as HTMLElement);
         }
       }
+    });
+  });
+
+  document.querySelectorAll('.send-email-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
     });
   });
 </script>
