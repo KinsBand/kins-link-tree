@@ -608,79 +608,81 @@ let activeFilter = "all";
 let userLocation = null;
 const markerMap = new Map();
 
-export let currentSnapState = 'peek'; // 'peek' | 'mid' | 'expanded'
+export let currentSnapState = 'peek'; // 'peek' (Tier 1) | 'expanded' (Tier 2)
 
-// Calculate dynamic pixel snap heights relative to current viewport
+// Calculate dynamic pixel snap heights and translation bounds for 2-tier bottom sheet (55vh max expansion)
 export function getSnapHeights() {
   const vh = window.innerHeight;
+  const card = document.getElementById('venueDetailBottomCard');
+  const fullHeight = card && card.offsetHeight > 0 ? card.offsetHeight : Math.round(vh * 0.55);
+  const peekHeight = Math.min(220, Math.max(190, Math.round(vh * 0.28)));
   return {
-    peek: 136,
-    mid: Math.round(vh * 0.50),
-    expanded: Math.round(vh * 0.94)
+    peek: peekHeight,
+    expanded: fullHeight,
+    maxTranslateY: Math.max(0, fullHeight - peekHeight)
   };
 }
 
-// Set bottom sheet snap state with smooth animation and accessibility ARIA sync
+// Set bottom sheet snap state (Tier 1 'peek' vs Tier 2 'expanded' 55vh)
 export function setSnapState(targetState, options = { animate: true, autoPanMap: true }) {
   const venueDetailCard = document.getElementById('venueDetailBottomCard');
   if (!venueDetailCard) return;
 
-  currentSnapState = targetState;
+  const validState = targetState === 'expanded' ? 'expanded' : 'peek';
+  currentSnapState = validState;
   venueDetailCard.classList.remove('is-dragging');
   venueDetailCard.classList.remove('is-peek', 'is-mid', 'is-expanded');
-  venueDetailCard.classList.add(`is-${targetState}`);
-  venueDetailCard.setAttribute('data-snap-state', targetState);
-  venueDetailCard.setAttribute('aria-expanded', targetState === 'expanded' ? 'true' : 'false');
+  venueDetailCard.classList.add(`is-${validState}`);
+  venueDetailCard.setAttribute('data-snap-state', validState);
+  venueDetailCard.setAttribute('aria-expanded', validState === 'expanded' ? 'true' : 'false');
 
-  // Clean inline height style to let CSS classes take control
+  // Clean inline transforms and heights so GPU CSS classes take control
+  venueDetailCard.style.transform = '';
   venueDetailCard.style.height = '';
 
-  // If collapsing to peek, reset inner scroll position
-  if (targetState === 'peek') {
+  const snapHeights = getSnapHeights();
+  document.documentElement.style.setProperty('--peek-height', `${snapHeights.peek}px`);
+
+  // If collapsing to Tier 1, reset inner scroll position
+  if (validState === 'peek') {
     venueDetailCard.scrollTo({ top: 0, behavior: 'smooth' });
     venueDetailCard.scrollTop = 0;
   }
 
-  // Auto-pan Leaflet map so the active venue marker is positioned comfortably in remaining visible map
+  // Smoothly adjust Leaflet map so the active venue marker stays centered in the visible top half (the 45% remaining viewport)
   if (options.autoPanMap && leafletMapInstance && activeVenueId) {
     const activeVenue = VENUES.find(v => v.id === activeVenueId);
     if (activeVenue) {
       const isDesktop = window.innerWidth >= 768;
-      if (!isDesktop) {
-        // On mobile, apply vertical latitude offset based on sheet coverage
-        const latOffset = targetState === 'expanded' ? 0.045 : (targetState === 'mid' ? 0.018 : 0.006);
-        leafletMapInstance.panTo([activeVenue.lat - latOffset, activeVenue.lng], {
-          animate: true,
-          duration: 0.4
-        });
-      }
+      const latOffset = validState === 'expanded' ? (isDesktop ? 0.035 : 0.046) : (isDesktop ? 0.015 : 0.008);
+      leafletMapInstance.panTo([activeVenue.lat - latOffset, activeVenue.lng], {
+        animate: true,
+        duration: 0.35
+      });
     }
   }
 
+  // Single deferred map size recalculation
   setTimeout(() => {
     if (leafletMapInstance) leafletMapInstance.invalidateSize();
   }, 360);
 }
 
-// Cycle to next higher state or toggle back to peek
+// Toggle between Tier 1 (Summary) and Tier 2 (Full Expanded)
 export function cycleSheetState() {
-  if (currentSnapState === 'peek') {
-    setSnapState('mid');
-  } else if (currentSnapState === 'mid') {
-    setSnapState('expanded');
-  } else {
+  if (currentSnapState === 'expanded') {
     setSnapState('peek');
+  } else {
+    setSnapState('expanded');
   }
 }
 
 export function stepUpSheetState() {
-  if (currentSnapState === 'peek') setSnapState('mid');
-  else if (currentSnapState === 'mid') setSnapState('expanded');
+  setSnapState('expanded');
 }
 
 export function stepDownSheetState() {
-  if (currentSnapState === 'expanded') setSnapState('mid');
-  else if (currentSnapState === 'mid') setSnapState('peek');
+  setSnapState('peek');
 }
 
 // Helper to find venue and show
@@ -1117,7 +1119,7 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
       const googleCalUrl = getGoogleCalendarUrl(show);
 
       venueDynamicBody.innerHTML = `
-        <!-- Mid-State Logistics Section (Tier 2 View) -->
+        <!-- Tier 1 View: Summary, Quick Actions & Drawer Trigger -->
         <div class="venue-quick-info-row">
           <span class="quick-chip"><i class="fa-regular fa-clock"></i> Doors ${show.doorsTime || '7:00 PM'}</span>
           <span class="quick-chip"><i class="fa-solid fa-id-card"></i> ${show.ageLimit || '18+'}</span>
@@ -1140,37 +1142,37 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
           </button>
         </div>
 
-        <!-- Enhanced Set Times & Lineup Card (Clean Hierarchy, No Arrows) -->
-        <div class="set-times-card">
-          <div class="set-times-header-title">
-            <i class="fa-solid fa-clock-rotate-left fa-fw"></i> Set Times & Lineup
-          </div>
-          <div class="set-times-list">
-            ${(show.setTimes || [
-              { time: "7:00 PM", act: "Doors Open", role: "Doors" },
-              { time: "7:30 PM", act: "The Local Openers", role: "Support" },
-              { time: "8:45 PM", act: "KINS (Main Set)", role: "Headliner" }
-            ]).map(st => `
-              <div class="set-time-row">
-                <div class="set-time-left">
-                  <span class="set-time-pill">${st.time}</span>
-                  <span class="set-act-title ${st.role === 'Headliner' ? 'is-headliner' : ''}">${st.act}</span>
-                </div>
-                <span class="set-role-badge role-${st.role ? st.role.toLowerCase() : 'support'}">${st.role || 'ACT'}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Fixed Interactive Bottom Drawer Trigger (Tier 2 Bottom) -->
+        <!-- Fixed Interactive Bottom Drawer Trigger (Tier 1 Bottom) -->
         <div class="swipe-up-hint-box" id="upcomingSwipeUpTrigger" role="button" tabindex="0" title="Tap or swipe up for full details">
           <i class="fa-solid fa-chevron-up"></i>
           <span>Swipe up for Setlist preview & Song Requests</span>
         </div>
 
-        <!-- FULL STATE ONLY EXTENDED CONTENT (Revealed via swipe-up / CTA tap) -->
+        <!-- TIER 2 FULL EXTENDED CONTENT (Revealed via swipe-up / CTA tap) -->
         <div class="expanded-only-block" style="display: flex; flex-direction: column; gap: 14px;">
-          <!-- Section 1: Planned Setlist Preview -->
+          <!-- Section 1: Set Times & Lineup Card (Moved to Tier 2) -->
+          <div class="set-times-card">
+            <div class="set-times-header-title">
+              <i class="fa-solid fa-clock-rotate-left fa-fw"></i> Set Times & Lineup
+            </div>
+            <div class="set-times-list">
+              ${(show.setTimes || [
+                { time: "7:00 PM", act: "Doors Open", role: "Doors" },
+                { time: "7:30 PM", act: "The Local Openers", role: "Support" },
+                { time: "8:45 PM", act: "KINS (Main Set)", role: "Headliner" }
+              ]).map(st => `
+                <div class="set-time-row">
+                  <div class="set-time-left">
+                    <span class="set-time-pill">${st.time}</span>
+                    <span class="set-act-title ${st.role === 'Headliner' ? 'is-headliner' : ''}">${st.act}</span>
+                  </div>
+                  <span class="set-role-badge role-${st.role ? st.role.toLowerCase() : 'support'}">${st.role || 'ACT'}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Section 2: Planned Setlist Preview -->
           <div class="section-divider-bar">
             <h3 class="expanded-section-title">
               <span class="left-title"><i class="fa-solid fa-music fa-fw"></i> Planned Setlist</span>
@@ -1194,7 +1196,7 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
             </div>
           </div>
 
-          <!-- Section 2: Request a Song or Cover -->
+          <!-- Section 3: Request a Song or Cover -->
           <div class="song-request-card">
             <div class="song-request-header">
               <i class="fa-solid fa-envelope fa-fw"></i> Request a Song or Cover
@@ -1206,7 +1208,7 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
             </div>
           </div>
 
-          <!-- Section 3: Venue & Location -->
+          <!-- Section 4: Venue & Location -->
           <div class="section-divider-bar">
             <h3 class="expanded-section-title">
               <span class="left-title"><i class="fa-solid fa-location-dot fa-fw"></i> Venue & Location</span>
@@ -1228,7 +1230,7 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
             </div>
           </div>
 
-          <!-- Section 4: Past Shows at Venue (Chronological History List) -->
+          <!-- Section 5: Past Shows at Venue (Chronological History List) -->
           <div class="section-divider-bar">
             <h3 class="expanded-section-title">
               <span class="left-title"><i class="fa-solid fa-clock-rotate-left fa-fw"></i> Past Shows at Venue</span>
@@ -1253,7 +1255,7 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
             </div>
           </div>
 
-          <!-- Tier 3 Bottom Navigation Controls (Back to Top & Back to Map) -->
+          <!-- Tier 2 Bottom Navigation Controls (Back to Top & Back to Map) -->
           <div class="sheet-bottom-nav-row">
             <button type="button" class="sheet-nav-btn is-back-to-top sheet-back-to-top-btn" aria-label="Back to top of gig details">
               <i class="fa-solid fa-arrow-up"></i>
@@ -1416,45 +1418,40 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
             "Archived in 24-bit stereo soundboard master format."
           ];
 
+      const originParamArc = userLocation ? `&origin=${userLocation.lat},${userLocation.lng}` : '';
+      const directionsUrlArc = `https://www.google.com/maps/dir/?api=1${originParamArc}&destination=${encodeURIComponent(venue.name + ', ' + venue.address)}`;
+
       venueDynamicBody.innerHTML = `
-        <!-- Mid-State Logistics Section (Tier 2 View) -->
+        <!-- Tier 1 View: Summary, Quick Actions & Drawer Trigger -->
         <div class="venue-quick-info-row">
           <span class="quick-chip"><i class="fa-solid fa-box-archive"></i> Tour Archive</span>
           <span class="quick-chip"><i class="fa-solid fa-id-card"></i> ${show.ageLimit || '18+'}</span>
           <span class="quick-chip"><i class="fa-solid fa-users"></i> ${show.capacity || '500'} Cap</span>
         </div>
 
-        <!-- Recap Photos Strip (Mid State) -->
-        ${recapPhotos.length > 0 ? `
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <div class="recap-header-title">
-              <span class="left-title"><i class="fa-solid fa-camera fa-fw"></i> Gig Recap Photos</span>
-              <span class="right-hint">Swipe ➔</span>
-            </div>
-            <div class="recap-photos-strip">
-              ${recapPhotos.slice(0, 3).map(p => `
-                <div class="recap-photo-card" data-photo-url="${p.url}" data-photo-caption="${p.caption}">
-                  <img src="${p.url}" alt="${p.caption}" loading="lazy" />
-                  <div class="photo-caption">${p.caption}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-
-        <!-- Full-Width Spotify Button (Mid State) -->
-        <a href="${show.spotifyPlaylistUrl || 'https://open.spotify.com'}" target="_blank" rel="noopener noreferrer" class="spotify-as-played-btn">
-          <i class="fa-brands fa-spotify"></i>
-          <span>Play As-Played Setlist on Spotify</span>
-        </a>
-
-        <!-- Fixed Interactive Bottom Drawer Trigger (Tier 2 Bottom) -->
-        <div class="swipe-up-hint-box" id="archiveSwipeUpTrigger" role="button" tabindex="0" title="Tap or swipe up for full archive">
-          <i class="fa-solid fa-chevron-up"></i>
-          <span>Swipe up for full setlist, recordings & stats</span>
+        <!-- Quick Action Row -->
+        <div class="venue-action-chips-row">
+          <a href="${directionsUrlArc}" target="_blank" rel="noopener" class="venue-action-chip-btn" id="venueArchiveDirectionsAction" aria-label="Directions to venue">
+            <i class="fa-solid fa-diamond-turn-right"></i>
+            <span>Navigate</span>
+          </a>
+          <a href="${show.spotifyPlaylistUrl || 'https://open.spotify.com'}" target="_blank" rel="noopener noreferrer" class="venue-action-chip-btn" aria-label="Play on Spotify">
+            <i class="fa-brands fa-spotify" style="color: #1db954 !important;"></i>
+            <span>Spotify</span>
+          </a>
+          <button type="button" class="venue-action-chip-btn" id="venueArchiveShareAction" aria-label="Share show details">
+            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+            <span>Share</span>
+          </button>
         </div>
 
-        <!-- FULL STATE ONLY EXTENDED CONTENT (Revealed via swipe-up / CTA tap) -->
+        <!-- Fixed Interactive Bottom Drawer Trigger (Tier 1 Bottom) -->
+        <div class="swipe-up-hint-box" id="archiveSwipeUpTrigger" role="button" tabindex="0" title="Tap or swipe up for full archive">
+          <i class="fa-solid fa-chevron-up"></i>
+          <span>Swipe up for Setlist, recordings & photos</span>
+        </div>
+
+        <!-- TIER 2 FULL EXTENDED CONTENT (Revealed via swipe-up / CTA tap) -->
         <div class="expanded-only-block" style="display: flex; flex-direction: column; gap: 14px;">
           <!-- Section 1: Official Photos & Media Gallery -->
           ${recapPhotos.length > 0 ? `
@@ -1536,7 +1533,7 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
             </div>
           </div>
 
-          <!-- Tier 3 Bottom Navigation Controls (Back to Top & Back to Map) -->
+          <!-- Tier 2 Bottom Navigation Controls (Back to Top & Back to Map) -->
           <div class="sheet-bottom-nav-row">
             <button type="button" class="sheet-nav-btn is-back-to-top sheet-back-to-top-btn" aria-label="Back to top of gig details">
               <i class="fa-solid fa-arrow-up"></i>
@@ -1551,6 +1548,19 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
       `;
 
       // Wire interactive events for archive components
+      const dirBtnArc = document.getElementById('venueArchiveDirectionsAction');
+      if (dirBtnArc) {
+        dirBtnArc.onclick = (e) => {
+          e.preventDefault();
+          calculateAndRenderRoute(venue);
+        };
+      }
+
+      const shareBtnArc = document.getElementById('venueArchiveShareAction');
+      if (shareBtnArc) {
+        shareBtnArc.onclick = () => triggerShareShow(venue, show);
+      }
+
       const swipeUpArc = document.getElementById('archiveSwipeUpTrigger');
       if (swipeUpArc) {
         swipeUpArc.onclick = (e) => {
@@ -1680,20 +1690,27 @@ export function filterGigs(category) {
   
   // Update filter buttons
   document.querySelectorAll('.gig-filter-tab').forEach(tab => {
-    if (tab.getAttribute('data-filter') === category) {
+    const isAct = tab.getAttribute('data-filter') === category;
+    if (isAct) {
       tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
     } else {
       tab.classList.remove('active');
+      tab.setAttribute('aria-selected', 'false');
     }
   });
 
-  // Filter venues
+  // Update active indicator dot on the filter toggle button
+  const activeDot = document.getElementById('filterActiveDot');
+  if (activeDot) {
+    activeDot.style.display = category !== 'all' ? 'block' : 'none';
+  }
+
+  // Filter venues by All, Upcoming, or Past
   const matchingVenues = VENUES.filter(v => {
     if (category === 'all') return true;
     if (category === 'upcoming') return v.shows.some(s => s.type === 'upcoming');
     if (category === 'past') return v.shows.some(s => s.type === 'past');
-    if (category === 'newcastle') return v.region === 'newcastle';
-    if (category === 'sydney') return v.region === 'sydney';
     return true;
   });
 
@@ -2023,15 +2040,37 @@ export function initGigMapModule() {
   }
   updateFloatingPill();
 
-  // Setup Filter Tabs
+  // Setup Horizontal Expanding Filter Toolbar
+  const filterToolbar = document.getElementById('expandingFilterToolbar');
+  const filterToggleBtn = document.getElementById('gigFilterToggleBtn');
+
+  if (filterToggleBtn && filterToolbar) {
+    filterToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      filterToolbar.classList.toggle('is-expanded');
+    });
+
+    // Collapse when tapping outside
+    document.addEventListener('click', (e) => {
+      if (filterToolbar && !filterToolbar.contains(e.target)) {
+        filterToolbar.classList.remove('is-expanded');
+      }
+    });
+  }
+
+  // Setup Filter Tabs (All, Upcoming, Archived)
   document.querySelectorAll('.gig-filter-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
+    tab.addEventListener('click', (e) => {
+      e.stopPropagation();
       const filter = tab.getAttribute('data-filter');
       filterGigs(filter || 'all');
+      if (filterToolbar) {
+        filterToolbar.classList.remove('is-expanded');
+      }
     });
   });
 
-  // Initialize selector pills row
+  // Initialize selector pills row with default 'all'
   filterGigs('all');
 
   async function ensureLeafletLoaded() {
@@ -2175,20 +2214,22 @@ export function initGigMapModule() {
   }
 
   // ==========================================================================
-  // 3-TIER FLUID BOTTOM SHEET GESTURE ENGINE (Peek / Mid / Expanded)
+  // 2-TIER GPU-ACCELERATED BOTTOM SHEET GESTURE ENGINE (Peek vs Expanded)
   // ==========================================================================
   const venueCardHeader = document.getElementById('venueCardHeader');
   const desktopSnapToggleBtn = document.getElementById('desktopSnapToggleBtn');
 
   let isDraggingSheet = false;
   let dragStartY = 0;
-  let dragStartHeight = 0;
+  let dragStartTranslateY = 0;
+  let currentDragTranslateY = 0;
   let dragStartTime = 0;
   let lastTouchY = 0;
   let lastTouchTime = 0;
   let dragInitiatedFromContent = false;
+  let dragRafId = null;
 
-  // --- MOBILE TOUCH GESTURE ENGINE (TouchStart / TouchMove / TouchEnd) ---
+  // --- MOBILE TOUCH GESTURE ENGINE (TouchStart / TouchMove / TouchEnd with GPU translate3d) ---
   if (venueDetailCard) {
     // 1. Touch Start
     venueDetailCard.addEventListener('touchstart', (e) => {
@@ -2200,13 +2241,20 @@ export function initGigMapModule() {
       lastTouchY = touch.clientY;
       dragStartTime = performance.now();
       lastTouchTime = dragStartTime;
-      dragStartHeight = venueDetailCard.getBoundingClientRect().height;
+
+      const snapHeights = getSnapHeights();
+      dragStartTranslateY = (currentSnapState === 'peek') ? snapHeights.maxTranslateY : 0;
+      currentDragTranslateY = dragStartTranslateY;
       dragInitiatedFromContent = false;
 
       // Check touch origination - allow interactive elements to receive taps cleanly
       const target = e.target;
       const isInteractive = target.closest('button') || 
                             target.closest('a') || 
+                            target.closest('input') ||
+                            target.closest('.gig-bottom-sheet-attached-header') ||
+                            target.closest('.expanding-filter-toolbar') ||
+                            target.closest('.gig-selector-pills-row') ||
                             target.closest('.swipe-up-hint-box') || 
                             target.closest('.sheet-nav-btn') || 
                             target.closest('.copy-address-btn') || 
@@ -2214,6 +2262,7 @@ export function initGigMapModule() {
                             target.closest('.as-played-item') || 
                             target.closest('.venue-history-card-row') || 
                             target.closest('.recap-photo-card') ||
+                            target.closest('.official-photo-card') ||
                             target.closest('.venue-checkin-btn') ||
                             target.closest('.venue-booking-btn');
 
@@ -2237,84 +2286,91 @@ export function initGigMapModule() {
       }
     }, { passive: true });
 
-    // 2. Touch Move
+    // 2. Touch Move (Batched via requestAnimationFrame)
     venueDetailCard.addEventListener('touchmove', (e) => {
       if (window.innerWidth >= 768) return;
       if (e.touches.length !== 1) return;
 
       const touch = e.touches[0];
       const currentY = touch.clientY;
-      const deltaY = dragStartY - currentY; // Positive = pulling UP, Negative = pulling DOWN
+      const deltaY = currentY - dragStartY; // Positive = pulling DOWN, Negative = pulling UP
       const now = performance.now();
 
       lastTouchY = currentY;
       lastTouchTime = now;
 
-      // Check if pulling down from top of scrollable content
+      // Check if pulling down from top of scrollable content in Expanded state
       if (!isDraggingSheet && dragInitiatedFromContent) {
-        if (venueDetailCard.scrollTop <= 0 && deltaY < -10) {
-          // Hand-off: switch to dragging the sheet
+        if (venueDetailCard.scrollTop <= 0 && deltaY > 10) {
+          // Hand-off: switch to dragging the sheet down
           isDraggingSheet = true;
           venueDetailCard.classList.add('is-dragging');
           dragStartY = currentY; // Reset anchor to avoid jump
-          dragStartHeight = venueDetailCard.getBoundingClientRect().height;
+          dragStartTranslateY = 0; // Top position
         }
       }
 
       if (isDraggingSheet) {
-        // Prevent background viewport bounce
+        // Prevent background viewport bounce/scroll
         if (e.cancelable) e.preventDefault();
 
         const snapHeights = getSnapHeights();
-        let targetHeight = dragStartHeight + deltaY;
+        let targetY = dragStartTranslateY + deltaY;
 
         // Apply logarithmic rubber-band resistance beyond limits
-        if (targetHeight < snapHeights.peek) {
-          const under = snapHeights.peek - targetHeight;
-          targetHeight = snapHeights.peek - Math.pow(under, 0.72);
-        } else if (targetHeight > snapHeights.expanded) {
-          const over = targetHeight - snapHeights.expanded;
-          targetHeight = snapHeights.expanded + Math.pow(over, 0.72);
+        if (targetY < 0) {
+          // Dragging UP past expanded top (resistance)
+          targetY = -Math.pow(Math.abs(targetY), 0.72);
+        } else if (targetY > snapHeights.maxTranslateY) {
+          // Dragging DOWN past peek bottom (resistance)
+          const over = targetY - snapHeights.maxTranslateY;
+          targetY = snapHeights.maxTranslateY + Math.pow(over, 0.72);
         }
 
-        venueDetailCard.style.height = `${Math.round(targetHeight)}px`;
+        currentDragTranslateY = targetY;
+
+        // GPU translate3d throttled strictly to display refresh rate
+        if (!dragRafId) {
+          dragRafId = requestAnimationFrame(() => {
+            venueDetailCard.style.transform = `translate3d(0, ${Math.round(currentDragTranslateY)}px, 0)`;
+            dragRafId = null;
+          });
+        }
       }
     }, { passive: false });
 
     // 3. Touch End / Cancel
     const handleTouchEnd = (e) => {
+      if (dragRafId) {
+        cancelAnimationFrame(dragRafId);
+        dragRafId = null;
+      }
+
       if (!isDraggingSheet) return;
       isDraggingSheet = false;
       venueDetailCard.classList.remove('is-dragging');
 
       const endTime = performance.now();
       const timeDiff = Math.max(1, endTime - dragStartTime);
-      const totalDeltaY = dragStartY - lastTouchY; // Positive = UP, Negative = DOWN
       const velocity = (lastTouchY - dragStartY) / timeDiff; // px/ms (Positive = DOWN, Negative = UP)
-      const currentHeight = venueDetailCard.getBoundingClientRect().height;
       const snapHeights = getSnapHeights();
 
       // Velocity-based dynamic snapping
-      if (velocity < -0.42) {
-        // High-speed flick UP
-        if (currentSnapState === 'peek') setSnapState('mid');
-        else setSnapState('expanded');
+      if (velocity < -0.3) {
+        // Flick UP -> Expand to Tier 2
+        setSnapState('expanded');
         return;
-      } else if (velocity > 0.42) {
-        // High-speed flick DOWN
-        if (currentSnapState === 'expanded') setSnapState('mid');
-        else setSnapState('peek');
+      } else if (velocity > 0.3) {
+        // Flick DOWN -> Collapse to Tier 1
+        setSnapState('peek');
         return;
       }
 
-      // Distance / Threshold snapping based on release height
-      const midThreshold1 = (snapHeights.peek + snapHeights.mid) / 2;
-      const midThreshold2 = (snapHeights.mid + snapHeights.expanded) / 2;
+      // Distance / Threshold snapping based on release translation
+      const midThreshold = snapHeights.maxTranslateY / 2;
 
-      if (currentHeight < midThreshold1) {
+      if (currentDragTranslateY > midThreshold) {
         setSnapState('peek');
-      } else if (currentHeight < midThreshold2) {
-        setSnapState('mid');
       } else {
         setSnapState('expanded');
       }
@@ -2323,7 +2379,7 @@ export function initGigMapModule() {
     venueDetailCard.addEventListener('touchend', handleTouchEnd, { passive: true });
     venueDetailCard.addEventListener('touchcancel', handleTouchEnd, { passive: true });
 
-    // Tap on drag handle toggles snap states
+    // Tap on drag handle toggles between Tier 1 and Tier 2
     if (sheetDragHandle) {
       sheetDragHandle.addEventListener('click', (e) => {
         // Only trigger click if not dragged significantly
@@ -2333,17 +2389,17 @@ export function initGigMapModule() {
       });
     }
 
-    // Header click in peek state expands to mid
+    // Header click in Tier 1 state expands to Tier 2
     if (venueCardHeader) {
       venueCardHeader.addEventListener('click', (e) => {
         if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input')) return; // Ignore interactive clicks
         if (currentSnapState === 'peek') {
-          setSnapState('mid');
+          setSnapState('expanded');
         }
       });
     }
 
-    // Close button on State 3 / Full
+    // Close button on State 2 / Full
     const sheetCloseFullBtn = document.getElementById('sheetCloseFullBtn');
     if (sheetCloseFullBtn) {
       sheetCloseFullBtn.addEventListener('click', (e) => {
@@ -2352,15 +2408,11 @@ export function initGigMapModule() {
       });
     }
 
-    // Desktop toggle button
+    // Desktop toggle button (toggles between Tier 1 & Tier 2)
     if (desktopSnapToggleBtn) {
       desktopSnapToggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (currentSnapState === 'expanded' || currentSnapState === 'mid') {
-          setSnapState('peek');
-        } else {
-          setSnapState('expanded');
-        }
+        cycleSheetState();
       });
     }
   }
@@ -2380,7 +2432,7 @@ export function initGigMapModule() {
         closePhotoLightbox();
         return;
       }
-      if (currentSnapState === 'expanded' || currentSnapState === 'mid') {
+      if (currentSnapState === 'expanded') {
         e.preventDefault();
         setSnapState('peek');
       } else {
@@ -2408,9 +2460,9 @@ export function initGigMapModule() {
       const pair = findVenueAndShow(gigOrVenueId || activeGigId || activeVenueId);
       displayVenueDetails(pair.venue, pair.show);
       
-      // Default to Mid if opened via hero Next Show CTA, or Peek if browsing
+      // Default to Tier 1 ('peek') on mobile, 'expanded' on desktop
       const isDesktop = window.innerWidth >= 768;
-      const targetState = initialSnapState || (isDesktop ? 'expanded' : 'mid');
+      const targetState = initialSnapState || (isDesktop ? 'expanded' : 'peek');
       setSnapState(targetState, { animate: true, autoPanMap: true });
       
       // Ensure Leaflet recalculates viewport sizes properly
@@ -2422,8 +2474,7 @@ export function initGigMapModule() {
 
   if (floatingGigPillBtn && gigMapModal) {
     floatingGigPillBtn.addEventListener('click', async () => {
-      // Direct opening from Hero CTA starts in 'mid'
-      await window.openGigMap(undefined, 'mid');
+      await window.openGigMap(undefined, 'peek');
     });
   }
 
@@ -2534,7 +2585,7 @@ export function initGigMapModule() {
       const pair = findVenueAndShow(showId || venueId);
       if (pair.venue) {
         displayVenueDetails(pair.venue, pair.show);
-        setSnapState('mid');
+        setSnapState('peek');
       }
     }
   });
@@ -2544,7 +2595,7 @@ export function initGigMapModule() {
   const requestedGig = urlParams.get('gig') || urlParams.get('venue');
   if (requestedGig || window.location.hash === '#gig-map') {
     setTimeout(() => {
-      window.openGigMap(requestedGig || undefined, 'mid');
+      window.openGigMap(requestedGig || undefined, 'peek');
     }, 400);
   }
 }

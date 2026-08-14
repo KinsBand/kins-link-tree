@@ -100,6 +100,12 @@
           </div>
         </div>
       </div>
+      <div class="feedback-action-row">
+        <button type="button" class="open-feedback-btn" id="openFeedbackFromContactsBtn">
+          <i class="fa-solid fa-lightbulb"></i>
+          <span>Suggest Improvement or Report Issue</span>
+        </button>
+      </div>
     </div>
   </div>
 </section>
@@ -502,9 +508,36 @@
     font-weight: 800;
   }
 
-  .send-email-btn:hover {
-    background: var(--btn-green-hover);
-    color: #000000;
+  .feedback-action-row {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  }
+
+  .open-feedback-btn {
+    width: 100%;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #fbbf24;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    transition: all 0.18s ease;
+  }
+
+  .open-feedback-btn:hover {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.45);
+    color: #fef08a;
+    transform: translateY(-1px);
   }
 </style>
 
@@ -674,5 +707,11 @@
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
     });
+  });
+
+  document.getElementById('openFeedbackFromContactsBtn')?.addEventListener('click', () => {
+    const feedbackModal = document.getElementById('feedbackModal');
+    feedbackModal?.classList.remove('hidden');
+    document.body.classList.add('modal-open');
   });
 </script>

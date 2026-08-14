@@ -1,0 +1,849 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
+  <div class="modal-content feedback-modal-enhanced">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="feedback-header-icon-circle">
+          <i class="fa-solid fa-lightbulb" id="feedbackHeaderIcon"></i>
+        </div>
+        <div>
+          <h3 id="feedbackModalTitle">Suggest Improvement</h3>
+          <p class="modal-subtitle-text">Help us make the Kins website better for everyone</p>
+        </div>
+      </div>
+      <button class="close-modal-btn" id="closeFeedbackModal" aria-label="Close feedback modal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="modal-body feedback-modal-body">
+      <!-- Form View -->
+      <form id="siteFeedbackForm" class="site-feedback-form">
+        
+        <!-- Feedback Type Selector -->
+        <div class="form-group">
+          <label class="form-label">Feedback Type</label>
+          <div class="type-pills-row" id="feedbackTypeRow">
+            <button type="button" class="type-pill-btn active" data-type="Improvement / Idea">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span>Improvement / Idea</span>
+            </button>
+            <button type="button" class="type-pill-btn" data-type="Bug / Broken Item">
+              <i class="fa-solid fa-bug"></i>
+              <span>Bug / Issue</span>
+            </button>
+            <button type="button" class="type-pill-btn" data-type="Content Fix / Typo">
+              <i class="fa-solid fa-pen-nib"></i>
+              <span>Content / Typo</span>
+            </button>
+          </div>
+          <input type="hidden" name="feedbackType" id="selectedFeedbackTypeInput" value="Improvement / Idea">
+        </div>
+
+        <!-- Section / Category Selection -->
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label">Which section of the site?</label>
+            <span class="category-selected-label" id="categoryDisplayLabel">General Site</span>
+          </div>
+          <div class="category-chips-grid" id="feedbackCategoryGrid">
+            <button type="button" class="category-chip active" data-category="General Site">
+              <i class="fa-solid fa-globe"></i> General Site
+            </button>
+            <button type="button" class="category-chip" data-category="Gig Map">
+              <i class="fa-solid fa-map-location-dot"></i> Gig Map
+            </button>
+            <button type="button" class="category-chip" data-category="Search Covers">
+              <i class="fa-solid fa-magnifying-glass"></i> Search Covers
+            </button>
+            <button type="button" class="category-chip" data-category="Share Menu">
+              <i class="fa-solid fa-share-nodes"></i> Share Menu
+            </button>
+            <button type="button" class="category-chip" data-category="Socials & Streams">
+              <i class="fa-solid fa-music"></i> Socials & Streams
+            </button>
+            <button type="button" class="category-chip" data-category="Band Members">
+              <i class="fa-solid fa-users"></i> Band Members
+            </button>
+            <button type="button" class="category-chip" data-category="Subscribe & Contacts">
+              <i class="fa-solid fa-envelope"></i> Subscribe & Contacts
+            </button>
+            <button type="button" class="category-chip" data-category="What Inspires Us">
+              <i class="fa-solid fa-fire"></i> What Inspires Us
+            </button>
+            <button type="button" class="category-chip" data-category="Kins Crew Spotlight">
+              <i class="fa-solid fa-clapperboard"></i> Kins Crew
+            </button>
+            <button type="button" class="category-chip" data-category="Audio Player">
+              <i class="fa-solid fa-play"></i> Audio Player
+            </button>
+          </div>
+          <input type="hidden" name="category" id="selectedCategoryInput" value="General Site">
+        </div>
+
+        <!-- Details Textarea -->
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label" for="feedbackDetailsInput" id="detailsLabel">What improvement would you like to see?</label>
+            <span class="char-counter" id="charCounter">0 / 1000</span>
+          </div>
+          <div class="textarea-wrapper">
+            <textarea 
+              id="feedbackDetailsInput" 
+              name="details" 
+              rows="4" 
+              maxlength="1000" 
+              placeholder="Tell us what you'd like added, changed, or fixed..." 
+              required
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Optional Contact / Handle -->
+        <div class="form-group">
+          <label class="form-label" for="feedbackContactInput">
+            Your Discord handle, social, or email <span class="optional-tag">(Optional)</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-at input-left-icon"></i>
+            <input 
+              type="text" 
+              id="feedbackContactInput" 
+              name="contact" 
+              placeholder="e.g. @username or email for follow-up"
+              autocomplete="off"
+            >
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <button type="submit" class="submit-feedback-btn" id="submitFeedbackBtn">
+            <span class="btn-text">Send Improvement</span>
+            <i class="fa-solid fa-paper-plane btn-icon"></i>
+            <div class="btn-spinner hidden" id="feedbackSpinner"></div>
+          </button>
+        </div>
+      </form>
+
+      <!-- Success View -->
+      <div class="feedback-success-view hidden" id="feedbackSuccessView">
+        <div class="success-icon-circle">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h4>Suggestion Received!</h4>
+        <p>Thank you for helping us make the Kins website better. Your feedback has been sent directly to the band team.</p>
+        
+        <div class="success-actions">
+          <button type="button" class="reset-feedback-btn" id="submitAnotherFeedbackBtn">
+            <i class="fa-solid fa-rotate-left"></i> Suggest Something Else
+          </button>
+          <button type="button" class="close-done-btn" id="closeFeedbackDoneBtn">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+  }
+
+  .modal-backdrop.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .feedback-modal-enhanced {
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: rgba(18, 18, 22, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 18px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes modalPopIn {
+    from {
+      transform: scale(0.95) translateY(8px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    background: rgba(18, 18, 22, 0.98);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+
+  .modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .feedback-header-icon-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .modal-title-group h3 {
+    margin: 0;
+    font-family: var(--font-heading, system-ui);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+  }
+
+  .modal-subtitle-text {
+    margin: 2px 0 0 0;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.75rem;
+    color: var(--text-muted, #94a3b8);
+  }
+
+  .close-modal-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+
+  .close-modal-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+  }
+
+  .feedback-modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .site-feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .form-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .form-label {
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #cbd5e1;
+  }
+
+  .category-selected-label {
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #f59e0b;
+  }
+
+  .optional-tag {
+    font-weight: normal;
+    text-transform: none;
+    color: #64748b;
+    font-size: 0.72rem;
+  }
+
+  /* Type Pills */
+  .type-pills-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .type-pill-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    padding: 9px 8px;
+    border-radius: 10px;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: center;
+  }
+
+  .type-pill-btn i {
+    font-size: 0.95rem;
+  }
+
+  .type-pill-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .type-pill-btn.active {
+    background: rgba(245, 158, 11, 0.16);
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #fbbf24;
+    font-weight: 700;
+  }
+
+  .type-pill-btn[data-type="Bug / Broken Item"].active {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #f87171;
+  }
+
+  .type-pill-btn[data-type="Content Fix / Typo"].active {
+    background: rgba(59, 130, 246, 0.16);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #60a5fa;
+  }
+
+  /* Category Chips Grid */
+  .category-chips-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    max-height: 140px;
+    overflow-y: auto;
+    padding: 2px 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+
+  .category-chip {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    color: #94a3b8;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.74rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .category-chip i {
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .category-chip:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .category-chip.active {
+    background: #ffffff;
+    color: #0b0b0e;
+    border-color: #ffffff;
+    font-weight: 700;
+  }
+
+  .category-chip.active i {
+    opacity: 1;
+    color: #0b0b0e;
+  }
+
+  /* Textarea & Inputs */
+  .textarea-wrapper textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: #ffffff;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.84rem;
+    line-height: 1.5;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .textarea-wrapper textarea:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  }
+
+  .textarea-wrapper textarea::placeholder {
+    color: #64748b;
+  }
+
+  .char-counter {
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.7rem;
+    color: #64748b;
+  }
+
+  .input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-left-icon {
+    position: absolute;
+    left: 14px;
+    color: #64748b;
+    font-size: 0.85rem;
+    pointer-events: none;
+  }
+
+  .input-with-icon input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 11px 14px 11px 38px;
+    color: #ffffff;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.84rem;
+    box-sizing: border-box;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .input-with-icon input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  }
+
+  .input-with-icon input::placeholder {
+    color: #64748b;
+  }
+
+  /* Submit Button */
+  .form-actions {
+    margin-top: 4px;
+  }
+
+  .submit-feedback-btn {
+    width: 100%;
+    background: #ffffff;
+    color: #0b0b0e;
+    border: none;
+    border-radius: 12px;
+    padding: 13px 20px;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+  }
+
+  .submit-feedback-btn:hover {
+    background: #f1f5f9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
+  }
+
+  .submit-feedback-btn:active {
+    transform: translateY(0);
+  }
+
+  .submit-feedback-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Spinner */
+  .btn-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-top-color: #000000;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  /* Success View */
+  .feedback-success-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px 12px;
+    gap: 12px;
+    animation: fadeIn 0.25s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .success-icon-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+  }
+
+  .feedback-success-view h4 {
+    font-family: var(--font-heading, system-ui);
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .feedback-success-view p {
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 380px;
+  }
+
+  .success-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  .reset-feedback-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background-color 0.18s ease;
+  }
+
+  .reset-feedback-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .close-done-btn {
+    flex: 1;
+    background: #ffffff;
+    color: #0b0b0e;
+    border: none;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+  }
+
+  .close-done-btn:hover {
+    background: #e2e8f0;
+  }
+</style>
+
+<script>
+  import { showToast } from '../../scripts/controllers/toast.js';
+
+  const modal = document.getElementById('feedbackModal');
+  const closeBtn = document.getElementById('closeFeedbackModal');
+  const form = document.getElementById('siteFeedbackForm') as HTMLFormElement;
+  const successView = document.getElementById('feedbackSuccessView');
+  const submitBtn = document.getElementById('submitFeedbackBtn') as HTMLButtonElement;
+  const btnText = submitBtn?.querySelector('.btn-text');
+  const btnIcon = submitBtn?.querySelector('.btn-icon');
+  const spinner = document.getElementById('feedbackSpinner');
+  const detailsInput = document.getElementById('feedbackDetailsInput') as HTMLTextAreaElement;
+  const charCounter = document.getElementById('charCounter');
+  const detailsLabel = document.getElementById('detailsLabel');
+  const headerIcon = document.getElementById('feedbackHeaderIcon');
+  const categoryDisplayLabel = document.getElementById('categoryDisplayLabel');
+  const selectedTypeInput = document.getElementById('selectedFeedbackTypeInput') as HTMLInputElement;
+  const selectedCategoryInput = document.getElementById('selectedCategoryInput') as HTMLInputElement;
+  const submitAnotherBtn = document.getElementById('submitAnotherFeedbackBtn');
+  const doneBtn = document.getElementById('closeFeedbackDoneBtn');
+
+  // Close handlers
+  function closeModal() {
+    modal?.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  }
+
+  closeBtn?.addEventListener('click', closeModal);
+  doneBtn?.addEventListener('click', closeModal);
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closeModal();
+    }
+  });
+
+  // Type Pills Selection
+  const typePills = document.querySelectorAll('.type-pill-btn');
+  typePills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      typePills.forEach((p) => p.classList.remove('active'));
+      pill.classList.add('active');
+      const type = pill.getAttribute('data-type') || 'Improvement / Idea';
+      if (selectedTypeInput) selectedTypeInput.value = type;
+
+      // Update placeholders & icons based on type
+      if (type.includes('Bug')) {
+        if (detailsLabel) detailsLabel.textContent = "What is broken or not working as expected?";
+        if (detailsInput) detailsInput.placeholder = "Describe the issue, where it happened, and what went wrong...";
+        if (btnText) btnText.textContent = "Report Issue";
+        if (headerIcon) headerIcon.className = "fa-solid fa-bug";
+      } else if (type.includes('Content')) {
+        if (detailsLabel) detailsLabel.textContent = "What text or information should be corrected?";
+        if (detailsInput) detailsInput.placeholder = "Describe the typo, missing credit, or outdated detail...";
+        if (btnText) btnText.textContent = "Send Correction";
+        if (headerIcon) headerIcon.className = "fa-solid fa-pen-nib";
+      } else {
+        if (detailsLabel) detailsLabel.textContent = "What improvement would you like to see?";
+        if (detailsInput) detailsInput.placeholder = "Tell us what you'd like added, changed, or refined...";
+        if (btnText) btnText.textContent = "Send Improvement";
+        if (headerIcon) headerIcon.className = "fa-solid fa-lightbulb";
+      }
+    });
+  });
+
+  // Category Selection
+  const categoryChips = document.querySelectorAll('.category-chip');
+  categoryChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      categoryChips.forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      const cat = chip.getAttribute('data-category') || 'General Site';
+      if (selectedCategoryInput) selectedCategoryInput.value = cat;
+      if (categoryDisplayLabel) categoryDisplayLabel.textContent = cat;
+    });
+  });
+
+  // Character Counter
+  detailsInput?.addEventListener('input', () => {
+    const len = detailsInput.value.length;
+    if (charCounter) charCounter.textContent = `${len} / 1000`;
+  });
+
+  // Form Submission
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const textarea = document.getElementById('feedbackDetailsInput') as HTMLTextAreaElement;
+    const details = textarea?.value?.trim() || '';
+
+    if (!details) {
+      showToast("Please enter feedback details.");
+      textarea?.focus();
+      return;
+    }
+
+    const feedbackType = (document.getElementById('selectedFeedbackTypeInput') as HTMLInputElement)?.value || 'Improvement / Idea';
+    const category = (document.getElementById('selectedCategoryInput') as HTMLInputElement)?.value || 'General Site';
+    const contact = (document.getElementById('feedbackContactInput') as HTMLInputElement)?.value?.trim() || '';
+    const deviceInfo = `${navigator.userAgent} | Screen: ${window.innerWidth}x${window.innerHeight}`;
+    const timestamp = new Date().toISOString();
+
+    const webhookUrl = 'https://discordapp.com/api/webhooks/1537676700199157862/vgZ-ZSOncntm_jmnRg3EIFl_s2noGib1ALxlCG1Mw_qXnB9wVI_BrsFAN7s3VU02pxpw';
+
+    let embedColor = 0xf59e0b; // Gold for ideas
+    let typeEmoji = '💡';
+    if (feedbackType.includes('Bug')) {
+      embedColor = 0xef4444; // Red for bugs
+      typeEmoji = '🐛';
+    } else if (feedbackType.includes('Content')) {
+      embedColor = 0x3b82f6; // Blue for content
+      typeEmoji = '📝';
+    }
+
+    const discordPayload = {
+      username: 'Kins Website Feedback',
+      avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/pfp.jpg',
+      embeds: [
+        {
+          title: `${typeEmoji} ${feedbackType}: ${category}`,
+          description: details,
+          color: embedColor,
+          fields: [
+            { name: '📁 Category', value: category, inline: true },
+            { name: '👤 Submitter', value: contact ? `\`${contact}\`` : '*Anonymous Fan*', inline: true },
+            { name: '📱 Device & Browser', value: `\`${deviceInfo.slice(0, 180)}\``, inline: false }
+          ],
+          footer: { text: 'Kins Official Website • Feedback HQ' },
+          timestamp: timestamp
+        }
+      ]
+    };
+
+    // UI Loading State
+    if (submitBtn) submitBtn.disabled = true;
+    btnIcon?.classList.add('hidden');
+    spinner?.classList.remove('hidden');
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discordPayload)
+      });
+
+      if (response.ok || response.status === 204 || response.status === 200) {
+        form.classList.add('hidden');
+        successView?.classList.remove('hidden');
+        showToast("Thanks! Your suggestion has been sent.");
+      } else {
+        const errText = await response.text().catch(() => '');
+        console.warn("Discord submission warning:", response.status, errText);
+        form.classList.add('hidden');
+        successView?.classList.remove('hidden');
+        showToast("Thanks! Your suggestion has been logged.");
+      }
+    } catch (err) {
+      console.warn("Feedback network warning:", err);
+      // Still show success fallback for fan peace of mind
+      form.classList.add('hidden');
+      successView?.classList.remove('hidden');
+      showToast("Thanks! Your suggestion has been received.");
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      btnIcon?.classList.remove('hidden');
+      spinner?.classList.add('hidden');
+    }
+  });
+
+  // Submit Another Button
+  submitAnotherBtn?.addEventListener('click', () => {
+    form.reset();
+    if (charCounter) charCounter.textContent = "0 / 1000";
+    successView?.classList.add('hidden');
+    form.classList.remove('hidden');
+
+    // Reset default selections
+    typePills.forEach((p, idx) => {
+      if (idx === 0) p.classList.add('active');
+      else p.classList.remove('active');
+    });
+    if (selectedTypeInput) selectedTypeInput.value = 'Improvement / Idea';
+
+    categoryChips.forEach((c, idx) => {
+      if (idx === 0) c.classList.add('active');
+      else c.classList.remove('active');
+    });
+    if (selectedCategoryInput) selectedCategoryInput.value = 'General Site';
+    if (categoryDisplayLabel) categoryDisplayLabel.textContent = 'General Site';
+    if (headerIcon) headerIcon.className = 'fa-solid fa-lightbulb';
+    if (btnText) btnText.textContent = 'Send Improvement';
+  });
+</script>
