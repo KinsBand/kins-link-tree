@@ -680,39 +680,91 @@ body.modal-open {
   border: 1px solid rgba(255, 255, 255, 0.16) !important;
   border-radius: 8px !important;
   overflow: hidden !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  background: rgba(14, 14, 18, 0.92) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-.leaflet-bar a {
-  background-color: rgba(14, 14, 18, 0.9) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  color: #fff !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  transition: background-color 0.18s ease, color 0.18s ease !important;
+.leaflet-bar a,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 34px !important;
+  background-color: transparent !important;
+  color: #f2f0eb !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: var(--font-secondary), -apple-system, sans-serif !important;
+  font-size: 1.18rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  user-select: none !important;
+  text-decoration: none !important;
+  padding: 0 !important;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.leaflet-bar a:hover {
-  background-color: rgba(30, 30, 36, 0.98) !important;
-  color: #ffffff !important;
+.leaflet-control-zoom-in {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
-.leaflet-bar a.leaflet-disabled {
-  background-color: rgba(10, 10, 14, 0.7) !important;
-  color: #555 !important;
+.leaflet-control-zoom-out {
+  border-bottom: none !important;
+}
+
+.leaflet-control-zoom-in span,
+.leaflet-control-zoom-out span {
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transform: translateY(-1px) !important;
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+}
+
+.leaflet-bar a:hover,
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background-color: #f2f0eb !important;
+  color: #0a0a0c !important;
+}
+
+.leaflet-bar a:active,
+.leaflet-control-zoom-in:active,
+.leaflet-control-zoom-out:active {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  transform: scale(0.96);
+}
+
+.leaflet-bar a.leaflet-disabled,
+.leaflet-control-zoom a.leaflet-disabled {
+  background-color: transparent !important;
+  color: #71717a !important;
+  opacity: 0.28 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
 }
 
 @media (min-width: 768px) {
   .leaflet-top.leaflet-left {
-    top: 24px !important;
-    left: 24px !important;
+    top: 86px !important;
+    left: 20px !important;
   }
 }
 
 @media (max-width: 767px) {
   .leaflet-top.leaflet-left {
-    top: 8px !important;
-    left: 8px !important;
+    top: 72px !important;
+    left: 14px !important;
   }
 }
 
@@ -789,7 +841,7 @@ body.modal-open {
 /* Custom Floating Map Controls */
 .map-floating-overlay-controls {
   position: absolute;
-  top: 14px;
+  top: 72px;
   right: 14px;
   z-index: 500;
   display: flex;
@@ -798,24 +850,33 @@ body.modal-open {
   pointer-events: auto;
 }
 
+@media (min-width: 768px) {
+  .map-floating-overlay-controls {
+    top: 20px;
+    right: 20px;
+  }
+}
+
 .map-control-glass-btn {
-  background: rgba(14, 14, 18, 0.9);
+  background: rgba(14, 14, 18, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #f2f0eb;
   width: 36px;
   height: 36px;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 0.88rem;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
-  transition: all 0.2s var(--ease-snappy);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .map-control-glass-btn:hover {
@@ -823,10 +884,35 @@ body.modal-open {
   border-color: #f2f0eb;
   color: #0a0a0c;
   transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8), 0 0 12px rgba(255, 255, 255, 0.2);
 }
 
 .map-control-glass-btn:active {
-  transform: translateY(0);
+  transform: scale(0.94);
+}
+
+.map-control-glass-btn.is-active {
+  border-color: #f2f0eb;
+  color: #0a0a0c;
+  background: #f2f0eb;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.35);
+}
+
+/* Desktop-only button refinement: strictly hidden on mobile, visible on desktop */
+.desktop-only,
+.map-control-glass-btn.desktop-only {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+@media (min-width: 768px) {
+  .desktop-only,
+  .map-control-glass-btn.desktop-only {
+    display: inline-flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
 }
 
 /* Concert Photo Lightbox Modal */

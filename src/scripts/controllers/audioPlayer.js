@@ -3,6 +3,7 @@ import { getITunesTrackData, loadAlbumArt, INSPIRED_ARTISTS_DATA } from './inspi
 
 let isPlayingAudio = false;
 let currentPlayingTrack = null;
+let hasTransitionedToActive = false;
 
 // Realistic Web Audio API Vinyl Scratch Synthesizer
 class VinylScratchSynthesizer {
@@ -316,7 +317,9 @@ export function initAudioPlayer() {
 
     const deckMusicSection = document.getElementById('deckMusicSection');
 
-    // Trigger synchronized curtain-wipe animation smoothly without synchronous forced reflow
+    if (deckIdleView) deckIdleView.classList.add('hidden');
+    if (deckActiveView) deckActiveView.classList.remove('hidden');
+
     if (deckMusicSection) {
       deckMusicSection.classList.remove('is-transitioning');
       requestAnimationFrame(() => {
@@ -324,18 +327,14 @@ export function initAudioPlayer() {
       });
     }
 
-    // At the end of the wipe animation (850ms), finalize DOM state & show stylus
-    setTimeout(() => {
-      if (deckIdleView) deckIdleView.classList.add('hidden');
-      if (deckActiveView) deckActiveView.classList.remove('hidden');
-      if (deckMusicSection) deckMusicSection.classList.remove('is-transitioning');
-      updateCachedMusicSectionRect();
+    updateCachedMusicSectionRect();
 
-      // Show the vinyl stylus after the active view has revealed
+    setTimeout(() => {
+      if (deckMusicSection) deckMusicSection.classList.remove('is-transitioning');
       if (vinylStylusWrapper) {
         vinylStylusWrapper.classList.add('stylus-visible');
       }
-    }, 850);
+    }, 450);
   }
 
   function showIdleView() {

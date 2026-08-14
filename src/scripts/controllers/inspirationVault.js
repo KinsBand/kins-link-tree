@@ -83,11 +83,14 @@ export async function getITunesTrackData(artist, title) {
   
   const fetchPromise = (async () => {
     try {
-      const cleanTitle = title.replace(/[!?"\\']/g, '').trim();
-      const query = encodeURIComponent(`${artist} ${cleanTitle}`);
+      const cleanTitle = (title || '').replace(/\(.*\)/g, '').replace(/\[.*\]/g, '').replace(/[!?"\\']/g, '').trim();
+      const cleanArtist = (artist && artist !== 'Kins' && !artist.toLowerCase().includes('kins') && !artist.toLowerCase().includes('unreleased'))
+        ? artist.replace(/\(.*\)/g, '').replace(/\[.*\]/g, '').trim()
+        : '';
+      const query = encodeURIComponent(`${cleanArtist} ${cleanTitle}`.trim());
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
       
       let res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`, {
         signal: controller.signal,
@@ -99,7 +102,7 @@ export async function getITunesTrackData(artist, title) {
       if (!data.results || data.results.length === 0) {
         const fallbackQuery = encodeURIComponent(cleanTitle);
         const fallbackController = new AbortController();
-        const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 3500);
+        const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 4000);
         
         res = await fetch(`https://itunes.apple.com/search?term=${fallbackQuery}&entity=song&limit=1`, {
           signal: fallbackController.signal,

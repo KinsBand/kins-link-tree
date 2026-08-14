@@ -27,8 +27,8 @@
         <button type="button" class="map-control-glass-btn" id="mapFitBoundsBtn" title="Fit all tour venues in view" aria-label="Fit All Venues">
           <i class="fa-solid fa-expand"></i>
         </button>
-        <button type="button" class="map-control-glass-btn desktop-only" id="toggleMapDetailsBtn" title="Toggle between map and details view" aria-label="Toggle Full Map">
-          <i class="fa-solid fa-map"></i>
+        <button type="button" class="map-control-glass-btn desktop-only" id="toggleMapDetailsBtn" title="Toggle venue details panel" aria-label="Toggle Details Panel">
+          <i class="fa-solid fa-layer-group"></i>
         </button>
       </div>
     </div>
@@ -536,6 +536,138 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    pointer-events: auto;
+  }
+
+  .map-control-glass-btn {
+    background: rgba(14, 14, 18, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #f2f0eb;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .map-control-glass-btn:hover {
+    background: #f2f0eb;
+    border-color: #f2f0eb;
+    color: #0a0a0c;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8), 0 0 12px rgba(255, 255, 255, 0.2);
+  }
+
+  .map-control-glass-btn:active {
+    transform: scale(0.94);
+  }
+
+  .map-control-glass-btn.is-active {
+    background: #f2f0eb;
+    border-color: #f2f0eb;
+    color: #0a0a0c;
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.35);
+  }
+
+  /* Desktop-only button refinement: strictly hidden on mobile, visible on desktop */
+  .desktop-only,
+  .map-control-glass-btn.desktop-only {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Leaflet Custom Glass Zoom Controls */
+  :global(.leaflet-top.leaflet-left) {
+    top: 72px !important;
+    left: 14px !important;
+    pointer-events: auto !important;
+  }
+
+  :global(.leaflet-control-zoom.leaflet-bar) {
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: rgba(14, 14, 18, 0.92) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
+  }
+
+  :global(.leaflet-control-zoom-in),
+  :global(.leaflet-control-zoom-out) {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 34px !important;
+    background: transparent !important;
+    color: #f2f0eb !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: var(--font-secondary), -apple-system, sans-serif !important;
+    font-size: 1.18rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    user-select: none !important;
+    text-decoration: none !important;
+    padding: 0 !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :global(.leaflet-control-zoom-in) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  }
+
+  :global(.leaflet-control-zoom-out) {
+    border-bottom: none !important;
+  }
+
+  :global(.leaflet-control-zoom-in span),
+  :global(.leaflet-control-zoom-out span) {
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: translateY(-1px) !important;
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
+  }
+
+  :global(.leaflet-control-zoom-in:hover),
+  :global(.leaflet-control-zoom-out:hover) {
+    background: #f2f0eb !important;
+    color: #0a0a0c !important;
+  }
+
+  :global(.leaflet-control-zoom-in:active),
+  :global(.leaflet-control-zoom-out:active) {
+    background: #ffffff !important;
+    color: #000000 !important;
+    transform: scale(0.96);
+  }
+
+  :global(.leaflet-control-zoom a.leaflet-disabled) {
+    opacity: 0.28 !important;
+    cursor: not-allowed !important;
+    background: transparent !important;
+    color: #71717a !important;
+    pointer-events: none !important;
   }
 
 
@@ -1639,70 +1771,22 @@
     .venue-detail-bottom-card.is-expanded .desktop-snap-toggle-btn i {
       transform: rotate(180deg);
     }
+
+    :global(.leaflet-top.leaflet-left) {
+      top: 86px !important;
+      left: 20px !important;
+    }
+
+    .desktop-only,
+    .map-control-glass-btn.desktop-only {
+      display: inline-flex !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
   }
 </style>
 
 <script>
-  let gigMapModulePromise: Promise<any> | null = null;
-
-  async function loadGigMapModule() {
-    if (!gigMapModulePromise) {
-      gigMapModulePromise = import('../../scripts/controllers/gigMap.js').then((mod) => {
-        if (typeof mod.initGigMapModule === 'function') {
-          mod.initGigMapModule();
-        }
-        return mod;
-      });
-    }
-    return gigMapModulePromise;
-  }
-
-  // Pre-define global openGigMap on window so any button or deep-link can trigger it immediately
-  (window as any).openGigMap = async function(gigOrVenueId?: string, initialSnapState?: string) {
-    await loadGigMapModule();
-    if (typeof (window as any).openGigMap === 'function') {
-      return (window as any).openGigMap(gigOrVenueId, initialSnapState);
-    }
-  };
-
-  function setupGigMapTriggers() {
-    const triggerSelectors = [
-      '#floatingGigPillBtn',
-      '#heroOpenGigMapBtn',
-      'a[href="#gigs"]',
-      'a[href="#gig-map"]',
-      '[data-open-gig-map]'
-    ];
-
-    const triggers = document.querySelectorAll(triggerSelectors.join(', '));
-
-    triggers.forEach((trigger) => {
-      // Pre-warm chunk on hover or pointer-enter on desktop (0ms perceived lag)
-      trigger.addEventListener('pointerenter', () => {
-        loadGigMapModule();
-      }, { once: true, passive: true });
-
-      trigger.addEventListener('click', async (e) => {
-        e.preventDefault();
-        await (window as any).openGigMap(undefined, 'peek');
-      });
-    });
-
-    // Check URL parameters or hash on page load
-    const urlParams = new URLSearchParams(window.location.search);
-    const requestedGig = urlParams.get('gig') || urlParams.get('venue');
-    if (requestedGig || window.location.hash === '#gig-map' || window.location.hash === '#gigs') {
-      loadGigMapModule().then(() => {
-        if (typeof (window as any).openGigMap === 'function') {
-          (window as any).openGigMap(requestedGig || undefined, 'peek');
-        }
-      });
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupGigMapTriggers, { once: true });
-  } else {
-    setupGigMapTriggers();
-  }
+  import { initGigMapModule } from '../../scripts/controllers/gigMap.js';
+  initGigMapModule();
 </script>

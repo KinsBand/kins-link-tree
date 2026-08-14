@@ -14,594 +14,24 @@ function unlockScroll() {
   document.documentElement.classList.remove('gig-map-open');
 }
 
-export const VENUES = [
-  {
-    id: "venue-cambridge",
-    name: "The Cambridge Hotel",
-    city: "Newcastle West, NSW",
-    address: "789 Hunter St, Newcastle West NSW 2302",
-    region: "newcastle",
-    lat: -32.9265,
-    lng: 151.7675,
-    rating: "4.9 ★",
-    capacity: "500 Cap",
-    transitSummary: "4 min walk from Wickham Interchange",
-    parkingSummary: "Free street parking on Hunter St after 6pm",
-    amenities: ["💳 Card-Only Bar", "♿ Wheelchair Accessible", "🍺 Craft Taps", "🔊 Full PA Rig", "👕 Merch Booth"],
-    shows: [
-      {
-        id: "gig-newcastle-1",
-        venueId: "venue-cambridge",
-        venue: "The Cambridge Hotel",
-        city: "Newcastle West, NSW",
-        address: "789 Hunter St, Newcastle West NSW 2302",
-        region: "newcastle",
-        lat: -32.9265,
-        lng: 151.7675,
-        type: "upcoming",
-        isNextShow: true,
-        dateText: "Sat, Aug 22, 2026",
-        urgencyBadgeText: "🔥 IN 8 DAYS",
-        ticketPriceLabel: "$15 (EARLY BIRD)",
-        ticketUrl: "https://www.bandsintown.com",
-        doorsTime: "7:00 PM",
-        ageLimit: "18+",
-        capacity: "500",
-        ticketStatus: "selling_fast",
-        targetDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000),
-        setTimes: [
-          { time: "7:00 PM", act: "Doors Open", role: "Doors" },
-          { time: "7:30 PM", act: "The Local Openers", role: "Support", link: "https://open.spotify.com" },
-          { time: "8:45 PM", act: "KINS (Main Set)", role: "Headliner" }
-        ],
-        plannedSetlist: [
-          { name: "Pictures of You (The Cure)", tag: "OPENER", duration: "4:20" },
-          { name: "Say It Ain't So (Weezer)", tag: "HIGH ENERGY", duration: "4:18" },
-          { name: "Common People (Pulp)", tag: "FAN FAVORITE", duration: "4:10" },
-          { name: "Jane (The Long Faces)", tag: "DEEP CUT", duration: "3:45" },
-          { name: "Everlong (Foo Fighters)", tag: "ENCORE", duration: "4:10" }
-        ],
-        merchItems: [
-          { name: "Tour Tee 2026", price: "$40", imageUrl: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=300&q=80" },
-          { name: "Embroidered Dad Hat", price: "$30", imageUrl: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=300&q=80" },
-          { name: "Silk Screen Poster", price: "$15", imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=300&q=80" }
-        ]
-      },
-      {
-        id: "gig-cambridge-archive-1",
-        venueId: "venue-cambridge",
-        venue: "The Cambridge Hotel",
-        city: "Newcastle West, NSW",
-        address: "789 Hunter St, Newcastle West NSW 2302",
-        region: "newcastle",
-        lat: -32.9265,
-        lng: 151.7675,
-        type: "past",
-        isNextShow: false,
-        dateText: "Played Jan 17, 2025",
-        attendanceCount: 340,
-        hasUserCheckedIn: false,
-        doorsTime: "7:00 PM",
-        ageLimit: "18+",
-        capacity: "500",
-        spotifyPlaylistUrl: "https://open.spotify.com",
-        recapPhotos: [
-          { url: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80", caption: "Stage & Light Rig", credit: "@local_photographer" },
-          { url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80", caption: "Full Room Crowd", credit: "@rock_lens" },
-          { url: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=800&q=80", caption: "Encore on Bar Counter", credit: "@band_archives" }
-        ],
-        asPlayedSetlist: [
-          { name: "Pictures of You (The Cure cover)", tag: "Opener", duration: "4:20" },
-          { name: "Say It Ain't So (Weezer cover)", tag: "High Energy", duration: "4:18" },
-          { name: "Common People", tag: "Britpop", duration: "4:10" },
-          { name: "Jane", tag: "Art Rock", duration: "3:45" },
-          { name: "Neon Horizon [UNRELEASED NEW SONG]", isUnreleased: true, tag: "Debut", duration: "3:55" },
-          { name: "Everlong (Foo Fighters)", tag: "Encore", duration: "4:10", hasSnippet: true }
-        ],
-        highlightsAndTrivia: [
-          "Sold out 3 days in advance (500 cap).",
-          "Surprise acoustic encore performed directly from the bar counter.",
-          "Total Set Time: 1 hour 18 minutes."
-        ],
-        pastVenueHistory: [
-          { date: "Jan 17, 2025", tourName: "Tour 2025" },
-          { date: "Aug 12, 2023", tourName: "Debut EP Tour" }
-        ]
-      }
-    ]
-  },
-  {
-    id: "venue-lansdowne",
-    name: "The Lansdowne Hotel",
-    city: "Chippendale, Sydney NSW",
-    address: "2-6 City Rd, Chippendale NSW 2008",
-    region: "sydney",
-    lat: -33.8845,
-    lng: 151.1985,
-    rating: "5.0 ★",
-    capacity: "300 Cap",
-    transitSummary: "5 min walk from Central Station (Railway Square exit)",
-    parkingSummary: "Limited street parking on Broadway & City Rd",
-    amenities: ["🍕 Famous Pizza", "🎸 Intimate Stage", "💿 Vinyl DJs", "🍺 Resch's On Tap", "♿ Accessible Ground"],
-    shows: [
-      {
-        id: "gig-lansdowne-upcoming",
-        venueId: "venue-lansdowne",
-        venue: "The Lansdowne Hotel",
-        city: "Chippendale, Sydney",
-        address: "2-6 City Rd, Chippendale NSW 2008",
-        region: "sydney",
-        lat: -33.8845,
-        lng: 151.1985,
-        type: "upcoming",
-        isNextShow: false,
-        dateText: "Sat, Oct 17, 2026",
-        urgencyBadgeText: "🔥 80% SOLD",
-        ticketPriceLabel: "$20 + BF",
-        ticketUrl: "https://www.bandsintown.com",
-        doorsTime: "7:30 PM",
-        ageLimit: "18+",
-        capacity: "300",
-        ticketStatus: "available",
-        targetDate: new Date(Date.now() + 64 * 24 * 60 * 60 * 1000 + 15 * 60 * 60 * 1000),
-        setTimes: [
-          { time: "7:30 PM", act: "Doors Open", role: "Doors" },
-          { time: "8:15 PM", act: "Velvet Bloom", role: "Support", link: "https://open.spotify.com" },
-          { time: "9:30 PM", act: "KINS (Headline Set)", role: "Headliner" }
-        ],
-        plannedSetlist: [
-          { name: "Boys Don't Cry (The Cure)", tag: "OPENER", duration: "2:40" },
-          { name: "Buddy Holly (Weezer)", tag: "HIGH ENERGY", duration: "2:40" },
-          { name: "Common People (Pulp)", tag: "FAN FAVORITE", duration: "4:10" },
-          { name: "Cadillac (The Long Faces)", tag: "DEEP CUT", duration: "3:30" },
-          { name: "Everlong (Foo Fighters)", tag: "ENCORE", duration: "4:10" }
-        ],
-        merchItems: [
-          { name: "Tour Tee 2026", price: "$40", imageUrl: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=300&q=80" },
-          { name: "Lansdowne Special Poster", price: "$15", imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=300&q=80" }
-        ]
-      },
-      {
-        id: "gig-sydney-past-1",
-        venueId: "venue-lansdowne",
-        venue: "The Lansdowne Hotel",
-        city: "Chippendale, Sydney",
-        address: "2-6 City Rd, Chippendale NSW 2008",
-        region: "sydney",
-        lat: -33.8845,
-        lng: 151.1985,
-        type: "past",
-        isNextShow: false,
-        dateText: "Played Jul 18, 2026",
-        attendanceCount: 300,
-        hasUserCheckedIn: true,
-        doorsTime: "7:30 PM",
-        ageLimit: "18+",
-        capacity: "300",
-        spotifyPlaylistUrl: "https://open.spotify.com",
-        recapPhotos: [
-          { url: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80", caption: "Packed Sweatbox", credit: "@sydney_gig_lens" },
-          { url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80", caption: "Stage Diving in Encore", credit: "@indie_rock_syd" }
-        ],
-        asPlayedSetlist: [
-          { name: "Friday I'm in Love (The Cure)", tag: "Opener", duration: "3:35" },
-          { name: "Undone - The Sweater Song (Weezer)", tag: "Heavy Jam", duration: "5:05" },
-          { name: "Babyshambles (Pulp)", tag: "Crowd Surge", duration: "4:15" },
-          { name: "Boys Don't Cry (The Cure)", tag: "Encore", duration: "3:10", hasSnippet: true }
-        ],
-        highlightsAndTrivia: [
-          "Sold out within 2 hours of announcement.",
-          "Crowd decibel level broke venue summer record.",
-          "Stage diving during the encore!"
-        ],
-        pastVenueHistory: [
-          { date: "Jul 18, 2026", tourName: "Winter Headline" },
-          { date: "Oct 14, 2024", tourName: "First Sydney Headline" }
-        ]
-      }
-    ]
-  },
-  {
-    id: "venue-metro",
-    name: "Metro Theatre",
-    city: "Sydney CBD, NSW",
-    address: "624 George St, Sydney NSW 2000",
-    region: "sydney",
-    lat: -33.8762,
-    lng: 151.2064,
-    rating: "4.9 ★",
-    capacity: "1,100 Cap",
-    amenities: [
-      { icon: "fa-train-subway", label: "Town Hall Station" },
-      { icon: "fa-wheelchair", label: "Accessible" },
-      { icon: "fa-martini-glass-citrus", label: "Full Bar" },
-      { icon: "fa-vest", label: "Cloakroom" },
-      { icon: "fa-shirt", label: "Merch Booth" }
-    ],
-    venueAndFood: {
-      venueDesc: "Sydney's premier heritage live music venue featuring multi-tiered viewing and world-class sound rig.",
-      transitDesc: "2 min walk from Town Hall Station. Light Rail directly outside on George St.",
-      foodRecommendation: "Late-night ramen in Chinatown or Spanish tapas on Liverpool St right around the corner."
-    },
-    shows: [
-      {
-        id: "gig-sydney-metro",
-        venueId: "venue-metro",
-        venue: "Metro Theatre",
-        city: "Sydney CBD, NSW",
-        address: "624 George St, Sydney NSW 2000",
-        region: "sydney",
-        lat: -33.8762,
-        lng: 151.2064,
-        type: "upcoming",
-        isNextShow: false,
-        dateText: "Fri, Sep 12, 2026",
-        timeText: "Doors: 7:00 PM • Kins on stage: 8:45 PM",
-        targetDate: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000),
-        rating: "4.9 ★",
-        capacity: "1,100 Cap",
-        ticketPrice: "$22 + BF",
-        ticketStatus: "available",
-        ageLimit: "18+ Event",
-        ticketUrl: "https://www.bandsintown.com",
-        supportActs: "Velvet Bloom & Midnight Echoes",
-        snapshot: {
-          vibe: "Sydney CBD Headline Showcase / Legendary Acoustic Heritage Soundstage",
-          highlight: "Special guest vocalists joining for 90s alt-rock anthems & full light show."
-        },
-        setlistDetails: {
-          songs: [
-            { name: "Boys Don't Cry (The Cure)", tag: "Upbeat", duration: "2:40", genre: "Post-Punk" },
-            { name: "Buddy Holly (Weezer)", tag: "Crowd Singalong", duration: "2:40", genre: "Power Pop" },
-            { name: "Disco 2000 (Pulp)", tag: "Groove", duration: "4:33", genre: "Britpop" },
-            { name: "Cadillac (The Long Faces)", tag: "Cover Special", duration: "3:30", genre: "Art Rock" },
-            { name: "Just Like Heaven (The Cure)", tag: "Encore", duration: "3:32", genre: "Classic" }
-          ]
-        }
-      },
-      {
-        id: "gig-metro-archive-1",
-        venueId: "venue-metro",
-        venue: "Metro Theatre",
-        city: "Sydney CBD, NSW",
-        address: "624 George St, Sydney NSW 2000",
-        region: "sydney",
-        lat: -33.8762,
-        lng: 151.2064,
-        type: "past",
-        isNextShow: false,
-        dateText: "Fri, Nov 21, 2025",
-        timeText: "EP Launch Showcase",
-        rating: "4.9 ★",
-        capacity: "1,100 Cap",
-        ticketPrice: "$20 Door",
-        ticketStatus: "archived",
-        ageLimit: "18+ Event",
-        supportActs: "Royel Otis Tribute & Local Sydney Acts",
-        snapshot: {
-          vibe: "Epic Mainstage Production / Laser Visuals & Heavy Guitars",
-          highlight: "Debut EP showcase performed to a thunderous standing ovation."
-        },
-        setlistDetails: {
-          songs: [
-            { name: "Pictures of You (The Cure)", tag: "Opener", duration: "4:20", genre: "Post-Punk" },
-            { name: "Say It Ain't So (Weezer)", tag: "Heavy Jams", duration: "4:18", genre: "Alt-Rock" },
-            { name: "Jane (The Long Faces)", tag: "Art Rock", duration: "3:45", genre: "Deep Cut" },
-            { name: "Everlong (Foo Fighters)", tag: "Encore", duration: "4:10", genre: "Power Jam" }
-          ],
-          audioRecording: "24-bit / 96kHz Multitrack Live Soundboard Desk Master.",
-          stageNotes: "Full tiered floor was bouncing in unison during the Weezer guitar solos."
-        },
-        crowdAndGallery: {
-          energyScore: "9.7/10 Roaring Mainstage",
-          fanQuote: "“The sound clarity and guitar tones at Metro were absolutely stadium grade.” — FasterLouder",
-          photos: [
-            "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "venue-oaf",
-    name: "Oxford Art Factory",
-    city: "Darlinghurst, Sydney NSW",
-    address: "38-46 Oxford St, Darlinghurst NSW 2010",
-    region: "sydney",
-    lat: -33.8785,
-    lng: 151.2140,
-    rating: "4.9 ★",
-    capacity: "500 Cap",
-    amenities: [
-      { icon: "fa-palette", label: "Art Showcase" },
-      { icon: "fa-beer-mug-empty", label: "Two Craft Bars" },
-      { icon: "fa-bus", label: "Oxford St Buses" },
-      { icon: "fa-volume-high", label: "Acoustic Tuning" }
-    ],
-    venueAndFood: {
-      venueDesc: "Iconic underground Darlinghurst arts & live music venue with dual rooms and immersive lighting.",
-      transitDesc: "5 min walk from Museum Station or any Oxford St bus stop.",
-      foodRecommendation: "Grab gourmet burgers at Mister Gee or cocktails at The Cliff Dive post-show."
-    },
-    shows: [
-      {
-        id: "gig-sydney-oaf",
-        venueId: "venue-oaf",
-        venue: "Oxford Art Factory",
-        city: "Darlinghurst, Sydney",
-        address: "38-46 Oxford St, Darlinghurst NSW 2010",
-        region: "sydney",
-        lat: -33.8785,
-        lng: 151.2140,
-        type: "past",
-        isNextShow: false,
-        dateText: "Sat, Apr 11, 2026",
-        timeText: "Indie Rock Gala Showcase",
-        rating: "4.9 ★",
-        capacity: "500 Cap (Sold Out)",
-        ticketPrice: "$18 Pre-sale",
-        ticketStatus: "archived",
-        ageLimit: "18+ Event",
-        supportActs: "Sunroom Sounds & Velvet Bloom",
-        snapshot: {
-          vibe: "Underground Art & Rock Fusion / Glowing Neon Visuals",
-          highlight: "Special dual-guitar jam with guest musicians under neon light art."
-        },
-        setlistDetails: {
-          songs: [
-            { name: "Friday I'm in Love (The Cure)", tag: "Opener", duration: "3:35", genre: "Post-Punk" },
-            { name: "Hash Pipe (Weezer)", tag: "Heavy Energy", duration: "3:06", genre: "Alt-Rock" },
-            { name: "Common People (Pulp)", tag: "Dance Anthem", duration: "4:10", genre: "Britpop" },
-            { name: "Everlong (Foo Fighters)", tag: "Encore", duration: "4:10", genre: "Power Jam" }
-          ],
-          audioRecording: "Stereo Desk Master + Ambient Room Microphones.",
-          stageNotes: "Underground room hit max capacity 20 mins before stage time."
-        },
-        crowdAndGallery: {
-          energyScore: "9.8/10 Neon Underground",
-          fanQuote: "“Oxford Art Factory has never sounded crisper. Kins tore down the roof!” — Sydney Music Scene",
-          photos: [
-            "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "venue-manning",
-    name: "Manning Bar",
-    city: "Camperdown, Sydney NSW",
-    address: "Manning Rd, University of Sydney, Camperdown NSW 2006",
-    region: "sydney",
-    lat: -33.8885,
-    lng: 151.1890,
-    rating: "4.8 ★",
-    capacity: "950 Cap",
-    amenities: [
-      { icon: "fa-wheelchair", label: "Accessible" },
-      { icon: "fa-martini-glass-citrus", label: "Full Bar" },
-      { icon: "fa-bus", label: "Near Bus Stop" },
-      { icon: "fa-tree", label: "Open Balcony" }
-    ],
-    venueAndFood: {
-      venueDesc: "Spacious multi-level uni venue with stellar balcony views and great acoustic soundstage.",
-      transitDesc: "Buses along Parramatta Rd / City Rd. 10 min walk to Redfern Station.",
-      foodRecommendation: "Hit up Newtown's King Street for Thai or artisan burgers before doors open."
-    },
-    shows: [
-      {
-        id: "gig-sydney-manning",
-        venueId: "venue-manning",
-        venue: "Manning Bar",
-        city: "Camperdown, Sydney",
-        address: "Manning Rd, University of Sydney, Camperdown NSW 2006",
-        region: "sydney",
-        lat: -33.8885,
-        lng: 151.1890,
-        type: "upcoming",
-        isNextShow: false,
-        dateText: "Sat, Oct 03, 2026",
-        timeText: "Doors: 7:30 PM • Kins on stage: 9:00 PM",
-        targetDate: new Date(Date.now() + 50 * 24 * 60 * 60 * 1000 + 15 * 60 * 60 * 1000),
-        rating: "4.8 ★",
-        capacity: "950 Cap",
-        ticketPrice: "$18 Student / $25 GA",
-        ticketStatus: "available",
-        ageLimit: "Lic / All Ages (AA)",
-        ticketUrl: "https://www.bandsintown.com",
-        supportActs: "Royel Otis Tribute & Sunroom Sounds",
-        snapshot: {
-          vibe: "Spring Campus Indie Fest / Outdoor Courtyard Pre-Party",
-          highlight: "Co-headlining indie festival with student entry discounts & outdoor deck bar."
-        },
-        setlistDetails: {
-          songs: [
-            { name: "Friday I'm in Love (The Cure)", tag: "Opener", duration: "3:35", genre: "Post-Punk" },
-            { name: "Hash Pipe (Weezer)", tag: "Heavy Energy", duration: "3:06", genre: "Alt-Rock" },
-            { name: "Sorted for E's & Wizz (Pulp)", tag: "Synth Groove", duration: "3:40", genre: "Britpop" },
-            { name: "Everlong (Foo Fighters)", tag: "Encore", duration: "4:10", genre: "Power Jam" }
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "venue-lass",
-    name: "The Lass O'Gowrie",
-    city: "Wickham, Newcastle NSW",
-    address: "Railway St, Wickham NSW 2293",
-    region: "newcastle",
-    lat: -32.9230,
-    lng: 151.7510,
-    rating: "4.9 ★",
-    capacity: "250 Cap",
-    amenities: [
-      { icon: "fa-tree", label: "Beer Garden" },
-      { icon: "fa-dog", label: "Dog Friendly" },
-      { icon: "fa-burger", label: "Smoked Brisket" },
-      { icon: "fa-wine-glass", label: "Natural Wines" }
-    ],
-    venueAndFood: {
-      venueDesc: "Classic Wickham pub known for arts, local band residency, and cozy outdoor beer garden.",
-      transitDesc: "4 min walk from Newcastle Interchange station.",
-      foodRecommendation: "Smoked brisket tacos & waffle fries at the Lass pub kitchen."
-    },
-    shows: [
-      {
-        id: "gig-newcastle-past-1",
-        venueId: "venue-lass",
-        venue: "The Lass O'Gowrie",
-        city: "Wickham, Newcastle",
-        address: "Railway St, Wickham NSW 2293",
-        region: "newcastle",
-        lat: -32.9230,
-        lng: 151.7510,
-        type: "past",
-        isNextShow: false,
-        dateText: "Fri, Jun 05, 2026",
-        timeText: "Past Summer Session",
-        rating: "4.9 ★",
-        capacity: "250 Cap",
-        ticketPrice: "Free Entry (Passed Hat)",
-        ticketStatus: "archived",
-        ageLimit: "18+ Event",
-        supportActs: "Local Hunter Valley Songwriters",
-        snapshot: {
-          vibe: "Underground Newcastle Scene / Summer Night Garden Session",
-          highlight: "Acoustic intro into full power band set under fairy lights and string lamps."
-        },
-        setlistDetails: {
-          songs: [
-            { name: "Just Like Heaven (The Cure)", tag: "Summer Vibe", duration: "3:32", genre: "Post-Punk" },
-            { name: "Island in the Sun (Weezer)", tag: "Chill Jam", duration: "3:20", genre: "Alt-Rock" },
-            { name: "Common People (Pulp)", tag: "Crowd Singalong", duration: "4:10", genre: "Britpop" }
-          ],
-          audioRecording: "Live Stereo Desk Record + Ambient Crowd Microphones.",
-          stageNotes: "Beer garden was packed to capacity with fans singing every chorus back to us."
-        },
-        crowdAndGallery: {
-          energyScore: "9.5/10 Cozy & Loud",
-          fanQuote: "“Hearing 'Just Like Heaven' under the string lights in Wickham was magic.” — Newcastle Herald Music",
-          photos: [
-            "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80"
-          ]
-        }
-      }
-    ]
-  },
-  {
-    id: "venue-king-st",
-    name: "King Street Bandroom",
-    city: "Newcastle CBD, NSW",
-    address: "15 Steel St, Newcastle NSW 2300",
-    region: "newcastle",
-    lat: -32.9278,
-    lng: 151.7640,
-    rating: "4.9 ★",
-    capacity: "450 Cap",
-    amenities: [
-      { icon: "fa-volume-high", label: "Huge Sub Bass" },
-      { icon: "fa-beer-mug-empty", label: "Two Bars" },
-      { icon: "fa-train-tram", label: "Light Rail Stop" },
-      { icon: "fa-square-parking", label: "Multi-Deck Parking" }
-    ],
-    venueAndFood: {
-      venueDesc: "Newcastle CBD's dedicated multi-level bandroom with booming subs and dual bars.",
-      transitDesc: "Steel St Light Rail stop directly adjacent to the venue entrance.",
-      foodRecommendation: "Grab street tacos or late-night burgers along King Street."
-    },
-    shows: [
-      {
-        id: "gig-newcastle-past-2",
-        venueId: "venue-king-st",
-        venue: "King Street Bandroom",
-        city: "Newcastle CBD, NSW",
-        address: "15 Steel St, Newcastle NSW 2300",
-        region: "newcastle",
-        lat: -32.9278,
-        lng: 151.7640,
-        type: "past",
-        isNextShow: false,
-        dateText: "Fri, May 15, 2026",
-        timeText: "Packed House Show",
-        rating: "4.9 ★",
-        capacity: "450 Cap",
-        ticketPrice: "$12 Door",
-        ticketStatus: "archived",
-        ageLimit: "18+ Event",
-        supportActs: "Newcastle Rock Collective",
-        snapshot: {
-          vibe: "Massive Bass & High Voltage Electric Rock Set",
-          highlight: "Triple encore demanded by the crowd after Foo Fighters cover."
-        },
-        setlistDetails: {
-          songs: [
-            { name: "Say It Ain't So (Weezer)", tag: "Opener", duration: "4:18", genre: "Alt-Rock" },
-            { name: "Pictures of You (The Cure)", tag: "Atmospheric", duration: "4:20", genre: "Post-Punk" },
-            { name: "Everlong (Foo Fighters)", tag: "Encore", duration: "4:10", genre: "Power Jam" }
-          ],
-          audioRecording: "Direct Multitrack Live Desk Recording in Master Flac.",
-          stageNotes: "Full sound system was shaking the room. Crowd demanded 3 separate encores before curfew."
-        },
-        crowdAndGallery: {
-          energyScore: "9.8/10 Wall-to-Wall Energy",
-          fanQuote: "“Kins shook the entire building from the first guitar riff.” — Live Newcastle",
-          photos: [
-            "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=800&q=80"
-          ]
-        }
-      }
-    ]
-  }
-];
+// GIG MAP DISABLED — No live venue data yet
+export const VENUES = [];
 
 // Flat array of all individual gig instances for backward compatibility
-export const LOCAL_GIGS = VENUES.flatMap(v => v.shows.map(s => ({
-  ...s,
-  amenities: v.amenities,
-  venueAndFood: v.venueAndFood,
-  venueRating: v.rating,
-  venueCapacity: v.capacity
-})));
+export const LOCAL_GIGS = [];
 
-// NSW Tour Corridor Polyline coordinates (Newcastle -> Central Coast -> Sydney)
-const TOUR_CORRIDOR_PATH = [
-  [-32.9265, 151.7675], // The Cambridge Hotel (Newcastle)
-  [-32.9230, 151.7510], // The Lass O'Gowrie (Wickham)
-  [-32.9278, 151.7640], // King Street Bandroom
-  [-33.0000, 151.6500], // Lake Macquarie
-  [-33.2800, 151.4200], // Tuggerah / Wyong
-  [-33.4300, 151.3400], // Gosford (Central Coast)
-  [-33.6000, 151.2000], // Hawkesbury River
-  [-33.8000, 151.1800], // Sydney North
-  [-33.8762, 151.2064], // Metro Theatre (Sydney CBD)
-  [-33.8785, 151.2140], // Oxford Art Factory (Darlinghurst)
-  [-33.8845, 151.1985], // The Lansdowne Hotel
-  [-33.8885, 151.1890]  // Manning Bar
-];
+// NSW Tour Corridor Polyline coordinates (empty — no live data)
+const TOUR_CORRIDOR_PATH = [];
 
-// Coastal Polygon for the Hunter / Sydney catchment
-const COASTAL_LAND_POLYGON = [
-  [-32.73, 151.55],
-  [-32.88, 151.72],
-  [-32.93, 151.78],
-  [-33.08, 151.65],
-  [-33.30, 151.50],
-  [-33.58, 151.32],
-  [-33.85, 151.28],
-  [-34.05, 151.15],
-  [-34.05, 150.85],
-  [-33.75, 150.68],
-  [-33.35, 151.10],
-  [-32.80, 151.25]
-];
+// Coastal Polygon (empty — no live data)
+const COASTAL_LAND_POLYGON = [];
 
 let leafletMapInstance = null;
 let tourPolylineInstance = null;
 let regionPolygonInstance = null;
 let countdownInterval = null;
-let activeVenueId = "venue-cambridge";
-let activeGigId = "gig-newcastle-1";
+let activeVenueId = null;
+let activeGigId = null;
 let activeFilter = "all";
 const markerMap = new Map();
 
@@ -669,6 +99,15 @@ export function setSnapState(targetState, options = { animate: true, autoPanMap:
   setTimeout(() => {
     if (leafletMapInstance) leafletMapInstance.invalidateSize();
   }, 360);
+
+  // Synchronize desktop map details toggle button state
+  const toggleMapBtn = document.getElementById('toggleMapDetailsBtn');
+  if (toggleMapBtn) {
+    const isExp = validState === 'expanded';
+    toggleMapBtn.classList.toggle('is-active', isExp);
+    toggleMapBtn.setAttribute('title', isExp ? 'Collapse venue details panel' : 'Expand venue details panel');
+    toggleMapBtn.setAttribute('aria-label', isExp ? 'Collapse Details' : 'Expand Details');
+  }
 }
 
 // Toggle between Tier 1 (Summary) and Tier 2 (Full Expanded)
@@ -819,29 +258,44 @@ function updateCountdownTimer(targetDate) {
 }
 
 function updateSetlistPlaybackState(currentTrack, isPlaying) {
-  const setlistRows = document.querySelectorAll('.setlist-item-row');
+  const setlistRows = document.querySelectorAll('.setlist-preview-row, .as-played-item');
   setlistRows.forEach(row => {
-    const songFullName = row.getAttribute('data-song-fullname') || '';
-    const icon = row.querySelector('.setlist-play-icon');
+    const songFullName = row.getAttribute('data-track-name') || '';
+    const playIcon = row.querySelector('.track-title-wrap i, .snippet-btn i, i.fa-play, i.fa-pause');
+    const snippetBtn = row.querySelector('.snippet-btn');
     
     let isMatch = false;
     if (currentTrack && currentTrack.title) {
-      const cleanName = songFullName.replace(/\(.*\)/, '').trim().toLowerCase();
-      const playingTitle = currentTrack.title.toLowerCase();
-      if (cleanName.includes(playingTitle) || playingTitle.includes(cleanName)) {
+      const cleanName = songFullName.replace(/\(.*\)/g, '').replace(/\[.*\]/g, '').trim().toLowerCase();
+      const playingTitle = currentTrack.title.toLowerCase().trim();
+      if (cleanName && (cleanName.includes(playingTitle) || playingTitle.includes(cleanName))) {
         isMatch = true;
       }
     }
 
     if (isMatch && isPlaying) {
       row.classList.add('is-playing');
-      if (icon) {
-        icon.className = 'fa-solid fa-pause setlist-play-icon';
+      if (playIcon) {
+        playIcon.className = 'fa-solid fa-pause';
+        playIcon.style.color = '#22c55e';
+      }
+      if (snippetBtn) {
+        snippetBtn.classList.add('is-playing');
+        snippetBtn.innerHTML = '<i class="fa-solid fa-pause"></i> Playing';
       }
     } else {
       row.classList.remove('is-playing');
-      if (icon) {
-        icon.className = 'fa-solid fa-play setlist-play-icon';
+      if (playIcon) {
+        if (playIcon.closest('.snippet-btn')) {
+          playIcon.className = 'fa-solid fa-volume-high';
+        } else {
+          playIcon.className = 'fa-solid fa-play';
+          playIcon.style.color = '#a1a1aa';
+        }
+      }
+      if (snippetBtn) {
+        snippetBtn.classList.remove('is-playing');
+        snippetBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Snippet';
       }
     }
   });
@@ -852,15 +306,28 @@ window.addEventListener('trackPlaybackStateChanged', (e) => {
   updateSetlistPlaybackState(track, isPlaying);
 });
 
-function parseSetlistTrackInfo(fullName) {
-  let title = fullName.replace(/\(.*\)/, '').trim();
+export function parseSetlistTrackInfo(fullName) {
+  let cleanName = (fullName || '').replace(/\(.*\)/g, '').replace(/\[.*\]/g, '').trim();
   let artist = "Kins";
-  if (fullName.includes('(The Cure)')) artist = "The Cure";
-  else if (fullName.includes('(Weezer)')) artist = "Weezer";
-  else if (fullName.includes('(The Long Faces)')) artist = "The Long Faces";
-  else if (fullName.includes('(Foo Fighters)')) artist = "Foo Fighters";
-  else if (fullName.includes('(Pulp)')) artist = "Pulp";
-  return { title, artist };
+  
+  const lowerFull = (fullName || '').toLowerCase();
+  const lowerClean = cleanName.toLowerCase();
+  
+  if (lowerFull.includes('the cure') || lowerClean.includes('pictures of you') || lowerClean.includes('boys don\'t cry') || lowerClean.includes('friday i\'m in love') || lowerClean.includes('just like heaven') || lowerClean.includes('lovesong')) {
+    artist = "The Cure";
+  } else if (lowerFull.includes('weezer') || lowerClean.includes('say it ain\'t so') || lowerClean.includes('buddy holly') || lowerClean.includes('hash pipe') || lowerClean.includes('undone') || lowerClean.includes('island in the sun') || lowerClean.includes('do you wanna get high') || lowerClean.includes('pink triangle')) {
+    artist = "Weezer";
+  } else if (lowerFull.includes('the long faces') || lowerClean.includes('jane') || lowerClean.includes('cadillac') || lowerClean.includes('sail away') || lowerClean.includes('documentaries') || lowerClean.includes('oberon')) {
+    artist = "The Long Faces";
+  } else if (lowerFull.includes('foo fighters') || lowerClean.includes('everlong')) {
+    artist = "Foo Fighters";
+  } else if (lowerFull.includes('pulp') || lowerClean.includes('common people') || lowerClean.includes('disco 2000') || lowerClean.includes('babies') || lowerClean.includes('sorted for e\'s') || lowerClean.includes('babyshambles') || lowerClean.includes('underwear')) {
+    artist = "Pulp";
+  } else if (lowerClean.includes('neon horizon')) {
+    artist = "Kins (Live Debut)";
+  }
+  
+  return { title: cleanName, artist, originalFull: fullName };
 }
 
 // Generate Google Calendar Link
@@ -1605,12 +1072,23 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
         });
       });
 
-      // Snippet player buttons
+      // Snippet player and as-played item clicks
       venueDynamicBody.querySelectorAll('.snippet-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           const trackName = btn.getAttribute('data-track-name') || '';
           const trackObj = parseSetlistTrackInfo(trackName);
-          showToast(`🎧 Playing soundboard snippet for ${trackObj.title}...`);
+          if (window.playTrackPreview) {
+            window.playTrackPreview(trackObj);
+          }
+        });
+      });
+
+      venueDynamicBody.querySelectorAll('.as-played-item').forEach(row => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.snippet-btn')) return;
+          const trackName = row.getAttribute('data-track-name') || '';
+          const trackObj = parseSetlistTrackInfo(trackName);
           if (window.playTrackPreview) {
             window.playTrackPreview(trackObj);
           }
@@ -1804,13 +1282,42 @@ export function filterGigs(category) {
 }
 
 export function fitAllTourBounds() {
-  if (!leafletMapInstance) return;
-  const group = new window.L.featureGroup(Array.from(markerMap.values()));
-  leafletMapInstance.fitBounds(group.getBounds(), {
-    padding: window.innerWidth >= 768 ? [80, 80] : [40, 40],
-    maxZoom: 13,
+  if (!leafletMapInstance || typeof window.L === 'undefined') {
+    if (window.openGigMap) {
+      window.openGigMap().then(() => {
+        setTimeout(fitAllTourBounds, 350);
+      });
+    }
+    return;
+  }
+
+  // Snap sheet down to peek if expanded so the full map area is visible
+  if (currentSnapState === 'expanded') {
+    setSnapState('peek', { animate: true, autoPanMap: false });
+  }
+
+  leafletMapInstance.invalidateSize();
+
+  // Create bounds covering all tour venues
+  const allVenueCoords = VENUES.map(v => [v.lat, v.lng]);
+  const bounds = window.L.latLngBounds(allVenueCoords);
+
+  const isDesktop = window.innerWidth >= 768;
+
+  leafletMapInstance.fitBounds(bounds, {
+    paddingTopLeft: isDesktop ? [460, 80] : [24, 76],
+    paddingBottomRight: isDesktop ? [60, 50] : [24, 230],
+    maxZoom: isDesktop ? 12 : 11,
+    animate: true,
     duration: 0.8
   });
+
+  const btn = document.getElementById('mapFitBoundsBtn');
+  if (btn) {
+    btn.classList.add('is-active');
+    setTimeout(() => btn.classList.remove('is-active'), 400);
+  }
+
   showToast("🗺️ Viewing all Kins tour stops across NSW");
 }
 
@@ -1829,18 +1336,29 @@ export function initGigMapModule() {
   const lightboxCloseBtn = document.getElementById('gigLightboxClose');
   const lightboxBackdrop = document.getElementById('gigPhotoLightbox');
 
-  const nextGig = LOCAL_GIGS.find(g => g.isNextShow) || LOCAL_GIGS[0];
+  // Wire Map Controls
+  if (fitBoundsBtn) {
+    fitBoundsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      fitAllTourBounds();
+    });
+  }
+
+  if (toggleMapDetailsBtn) {
+    toggleMapDetailsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      cycleSheetState();
+    });
+  }
+
+  const nextGig = null; // No live gig data
 
   function updateFloatingPill() {
-    if (nextGig) {
-      if (gigPillTag) gigPillTag.textContent = "NEXT SHOW";
-      if (gigPillTitle) gigPillTitle.textContent = "TOUR MAP";
-      if (gigPillLocation) gigPillLocation.textContent = `${nextGig.venue.replace('The ', '')} • ${nextGig.city.split(',')[0]}`;
-    } else {
-      if (gigPillTag) gigPillTag.textContent = "TOUR";
-      if (gigPillTitle) gigPillTitle.textContent = "GIG MAP";
-      if (gigPillLocation) gigPillLocation.textContent = "Newcastle & Sydney";
-    }
+    if (gigPillTag) gigPillTag.textContent = "COMING SOON";
+    if (gigPillTitle) gigPillTitle.textContent = "GIG MAP";
+    if (gigPillLocation) gigPillLocation.textContent = "Currently unavailable";
   }
   updateFloatingPill();
 
@@ -2241,36 +1759,15 @@ export function initGigMapModule() {
     }
   });
 
-  // Global Open Helper with Context-Aware Default State
-  window.openGigMap = async function(gigOrVenueId, initialSnapState) {
-    if (gigMapModal) {
-      gigMapModal.classList.add('active');
-      lockScroll();
-      await ensureLeafletLoaded();
-      
-      if (gigOrVenueId) {
-        const pair = findVenueAndShow(gigOrVenueId);
-        activeVenueId = pair.venue.id;
-        activeGigId = pair.show.id;
-      }
-      
-      initGigMap();
-      
-      // Default to Tier 1 ('peek') on mobile, 'expanded' on desktop
-      const isDesktop = window.innerWidth >= 768;
-      const targetState = initialSnapState || (isDesktop ? 'expanded' : 'peek');
-      setSnapState(targetState, { animate: true, autoPanMap: true });
-      
-      // Ensure Leaflet recalculates viewport sizes properly
-      setTimeout(() => { if (leafletMapInstance) leafletMapInstance.invalidateSize(); }, 80);
-      setTimeout(() => { if (leafletMapInstance) leafletMapInstance.invalidateSize(); }, 250);
-      setTimeout(() => { if (leafletMapInstance) leafletMapInstance.invalidateSize(); }, 450);
-    }
+  // Global Open Helper — DISABLED (no venue data)
+  window.openGigMap = async function() {
+    showToast("🎸 Gig map is coming soon! No shows announced yet.");
   };
 
-  if (floatingGigPillBtn && gigMapModal) {
-    floatingGigPillBtn.addEventListener('click', async () => {
-      await window.openGigMap(undefined, 'peek');
+  if (floatingGigPillBtn) {
+    floatingGigPillBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showToast("🎸 Gig map is coming soon! No shows announced yet.");
     });
   }
 
@@ -2288,37 +1785,6 @@ export function initGigMapModule() {
     });
   }
 
-  // Custom Map Controls Handlers
-  if (fitBoundsBtn) {
-    fitBoundsBtn.addEventListener('click', () => {
-      fitAllTourBounds();
-    });
-  }
-
-  if (locateMeBtn) {
-    locateMeBtn.addEventListener('click', () => {
-      locateUserAndSort(true);
-    });
-  }
-
-  // Toggle map canvas mode (collapse/expand details)
-  if (toggleMapDetailsBtn && venueDetailCard) {
-    let isCollapsed = false;
-    toggleMapDetailsBtn.addEventListener('click', () => {
-      isCollapsed = !isCollapsed;
-      if (isCollapsed) {
-        setSnapState('peek');
-        toggleMapDetailsBtn.innerHTML = `<i class="fa-solid fa-sheet-plastic"></i>`;
-        toggleMapDetailsBtn.title = "Show Venue Details";
-        showToast("🗺️ Map Canvas Maximized");
-      } else {
-        setSnapState('expanded');
-        toggleMapDetailsBtn.innerHTML = `<i class="fa-solid fa-map"></i>`;
-        toggleMapDetailsBtn.title = "Full Map Canvas";
-      }
-    });
-  }
-
   // Photo Lightbox Close
   if (lightboxCloseBtn) {
     lightboxCloseBtn.addEventListener('click', closePhotoLightbox);
@@ -2329,15 +1795,7 @@ export function initGigMapModule() {
     });
   }
 
-  // Directions HUD Close & Clear buttons
-  if (closeDirectionsHud) {
-    closeDirectionsHud.addEventListener('click', clearActiveRoute);
-  }
-  if (clearRouteHudBtn) {
-    clearRouteHudBtn.addEventListener('click', clearActiveRoute);
-  }
-
-  // Delegated click handler for popup action buttons, route triggers, and back to top/map buttons
+  // Delegated click handler for popup action buttons, navigate triggers, and back to top/map buttons
   document.addEventListener('click', (e) => {
     const backToTopBtn = e.target.closest('.sheet-back-to-top-btn') || e.target.closest('#scrollTopBtn');
     if (backToTopBtn) {
@@ -2364,13 +1822,28 @@ export function initGigMapModule() {
       return;
     }
 
-    const routeBtn = e.target.closest('.map-popup-route-btn');
+    const routeBtn = e.target.closest('.map-popup-route-btn') || e.target.closest('.map-popup-navigate-btn');
     if (routeBtn) {
+      e.preventDefault();
       const venueId = routeBtn.getAttribute('data-route-venue-id') || routeBtn.getAttribute('data-route-gig-id');
       const pair = findVenueAndShow(venueId);
       if (pair.venue) {
-        calculateAndRenderRoute(pair.venue);
+        openExternalMaps(pair.venue);
       }
+      return;
+    }
+
+    const fitBtn = e.target.closest('#mapFitBoundsBtn');
+    if (fitBtn) {
+      e.preventDefault();
+      fitAllTourBounds();
+      return;
+    }
+
+    const toggleBtn = e.target.closest('#toggleMapDetailsBtn');
+    if (toggleBtn) {
+      e.preventDefault();
+      cycleSheetState();
       return;
     }
 

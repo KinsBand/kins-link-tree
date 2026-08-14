@@ -46,648 +46,614 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
 ---
 
 <div class="hero-feature-card-wrapper" id="heroFeatureCardWrapper">
-  <!-- Main Hero Card Container (Renders only the active state and variation defined in hero.config.ts) -->
+  <!-- Main Hero Card Container -->
   <div class="hero-feature-card" id="heroFeatureCard" data-active-state={activeState} data-active-var={activeSubvar}>
 
-    <!-- STATE 0: UPCOMING -->
-    {activeState === 'upcoming' && (
-      <div class="hero-card-state state-upcoming" id="stateUpcoming">
-        {activeUpcomingVar === 'minimal_teaser' && (
-          <div class="sub-var-panel var-upcoming-minimal_teaser" id="varUpcomingMinimalTeaser">
-            <div class="upcoming-teaser-card">
-              <div class="upcoming-icon-box">
-                <i class="fa-solid fa-compact-disc"></i>
+    <!-- ==================== STATE 0: UPCOMING ==================== -->
+    <div class="hero-card-state state-upcoming hidden" id="stateUpcoming">
+      <!-- Sub-Var 0A: Minimal Teaser -->
+      <div class="sub-var-panel var-upcoming-minimal_teaser" id="varUpcomingMinimalTeaser">
+        <div class="upcoming-teaser-card">
+          <div class="upcoming-icon-box">
+            <i class="fa-solid fa-compact-disc"></i>
+          </div>
+          <div class="upcoming-teaser-content">
+            <span class="upcoming-teaser-badge">{upcoming.minimal_teaser.badge}</span>
+            <h4 class="upcoming-teaser-title">{upcoming.minimal_teaser.title}</h4>
+            <p class="upcoming-teaser-desc">{upcoming.minimal_teaser.desc}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 0B: Mystery Countdown -->
+      <div class="sub-var-panel var-upcoming-mystery_countdown hidden" id="varUpcomingMysteryCountdown">
+        <div class="mystery-countdown-card">
+          <span class="upcoming-teaser-badge">{upcoming.mystery_countdown.badge}</span>
+          <h4 class="upcoming-teaser-title">{upcoming.mystery_countdown.title}</h4>
+          <div class="mystery-timer-digits" id="mysteryTimerDigits">
+            <span class="cd-unit"><strong id="mysteryCdDays">03</strong>d</span> :
+            <span class="cd-unit"><strong id="mysteryCdHours">14</strong>h</span> :
+            <span class="cd-unit"><strong id="mysteryCdMins">22</strong>m</span> :
+            <span class="cd-unit"><strong id="mysteryCdSecs">00</strong>s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 1: RELEASES ==================== -->
+    <div class="hero-card-state state-release" id="stateRelease">
+      <!-- Sub-Var 1A: Cover Video Release -->
+      <div class="sub-var-panel var-release-cover_video" id="varReleaseCoverVideo">
+        <div class="hero-card-media-bg">
+          <div class="hero-media-overlay"></div>
+          <div class="hero-card-header">
+            <div class="hero-header-text">
+              <h3 class="hero-release-title">{release.cover_video.title}</h3>
+              <p class="hero-release-subtitle">{release.cover_video.subtitle}</p>
+              <div class="hero-badge-row">
+                <span class="hero-genre-badge">{release.cover_video.badge}</span>
               </div>
-              <div class="upcoming-teaser-content">
-                <span class="upcoming-teaser-badge">{upcoming.minimal_teaser.badge}</span>
-                <h4 class="upcoming-teaser-title">{upcoming.minimal_teaser.title}</h4>
-                <p class="upcoming-teaser-desc">{upcoming.minimal_teaser.desc}</p>
+            </div>
+            <button type="button" class="hero-platform-btn release-play-trigger" aria-label="Play cover video">
+              <i class={`fa-brands ${release.cover_video.platformIcon}`}></i>
+            </button>
+          </div>
+
+          <button type="button" class="hero-center-play-btn release-play-trigger" aria-label="Play cover video">
+            <i class="fa-solid fa-play"></i>
+          </button>
+
+          <div class="hero-action-buttons-row">
+            <button type="button" class="hero-btn-primary release-play-trigger">
+              <i class="fa-solid fa-play"></i>
+              <span>PLAY NOW</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+            <button type="button" class="hero-btn-secondary hero-share-trigger">
+              <i class="fa-solid fa-share-nodes"></i>
+              <span>SHARE</span>
+            </button>
+          </div>
+        </div>
+        <div class="hero-card-footer">
+          <span class="hero-footer-text">{release.cover_video.footerText}</span>
+        </div>
+      </div>
+
+      <!-- Sub-Var 1B: Original Single Release -->
+      <div class="sub-var-panel var-release-original_single hidden" id="varReleaseOriginalSingle">
+        <div class="hero-card-media-bg single-bg">
+          <div class="hero-media-overlay"></div>
+          <div class="hero-card-header">
+            <div class="hero-header-text">
+              <h3 class="hero-release-title">{release.original_single.title}</h3>
+              <p class="hero-release-subtitle">{release.original_single.subtitle}</p>
+              <div class="hero-badge-row">
+                <span class="hero-genre-badge">{release.original_single.badge}</span>
+              </div>
+            </div>
+            <button type="button" class="hero-platform-btn single-stream-trigger" aria-label="Stream on Spotify">
+              <i class={`fa-brands ${release.original_single.platformIcon}`}></i>
+            </button>
+          </div>
+
+          <button type="button" class="hero-center-play-btn single-stream-trigger" aria-label="Stream single">
+            <i class="fa-solid fa-play"></i>
+          </button>
+
+          <div class="hero-action-buttons-row">
+            <button type="button" class="hero-btn-primary single-stream-trigger">
+              <i class="fa-solid fa-music"></i>
+              <span>LISTEN NOW</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+            <button type="button" class="hero-btn-secondary hero-share-trigger">
+              <i class="fa-solid fa-share-nodes"></i>
+              <span>SHARE</span>
+            </button>
+          </div>
+        </div>
+        <div class="hero-card-footer">
+          <span class="hero-footer-text">{release.original_single.footerText}</span>
+        </div>
+      </div>
+
+      <!-- Sub-Var 1C: EP Pre-Order -->
+      <div class="sub-var-panel var-release-ep_preorder hidden" id="varReleaseEpPreorder">
+        <div class="hero-card-media-bg ep-bg">
+          <div class="hero-media-overlay"></div>
+          <div class="hero-card-header">
+            <div class="hero-header-text">
+              <h3 class="hero-release-title">{release.ep_preorder.title}</h3>
+              <p class="hero-release-subtitle">{release.ep_preorder.subtitle}</p>
+              <div class="hero-badge-row">
+                <span class="hero-genre-badge">{release.ep_preorder.badge}</span>
               </div>
             </div>
           </div>
-        )}
 
-        {activeUpcomingVar === 'mystery_countdown' && (
-          <div class="sub-var-panel var-upcoming-mystery_countdown" id="varUpcomingMysteryCountdown">
-            <div class="mystery-countdown-card">
-              <span class="upcoming-teaser-badge">{upcoming.mystery_countdown.badge}</span>
-              <h4 class="upcoming-teaser-title">{upcoming.mystery_countdown.title}</h4>
-              <div class="mystery-timer-digits" id="mysteryTimerDigits">
-                <span class="cd-unit"><strong id="mysteryCdDays">03</strong>d</span> :
-                <span class="cd-unit"><strong id="mysteryCdHours">14</strong>h</span> :
-                <span class="cd-unit"><strong id="mysteryCdMins">22</strong>m</span> :
-                <span class="cd-unit"><strong id="mysteryCdSecs">00</strong>s</span>
-              </div>
+          <div class="hero-action-buttons-row ep-action-row">
+            <button type="button" class="hero-btn-primary ep-preorder-trigger">
+              <i class="fa-solid fa-cart-shopping"></i>
+              <span>PRE-ORDER VINYL</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+            <button type="button" class="hero-btn-secondary hero-share-trigger">
+              <i class="fa-solid fa-share-nodes"></i>
+              <span>SHARE</span>
+            </button>
+          </div>
+        </div>
+        <div class="hero-card-footer">
+          <span class="hero-footer-text">{release.ep_preorder.footerText}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 2: POLLS ==================== -->
+    <div class="hero-card-state state-poll hidden" id="statePoll">
+      <!-- Sub-Var 2A: Recording Cover Poll -->
+      <div class="sub-var-panel var-poll-recording_cover" id="varPollRecordingCover">
+        <div class="poll-card-header">
+          <div class="poll-header-top-row">
+            <span class="poll-status-tag poll-status-recording"><i class="fa-solid fa-vote-yea"></i> Voting Open</span>
+          </div>
+          <h3 class="poll-question">{poll.recording_cover.question}</h3>
+        </div>
+        <div class="poll-options-list">
+          {poll.recording_cover.options.map((opt) => {
+            const pct = Math.round((opt.votes / recordingTotalVotes) * 100);
+            return (
+              <button type="button" class="poll-option-btn" data-poll-type="recording" data-option-id={opt.id} data-votes={opt.votes}>
+                <div class="poll-progress-fill" style="width: 0%"></div>
+                <div class="poll-option-content">
+                  <span class="poll-option-text">{opt.text}</span>
+                  <span class="poll-option-pct hidden">{pct}%</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <!-- Sub-Var 2B: Setlist Song Poll + Gig Countdown -->
+      <div class="sub-var-panel var-poll-setlist_song hidden" id="varPollSetlistSong">
+        <div class="poll-card-header">
+          <div class="poll-header-top-row">
+            <span class="poll-status-tag poll-status-setlist"><i class="fa-solid fa-vote-yea"></i> Voting Open</span>
+          </div>
+          <h3 class="poll-question">{poll.setlist_song.question}</h3>
+        </div>
+        <div class="poll-options-list">
+          {poll.setlist_song.options.map((opt) => {
+            const pct = Math.round((opt.votes / setlistTotalVotes) * 100);
+            return (
+              <button type="button" class="poll-option-btn" data-poll-type="setlist" data-option-id={opt.id} data-votes={opt.votes}>
+                <div class="poll-progress-fill" style="width: 0%"></div>
+                <div class="poll-option-content">
+                  <span class="poll-option-text">{opt.text}</span>
+                  <span class="poll-option-pct hidden">{pct}%</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {poll.setlist_song.showCountdown && (
+          <div class="hero-gig-countdown-banner">
+            <div class="countdown-info">
+              <i class="fa-solid fa-location-dot"></i>
+              <span>NEXT SHOW: <strong>{poll.setlist_song.gigName}</strong></span>
+            </div>
+            <div class="countdown-digits-row">
+              <span class="cd-unit"><strong id="heroCdDays">04</strong>d</span> :
+              <span class="cd-unit"><strong id="heroCdHours">12</strong>h</span> :
+              <span class="cd-unit"><strong id="heroCdMins">30</strong>m</span> :
+              <span class="cd-unit"><strong id="heroCdSecs">15</strong>s</span>
             </div>
           </div>
         )}
       </div>
-    )}
 
-    <!-- STATE 1: RELEASES -->
-    {activeState === 'release' && (
-      <div class="hero-card-state state-release" id="stateRelease">
-        {activeReleaseVar === 'cover_video' && (
-          <div class="sub-var-panel var-release-cover_video" id="varReleaseCoverVideo">
-            <div class="hero-card-media-bg">
-              <div class="hero-media-overlay"></div>
-              <div class="hero-card-header">
-                <div class="hero-header-text">
-                  <h3 class="hero-release-title">{release.cover_video.title}</h3>
-                  <p class="hero-release-subtitle">{release.cover_video.subtitle}</p>
-                  <div class="hero-badge-row">
-                    <span class="hero-genre-badge">{release.cover_video.badge}</span>
+      <!-- Sub-Var 2C: Merch Design Vote (3-in-a-row Visual Cards) -->
+      <div class="sub-var-panel var-poll-merch_design hidden" id="varPollMerchDesign">
+        <div class="poll-card-header">
+          <div class="poll-header-top-row">
+            <span class="poll-status-tag poll-status-merch"><i class="fa-solid fa-shirt"></i> Merch Vote Open</span>
+          </div>
+          <h3 class="poll-question">{poll.merch_design.question}</h3>
+        </div>
+
+        <div class="merch-poll-grid">
+          {poll.merch_design.options.map((opt) => {
+            const pct = Math.round((opt.votes / merchTotalVotes) * 100);
+            return (
+              <button type="button" class="merch-card-item poll-option-btn" data-poll-type="merch" data-option-id={opt.id} data-votes={opt.votes}>
+                <div class="merch-card-thumb-box">
+                  <img src={opt.img || '/pfp.jpg'} alt={opt.text} class="merch-card-img" />
+                  <div class="merch-card-icon-badge">
+                    <i class={`fa-solid ${opt.icon || 'fa-shirt'}`}></i>
+                  </div>
+                  <div class="merch-card-voted-check">
+                    <i class="fa-solid fa-check"></i>
                   </div>
                 </div>
-                <button type="button" class="hero-platform-btn release-play-trigger" aria-label="Play cover video">
-                  <i class={`fa-brands ${release.cover_video.platformIcon}`}></i>
-                </button>
-              </div>
 
-              <button type="button" class="hero-center-play-btn release-play-trigger" aria-label="Play cover video">
-                <i class="fa-solid fa-play"></i>
-              </button>
-
-              <div class="hero-action-buttons-row">
-                <button type="button" class="hero-btn-primary release-play-trigger">
-                  <i class="fa-solid fa-play"></i>
-                  <span>PLAY NOW</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </button>
-                <button type="button" class="hero-btn-secondary hero-share-trigger">
-                  <i class="fa-solid fa-share-nodes"></i>
-                  <span>SHARE</span>
-                </button>
-              </div>
-            </div>
-            <div class="hero-card-footer">
-              <span class="hero-footer-text">{release.cover_video.footerText}</span>
-            </div>
-          </div>
-        )}
-
-        {activeReleaseVar === 'original_single' && (
-          <div class="sub-var-panel var-release-original_single" id="varReleaseOriginalSingle">
-            <div class="hero-card-media-bg single-bg">
-              <div class="hero-media-overlay"></div>
-              <div class="hero-card-header">
-                <div class="hero-header-text">
-                  <h3 class="hero-release-title">{release.original_single.title}</h3>
-                  <p class="hero-release-subtitle">{release.original_single.subtitle}</p>
-                  <div class="hero-badge-row">
-                    <span class="hero-genre-badge">{release.original_single.badge}</span>
-                  </div>
-                </div>
-                <button type="button" class="hero-platform-btn single-stream-trigger" aria-label="Stream on Spotify">
-                  <i class={`fa-brands ${release.original_single.platformIcon}`}></i>
-                </button>
-              </div>
-
-              <button type="button" class="hero-center-play-btn single-stream-trigger" aria-label="Stream single">
-                <i class="fa-solid fa-play"></i>
-              </button>
-
-              <div class="hero-action-buttons-row">
-                <button type="button" class="hero-btn-primary single-stream-trigger">
-                  <i class="fa-solid fa-music"></i>
-                  <span>LISTEN NOW</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </button>
-                <button type="button" class="hero-btn-secondary hero-share-trigger">
-                  <i class="fa-solid fa-share-nodes"></i>
-                  <span>SHARE</span>
-                </button>
-              </div>
-            </div>
-            <div class="hero-card-footer">
-              <span class="hero-footer-text">{release.original_single.footerText}</span>
-            </div>
-          </div>
-        )}
-
-        {activeReleaseVar === 'ep_preorder' && (
-          <div class="sub-var-panel var-release-ep_preorder" id="varReleaseEpPreorder">
-            <div class="hero-card-media-bg ep-bg">
-              <div class="hero-media-overlay"></div>
-              <div class="hero-card-header">
-                <div class="hero-header-text">
-                  <h3 class="hero-release-title">{release.ep_preorder.title}</h3>
-                  <p class="hero-release-subtitle">{release.ep_preorder.subtitle}</p>
-                  <div class="hero-badge-row">
-                    <span class="hero-genre-badge">{release.ep_preorder.badge}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="hero-action-buttons-row ep-action-row">
-                <button type="button" class="hero-btn-primary ep-preorder-trigger">
-                  <i class="fa-solid fa-cart-shopping"></i>
-                  <span>PRE-ORDER VINYL</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </button>
-                <button type="button" class="hero-btn-secondary hero-share-trigger">
-                  <i class="fa-solid fa-share-nodes"></i>
-                  <span>SHARE</span>
-                </button>
-              </div>
-            </div>
-            <div class="hero-card-footer">
-              <span class="hero-footer-text">{release.ep_preorder.footerText}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    )}
-
-    <!-- STATE 2: POLLS -->
-    {activeState === 'poll' && (
-      <div class="hero-card-state state-poll" id="statePoll">
-        {activePollVar === 'recording_cover' && (
-          <div class="sub-var-panel var-poll-recording_cover" id="varPollRecordingCover">
-            <div class="poll-card-header">
-              <div class="poll-header-top-row">
-                <span class="poll-status-tag poll-status-recording"><i class="fa-solid fa-vote-yea"></i> Voting Open</span>
-              </div>
-              <h3 class="poll-question">{poll.recording_cover.question}</h3>
-            </div>
-            <div class="poll-options-list">
-              {poll.recording_cover.options.map((opt) => {
-                const pct = Math.round((opt.votes / recordingTotalVotes) * 100);
-                return (
-                  <button type="button" class="poll-option-btn" data-poll-type="recording" data-option-id={opt.id} data-votes={opt.votes}>
+                <div class="merch-card-info">
+                  <span class="merch-card-title">{opt.text}</span>
+                  <div class="merch-card-progress-bar">
                     <div class="poll-progress-fill" style="width: 0%"></div>
-                    <div class="poll-option-content">
-                      <span class="poll-option-text">{opt.text}</span>
-                      <span class="poll-option-pct hidden">{pct}%</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {activePollVar === 'setlist_song' && (
-          <div class="sub-var-panel var-poll-setlist_song" id="varPollSetlistSong">
-            <div class="poll-card-header">
-              <div class="poll-header-top-row">
-                <span class="poll-status-tag poll-status-setlist"><i class="fa-solid fa-vote-yea"></i> Voting Open</span>
-              </div>
-              <h3 class="poll-question">{poll.setlist_song.question}</h3>
-            </div>
-            <div class="poll-options-list">
-              {poll.setlist_song.options.map((opt) => {
-                const pct = Math.round((opt.votes / setlistTotalVotes) * 100);
-                return (
-                  <button type="button" class="poll-option-btn" data-poll-type="setlist" data-option-id={opt.id} data-votes={opt.votes}>
-                    <div class="poll-progress-fill" style="width: 0%"></div>
-                    <div class="poll-option-content">
-                      <span class="poll-option-text">{opt.text}</span>
-                      <span class="poll-option-pct hidden">{pct}%</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            {poll.setlist_song.showCountdown && (
-              <div class="hero-gig-countdown-banner">
-                <div class="countdown-info">
-                  <i class="fa-solid fa-location-dot"></i>
-                  <span>NEXT SHOW: <strong>{poll.setlist_song.gigName}</strong></span>
-                </div>
-                <div class="countdown-digits-row">
-                  <span class="cd-unit"><strong id="heroCdDays">04</strong>d</span> :
-                  <span class="cd-unit"><strong id="heroCdHours">12</strong>h</span> :
-                  <span class="cd-unit"><strong id="heroCdMins">30</strong>m</span> :
-                  <span class="cd-unit"><strong id="heroCdSecs">15</strong>s</span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activePollVar === 'merch_design' && (
-          <div class="sub-var-panel var-poll-merch_design" id="varPollMerchDesign">
-            <div class="poll-card-header">
-              <div class="poll-header-top-row">
-                <span class="poll-status-tag poll-status-merch"><i class="fa-solid fa-shirt"></i> Merch Vote Open</span>
-              </div>
-              <h3 class="poll-question">{poll.merch_design.question}</h3>
-            </div>
-
-            <div class="merch-poll-grid">
-              {poll.merch_design.options.map((opt) => {
-                const pct = Math.round((opt.votes / merchTotalVotes) * 100);
-                return (
-                  <button type="button" class="merch-card-item poll-option-btn" data-poll-type="merch" data-option-id={opt.id} data-votes={opt.votes}>
-                    <div class="merch-card-thumb-box">
-                      <img src={opt.img || '/pfp.jpg'} alt={opt.text} class="merch-card-img" />
-                      <div class="merch-card-icon-badge">
-                        <i class={`fa-solid ${opt.icon || 'fa-shirt'}`}></i>
-                      </div>
-                      <div class="merch-card-voted-check">
-                        <i class="fa-solid fa-check"></i>
-                      </div>
-                    </div>
-
-                    <div class="merch-card-info">
-                      <span class="merch-card-title">{opt.text}</span>
-                      <div class="merch-card-progress-bar">
-                        <div class="poll-progress-fill" style="width: 0%"></div>
-                      </div>
-                      <span class="poll-option-pct hidden">{pct}%</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {activePollVar === 'city_request' && (
-          <div class="sub-var-panel var-poll-city_request" id="varPollCityRequest">
-            <div class="poll-card-header">
-              <div class="poll-header-top-row">
-                <span class="poll-status-tag poll-status-city"><i class="fa-solid fa-map-location-dot"></i> City Request</span>
-              </div>
-              <h3 class="poll-question">{poll.city_request.question}</h3>
-            </div>
-            <div class="poll-options-list">
-              {poll.city_request.options.map((opt) => {
-                const pct = Math.round((opt.votes / cityTotalVotes) * 100);
-                return (
-                  <button type="button" class="poll-option-btn" data-poll-type="city" data-option-id={opt.id} data-votes={opt.votes}>
-                    <div class="poll-progress-fill" style="width: 0%"></div>
-                    <div class="poll-option-content">
-                      <span class="poll-option-text">{opt.text}</span>
-                      <span class="poll-option-pct hidden">{pct}%</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-    )}
-
-    <!-- STATE 3: PREVIEWS -->
-    {activeState === 'preview' && (
-      <div class="hero-card-state state-preview" id="statePreview">
-        {activePreviewVar === 'inspired_demo' && (
-          <div class="sub-var-panel var-preview-inspired_demo" id="varPreviewInspiredDemo">
-            <div class="inspired-style-preview-card">
-              <div class="preview-thumb-box" id="previewDiscBox">
-                <img src={preview.inspired_demo.coverImg} alt={preview.inspired_demo.title} class="preview-thumb-img" />
-                <i class="fa-solid fa-compact-disc preview-fallback-icon"></i>
-              </div>
-
-              <div class="preview-card-info">
-                <div class="preview-title-row">
-                  <span class="preview-song-title">{preview.inspired_demo.title}</span>
-                </div>
-                <span class="preview-artist-name">{preview.inspired_demo.artist}</span>
-
-                <div class="preview-timeline-box">
-                  <div class="preview-progress-track" id="previewProgressTrack">
-                    <div class="preview-progress-fill" id="previewProgressFill" style="width: 0%"></div>
                   </div>
-                  <div class="preview-time-row">
-                    <span id="previewTimeCurrent">0:00</span>
-                    <span id="previewTimeTotal">0:30</span>
-                  </div>
+                  <span class="poll-option-pct hidden">{pct}%</span>
                 </div>
-              </div>
-
-              <button type="button" class="preview-play-toggle-btn" id="previewPlayToggleBtn" aria-label="Toggle preview playback">
-                <i class="fa-solid fa-play"></i>
               </button>
-            </div>
+            );
+          })}
+        </div>
+      </div>
 
-            <div class="preview-actions-row">
-              <button type="button" class="hero-btn-primary" id="previewPreSaveBtn">
-                <i class="fa-solid fa-bookmark"></i>
-                <span>PRE-SAVE SINGLE</span>
+      <!-- Sub-Var 2D: Tour City Request Poll -->
+      <div class="sub-var-panel var-poll-city_request hidden" id="varPollCityRequest">
+        <div class="poll-card-header">
+          <div class="poll-header-top-row">
+            <span class="poll-status-tag poll-status-city"><i class="fa-solid fa-map-location-dot"></i> City Request</span>
+          </div>
+          <h3 class="poll-question">{poll.city_request.question}</h3>
+        </div>
+        <div class="poll-options-list">
+          {poll.city_request.options.map((opt) => {
+            const pct = Math.round((opt.votes / cityTotalVotes) * 100);
+            return (
+              <button type="button" class="poll-option-btn" data-poll-type="city" data-option-id={opt.id} data-votes={opt.votes}>
+                <div class="poll-progress-fill" style="width: 0%"></div>
+                <div class="poll-option-content">
+                  <span class="poll-option-text">{opt.text}</span>
+                  <span class="poll-option-pct hidden">{pct}%</span>
+                </div>
               </button>
-              <button type="button" class="hero-btn-secondary hero-share-trigger">
-                <i class="fa-solid fa-share-nodes"></i>
-                <span>SHARE DEMO</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {activePreviewVar === 'studio_bts' && (
-          <div class="sub-var-panel var-preview-studio_bts" id="varPreviewStudioBts">
-            <div class="inspired-style-preview-card">
-              <div class="preview-thumb-box">
-                <i class="fa-solid fa-video preview-fallback-icon"></i>
-              </div>
-              <div class="preview-card-info">
-                <span class="preview-song-title">{preview.studio_bts.title}</span>
-                <span class="preview-artist-name">{preview.studio_bts.artist}</span>
-              </div>
-              <button type="button" class="preview-play-toggle-btn release-play-trigger" aria-label="Watch Studio Vlog">
-                <i class="fa-solid fa-play"></i>
-              </button>
-            </div>
-          </div>
-        )}
+            );
+          })}
+        </div>
       </div>
-    )}
+    </div>
 
-    <!-- STATE 4: TOUR SPOTLIGHT -->
-    {activeState === 'tour' && (
-      <div class="hero-card-state state-tour" id="stateTour">
-        {activeTourVar === 'next_show' && (
-          <div class="sub-var-panel var-tour-next_show" id="varTourNextShow">
-            <div class="tour-card-content">
-              <div class="tour-header-badge-row">
-                <span class="tour-badge"><i class="fa-solid fa-guitar"></i> {tour.next_show.badge}</span>
+    <!-- ==================== STATE 3: PREVIEWS ==================== -->
+    <div class="hero-card-state state-preview hidden" id="statePreview">
+      <!-- Sub-Var 3A: Inspired-Style Demo Preview -->
+      <div class="sub-var-panel var-preview-inspired_demo" id="varPreviewInspiredDemo">
+        <div class="inspired-style-preview-card">
+          <div class="preview-thumb-box" id="previewDiscBox">
+            <img src={preview.inspired_demo.coverImg} alt={preview.inspired_demo.title} class="preview-thumb-img" />
+            <i class="fa-solid fa-compact-disc preview-fallback-icon"></i>
+          </div>
+
+          <div class="preview-card-info">
+            <div class="preview-title-row">
+              <span class="preview-song-title">{preview.inspired_demo.title}</span>
+            </div>
+            <span class="preview-artist-name">{preview.inspired_demo.artist}</span>
+
+            <div class="preview-timeline-box">
+              <div class="preview-progress-track" id="previewProgressTrack">
+                <div class="preview-progress-fill" id="previewProgressFill" style="width: 0%"></div>
               </div>
-              <h3 class="tour-title">{tour.next_show.title}</h3>
-              <p class="tour-venue-line"><i class="fa-solid fa-location-dot"></i> {tour.next_show.venue}</p>
-              <p class="tour-date-line">{tour.next_show.dateText}</p>
-
-              <div class="tour-actions-row">
-                <a href={tour.next_show.ticketsUrl} target="_blank" rel="noopener noreferrer" class="hero-btn-primary tour-ticket-link">
-                  <i class="fa-solid fa-ticket"></i>
-                  <span>GET TICKETS</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </a>
-                <button type="button" class="hero-btn-secondary" id="heroOpenGigMapBtn">
-                  <i class="fa-solid fa-map-location-dot"></i>
-                  <span>VIEW GIG MAP</span>
-                </button>
+              <div class="preview-time-row">
+                <span id="previewTimeCurrent">0:00</span>
+                <span id="previewTimeTotal">0:30</span>
               </div>
             </div>
           </div>
-        )}
 
-        {activeTourVar === 'aftermovie' && (
-          <div class="sub-var-panel var-tour-aftermovie" id="varTourAftermovie">
-            <div class="tour-card-content">
-              <span class="tour-badge">{tour.aftermovie.badge}</span>
-              <h3 class="tour-title">{tour.aftermovie.title}</h3>
-              <p class="tour-venue-line">{tour.aftermovie.venue}</p>
-              <div class="tour-actions-row">
-                <button type="button" class="hero-btn-primary release-play-trigger">
-                  <i class="fa-solid fa-play"></i>
-                  <span>WATCH AFTERMOVIE</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+          <button type="button" class="preview-play-toggle-btn" id="previewPlayToggleBtn" aria-label="Toggle preview playback">
+            <i class="fa-solid fa-play"></i>
+          </button>
+        </div>
 
-        {activeTourVar === 'sold_out' && (
-          <div class="sub-var-panel var-tour-sold_out" id="varTourSoldOut">
-            <div class="tour-card-content">
-              <span class="tour-badge sold-out-badge">{tour.sold_out.badge}</span>
-              <h3 class="tour-title">{tour.sold_out.title}</h3>
-              <p class="tour-venue-line">{tour.sold_out.dateText}</p>
-              <div class="tour-actions-row">
-                <a href={tour.sold_out.ticketsUrl} target="_blank" rel="noopener noreferrer" class="hero-btn-primary tour-ticket-link">
-                  <i class="fa-solid fa-ticket"></i>
-                  <span>GET 2ND SHOW TICKETS</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
+        <div class="preview-actions-row">
+          <button type="button" class="hero-btn-primary" id="previewPreSaveBtn">
+            <i class="fa-solid fa-bookmark"></i>
+            <span>PRE-SAVE SINGLE</span>
+          </button>
+          <button type="button" class="hero-btn-secondary hero-share-trigger">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>SHARE DEMO</span>
+          </button>
+        </div>
       </div>
-    )}
 
-    <!-- STATE 5: MILESTONES -->
-    {activeState === 'milestones' && (
-      <div class="hero-card-state state-milestones" id="stateMilestones">
-        {activeMilestoneVar === 'follower_milestone' && (
-          <div class="sub-var-panel var-milestones-follower_milestone" id="varMilestonesFollower">
-            <div class="milestone-card-content">
-              <div class="milestone-top-row">
-                <div class="milestone-icon-circle">
-                  <i class="fa-solid fa-users"></i>
+      <!-- Sub-Var 3B: Studio BTS Vlog Teaser -->
+      <div class="sub-var-panel var-preview-studio_bts hidden" id="varPreviewStudioBts">
+        <div class="inspired-style-preview-card">
+          <div class="preview-thumb-box">
+            <i class="fa-solid fa-video preview-fallback-icon"></i>
+          </div>
+          <div class="preview-card-info">
+            <span class="preview-song-title">{preview.studio_bts.title}</span>
+            <span class="preview-artist-name">{preview.studio_bts.artist}</span>
+          </div>
+          <button type="button" class="preview-play-toggle-btn release-play-trigger" aria-label="Watch Studio Vlog">
+            <i class="fa-solid fa-play"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 4: TOUR SPOTLIGHT ==================== -->
+    <div class="hero-card-state state-tour hidden" id="stateTour">
+      <!-- Sub-Var 4A: Next Show & Ticket Drop -->
+      <div class="sub-var-panel var-tour-next_show" id="varTourNextShow">
+        <div class="tour-card-content">
+          <div class="tour-header-badge-row">
+            <span class="tour-badge"><i class="fa-solid fa-guitar"></i> {tour.next_show.badge}</span>
+          </div>
+          <h3 class="tour-title">{tour.next_show.title}</h3>
+          <p class="tour-venue-line"><i class="fa-solid fa-location-dot"></i> {tour.next_show.venue}</p>
+          <p class="tour-date-line">{tour.next_show.dateText}</p>
+
+          <div class="tour-actions-row">
+            <a href={tour.next_show.ticketsUrl} target="_blank" rel="noopener noreferrer" class="hero-btn-primary tour-ticket-link">
+              <i class="fa-solid fa-ticket"></i>
+              <span>GET TICKETS</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </a>
+            <button type="button" class="hero-btn-secondary" id="heroOpenGigMapBtn">
+              <i class="fa-solid fa-map-location-dot"></i>
+              <span>VIEW GIG MAP</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 4B: Concert Aftermovie -->
+      <div class="sub-var-panel var-tour-aftermovie hidden" id="varTourAftermovie">
+        <div class="tour-card-content">
+          <span class="tour-badge">{tour.aftermovie.badge}</span>
+          <h3 class="tour-title">{tour.aftermovie.title}</h3>
+          <p class="tour-venue-line">{tour.aftermovie.venue}</p>
+          <div class="tour-actions-row">
+            <button type="button" class="hero-btn-primary release-play-trigger">
+              <i class="fa-solid fa-play"></i>
+              <span>WATCH AFTERMOVIE</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 4C: Sold Out Alert -->
+      <div class="sub-var-panel var-tour-sold_out hidden" id="varTourSoldOut">
+        <div class="tour-card-content">
+          <span class="tour-badge sold-out-badge">{tour.sold_out.badge}</span>
+          <h3 class="tour-title">{tour.sold_out.title}</h3>
+          <p class="tour-venue-line">{tour.sold_out.dateText}</p>
+          <div class="tour-actions-row">
+            <a href={tour.sold_out.ticketsUrl} target="_blank" rel="noopener noreferrer" class="hero-btn-primary tour-ticket-link">
+              <i class="fa-solid fa-ticket"></i>
+              <span>GET 2ND SHOW TICKETS</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 5: MILESTONES ==================== -->
+    <div class="hero-card-state state-milestones hidden" id="stateMilestones">
+      <!-- Sub-Var 5A: Follower Milestone -->
+      <div class="sub-var-panel var-milestones-follower_milestone" id="varMilestonesFollower">
+        <div class="milestone-card-content">
+          <!-- Top Row: Icon + Meta Column -->
+          <div class="milestone-top-row">
+            <div class="milestone-icon-circle">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="milestone-top-meta">
+              <span class="milestone-badge">{milestones.follower_milestone.badge}</span>
+              <h3 class="milestone-title">{milestones.follower_milestone.title}</h3>
+            </div>
+          </div>
+
+          <!-- Second Row: Message Subtext -->
+          <p class="milestone-desc">{milestones.follower_milestone.message}</p>
+
+          <!-- Action Button -->
+          <div class="milestone-actions-row">
+            <button type="button" class="hero-btn-primary milestone-celebrate-btn hero-share-trigger">
+              <i class="fa-solid fa-heart"></i>
+              <span>CELEBRATE WITH KINS</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 5B: Stream Milestone -->
+      <div class="sub-var-panel var-milestones-stream_milestone hidden" id="varMilestonesStream">
+        <div class="milestone-card-content spotify-theme">
+          <!-- Top Row: Spotify Icon + Meta Column -->
+          <div class="milestone-top-row">
+            <div class="milestone-icon-circle spotify-icon">
+              <i class="fa-brands fa-spotify"></i>
+            </div>
+            <div class="milestone-top-meta">
+              <span class="milestone-badge">{milestones.stream_milestone.badge}</span>
+              <h3 class="milestone-title spotify-green-text">{milestones.stream_milestone.streamCount}</h3>
+            </div>
+          </div>
+
+          <!-- Second Row: Track Subtext -->
+          <p class="milestone-desc">{milestones.stream_milestone.songTitle} • Out now on Spotify & Apple Music</p>
+
+          <!-- Action Button -->
+          <div class="milestone-actions-row">
+            <button type="button" class="hero-btn-primary spotify-btn single-stream-trigger">
+              <i class="fa-brands fa-spotify"></i>
+              <span>STREAM ON SPOTIFY</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 5C: Press / Blog Quote -->
+      <div class="sub-var-panel var-milestones-press_quote hidden" id="varMilestonesPress">
+        <div class="milestone-card-content quote-theme">
+          <i class="fa-solid fa-quote-left press-quote-icon"></i>
+          <p class="press-quote-text">"{milestones.press_quote.quote}"</p>
+          <span class="press-pub-name">— {milestones.press_quote.publication}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 6: LIVESTREAM & EVENTS ==================== -->
+    <div class="hero-card-state state-livestream hidden" id="stateLivestream">
+      <!-- Sub-Var 6A: Live Now -->
+      <div class="sub-var-panel var-livestream-live_now" id="varLivestreamLiveNow">
+        <div class="livestream-card-content">
+          <div class="live-pulse-badge-row">
+            <span class="live-pulse-badge"><span class="live-dot"></span> LIVE NOW</span>
+            <span class="live-viewers-count"><i class="fa-solid fa-eye"></i> {livestream.live_now.viewerCount}</span>
+          </div>
+          <h3 class="livestream-title">{livestream.live_now.title}</h3>
+          <div class="livestream-actions-row">
+            <button type="button" class="hero-btn-primary live-join-btn release-play-trigger">
+              <i class="fa-solid fa-tower-broadcast"></i>
+              <span>JOIN STREAM NOW</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 6B: Upcoming Stream -->
+      <div class="sub-var-panel var-livestream-upcoming_stream hidden" id="varLivestreamUpcoming">
+        <div class="livestream-card-content">
+          <span class="tour-badge"><i class="fa-solid fa-clock"></i> {livestream.upcoming_stream.badge}</span>
+          <h3 class="livestream-title">{livestream.upcoming_stream.title}</h3>
+          <p class="tour-date-line"><i class="fa-solid fa-calendar-day"></i> {livestream.upcoming_stream.scheduledTime}</p>
+          <div class="livestream-actions-row">
+            <button type="button" class="hero-btn-primary livestream-reminder-btn hero-share-trigger">
+              <i class="fa-solid fa-bell"></i>
+              <span>SET REMINDER</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 6C: Listening Party -->
+      <div class="sub-var-panel var-livestream-listening_party hidden" id="varLivestreamParty">
+        <div class="livestream-card-content">
+          <span class="tour-badge party-badge"><i class="fa-solid fa-headphones"></i> {livestream.listening_party.badge}</span>
+          <h3 class="livestream-title">{livestream.listening_party.title}</h3>
+          <p class="tour-date-line">{livestream.listening_party.eventDetails}</p>
+          <div class="livestream-actions-row">
+            <button type="button" class="hero-btn-primary discord-btn hero-share-trigger">
+              <i class="fa-brands fa-discord"></i>
+              <span>JOIN DISCORD PARTY</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STATE 7: SPOTLIGHT ==================== -->
+    <div class="hero-card-state state-spotlight hidden" id="stateSpotlight">
+      <!-- Sub-Var 7A: Member Spotlight -->
+      <div class="sub-var-panel var-spotlight-member_spotlight" id="varSpotlightMember">
+        <div class="spotlight-card-content">
+          <div class="spotlight-thumb-box">
+            <img src={spotlight.member_spotlight.img} alt={spotlight.member_spotlight.name} class="spotlight-img" />
+          </div>
+          <div class="spotlight-details">
+            <span class="tour-badge">{spotlight.member_spotlight.role}</span>
+            <h3 class="spotlight-name">{spotlight.member_spotlight.name}</h3>
+            <p class="spotlight-quote">"{spotlight.member_spotlight.quote}"</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 7B: Origin Story -->
+      <div class="sub-var-panel var-spotlight-origin_story hidden" id="varSpotlightOrigin">
+        <div class="spotlight-card-content origin-theme">
+          <span class="tour-badge">{spotlight.origin_story.yearFormed}</span>
+          <h3 class="spotlight-name">{spotlight.origin_story.title}</h3>
+          <p class="spotlight-quote">{spotlight.origin_story.snippet}</p>
+        </div>
+      </div>
+
+      <!-- Sub-Var 7C: Gear Showcase (3-in-a-row) -->
+      <div class="sub-var-panel var-spotlight-gear_showcase hidden" id="varSpotlightGear">
+        <div class="poll-card-header">
+          <h3 class="poll-question">{spotlight.gear_showcase.title}</h3>
+        </div>
+        <div class="merch-poll-grid">
+          {spotlight.gear_showcase.items.map((item) => (
+            <div class="merch-card-item">
+              <div class="merch-card-thumb-box">
+                <img src={item.img} alt={item.name} class="merch-card-img" />
+                <div class="merch-card-icon-badge">
+                  <i class={`fa-solid ${item.icon}`}></i>
                 </div>
-                <div class="milestone-top-meta">
-                  <span class="milestone-badge">{milestones.follower_milestone.badge}</span>
-                  <h3 class="milestone-title">{milestones.follower_milestone.title}</h3>
-                </div>
               </div>
-              <p class="milestone-desc">{milestones.follower_milestone.message}</p>
-              <div class="milestone-actions-row">
-                <button type="button" class="hero-btn-primary milestone-celebrate-btn hero-share-trigger">
-                  <i class="fa-solid fa-heart"></i>
-                  <span>CELEBRATE WITH KINS</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </button>
+              <div class="merch-card-info">
+                <span class="merch-card-title">{item.name}</span>
+                <span class="tour-date-line">{item.category}</span>
               </div>
             </div>
-          </div>
-        )}
-
-        {activeMilestoneVar === 'stream_milestone' && (
-          <div class="sub-var-panel var-milestones-stream_milestone" id="varMilestonesStream">
-            <div class="milestone-card-content spotify-theme">
-              <div class="milestone-top-row">
-                <div class="milestone-icon-circle spotify-icon">
-                  <i class="fa-brands fa-spotify"></i>
-                </div>
-                <div class="milestone-top-meta">
-                  <span class="milestone-badge">{milestones.stream_milestone.badge}</span>
-                  <h3 class="milestone-title spotify-green-text">{milestones.stream_milestone.streamCount}</h3>
-                </div>
-              </div>
-              <p class="milestone-desc">{milestones.stream_milestone.songTitle} • Out now on Spotify & Apple Music</p>
-              <div class="milestone-actions-row">
-                <button type="button" class="hero-btn-primary spotify-btn single-stream-trigger">
-                  <i class="fa-brands fa-spotify"></i>
-                  <span>STREAM ON SPOTIFY</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeMilestoneVar === 'press_quote' && (
-          <div class="sub-var-panel var-milestones-press_quote" id="varMilestonesPress">
-            <div class="milestone-card-content quote-theme">
-              <i class="fa-solid fa-quote-left press-quote-icon"></i>
-              <p class="press-quote-text">"{milestones.press_quote.quote}"</p>
-              <span class="press-pub-name">— {milestones.press_quote.publication}</span>
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
-    )}
+    </div>
 
-    <!-- STATE 6: LIVESTREAM & EVENTS -->
-    {activeState === 'livestream' && (
-      <div class="hero-card-state state-livestream" id="stateLivestream">
-        {activeLivestreamVar === 'live_now' && (
-          <div class="sub-var-panel var-livestream-live_now" id="varLivestreamLiveNow">
-            <div class="livestream-card-content">
-              <div class="live-pulse-badge-row">
-                <span class="live-pulse-badge"><span class="live-dot"></span> LIVE NOW</span>
-                <span class="live-viewers-count"><i class="fa-solid fa-eye"></i> {livestream.live_now.viewerCount}</span>
-              </div>
-              <h3 class="livestream-title">{livestream.live_now.title}</h3>
-              <div class="livestream-actions-row">
-                <button type="button" class="hero-btn-primary live-join-btn release-play-trigger">
-                  <i class="fa-solid fa-tower-broadcast"></i>
-                  <span>JOIN STREAM NOW</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </button>
-              </div>
-            </div>
+    <!-- ==================== STATE 8: COLLAB ==================== -->
+    <div class="hero-card-state state-collab hidden" id="stateCollab">
+      <!-- Sub-Var 8A: Collab Single -->
+      <div class="sub-var-panel var-collab-collab_single" id="varCollabSingle">
+        <div class="tour-card-content">
+          <span class="tour-badge">{collab.collab_single.badge}</span>
+          <h3 class="tour-title">{collab.collab_single.title}</h3>
+          <p class="tour-venue-line">{collab.collab_single.featuredArtist}</p>
+          <div class="tour-actions-row">
+            <button type="button" class="hero-btn-primary single-stream-trigger">
+              <i class="fa-solid fa-play"></i>
+              <span>LISTEN NOW</span>
+            </button>
           </div>
-        )}
-
-        {activeLivestreamVar === 'upcoming_stream' && (
-          <div class="sub-var-panel var-livestream-upcoming_stream" id="varLivestreamUpcoming">
-            <div class="livestream-card-content">
-              <span class="tour-badge"><i class="fa-solid fa-clock"></i> {livestream.upcoming_stream.badge}</span>
-              <h3 class="livestream-title">{livestream.upcoming_stream.title}</h3>
-              <p class="tour-date-line"><i class="fa-solid fa-calendar-day"></i> {livestream.upcoming_stream.scheduledTime}</p>
-              <div class="livestream-actions-row">
-                <button type="button" class="hero-btn-primary livestream-reminder-btn hero-share-trigger">
-                  <i class="fa-solid fa-bell"></i>
-                  <span>SET REMINDER</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeLivestreamVar === 'listening_party' && (
-          <div class="sub-var-panel var-livestream-listening_party" id="varLivestreamParty">
-            <div class="livestream-card-content">
-              <span class="tour-badge party-badge"><i class="fa-solid fa-headphones"></i> {livestream.listening_party.badge}</span>
-              <h3 class="livestream-title">{livestream.listening_party.title}</h3>
-              <p class="tour-date-line">{livestream.listening_party.eventDetails}</p>
-              <div class="livestream-actions-row">
-                <button type="button" class="hero-btn-primary discord-btn hero-share-trigger">
-                  <i class="fa-brands fa-discord"></i>
-                  <span>JOIN DISCORD PARTY</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
-    )}
 
-    <!-- STATE 7: SPOTLIGHT -->
-    {activeState === 'spotlight' && (
-      <div class="hero-card-state state-spotlight" id="stateSpotlight">
-        {activeSpotlightVar === 'member_spotlight' && (
-          <div class="sub-var-panel var-spotlight-member_spotlight" id="varSpotlightMember">
-            <div class="spotlight-card-content">
-              <div class="spotlight-thumb-box">
-                <img src={spotlight.member_spotlight.img} alt={spotlight.member_spotlight.name} class="spotlight-img" />
-              </div>
-              <div class="spotlight-details">
-                <span class="tour-badge">{spotlight.member_spotlight.role}</span>
-                <h3 class="spotlight-name">{spotlight.member_spotlight.name}</h3>
-                <p class="spotlight-quote">"{spotlight.member_spotlight.quote}"</p>
-              </div>
-            </div>
+      <!-- Sub-Var 8B: Featured Playlist -->
+      <div class="sub-var-panel var-collab-featured_playlist hidden" id="varCollabPlaylist">
+        <div class="tour-card-content spotify-theme">
+          <span class="tour-badge">{collab.featured_playlist.badge}</span>
+          <h3 class="tour-title">{collab.featured_playlist.playlistName}</h3>
+          <p class="tour-venue-line">{collab.featured_playlist.curator} • {collab.featured_playlist.followers}</p>
+          <div class="tour-actions-row">
+            <button type="button" class="hero-btn-primary single-stream-trigger">
+              <i class="fa-brands fa-spotify"></i>
+              <span>OPEN PLAYLIST</span>
+            </button>
           </div>
-        )}
-
-        {activeSpotlightVar === 'origin_story' && (
-          <div class="sub-var-panel var-spotlight-origin_story" id="varSpotlightOrigin">
-            <div class="spotlight-card-content origin-theme">
-              <span class="tour-badge">{spotlight.origin_story.yearFormed}</span>
-              <h3 class="spotlight-name">{spotlight.origin_story.title}</h3>
-              <p class="spotlight-quote">{spotlight.origin_story.snippet}</p>
-            </div>
-          </div>
-        )}
-
-        {activeSpotlightVar === 'gear_showcase' && (
-          <div class="sub-var-panel var-spotlight-gear_showcase" id="varSpotlightGear">
-            <div class="poll-card-header">
-              <h3 class="poll-question">{spotlight.gear_showcase.title}</h3>
-            </div>
-            <div class="merch-poll-grid">
-              {spotlight.gear_showcase.items.map((item) => (
-                <div class="merch-card-item">
-                  <div class="merch-card-thumb-box">
-                    <img src={item.img} alt={item.name} class="merch-card-img" />
-                    <div class="merch-card-icon-badge">
-                      <i class={`fa-solid ${item.icon}`}></i>
-                    </div>
-                  </div>
-                  <div class="merch-card-info">
-                    <span class="merch-card-title">{item.name}</span>
-                    <span class="tour-date-line">{item.category}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
-    )}
 
-    <!-- STATE 8: COLLAB -->
-    {activeState === 'collab' && (
-      <div class="hero-card-state state-collab" id="stateCollab">
-        {activeCollabVar === 'collab_single' && (
-          <div class="sub-var-panel var-collab-collab_single" id="varCollabSingle">
-            <div class="tour-card-content">
-              <span class="tour-badge">{collab.collab_single.badge}</span>
-              <h3 class="tour-title">{collab.collab_single.title}</h3>
-              <p class="tour-venue-line">{collab.collab_single.featuredArtist}</p>
-              <div class="tour-actions-row">
-                <button type="button" class="hero-btn-primary single-stream-trigger">
-                  <i class="fa-solid fa-play"></i>
-                  <span>LISTEN NOW</span>
-                </button>
-              </div>
-            </div>
+      <!-- Sub-Var 8C: TikTok Challenge -->
+      <div class="sub-var-panel var-collab-tiktok_challenge hidden" id="varCollabTiktok">
+        <div class="tour-card-content">
+          <span class="tour-badge">{collab.tiktok_challenge.badge}</span>
+          <h3 class="tour-title">{collab.tiktok_challenge.title}</h3>
+          <p class="tour-venue-line">{collab.tiktok_challenge.hashtag}</p>
+          <p class="tour-date-line">{collab.tiktok_challenge.desc}</p>
+          <div class="tour-actions-row">
+            <button type="button" class="hero-btn-primary hero-share-trigger">
+              <i class="fa-brands fa-tiktok"></i>
+              <span>JOIN CHALLENGE</span>
+            </button>
           </div>
-        )}
-
-        {activeCollabVar === 'featured_playlist' && (
-          <div class="sub-var-panel var-collab-featured_playlist" id="varCollabPlaylist">
-            <div class="tour-card-content spotify-theme">
-              <span class="tour-badge">{collab.featured_playlist.badge}</span>
-              <h3 class="tour-title">{collab.featured_playlist.playlistName}</h3>
-              <p class="tour-venue-line">{collab.featured_playlist.curator} • {collab.featured_playlist.followers}</p>
-              <div class="tour-actions-row">
-                <button type="button" class="hero-btn-primary single-stream-trigger">
-                  <i class="fa-brands fa-spotify"></i>
-                  <span>OPEN PLAYLIST</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeCollabVar === 'tiktok_challenge' && (
-          <div class="sub-var-panel var-collab-tiktok_challenge" id="varCollabTiktok">
-            <div class="tour-card-content">
-              <span class="tour-badge">{collab.tiktok_challenge.badge}</span>
-              <h3 class="tour-title">{collab.tiktok_challenge.title}</h3>
-              <p class="tour-venue-line">{collab.tiktok_challenge.hashtag}</p>
-              <p class="tour-date-line">{collab.tiktok_challenge.desc}</p>
-              <div class="tour-actions-row">
-                <button type="button" class="hero-btn-primary hero-share-trigger">
-                  <i class="fa-brands fa-tiktok"></i>
-                  <span>JOIN CHALLENGE</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
-    )}
+    </div>
 
   </div>
 </div>
