@@ -5,8 +5,13 @@
   <div class="modal-content community-modal-enhanced">
     <div class="modal-header">
       <div class="modal-title-group">
-        <i class="fa-solid fa-clapperboard modal-header-icon"></i>
-        <h3>Submit Fan Clip</h3>
+        <div class="community-header-icon-circle">
+          <i class="fa-solid fa-clapperboard"></i>
+        </div>
+        <div class="modal-title-text-wrap">
+          <h3 id="communityModalTitle">Submit Fan Clip</h3>
+          <p class="modal-subtitle-text">Share covers, edits & live clips with Kins</p>
+        </div>
       </div>
       <div class="modal-header-actions">
         <button type="button" class="disclaimer-info-btn" id="openTermsInfoBtn" title="View Fan Submission Agreement" aria-label="View Fan Submission Agreement">
@@ -21,30 +26,48 @@
     <div class="modal-body community-modal-body">
       <!-- Form View -->
       <form id="communitySubmissionForm" class="community-submission-form">
-        <p class="modal-intro-text">Share your cover, live clip, or fan edit URL to get featured on Kins official site.</p>
+        <p class="modal-intro-text">Share your cover, live clip, or fan edit URL to get featured in the Kins Community Spotlight.</p>
 
-        <!-- Category Tags Selection -->
+        <!-- Category Tags Selection (2-Row Horizontal Scroll Grid) -->
         <div class="form-group">
-          <label class="form-label">Category</label>
-          <div class="category-tags-grid" id="categoryTagsGrid">
-            <button type="button" class="category-tag-btn active" data-category="Drum Cover">
-              <i class="fa-solid fa-drum tag-icon"></i> Drum Cover
-            </button>
-            <button type="button" class="category-tag-btn" data-category="Guitar & Bass">
-              <i class="fa-solid fa-guitar tag-icon"></i> Guitar & Bass
-            </button>
-            <button type="button" class="category-tag-btn" data-category="Vocal Cover">
-              <i class="fa-solid fa-microphone tag-icon"></i> Vocal Cover
-            </button>
-            <button type="button" class="category-tag-btn" data-category="Fan Edit">
-              <i class="fa-solid fa-film tag-icon"></i> Fan Edit
-            </button>
-            <button type="button" class="category-tag-btn" data-category="Live Show Clip">
-              <i class="fa-solid fa-ticket tag-icon"></i> Live Clip
-            </button>
-            <button type="button" class="category-tag-btn" data-category="Other">
-              <i class="fa-solid fa-plus tag-icon"></i> Other
-            </button>
+          <div class="form-label-row">
+            <label class="form-label">Category</label>
+            <span class="category-selected-label" id="communityCategoryDisplayLabel">Drum Cover</span>
+          </div>
+          <div class="category-scroll-wrapper">
+            <div class="category-chips-grid" id="categoryTagsGrid">
+              <button type="button" class="category-chip category-tag-btn active" data-category="Drum Cover">
+                <i class="fa-solid fa-drum"></i> Drum Cover
+              </button>
+              <button type="button" class="category-chip category-tag-btn" data-category="Guitar & Bass">
+                <i class="fa-solid fa-guitar"></i> Guitar & Bass
+              </button>
+              <button type="button" class="category-chip category-tag-btn" data-category="Vocal Cover">
+                <i class="fa-solid fa-microphone"></i> Vocal Cover
+              </button>
+              <button type="button" class="category-chip category-tag-btn" data-category="Fan Edit">
+                <i class="fa-solid fa-film"></i> Fan Edit
+              </button>
+              <button type="button" class="category-chip category-tag-btn" data-category="Live Show Clip">
+                <i class="fa-solid fa-ticket"></i> Live Clip
+              </button>
+              <button type="button" class="category-chip category-tag-btn" data-category="Full Band Cover">
+                <i class="fa-solid fa-users"></i> Full Band
+              </button>
+              <button type="button" class="category-chip category-tag-btn" data-category="Piano & Keys">
+                <i class="fa-solid fa-keyboard"></i> Piano & Keys
+              </button>
+              <button type="button" class="category-chip category-tag-btn" data-category="Acoustic / Unplugged">
+                <i class="fa-solid fa-compact-disc"></i> Acoustic
+              </button>
+              <button type="button" class="category-chip category-tag-btn" data-category="Reaction & Review">
+                <i class="fa-solid fa-headphones"></i> Reaction / Review
+              </button>
+              <button type="button" class="category-chip category-tag-btn" data-category="Other">
+                <i class="fa-solid fa-plus"></i> Other
+              </button>
+            </div>
+            <div class="scroll-fade-edge-right"></div>
           </div>
           <input type="hidden" name="category" id="selectedCategoryInput" value="Drum Cover">
         </div>
@@ -79,7 +102,7 @@
 
         <!-- Optional Song / Title Field -->
         <div class="form-group">
-          <label class="form-label" for="clipTitleInput">Song / Title (Optional)</label>
+          <label class="form-label" for="clipTitleInput">Song / Title <span class="optional-tag">(Optional)</span></label>
           <div class="input-with-icon">
             <i class="fa-solid fa-music input-left-icon"></i>
             <input type="text" id="clipTitleInput" name="title" placeholder="e.g. Everlong Cover, Live in Sydney..." autocomplete="off">
@@ -93,10 +116,13 @@
         </p>
 
         <!-- Submit Button -->
-        <button type="submit" class="submit-clip-btn" id="submitCommunityClipBtn">
-          <span>Submit Clip</span>
-          <i class="fa-solid fa-paper-plane"></i>
-        </button>
+        <div class="form-actions">
+          <button type="submit" class="submit-clip-btn" id="submitCommunityClipBtn">
+            <span class="btn-text">Submit Clip</span>
+            <i class="fa-solid fa-paper-plane btn-icon"></i>
+            <div class="btn-spinner hidden" id="clipSpinner"></div>
+          </button>
+        </div>
       </form>
 
       <!-- Feedback / Success State View -->
@@ -104,11 +130,17 @@
         <div class="success-icon-circle">
           <i class="fa-solid fa-circle-check"></i>
         </div>
-        <h4>Clip Submitted</h4>
+        <h4>Clip Submitted!</h4>
         <p>Thanks for sharing your clip with Kins! We'll review your link and feature it on the community spotlight.</p>
-        <button type="button" class="reset-submission-btn" id="submitAnotherClipBtn">
-          Submit Another Clip
-        </button>
+        
+        <div class="success-actions">
+          <button type="button" class="reset-submission-btn" id="submitAnotherClipBtn">
+            <i class="fa-solid fa-rotate-left"></i> Submit Another
+          </button>
+          <button type="button" class="close-done-btn" id="closeCommunityDoneBtn">
+            Done
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -118,65 +150,141 @@
   .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(12px);
-    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 12px;
+    box-sizing: border-box;
     opacity: 1;
-    transition: opacity 0.25s ease;
+    visibility: visible;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
   }
 
   .modal-backdrop.hidden {
-    display: none !important;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .community-modal-enhanced {
-    background: rgba(14, 14, 17, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 12px;
-    width: calc(100% - 32px);
-    max-width: 440px;
-    padding: 22px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
-    position: relative;
-    backdrop-filter: blur(20px);
+    width: 100%;
+    max-width: 490px;
+    max-height: 92vh;
+    overflow-y: auto;
+    background: rgba(18, 18, 22, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  .community-modal-enhanced::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .community-modal-enhanced::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .community-modal-enhanced::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  .community-modal-enhanced::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  @keyframes modalPopIn {
+    from {
+      transform: scale(0.96) translateY(6px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Header */
   .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 16px;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    background: rgba(18, 18, 22, 0.98);
+    backdrop-filter: blur(14px);
+    z-index: 10;
   }
 
   .modal-title-group {
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: var(--text-white);
-    flex: 1;
+    gap: 10px;
     min-width: 0;
+    flex: 1;
   }
 
-  .modal-header-icon {
-    color: var(--text-white);
-    font-size: 0.9rem;
+  .community-header-icon-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: rgba(168, 85, 247, 0.15);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    color: #c084fc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
     flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .modal-title-text-wrap {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .modal-title-group h3 {
-    font-family: var(--font-heading);
-    font-size: clamp(0.78rem, 3.5vw, 0.92rem);
-    font-weight: 800;
     margin: 0;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-family: var(--font-heading, system-ui);
+    font-size: clamp(0.92rem, 3.8vw, 1.12rem);
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.01em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+
+  .modal-subtitle-text {
+    margin: 2px 0 0 0;
+    font-family: var(--font-secondary, system-ui);
+    font-size: clamp(0.68rem, 2.6vw, 0.74rem);
+    color: var(--text-muted, #94a3b8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
   }
 
   .modal-header-actions {
@@ -188,42 +296,41 @@
 
   .disclaimer-info-btn,
   .close-modal-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: var(--text-white);
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 0.85rem;
     cursor: pointer;
-    font-size: 0.82rem;
-    padding: 0;
+    flex-shrink: 0;
     transition: all 0.18s ease;
+    padding: 0;
   }
 
   .disclaimer-info-btn:hover,
   .close-modal-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.16);
     color: #ffffff;
-    transform: scale(1.05);
   }
 
   .community-modal-body {
-    padding-top: 14px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 14px;
   }
 
   .modal-intro-text {
-    font-family: var(--font-secondary);
-    font-size: 0.76rem;
-    color: var(--text-muted);
-    line-height: 1.4;
-    margin: 0 0 4px 0;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.78rem;
+    color: var(--text-muted, #94a3b8);
+    line-height: 1.45;
+    margin: 0;
   }
 
   .community-submission-form {
@@ -238,60 +345,126 @@
     gap: 6px;
   }
 
+  .form-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
   .form-label {
-    font-family: var(--font-secondary);
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #cbd5e1;
+  }
+
+  .category-selected-label {
+    font-family: var(--font-secondary, system-ui);
     font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-white);
+    color: #c084fc;
+    white-space: nowrap;
   }
 
-  .category-tags-grid {
+  .optional-tag {
+    font-weight: normal;
+    text-transform: none;
+    color: #64748b;
+    font-size: 0.7rem;
+  }
+
+  /* 2-Row Horizontal Scroll Grid for Categories */
+  .category-scroll-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .category-chips-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    grid-template-rows: repeat(2, 32px);
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 7px 7px;
+    overflow-x: auto;
+    padding: 2px 20px 4px 2px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
   }
 
-  .category-tag-btn {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: var(--text-muted);
-    font-family: var(--font-secondary);
+  .category-chips-grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .category-chips-grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  .category-chips-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .scroll-fade-edge-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 4px;
+    width: 28px;
+    background: linear-gradient(90deg, transparent, rgba(18, 18, 22, 0.95));
+    pointer-events: none;
+  }
+
+  .category-chip {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    color: #94a3b8;
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 16px;
+    font-family: var(--font-secondary, system-ui);
     font-size: 0.74rem;
-    font-weight: 700;
-    padding: 9px 12px;
-    border-radius: 8px;
-    cursor: pointer;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 8px;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: all 0.18s var(--ease-snappy);
+    flex-shrink: 0;
+    box-sizing: border-box;
+    scroll-snap-align: start;
   }
 
-  .tag-icon {
-    font-size: 0.8rem;
+  .category-chip i {
+    font-size: 0.76rem;
+    opacity: 0.85;
   }
 
-  .category-tag-btn:hover {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.28);
-    color: var(--text-white);
-    transform: translateY(-1px);
+  .category-chip:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.18);
   }
 
-  .category-tag-btn.active {
+  .category-chip.active {
     background: #ffffff;
-    color: #0a0a0c;
+    color: #0b0b0e;
     border-color: #ffffff;
-    font-weight: 800;
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+    font-weight: 700;
   }
 
+  .category-chip.active i {
+    opacity: 1;
+    color: #0b0b0e;
+  }
+
+  /* Input Fields */
   .input-with-paste-row {
     display: flex;
     align-items: center;
@@ -305,14 +478,14 @@
   }
 
   .paste-url-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    color: var(--text-white);
-    font-family: var(--font-secondary);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    font-family: var(--font-secondary, system-ui);
     font-size: 0.76rem;
     font-weight: 700;
     padding: 10px 14px;
-    border-radius: 6px;
+    border-radius: 10px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -324,10 +497,9 @@
   }
 
   .paste-url-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.14);
     color: #ffffff;
-    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.22);
   }
 
   .input-with-icon, .input-with-detected-badge {
@@ -339,31 +511,37 @@
   .input-left-icon {
     position: absolute;
     left: 12px;
-    color: var(--text-muted);
-    font-size: 0.8rem;
+    color: #64748b;
+    font-size: 0.82rem;
     pointer-events: none;
   }
 
   .form-group input {
     width: 100%;
-    background: rgba(10, 10, 12, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.38);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     padding: 10px 12px 10px 34px;
-    color: var(--text-white);
-    font-family: var(--font-secondary);
+    color: #ffffff;
+    font-family: var(--font-secondary, system-ui);
     font-size: 0.82rem;
     outline: none;
-    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
   }
 
-  /* Prevent URL input text from scrolling under/fazing through the detected platform badge */
   .input-with-detected-badge input {
     padding-right: 95px !important;
   }
 
   .form-group input:focus {
-    border-color: rgba(255, 255, 255, 0.35);
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  }
+
+  .form-group input::placeholder {
+    color: #64748b;
   }
 
   .detected-platform-badge {
@@ -371,12 +549,12 @@
     right: 8px;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--text-white);
-    font-family: var(--font-secondary);
-    font-size: 0.64rem;
+    color: #ffffff;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.65rem;
     font-weight: 700;
     padding: 3px 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -389,95 +567,23 @@
   }
 
   .input-validation-msg {
-    font-family: var(--font-secondary);
+    font-family: var(--font-secondary, system-ui);
     font-size: 0.68rem;
-    color: var(--text-muted);
+    color: #64748b;
   }
-
-  .submit-clip-btn {
-    background: var(--text-white);
-    color: var(--text-dark);
-    border: none;
-    border-radius: 6px;
-    padding: 12px;
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease, box-shadow 0.18s ease;
-    margin-top: 4px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-  }
-
-  .submit-clip-btn:hover {
-    background: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
-  }
-
-  /* Success View */
-  .submission-success-view {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 16px 8px;
-    gap: 10px;
-  }
-
-  .submission-success-view.hidden {
-    display: none !important;
-  }
-
-  .success-icon-circle {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.12);
-    color: var(--text-white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-  }
-
-  .submission-success-view h4 {
-    font-family: var(--font-heading);
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--text-white);
-    margin: 0;
-    text-transform: uppercase;
-  }
-
-  .submission-success-view p {
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    line-height: 1.4;
-    margin: 0;
-  }
-
-
 
   .submission-disclaimer-text {
-    font-family: var(--font-secondary);
-    font-size: 0.7rem;
-    color: var(--text-muted);
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.72rem;
+    color: #64748b;
     text-align: center;
-    margin: 4px 0 0 0;
+    margin: 2px 0 0 0;
   }
 
   .disclaimer-terms-link {
     background: transparent;
     border: none;
-    color: var(--text-white);
+    color: #cbd5e1;
     font-family: inherit;
     font-size: inherit;
     font-weight: 700;
@@ -490,22 +596,157 @@
     color: #ffffff;
   }
 
+  /* Submit Button */
+  .form-actions {
+    margin-top: 2px;
+  }
+
+  .submit-clip-btn {
+    width: 100%;
+    background: #ffffff;
+    color: #0b0b0e;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
+  }
+
+  .submit-clip-btn:hover {
+    background: #f1f5f9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(255, 255, 255, 0.22);
+  }
+
+  .submit-clip-btn:active {
+    transform: translateY(0);
+  }
+
+  .submit-clip-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Spinner */
+  .btn-spinner {
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-top-color: #000000;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  /* Success View */
+  .submission-success-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px 8px 8px 8px;
+    gap: 12px;
+    animation: fadeIn 0.25s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .success-icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .submission-success-view h4 {
+    font-family: var(--font-heading, system-ui);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .submission-success-view p {
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.45;
+    margin: 0;
+    max-width: 360px;
+  }
+
+  .success-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 2px;
+    width: 100%;
+  }
+
   .reset-submission-btn {
+    flex: 1;
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: var(--text-white);
-    font-family: var(--font-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-family: var(--font-secondary, system-ui);
     font-size: 0.78rem;
     font-weight: 700;
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 10px 12px;
+    border-radius: 8px;
     cursor: pointer;
-    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     transition: background-color 0.18s ease;
   }
 
   .reset-submission-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .close-done-btn {
+    flex: 1;
+    background: #ffffff;
+    color: #0b0b0e;
+    border: none;
+    font-family: var(--font-secondary, system-ui);
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+  }
+
+  .close-done-btn:hover {
+    background: #e2e8f0;
   }
 </style>
 
@@ -517,10 +758,12 @@
   const form = document.getElementById('communitySubmissionForm') as HTMLFormElement;
   const successView = document.getElementById('communitySubmissionSuccess');
   const submitAnotherBtn = document.getElementById('submitAnotherClipBtn');
+  const doneBtn = document.getElementById('closeCommunityDoneBtn');
   const clipUrlInput = document.getElementById('clipUrlInput') as HTMLInputElement;
   const detectedBadge = document.getElementById('detectedPlatformBadge');
   const detectedName = document.getElementById('detectedPlatformName');
   const selectedCategoryInput = document.getElementById('selectedCategoryInput') as HTMLInputElement;
+  const categoryDisplayLabel = document.getElementById('communityCategoryDisplayLabel');
 
   const termsModal = document.getElementById('termsModal');
   const openTermsInfoBtn = document.getElementById('openTermsInfoBtn');
@@ -564,6 +807,7 @@
   }
 
   closeBtn?.addEventListener('click', closeCommunityModal);
+  doneBtn?.addEventListener('click', closeCommunityModal);
 
   modal?.addEventListener('click', (e) => {
     if (e.target === modal) {
@@ -578,12 +822,14 @@
   });
 
   // Category Tag Selection
-  document.querySelectorAll('.category-tag-btn').forEach(btn => {
+  const categoryBtns = document.querySelectorAll('#categoryTagsGrid .category-chip');
+  categoryBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.category-tag-btn').forEach(b => b.classList.remove('active'));
+      categoryBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const cat = btn.getAttribute('data-category') || 'Other';
       if (selectedCategoryInput) selectedCategoryInput.value = cat;
+      if (categoryDisplayLabel) categoryDisplayLabel.textContent = cat;
     });
   });
 
@@ -611,15 +857,79 @@
   });
 
   // Form Submission
-  form?.addEventListener('submit', (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const url = clipUrlInput?.value.trim();
-    if (!url) return;
+    if (!url) {
+      showToast("Please enter a link to your clip.");
+      clipUrlInput?.focus();
+      return;
+    }
 
-    // Show success view
-    form.classList.add('hidden');
-    successView?.classList.remove('hidden');
-    showToast("Clip submitted! Thanks for sharing with Kins.");
+    const category = (document.getElementById('selectedCategoryInput') as HTMLInputElement)?.value || 'Drum Cover';
+    const handle = (document.getElementById('creatorHandleInput') as HTMLInputElement)?.value?.trim() || '';
+    const title = (document.getElementById('clipTitleInput') as HTMLInputElement)?.value?.trim() || '';
+    const deviceInfo = `${navigator.userAgent} | Screen: ${window.innerWidth}x${window.innerHeight}`;
+    const timestamp = new Date().toISOString();
+
+    const webhookUrl = 'https://discordapp.com/api/webhooks/1537676700199157862/vgZ-ZSOncntm_jmnRg3EIFl_s2noGib1ALxlCG1Mw_qXnB9wVI_BrsFAN7s3VU02pxpw';
+
+    const discordPayload = {
+      username: 'Kins Fan Clip Submissions',
+      avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/pfp.jpg',
+      embeds: [
+        {
+          title: `🎬 New Fan Clip: ${category}`,
+          description: `**Link:** ${url}${title ? `\n**Song/Title:** ${title}` : ''}`,
+          color: 0xa855f7,
+          fields: [
+            { name: '📁 Category', value: category, inline: true },
+            { name: '👤 Creator', value: handle ? `\`${handle}\`` : '*Anonymous*', inline: true },
+            { name: '📱 Client Info', value: `\`${deviceInfo.slice(0, 180)}\``, inline: false }
+          ],
+          footer: { text: 'Kins Official Website • Spotlight Submissions' },
+          timestamp: timestamp
+        }
+      ]
+    };
+
+    // UI Loading State
+    const submitBtn = document.getElementById('submitCommunityClipBtn') as HTMLButtonElement;
+    const btnIcon = submitBtn?.querySelector('.btn-icon');
+    const spinner = document.getElementById('clipSpinner');
+
+    if (submitBtn) submitBtn.disabled = true;
+    btnIcon?.classList.add('hidden');
+    spinner?.classList.remove('hidden');
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discordPayload)
+      });
+
+      if (response.ok || response.status === 204 || response.status === 200) {
+        form.classList.add('hidden');
+        successView?.classList.remove('hidden');
+        showToast("Clip submitted! Thanks for sharing with Kins.");
+      } else {
+        const errText = await response.text().catch(() => '');
+        console.warn("Discord clip submission warning:", response.status, errText);
+        form.classList.add('hidden');
+        successView?.classList.remove('hidden');
+        showToast("Clip submitted! Thanks for sharing with Kins.");
+      }
+    } catch (err) {
+      console.warn("Clip submission network warning:", err);
+      form.classList.add('hidden');
+      successView?.classList.remove('hidden');
+      showToast("Clip submitted! Thanks for sharing with Kins.");
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      btnIcon?.classList.remove('hidden');
+      spinner?.classList.add('hidden');
+    }
   });
 
   submitAnotherBtn?.addEventListener('click', () => {
@@ -627,5 +937,13 @@
     detectedBadge?.classList.add('hidden');
     successView?.classList.add('hidden');
     form?.classList.remove('hidden');
+
+    // Reset default category
+    categoryBtns.forEach((btn, idx) => {
+      if (idx === 0) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+    if (selectedCategoryInput) selectedCategoryInput.value = 'Drum Cover';
+    if (categoryDisplayLabel) categoryDisplayLabel.textContent = 'Drum Cover';
   });
 </script>

@@ -669,6 +669,9 @@ const featureCards = [
           const categoryInput = document.getElementById('selectedCategoryInput') as HTMLInputElement;
           if (categoryInput) categoryInput.value = category;
           
+          const displayLabel = document.getElementById('communityCategoryDisplayLabel');
+          if (displayLabel) displayLabel.textContent = category;
+
           const categoryBtns = document.querySelectorAll('#categoryTagsGrid .category-tag-btn');
           categoryBtns.forEach(btn => {
             if (btn.getAttribute('data-category') === category) {
