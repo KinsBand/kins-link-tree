@@ -55,6 +55,13 @@ function animateCount(el, target, duration = 900) {
 export function initFollowersTracker() {
   const totalFollowersCountEl = document.getElementById('totalFollowersCount');
   const lastUpdatedEl = document.getElementById('followersLastUpdated');
+  const totalFollowersCard = document.querySelector('.total-followers-card');
+
+  // Check if followers UI is actually displayed in the active DOM tree
+  const isCardVisible = totalFollowersCard && window.getComputedStyle(totalFollowersCard).display !== 'none';
+  if (!isCardVisible && !document.querySelector('.has-live-follower-badges')) {
+    return;
+  }
 
   function updateLiveMetrics(animate = false) {
     const socialKeys = ['instagram', 'linkedin', 'tiktok', 'twitch', 'twitter', 'youtube'];
@@ -85,6 +92,8 @@ export function initFollowersTracker() {
   updateLiveMetrics(false);
 
   async function fetchFollowersData() {
+    if (document.hidden) return;
+
     try {
       const baseUrl = import.meta.env.BASE_URL || '/';
       const res = await fetch(`${baseUrl}followers.json?t=${Date.now()}`);
@@ -115,6 +124,33 @@ export function initFollowersTracker() {
     }
   }
 
+  let pollIntervalId = null;
+
+  function startPolling() {
+    if (pollIntervalId) return;
+    pollIntervalId = setInterval(() => {
+      if (!document.hidden) {
+        fetchFollowersData();
+      }
+    }, 30 * 60 * 1000);
+  }
+
+  function stopPolling() {
+    if (pollIntervalId) {
+      clearInterval(pollIntervalId);
+      pollIntervalId = null;
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopPolling();
+    } else {
+      fetchFollowersData();
+      startPolling();
+    }
+  });
+
   fetchFollowersData();
-  setInterval(fetchFollowersData, 30 * 60 * 1000);
+  startPolling();
 }

@@ -438,9 +438,10 @@ const artists = [
 
       if (currentlyShowingPause !== playingThis) {
         playBtn.classList.remove('card-icon-morph');
-        void playBtn.offsetWidth;
         playBtn.innerHTML = `<i class="fa-solid ${playingThis ? 'fa-pause' : 'fa-play'}"></i>`;
-        playBtn.classList.add('card-icon-morph');
+        requestAnimationFrame(() => {
+          playBtn.classList.add('card-icon-morph');
+        });
 
         setTimeout(() => {
           playBtn.classList.remove('card-icon-morph');
@@ -517,8 +518,6 @@ const artists = [
       const rawTracks = artistData.pages[currentPageIndex] || [];
       const tracks = rawTracks.slice(0, 4);
 
-      prefetchTrackArtwork(tracks);
-
       tracks.forEach((track: any) => {
         const card = document.createElement('div');
         card.className = 'music-card';
@@ -580,13 +579,17 @@ const artists = [
       });
 
       requestAnimationFrame(() => {
+        const titleUpdates: Array<{ el: HTMLElement; dist: number }> = [];
         container.querySelectorAll('.song-title').forEach((titleEl: any) => {
           const parent = titleEl.parentElement;
           if (parent && titleEl.scrollWidth > parent.clientWidth + 2) {
             const dist = -(titleEl.scrollWidth - parent.clientWidth + 16);
-            titleEl.style.setProperty('--title-scroll-dist', `${dist}px`);
-            titleEl.classList.add('is-scrolling');
+            titleUpdates.push({ el: titleEl, dist });
           }
+        });
+        titleUpdates.forEach(({ el, dist }) => {
+          el.style.setProperty('--title-scroll-dist', `${dist}px`);
+          el.classList.add('is-scrolling');
         });
       });
 

@@ -1,7 +1,7 @@
 ---
 ---
 
-<div class="modal-backdrop hidden" id="communitySubmissionModal">
+<div class="modal-backdrop hidden" id="communitySubmissionModal" role="dialog" aria-modal="true" aria-label="Submit Fan Clip">
   <div class="modal-content community-modal-enhanced">
     <div class="modal-header">
       <div class="modal-title-group">
@@ -60,7 +60,7 @@
                 <i class="fa-solid fa-circle-check"></i> <span id="detectedPlatformName">Link</span>
               </span>
             </div>
-            <button type="button" class="paste-url-btn" id="pasteClipUrlBtn" title="Paste link from clipboard">
+            <button type="button" class="paste-url-btn" id="pasteClipUrlBtn" title="Paste link from clipboard" aria-label="Paste link from clipboard">
               <i class="fa-solid fa-paste"></i>
               <span>Paste</span>
             </button>
@@ -558,13 +558,22 @@
   });
 
   // Close modal
-  closeBtn?.addEventListener('click', () => {
+  function closeCommunityModal() {
     modal?.classList.add('hidden');
-  });
+    document.body.classList.remove('modal-open');
+  }
+
+  closeBtn?.addEventListener('click', closeCommunityModal);
 
   modal?.addEventListener('click', (e) => {
     if (e.target === modal) {
-      modal.classList.add('hidden');
+      closeCommunityModal();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closeCommunityModal();
     }
   });
 

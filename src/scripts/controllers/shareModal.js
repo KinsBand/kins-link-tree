@@ -17,7 +17,28 @@ function unlockScroll() {
   document.documentElement.classList.remove('modal-open');
 }
 
-function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
+export async function ensureQrCodeLoaded() {
+  if (typeof window !== 'undefined' && window.QRCode) return true;
+  if (!document.getElementById('qrcode-js-dyn')) {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.id = 'qrcode-js-dyn';
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    });
+  }
+  return true;
+}
+
+async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
+  await ensureQrCodeLoaded();
+  if (typeof window.QRCode === 'undefined') {
+    if (callback) callback(null);
+    return;
+  }
+
   const tempDiv = document.createElement('div');
   tempDiv.style.position = 'absolute';
   tempDiv.style.left = '-9999px';
@@ -323,11 +344,14 @@ export function initShareModal() {
   }
 
   // Render High-Resolution QR Code image with 100% scan accuracy
-  function renderQrCode(containerId, displaySize) {
+  async function renderQrCode(containerId, displaySize) {
     const container = document.getElementById(containerId);
-    if (!container || typeof window.QRCode === 'undefined') return;
+    if (!container) return;
+    await ensureQrCodeLoaded();
+    if (typeof window.QRCode === 'undefined') return;
 
     createBrandedQrCanvas(qrCodeUrl, 600, (canvas) => {
+      if (!canvas) return;
       container.innerHTML = '';
       const img = document.createElement('img');
       img.src = canvas.toDataURL('image/png');

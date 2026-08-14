@@ -599,28 +599,30 @@ const COASTAL_LAND_POLYGON = [
 let leafletMapInstance = null;
 let tourPolylineInstance = null;
 let regionPolygonInstance = null;
-let activeRoutePolyline = null;
-let userLocationMarker = null;
 let countdownInterval = null;
 let activeVenueId = "venue-cambridge";
 let activeGigId = "gig-newcastle-1";
 let activeFilter = "all";
-let userLocation = null;
 const markerMap = new Map();
 
 export let currentSnapState = 'peek'; // 'peek' (Tier 1) | 'expanded' (Tier 2)
 
+let cachedSnapHeights = null;
+
 // Calculate dynamic pixel snap heights and translation bounds for 2-tier bottom sheet (55vh max expansion)
-export function getSnapHeights() {
-  const vh = window.innerHeight;
-  const card = document.getElementById('venueDetailBottomCard');
-  const fullHeight = card && card.offsetHeight > 0 ? card.offsetHeight : Math.round(vh * 0.55);
-  const peekHeight = Math.min(220, Math.max(190, Math.round(vh * 0.28)));
-  return {
-    peek: peekHeight,
-    expanded: fullHeight,
-    maxTranslateY: Math.max(0, fullHeight - peekHeight)
-  };
+export function getSnapHeights(forceRefresh = false) {
+  if (!cachedSnapHeights || forceRefresh) {
+    const vh = window.innerHeight;
+    const card = document.getElementById('venueDetailBottomCard');
+    const fullHeight = card && card.offsetHeight > 0 ? card.offsetHeight : Math.round(vh * 0.55);
+    const peekHeight = Math.min(220, Math.max(190, Math.round(vh * 0.28)));
+    cachedSnapHeights = {
+      peek: peekHeight,
+      expanded: fullHeight,
+      maxTranslateY: Math.max(0, fullHeight - peekHeight)
+    };
+  }
+  return cachedSnapHeights;
 }
 
 // Set bottom sheet snap state (Tier 1 'peek' vs Tier 2 'expanded' 55vh)
@@ -712,18 +714,29 @@ export function findVenueAndShow(targetId) {
   return { venue: VENUES[0], show: VENUES[0].shows[0] };
 }
 
+// Helper to open Apple Maps (iOS / macOS) or Google Maps (Android / Windows / Other)
+export function openExternalMaps(venue) {
+  if (!venue) return;
+  const isApple = /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent || navigator.platform || '');
+  const destination = encodeURIComponent(`${venue.name}, ${venue.address}`);
+  let url = '';
+
+  if (isApple) {
+    url = `https://maps.apple.com/?daddr=${destination}&dirflg=d`;
+  } else {
+    url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+  }
+
+  window.open(url, '_blank', 'noopener,noreferrer');
+  showToast(`🗺️ Opening directions to ${venue.name}...`);
+}
+
 // Generate high-density popup HTML with zero negative space and multi-show preview
 function buildPopupHtml(venue, activeShow) {
   const show = activeShow || venue.shows.find(s => s.isNextShow) || venue.shows[0];
   const isUpcoming = show.type === 'upcoming';
   const isNext = show.isNextShow;
   const showCount = venue.shows.length;
-  
-  let distHtml = "";
-  if (userLocation) {
-    const d = calculateDistanceKm(userLocation.lat, userLocation.lng, venue.lat, venue.lng);
-    distHtml = `<span class="map-popup-distance-tag"><i class="fa-solid fa-location-arrow"></i> ${d} km</span>`;
-  }
 
   let badgeText = isNext ? '🔥 NEXT GIG' : (isUpcoming ? '🎟️ UPCOMING' : '📼 ARCHIVE');
   if (showCount > 1) {
@@ -741,7 +754,6 @@ function buildPopupHtml(venue, activeShow) {
       <h4 class="map-popup-title" title="${venue.name}">${venue.name}</h4>
       <div class="map-popup-meta">
         <span><i class="fa-solid fa-location-dot"></i> ${venue.city.split(',')[0]}</span>
-        ${distHtml}
       </div>
       <div class="map-popup-dates-summary">
         <span class="map-popup-date-preview"><i class="fa-regular fa-calendar"></i> ${show.dateText}</span>
@@ -750,8 +762,8 @@ function buildPopupHtml(venue, activeShow) {
         <button type="button" class="map-popup-btn map-popup-action-btn" data-popup-venue-id="${venue.id}" data-popup-gig-id="${show.id}" title="View setlist and timeline">
           <i class="fa-solid fa-circle-info"></i> Details
         </button>
-        <button type="button" class="map-popup-btn btn-route map-popup-route-btn" data-route-venue-id="${venue.id}" data-route-gig-id="${show.id}" title="Get directions from current location">
-          <i class="fa-solid fa-diamond-turn-right"></i> Route
+        <button type="button" class="map-popup-btn btn-route map-popup-route-btn" data-route-venue-id="${venue.id}" data-route-gig-id="${show.id}" title="Navigate in Maps">
+          <i class="fa-solid fa-diamond-turn-right"></i> Navigate
         </button>
       </div>
     </div>
@@ -1123,8 +1135,6 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
   if (venueDynamicBody) {
     if (isUpcoming) {
       // UPCOMING GIG SECTIONS
-      const originParam = userLocation ? `&origin=${userLocation.lat},${userLocation.lng}` : '';
-      const directionsUrl = `https://www.google.com/maps/dir/?api=1${originParam}&destination=${encodeURIComponent(venue.name + ', ' + venue.address)}`;
       const googleCalUrl = getGoogleCalendarUrl(show);
 
       venueDynamicBody.innerHTML = `
@@ -1137,10 +1147,10 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
 
         <!-- Redesigned Quick Action Row -->
         <div class="venue-action-chips-row">
-          <a href="${directionsUrl}" target="_blank" rel="noopener" class="venue-action-chip-btn" id="venueDirectionsAction" aria-label="Directions to venue">
+          <button type="button" class="venue-action-chip-btn" id="venueDirectionsAction" aria-label="Directions to venue">
             <i class="fa-solid fa-diamond-turn-right"></i>
             <span>Navigate</span>
-          </a>
+          </button>
           <button type="button" class="venue-action-chip-btn" id="venueCalendarAction" aria-label="Add show to calendar">
             <i class="fa-regular fa-calendar-plus"></i>
             <span>+Calendar</span>
@@ -1283,7 +1293,7 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
       if (dirBtn) {
         dirBtn.onclick = (e) => {
           e.preventDefault();
-          calculateAndRenderRoute(venue);
+          openExternalMaps(venue);
         };
       }
 
@@ -1426,10 +1436,6 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
             show.setlistDetails?.stageNotes || "Crowd reached full room capacity before headline set.",
             "Archived in 24-bit stereo soundboard master format."
           ];
-
-      const originParamArc = userLocation ? `&origin=${userLocation.lat},${userLocation.lng}` : '';
-      const directionsUrlArc = `https://www.google.com/maps/dir/?api=1${originParamArc}&destination=${encodeURIComponent(venue.name + ', ' + venue.address)}`;
-
       venueDynamicBody.innerHTML = `
         <!-- Tier 1 View: Summary, Quick Actions & Drawer Trigger -->
         <div class="venue-quick-info-row">
@@ -1440,10 +1446,10 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
 
         <!-- Quick Action Row -->
         <div class="venue-action-chips-row">
-          <a href="${directionsUrlArc}" target="_blank" rel="noopener" class="venue-action-chip-btn" id="venueArchiveDirectionsAction" aria-label="Directions to venue">
+          <button type="button" class="venue-action-chip-btn" id="venueArchiveDirectionsAction" aria-label="Directions to venue">
             <i class="fa-solid fa-diamond-turn-right"></i>
             <span>Navigate</span>
-          </a>
+          </button>
           <a href="${show.spotifyPlaylistUrl || 'https://open.spotify.com'}" target="_blank" rel="noopener noreferrer" class="venue-action-chip-btn" aria-label="Play on Spotify">
             <i class="fa-brands fa-spotify" style="color: #1db954 !important;"></i>
             <span>Spotify</span>
@@ -1561,7 +1567,7 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
       if (dirBtnArc) {
         dirBtnArc.onclick = (e) => {
           e.preventDefault();
-          calculateAndRenderRoute(venue);
+          openExternalMaps(venue);
         };
       }
 
@@ -1655,16 +1661,23 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
   }
 
   // 8. Update Selector Pills
+  let activePillToCenter = null;
   document.querySelectorAll('.gig-select-pill').forEach(pill => {
     const pillGigId = pill.getAttribute('data-gig-id');
     const pillVenueId = pill.getAttribute('data-venue-id');
     if (pillGigId === show.id || pillVenueId === venue.id) {
       pill.classList.add('active');
-      pill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      activePillToCenter = pill;
     } else {
       pill.classList.remove('active');
     }
   });
+
+  if (activePillToCenter) {
+    requestAnimationFrame(() => {
+      activePillToCenter.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    });
+  }
 
   // 10. Highlight Map Marker (Without opening duplicate popup overlay)
   markerMap.forEach((marker, vId) => {
@@ -1738,12 +1751,6 @@ export function filterGigs(category) {
           }
         }
 
-        let distanceTag = "";
-        if (userLocation) {
-          const dist = calculateDistanceKm(userLocation.lat, userLocation.lng, v.lat, v.lng);
-          distanceTag = `<span class="pill-distance-tag"><i class="fa-solid fa-location-arrow"></i> ${dist}km</span>`;
-        }
-
         const isNext = primeShow.isNextShow;
         const isUp = primeShow.type === 'upcoming';
         const multiTag = v.shows.length > 1 ? `<span class="pill-multi-count">${v.shows.length}</span>` : '';
@@ -1754,7 +1761,6 @@ export function filterGigs(category) {
             <span class="pill-name">${v.name}</span>
             <span class="pill-city-tag">• ${v.city.split(',')[0]}</span>
             ${multiTag}
-            ${distanceTag}
           </button>
         `;
       }).join('');
@@ -1808,214 +1814,7 @@ export function fitAllTourBounds() {
   showToast("🗺️ Viewing all Kins tour stops across NSW");
 }
 
-function updateUserLocationOnMap(lat, lng) {
-  userLocation = { lat, lng };
 
-  if (leafletMapInstance && window.L) {
-    if (userLocationMarker) {
-      userLocationMarker.setLatLng([lat, lng]);
-    } else {
-      const userIcon = window.L.divIcon({
-        className: 'user-geo-pin',
-        html: `
-          <div class="user-geo-beacon" title="Your Live Location">
-            <div class="user-geo-pulse"></div>
-            <div class="user-geo-pulse ring-2"></div>
-            <div class="user-geo-dot"></div>
-            <div class="user-geo-label"><i class="fa-solid fa-person-rays"></i> YOU ARE HERE</div>
-          </div>
-        `,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
-        popupAnchor: [0, -18]
-      });
-
-      userLocationMarker = window.L.marker([lat, lng], { 
-        icon: userIcon, 
-        zIndexOffset: 2000 
-      }).addTo(leafletMapInstance);
-
-      userLocationMarker.bindPopup(`
-        <div class="map-popup-card" style="text-align: center; padding: 4px;">
-          <strong style="color: #38bdf8; font-size: 0.78rem;"><i class="fa-solid fa-location-crosshairs"></i> Your Live Location</strong>
-          <p style="font-size: 0.68rem; color: #a1a1aa; margin: 2px 0 0 0;">Proximity sorting & route active</p>
-        </div>
-      `, { offset: [0, -4], className: 'dark-glass-popup' });
-    }
-  }
-
-  // Update locate button UI
-  const locateBtn = document.getElementById('mapLocateMeBtn');
-  if (locateBtn) locateBtn.classList.add('is-active');
-
-  // Refresh filter and pills with accurate distance tags
-  filterGigs(activeFilter);
-}
-
-export async function calculateAndRenderRoute(venueOrGig) {
-  if (!venueOrGig) return;
-  const pair = findVenueAndShow(venueOrGig.id);
-  const venue = pair.venue;
-
-  // Request user location if not yet obtained
-  if (!userLocation) {
-    showToast("📍 Requesting GPS location to calculate directions...");
-    try {
-      await new Promise((resolve, reject) => {
-        if (!navigator.geolocation) return reject(new Error("No geolocation"));
-        navigator.geolocation.getCurrentPosition(
-          pos => {
-            updateUserLocationOnMap(pos.coords.latitude, pos.coords.longitude);
-            resolve();
-          },
-          err => reject(err),
-          { timeout: 9000, enableHighAccuracy: true }
-        );
-      });
-    } catch (err) {
-      // Direct fallback to Google Maps
-      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(venue.name + ', ' + venue.address)}`;
-      window.open(gmapsUrl, '_blank', 'noopener,noreferrer');
-      showToast(`🗺️ Opening ${venue.name} in Google Maps...`);
-      return;
-    }
-  }
-
-  if (!leafletMapInstance || !window.L || !userLocation) return;
-
-  showToast(`🚗 Mapping route to ${venue.name}...`);
-
-  let routeCoordinates = [];
-  let estDurationMins = 0;
-  let distanceKm = calculateDistanceKm(userLocation.lat, userLocation.lng, venue.lat, venue.lng);
-
-  try {
-    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${userLocation.lng},${userLocation.lat};${venue.lng},${venue.lat}?overview=full&geometries=geojson`;
-    const res = await fetch(osrmUrl);
-    const data = await res.json();
-    if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
-      const route = data.routes[0];
-      routeCoordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]); // [lat, lng]
-      estDurationMins = Math.round(route.duration / 60);
-      distanceKm = Math.round((route.distance / 1000) * 10) / 10;
-    } else {
-      throw new Error("OSRM routing fallback");
-    }
-  } catch (e) {
-    // Fallback direct path
-    routeCoordinates = [
-      [userLocation.lat, userLocation.lng],
-      [venue.lat, venue.lng]
-    ];
-    estDurationMins = Math.max(5, Math.round((distanceKm / 60) * 60));
-  }
-
-  // Remove previous route polyline
-  if (activeRoutePolyline) {
-    leafletMapInstance.removeLayer(activeRoutePolyline);
-    activeRoutePolyline = null;
-  }
-
-  // Draw high-performance cyan route line (hardware accelerated)
-  activeRoutePolyline = window.L.polyline(routeCoordinates, {
-    color: '#38bdf8',
-    weight: 4,
-    opacity: 0.95,
-    smoothFactor: 1.5,
-    className: 'active-directions-line'
-  }).addTo(leafletMapInstance);
-
-  // Fit map to show both User and Venue comfortably
-  leafletMapInstance.fitBounds(activeRoutePolyline.getBounds(), {
-    padding: window.innerWidth >= 768 ? [70, 70] : [36, 36],
-    duration: 0.8
-  });
-
-  // Update and reveal Directions HUD
-  const hud = document.getElementById('mapDirectionsHud');
-  const hudDest = document.getElementById('directionsHudDest');
-  const hudDuration = document.getElementById('directionsDuration');
-  const hudDistance = document.getElementById('directionsDistance');
-  const hudGmapsLink = document.getElementById('directionsGmapsLink');
-
-  if (hud && hudDest && hudDuration && hudDistance && hudGmapsLink) {
-    hudDest.textContent = venue.name;
-    hudDuration.textContent = `~${estDurationMins} mins`;
-    hudDistance.textContent = `${distanceKm} km`;
-    hudGmapsLink.href = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${encodeURIComponent(venue.name + ', ' + venue.address)}`;
-    hud.classList.remove('hidden');
-  }
-
-  displayVenueDetails(venue);
-  showToast(`🗺️ Route mapped: ~${estDurationMins} min drive (${distanceKm} km)`);
-}
-
-export function clearActiveRoute() {
-  if (activeRoutePolyline && leafletMapInstance) {
-    leafletMapInstance.removeLayer(activeRoutePolyline);
-    activeRoutePolyline = null;
-  }
-  const hud = document.getElementById('mapDirectionsHud');
-  if (hud) hud.classList.add('hidden');
-  showToast("📍 Route cleared from map");
-}
-
-function locateUserAndSort(flyToClosest = true) {
-  if (!navigator.geolocation) {
-    showToast("📍 Geolocation not supported by your browser");
-    return;
-  }
-
-  const locateBtn = document.getElementById('mapLocateMeBtn');
-  if (locateBtn) locateBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
-  showToast("📍 Finding nearest Kins tour dates...");
-
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      if (locateBtn) {
-        locateBtn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i>`;
-        locateBtn.classList.add('is-active');
-      }
-      updateUserLocationOnMap(pos.coords.latitude, pos.coords.longitude);
-
-      // Find closest venue
-      let closestVenue = VENUES[0];
-      let minDistance = Infinity;
-      VENUES.forEach(v => {
-        const d = calculateDistanceKm(userLocation.lat, userLocation.lng, v.lat, v.lng);
-        if (d < minDistance) {
-          minDistance = d;
-          closestVenue = v;
-        }
-      });
-
-      if (closestVenue) {
-        displayVenueDetails(closestVenue);
-        showToast(`📍 Closest show: ${closestVenue.name} in ${closestVenue.city.split(',')[0]} (${minDistance} km away)!`);
-        
-        if (flyToClosest && leafletMapInstance && window.L) {
-          const group = new window.L.featureGroup([
-            window.L.marker([userLocation.lat, userLocation.lng]),
-            window.L.marker([closestVenue.lat, closestVenue.lng])
-          ]);
-          leafletMapInstance.fitBounds(group.getBounds(), {
-            padding: window.innerWidth >= 768 ? [70, 70] : [40, 40],
-            maxZoom: 13,
-            duration: 0.9
-          });
-        }
-      }
-    },
-    (err) => {
-      if (locateBtn) {
-        locateBtn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i>`;
-        locateBtn.classList.remove('is-active');
-      }
-      showToast("📍 Location access was declined or unavailable.");
-    },
-    { timeout: 10000, enableHighAccuracy: true }
-  );
-}
 
 export function initGigMapModule() {
   const floatingGigPillBtn = document.getElementById('floatingGigPillBtn');
@@ -2025,14 +1824,10 @@ export function initGigMapModule() {
   const gigPillLocation = document.getElementById('gigPillLocation');
   const gigPillTitle = document.getElementById('gigPillTitle');
   const fitBoundsBtn = document.getElementById('mapFitBoundsBtn');
-  const locateMeBtn = document.getElementById('mapLocateMeBtn');
   const toggleMapDetailsBtn = document.getElementById('toggleMapDetailsBtn');
   const venueDetailCard = document.getElementById('venueDetailBottomCard');
-  const sheetDragHandle = document.getElementById('sheetDragHandle');
   const lightboxCloseBtn = document.getElementById('gigLightboxClose');
   const lightboxBackdrop = document.getElementById('gigPhotoLightbox');
-  const closeDirectionsHud = document.getElementById('closeDirectionsHud');
-  const clearRouteHudBtn = document.getElementById('clearRouteHudBtn');
 
   const nextGig = LOCAL_GIGS.find(g => g.isNextShow) || LOCAL_GIGS[0];
 
@@ -2202,11 +1997,6 @@ export function initGigMapModule() {
 
         markerMap.set(venue.id, marker);
       });
-
-      // Restore user location marker if previously found
-      if (userLocation) {
-        updateUserLocationOnMap(userLocation.lat, userLocation.lng);
-      }
 
       const initialPair = findVenueAndShow(activeGigId || activeVenueId);
       displayVenueDetails(initialPair.venue, initialPair.show);
@@ -2465,9 +2255,6 @@ export function initGigMapModule() {
       }
       
       initGigMap();
-      
-      const pair = findVenueAndShow(gigOrVenueId || activeGigId || activeVenueId);
-      displayVenueDetails(pair.venue, pair.show);
       
       // Default to Tier 1 ('peek') on mobile, 'expanded' on desktop
       const isDesktop = window.innerWidth >= 768;

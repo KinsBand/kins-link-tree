@@ -1,6 +1,7 @@
 import { showToast } from './toast.js';
 
-const ITUNES_CACHE = {};
+const ITUNES_CACHE = new Map();
+const ITUNES_INFLIGHT_PROMISES = new Map();
 const IMAGE_PRELOAD_CACHE = new Map();
 
 // Optimized image loader with progressive quality for low-end devices
@@ -46,7 +47,7 @@ export function loadAlbumArt(imgElement, artworkUrl, highResUrl = null) {
   });
 }
 
-// Bulk prefetch for multiple tracks - fires all requests in parallel
+// Bulk prefetch for multiple tracks - fires requests in parallel with deduplication
 export async function prefetchTrackArtwork(tracks) {
   if (!tracks || tracks.length === 0) return;
   
@@ -59,73 +60,82 @@ export async function prefetchTrackArtwork(tracks) {
         IMAGE_PRELOAD_CACHE.set(url, img);
       }
     } else if (track.artist && track.title) {
-      getITunesTrackData(track.artist, track.title).then(meta => {
-        if (meta && meta.artworkUrl) {
-          track.coverUrl = meta.artworkUrl;
-          track.artworkUrl = meta.artworkUrl;
+      const meta = await getITunesTrackData(track.artist, track.title);
+      if (meta && meta.artworkUrl) {
+        track.coverUrl = meta.artworkUrl;
+        track.artworkUrl = meta.artworkUrl;
+        if (!IMAGE_PRELOAD_CACHE.has(meta.artworkUrl)) {
           const img = new Image();
           img.src = meta.artworkUrl;
           IMAGE_PRELOAD_CACHE.set(meta.artworkUrl, img);
         }
-      });
+      }
     }
   });
   
-  Promise.allSettled(promises);
+  await Promise.allSettled(promises);
 }
 
 export async function getITunesTrackData(artist, title) {
-  const cacheKey = `${artist} - ${title}`.toLowerCase();
-  if (ITUNES_CACHE[cacheKey]) return ITUNES_CACHE[cacheKey];
+  const cacheKey = `${artist} - ${title}`.toLowerCase().trim();
+  if (ITUNES_CACHE.has(cacheKey)) return ITUNES_CACHE.get(cacheKey);
+  if (ITUNES_INFLIGHT_PROMISES.has(cacheKey)) return ITUNES_INFLIGHT_PROMISES.get(cacheKey);
   
-  try {
-    const cleanTitle = title.replace(/[!?"\\']/g, '').trim();
-    const query = encodeURIComponent(`${artist} ${cleanTitle}`);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-    
-    let res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`, {
-      signal: controller.signal,
-      headers: { 'Accept': 'application/json' }
-    });
-    clearTimeout(timeoutId);
-    let data = await res.json();
-
-    if (!data.results || data.results.length === 0) {
-      const fallbackQuery = encodeURIComponent(cleanTitle);
-      const fallbackController = new AbortController();
-      const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 3000);
+  const fetchPromise = (async () => {
+    try {
+      const cleanTitle = title.replace(/[!?"\\']/g, '').trim();
+      const query = encodeURIComponent(`${artist} ${cleanTitle}`);
       
-      res = await fetch(`https://itunes.apple.com/search?term=${fallbackQuery}&entity=song&limit=1`, {
-        signal: fallbackController.signal,
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      
+      let res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`, {
+        signal: controller.signal,
         headers: { 'Accept': 'application/json' }
       });
-      clearTimeout(fallbackTimeoutId);
-      data = await res.json();
-    }
+      clearTimeout(timeoutId);
+      let data = await res.json();
 
-    if (data.results && data.results.length > 0) {
-      const item = data.results[0];
-      const rawArt = item.artworkUrl100 || item.artworkUrl60 || null;
-      const lowResUrl = rawArt;
-      const highResUrl = rawArt ? rawArt.replace(/100x100bb?\./, '600x600bb.').replace(/100x100/, '600x600') : null;
-      const previewUrl = item.previewUrl || null;
-      const result = { 
-        artworkUrl: highResUrl, 
-        rawArtworkUrl: lowResUrl, 
-        previewUrl,
-        isHighResAvailable: !!highResUrl
-      };
-      ITUNES_CACHE[cacheKey] = result;
-      return result;
+      if (!data.results || data.results.length === 0) {
+        const fallbackQuery = encodeURIComponent(cleanTitle);
+        const fallbackController = new AbortController();
+        const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 3500);
+        
+        res = await fetch(`https://itunes.apple.com/search?term=${fallbackQuery}&entity=song&limit=1`, {
+          signal: fallbackController.signal,
+          headers: { 'Accept': 'application/json' }
+        });
+        clearTimeout(fallbackTimeoutId);
+        data = await res.json();
+      }
+
+      if (data.results && data.results.length > 0) {
+        const item = data.results[0];
+        const rawArt = item.artworkUrl100 || item.artworkUrl60 || null;
+        const lowResUrl = rawArt;
+        const highResUrl = rawArt ? rawArt.replace(/100x100bb?\./, '600x600bb.').replace(/100x100/, '600x600') : null;
+        const previewUrl = item.previewUrl || null;
+        const result = { 
+          artworkUrl: highResUrl, 
+          rawArtworkUrl: lowResUrl, 
+          previewUrl,
+          isHighResAvailable: !!highResUrl
+        };
+        ITUNES_CACHE.set(cacheKey, result);
+        return result;
+      }
+    } catch (e) {
+      console.warn('iTunes API fetch error:', e);
     }
-  } catch (e) {
-    console.warn('iTunes API fetch error:', e);
-  }
-  const fallback = { artworkUrl: null, rawArtworkUrl: null, previewUrl: null, isHighResAvailable: false };
-  ITUNES_CACHE[cacheKey] = fallback;
-  return fallback;
+    const fallback = { artworkUrl: null, rawArtworkUrl: null, previewUrl: null, isHighResAvailable: false };
+    ITUNES_CACHE.set(cacheKey, fallback);
+    return fallback;
+  })().finally(() => {
+    ITUNES_INFLIGHT_PROMISES.delete(cacheKey);
+  });
+
+  ITUNES_INFLIGHT_PROMISES.set(cacheKey, fetchPromise);
+  return fetchPromise;
 }
 
 export const INSPIRED_ARTISTS_DATA = {

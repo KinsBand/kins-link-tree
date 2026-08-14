@@ -231,11 +231,11 @@ export function initHeroFeatureController() {
     });
   });
 
-  // GIG COUNTDOWN TIMER TICK
-  const cdDays = document.getElementById('heroCdDays');
-  const cdHours = document.getElementById('heroCdHours');
-  const cdMins = document.getElementById('heroCdMins');
-  const cdSecs = document.getElementById('heroCdSecs');
+  // GIG / MYSTERY COUNTDOWN TIMER TICK
+  const cdDays = document.getElementById('heroCdDays') || document.getElementById('mysteryCdDays');
+  const cdHours = document.getElementById('heroCdHours') || document.getElementById('mysteryCdHours');
+  const cdMins = document.getElementById('heroCdMins') || document.getElementById('mysteryCdMins');
+  const cdSecs = document.getElementById('heroCdSecs') || document.getElementById('mysteryCdSecs');
   const gigTargetTime = new Date('2026-03-28T20:00:00').getTime();
 
   function updateCountdown() {
@@ -255,8 +255,10 @@ export function initHeroFeatureController() {
     }
   }
 
-  setInterval(updateCountdown, 1000);
-  updateCountdown();
+  if (cdDays && cdHours && cdMins && cdSecs) {
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  }
 
   // --- STATE 3: SONG PREVIEW PLAYER ---
   const previewPlayBtn = document.getElementById('previewPlayToggleBtn');

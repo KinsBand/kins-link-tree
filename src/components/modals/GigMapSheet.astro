@@ -27,48 +27,9 @@
         <button type="button" class="map-control-glass-btn" id="mapFitBoundsBtn" title="Fit all tour venues in view" aria-label="Fit All Venues">
           <i class="fa-solid fa-expand"></i>
         </button>
-        <button type="button" class="map-control-glass-btn" id="mapLocateMeBtn" title="Find closest show to your location (My GPS)" aria-label="My GPS">
-          <i class="fa-solid fa-location-crosshairs"></i>
-        </button>
         <button type="button" class="map-control-glass-btn desktop-only" id="toggleMapDetailsBtn" title="Toggle between map and details view" aria-label="Toggle Full Map">
           <i class="fa-solid fa-map"></i>
         </button>
-      </div>
-
-      <!-- Floating Interactive Directions HUD -->
-      <div class="map-directions-hud hidden" id="mapDirectionsHud" role="region" aria-label="Route Directions HUD">
-        <div class="directions-hud-header">
-          <div class="directions-hud-title-wrap">
-            <span class="directions-hud-badge"><i class="fa-solid fa-diamond-turn-right"></i> ROUTE</span>
-            <h5 class="directions-hud-destination" id="directionsHudDest">Venue Name</h5>
-          </div>
-          <button type="button" class="directions-hud-close" id="closeDirectionsHud" aria-label="Close directions HUD" title="Close directions">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        </div>
-        
-        <div class="directions-hud-stats">
-          <div class="directions-stat-item">
-            <span class="directions-stat-label">Estimated Drive</span>
-            <span class="directions-stat-value" id="directionsDuration">-- mins</span>
-          </div>
-          <div class="directions-stat-divider"></div>
-          <div class="directions-stat-item">
-            <span class="directions-stat-label">Distance</span>
-            <span class="directions-stat-value" id="directionsDistance">-- km</span>
-          </div>
-        </div>
-
-        <div class="directions-hud-actions">
-          <a href="#" target="_blank" rel="noopener" class="directions-gmaps-btn" id="directionsGmapsLink" title="Navigate in Google Maps app with live GPS">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-            <span>Google Maps</span>
-          </a>
-          <button type="button" class="directions-clear-btn" id="clearRouteHudBtn" title="Clear route from map">
-            <i class="fa-solid fa-xmark"></i>
-            <span>Clear</span>
-          </button>
-        </div>
       </div>
     </div>
 
@@ -577,188 +538,7 @@
     gap: 8px;
   }
 
-  /* Directions HUD */
-  .map-directions-hud {
-    position: absolute;
-    top: 72px;
-    left: 14px;
-    right: 14px;
-    z-index: 450;
-    background: rgba(12, 12, 16, 0.96);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 6px;
-    padding: 10px 14px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    animation: slideDownHud 0.28s var(--ease-snappy) forwards;
-    pointer-events: auto;
-  }
 
-  .map-directions-hud.hidden {
-    display: none !important;
-  }
-
-  @keyframes slideDownHud {
-    from { transform: translateY(-12px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
-  .directions-hud-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .directions-hud-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-  }
-
-  .directions-hud-badge {
-    background: #f2f0eb;
-    color: #0a0a0c;
-    font-family: var(--font-secondary);
-    font-size: 0.58rem;
-    font-weight: 900;
-    padding: 2px 6px;
-    border-radius: 3px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-  }
-
-  .directions-hud-destination {
-    font-family: var(--font-heading);
-    font-size: 0.88rem;
-    font-weight: 800;
-    color: var(--text-white);
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .directions-hud-close {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: var(--text-muted);
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.72rem;
-    flex-shrink: 0;
-    transition: all 0.18s ease;
-  }
-
-  .directions-hud-close:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-  }
-
-  .directions-hud-stats {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 4px;
-    padding: 6px 12px;
-  }
-
-  .directions-stat-item {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    flex: 1;
-  }
-
-  .directions-stat-label {
-    font-family: var(--font-secondary);
-    font-size: 0.6rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .directions-stat-value {
-    font-family: var(--font-primary);
-    font-size: 0.86rem;
-    font-weight: 800;
-    color: #fbbf24;
-  }
-
-  .directions-stat-divider {
-    width: 1px;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.12);
-    margin: 0 10px;
-  }
-
-  .directions-hud-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .directions-gmaps-btn {
-    flex: 1;
-    background: #f2f0eb;
-    color: #0a0a0c;
-    text-decoration: none;
-    font-family: var(--font-secondary);
-    font-size: 0.72rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 6px 12px;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: all 0.18s var(--ease-snappy);
-  }
-
-  .directions-gmaps-btn:hover {
-    background: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
-  }
-
-  .directions-clear-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    color: #fff;
-    font-family: var(--font-secondary);
-    font-size: 0.7rem;
-    font-weight: 800;
-    padding: 6px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.18s ease;
-  }
-
-  .directions-clear-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.3);
-  }
 
   /* ==========================================================================
      3. BOTTOM SHEET (Tier 1 vs Tier 2, 55vh Max Expansion)
@@ -1863,6 +1643,66 @@
 </style>
 
 <script>
-  import { initGigMapModule } from '../../scripts/controllers/gigMap.js';
-  initGigMapModule();
+  let gigMapModulePromise: Promise<any> | null = null;
+
+  async function loadGigMapModule() {
+    if (!gigMapModulePromise) {
+      gigMapModulePromise = import('../../scripts/controllers/gigMap.js').then((mod) => {
+        if (typeof mod.initGigMapModule === 'function') {
+          mod.initGigMapModule();
+        }
+        return mod;
+      });
+    }
+    return gigMapModulePromise;
+  }
+
+  // Pre-define global openGigMap on window so any button or deep-link can trigger it immediately
+  (window as any).openGigMap = async function(gigOrVenueId?: string, initialSnapState?: string) {
+    await loadGigMapModule();
+    if (typeof (window as any).openGigMap === 'function') {
+      return (window as any).openGigMap(gigOrVenueId, initialSnapState);
+    }
+  };
+
+  function setupGigMapTriggers() {
+    const triggerSelectors = [
+      '#floatingGigPillBtn',
+      '#heroOpenGigMapBtn',
+      'a[href="#gigs"]',
+      'a[href="#gig-map"]',
+      '[data-open-gig-map]'
+    ];
+
+    const triggers = document.querySelectorAll(triggerSelectors.join(', '));
+
+    triggers.forEach((trigger) => {
+      // Pre-warm chunk on hover or pointer-enter on desktop (0ms perceived lag)
+      trigger.addEventListener('pointerenter', () => {
+        loadGigMapModule();
+      }, { once: true, passive: true });
+
+      trigger.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await (window as any).openGigMap(undefined, 'peek');
+      });
+    });
+
+    // Check URL parameters or hash on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedGig = urlParams.get('gig') || urlParams.get('venue');
+    if (requestedGig || window.location.hash === '#gig-map' || window.location.hash === '#gigs') {
+      loadGigMapModule().then(() => {
+        if (typeof (window as any).openGigMap === 'function') {
+          (window as any).openGigMap(requestedGig || undefined, 'peek');
+        }
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupGigMapTriggers, { once: true });
+  } else {
+    setupGigMapTriggers();
+  }
 </script>

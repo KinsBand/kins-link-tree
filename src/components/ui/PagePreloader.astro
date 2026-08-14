@@ -30,6 +30,8 @@
     pointer-events: auto;
     overflow: hidden;
     visibility: visible;
+    opacity: 1;
+    transition: opacity 0.28s var(--ease-snappy), visibility 0.28s ease;
   }
 
   .preloader-curtain {
@@ -41,7 +43,7 @@
     justify-content: center;
     position: relative;
     transform: translateY(0%);
-    transition: transform 0.45s cubic-bezier(0.77, 0, 0.175, 1);
+    transition: transform 0.35s cubic-bezier(0.77, 0, 0.175, 1);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
   }
 
@@ -132,13 +134,15 @@
   }
 
   .page-preloader-overlay.dismissed {
+    opacity: 0;
     pointer-events: none;
     visibility: hidden;
-    transition: visibility 0s linear 0.45s;
+    transition: opacity 0.28s var(--ease-snappy), visibility 0s linear 0.28s;
   }
 
   .page-preloader-overlay.entering {
     visibility: visible;
+    opacity: 1;
     pointer-events: auto;
   }
 
@@ -153,10 +157,10 @@
     if (!overlay) return;
 
     function dismissCurtain() {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         overlay?.classList.remove('active', 'entering');
         overlay?.classList.add('dismissed');
-      }, 250);
+      });
     }
 
     function triggerCurtainIn(targetUrl: string) {
@@ -165,13 +169,14 @@
 
       setTimeout(() => {
         window.location.href = targetUrl;
-      }, 380);
+      }, 250);
     }
 
-    if (document.readyState === 'complete') {
+    // Dismiss as soon as DOM is interactive (zero artificial delay)
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
       dismissCurtain();
     } else {
-      window.addEventListener('load', dismissCurtain);
+      document.addEventListener('DOMContentLoaded', dismissCurtain, { once: true });
     }
 
     document.addEventListener('click', (e) => {
@@ -212,7 +217,7 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPreloaderController);
+    document.addEventListener('DOMContentLoaded', initPreloaderController, { once: true });
   } else {
     initPreloaderController();
   }

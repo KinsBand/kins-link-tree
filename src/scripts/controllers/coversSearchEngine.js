@@ -1,7 +1,8 @@
-import { KINS_COVERS_DATA } from '../data/coversData.js';
 import { openCoverVideoModal } from './videoModalController.js';
 import { handleSongRequestSubmit } from './requestSongController.js';
 import { getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from './inspirationVault.js';
+
+export const KINS_COVERS_DATA = [];
 
 let activeCategory = 'all';
 let searchDebounceTimeout = null;

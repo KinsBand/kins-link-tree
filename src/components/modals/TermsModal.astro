@@ -1,7 +1,7 @@
 ---
 ---
 
-<div class="modal-backdrop hidden" id="termsModal">
+<div class="modal-backdrop hidden" id="termsModal" role="dialog" aria-modal="true" aria-label="Fan Submission Terms">
   <div class="modal-content legal-modal-content">
     <div class="modal-header">
       <div class="modal-title-group">
@@ -219,5 +219,11 @@
   closeTermsFooterBtn?.addEventListener('click', hideModal);
   termsModal?.addEventListener('click', (e) => {
     if (e.target === termsModal) hideModal();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && termsModal && !termsModal.classList.contains('hidden')) {
+      hideModal();
+    }
   });
 </script>

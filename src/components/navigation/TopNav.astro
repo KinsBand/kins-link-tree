@@ -203,14 +203,15 @@
   let heroBannerImg: HTMLElement | null = null;
   let ticking = false;
 
+  const mql = window.matchMedia('(min-width: 768px)');
+
   function updateScrollDrivenFade() {
     ticking = false;
 
-    // Detect active scroll context:
+    // Detect active scroll context dynamically:
     // Desktop (>= 768px): Scroll offset of #leftSidebar
     // Mobile (< 768px): Scroll offset of window / documentElement
-    const isDesktop = window.innerWidth >= 768;
-    const scrollOffset = isDesktop && leftSidebar 
+    const scrollOffset = mql.matches && leftSidebar 
       ? leftSidebar.scrollTop 
       : (window.scrollY || document.documentElement.scrollTop || 0);
 
@@ -251,17 +252,23 @@
     }
   }
 
-  // Bind scroll triggers efficiently
-  const isDesktopEnv = window.innerWidth >= 768;
-  if (isDesktopEnv && leftSidebar) {
-    leftSidebar.addEventListener('scroll', onScroll, { passive: true });
-  } else {
-    window.addEventListener('scroll', onScroll, { passive: true });
-  }
-  window.addEventListener('resize', onScroll, { passive: true });
+  function rebindScrollListeners() {
+    window.removeEventListener('scroll', onScroll);
+    if (leftSidebar) {
+      leftSidebar.removeEventListener('scroll', onScroll);
+    }
 
-  // Initial calculation on load
-  updateScrollDrivenFade();
+    if (mql.matches && leftSidebar) {
+      leftSidebar.addEventListener('scroll', onScroll, { passive: true });
+    } else {
+      window.addEventListener('scroll', onScroll, { passive: true });
+    }
+    onScroll();
+  }
+
+  mql.addEventListener('change', rebindScrollListeners);
+  rebindScrollListeners();
+  window.addEventListener('resize', onScroll, { passive: true });
 
   // Initialize YouTube-Style Notification Bell Component State
   initSubscribeBell();

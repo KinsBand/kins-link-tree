@@ -904,3 +904,54 @@ body.modal-open {
   transform: scale(1.1);
 }
 
+/* ==========================================================================
+   Hardware-Adaptive Engine & Accessibility (Reduced-Motion / Low-Power)
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
+}
+
+/* Low-Power Hardware Tier Optimization (< 4 cores, < 4GB RAM, or Data-Saver) */
+html.low-power-mode body::before {
+  display: none !important;
+}
+
+html.low-power-mode *,
+html.low-power-mode *::before,
+html.low-power-mode *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.low-power-mode .modal-content,
+html.low-power-mode .feedback-modal-enhanced,
+html.low-power-mode .share-modal-enhanced,
+html.low-power-mode .cover-video-modal-container,
+html.low-power-mode .legal-modal-content,
+html.low-power-mode .community-modal-enhanced,
+html.low-power-mode .hero-feature-card,
+html.low-power-mode .members-section,
+html.low-power-mode .spotlight-section,
+html.low-power-mode .submission-banner,
+html.low-power-mode .audio-bar-inner,
+html.low-power-mode .sheet-container {
+  background: rgba(14, 14, 17, 0.97) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Keyboard Focus Trapping & Accessibility Outline */
+:focus-visible {
+  outline: 2px solid var(--btn-green);
+  outline-offset: 2px;
+}
+

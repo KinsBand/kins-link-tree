@@ -321,21 +321,23 @@ const members = [
   const prevBtn = document.getElementById('membersScrollPrev');
   const nextBtn = document.getElementById('membersScrollNext');
 
+  let rafId: number | null = null;
+
   function updateMembersNav() {
     if (!container) return;
-    const isOverflowing = container.scrollWidth > container.clientWidth + 4;
-    const controlsGroup = prevBtn?.parentElement;
-    if (controlsGroup) {
-      controlsGroup.style.display = isOverflowing ? 'flex' : 'none';
-    }
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      const isOverflowing = container.scrollWidth > container.clientWidth + 4;
+      const controlsGroup = prevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.style.display = isOverflowing ? 'flex' : 'none';
+      }
+    });
   }
 
   if (container) {
     updateMembersNav();
-    window.addEventListener('resize', updateMembersNav);
-    if (typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(updateMembersNav).observe(container);
-    }
+    window.addEventListener('resize', updateMembersNav, { passive: true });
 
     container.addEventListener('wheel', (e) => {
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {

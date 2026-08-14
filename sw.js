@@ -1,23 +1,26 @@
-const CACHE_NAME = 'kins-link-bio-v25';
-const ASSETS = [
+const CACHE_NAME = 'kins-link-bio-v26';
+const PRECACHE_ASSETS = [
   './',
-  './index.html',
-  './styles.css',
-  './script.js',
+  './manifest.json',
   './pfp.jpg',
-  './followers.json',
-  './kins-studio/',
-  './kins-studio/index.html',
-  './kins-studio/dashboard.css',
-  './kins-studio/dashboard.js',
-  './kins-studio/styles.css',
-  './kins-studio/pfp.jpg'
+  './kins-logo-new.png',
+  './followers.json'
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => {
+      return Promise.allSettled(
+        PRECACHE_ASSETS.map((asset) =>
+          fetch(asset, { cache: 'no-cache' }).then((response) => {
+            if (response.ok) {
+              return cache.put(asset, response);
+            }
+          }).catch(() => {})
+        )
+      );
+    })
   );
 });
 
@@ -30,9 +33,30 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+
+  // Skip non-http/https requests
+  if (!url.protocol.startsWith('http')) return;
+
+  // Stale-While-Revalidate strategy for static assets
   event.respondWith(
-    fetch(event.request).catch(() =>
-      caches.match(event.request)
-    )
+    caches.match(request).then((cachedResponse) => {
+      const fetchPromise = fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
+
+      return cachedResponse || fetchPromise;
+    })
   );
 });

@@ -608,21 +608,23 @@ const featureCards = [
   const spotlightPrevBtn = document.getElementById('spotlightScrollPrev');
   const spotlightNextBtn = document.getElementById('spotlightScrollNext');
 
+  let spotlightRafId: number | null = null;
+
   function updateSpotlightNav() {
     if (!spotlightContainer) return;
-    const isOverflowing = spotlightContainer.scrollWidth > spotlightContainer.clientWidth + 4;
-    const controlsGroup = spotlightPrevBtn?.parentElement;
-    if (controlsGroup) {
-      controlsGroup.style.display = isOverflowing ? 'flex' : 'none';
-    }
+    if (spotlightRafId) cancelAnimationFrame(spotlightRafId);
+    spotlightRafId = requestAnimationFrame(() => {
+      const isOverflowing = spotlightContainer.scrollWidth > spotlightContainer.clientWidth + 4;
+      const controlsGroup = spotlightPrevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.style.display = isOverflowing ? 'flex' : 'none';
+      }
+    });
   }
 
   if (spotlightContainer) {
     updateSpotlightNav();
-    window.addEventListener('resize', updateSpotlightNav);
-    if (typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(updateSpotlightNav).observe(spotlightContainer);
-    }
+    window.addEventListener('resize', updateSpotlightNav, { passive: true });
 
     spotlightContainer.addEventListener('wheel', (e) => {
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {

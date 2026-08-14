@@ -69,4 +69,10 @@ export function initCoverVideoModalController() {
       }
     });
   }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && backdrop && backdrop.classList.contains('active')) {
+      closeCoverVideoModal();
+    }
+  });
 }

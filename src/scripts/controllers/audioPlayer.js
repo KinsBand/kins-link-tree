@@ -184,9 +184,6 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
       element.classList.remove('vinyl-spin-anim', 'spinning', 'vinyl-spin-once');
       element.style.transform = `rotate(${currentAngle}deg)`;
 
-      // Force reflow so browser commits initial angle before transitioning
-      void element.offsetWidth;
-
       // Calculate forward deceleration arc to the next upright 360° position (0°)
       let remainder = currentAngle % 360;
       let extraDeg = 360 - remainder;
@@ -195,14 +192,16 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
       }
       const targetAngle = currentAngle + extraDeg;
 
-      element.classList.add('vinyl-spin-decelerate');
-      element.style.transform = `rotate(${targetAngle}deg)`;
+      requestAnimationFrame(() => {
+        element.classList.add('vinyl-spin-decelerate');
+        element.style.transform = `rotate(${targetAngle}deg)`;
 
-      setTimeout(() => {
-        // Once deceleration completes, finalize inline style to upright 0deg smoothly without snapping
-        element.classList.remove('vinyl-spin-decelerate');
-        element.style.transform = 'rotate(0deg)';
-      }, 720);
+        setTimeout(() => {
+          // Once deceleration completes, finalize inline style to upright 0deg smoothly without snapping
+          element.classList.remove('vinyl-spin-decelerate');
+          element.style.transform = 'rotate(0deg)';
+        }, 720);
+      });
     } else {
       element.classList.remove('vinyl-spin-decelerate', 'vinyl-spin-anim', 'spinning');
       element.style.transform = 'rotate(0deg)';
@@ -300,7 +299,16 @@ export function initAudioPlayer() {
 
   loadStackedAlbumCovers();
 
-  let hasTransitionedToActive = false;
+  let cachedMusicSectionRect = null;
+
+  function updateCachedMusicSectionRect() {
+    const musicSection = document.getElementById('deckMusicSection');
+    if (musicSection) {
+      cachedMusicSectionRect = musicSection.getBoundingClientRect();
+    }
+  }
+
+  window.addEventListener('resize', updateCachedMusicSectionRect, { passive: true });
 
   function showActiveView() {
     if (hasTransitionedToActive) return;
@@ -308,11 +316,12 @@ export function initAudioPlayer() {
 
     const deckMusicSection = document.getElementById('deckMusicSection');
 
-    // Trigger synchronized curtain-wipe animation from left to right
+    // Trigger synchronized curtain-wipe animation smoothly without synchronous forced reflow
     if (deckMusicSection) {
       deckMusicSection.classList.remove('is-transitioning');
-      void deckMusicSection.offsetWidth; // force reflow
-      deckMusicSection.classList.add('is-transitioning');
+      requestAnimationFrame(() => {
+        deckMusicSection.classList.add('is-transitioning');
+      });
     }
 
     // At the end of the wipe animation (850ms), finalize DOM state & show stylus
@@ -320,6 +329,7 @@ export function initAudioPlayer() {
       if (deckIdleView) deckIdleView.classList.add('hidden');
       if (deckActiveView) deckActiveView.classList.remove('hidden');
       if (deckMusicSection) deckMusicSection.classList.remove('is-transitioning');
+      updateCachedMusicSectionRect();
 
       // Show the vinyl stylus after the active view has revealed
       if (vinylStylusWrapper) {
@@ -376,9 +386,13 @@ export function initAudioPlayer() {
   }
 
   function seekToPosition(clientX) {
-    const musicSection = document.getElementById('deckMusicSection');
-    if (!musicSection || !vaultAudioPlayer) return;
-    const rect = musicSection.getBoundingClientRect();
+    if (!vaultAudioPlayer) return;
+    if (!cachedMusicSectionRect) {
+      updateCachedMusicSectionRect();
+    }
+    if (!cachedMusicSectionRect || cachedMusicSectionRect.width === 0) return;
+
+    const rect = cachedMusicSectionRect;
     const pctRatio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const pct = pctRatio * 100;
     const duration = vaultAudioPlayer.duration || 30;
@@ -395,13 +409,14 @@ export function initAudioPlayer() {
     }
   }
 
-  // Interactive Timeline Scrubbing
+  // Interactive Timeline Scrubbing with cached layout bounds
   if (bottomAudioBar) {
     bottomAudioBar.addEventListener('pointerdown', (e) => {
       if (!e.target || !e.target.closest) return;
       if (e.target.closest('button, .deck-gig-section, .deck-divider') || !currentPlayingTrack) return;
 
       isScrubbing = true;
+      updateCachedMusicSectionRect();
       bottomAudioBar.classList.add('is-scrubbing');
       try { bottomAudioBar.setPointerCapture(e.pointerId); } catch (err) {}
 
@@ -493,10 +508,11 @@ export function initAudioPlayer() {
     if (shouldOpen) {
       if (currentPlayingTrack) updateStreamLinks(currentPlayingTrack);
       streamDrawerPanel.classList.remove('hidden');
-      void streamDrawerPanel.offsetWidth;
-      streamDrawerPanel.classList.add('active-drawer');
-      audioBarStreamBtn.classList.add('active');
-      document.body.classList.add('stream-panel-open');
+      requestAnimationFrame(() => {
+        streamDrawerPanel.classList.add('active-drawer');
+        audioBarStreamBtn.classList.add('active');
+        document.body.classList.add('stream-panel-open');
+      });
     } else {
       streamDrawerPanel.classList.remove('active-drawer');
       audioBarStreamBtn.classList.remove('active');
@@ -517,14 +533,14 @@ export function initAudioPlayer() {
 
     if (loading && !currentIsSpinner) {
       audioBarToggleBtn.classList.remove('icon-morph');
-      void audioBarToggleBtn.offsetWidth;
       audioBarToggleBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
     } else if (!loading && (currentIsPause !== playing || currentIsSpinner)) {
       audioBarToggleBtn.classList.remove('icon-morph');
-      void audioBarToggleBtn.offsetWidth;
       audioBarToggleBtn.innerHTML = `<i class="fa-solid ${playing ? 'fa-pause' : 'fa-play'}"></i>`;
-      audioBarToggleBtn.classList.add('icon-morph');
-      setTimeout(() => audioBarToggleBtn.classList.remove('icon-morph'), 350);
+      requestAnimationFrame(() => {
+        audioBarToggleBtn.classList.add('icon-morph');
+        setTimeout(() => audioBarToggleBtn.classList.remove('icon-morph'), 350);
+      });
     }
 
     if (audioBarIconBox) {
