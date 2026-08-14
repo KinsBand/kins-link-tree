@@ -1,19 +1,59 @@
 import { showToast } from './toast.js';
 
-export function handleSongRequestSubmit(event, prefilledTitle = '') {
+export async function handleSongRequestSubmit(event, prefilledTitle = '') {
   event.preventDefault();
   const form = event.target;
   const songTitleInput = form.querySelector('#reqSongTitle');
   const artistInput = form.querySelector('#reqArtist');
   const reasonInput = form.querySelector('#reqReason');
   const emailInput = form.querySelector('#reqEmail');
+  const submitBtn = form.querySelector('.submit-request-btn');
 
   const songTitle = songTitleInput?.value.trim() || prefilledTitle || 'Untitled Cover';
   const artist = artistInput?.value.trim() || 'Unknown Artist';
+  const reason = reasonInput?.value.trim() || 'None provided';
+  const email = emailInput?.value.trim() || 'Not provided';
 
   if (!songTitle || !artist) {
     showToast('⚠️ Please provide both Song Title and Original Artist!');
     return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i> <span>Submitting...</span>`;
+  }
+
+  // Cover Song Request Discord Webhook (#cover-requests)
+  const webhookUrl = 'https://discord.com/api/webhooks/1537817839199854622/MHgzq6-LRPJzNybsWx_wRhR7zDl5sCslZNxzHQtQRcMAn5rrB3Qu46X2IpNaMiP2uYXV';
+
+  const discordPayload = {
+    username: 'Kins Cover Request System',
+    avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/pfp.jpg',
+    embeds: [
+      {
+        title: '🎵 New Cover Song Request',
+        color: 0x5865f2, // #5865F2 Blurple
+        fields: [
+          { name: 'Song Title', value: `**${songTitle}**`, inline: true },
+          { name: 'Original Artist', value: `**${artist}**`, inline: true },
+          { name: 'Why should Kins cover this?', value: reason, inline: false },
+          { name: 'Contact Email', value: email ? `\`${email}\`` : 'Not provided', inline: false }
+        ],
+        footer: { text: 'Kins Cover Request System' },
+        timestamp: new Date().toISOString()
+      }
+    ]
+  };
+
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(discordPayload)
+    });
+  } catch (err) {
+    console.warn('Cover request webhook error:', err);
   }
 
   const container = form.closest('.request-song-card-container');

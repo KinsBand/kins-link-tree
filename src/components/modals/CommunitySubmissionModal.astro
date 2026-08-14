@@ -871,22 +871,22 @@
     const deviceInfo = `${navigator.userAgent} | Screen: ${window.innerWidth}x${window.innerHeight}`;
     const timestamp = new Date().toISOString();
 
-    const webhookUrl = 'https://discordapp.com/api/webhooks/1537676700199157862/vgZ-ZSOncntm_jmnRg3EIFl_s2noGib1ALxlCG1Mw_qXnB9wVI_BrsFAN7s3VU02pxpw';
+    const webhookUrl = 'https://discord.com/api/webhooks/1537817848661942372/Kz6jjYs0OU7YP5Xz3TpeaLIivtASMsA9Njb_sGmwoqF_xYKcbVvSP1GuF0AymVZYJv7E';
 
     const discordPayload = {
-      username: 'Kins Fan Clip Submissions',
+      username: 'Kins Community Hub',
       avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/pfp.jpg',
       embeds: [
         {
-          title: `🎬 New Fan Clip: ${category}`,
-          description: `**Link:** ${url}${title ? `\n**Song/Title:** ${title}` : ''}`,
-          color: 0xa855f7,
+          title: '🎬 New Fan Clip Submission',
+          color: 0x57f287, // #57F287 Green
           fields: [
-            { name: '📁 Category', value: category, inline: true },
-            { name: '👤 Creator', value: handle ? `\`${handle}\`` : '*Anonymous*', inline: true },
-            { name: '📱 Client Info', value: `\`${deviceInfo.slice(0, 180)}\``, inline: false }
+            { name: 'Category', value: `**${category}**`, inline: true },
+            { name: 'Social Handle', value: handle ? `\`${handle}\`` : '*Not provided*', inline: true },
+            { name: 'Song / Title', value: title || 'Untitled', inline: true },
+            { name: 'Video / Post Link', value: `[Watch Clip / Open Post](${url})\n\`${url}\``, inline: false }
           ],
-          footer: { text: 'Kins Official Website • Spotlight Submissions' },
+          footer: { text: 'Kins Community Hub' },
           timestamp: timestamp
         }
       ]

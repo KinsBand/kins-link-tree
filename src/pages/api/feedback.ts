@@ -35,9 +35,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Route to the correct Discord channel based on feedback type
     const webhookMap: Record<string, string> = {
-      'Improvement / Idea': 'https://discordapp.com/api/webhooks/1537676700199157862/vgZ-ZSOncntm_jmnRg3EIFl_s2noGib1ALxlCG1Mw_qXnB9wVI_BrsFAN7s3VU02pxpw',
-      'Bug / Broken Item': 'https://discordapp.com/api/webhooks/1537794715712491591/o-sh7Hks55I-Cc_X8j6qXfGNMZ8lDP8yCzGg2085_cdEuQiqyKW9NxeeQ9wfNwsYiyax',
-      'Content Fix / Typo': 'https://discordapp.com/api/webhooks/1537794718677733417/uaoohPCjEUbQMfwoeOxvHu-pkG8FBRndkAuP6w2VKdhperzqGEdsbddsQLR6E0T-l8z7'
+      'Improvement / Idea': 'https://discord.com/api/webhooks/1537823822240026705/Gw3XTHhEbpqIGGxhXvQx6yeOoAOWVwCVLyo-36DtwqXNptDHR69KqN-4286oMpHfSB7G',
+      'Bug / Broken Item': 'https://discord.com/api/webhooks/1537823829039124541/ePyQFBCtvGO9nHQWWopo6l4NDvjiweDq0R1WeURZBxsuAVpqco4hM0LC1r9nXnrpEuJg',
+      'Content Fix / Typo': 'https://discord.com/api/webhooks/1537823842880192573/B11FLr0cU92wYSN_8Jl06K8gARQjvtznFJzL5ZZmXZISABg0RSHHVbxjmS_sjk4LaF8k'
     };
 
     let webhookUrl = webhookMap['Improvement / Idea']; // default
@@ -54,14 +54,14 @@ export const POST: APIRoute = async ({ request }) => {
     if (envWebhook) webhookUrl = envWebhook;
 
     // Determine color & icon based on feedback type
-    let embedColor = 0xf59e0b; // Amber / Gold for improvements
+    let embedColor = 0x3498db; // #3498DB Blue for improvements
     let typeEmoji = '💡';
 
     if (feedbackType.includes('Bug') || feedbackType === 'bug_report') {
-      embedColor = 0xef4444; // Red for bugs
+      embedColor = 0xe74c3c; // #E74C3C Red for bugs
       typeEmoji = '🐛';
     } else if (feedbackType.includes('Content')) {
-      embedColor = 0x3b82f6; // Blue for content
+      embedColor = 0xe67e22; // #E67E22 Orange for content
       typeEmoji = '📝';
     }
 
@@ -91,7 +91,7 @@ export const POST: APIRoute = async ({ request }) => {
               description: descriptionLines.join('\n'),
               color: embedColor,
               footer: {
-                text: `Kins Official Website • Build: ${buildVersion}`
+                text: 'Kins Site Diagnostics'
               },
               timestamp: body.timestamp || new Date().toISOString()
             }
