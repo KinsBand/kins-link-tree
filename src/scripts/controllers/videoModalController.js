@@ -38,6 +38,7 @@ export function openCoverVideoModal(coverData) {
     };
   }
 
+  modal.classList.remove('hidden');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
 }
@@ -47,6 +48,7 @@ export function closeCoverVideoModal() {
   const iframe = document.getElementById('coverVideoIframe');
   if (modal) {
     modal.classList.remove('active');
+    modal.classList.add('hidden');
     document.body.classList.remove('modal-open');
   }
   if (iframe) {

@@ -75,7 +75,6 @@ export const POST: APIRoute = async ({ request }) => {
           `• **Submitter:** ${contact ? `\`${contact}\`` : '*Anonymous Fan*'}`,
           `• **Viewport:** \`${viewport}\``,
           `• **Environment:** ${environment}`,
-          `• **Page:** [${url}](${url})`,
           `• **Date:** ${formattedDate}`
         ];
 

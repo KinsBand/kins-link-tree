@@ -1283,11 +1283,6 @@ export function filterGigs(category) {
 
 export function fitAllTourBounds() {
   if (!leafletMapInstance || typeof window.L === 'undefined') {
-    if (window.openGigMap) {
-      window.openGigMap().then(() => {
-        setTimeout(fitAllTourBounds, 350);
-      });
-    }
     return;
   }
 

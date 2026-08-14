@@ -1,6 +1,6 @@
 /**
  * Kins Essential Diagnostics & Telemetry Collector
- * Lightweight (~1KB), zero-dependency utility collecting the 5 essentials for UI/frontend bug reproduction.
+ * Lightweight zero-dependency utility providing precise browser, in-app webview, and device environment detection.
  */
 
 let lastUnhandledError = '';
@@ -21,6 +21,64 @@ if (typeof window !== 'undefined') {
 }
 
 /**
+ * Detects precise browser and operating system / device name.
+ * Output examples: "Chrome (Android)", "Safari (iPhone)", "DuckDuckGo (iPhone)", "Brave (Mac)", "Instagram In-App (iPhone)"
+ */
+function detectEnvironment(ua = '') {
+  // Device & OS detection
+  let device = 'Device';
+  if (/iPhone/i.test(ua)) device = 'iPhone';
+  else if (/iPad/i.test(ua)) device = 'iPad';
+  else if (/Android/i.test(ua)) device = 'Android';
+  else if (/Mac OS X|Macintosh/i.test(ua)) {
+    // Check if it's an iPad requesting desktop site
+    if (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 1) {
+      device = 'iPad';
+    } else {
+      device = 'Mac';
+    }
+  } else if (/Windows/i.test(ua)) device = 'Windows';
+  else if (/CrOS/i.test(ua)) device = 'ChromeOS';
+  else if (/Linux/i.test(ua)) device = 'Linux';
+
+  // Check Brave browser
+  let isBrave = false;
+  if (typeof navigator !== 'undefined') {
+    try {
+      if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+        isBrave = true;
+      }
+    } catch (_) {}
+  }
+
+  let browser = 'Browser';
+
+  // In-App WebViews & Social Browsers
+  if (/Instagram/i.test(ua)) browser = 'Instagram In-App';
+  else if (/TikTok|musical_ly/i.test(ua)) browser = 'TikTok In-App';
+  else if (/FBAN|FBAV|FB_IAB/i.test(ua)) browser = 'Facebook In-App';
+  else if (/Discord/i.test(ua)) browser = 'Discord In-App';
+  else if (/Twitter|TwitterAndroid/i.test(ua)) browser = 'Twitter In-App';
+  else if (/Reddit/i.test(ua)) browser = 'Reddit In-App';
+  else if (/Snapchat/i.test(ua)) browser = 'Snapchat In-App';
+  else if (/Line\//i.test(ua)) browser = 'Line In-App';
+  // Standalone Browsers
+  else if (/DuckDuckGo|Ddg\//i.test(ua)) browser = 'DuckDuckGo';
+  else if (isBrave || /Brave/i.test(ua)) browser = 'Brave';
+  else if (/SamsungBrowser/i.test(ua)) browser = 'Samsung Internet';
+  else if (/Arc/i.test(ua)) browser = 'Arc';
+  else if (/EdgA?\/|Edge\//i.test(ua)) browser = 'Edge';
+  else if (/OPR\/|Opera/i.test(ua)) browser = 'Opera';
+  else if (/Vivaldi/i.test(ua)) browser = 'Vivaldi';
+  else if (/UCBrowser/i.test(ua)) browser = 'UC Browser';
+  else if (/Firefox|FxiOS/i.test(ua)) browser = 'Firefox';
+  else if (/Chrome|CriOS/i.test(ua)) browser = 'Chrome';
+  else if (/Safari/i.test(ua) && !/Android/i.test(ua)) browser = 'Safari';
+
+  return `${browser} (${device})`;
+}
+
+/**
  * Collects lightweight essential diagnostics.
  */
 export function getEssentialDiagnostics() {
@@ -28,10 +86,13 @@ export function getEssentialDiagnostics() {
     return {
       viewport: '0x0',
       pixelRatio: 1,
+      viewportWithDpr: '0x0 (@1x)',
       platform: 'Server',
       environment: 'Server',
       url: '',
       userAgent: '',
+      buildVersion: '2026.08.1-prod',
+      lastError: '',
       timestamp: new Date().toISOString(),
       formattedDate: ''
     };
@@ -39,30 +100,9 @@ export function getEssentialDiagnostics() {
 
   const ua = navigator.userAgent || '';
   const dpr = Math.round((window.devicePixelRatio || 1) * 10) / 10;
+  const environment = detectEnvironment(ua);
 
-  // In-App browser detection
-  let inAppName = '';
-  if (/Instagram/i.test(ua)) inAppName = 'Instagram';
-  else if (/TikTok|musical_ly/i.test(ua)) inAppName = 'TikTok';
-  else if (/FBAN|FBAV|FB_IAB/i.test(ua)) inAppName = 'Facebook';
-  else if (/Discord/i.test(ua)) inAppName = 'Discord';
-  else if (/Reddit/i.test(ua)) inAppName = 'Reddit';
-  else if (/Line/i.test(ua)) inAppName = 'Line';
-  else if (/Snapchat/i.test(ua)) inAppName = 'Snapchat';
-
-  // OS detection
-  let os = 'Unknown OS';
-  if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
-  else if (/Android/.test(ua)) os = 'Android';
-  else if (/Mac OS X/.test(ua)) os = 'macOS';
-  else if (/Windows/.test(ua)) os = 'Windows';
-  else if (/Linux/.test(ua)) os = 'Linux';
-
-  const environment = inAppName
-    ? `In-App Browser (${inAppName} ${os})`
-    : `Standard Browser (${os})`;
-
-  // Formatted date (e.g. 14 Aug 2026, 21:40)
+  // Formatted date (e.g. 14 Aug 2026, 22:20)
   const now = new Date();
   const dateOptions = {
     day: 'numeric',
@@ -81,7 +121,7 @@ export function getEssentialDiagnostics() {
     viewport: `${window.innerWidth}x${window.innerHeight}`,
     pixelRatio: dpr,
     viewportWithDpr: `${window.innerWidth}x${window.innerHeight} (@${dpr}x)`,
-    platform: navigator.platform || os,
+    platform: navigator.platform,
     environment: environment,
     url: window.location.href,
     buildVersion: '2026.08.1-prod',

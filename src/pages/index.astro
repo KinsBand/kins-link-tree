@@ -55,6 +55,8 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
           <div class="footer-legal-links">
             <button type="button" id="openPrivacyFooterBtn" class="footer-legal-btn">Privacy Policy</button>
             <span class="legal-bullet">•</span>
+            <button type="button" id="openSuggestImprovementFooterBtn" class="footer-legal-btn">Suggest Improvement</button>
+            <span class="legal-bullet">•</span>
             <button type="button" id="openTermsFooterBtn" class="footer-legal-btn">Fan Submission Terms</button>
           </div>
         </footer>
@@ -214,7 +216,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
 
   .site-footer {
     text-align: center;
-    padding: 32px 0 20px;
+    padding: 32px 16px 120px;
     color: var(--text-muted);
     font-size: 0.72rem;
     letter-spacing: 0.06em;
@@ -222,54 +224,122 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     font-family: var(--font-secondary);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     margin-top: 12px;
+    position: relative;
+    z-index: 10;
+  }
+
+  @media (min-width: 1024px) {
+    .site-footer {
+      padding: 36px 16px 48px;
+    }
   }
 
   .footer-legal-links {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    margin-top: 8px;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin-top: 10px;
   }
 
   .footer-legal-btn {
     background: transparent;
     border: none;
-    color: var(--text-muted);
+    color: #94a3b8;
     font-family: inherit;
-    font-size: 0.7rem;
+    font-size: clamp(0.68rem, 2.5vw, 0.74rem);
     font-weight: 700;
     cursor: pointer;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    padding: 0;
-    transition: color 0.18s ease;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .footer-legal-btn:hover {
-    color: var(--text-white);
-    text-decoration: underline;
+  .footer-legal-btn:hover,
+  .footer-legal-btn:focus-visible {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    text-decoration: none;
+    outline: none;
   }
 
   .legal-bullet {
-    color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 0.75rem;
+    user-select: none;
+  }
+
+  @media (max-width: 480px) {
+    .footer-legal-links {
+      gap: 4px 6px;
+    }
+    .footer-legal-btn {
+      padding: 6px 6px;
+      font-size: 0.68rem;
+    }
+    .legal-bullet {
+      font-size: 0.65rem;
+    }
   }
 </style>
 
-<script>
-  const yearEl = document.getElementById('copyrightYear');
-  if (yearEl) yearEl.textContent = new Date().getFullYear().toString();
+<script is:inline>
+  (function initFooterModalTriggers() {
+    function handleFooterTriggerClick(e) {
+      var target = e.target;
+      if (!target || !target.closest) return;
 
-  const privacyModal = document.getElementById('privacyModal');
-  const termsModal = document.getElementById('termsModal');
+      var suggestBtn = target.closest('#openSuggestImprovementFooterBtn, .open-feedback-trigger, [data-open-feedback]');
+      if (suggestBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var feedbackModal = document.getElementById('feedbackModal');
+        if (typeof window.openFeedbackModal === 'function') {
+          window.openFeedbackModal();
+        } else if (feedbackModal) {
+          feedbackModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
 
-  document.getElementById('openPrivacyFooterBtn')?.addEventListener('click', () => {
-    privacyModal?.classList.remove('hidden');
-    document.body.classList.add('modal-open');
-  });
+      var privacyBtn = target.closest('#openPrivacyFooterBtn, .open-privacy-trigger');
+      if (privacyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var privacyModal = document.getElementById('privacyModal');
+        if (privacyModal) {
+          privacyModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
 
-  document.getElementById('openTermsFooterBtn')?.addEventListener('click', () => {
-    termsModal?.classList.remove('hidden');
-    document.body.classList.add('modal-open');
-  });
+      var termsBtn = target.closest('#openTermsFooterBtn, .open-terms-trigger');
+      if (termsBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var termsModal = document.getElementById('termsModal');
+        if (termsModal) {
+          termsModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
+    }
+
+    document.addEventListener('click', handleFooterTriggerClick, true);
+
+    var yearEl = document.getElementById('copyrightYear');
+    if (yearEl) yearEl.textContent = new Date().getFullYear().toString();
+  })();
 </script>

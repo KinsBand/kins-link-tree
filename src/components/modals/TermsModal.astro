@@ -45,7 +45,7 @@
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    z-index: 1000;
+    z-index: 10050;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -132,6 +132,8 @@
   .legal-modal-body {
     padding: 20px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -139,6 +141,17 @@
     font-family: var(--font-secondary);
     font-size: 0.82rem;
     line-height: 1.5;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+
+  .legal-modal-body::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .legal-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
   }
 
   .agreement-highlight-box {
@@ -210,20 +223,33 @@
   const closeTermsModal = document.getElementById('closeTermsModal');
   const closeTermsFooterBtn = document.getElementById('closeTermsFooterBtn');
 
-  function hideModal() {
+  function hideTermsModal() {
     termsModal?.classList.add('hidden');
-    document.body.classList.remove('modal-open');
+    
+    // Check if underlying community submission modal or feedback modal is still open
+    const communityModal = document.getElementById('communitySubmissionModal');
+    const isCommunityModalOpen = communityModal && !communityModal.classList.contains('hidden');
+
+    const feedbackModal = document.getElementById('feedbackModal');
+    const isFeedbackModalOpen = feedbackModal && !feedbackModal.classList.contains('hidden');
+
+    // Only unlock page scrolling if no other modal is active
+    if (!isCommunityModalOpen && !isFeedbackModalOpen) {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
   }
 
-  closeTermsModal?.addEventListener('click', hideModal);
-  closeTermsFooterBtn?.addEventListener('click', hideModal);
+  closeTermsModal?.addEventListener('click', hideTermsModal);
+  closeTermsFooterBtn?.addEventListener('click', hideTermsModal);
   termsModal?.addEventListener('click', (e) => {
-    if (e.target === termsModal) hideModal();
+    if (e.target === termsModal) hideTermsModal();
   });
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && termsModal && !termsModal.classList.contains('hidden')) {
-      hideModal();
+      e.stopPropagation();
+      hideTermsModal();
     }
   });
 </script>

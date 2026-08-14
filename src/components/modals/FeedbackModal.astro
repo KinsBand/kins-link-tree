@@ -1355,6 +1355,36 @@
     }
   });
 
+  // Global Open Helper & Triggers
+  (window as any).openFeedbackModal = function() {
+    if (!modal) return;
+
+    // Reset view if previously showing success screen
+    if (successView && !successView.classList.contains('hidden')) {
+      form?.reset();
+      removeAttachedImage();
+      if (charCounter) charCounter.textContent = "0 / 1000";
+      successView.classList.add('hidden');
+      form?.classList.remove('hidden');
+    }
+
+    modal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+
+    setTimeout(() => {
+      detailsInput?.focus();
+    }, 120);
+  };
+
+  // Delegated click listener for any footer/page triggers
+  document.addEventListener('click', (e) => {
+    const trigger = (e.target as HTMLElement)?.closest?.('#openSuggestImprovementFooterBtn, .open-feedback-trigger, [data-open-feedback]');
+    if (trigger) {
+      e.preventDefault();
+      (window as any).openFeedbackModal?.();
+    }
+  });
+
   // Type Pills Selection
   const typePills = document.querySelectorAll('.type-pill-btn');
   typePills.forEach((pill) => {
@@ -1462,7 +1492,6 @@
       `• **Submitter:** ${contact ? `\`${contact}\`` : '*Anonymous Fan*'}`,
       `• **Viewport:** \`${diagnostics.viewportWithDpr}\``,
       `• **Environment:** ${diagnostics.environment}`,
-      `• **Page:** [${diagnostics.url}](${diagnostics.url})`,
       `• **Date:** ${diagnostics.formattedDate}`
     ];
 
