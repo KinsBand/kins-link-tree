@@ -439,11 +439,16 @@ export function initShareModal() {
 
   // Band Logo Format Selector Modal Controls
   const openLogoDownloadModalBtn = document.getElementById('openLogoDownloadModalBtn');
+  const openLogoDownloadModalBox = document.getElementById('openLogoDownloadModalBox');
   const logoDownloadFormatModal = document.getElementById('logoDownloadFormatModal');
   const closeLogoFormatModalBtn = document.getElementById('closeLogoFormatModalBtn');
 
-  if (openLogoDownloadModalBtn && logoDownloadFormatModal) {
-    openLogoDownloadModalBtn.addEventListener('click', () => {
+  if (logoDownloadFormatModal) {
+    openLogoDownloadModalBtn?.addEventListener('click', () => {
+      logoDownloadFormatModal.classList.remove('hidden');
+    });
+
+    openLogoDownloadModalBox?.addEventListener('click', () => {
       logoDownloadFormatModal.classList.remove('hidden');
     });
 

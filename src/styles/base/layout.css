@@ -24,7 +24,7 @@ html, body {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  background: var(--bg-dark-green-gradient);
+  background: var(--bg-dark-gradient);
 }
 
 .site-container {

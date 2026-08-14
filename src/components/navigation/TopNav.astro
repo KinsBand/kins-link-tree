@@ -40,15 +40,16 @@
     transform: translateY(-12px);
   }
 
-  #topSubscribeBtn, #shareBtn {
-    transition: opacity 0.2s ease, transform 0.18s var(--ease-snappy), background-color 0.18s ease, border-color 0.18s ease;
+  #topSubscribeBtn, #shareBtn, .header-search-pill-btn {
+    will-change: opacity, transform;
+    transition: opacity 0.22s var(--ease-snappy), transform 0.22s var(--ease-snappy), background-color 0.18s ease, border-color 0.18s ease;
   }
 
   .top-nav.search-active #topSubscribeBtn,
   .top-nav.search-active #shareBtn {
-    opacity: 0;
-    pointer-events: none;
-    transform: scale(0.92);
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: scale(0.92) !important;
   }
 
   .nav-pill-btn {
@@ -115,6 +116,41 @@
     color: #000000;
   }
 
+  /* YouTube-Style Subscriber Bell Visual States & Animation */
+  #topSubscribeBtn.bell-subscribed {
+    background: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
+    position: relative;
+  }
+
+  #topSubscribeBtn.bell-subscribed::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #000000;
+  }
+
+  .bell-ring-shake {
+    display: inline-block;
+    animation: youtubeBellShake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+
+  @keyframes youtubeBellShake {
+    0% { transform: rotate(0deg); }
+    15% { transform: rotate(22deg); }
+    30% { transform: rotate(-18deg); }
+    45% { transform: rotate(14deg); }
+    60% { transform: rotate(-8deg); }
+    75% { transform: rotate(4deg); }
+    100% { transform: rotate(0deg); }
+  }
+
   .header-search-pill-btn {
     flex: 1 1 auto;
     width: 100%;
@@ -157,65 +193,76 @@
 </style>
 
 <script>
-  const topNav = document.querySelector('.top-nav');
-  const leftSidebar = document.getElementById('leftSidebar');
-
-  let lastWindowScrollY = window.scrollY;
-  let lastSidebarScrollY = 0;
-
-  function handleWindowScroll() {
-    // When sidebar mode is active (≥ 768px), scrolling main view (window) should NOT blur topNav
-    if (window.innerWidth >= 768) {
-      topNav?.classList.remove('nav-hidden');
-      return;
-    }
-
-    const currentScrollY = window.scrollY;
-    if (!topNav) return;
-
-    if (currentScrollY <= 20) {
-      topNav.classList.remove('nav-hidden');
-    } else if (currentScrollY > lastWindowScrollY && currentScrollY > 40) {
-      topNav.classList.add('nav-hidden');
-    } else if (currentScrollY < lastWindowScrollY) {
-      topNav.classList.remove('nav-hidden');
-    }
-    lastWindowScrollY = currentScrollY;
-  }
-
-  function handleSidebarScroll() {
-    // Only handle sidebar scroll in split sidebar view (≥ 768px)
-    if (window.innerWidth < 768 || !leftSidebar || !topNav) return;
-
-    const currentScrollY = leftSidebar.scrollTop;
-
-    if (currentScrollY <= 20) {
-      topNav.classList.remove('nav-hidden');
-    } else if (currentScrollY > lastSidebarScrollY && currentScrollY > 40) {
-      topNav.classList.add('nav-hidden');
-    } else if (currentScrollY < lastSidebarScrollY) {
-      topNav.classList.remove('nav-hidden');
-    }
-    lastSidebarScrollY = currentScrollY;
-  }
-
-  window.addEventListener('scroll', handleWindowScroll, { passive: true });
-
-  if (leftSidebar) {
-    leftSidebar.addEventListener('scroll', handleSidebarScroll, { passive: true });
-  }
+  import { initSubscribeBell } from '../../scripts/controllers/subscribeController.js';
 
   const topSubscribeBtn = document.getElementById('topSubscribeBtn');
-  const subscribeFormSection = document.getElementById('subscribeFormSection');
-  if (topSubscribeBtn && subscribeFormSection) {
-    topSubscribeBtn.addEventListener('click', () => {
-      subscribeFormSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const subTabBtn = document.getElementById('tabSubBtn');
-      if (subTabBtn) subTabBtn.click();
-      const emailInput = document.getElementById('emailInput') as HTMLInputElement;
-      if (emailInput) {
-        setTimeout(() => emailInput.focus(), 600);
+  const headerSearchPillBtn = document.getElementById('headerSearchPillBtn');
+  const shareBtn = document.getElementById('shareBtn');
+  const leftSidebar = document.getElementById('leftSidebar');
+
+  let heroBannerImg: HTMLElement | null = null;
+  let ticking = false;
+
+  function updateScrollDrivenFade() {
+    ticking = false;
+
+    // Detect active scroll context:
+    // Desktop (>= 768px): Scroll offset of #leftSidebar
+    // Mobile (< 768px): Scroll offset of window / documentElement
+    const isDesktop = window.innerWidth >= 768;
+    const scrollOffset = isDesktop && leftSidebar 
+      ? leftSidebar.scrollTop 
+      : (window.scrollY || document.documentElement.scrollTop || 0);
+
+    // Distance (in pixels) over which elements transition from opacity 1.0 -> 0.0
+    const maxFadeDistance = 140;
+
+    // Linear progress ratio between 0.0 and 1.0
+    const rawProgress = Math.min(1, Math.max(0, scrollOffset / maxFadeDistance));
+
+    // Deceleration Easing Curve: 1 - (1 - x)^2.5 (Ease-Out Cubic-Bezier)
+    // Eliminates harsh linear cuts and produces a gradual, ultra-smooth transparency decay
+    const easedProgress = 1 - Math.pow(1 - rawProgress, 2.5);
+    const targetOpacity = Math.max(0, 1 - easedProgress);
+
+    if (!heroBannerImg) {
+      heroBannerImg = document.getElementById('heroBannerImg') || document.querySelector('.hero-banner-img');
+    }
+
+    const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, shareBtn, heroBannerImg];
+    const isTransparent = targetOpacity <= 0.02;
+
+    elementsToFade.forEach(el => {
+      if (!el) return;
+      el.style.opacity = targetOpacity.toFixed(3);
+      
+      if (isTransparent) {
+        el.style.pointerEvents = 'none';
+      } else {
+        el.style.pointerEvents = '';
       }
     });
   }
+
+  function onScroll() {
+    if (!ticking) {
+      requestAnimationFrame(updateScrollDrivenFade);
+      ticking = true;
+    }
+  }
+
+  // Bind scroll triggers efficiently
+  const isDesktopEnv = window.innerWidth >= 768;
+  if (isDesktopEnv && leftSidebar) {
+    leftSidebar.addEventListener('scroll', onScroll, { passive: true });
+  } else {
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+  window.addEventListener('resize', onScroll, { passive: true });
+
+  // Initial calculation on load
+  updateScrollDrivenFade();
+
+  // Initialize YouTube-Style Notification Bell Component State
+  initSubscribeBell();
 </script>

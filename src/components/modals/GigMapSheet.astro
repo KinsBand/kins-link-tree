@@ -1,82 +1,197 @@
 ---
 ---
 
-<div class="bottom-sheet-backdrop" id="gigMapModal">
+<div class="bottom-sheet-backdrop" id="gigMapModal" role="dialog" aria-modal="true" aria-label="Kins Live Tour & Gig Map">
   <div class="bottom-sheet-container" id="bottomSheetContainer">
     
-    <!-- Header & Region Copywriting -->
+    <!-- Top Header & Region Branding -->
     <div class="gig-sheet-header">
       <div class="gig-header-titles">
-        <div class="gig-status-row">
-          <span class="gig-status-badge"><i class="fa-solid fa-guitar"></i> LOCAL GIGS</span>
-          <span class="region-pill-tag"><i class="fa-solid fa-map-pin"></i> SYDNEY • NEWCASTLE</span>
-        </div>
+        <h3 class="gig-modal-heading">Sydney & Newcastle</h3>
         <p class="gig-banner-meta">
-          Indie rock band playing local venues across Sydney & Newcastle.
+          Official live dates, setlists, and concert archives across New South Wales.
         </p>
       </div>
-      <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map">
+      <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map" title="Close Gig Map (Esc)">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
-    <!-- Quick Gig Selector Tabs -->
-    <div class="gig-selector-pills-row" id="gigSelectorPillsRow">
+    <!-- Category Filter Tabs Bar -->
+    <div class="gig-filter-tabs-bar" id="gigFilterTabsBar" role="tablist" aria-label="Filter Tour Shows">
+      <button type="button" class="gig-filter-tab active" data-filter="all" role="tab" aria-selected="true">
+        <i class="fa-solid fa-border-all"></i>
+        <span>All Shows (10)</span>
+      </button>
+      <button type="button" class="gig-filter-tab" data-filter="upcoming" role="tab" aria-selected="false">
+        <i class="fa-solid fa-fire-flame-curved"></i>
+        <span>Upcoming (4)</span>
+      </button>
+      <button type="button" class="gig-filter-tab" data-filter="past" role="tab" aria-selected="false">
+        <i class="fa-solid fa-compact-disc"></i>
+        <span>Tour Archive (6)</span>
+      </button>
+      <button type="button" class="gig-filter-tab" data-filter="newcastle" role="tab" aria-selected="false">
+        <i class="fa-solid fa-location-dot"></i>
+        <span>Newcastle (4)</span>
+      </button>
+      <button type="button" class="gig-filter-tab" data-filter="sydney" role="tab" aria-selected="false">
+        <i class="fa-solid fa-location-dot"></i>
+        <span>Sydney (6)</span>
+      </button>
+    </div>
+
+    <!-- Quick Gig Selector Carousel Pills -->
+    <div class="gig-selector-pills-row" id="gigSelectorPillsRow" role="region" aria-label="Quick Venue Selectors">
       <!-- Populated dynamically by gigMap.js -->
     </div>
 
-    <!-- Leaflet Map Container -->
-    <div class="gig-map-view" id="gigMapView"></div>
+    <!-- Map View Container with Floating Controls Overlay -->
+    <div class="map-view-wrapper">
+      <div class="gig-map-view" id="gigMapView"></div>
 
-    <!-- Venue Detail Bottom Card -->
-    <div class="venue-detail-bottom-card" id="venueDetailBottomCard">
+      <!-- Floating Map Control Buttons (Icon-only) -->
+      <div class="map-floating-overlay-controls">
+        <button type="button" class="map-control-glass-btn" id="mapFitBoundsBtn" title="Fit all tour venues in view" aria-label="Fit All Venues">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+        <button type="button" class="map-control-glass-btn" id="mapLocateMeBtn" title="Find closest show to your location (My GPS)" aria-label="My GPS">
+          <i class="fa-solid fa-location-crosshairs"></i>
+        </button>
+        <button type="button" class="map-control-glass-btn desktop-only" id="toggleMapDetailsBtn" title="Toggle between map and details view" aria-label="Toggle Full Map">
+          <i class="fa-solid fa-map"></i>
+        </button>
+      </div>
+
+      <!-- Floating Interactive Directions HUD (Google Maps Style In-App Routing) -->
+      <div class="map-directions-hud hidden" id="mapDirectionsHud" role="region" aria-label="Route Directions HUD">
+        <div class="directions-hud-header">
+          <div class="directions-hud-title-wrap">
+            <span class="directions-hud-badge"><i class="fa-solid fa-diamond-turn-right"></i> ROUTE</span>
+            <h5 class="directions-hud-destination" id="directionsHudDest">Venue Name</h5>
+          </div>
+          <button type="button" class="directions-hud-close" id="closeDirectionsHud" aria-label="Close directions HUD" title="Close directions">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        
+        <div class="directions-hud-stats">
+          <div class="directions-stat-item">
+            <span class="directions-stat-label">Estimated Drive</span>
+            <span class="directions-stat-value" id="directionsDuration">-- mins</span>
+          </div>
+          <div class="directions-stat-divider"></div>
+          <div class="directions-stat-item">
+            <span class="directions-stat-label">Distance</span>
+            <span class="directions-stat-value" id="directionsDistance">-- km</span>
+          </div>
+        </div>
+
+        <div class="directions-hud-actions">
+          <a href="#" target="_blank" rel="noopener" class="directions-gmaps-btn" id="directionsGmapsLink" title="Navigate in Google Maps app with live GPS">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            <span>Google Maps</span>
+          </a>
+          <button type="button" class="directions-clear-btn" id="clearRouteHudBtn" title="Clear route from map">
+            <i class="fa-solid fa-xmark"></i>
+            <span>Clear</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Venue Detail Bottom Card with 3-Tier Fluid Snap Engine (Peek / Mid / Expanded) -->
+    <div 
+      class="venue-detail-bottom-card is-peek" 
+      id="venueDetailBottomCard" 
+      role="region" 
+      aria-label="Venue and Tour Details" 
+      aria-expanded="false"
+      data-snap-state="peek"
+      tabindex="0"
+    >
       
-      <!-- Top Title & Ticket Bar -->
-      <div class="venue-card-header">
-        <div class="venue-header-info">
-          <h4 class="venue-card-name" id="venueCardName">Select a venue on the map</h4>
-          <div class="venue-submeta-row">
-            <p class="venue-card-city" id="venueCardCity">Newcastle & Sydney Region</p>
-            <div class="venue-stats-badges">
-              <span class="venue-rating-badge" id="venueRatingBadge"><i class="fa-solid fa-star"></i> 4.9</span>
-              <span class="venue-capacity-badge" id="venueCapacityBadge"><i class="fa-solid fa-users"></i> 350 Cap</span>
-            </div>
+      <!-- Persistent Drag / Tap Handle Bar -->
+      <div 
+        class="sheet-drag-handle" 
+        id="sheetDragHandle" 
+        role="button" 
+        tabindex="0"
+        aria-label="Drag or tap to expand venue details (Snap: Peek, Mid, Expanded)"
+        title="Drag up or tap to expand (ArrowUp / ArrowDown)"
+      >
+        <div class="drag-bar-pill"></div>
+        <button type="button" class="sheet-close-full-btn" id="sheetCloseFullBtn" aria-label="Collapse drawer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <!-- Sticky Header Block (Always visible; pins at top in State 3) -->
+      <div class="venue-card-header" id="venueCardHeader">
+        <!-- Row 1: Venue Title + Badge (Urgency for upcoming, Tour Archive for past) -->
+        <div class="venue-title-full-row">
+          <h4 class="venue-card-name" id="venueCardName" title="Select a venue on the map">Select a venue on the map</h4>
+          
+          <div class="header-badges-group">
+            <span class="venue-urgency-pill hidden" id="venueUrgencyPill"><i class="fa-solid fa-fire"></i> IN 8 DAYS</span>
+            <span class="venue-archive-badge hidden" id="venueArchiveBadge"><i class="fa-solid fa-box-archive"></i> TOUR ARCHIVE</span>
+            
+            <!-- Desktop Snap Toggle -->
+            <button 
+              type="button" 
+              class="desktop-snap-toggle-btn" 
+              id="desktopSnapToggleBtn" 
+              aria-label="Toggle Details Panel Expansion"
+              title="Expand / Collapse details panel (ArrowUp / ArrowDown)"
+            >
+              <i class="fa-solid fa-chevron-up"></i>
+            </button>
           </div>
         </div>
         
-        <div class="venue-action-buttons-group">
-          <a href="https://www.bandsintown.com" target="_blank" rel="noopener" class="venue-booking-btn" id="venueBookingBtn">
-            <i class="fa-solid fa-ticket"></i>
-            <span>GET TICKETS</span>
+        <!-- Row 2: Sub-meta Location & Date -->
+        <div class="venue-sub-meta-line" id="venueSubMetaLine">
+          <span class="venue-sub-location" id="venueCardLocation">Newcastle West</span>
+          <span class="meta-dot">•</span>
+          <span class="venue-sub-date" id="venuePeekDate">Sat, Aug 22, 2026</span>
+        </div>
+
+        <!-- Row 3: 100% Full-Width Primary CTA Button -->
+        <div class="venue-primary-cta-wrap">
+          <!-- Upcoming CTA: Get Tickets -->
+          <a href="https://www.bandsintown.com" target="_blank" rel="noopener" class="venue-booking-btn" id="venueBookingBtn" aria-label="Get tickets for this show">
+            <i class="fa-solid fa-bolt"></i>
+            <span id="venueBookingBtnText">GET TICKETS — $15 (EARLY BIRD)</span>
           </a>
+          
+          <!-- Archived CTA: I Was There Fan Check-in Button -->
+          <button type="button" class="venue-checkin-btn hidden" id="venueCheckinBtn" aria-label="Check in to show">
+            <i class="fa-solid fa-ticket"></i>
+            <span id="venueCheckinBtnText">340 FANS ATTENDED • "I WAS THERE" (✓)</span>
+          </button>
         </div>
       </div>
 
-      <!-- Real-world Accessibility & Venue Amenities -->
-      <div class="venue-amenities-row" id="venueAmenitiesRow">
-        <!-- Populated dynamically -->
-      </div>
-
-      <!-- Countdown Timer for Upcoming Gig -->
-      <div class="gig-countdown-banner hidden" id="gigCountdownBanner">
-        <div class="countdown-label">
-          <i class="fa-solid fa-clock"></i> NEXT SHOW COUNTDOWN:
-        </div>
-        <div class="countdown-timer-digits" id="countdownTimerDigits">
-          <span class="time-unit"><strong id="cdDays">00</strong>d</span> : 
-          <span class="time-unit"><strong id="cdHours">00</strong>h</span> : 
-          <span class="time-unit"><strong id="cdMins">00</strong>m</span> : 
-          <span class="time-unit"><strong id="cdSecs">00</strong>s</span>
+      <!-- Expandable Drawer Content (Scrollable in State 2 and State 3) -->
+      <div class="venue-expanded-content" id="venueExpandedContent">
+        <!-- Dynamic rich container populated by gigMap.js for Upcoming / Archived -->
+        <div class="venue-dynamic-body" id="venueDynamicBody">
+          <!-- Populated dynamically based on event type -->
         </div>
       </div>
-
-      <!-- Rich Show Breakdown Container -->
-      <div class="rich-show-breakdown" id="richShowBreakdown">
-        <!-- Dynamic rich content generated by gigMap.js -->
-      </div>
-
     </div>
 
+  </div>
+</div>
+
+<!-- Concert Photo Lightbox Modal -->
+<div class="gig-lightbox-backdrop" id="gigPhotoLightbox" role="dialog" aria-modal="true" aria-label="Concert Photo Preview">
+  <div class="gig-lightbox-content">
+    <button type="button" class="gig-lightbox-close" id="gigLightboxClose" aria-label="Close photo preview">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <img src="" alt="Concert Photo" class="gig-lightbox-img" id="gigLightboxImg" loading="lazy">
+    <div class="gig-lightbox-caption" id="gigLightboxCaption">Concert Photo • Kins Live</div>
   </div>
 </div>
 
@@ -86,6 +201,7 @@
     inset: 0;
     background: rgba(10, 10, 12, 0.98);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -120,15 +236,17 @@
     opacity: 1;
   }
 
+  /* Top Sheet Header */
   .gig-sheet-header {
-    height: 8vh;
+    width: 100%;
+    height: auto;
     min-height: 52px;
-    padding: 8px 16px;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    background: rgba(18, 18, 20, 0.95);
+    background: rgba(14, 14, 17, 0.98);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
     box-sizing: border-box;
@@ -137,46 +255,30 @@
   .gig-header-titles {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
   }
 
-  .gig-status-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .gig-status-badge {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    font-family: var(--font-secondary);
-    font-size: 0.6rem;
+  .gig-modal-heading {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
     font-weight: 800;
-    padding: 2px 6px;
-    border-radius: 2px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .region-pill-tag {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.14);
     color: var(--text-white);
-    font-family: var(--font-secondary);
-    font-size: 0.6rem;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 2px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height: 1.2;
   }
 
   .gig-banner-meta {
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    font-size: clamp(0.68rem, 2.6vw, 0.74rem);
     color: var(--text-muted);
     line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
   }
 
   .close-sheet-btn {
@@ -185,33 +287,84 @@
     color: var(--text-white);
     width: 32px;
     height: 32px;
-    border-radius: 50%;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: 0.82rem;
     flex-shrink: 0;
-    transition: background-color 0.18s ease, transform 0.18s ease;
+    transition: all 0.18s ease;
   }
 
   .close-sheet-btn:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
     transform: scale(1.05);
   }
 
-  .gig-selector-pills-row {
-    height: 7vh;
-    min-height: 44px;
+  /* Filter Tabs Bar */
+  .gig-filter-tabs-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    padding: 6px 16px;
+    background: rgba(12, 12, 15, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+    box-sizing: border-box;
+  }
+
+  .gig-filter-tabs-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gig-filter-tab {
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+
+  .gig-filter-tab:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+
+  .gig-filter-tab.active {
+    background: var(--text-white);
+    color: var(--text-dark);
+    border-color: var(--text-white);
+    font-weight: 800;
+  }
+
+  /* Carousel Pills Row - Minimized */
+  .gig-selector-pills-row {
+    height: auto;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     touch-action: pan-x;
     scrollbar-width: none;
-    padding: 4px 16px;
-    background: rgba(10, 10, 12, 0.9);
+    padding: 4px 14px;
+    background: rgba(10, 10, 12, 0.95);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     flex-shrink: 0;
     width: 100%;
@@ -225,358 +378,1927 @@
   .gig-selector-pills-row :global(.gig-select-pill) {
     flex: 0 0 auto !important;
     min-width: max-content !important;
-    background: rgba(18, 18, 20, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: var(--text-muted);
+    background: rgba(18, 18, 22, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #d4d4d8;
     font-family: var(--font-secondary);
-    font-size: 0.74rem;
+    font-size: 0.67rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 6px 14px;
+    letter-spacing: 0.03em;
+    padding: 3px 9px;
     border-radius: 4px;
     cursor: pointer;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     transition: all 0.18s ease;
   }
 
   .gig-selector-pills-row :global(.gig-select-pill:hover) {
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.14);
     color: var(--text-white);
+    border-color: rgba(255, 255, 255, 0.25);
   }
 
   .gig-selector-pills-row :global(.gig-select-pill.active) {
     background: var(--btn-green);
     color: var(--btn-text-color);
     border-color: var(--btn-green);
+    font-weight: 900;
+  }
+
+  .gig-selector-pills-row :global(.pill-city-tag) {
+    opacity: 0.7;
+    font-size: 0.62rem;
+  }
+
+  .gig-selector-pills-row :global(.pill-distance-tag) {
+    font-size: 0.58rem;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 1px 4px;
+    border-radius: 3px;
     font-weight: 800;
+    color: inherit;
+  }
+
+  /* Map View Wrapper */
+  .map-view-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    z-index: 1;
   }
 
   .gig-map-view {
-    height: 45vh;
     width: 100%;
-    background: #000;
+    height: 100%;
+    min-height: 200px;
+    background: #09090b;
+  }
+
+  /* Floating Map Overlay Controls */
+  .map-floating-overlay-controls {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 400;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .map-control-glass-btn {
+    background: rgba(16, 16, 20, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.88rem;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    transition: all 0.18s ease;
+  }
+
+  .map-control-glass-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: scale(1.06);
+  }
+
+  .map-control-glass-btn:global(.is-active) {
+    background: #38bdf8;
+    color: #041019;
+    border-color: #38bdf8;
+  }
+
+  /* Floating Directions HUD Overlay */
+  .map-directions-hud {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    z-index: 500;
+    background: rgba(12, 12, 16, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: slideUpHud 0.28s var(--ease-snappy) forwards;
+    pointer-events: auto;
+  }
+
+  .map-directions-hud.hidden {
+    display: none !important;
+  }
+
+  @keyframes slideUpHud {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .directions-hud-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .directions-hud-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .directions-hud-badge {
+    background: #38bdf8;
+    color: #041019;
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     flex-shrink: 0;
   }
 
-  .venue-detail-bottom-card {
-    height: 40vh;
-    flex: 1;
-    padding: 16px;
-    background: #0d0d0f;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    touch-action: pan-y;
-    scrollbar-width: thin;
+  .directions-hud-destination {
+    font-family: var(--font-heading);
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: var(--text-white);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
+  .directions-hud-close {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-muted);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+  }
+
+  .directions-hud-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: scale(1.08);
+  }
+
+  .directions-hud-stats {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 6px 12px;
+  }
+
+  .directions-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+  }
+
+  .directions-stat-label {
+    font-family: var(--font-secondary);
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .directions-stat-value {
+    font-family: var(--font-primary);
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: #38bdf8;
+  }
+
+  .directions-stat-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.12);
+    margin: 0 10px;
+  }
+
+  .directions-hud-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .directions-gmaps-btn {
+    flex: 1;
+    background: #38bdf8;
+    color: #031525;
+    text-decoration: none;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.18s var(--ease-snappy);
+  }
+
+  .directions-gmaps-btn:hover {
+    background: #7dd3fc;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
+  }
+
+  .directions-clear-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.18s ease;
+  }
+
+  .directions-clear-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  /* ==========================================================================
+     VENUE DETAIL BOTTOM SHEET CARD (Refined 3-State Architecture)
+     ========================================================================== */
+  .venue-detail-bottom-card {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(13, 13, 17, 0.97);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px 12px 16px;
+    box-sizing: border-box;
+    overflow: hidden;
+    touch-action: pan-y;
+    contain: layout style;
+    transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .venue-detail-bottom-card.is-dragging {
+    transition: none !important;
+    user-select: none;
+    will-change: height, transform;
+  }
+
+  /* ==========================================================================
+     VENUE DETAIL BOTTOM SHEET CARD (3-State Fluid Drawer Engine)
+     ========================================================================== */
+  .venue-detail-bottom-card {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(13, 13, 17, 0.98);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.92);
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px 14px 16px;
+    box-sizing: border-box;
+    overflow: hidden;
+    touch-action: pan-y;
+    contain: layout style;
+    transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .venue-detail-bottom-card.is-dragging {
+    transition: none !important;
+    user-select: none;
+    will-change: height, transform;
+  }
+
+  /* --- SNAP STATE 1: PEEK / LOW (~20% screen height / ~136px) --- */
+  .venue-detail-bottom-card.is-peek {
+    height: 136px;
+    max-height: 140px;
+    overflow-y: hidden;
+  }
+
+  .venue-detail-bottom-card.is-peek .venue-expanded-content {
+    display: none;
+  }
+
+  /* --- SNAP STATE 2: MID / HALF (~50% screen height) --- */
+  .venue-detail-bottom-card.is-mid {
+    height: auto;
+    max-height: 60vh;
+    max-height: 60dvh;
+    overflow-y: hidden !important; /* Strict scroll lock: reveal content only via swipe up or CTA tap */
+    -webkit-overflow-scrolling: auto;
+  }
+
+  .venue-detail-bottom-card.is-mid .venue-expanded-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    padding-bottom: 2px;
+    overflow: hidden;
+    animation: fadeInMid 0.22s var(--ease-snappy) forwards;
+  }
+
+  .venue-detail-bottom-card:not(.is-expanded) .expanded-only-block {
+    display: none !important;
+  }
+
+  @keyframes fadeInMid {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- SNAP STATE 3: HIGH / FULL EXPANDED (~94% screen height, scrollable body) --- */
+  .venue-detail-bottom-card.is-expanded {
+    height: 94vh;
+    height: 94dvh;
+    max-height: 96vh;
+    overflow-y: auto !important; /* Free scrolling allowed in full expanded state */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  .venue-detail-bottom-card.is-expanded .venue-card-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(13, 13, 17, 0.98);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    padding-top: 4px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .venue-detail-bottom-card.is-expanded .venue-expanded-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 12px;
+    padding-bottom: 30px;
+    animation: fadeInExpanded 0.24s var(--ease-snappy) forwards;
+  }
+
+  .venue-detail-bottom-card.is-expanded .expanded-only-block {
+    display: flex !important;
+  }
+
+  @keyframes fadeInExpanded {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Custom Scrollbar for Card */
+  .venue-detail-bottom-card::-webkit-scrollbar {
+    width: 4px;
+  }
+  .venue-detail-bottom-card::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .venue-detail-bottom-card::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  /* --- DRAG / TAP HANDLE BAR --- */
+  .sheet-drag-handle {
+    width: 100%;
+    padding: 8px 0 4px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    flex-shrink: 0;
+    user-select: none;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .sheet-drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .drag-bar-pill {
+    width: 38px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.35);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .sheet-drag-handle:hover .drag-bar-pill,
+  .venue-detail-bottom-card.is-dragging .drag-bar-pill {
+    background: rgba(255, 255, 255, 0.85);
+    width: 48px;
+    height: 5px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  }
+
+  .sheet-close-full-btn {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 2px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #d4d4d8;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .sheet-close-full-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    transform: scale(1.08);
+  }
+
+  .venue-detail-bottom-card.is-expanded .sheet-close-full-btn {
+    display: inline-flex;
+  }
+
+  /* --- VENUE CARD HEADER & METADATA --- */
   .venue-card-header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
+    flex-direction: column;
+    gap: 3px;
     width: 100%;
+    flex-shrink: 0;
   }
 
-  .venue-header-info {
+  .venue-title-full-row {
+    width: 100%;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
   }
 
   .venue-card-name {
     font-family: var(--font-heading);
-    font-size: 1.18rem;
+    font-size: clamp(1.05rem, 4.2vw, 1.35rem);
     font-weight: 800;
     color: var(--text-white);
-    line-height: 1.25;
-    letter-spacing: -0.01em;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
-  .venue-submeta-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .venue-card-city {
-    font-family: var(--font-secondary);
-    font-size: 0.74rem;
-    color: var(--text-muted);
-  }
-
-  .venue-stats-badges {
+  .header-badges-group {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
   }
 
-  .venue-rating-badge, .venue-capacity-badge {
-    font-family: var(--font-secondary);
+  .desktop-snap-toggle-btn {
+    display: none;
+  }
+
+  /* Sub-meta Line: Location • Date */
+  .venue-sub-meta-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #a1a1aa;
+    line-height: 1.3;
+  }
+
+  .meta-dot {
+    opacity: 0.5;
     font-size: 0.65rem;
+  }
+
+  .venue-sub-location {
+    color: #d4d4d8;
+    font-weight: 600;
+  }
+
+  .venue-sub-date {
+    color: #e4e4e7;
+  }
+
+  /* Urgency Pill (Upcoming) */
+  .venue-urgency-pill {
+    background: rgba(255, 115, 0, 0.16);
+    border: 1px solid rgba(255, 115, 0, 0.38);
+    color: #ff9800;
+    font-size: 0.66rem;
     font-weight: 800;
-    color: var(--text-white);
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    padding: 2px 6px;
-    border-radius: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.2);
+  }
+
+  .venue-urgency-pill.hidden {
+    display: none !important;
+  }
+
+  /* Archive Badge (Past) */
+  .venue-archive-badge {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e4e4e7;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 9999px;
     display: inline-flex;
     align-items: center;
     gap: 4px;
   }
 
+  .venue-archive-badge.hidden {
+    display: none !important;
+  }
+
+  /* --- 100% FULL-WIDTH PRIMARY CTAS --- */
+  .venue-primary-cta-wrap {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  /* Upcoming Ticket CTA */
   .venue-booking-btn {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    padding: 8px 14px;
-    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    background: #f2f0eb;
+    color: #0a0a0c;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 9px;
     text-decoration: none;
     font-family: var(--font-secondary);
-    font-weight: 800;
-    font-size: 0.76rem;
-    letter-spacing: 0.06em;
+    font-weight: 900;
+    font-size: 0.82rem;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-    transition: transform 0.18s var(--ease-snappy);
-    flex-shrink: 0;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 20px rgba(242, 240, 235, 0.18);
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease, box-shadow 0.18s ease;
+    cursor: pointer;
+  }
+
+  .venue-booking-btn i {
+    color: #0a0a0c;
+    font-size: 0.82rem;
   }
 
   .venue-booking-btn:hover {
-    background: var(--btn-green-hover);
+    background: #ffffff;
     transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(255, 255, 255, 0.35);
   }
 
-  .venue-amenities-row {
+  .venue-booking-btn:active {
+    transform: scale(0.98);
+  }
+
+  .venue-booking-btn.is-selling-fast {
+    animation: pulseSellingFast 2.4s infinite ease-in-out;
+  }
+
+  /* Archived Check-in CTA */
+  .venue-checkin-btn {
+    width: 100%;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, rgba(28, 28, 36, 0.95), rgba(18, 18, 24, 0.98));
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 9px;
+    font-family: var(--font-secondary);
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    touch-action: pan-x;
-    scrollbar-width: none;
-    padding-bottom: 4px;
-    -webkit-overflow-scrolling: touch;
-    flex-shrink: 0;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+  }
+
+  .venue-checkin-btn i {
+    color: #e4e4e7;
+    font-size: 0.82rem;
+  }
+
+  .venue-checkin-btn:hover {
+    background: linear-gradient(135deg, rgba(38, 38, 48, 0.98), rgba(24, 24, 32, 1));
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+  }
+
+  .venue-checkin-btn:active {
+    transform: scale(0.98);
+  }
+
+  .venue-checkin-btn.is-checked-in {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(5, 150, 105, 0.16));
+    border-color: rgba(16, 185, 129, 0.55);
+    color: #6ee7b7;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.28), 0 4px 14px rgba(0, 0, 0, 0.5);
+  }
+
+  .venue-checkin-btn.is-checked-in i {
+    color: #6ee7b7;
+    animation: checkmarkPop 0.3s ease-out;
+  }
+
+  @keyframes checkmarkPop {
+    0% { transform: scale(0.6); }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  .venue-checkin-btn.hidden {
+    display: none !important;
+  }
+
+  /* --- DYNAMIC DRAWER BODY --- */
+  .venue-dynamic-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     width: 100%;
   }
 
-  .venue-amenities-row::-webkit-scrollbar {
+  /* --- QUICK INFO PILL ROW (Doors, Age, Capacity) --- */
+  .venue-quick-info-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 0;
+  }
+
+  .venue-quick-info-row::-webkit-scrollbar {
     display: none;
   }
 
-  .venue-amenities-row :global(.amenity-chip) {
-    flex: 0 0 auto !important;
-    min-width: max-content !important;
+  :global(.venue-quick-info-row .quick-chip) {
+    flex: 1 1 auto !important;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--text-muted);
-    font-family: var(--font-secondary);
+    color: #d4d4d8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 0.7rem;
-    font-weight: 700;
-    padding: 5px 10px;
+    font-weight: 500;
+    padding: 5px 8px;
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    gap: 5px;
     white-space: nowrap;
   }
 
-  .gig-countdown-banner {
-    background: rgba(24, 24, 28, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    min-height: 46px;
-    width: 100%;
-    box-sizing: border-box;
+  :global(.venue-quick-info-row .quick-chip i) {
+    font-size: 0.68rem;
+    color: #a1a1aa;
   }
 
-  .countdown-label {
-    font-family: var(--font-secondary);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-white);
+  /* --- REDESIGNED QUICK ACTION ROW (Navigate, +Calendar, Share) --- */
+  .venue-action-chips-row,
+  :global(.venue-action-chips-row) {
     display: flex;
     align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 2px 0;
+  }
+
+  :global(.venue-action-chip-btn) {
+    flex: 1 1 0;
+    height: 36px;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #f4f4f5;
+    border-radius: 8px;
+    padding: 0 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  :global(.venue-action-chip-btn#venueDirectionsAction i) {
+    color: #38bdf8 !important;
+    font-size: 0.76rem;
+  }
+
+  :global(.venue-action-chip-btn#venueCalendarAction i) {
+    color: #fbbf24 !important;
+    font-size: 0.76rem;
+  }
+
+  :global(.venue-action-chip-btn#venueShareAction i) {
+    color: #a78bfa !important;
+    font-size: 0.76rem;
+  }
+
+  :global(.venue-action-chip-btn:hover) {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  }
+
+  :global(.venue-action-chip-btn:active) {
+    transform: scale(0.97);
+  }
+
+  /* --- ENHANCED SET TIMES & LINEUP CARD (Clean Hierarchy, No Arrows) --- */
+  :global(.set-times-card) {
+    background: rgba(18, 18, 24, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
     gap: 6px;
   }
 
-  .countdown-timer-digits {
-    font-family: monospace;
-    font-size: 0.88rem;
+  :global(.set-times-header-title) {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
     font-weight: 900;
-    color: var(--text-white);
-    letter-spacing: 1px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a1a1aa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px 0;
   }
 
-  .rich-show-breakdown {
+  :global(.set-times-list) {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-top: 4px;
+    gap: 5px;
   }
 
-  .rich-show-breakdown :global(.show-section-card) {
-    background: rgba(10, 10, 12, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  :global(.set-time-row) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
     border-radius: 6px;
-    padding: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  :global(.set-time-left) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  :global(.set-time-pill) {
+    font-family: monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #f4f4f5;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  :global(.set-act-title) {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #e4e4e7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.set-act-title.is-headliner) {
+    color: #ffffff;
+    font-weight: 800;
+  }
+
+  :global(.set-role-badge) {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+
+  :global(.set-role-badge.role-doors) {
+    color: #a1a1aa;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  :global(.set-role-badge.role-support) {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+  }
+
+  :global(.set-role-badge.role-headliner) {
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+  }
+
+  /* --- INTERACTIVE SWIPE UP CTA BUTTON / DRAWER TRIGGER --- */
+  :global(.swipe-up-hint-box) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px dashed rgba(255, 255, 255, 0.22);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #f4f4f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-top: 2px;
+    user-select: none;
+    touch-action: manipulation;
+    width: 100%;
+    box-sizing: border-box;
+    pointer-events: auto;
+  }
+
+  /* Automatically remove swipe up button in Tier 3 / Expanded State */
+  .venue-detail-bottom-card.is-expanded .swipe-up-hint-box,
+  :global(.venue-detail-bottom-card.is-expanded .swipe-up-hint-box) {
+    display: none !important;
+  }
+
+  :global(.swipe-up-hint-box i) {
+    font-size: 0.76rem;
+    color: #f4f4f5;
+    animation: bounceUp 1.8s infinite ease-in-out;
+  }
+
+  :global(.swipe-up-hint-box:hover) {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+
+  :global(.swipe-up-hint-box:active) {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  @keyframes bounceUp {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  /* --- RECAP PHOTOS STRIP (Archived State 2) --- */
+  :global(.recap-photos-strip) {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px 0;
+  }
+
+  :global(.recap-photos-strip::-webkit-scrollbar) {
+    display: none;
+  }
+
+  :global(.recap-photo-card) {
+    flex: 0 0 110px;
+    height: 78px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+  }
+
+  :global(.recap-photo-card img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.25s ease;
+  }
+
+  :global(.recap-photo-card:hover img) {
+    transform: scale(1.08);
+  }
+
+  :global(.recap-photo-card .photo-caption) {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+    padding: 4px 6px;
+    font-size: 0.62rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* --- SPOTIFY AS-PLAYED BUTTON --- */
+  :global(.spotify-as-played-btn) {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border-radius: 8px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 0.18s ease;
+  }
+
+  :global(.spotify-as-played-btn:hover) {
+    background: #1db954;
+    color: #0a0a0c;
+    border-color: #1db954;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(29, 185, 84, 0.4);
+  }
+
+  :global(.spotify-as-played-btn i) {
+    font-size: 0.85rem;
+  }
+
+  /* --- EXPANDED SECTION HEADINGS & DIVIDERS (Matched with Community & Band Members) --- */
+  :global(.section-divider-bar) {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 14px;
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
 
-  .rich-show-breakdown :global(.section-heading) {
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
+  :global(.expanded-section-title) {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-white);
     display: flex;
     align-items: center;
-    gap: 6px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding-bottom: 6px;
-  }
-
-  .rich-show-breakdown :global(.snapshot-item),
-  .rich-show-breakdown :global(.scene-item),
-  .rich-show-breakdown :global(.bts-item) {
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    line-height: 1.4;
-  }
-
-  .rich-show-breakdown :global(.setlist-list) {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 4px;
-  }
-
-  .rich-show-breakdown :global(.setlist-item-row) {
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    color: var(--text-white);
-    background: rgba(255, 255, 255, 0.05);
-    padding: 8px 12px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
     justify-content: space-between;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: background-color 0.18s ease, border-color 0.18s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    user-select: none;
+    margin: 0;
+    overflow: visible;
   }
 
-  .rich-show-breakdown :global(.setlist-item-row:hover) {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.22);
+  :global(.expanded-section-title span.left-title),
+  :global(.set-times-header-title),
+  :global(.song-request-header),
+  :global(.recap-header-title) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    font-family: var(--font-heading) !important;
+    font-size: 0.92rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: var(--text-white) !important;
+    margin: 0;
+    overflow: visible;
+    text-align: left;
   }
 
-  .rich-show-breakdown :global(.setlist-row-progress) {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 0%;
-    background: linear-gradient(90deg, rgba(242, 240, 235, 0.2) 0%, rgba(242, 240, 235, 0.12) 100%);
-    pointer-events: none;
-    transition: width 0.25s linear;
-  }
-
-  .rich-show-breakdown :global(.setlist-item-row.is-playing .setlist-row-progress) {
-    animation: setlistProgressFill 30s linear forwards;
-  }
-
-  @keyframes setlistProgressFill {
-    from { width: 0%; }
-    to { width: 100%; }
-  }
-
-  .rich-show-breakdown :global(.setlist-row-content) {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .rich-show-breakdown :global(.setlist-song-name) {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .rich-show-breakdown :global(.setlist-play-icon) {
-    font-size: 0.7rem;
+  :global(.expanded-section-title i),
+  :global(.set-times-header-title i),
+  :global(.song-request-header i),
+  :global(.recap-header-title i) {
     color: var(--text-muted);
-    transition: color 0.18s ease, transform 0.18s ease;
-  }
-
-  .rich-show-breakdown :global(.setlist-item-row.is-playing .setlist-play-icon) {
-    color: var(--text-white);
-  }
-
-  .rich-show-breakdown :global(.setlist-tag) {
-    font-size: 0.62rem;
-    color: var(--text-muted);
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .rich-show-breakdown :global(.request-song-mailto-btn) {
+    font-size: 0.85rem;
+    width: 1.25em;
+    height: 1.25em;
+    line-height: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+  }
+
+  :global(.expanded-section-title span.right-hint),
+  :global(.recap-header-title span.right-hint) {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-family: monospace;
+    text-transform: none;
+    letter-spacing: normal;
+    margin-left: auto;
+  }
+
+  /* --- RUN SHEET & LINEUP (Upcoming State 3) --- */
+  :global(.run-sheet-card) {
+    background: rgba(14, 14, 18, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--text-white);
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
+  }
+
+  :global(.run-sheet-item) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.76rem;
+    color: #e4e4e7;
+  }
+
+  :global(.run-sheet-item a.spotify-link) {
+    color: #38bdf8;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  :global(.run-sheet-item a.spotify-link:hover) {
+    text-decoration: underline;
+  }
+
+  /* --- PLANNED SETLIST PREVIEW (Upcoming State 3) --- */
+  :global(.setlist-preview-list) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  :global(.setlist-preview-row) {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 7px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.76rem;
+    color: #e4e4e7;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+
+  :global(.setlist-preview-row:hover) {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  :global(.setlist-preview-row .track-title-wrap) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.setlist-preview-row .track-tag) {
+    font-size: 0.58rem;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 10px 16px;
-    min-height: 44px;
-    border-radius: 4px;
-    text-decoration: none;
-    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s var(--ease-snappy);
-    width: 100%;
-    box-sizing: border-box;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #a1a1aa;
+    flex-shrink: 0;
   }
 
-  .rich-show-breakdown :global(.request-song-mailto-btn:hover) {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    border-color: var(--btn-green);
+  /* --- REQUEST A SONG / COVER CARD (Upcoming State 3) --- */
+  :global(.song-request-card) {
+    background: linear-gradient(135deg, rgba(24, 24, 32, 0.85), rgba(12, 12, 16, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  :global(.song-request-header) {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  :global(.song-request-desc) {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.72rem;
+    color: #a1a1aa;
+    margin: 0;
+  }
+
+  :global(.song-request-form) {
+    display: flex;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  :global(.song-request-input) {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.72rem;
+    outline: none;
+    transition: border-color 0.18s ease;
+  }
+
+  :global(.song-request-input:focus) {
+    border-color: #38bdf8;
+  }
+
+  :global(.song-request-submit-btn) {
+    background: #f2f0eb;
+    color: #0a0a0c;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+
+  :global(.song-request-submit-btn:hover) {
+    background: #ffffff;
     transform: translateY(-1px);
+  }
+
+  :global(.song-request-success) {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #6ee7b7;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+  }
+
+  /* --- VENUE & LOCATION DETAILS (Upcoming State 3) --- */
+  :global(.venue-travel-card) {
+    background: rgba(14, 14, 18, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  :global(.copy-address-btn) {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: left;
+    user-select: none;
+  }
+
+  :global(.copy-address-btn:hover) {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
+  }
+
+  :global(.copy-address-btn:active) {
+    transform: scale(0.99);
+  }
+
+  :global(.copy-address-text-wrap) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  :global(.copy-address-text-wrap i.address-icon) {
+    color: #38bdf8;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  :global(.venue-full-address-text) {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #e4e4e7;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  :global(.copy-address-action-badge) {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #d4d4d8;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+
+  :global(.copy-address-btn:hover .copy-address-action-badge) {
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.4);
+  }
+
+  :global(.travel-amenities-pills) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: 2px;
+  }
+
+  :global(.travel-amenity-chip) {
+    font-size: 0.66rem;
+    font-weight: 500;
+    color: #a1a1aa;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  /* --- TOUR MERCH CAROUSEL (Upcoming State 3) --- */
+  :global(.merch-carousel-track) {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px 0 6px 0;
+  }
+
+  :global(.merch-carousel-track::-webkit-scrollbar) {
+    display: none;
+  }
+
+  :global(.merch-item-card) {
+    flex: 0 0 100px;
+    background: rgba(18, 18, 24, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  :global(.merch-item-card img) {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: #000;
+  }
+
+  :global(.merch-item-card .merch-name) {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+  }
+
+  :global(.merch-item-card .merch-price) {
+    font-size: 0.65rem;
+    font-family: monospace;
+    color: #a1a1aa;
+    margin: 0;
+  }
+
+  /* --- OFFICIAL MEDIA GALLERY (Archived State 3) --- */
+  :global(.official-media-gallery) {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 2px 0 6px 0;
+  }
+
+  :global(.official-media-gallery::-webkit-scrollbar) {
+    display: none;
+  }
+
+  :global(.official-photo-card) {
+    flex: 0 0 140px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+  }
+
+  :global(.official-photo-card img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.25s ease;
+  }
+
+  :global(.official-photo-card:hover img) {
+    transform: scale(1.08);
+  }
+
+  :global(.official-photo-card .photo-credit-bar) {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.88), transparent);
+    padding: 4px 6px;
+    font-size: 0.62rem;
+    color: #e4e4e7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* --- AS-PLAYED SETLIST WITH AUDIO SNIPPETS (Archived State 3) --- */
+  :global(.as-played-list) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  :global(.as-played-item) {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.74rem;
+    color: #e4e4e7;
+  }
+
+  :global(.as-played-item .track-main-info) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.as-played-item .unreleased-star) {
+    color: #fbbf24;
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  :global(.as-played-item .snippet-btn) {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.18s ease;
+  }
+
+  :global(.as-played-item .snippet-btn:hover) {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  /* --- SHOW HIGHLIGHTS & TRIVIA (Archived State 3) --- */
+  :global(.show-trivia-card) {
+    background: rgba(14, 14, 18, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  :global(.trivia-bullet) {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.74rem;
+    color: #d4d4d8;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  :global(.trivia-bullet i) {
+    color: #fbbf24;
+    font-size: 0.7rem;
+    margin-top: 3px;
+  }
+
+  /* --- ALL PAST SHOWS AT THIS VENUE HISTORY LIST --- */
+  :global(.venue-history-list) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  :global(.venue-history-card-row) {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+  }
+
+  :global(.venue-history-card-row:hover) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.22);
+    transform: translateX(2px);
+  }
+
+  :global(.venue-history-card-row.is-current-active) {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.08);
+  }
+
+  :global(.venue-history-row-left) {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  :global(.venue-history-date) {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  :global(.venue-history-sub) {
+    font-size: 0.66rem;
+    color: #a1a1aa;
+  }
+
+  :global(.venue-history-badge) {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+
+  :global(.venue-history-badge.is-live) {
+    background: rgba(239, 68, 68, 0.18);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    animation: pulseBadge 2.2s infinite ease-in-out;
+  }
+
+  :global(.venue-history-badge.is-upcoming) {
+    background: rgba(251, 191, 36, 0.14);
+    color: #fde047;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+  }
+
+  :global(.venue-history-badge.is-past) {
+    background: rgba(255, 255, 255, 0.06);
+    color: #a1a1aa;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* --- TIER 3 BOTTOM NAVIGATION BAR (Back to Top & Back to Map) --- */
+  :global(.sheet-bottom-nav-row) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  :global(.sheet-nav-btn) {
+    flex: 1;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-secondary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+  }
+
+  :global(.sheet-nav-btn.is-back-to-top) {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #e4e4e7;
+  }
+
+  :global(.sheet-nav-btn.is-back-to-top:hover) {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
+  :global(.sheet-nav-btn.is-back-to-map) {
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+  }
+
+  :global(.sheet-nav-btn.is-back-to-map:hover) {
+    background: #38bdf8;
+    border-color: #38bdf8;
+    color: #041019;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+  }
+
+  /* ==========================================================================
+     DESKTOP LAYOUT & FLOATING INSPECTOR ISLAND (>= 768px)
+     ========================================================================== */
+  @media (min-width: 768px) {
+    .bottom-sheet-backdrop {
+      padding: 0;
+      background: rgba(6, 6, 8, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .bottom-sheet-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .map-view-wrapper {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .gig-map-view {
+      cursor: grab;
+    }
+
+    .gig-map-view:active {
+      cursor: grabbing;
+    }
+
+    /* Top Left Floating Header Island */
+    .gig-sheet-header {
+      position: absolute;
+      top: 18px;
+      left: 24px;
+      right: auto;
+      width: 380px;
+      z-index: 50;
+      border-radius: 14px 14px 0 0;
+      background: rgba(14, 14, 18, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-bottom: none;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+      padding: 12px 18px;
+    }
+
+    .gig-filter-tabs-bar {
+      position: absolute;
+      top: 86px;
+      left: 24px;
+      right: auto;
+      width: 380px;
+      z-index: 50;
+      border-radius: 0;
+      background: rgba(12, 12, 16, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-left: 1px solid rgba(255, 255, 255, 0.16);
+      border-right: 1px solid rgba(255, 255, 255, 0.16);
+      border-top: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+      padding: 6px 14px;
+    }
+
+    .gig-selector-pills-row {
+      position: absolute;
+      top: 128px;
+      left: 24px;
+      right: auto;
+      width: 380px;
+      z-index: 50;
+      border-radius: 0 0 14px 14px;
+      background: rgba(10, 10, 14, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-top: none;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+      padding: 6px 14px 8px 14px;
+    }
+
+    .sheet-drag-handle {
+      display: none;
+    }
+
+    .desktop-snap-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #fff;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.72rem;
+      flex-shrink: 0;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .desktop-snap-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.35);
+      transform: scale(1.08);
+    }
+
+    .venue-detail-bottom-card.is-expanded .desktop-snap-toggle-btn i {
+      transform: rotate(180deg);
+    }
+
+    .map-directions-hud {
+      position: absolute;
+      top: 184px;
+      left: 24px;
+      right: auto;
+      bottom: auto;
+      width: 340px;
+      z-index: 50;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
+    }
+
+    /* Floating Desktop Inspector Island */
+    .venue-detail-bottom-card {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      right: auto;
+      max-width: 440px;
+      width: 100%;
+      height: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(13, 13, 17, 0.96);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+      overflow-y: auto !important;
+      padding: 16px 18px;
+      transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  box-shadow 0.25s ease;
+    }
+
+    .venue-detail-bottom-card:hover {
+      border-color: rgba(255, 255, 255, 0.26);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.95);
+    }
+
+    /* Desktop Collapsed Compact Mode */
+    .venue-detail-bottom-card.is-peek {
+      height: auto !important;
+      max-height: 136px !important;
+      overflow-y: hidden !important;
+    }
+
+    .venue-detail-bottom-card.is-peek .venue-expanded-content {
+      display: none !important;
+    }
+
+    /* Desktop Mid / Expanded Modes */
+    .venue-detail-bottom-card.is-mid {
+      height: auto !important;
+      max-height: 50vh !important;
+    }
+
+    .venue-detail-bottom-card.is-expanded {
+      height: auto !important;
+      max-height: calc(100vh - 210px) !important;
+    }
+
+    .venue-detail-bottom-card.is-expanded .venue-card-header {
+      position: static;
+      background: transparent;
+      padding: 0;
+      border: none;
+    }
   }
 </style>
 

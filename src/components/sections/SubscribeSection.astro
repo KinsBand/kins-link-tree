@@ -6,34 +6,39 @@
     <!-- Form State -->
     <div id="subscribeFormContainer" class="subscribe-form-container">
       <div class="subscribe-header">
-        <h3>Subscribe to Kins!</h3>
-        <p class="subscribe-subtext">Receive new music, behind-the-scenes moments & gig drops.</p>
+        <div class="subscribe-title-row">
+          <h3>Subscribe to Kins!</h3>
+          <span class="est-time-pill"><i class="fa-regular fa-clock"></i> ~5 sec</span>
+        </div>
+        <p class="subscribe-subtext">Receive new music, behind-the-scenes moments & gig drops via Substack.</p>
       </div>
 
       <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
         <div class="form-group">
           <div class="inline-input-row">
             <input type="email" name="email" id="emailInput" placeholder="Enter your email..." required autocomplete="email">
-            <button type="submit" class="green-submit-btn">
-              <i class="fa-solid fa-envelope"></i>
-              <span>Subscribe</span>
-            </button>
+            <!-- Inline Quick Email Domain Shortcuts Row -->
+            <div class="email-domain-shortcuts-row" id="emailDomainShortcutsRow">
+              <button type="button" class="domain-shortcut-btn" data-domain="@gmail.com">@gmail.com</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@outlook.com">@outlook.com</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@yahoo.com">@yahoo.com</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@icloud.com">@icloud.com</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@hotmail.com">@hotmail.com</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@proton.me">@proton.me</button>
+              <button type="button" class="domain-shortcut-btn" data-domain="@live.com">@live.com</button>
+            </div>
           </div>
-          <!-- Quick Email Domain Shortcuts Row -->
-          <div class="email-domain-shortcuts-row" id="emailDomainShortcutsRow">
-            <button type="button" class="domain-shortcut-btn" data-domain="@gmail.com">@gmail.com</button>
-            <button type="button" class="domain-shortcut-btn" data-domain="@outlook.com">@outlook.com</button>
-            <button type="button" class="domain-shortcut-btn" data-domain="@yahoo.com">@yahoo.com</button>
-            <button type="button" class="domain-shortcut-btn" data-domain="@icloud.com">@icloud.com</button>
-            <button type="button" class="domain-shortcut-btn" data-domain="@hotmail.com">@hotmail.com</button>
-            <button type="button" class="domain-shortcut-btn" data-domain="@proton.me">@proton.me</button>
-            <button type="button" class="domain-shortcut-btn" data-domain="@live.com">@live.com</button>
-          </div>
+
+          <button type="submit" class="green-submit-btn">
+            <i class="fa-solid fa-envelope"></i>
+            <span>Subscribe</span>
+          </button>
+
           <!-- Subscription Consent Micro-Text -->
           <p class="subscribe-consent-text">
-            By subscribing, you agree to our 
+            Powered by Substack. By subscribing, you agree to our 
             <button type="button" id="openPrivacyFormBtn" class="privacy-consent-link">Privacy Policy</button>. 
-            Unsubscribe anytime.
+            <a href="https://kinsbandoffical.substack.com" target="_blank" rel="noopener noreferrer" class="substack-link-text">Subscribe on Substack directly</a> if preferred.
           </p>
         </div>
       </form>
@@ -157,11 +162,12 @@
   .inline-input-row {
     display: flex;
     align-items: center;
+    gap: 8px;
     position: relative;
     background: rgba(10, 10, 12, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 6px;
-    padding: 3px 4px 3px 12px;
+    padding: 3px 6px 3px 12px;
     transition: border-color 0.2s ease;
   }
 
@@ -171,10 +177,10 @@
 
   .inline-input-row input {
     flex: 1;
-    min-width: 0;
+    min-width: 110px;
     background: transparent;
     border: none;
-    padding: 10px 8px 10px 0;
+    padding: 10px 4px 10px 0;
     color: var(--text-white);
     font-family: var(--font-secondary);
     font-size: 0.88rem;
@@ -184,37 +190,30 @@
   .email-domain-shortcuts-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     overflow-x: auto;
-    padding: 6px 2px 8px 2px;
-    margin-top: 4px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+    max-width: 55%;
+    padding: 2px 0;
+    margin-top: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
   }
 
   .email-domain-shortcuts-row::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  .email-domain-shortcuts-row::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .email-domain-shortcuts-row::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.25);
-    border-radius: 4px;
+    display: none;
   }
 
   .domain-shortcut-btn {
     flex: 0 0 auto;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     color: var(--text-muted);
     font-family: var(--font-secondary);
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    padding: 4px 9px;
+    padding: 3px 7px;
     border-radius: 4px;
     cursor: pointer;
     white-space: nowrap;
@@ -222,9 +221,54 @@
   }
 
   .domain-shortcut-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.32);
     color: var(--text-white);
+    transform: translateY(-1px);
+  }
+
+  .subscribe-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .est-time-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 12px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .substack-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 103, 25, 0.15);
+    color: #FF6719;
+    border: 1px solid rgba(255, 103, 25, 0.35);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .substack-badge-pill:hover {
+    background: rgba(255, 103, 25, 0.28);
+    border-color: #FF6719;
+    color: #ffffff;
     transform: translateY(-1px);
   }
 
@@ -234,6 +278,16 @@
     color: var(--text-muted);
     margin-top: 6px;
     margin-bottom: 0;
+  }
+
+  .substack-link-text {
+    color: #FF6719;
+    text-decoration: underline;
+    font-weight: 600;
+  }
+
+  .substack-link-text:hover {
+    color: #ff8547;
   }
 
   .privacy-consent-link {
@@ -253,15 +307,16 @@
   }
 
   .green-submit-btn {
-    flex: 0 0 auto;
+    width: 100%;
+    margin-top: 6px;
     background: var(--btn-green);
     color: var(--btn-text-color);
     border: none;
-    border-radius: 4px;
-    padding: 8px 14px;
+    border-radius: 6px;
+    padding: 10px 16px;
     font-family: var(--font-secondary);
     font-weight: 800;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     cursor: pointer;
@@ -270,7 +325,7 @@
     justify-content: center;
     gap: 6px;
     transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease;
-    min-height: 38px;
+    min-height: 40px;
   }
 
   .green-submit-btn:hover {
@@ -457,6 +512,8 @@
   import { copyToClipboard, animateCopySuccess } from '../../scripts/controllers/clipboard.js';
   import { showToast } from '../../scripts/controllers/toast.js';
 
+  import { getSubscriptionState, setSubscriptionState } from '../../scripts/controllers/subscribeController.js';
+
   const formContainer = document.getElementById('subscribeFormContainer');
   const successContainer = document.getElementById('subscribeSuccessContainer');
   const subscribeForm = document.getElementById('subscribeForm') as HTMLFormElement;
@@ -472,8 +529,16 @@
     }
   }
 
-  const initialSubbed = localStorage.getItem('kins_subscribed') === 'true';
+  const initialSubbed = getSubscriptionState();
   setSubscribedState(initialSubbed);
+
+  // Listen to global subscription events
+  window.addEventListener('kins:subscription-change', (e: any) => {
+    const isSubbed = e.detail?.isSubscribed;
+    if (typeof isSubbed === 'boolean') {
+      setSubscribedState(isSubbed);
+    }
+  });
 
   if (subscribeForm) {
     subscribeForm.addEventListener('submit', async (e) => {
@@ -501,13 +566,17 @@
         });
         const data = await res.json().catch(() => ({}));
 
-        localStorage.setItem('kins_subscribed', 'true');
-        setSubscribedState(true);
-        showToast(data.message || "Welcome to Kins! You are now subscribed.");
+        setSubscriptionState(true);
+        showToast(data.message || "Subscribed on Substack! Check your inbox to confirm.");
+
+        if (data.redirectUrl) {
+          setTimeout(() => {
+            window.open(data.redirectUrl, '_blank');
+          }, 1200);
+        }
       } catch (err) {
-        localStorage.setItem('kins_subscribed', 'true');
-        setSubscribedState(true);
-        showToast("Welcome to Kins! You are now subscribed.");
+        setSubscriptionState(true);
+        showToast("Subscribed on Substack! Check your inbox to confirm.");
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -519,9 +588,8 @@
 
   if (unsubscribeBtn) {
     unsubscribeBtn.addEventListener('click', () => {
-      localStorage.removeItem('kins_subscribed');
-      setSubscribedState(false);
-      showToast("You have unsubscribed from Kins updates.");
+      setSubscriptionState(false);
+      showToast("Notifications turned OFF.");
     });
   }
 
@@ -557,11 +625,10 @@
   const emailDomainShortcutsRow = document.getElementById('emailDomainShortcutsRow');
   if (emailDomainShortcutsRow) {
     emailDomainShortcutsRow.addEventListener('wheel', (e) => {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        emailDomainShortcutsRow.scrollLeft += e.deltaY;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        emailDomainShortcutsRow.scrollLeft += e.deltaX;
       }
-    }, { passive: false });
+    }, { passive: true });
   }
 
   const privacyModal = document.getElementById('privacyModal');

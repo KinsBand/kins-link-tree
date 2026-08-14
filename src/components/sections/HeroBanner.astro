@@ -58,6 +58,8 @@ const { image = kinsLogoNew } = Astro.props;
     object-position: center;
     filter: brightness(105%) contrast(110%);
     mix-blend-mode: lighten;
+    will-change: opacity, transform;
+    transition: opacity 0.22s var(--ease-snappy);
     mask-image: radial-gradient(
       ellipse 85% 75% at 50% 50%,
       black 40%,

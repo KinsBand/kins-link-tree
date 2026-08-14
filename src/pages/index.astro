@@ -82,7 +82,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     box-sizing: border-box;
     padding: 0;
     margin: 0;
-    background: var(--bg-dark-green-gradient);
+    background: var(--bg-dark-gradient);
   }
 
   .site-container {
@@ -133,6 +133,8 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
       gap: 20px;
       z-index: 100;
       box-sizing: border-box;
+      transform: translateZ(0);
+      will-change: transform;
     }
 
     .left-sidebar::-webkit-scrollbar {
@@ -159,6 +161,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
       padding: 32px 36px 120px;
       background: rgba(10, 10, 12, 0.5);
       box-sizing: border-box;
+      transform: translateZ(0);
     }
   }
 

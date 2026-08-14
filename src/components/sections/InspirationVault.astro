@@ -9,10 +9,7 @@ const artists = [
 
 <section class="inspired-section" id="inspired-section">
   <div class="inspired-header">
-    <h2 class="inspired-title">
-      <i class="fa-solid fa-record-vinyl inspired-title-icon"></i>
-      <span>What Inspires Us</span>
-    </h2>
+    <h3 class="inspired-title"><i class="fa-solid fa-record-vinyl fa-fw"></i> What Inspires Us</h3>
   </div>
 
   <div class="artist-filter-scroll-container" id="artistFilterBar">
@@ -57,6 +54,10 @@ const artists = [
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0 2px;
+    cursor: pointer;
+    user-select: none;
+    overflow: visible;
   }
 
   .inspired-title {
@@ -69,11 +70,49 @@ const artists = [
     display: flex;
     align-items: center;
     gap: 8px;
+    overflow: visible;
   }
 
-  .inspired-title-icon {
+  .inspired-title i {
     color: var(--text-muted);
     font-size: 0.85rem;
+    width: 1.25em;
+    height: 1.25em;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-shrink: 0;
+    overflow: visible;
+    transform-origin: 50% 50% !important;
+    /* Plays 2 pure vinyl spin cycles on load (~2.8s total) then times out & settles */
+    animation: spinVinylPure 1.4s cubic-bezier(0.25, 1, 0.5, 1) 2 forwards;
+    transition: color 0.3s ease, filter 0.3s ease;
+  }
+
+  /* Triggered on press / click down */
+  .inspired-header:active .inspired-title i {
+    color: var(--text-white);
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.45));
+    /* Re-triggers 1 pure spin cycle on press then settles */
+    animation: spinVinylPress 0.9s cubic-bezier(0.22, 1, 0.36, 1) 1 forwards;
+  }
+
+  @keyframes spinVinylPure {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes spinVinylPress {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .inspired-title i {
+      animation: none !important;
+    }
   }
 
   .artist-filter-scroll-container {

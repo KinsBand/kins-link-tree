@@ -1,11 +1,8 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
-import { Resend } from 'resend';
 
 export const prerender = false;
 
-const resendApiKey = import.meta.env.RESEND_API_KEY || process.env.RESEND_API_KEY || '';
-const resend = resendApiKey && !resendApiKey.includes('your_api_key') ? new Resend(resendApiKey) : null;
+const DEFAULT_SUBSTACK_DOMAIN = 'kinsbandoffical.substack.com';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -19,54 +16,75 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
+    const rawDomain = import.meta.env.SUBSTACK_DOMAIN || process.env.SUBSTACK_DOMAIN || DEFAULT_SUBSTACK_DOMAIN;
+    const substackDomain = rawDomain.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
-    // 1. Insert email into Supabase database (if configured)
-    if (supabase) {
-      const { error } = await supabase
-        .from('subscribers')
-        .insert([{ email: cleanEmail }]);
+    let substackSuccess = false;
+    let errorMessage = '';
 
-      if (error) {
-        if (error.code === '23505') {
-          return new Response(
-            JSON.stringify({ status: 'success', message: "You're already on the list!" }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
-          );
-        }
-        console.warn('Supabase insert warning/error:', error);
-      }
-    }
+    // 1. Submit email to Substack free subscription API (form-encoded)
+    try {
+      const substackUrl = `https://${substackDomain}/api/v1/free?nojs=true`;
+      const formData = new URLSearchParams();
+      formData.append('email', cleanEmail);
+      formData.append('source', 'website_footer');
 
-    // 2. Send Automated Instant Welcome Email via Resend API
-    if (resend) {
-      try {
-        await resend.emails.send({
-          from: 'Kins <onboarding@resend.dev>',
-          to: [cleanEmail],
-          subject: 'Welcome to The Kins! 🎉',
-          html: `
-            <div style="font-family: Arial, sans-serif; background-color: #121214; color: #ffffff; padding: 28px; border-radius: 8px; max-width: 520px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.12);">
-              <h2 style="color: #1DB954; font-size: 20px; margin-bottom: 12px;">Welcome to The Kins! 🎉</h2>
-              <p style="font-size: 14px; color: #e4e4e7; line-height: 1.5;">Hey,</p>
-              <p style="font-size: 14px; color: #e4e4e7; line-height: 1.5;">Thanks for joining The Kins!</p>
-              <p style="font-size: 14px; color: #e4e4e7; line-height: 1.5;">You'll be the first to hear about new music, covers, behind-the-scenes moments, gigs, and everything we're working on.</p>
-              <p style="font-size: 14px; color: #e4e4e7; line-height: 1.5;">If you've got a question, an idea, or just want to say hi, simply reply to this email. We'd love to hear from you!</p>
-              <p style="font-size: 12px; color: #a1a1aa; margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 14px;">
-                <em>One last thing—if this email landed in your Promotions or Spam folder, move it to your Primary inbox so you don't miss future updates.</em>
-              </p>
-              <p style="font-size: 14px; color: #ffffff; font-weight: bold; margin-top: 16px;">— KINS</p>
-            </div>
-          `
+      const response = await fetch(substackUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': `https://${substackDomain}/`
+        },
+        body: formData.toString()
+      });
+
+      if (response.ok) {
+        substackSuccess = true;
+      } else {
+        // Fallback: Attempt JSON payload to Substack API
+        const jsonResponse = await fetch(`https://${substackDomain}/api/v1/free`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': `https://${substackDomain}/`
+          },
+          body: JSON.stringify({ email: cleanEmail, domain: 'substack.com', source: 'subscribe_page' })
         });
-      } catch (emailErr) {
-        console.warn('Resend email dispatch notice:', emailErr);
+
+        if (jsonResponse.ok) {
+          substackSuccess = true;
+        } else {
+          const text = await response.text().catch(() => '');
+          errorMessage = `Substack responded with status ${response.status}`;
+          console.warn('Substack subscription response warning:', response.status, text);
+        }
       }
+    } catch (err: any) {
+      console.error('Substack fetch error:', err);
+      errorMessage = err?.message || 'Network error reaching Substack.';
     }
 
-    return new Response(
-      JSON.stringify({ status: 'success', message: "You're subscribed! Welcome email sent." }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    if (substackSuccess) {
+      return new Response(
+        JSON.stringify({
+          status: 'success',
+          message: "Subscribed to Kins on Substack! Check your inbox to confirm."
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } else {
+      // Return success to the user so client UX remains smooth while providing fallback notice
+      return new Response(
+        JSON.stringify({
+          status: 'success',
+          message: "Welcome to Kins! Redirecting to Substack to complete subscription...",
+          redirectUrl: `https://${substackDomain}/subscribe?email=${encodeURIComponent(cleanEmail)}`
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
   } catch (err: any) {
     return new Response(
       JSON.stringify({ status: 'error', message: 'Subscription processing error.' }),
@@ -74,3 +92,4 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 };
+

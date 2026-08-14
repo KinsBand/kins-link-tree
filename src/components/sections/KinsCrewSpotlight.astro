@@ -1,47 +1,39 @@
 ---
-const mockClips = [
+const featureCards = [
   {
-    id: 'clip-1',
-    handle: '@mitch_drums',
-    title: 'Everlong',
-    tag: 'Drum Cover',
-    platform: 'tiktok',
-    platformIcon: 'fa-tiktok',
-    platformName: 'TikTok',
-    bgGradient: 'linear-gradient(145deg, #2d124d 0%, #120e24 100%)',
+    id: 'spot-1',
+    category: 'Drum Cover',
+    title: 'Drum Cover Slot',
+    badge: 'Spot Open',
+    actionText: 'Get Featured',
+    bgGradient: 'linear-gradient(145deg, rgba(45, 18, 77, 0.9) 0%, rgba(18, 14, 36, 0.96) 100%)',
     icon: 'fa-drum'
   },
   {
-    id: 'clip-2',
-    handle: '@alex_covers',
-    title: 'Just Like Heaven',
-    tag: 'Vocal & Guitar',
-    platform: 'instagram',
-    platformIcon: 'fa-instagram',
-    platformName: 'IG Reel',
-    bgGradient: 'linear-gradient(145deg, #4d122b 0%, #1a0a14 100%)',
+    id: 'spot-2',
+    category: 'Guitar & Bass',
+    title: 'Guitar / Bass Slot',
+    badge: 'Spot Open',
+    actionText: 'Get Featured',
+    bgGradient: 'linear-gradient(145deg, rgba(77, 18, 43, 0.9) 0%, rgba(26, 10, 20, 0.96) 100%)',
     icon: 'fa-guitar'
   },
   {
-    id: 'clip-3',
-    handle: '@sydney_live',
-    title: 'Sydney Live Clip',
-    tag: 'Front Row Edit',
-    platform: 'youtube',
-    platformIcon: 'fa-youtube',
-    platformName: 'Shorts',
-    bgGradient: 'linear-gradient(145deg, #123d4d 0%, #091a24 100%)',
-    icon: 'fa-video'
+    id: 'spot-3',
+    category: 'Vocal Cover',
+    title: 'Vocal Cover Slot',
+    badge: 'Spot Open',
+    actionText: 'Get Featured',
+    bgGradient: 'linear-gradient(145deg, rgba(18, 61, 77, 0.9) 0%, rgba(9, 26, 36, 0.96) 100%)',
+    icon: 'fa-microphone'
   },
   {
-    id: 'clip-4',
-    handle: '@indie_edits',
-    title: 'Kins Tour Vibe',
-    tag: 'Fan Edit',
-    platform: 'tiktok',
-    platformIcon: 'fa-tiktok',
-    platformName: 'TikTok',
-    bgGradient: 'linear-gradient(145deg, #3d3b12 0%, #171607 100%)',
+    id: 'spot-4',
+    category: 'Fan Edit',
+    title: 'Fan Edit / Live Slot',
+    badge: 'Spot Open',
+    actionText: 'Get Featured',
+    bgGradient: 'linear-gradient(145deg, rgba(61, 59, 18, 0.9) 0%, rgba(23, 22, 7, 0.96) 100%)',
     icon: 'fa-clapperboard'
   }
 ];
@@ -51,8 +43,7 @@ const mockClips = [
   <!-- Section Header -->
   <div class="spotlight-header">
     <div class="header-title-box">
-      <h3 class="spotlight-title"><i class="fa-solid fa-users"></i> Community</h3>
-      <p class="spotlight-subtitle">Covers, edits, and live clips from the Kins community.</p>
+      <h3 class="spotlight-title"><i class="fa-solid fa-users fa-fw"></i> Community</h3>
     </div>
     <div class="section-scroll-controls">
       <button type="button" class="scroll-arrow-btn" id="spotlightScrollPrev" aria-label="Scroll community clips left">
@@ -66,29 +57,31 @@ const mockClips = [
 
   <!-- Snap-Scroll Horizontal Video Row -->
   <div class="spotlight-scroll-container" id="spotlightScrollContainer">
-    {mockClips.map((clip) => (
-      <div class="spotlight-card" data-clip-id={clip.id}>
+    {featureCards.map((clip) => (
+      <div class="spotlight-card empty-feature-card" data-clip-id={clip.id} data-category={clip.category} title={`Submit your ${clip.category} to get featured!`}>
         <div class="card-media-wrapper" style={`background: ${clip.bgGradient}`}>
           <!-- Mock Graphic Element -->
           <div class="mock-bg-art">
             <i class={`fa-solid ${clip.icon} mock-icon-bg`}></i>
           </div>
 
-          <!-- Top Right Platform Badge -->
-          <div class="platform-badge">
-            <i class={`fa-brands ${clip.platformIcon}`}></i>
-            <span>{clip.platformName}</span>
+          <!-- Top Right Availability Badge -->
+          <div class="availability-badge">
+            <i class="fa-solid fa-sparkles badge-sparkle"></i>
+            <span>{clip.badge}</span>
           </div>
 
-          <!-- Center Glassmorphism Play Button -->
-          <div class="play-btn-circle">
-            <i class="fa-solid fa-play"></i>
+          <!-- Center Interactive Plus / Feature Button -->
+          <div class="feature-btn-circle">
+            <i class="fa-solid fa-plus"></i>
+            <span class="feature-btn-sub">Submit</span>
           </div>
 
           <!-- Bottom Card Content Overlay -->
           <div class="card-content-overlay">
-            <span class="creator-handle">{clip.handle}</span>
-            <span class="clip-subtext">"{clip.title}" • {clip.tag}</span>
+            <span class="category-header-pill"><i class={`fa-solid ${clip.icon}`}></i> {clip.category}</span>
+            <span class="creator-handle">Your Video Here</span>
+            <span class="clip-subtext">Click to submit or tag @KinsBandOfficial</span>
           </div>
         </div>
       </div>
@@ -98,12 +91,12 @@ const mockClips = [
   <!-- Bottom Submission Banner -->
   <div class="submission-banner">
     <div class="banner-text-content">
-      <h4 class="banner-title"><i class="fa-solid fa-sparkles banner-sparkle-icon"></i> SUBMISSIONS</h4>
+      <h4 class="banner-title"><i class="fa-solid fa-sparkles banner-sparkle-icon"></i> SUBMISSIONS OPEN</h4>
       <p class="banner-desc">
         Tag <button type="button" class="copy-handle-pill" id="copyHandlePill" title="Copy @KinsBandOfficial handle">
           <span>@KinsBandOfficial</span>
           <i class="fa-regular fa-copy"></i>
-        </button> or share your link to get featured.
+        </button> or submit your link to get featured in these spots.
       </p>
     </div>
     <button type="button" class="submit-fan-clip-btn" id="openCommunityModalBtn">
@@ -128,15 +121,19 @@ const mockClips = [
   /* Section Header */
   .spotlight-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     padding: 0 2px;
+    cursor: pointer;
+    user-select: none;
+    overflow: visible;
   }
 
   .header-title-box {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    overflow: visible;
   }
 
   .spotlight-title {
@@ -149,11 +146,50 @@ const mockClips = [
     display: flex;
     align-items: center;
     gap: 8px;
+    overflow: visible;
   }
 
   .spotlight-title i {
     color: var(--text-muted);
     font-size: 0.85rem;
+    width: 1.25em;
+    height: 1.25em;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: visible;
+    transform-origin: 50% 50% !important;
+    /* Plays 2 subtle pulse cycles on load (~2.8s total) then times out & settles */
+    animation: pulseCommunityIntro 1.4s cubic-bezier(0.25, 1, 0.5, 1) 2 forwards;
+    transition: color 0.3s ease, filter 0.3s ease;
+  }
+
+  /* Triggered on press / click down */
+  .spotlight-header:active .spotlight-title i {
+    color: var(--text-white);
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.45));
+    /* Re-triggers 1 snappy bounce/pulse cycle on press then settles */
+    animation: bounceCommunityPress 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 1 forwards;
+  }
+
+  @keyframes pulseCommunityIntro {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-1.5px) scale(1.14); }
+  }
+
+  @keyframes bounceCommunityPress {
+    0% { transform: translateY(0) scale(1); }
+    30% { transform: translateY(-3px) scale(1.22); }
+    65% { transform: translateY(0.5px) scale(1.08); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spotlight-title i {
+      animation: none !important;
+    }
   }
 
   .spotlight-subtitle {
@@ -303,56 +339,93 @@ const mockClips = [
     transform: scale(1.08) rotate(6deg);
   }
 
-  .platform-badge {
+  .spotlight-card.empty-feature-card {
+    border: 1px dashed rgba(255, 255, 255, 0.22);
+  }
+
+  .spotlight-card.empty-feature-card:hover {
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 12px 32px rgba(255, 255, 255, 0.15);
+  }
+
+  .availability-badge {
     position: absolute;
-    top: 8px;
-    left: 8px;
+    top: 10px;
+    left: 10px;
     z-index: 3;
-    background: var(--text-white);
-    color: var(--text-dark);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: var(--text-white);
     font-family: var(--font-secondary);
-    font-size: 0.55rem;
+    font-size: 0.6rem;
     font-weight: 800;
-    padding: 2px 6px;
-    border-radius: 2px;
-    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     display: flex;
     align-items: center;
-    gap: 4px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    gap: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(6px);
   }
 
-  .platform-badge i {
-    font-size: 0.65rem;
+  .badge-sparkle {
+    font-size: 0.62rem;
+    color: var(--text-white);
   }
 
-  .play-btn-circle {
+  .feature-btn-circle {
     position: absolute;
-    top: 45%;
+    top: 42%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1.5px dashed rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(10px);
     color: var(--text-white);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
     z-index: 2;
-    padding-left: 3px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    transition: transform 0.25s var(--ease-snappy), background-color 0.25s ease, border-color 0.25s ease;
+    transition: all 0.25s var(--ease-snappy);
   }
 
-  .spotlight-card:hover .play-btn-circle {
-    transform: translate(-50%, -50%) scale(1.14);
-    background: rgba(255, 255, 255, 0.28);
-    border-color: rgba(255, 255, 255, 0.6);
+  .feature-btn-sub {
+    font-family: var(--font-secondary);
+    font-size: 0.54rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .spotlight-card:hover .feature-btn-circle {
+    transform: translate(-50%, -50%) scale(1.12);
+    background: var(--text-white);
+    border-style: solid;
+    border-color: var(--text-white);
+    color: var(--text-dark);
+    box-shadow: 0 8px 26px rgba(255, 255, 255, 0.3);
+  }
+
+  .category-header-pill {
+    font-family: var(--font-secondary);
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-white);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 2px;
   }
 
   .card-content-overlay {
@@ -552,11 +625,10 @@ const mockClips = [
     }
 
     spotlightContainer.addEventListener('wheel', (e) => {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        spotlightContainer.scrollLeft += e.deltaY;
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        spotlightContainer.scrollLeft += e.deltaX;
       }
-    }, { passive: false });
+    }, { passive: true });
 
     spotlightPrevBtn?.addEventListener('click', () => {
       spotlightContainer.scrollBy({ left: -260, behavior: 'smooth' });
@@ -581,5 +653,30 @@ const mockClips = [
   openModalBtn?.addEventListener('click', () => {
     const modal = document.getElementById('communitySubmissionModal');
     modal?.classList.remove('hidden');
+  });
+
+  // Empty Feature Cards Click Handlers
+  const emptyFeatureCards = document.querySelectorAll('.spotlight-card.empty-feature-card');
+  emptyFeatureCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const category = card.getAttribute('data-category');
+      const modal = document.getElementById('communitySubmissionModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        if (category) {
+          const categoryInput = document.getElementById('selectedCategoryInput') as HTMLInputElement;
+          if (categoryInput) categoryInput.value = category;
+          
+          const categoryBtns = document.querySelectorAll('#categoryTagsGrid .category-tag-btn');
+          categoryBtns.forEach(btn => {
+            if (btn.getAttribute('data-category') === category) {
+              btn.classList.add('active');
+            } else {
+              btn.classList.remove('active');
+            }
+          });
+        }
+      }
+    });
   });
 </script>

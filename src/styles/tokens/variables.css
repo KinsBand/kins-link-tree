@@ -17,8 +17,8 @@
   --md-sys-color-inverse-surface: #f2f0eb;
 
   /* Theme Colors & Gradients */
-  --bg-dark-green: #0d0d0f;
-  --bg-dark-green-gradient: linear-gradient(180deg, #141417 0%, #0a0a0c 100%);
+  --bg-dark: #0d0d0f;
+  --bg-dark-gradient: linear-gradient(180deg, #141417 0%, #0a0a0c 100%);
   --btn-green: #f2f0eb;
   --btn-green-hover: #ffffff;
   --btn-green-shadow: rgba(0, 0, 0, 0.6);

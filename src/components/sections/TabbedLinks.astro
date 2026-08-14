@@ -70,9 +70,16 @@ const secondaryStreams = [
       </div>
     </div>
 
-    <button class="toggle-more-socials-btn" id="toggleMoreSocialsBtn" type="button" aria-label="Toggle all social channels">
+    <button class="toggle-more-socials-btn" id="toggleMoreSocialsBtn" type="button" aria-label="Toggle all social channels" data-count={secondarySocials.length}>
+      <div class="mini-icon-preview">
+        {secondarySocials.slice(0, 4).map((link) => (
+          <span class="mini-icon-chip" title={link.name}>
+            <i class={link.icon}></i>
+          </span>
+        ))}
+      </div>
       <span id="toggleSocialsText">Other (+{secondarySocials.length})</span>
-      <i class="fa-solid fa-chevron-down" id="toggleSocialsIcon"></i>
+      <i class="fa-solid fa-chevron-down toggle-chevron" id="toggleSocialsIcon"></i>
     </button>
   </div>
 
@@ -100,9 +107,16 @@ const secondaryStreams = [
       </div>
     </div>
 
-    <button class="toggle-more-socials-btn" id="toggleMoreStreamsBtn" type="button" aria-label="Toggle all streaming services">
+    <button class="toggle-more-socials-btn" id="toggleMoreStreamsBtn" type="button" aria-label="Toggle all streaming services" data-count={secondaryStreams.length}>
+      <div class="mini-icon-preview">
+        {secondaryStreams.slice(0, 4).map((link) => (
+          <span class="mini-icon-chip" title={link.name}>
+            <i class={link.icon}></i>
+          </span>
+        ))}
+      </div>
       <span id="toggleStreamsText">Other (+{secondaryStreams.length})</span>
-      <i class="fa-solid fa-chevron-down" id="toggleStreamsIcon"></i>
+      <i class="fa-solid fa-chevron-down toggle-chevron" id="toggleStreamsIcon"></i>
     </button>
   </div>
 </section>
@@ -151,34 +165,86 @@ const secondaryStreams = [
   .toggle-more-socials-btn {
     width: 100%;
     margin-top: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px dashed rgba(255, 255, 255, 0.16);
-    border-radius: 6px;
-    padding: 11px 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+    padding: 10px 20px;
     color: var(--text-white);
     font-family: var(--font-secondary);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    transition: all 0.2s ease;
+    gap: 10px;
+    backdrop-filter: blur(10px);
+    transition: all 0.25s var(--ease-snappy);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   }
 
   .toggle-more-socials-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
   }
 
-  .toggle-more-socials-btn i {
-    font-size: 0.75rem;
-    transition: transform 0.3s ease;
+  .toggle-more-socials-btn:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.12);
   }
 
-  .toggle-more-socials-btn.active i {
+  .mini-icon-preview {
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s ease, transform 0.2s ease, width 0.2s ease;
+  }
+
+  .toggle-more-socials-btn.active .mini-icon-preview {
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    overflow: hidden;
+    margin: 0;
+  }
+
+  .mini-icon-chip {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-left: -6px;
+    backdrop-filter: blur(4px);
+    transition: transform 0.2s ease;
+  }
+
+  .mini-icon-chip:first-child {
+    margin-left: 0;
+  }
+
+  .toggle-more-socials-btn:hover .mini-icon-chip {
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  .toggle-chevron {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.6);
+    transition: transform 0.3s var(--ease-snappy), color 0.2s ease;
+  }
+
+  .toggle-more-socials-btn:hover .toggle-chevron {
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .toggle-more-socials-btn.active .toggle-chevron {
     transform: rotate(180deg);
   }
 
@@ -259,12 +325,13 @@ const secondaryStreams = [
   const socialsTextEl = document.getElementById('toggleSocialsText');
 
   if (toggleSocialsBtn && socialsDrawer) {
+    const count = toggleSocialsBtn.getAttribute('data-count') || '8';
     toggleSocialsBtn.addEventListener('click', () => {
       const isOpen = socialsDrawer.classList.contains('active-drawer');
       if (isOpen) {
         socialsDrawer.classList.remove('active-drawer');
         toggleSocialsBtn.classList.remove('active');
-        if (socialsTextEl) socialsTextEl.textContent = 'Other (+8)';
+        if (socialsTextEl) socialsTextEl.textContent = `Other (+${count})`;
       } else {
         socialsDrawer.classList.add('active-drawer');
         toggleSocialsBtn.classList.add('active');
@@ -278,12 +345,13 @@ const secondaryStreams = [
   const streamsTextEl = document.getElementById('toggleStreamsText');
 
   if (toggleStreamsBtn && streamsDrawer) {
+    const count = toggleStreamsBtn.getAttribute('data-count') || '5';
     toggleStreamsBtn.addEventListener('click', () => {
       const isOpen = streamsDrawer.classList.contains('active-drawer');
       if (isOpen) {
         streamsDrawer.classList.remove('active-drawer');
         toggleStreamsBtn.classList.remove('active');
-        if (streamsTextEl) streamsTextEl.textContent = 'Other (+5)';
+        if (streamsTextEl) streamsTextEl.textContent = `Other (+${count})`;
       } else {
         streamsDrawer.classList.add('active-drawer');
         toggleStreamsBtn.classList.add('active');

@@ -7,13 +7,15 @@
       <div class="modal-title-group">
         <i class="fa-solid fa-clapperboard modal-header-icon"></i>
         <h3>Submit Fan Clip</h3>
+      </div>
+      <div class="modal-header-actions">
         <button type="button" class="disclaimer-info-btn" id="openTermsInfoBtn" title="View Fan Submission Agreement" aria-label="View Fan Submission Agreement">
           <i class="fa-solid fa-circle-info"></i>
         </button>
+        <button class="close-modal-btn" id="closeCommunityModal" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
-      <button class="close-modal-btn" id="closeCommunityModal" aria-label="Close modal">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
     </div>
 
     <div class="modal-body community-modal-body">
@@ -91,7 +93,7 @@
         </p>
 
         <!-- Submit Button -->
-        <button type="submit" class="green-submit-clip-btn" id="submitCommunityClipBtn">
+        <button type="submit" class="submit-clip-btn" id="submitCommunityClipBtn">
           <span>Submit Clip</span>
           <i class="fa-solid fa-paper-plane"></i>
         </button>
@@ -131,15 +133,15 @@
   }
 
   .community-modal-enhanced {
-    background: rgba(18, 18, 22, 0.95);
+    background: rgba(14, 14, 17, 0.96);
     border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 8px;
+    border-radius: 12px;
     width: calc(100% - 32px);
     max-width: 440px;
-    padding: 20px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    padding: 22px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
     position: relative;
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
   }
 
   .modal-header {
@@ -147,7 +149,7 @@
     align-items: center;
     justify-content: space-between;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .modal-title-group {
@@ -155,38 +157,58 @@
     align-items: center;
     gap: 8px;
     color: var(--text-white);
+    flex: 1;
+    min-width: 0;
   }
 
   .modal-header-icon {
-    color: var(--btn-green);
-    font-size: 0.95rem;
+    color: var(--text-white);
+    font-size: 0.9rem;
+    flex-shrink: 0;
   }
 
   .modal-title-group h3 {
     font-family: var(--font-heading);
-    font-size: 1rem;
+    font-size: clamp(0.78rem, 3.5vw, 0.92rem);
     font-weight: 800;
     margin: 0;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
+  .modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .disclaimer-info-btn,
   .close-modal-btn {
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     color: var(--text-white);
     width: 32px;
     height: 32px;
-    border-radius: 4px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background-color 0.18s ease;
+    font-size: 0.82rem;
+    padding: 0;
+    transition: all 0.18s ease;
   }
 
+  .disclaimer-info-btn:hover,
   .close-modal-btn:hover {
     background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+    transform: scale(1.05);
   }
 
   .community-modal-body {
@@ -227,44 +249,47 @@
 
   .category-tags-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   .category-tag-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     color: var(--text-muted);
     font-family: var(--font-secondary);
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 7px 4px;
-    border-radius: 4px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 9px 12px;
+    border-radius: 8px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 5px;
+    justify-content: flex-start;
+    gap: 8px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: all 0.18s ease;
+    transition: all 0.18s var(--ease-snappy);
   }
 
   .tag-icon {
-    font-size: 0.68rem;
+    font-size: 0.8rem;
   }
 
   .category-tag-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
     color: var(--text-white);
+    transform: translateY(-1px);
   }
 
   .category-tag-btn.active {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    border-color: transparent;
+    background: #ffffff;
+    color: #0a0a0c;
+    border-color: #ffffff;
     font-weight: 800;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
   }
 
   .input-with-paste-row {
@@ -287,7 +312,7 @@
     font-size: 0.76rem;
     font-weight: 700;
     padding: 10px 14px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -301,7 +326,7 @@
   .paste-url-btn:hover {
     background: rgba(255, 255, 255, 0.18);
     border-color: rgba(255, 255, 255, 0.3);
-    color: var(--btn-green);
+    color: #ffffff;
     transform: translateY(-1px);
   }
 
@@ -323,13 +348,18 @@
     width: 100%;
     background: rgba(10, 10, 12, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 10px 12px 10px 34px;
     color: var(--text-white);
     font-family: var(--font-secondary);
     font-size: 0.82rem;
     outline: none;
     transition: border-color 0.2s ease;
+  }
+
+  /* Prevent URL input text from scrolling under/fazing through the detected platform badge */
+  .input-with-detected-badge input {
+    padding-right: 95px !important;
   }
 
   .form-group input:focus {
@@ -341,7 +371,7 @@
     right: 8px;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--btn-green);
+    color: var(--text-white);
     font-family: var(--font-secondary);
     font-size: 0.64rem;
     font-weight: 700;
@@ -351,6 +381,7 @@
     align-items: center;
     gap: 4px;
     pointer-events: none;
+    z-index: 2;
   }
 
   .detected-platform-badge.hidden {
@@ -363,11 +394,11 @@
     color: var(--text-muted);
   }
 
-  .green-submit-clip-btn {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
+  .submit-clip-btn {
+    background: var(--text-white);
+    color: var(--text-dark);
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 12px;
     font-family: var(--font-secondary);
     font-size: 0.82rem;
@@ -379,13 +410,15 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease;
+    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease, box-shadow 0.18s ease;
     margin-top: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
   }
 
-  .green-submit-clip-btn:hover {
-    background: var(--btn-green-hover);
+  .submit-clip-btn:hover {
+    background: #ffffff;
     transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
   }
 
   /* Success View */
@@ -406,8 +439,8 @@
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--btn-green);
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-white);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -431,28 +464,7 @@
     margin: 0;
   }
 
-  .disclaimer-info-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: var(--btn-green);
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.72rem;
-    padding: 0;
-    margin-left: 4px;
-    transition: all 0.18s ease;
-  }
 
-  .disclaimer-info-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    color: var(--text-white);
-    transform: scale(1.08);
-  }
 
   .submission-disclaimer-text {
     font-family: var(--font-secondary);
@@ -465,7 +477,7 @@
   .disclaimer-terms-link {
     background: transparent;
     border: none;
-    color: var(--btn-green);
+    color: var(--text-white);
     font-family: inherit;
     font-size: inherit;
     font-weight: 700;
@@ -475,7 +487,7 @@
   }
 
   .disclaimer-terms-link:hover {
-    color: var(--btn-green-hover);
+    color: #ffffff;
   }
 
   .reset-submission-btn {
@@ -486,7 +498,7 @@
     font-size: 0.78rem;
     font-weight: 700;
     padding: 8px 16px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     margin-top: 6px;
     transition: background-color 0.18s ease;

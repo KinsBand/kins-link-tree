@@ -75,34 +75,38 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
         </div>
       </div>
 
-      <!-- 5. Dual Asset Box: QR Code (Left) | Band Logo (Right) -->
+      <!-- 5. Dual Asset Grid: QR Code Card (Left) | Band Logo Card (Right) -->
       <div class="dual-asset-box">
-        <!-- Left Asset: QR Code -->
-        <div class="asset-column">
-          <span class="asset-col-label">QR CODE</span>
-          <div class="asset-img-row">
-            <button type="button" class="icon-only-download-btn qr-btn" id="openQrDownloadModalBtn" title="Download QR Code Asset" aria-label="Download QR Code">
+        <!-- Left Asset Card: QR Code -->
+        <div class="asset-card">
+          <div class="asset-card-header">
+            <span class="asset-card-title">QR CODE</span>
+            <button type="button" class="asset-download-btn" id="openQrDownloadModalBtn" title="Download QR Code Asset" aria-label="Download QR Code">
               <i class="fa-solid fa-download"></i>
             </button>
-            <div class="qr-canvas-clickable" id="qrcodeCanvasWrapper" title="Click to view full screen QR code">
-              <div class="qr-canvas-inner" id="qrcodeCanvas"></div>
-              <div class="qr-hover-tap-badge">
-                <i class="fa-solid fa-expand"></i>
-                <span>Fullscreen</span>
-              </div>
+          </div>
+          <div class="qr-canvas-clickable" id="qrcodeCanvasWrapper" title="Click to view full screen QR code">
+            <div class="qr-canvas-inner" id="qrcodeCanvas"></div>
+            <div class="qr-hover-tap-badge">
+              <i class="fa-solid fa-expand"></i>
+              <span>Fullscreen</span>
             </div>
           </div>
         </div>
 
-        <!-- Right Asset: Band Logo -->
-        <div class="asset-column">
-          <span class="asset-col-label">LOGO</span>
-          <div class="asset-img-row">
-            <button type="button" class="icon-only-download-btn logo-btn" id="openLogoDownloadModalBtn" title="Download Band Logo Asset" aria-label="Download Band Logo">
+        <!-- Right Asset Card: Band Logo -->
+        <div class="asset-card">
+          <div class="asset-card-header">
+            <span class="asset-card-title">LOGO</span>
+            <button type="button" class="asset-download-btn" id="openLogoDownloadModalBtn" title="Download Band Logo Asset" aria-label="Download Band Logo">
               <i class="fa-solid fa-download"></i>
             </button>
-            <div class="band-logo-preview-box" id="bandLogoPreviewBox" title="Kins Official Logo Asset">
-              <Image src={kinsLogoImg} alt="Kins Band Official Logo" class="band-logo-asset-img" width={100} height={100} />
+          </div>
+          <div class="band-logo-preview-box" id="openLogoDownloadModalBox" title="Click to download Band Logo format">
+            <Image src={kinsLogoImg} alt="Kins Band Official Logo" class="band-logo-asset-img" width={120} height={120} />
+            <div class="logo-hover-tap-badge">
+              <i class="fa-solid fa-download"></i>
+              <span>Export</span>
             </div>
           </div>
         </div>
@@ -480,70 +484,125 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   }
 
   .dual-asset-box {
-    display: flex;
-    align-items: stretch;
-    gap: 6px;
-    background: rgba(10, 10, 12, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 12px;
-    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
     width: 100%;
     box-sizing: border-box;
   }
 
-  /* Each asset column takes equal width */
-  .asset-column {
-    flex: 1;
+  .asset-card {
+    background: rgba(14, 14, 17, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-    min-width: 0;
+    gap: 8px;
+    transition: border-color 0.2s ease, transform 0.2s ease;
   }
 
-  /* Big label above each image — offset past the 36px button + 5px gap */
-  .asset-col-label {
+  .asset-card:hover {
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  .asset-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px;
+  }
+
+  .asset-card-title {
     font-family: var(--font-heading);
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-white);
-    line-height: 1;
-    margin-left: 41px;
   }
 
-  /* Row: download button on left, image on right */
-  .asset-img-row {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    width: 100%;
-  }
-
-  /* QR Code Image Card */
-  .qr-canvas-clickable {
-    position: relative;
-    background: #ffffff;
-    flex: 1;
-    aspect-ratio: 1;
-    padding: 5px;
-    box-sizing: border-box;
-    border-radius: 8px;
+  .asset-download-btn {
+    background: var(--text-white);
+    color: var(--text-dark);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    font-size: 0.76rem;
+    transition: all 0.18s var(--ease-snappy);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  .asset-download-btn:hover {
+    background: #ffffff;
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+  }
+
+  /* Preview Boxes */
+  .qr-canvas-clickable,
+  .band-logo-preview-box {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
     overflow: hidden;
+    cursor: pointer;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: transform 0.2s var(--ease-snappy), box-shadow 0.2s ease;
   }
 
-  .qr-canvas-clickable:hover {
-    transform: scale(1.03);
-    box-shadow: 0 0 14px rgba(0, 230, 153, 0.35);
+  .qr-canvas-clickable {
+    background: #ffffff;
+    padding: 6px;
   }
 
-  .qr-hover-tap-badge {
+  .band-logo-preview-box {
+    background: #0a0a0c;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 8px;
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
+  }
+
+  .qr-canvas-clickable:hover,
+  .band-logo-preview-box:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
+  }
+
+  .qr-canvas-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .qr-canvas-inner :global(img) {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
+  .band-logo-asset-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+  }
+
+  /* Hover Badges */
+  .qr-hover-tap-badge,
+  .logo-hover-tap-badge {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.78);
@@ -554,75 +613,17 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     justify-content: center;
     gap: 4px;
     font-family: var(--font-secondary);
-    font-size: 0.58rem;
-    font-weight: 700;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     opacity: 0;
     transition: opacity 0.2s ease;
   }
 
-  .qr-canvas-clickable:hover .qr-hover-tap-badge {
+  .qr-canvas-clickable:hover .qr-hover-tap-badge,
+  .band-logo-preview-box:hover .logo-hover-tap-badge {
     opacity: 1;
-  }
-
-  /* Download Buttons — tall pill, flush with image height */
-  .icon-only-download-btn {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    border: none;
-    width: 36px;
-    min-width: 36px;
-    align-self: stretch;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.18s var(--ease-snappy);
-    box-shadow: 0 3px 10px rgba(0, 230, 153, 0.25);
-    flex-shrink: 0;
-  }
-
-  .icon-only-download-btn:hover {
-    background: var(--btn-green-hover);
-    transform: translateY(-1px) scale(1.04);
-    box-shadow: 0 5px 16px rgba(0, 230, 153, 0.4);
-  }
-
-  .icon-only-download-btn.logo-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    color: var(--text-white);
-    box-shadow: none;
-  }
-
-  .icon-only-download-btn.logo-btn:hover {
-    background: rgba(255, 255, 255, 0.22);
-    border-color: rgba(255, 255, 255, 0.35);
-    color: var(--text-white);
-    transform: translateY(-1px) scale(1.04);
-  }
-
-  /* Band Logo Container — matches QR sizing via flex */
-  .band-logo-preview-box {
-    flex: 1;
-    aspect-ratio: 1;
-    box-sizing: border-box;
-    background: #0a0a0c;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 8px;
-    padding: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-  }
-
-  .band-logo-asset-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
   }
 
   /* Format Selector Modal */
@@ -765,7 +766,7 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     background: #ffffff;
     padding: 14px;
     border-radius: 12px;
-    box-shadow: 0 0 30px rgba(0, 230, 153, 0.2);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;

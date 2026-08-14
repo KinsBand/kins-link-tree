@@ -86,25 +86,31 @@
     align-items: center;
     gap: 8px;
     color: var(--text-white);
+    flex: 1;
+    min-width: 0;
   }
 
   .modal-header-icon {
-    color: var(--btn-green);
-    font-size: 1rem;
+    color: var(--text-white);
+    font-size: 0.95rem;
+    flex-shrink: 0;
   }
 
   .modal-title-group h3 {
     font-family: var(--font-heading);
-    font-size: 1rem;
+    font-size: clamp(0.78rem, 3.5vw, 0.95rem);
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .close-modal-btn {
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     color: var(--text-white);
     width: 32px;
     height: 32px;
@@ -113,11 +119,14 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background-color 0.18s ease;
+    flex-shrink: 0;
+    transition: all 0.18s ease;
   }
 
   .close-modal-btn:hover {
     background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: scale(1.05);
   }
 
   .legal-modal-body {
@@ -135,7 +144,7 @@
   .agreement-highlight-box {
     background: rgba(18, 18, 20, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-left: 3px solid var(--btn-green);
+    border-left: 3px solid var(--text-white);
     padding: 14px 16px;
     border-radius: 6px;
     display: flex;
