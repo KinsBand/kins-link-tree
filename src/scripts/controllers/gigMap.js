@@ -643,11 +643,12 @@ export function setSnapState(targetState, options = { animate: true, autoPanMap:
   const snapHeights = getSnapHeights();
   document.documentElement.style.setProperty('--peek-height', `${snapHeights.peek}px`);
 
-  // If collapsing to Tier 1, reset inner scroll position
-  if (validState === 'peek') {
-    venueDetailCard.scrollTo({ top: 0, behavior: 'smooth' });
-    venueDetailCard.scrollTop = 0;
-  }
+  // Reset inner scroll positions so Tier 2 always starts at the very top
+  const expandedContent = document.getElementById('venueExpandedContent');
+  const dynamicBody = document.getElementById('venueDynamicBody');
+  if (expandedContent) expandedContent.scrollTop = 0;
+  if (dynamicBody) dynamicBody.scrollTop = 0;
+  if (venueDetailCard) venueDetailCard.scrollTop = 0;
 
   // Smoothly adjust Leaflet map so the active venue marker stays centered in the visible top half (the 45% remaining viewport)
   if (options.autoPanMap && leafletMapInstance && activeVenueId) {
@@ -1007,6 +1008,14 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
   activeVenueId = venue.id;
   activeGigId = show.id;
   const isUpcoming = show.type === 'upcoming';
+
+  // Always reset Tier 2 scroll to top when switching gigs or venues
+  const expandedContentEl = document.getElementById('venueExpandedContent');
+  const dynamicBodyEl = document.getElementById('venueDynamicBody');
+  const detailCardEl = document.getElementById('venueDetailBottomCard');
+  if (expandedContentEl) expandedContentEl.scrollTop = 0;
+  if (dynamicBodyEl) dynamicBodyEl.scrollTop = 0;
+  if (detailCardEl) detailCardEl.scrollTop = 0;
 
   // 1. Venue Title, Location & Date
   if (venueNameEl) venueNameEl.textContent = venue.name;
@@ -1907,12 +1916,12 @@ export async function calculateAndRenderRoute(venueOrGig) {
     activeRoutePolyline = null;
   }
 
-  // Draw glowing cyan route line
+  // Draw high-performance cyan route line (hardware accelerated)
   activeRoutePolyline = window.L.polyline(routeCoordinates, {
     color: '#38bdf8',
-    weight: 4.5,
+    weight: 4,
     opacity: 0.95,
-    dashArray: '8, 8',
+    smoothFactor: 1.5,
     className: 'active-directions-line'
   }).addTo(leafletMapInstance);
 
@@ -2134,9 +2143,9 @@ export function initGigMapModule() {
       // Tour Route Polyline connecting the tour stops
       tourPolylineInstance = window.L.polyline(TOUR_CORRIDOR_PATH, {
         color: '#f2f0eb',
-        weight: 3,
+        weight: 2.5,
         opacity: 0.85,
-        dashArray: '8, 8',
+        smoothFactor: 1.5,
         className: 'tour-route-line'
       }).addTo(leafletMapInstance);
 

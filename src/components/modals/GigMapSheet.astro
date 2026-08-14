@@ -120,13 +120,10 @@
         id="sheetDragHandle" 
         role="button" 
         tabindex="0"
-        aria-label="Drag or tap to expand venue details (Snap: Peek 210px, Expanded 55vh)"
+        aria-label="Drag or tap to expand venue details (Snap: Peek 214px, Expanded 55vh)"
         title="Drag up or tap to expand"
       >
         <div class="drag-bar-pill"></div>
-        <button type="button" class="sheet-close-full-btn" id="sheetCloseFullBtn" aria-label="Collapse drawer">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
       </div>
       
       <!-- Sticky Header Block -->
@@ -767,7 +764,7 @@
      3. BOTTOM SHEET (Tier 1 vs Tier 2, 55vh Max Expansion)
      ========================================================================== */
   :root {
-    --peek-height: 210px;
+    --peek-height: calc(214px + env(safe-area-inset-bottom, 0px));
   }
 
   .venue-detail-bottom-card {
@@ -783,7 +780,7 @@
     box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.92);
     display: flex;
     flex-direction: column;
-    padding: 0 16px 14px 16px;
+    padding: 0 16px calc(14px + env(safe-area-inset-bottom, 0px)) 16px;
     box-sizing: border-box;
     overflow: visible;
     touch-action: pan-y;
@@ -802,10 +799,10 @@
     will-change: transform;
   }
 
-  /* --- TIER 1: INITIAL SUMMARY / COLLAPSED STATE (Peek ~210px) --- */
+  /* --- TIER 1: INITIAL SUMMARY / COLLAPSED STATE (Peek ~214px + safe area) --- */
   .venue-detail-bottom-card.is-peek {
-    transform: translate3d(0, calc(100% - var(--peek-height, 210px)), 0);
-    padding-bottom: 12px;
+    transform: translate3d(0, calc(100% - var(--peek-height, 214px)), 0);
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   }
 
   .venue-detail-bottom-card.is-peek .venue-expanded-content {
@@ -901,33 +898,6 @@
     background: rgba(255, 255, 255, 0.85);
     width: 48px;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
-  }
-
-  .sheet-close-full-btn {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 2px;
-    width: 26px;
-    height: 26px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #d4d4d8;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .sheet-close-full-btn:hover {
-    background: #f2f0eb;
-    color: #0a0a0c;
-  }
-
-  .venue-detail-bottom-card.is-expanded .sheet-close-full-btn {
-    display: inline-flex;
   }
 
   /* --- VENUE CARD HEADER & METADATA --- */

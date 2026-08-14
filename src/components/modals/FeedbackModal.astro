@@ -8,9 +8,9 @@
         <div class="feedback-header-icon-circle">
           <i class="fa-solid fa-lightbulb" id="feedbackHeaderIcon"></i>
         </div>
-        <div>
+        <div class="modal-title-text-wrap">
           <h3 id="feedbackModalTitle">Suggest Improvement</h3>
-          <p class="modal-subtitle-text">Help us make the Kins website better for everyone</p>
+          <p class="modal-subtitle-text">Help us make the Kins site better</p>
         </div>
       </div>
       <button class="close-modal-btn" id="closeFeedbackModal" aria-label="Close feedback modal">
@@ -28,7 +28,7 @@
           <div class="type-pills-row" id="feedbackTypeRow">
             <button type="button" class="type-pill-btn active" data-type="Improvement / Idea">
               <i class="fa-solid fa-lightbulb"></i>
-              <span>Improvement / Idea</span>
+              <span>Improvement</span>
             </button>
             <button type="button" class="type-pill-btn" data-type="Bug / Broken Item">
               <i class="fa-solid fa-bug"></i>
@@ -36,57 +36,59 @@
             </button>
             <button type="button" class="type-pill-btn" data-type="Content Fix / Typo">
               <i class="fa-solid fa-pen-nib"></i>
-              <span>Content / Typo</span>
+              <span>Content Fix</span>
             </button>
           </div>
           <input type="hidden" name="feedbackType" id="selectedFeedbackTypeInput" value="Improvement / Idea">
         </div>
 
-        <!-- Section / Category Selection -->
+        <!-- Section / Category Selection (2-Row Horizontal Scroll Grid on Mobile) -->
         <div class="form-group">
           <div class="form-label-row">
-            <label class="form-label">Which section of the site?</label>
+            <label class="form-label">Which section?</label>
             <span class="category-selected-label" id="categoryDisplayLabel">General Site</span>
           </div>
-          <div class="category-chips-grid" id="feedbackCategoryGrid">
-            <button type="button" class="category-chip active" data-category="General Site">
-              <i class="fa-solid fa-globe"></i> General Site
-            </button>
-            <button type="button" class="category-chip" data-category="Gig Map">
-              <i class="fa-solid fa-map-location-dot"></i> Gig Map
-            </button>
-            <button type="button" class="category-chip" data-category="Search Covers">
-              <i class="fa-solid fa-magnifying-glass"></i> Search Covers
-            </button>
-            <button type="button" class="category-chip" data-category="Share Menu">
-              <i class="fa-solid fa-share-nodes"></i> Share Menu
-            </button>
-            <button type="button" class="category-chip" data-category="Socials & Streams">
-              <i class="fa-solid fa-music"></i> Socials & Streams
-            </button>
-            <button type="button" class="category-chip" data-category="Band Members">
-              <i class="fa-solid fa-users"></i> Band Members
-            </button>
-            <button type="button" class="category-chip" data-category="Subscribe & Contacts">
-              <i class="fa-solid fa-envelope"></i> Subscribe & Contacts
-            </button>
-            <button type="button" class="category-chip" data-category="What Inspires Us">
-              <i class="fa-solid fa-fire"></i> What Inspires Us
-            </button>
-            <button type="button" class="category-chip" data-category="Kins Crew Spotlight">
-              <i class="fa-solid fa-clapperboard"></i> Kins Crew
-            </button>
-            <button type="button" class="category-chip" data-category="Audio Player">
-              <i class="fa-solid fa-play"></i> Audio Player
-            </button>
+          <div class="category-scroll-wrapper">
+            <div class="category-chips-grid" id="feedbackCategoryGrid">
+              <button type="button" class="category-chip active" data-category="General Site">
+                <i class="fa-solid fa-globe"></i> General Site
+              </button>
+              <button type="button" class="category-chip" data-category="Gig Map">
+                <i class="fa-solid fa-map-location-dot"></i> Gig Map
+              </button>
+              <button type="button" class="category-chip" data-category="Search Covers">
+                <i class="fa-solid fa-magnifying-glass"></i> Search Covers
+              </button>
+              <button type="button" class="category-chip" data-category="Share Menu">
+                <i class="fa-solid fa-share-nodes"></i> Share Menu
+              </button>
+              <button type="button" class="category-chip" data-category="Socials & Streams">
+                <i class="fa-solid fa-music"></i> Socials & Streams
+              </button>
+              <button type="button" class="category-chip" data-category="Band Members">
+                <i class="fa-solid fa-users"></i> Band Members
+              </button>
+              <button type="button" class="category-chip" data-category="Subscribe & Contacts">
+                <i class="fa-solid fa-envelope"></i> Subscribe & Contacts
+              </button>
+              <button type="button" class="category-chip" data-category="What Inspires Us">
+                <i class="fa-solid fa-fire"></i> What Inspires Us
+              </button>
+              <button type="button" class="category-chip" data-category="Kins Crew Spotlight">
+                <i class="fa-solid fa-clapperboard"></i> Kins Crew
+              </button>
+              <button type="button" class="category-chip" data-category="Audio Player">
+                <i class="fa-solid fa-play"></i> Audio Player
+              </button>
+            </div>
+            <div class="scroll-fade-edge-right"></div>
           </div>
-          <input type="hidden" name="category" id="selectedCategoryInput" value="General Site">
         </div>
 
-        <!-- Details Textarea -->
+        <!-- Details Textarea with Adaptable Label & Tabular 0/1000 Counter -->
         <div class="form-group">
-          <div class="form-label-row">
-            <label class="form-label" for="feedbackDetailsInput" id="detailsLabel">What improvement would you like to see?</label>
+          <div class="form-label-row form-label-row-details">
+            <label class="form-label dynamic-details-label" for="feedbackDetailsInput" id="detailsLabel">What improvement would you like to see?</label>
             <span class="char-counter" id="charCounter">0 / 1000</span>
           </div>
           <div class="textarea-wrapper">
@@ -95,7 +97,7 @@
               name="details" 
               rows="4" 
               maxlength="1000" 
-              placeholder="Tell us what you'd like added, changed, or fixed..." 
+              placeholder="Tell us what you'd like added, changed, or refined..." 
               required
             ></textarea>
           </div>
@@ -104,7 +106,7 @@
         <!-- Optional Contact / Handle -->
         <div class="form-group">
           <label class="form-label" for="feedbackContactInput">
-            Your Discord handle, social, or email <span class="optional-tag">(Optional)</span>
+            Your Discord, social, or email <span class="optional-tag">(Optional)</span>
           </label>
           <div class="input-with-icon">
             <i class="fa-solid fa-at input-left-icon"></i>
@@ -134,11 +136,11 @@
           <i class="fa-solid fa-circle-check"></i>
         </div>
         <h4>Suggestion Received!</h4>
-        <p>Thank you for helping us make the Kins website better. Your feedback has been sent directly to the band team.</p>
+        <p>Thank you for helping us make the Kins website better. Your feedback has been sent directly to the band team in Discord HQ.</p>
         
         <div class="success-actions">
           <button type="button" class="reset-feedback-btn" id="submitAnotherFeedbackBtn">
-            <i class="fa-solid fa-rotate-left"></i> Suggest Something Else
+            <i class="fa-solid fa-rotate-left"></i> Suggest Another
           </button>
           <button type="button" class="close-done-btn" id="closeFeedbackDoneBtn">
             Done
@@ -155,14 +157,14 @@
     inset: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.78);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: 12px;
     box-sizing: border-box;
     opacity: 1;
     visibility: visible;
@@ -177,13 +179,13 @@
 
   .feedback-modal-enhanced {
     width: 100%;
-    max-width: 520px;
-    max-height: 90vh;
+    max-width: 490px;
+    max-height: 92vh;
     overflow-y: auto;
-    background: rgba(18, 18, 22, 0.96);
+    background: rgba(18, 18, 22, 0.97);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 18px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -194,7 +196,7 @@
 
   @keyframes modalPopIn {
     from {
-      transform: scale(0.95) translateY(8px);
+      transform: scale(0.96) translateY(6px);
       opacity: 0;
     }
     to {
@@ -203,150 +205,201 @@
     }
   }
 
+  /* Adaptable Header & Title */
   .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 20px;
+    padding: 14px 16px;
+    gap: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
     top: 0;
     background: rgba(18, 18, 22, 0.98);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
     z-index: 10;
   }
 
   .modal-title-group {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
   }
 
   .feedback-header-icon-circle {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
     background: rgba(245, 158, 11, 0.15);
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    border: 1px solid rgba(245, 158, 11, 0.35);
     color: #f59e0b;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 1rem;
     flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .modal-title-text-wrap {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .modal-title-group h3 {
     margin: 0;
     font-family: var(--font-heading, system-ui);
-    font-size: 1.15rem;
+    font-size: clamp(0.92rem, 3.8vw, 1.12rem);
     font-weight: 800;
     color: #ffffff;
     letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
   }
 
   .modal-subtitle-text {
     margin: 2px 0 0 0;
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.75rem;
+    font-size: clamp(0.68rem, 2.6vw, 0.74rem);
     color: var(--text-muted, #94a3b8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
   }
 
   .close-modal-btn {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #cbd5e1;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
+    flex-shrink: 0;
     transition: all 0.18s ease;
   }
 
   .close-modal-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.16);
     color: #ffffff;
   }
 
   .feedback-modal-body {
-    padding: 20px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 14px;
   }
 
   .site-feedback-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
   .form-group {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 6px;
   }
 
   .form-label-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
+  }
+
+  .form-label-row-details {
+    align-items: baseline;
   }
 
   .form-label {
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #cbd5e1;
   }
 
+  .dynamic-details-label {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.35;
+    font-size: clamp(0.72rem, 2.7vw, 0.77rem);
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+
   .category-selected-label {
     font-family: var(--font-secondary, system-ui);
     font-size: 0.72rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #f59e0b;
+    white-space: nowrap;
   }
 
   .optional-tag {
     font-weight: normal;
     text-transform: none;
     color: #64748b;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
   }
 
-  /* Type Pills */
+  /* Compact & Balanced Feedback Type Cards */
   .type-pills-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 6px;
   }
 
   .type-pill-btn {
     background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.09);
     color: #94a3b8;
-    padding: 9px 8px;
-    border-radius: 10px;
+    padding: 8px 6px;
+    min-height: 48px;
+    border-radius: 9px;
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.75rem;
+    font-size: clamp(0.68rem, 2.5vw, 0.74rem);
     font-weight: 600;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    gap: 4px;
     cursor: pointer;
     transition: all 0.18s ease;
     text-align: center;
+    box-sizing: border-box;
+  }
+
+  .type-pill-btn span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1.1;
   }
 
   .type-pill-btn i {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    line-height: 1;
   }
 
   .type-pill-btn:hover {
@@ -374,24 +427,53 @@
     color: #60a5fa;
   }
 
-  /* Category Chips Grid */
+  /* 2-Row Horizontal Scroll Grid for Sections */
+  .category-scroll-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+
   .category-chips-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    max-height: 140px;
-    overflow-y: auto;
-    padding: 2px 0;
+    display: grid;
+    grid-template-rows: repeat(2, 32px);
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 7px 7px;
+    overflow-x: auto;
+    padding: 2px 20px 4px 2px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+
+  .category-chips-grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .category-chips-grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  .scroll-fade-edge-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 4px;
+    width: 28px;
+    background: linear-gradient(90deg, transparent, rgba(18, 18, 22, 0.95));
+    pointer-events: none;
   }
 
   .category-chip {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.09);
     color: #94a3b8;
-    padding: 6px 12px;
-    border-radius: 20px;
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 16px;
     font-family: var(--font-secondary, system-ui);
     font-size: 0.74rem;
     font-weight: 600;
@@ -401,10 +483,13 @@
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    scroll-snap-align: start;
   }
 
   .category-chip i {
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     opacity: 0.8;
   }
 
@@ -429,14 +514,14 @@
   /* Textarea & Inputs */
   .textarea-wrapper textarea {
     width: 100%;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.38);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    padding: 12px 14px;
+    border-radius: 10px;
+    padding: 10px 12px;
     color: #ffffff;
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.84rem;
-    line-height: 1.5;
+    font-size: 0.82rem;
+    line-height: 1.45;
     resize: vertical;
     box-sizing: border-box;
     transition: border-color 0.18s ease, box-shadow 0.18s ease;
@@ -454,8 +539,11 @@
 
   .char-counter {
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.7rem;
+    font-size: clamp(0.66rem, 2.3vw, 0.72rem);
     color: #64748b;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
   }
 
   .input-with-icon {
@@ -466,21 +554,21 @@
 
   .input-left-icon {
     position: absolute;
-    left: 14px;
+    left: 12px;
     color: #64748b;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     pointer-events: none;
   }
 
   .input-with-icon input {
     width: 100%;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.38);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    padding: 11px 14px 11px 38px;
+    border-radius: 10px;
+    padding: 10px 12px 10px 34px;
     color: #ffffff;
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.84rem;
+    font-size: 0.82rem;
     box-sizing: border-box;
     transition: border-color 0.18s ease, box-shadow 0.18s ease;
   }
@@ -497,7 +585,7 @@
 
   /* Submit Button */
   .form-actions {
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   .submit-feedback-btn {
@@ -505,10 +593,10 @@
     background: #ffffff;
     color: #0b0b0e;
     border: none;
-    border-radius: 12px;
-    padding: 13px 20px;
+    border-radius: 10px;
+    padding: 12px 18px;
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -518,13 +606,13 @@
     gap: 8px;
     cursor: pointer;
     transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
   }
 
   .submit-feedback-btn:hover {
     background: #f1f5f9;
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
+    box-shadow: 0 6px 18px rgba(255, 255, 255, 0.22);
   }
 
   .submit-feedback-btn:active {
@@ -539,8 +627,8 @@
 
   /* Spinner */
   .btn-spinner {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     border: 2px solid rgba(0, 0, 0, 0.2);
     border-top-color: #000000;
     border-radius: 50%;
@@ -561,8 +649,8 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 24px 12px;
-    gap: 12px;
+    padding: 20px 10px;
+    gap: 10px;
     animation: fadeIn 0.25s ease;
   }
 
@@ -572,8 +660,8 @@
   }
 
   .success-icon-circle {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: rgba(34, 197, 94, 0.15);
     border: 1px solid rgba(34, 197, 94, 0.35);
@@ -581,12 +669,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.7rem;
+    font-size: 1.5rem;
   }
 
   .feedback-success-view h4 {
     font-family: var(--font-heading, system-ui);
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: #ffffff;
     margin: 0;
@@ -594,17 +682,17 @@
 
   .feedback-success-view p {
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: #94a3b8;
-    line-height: 1.5;
+    line-height: 1.45;
     margin: 0;
-    max-width: 380px;
+    max-width: 360px;
   }
 
   .success-actions {
     display: flex;
     gap: 10px;
-    margin-top: 12px;
+    margin-top: 10px;
     width: 100%;
   }
 
@@ -614,10 +702,10 @@
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: #ffffff;
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
-    padding: 10px 14px;
-    border-radius: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -636,10 +724,10 @@
     color: #0b0b0e;
     border: none;
     font-family: var(--font-secondary, system-ui);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 800;
-    padding: 10px 14px;
-    border-radius: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.18s ease;
   }
@@ -705,17 +793,32 @@
         if (detailsLabel) detailsLabel.textContent = "What is broken or not working as expected?";
         if (detailsInput) detailsInput.placeholder = "Describe the issue, where it happened, and what went wrong...";
         if (btnText) btnText.textContent = "Report Issue";
-        if (headerIcon) headerIcon.className = "fa-solid fa-bug";
+        if (headerIcon) {
+          headerIcon.className = "fa-solid fa-bug";
+          (headerIcon.parentElement as HTMLElement).style.color = "#f87171";
+          (headerIcon.parentElement as HTMLElement).style.borderColor = "rgba(239, 68, 68, 0.4)";
+          (headerIcon.parentElement as HTMLElement).style.backgroundColor = "rgba(239, 68, 68, 0.15)";
+        }
       } else if (type.includes('Content')) {
         if (detailsLabel) detailsLabel.textContent = "What text or information should be corrected?";
         if (detailsInput) detailsInput.placeholder = "Describe the typo, missing credit, or outdated detail...";
         if (btnText) btnText.textContent = "Send Correction";
-        if (headerIcon) headerIcon.className = "fa-solid fa-pen-nib";
+        if (headerIcon) {
+          headerIcon.className = "fa-solid fa-pen-nib";
+          (headerIcon.parentElement as HTMLElement).style.color = "#60a5fa";
+          (headerIcon.parentElement as HTMLElement).style.borderColor = "rgba(59, 130, 246, 0.4)";
+          (headerIcon.parentElement as HTMLElement).style.backgroundColor = "rgba(59, 130, 246, 0.15)";
+        }
       } else {
         if (detailsLabel) detailsLabel.textContent = "What improvement would you like to see?";
         if (detailsInput) detailsInput.placeholder = "Tell us what you'd like added, changed, or refined...";
         if (btnText) btnText.textContent = "Send Improvement";
-        if (headerIcon) headerIcon.className = "fa-solid fa-lightbulb";
+        if (headerIcon) {
+          headerIcon.className = "fa-solid fa-lightbulb";
+          (headerIcon.parentElement as HTMLElement).style.color = "#f59e0b";
+          (headerIcon.parentElement as HTMLElement).style.borderColor = "rgba(245, 158, 11, 0.35)";
+          (headerIcon.parentElement as HTMLElement).style.backgroundColor = "rgba(245, 158, 11, 0.15)";
+        }
       }
     });
   });
@@ -843,7 +946,12 @@
     });
     if (selectedCategoryInput) selectedCategoryInput.value = 'General Site';
     if (categoryDisplayLabel) categoryDisplayLabel.textContent = 'General Site';
-    if (headerIcon) headerIcon.className = 'fa-solid fa-lightbulb';
+    if (headerIcon) {
+      headerIcon.className = 'fa-solid fa-lightbulb';
+      (headerIcon.parentElement as HTMLElement).style.color = "#f59e0b";
+      (headerIcon.parentElement as HTMLElement).style.borderColor = "rgba(245, 158, 11, 0.35)";
+      (headerIcon.parentElement as HTMLElement).style.backgroundColor = "rgba(245, 158, 11, 0.15)";
+    }
     if (btnText) btnText.textContent = 'Send Improvement';
   });
 </script>

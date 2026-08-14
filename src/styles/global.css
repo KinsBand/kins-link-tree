@@ -772,30 +772,18 @@ body.modal-open {
   box-shadow: none !important;
 }
 
-/* Tour Route Polyline */
+/* Tour Route Polyline (Hardware-optimized) */
 .tour-route-line {
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
-  animation: tourRoutePulse 3s ease-in-out infinite alternate;
+  stroke-opacity: 0.85;
 }
 
-@keyframes tourRoutePulse {
-  from { stroke-opacity: 0.75; }
-  to { stroke-opacity: 1; filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.85)); }
-}
-
-/* Active Directions Live Route Polyline (Amber/Gold Glow) */
+/* Active Directions Live Route Polyline (High-performance clean stroke) */
 .active-directions-line {
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.85)) drop-shadow(0 0 16px rgba(251, 191, 36, 0.4));
-  animation: directionsRouteFlow 2s linear infinite;
-}
-
-@keyframes directionsRouteFlow {
-  from { stroke-dashoffset: 40; }
-  to { stroke-dashoffset: 0; }
+  stroke-opacity: 0.95;
 }
 
 /* Custom Floating Map Controls */
