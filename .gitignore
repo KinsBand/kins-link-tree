@@ -8,10 +8,12 @@ build/
 *.min.css
 *.bundle.js
 
-# Environment variables
+# Environment variables & Local State
 .env
 .env.local
+.env.*
 *.env.*
+.discord_traffic_state.json
 
 # Editors
 .vscode/

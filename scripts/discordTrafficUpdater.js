@@ -6,11 +6,9 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 
-const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://dmoagpgtvkpsvdfjhurc.supabase.co';
-const SUPABASE_KEY = process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtb2FncGd0dmtwc3ZkZmpodXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNDIzOTYsImV4cCI6MjEwMjcxODM5Nn0.TYVzMsFkn8axNbouj1opdQkN5GzweUpQYN2Foqvyq7U';
-
-// Discord Webhook for #traffic
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_TRAFFIC_WEBHOOK_URL || 'https://discord.com/api/webhooks/1539643662311620690/yl2uYZq3a1S4Kvx-HWHhTF2gA5hqo-xtnfdUH9SGHHpYfco_EwIlRmOyJ_5nFT9lhwk-';
+const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_TRAFFIC_WEBHOOK_URL;
 
 const STATE_FILE_PATH = path.resolve('.discord_traffic_state.json');
 

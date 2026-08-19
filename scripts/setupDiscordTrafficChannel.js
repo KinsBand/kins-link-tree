@@ -1,6 +1,13 @@
 // scripts/setupDiscordTrafficChannel.js
-const BOT_TOKEN = 'MTUzMTE1MTM4Njc2MTIzNjY5Mg.GlvpiC.QKZxBF5cwd8FFAov0Drmdaahx19vYVjE6sBR80';
-const GUILD_ID = '1531126774061203524';
+// One-time setup script to initialize #traffic channel and webhook via environment variables
+
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TOKEN;
+const GUILD_ID = process.env.DISCORD_GUILD_ID || '1531126774061203524';
+
+if (!BOT_TOKEN) {
+  console.error('❌ Error: DISCORD_BOT_TOKEN environment variable is required.');
+  process.exit(1);
+}
 
 async function main() {
   console.log('📡 Connecting to Discord API for Guild ID:', GUILD_ID);
@@ -10,7 +17,7 @@ async function main() {
     headers: { Authorization: `Bot ${BOT_TOKEN}` }
   });
   const channels = await channelsRes.json();
-  let trafficChan = channels.find(c => c.name === 'traffic');
+  let trafficChan = Array.isArray(channels) ? channels.find(c => c.name === 'traffic') : null;
 
   if (!trafficChan) {
     console.log('Creating #traffic channel...');
@@ -33,7 +40,7 @@ async function main() {
   }
 
   // 2. Create Webhook in #traffic
-  const webhooksRes = await fetch(`https://discord.com/api/v10/channels/${trafficChan.id}/webhooks`, {
+  const webhooksRes = await fetch(`https://discord.com/api/webhooks/${trafficChan.id}/webhooks`, {
     headers: { Authorization: `Bot ${BOT_TOKEN}` }
   });
   const webhooks = await webhooksRes.json();
