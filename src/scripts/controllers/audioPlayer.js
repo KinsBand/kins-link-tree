@@ -1,9 +1,11 @@
 import { showToast } from './toast.js';
 import { getITunesTrackData, loadAlbumArt, INSPIRED_ARTISTS_DATA } from './inspirationVault.js';
+import { trackAudioMilestone, trackKinsInteraction } from '../../lib/analytics';
 
 let isPlayingAudio = false;
 let currentPlayingTrack = null;
 let hasTransitionedToActive = false;
+let trackMilestonesFired = { m25: false, m50: false, m75: false, completed: false };
 
 // Realistic Web Audio API Vinyl Scratch Synthesizer
 class VinylScratchSynthesizer {
@@ -476,6 +478,15 @@ export function initAudioPlayer() {
         }
       }
 
+      if (currentPlayingTrack && vaultAudioPlayer) {
+        trackAudioMilestone(
+          currentPlayingTrack.title,
+          currentPlayingTrack.artist || 'Kins',
+          'seek_scrub',
+          vaultAudioPlayer.currentTime || 0
+        );
+      }
+
       if (isPlayingAudio) startTimelineAnimation();
     };
 
@@ -507,6 +518,11 @@ export function initAudioPlayer() {
     if (shouldOpen) {
       if (currentPlayingTrack) updateStreamLinks(currentPlayingTrack);
       streamDrawerPanel.classList.remove('hidden');
+      trackKinsInteraction('audio_stream_drawer_toggled', 'music', {
+        drawer_state: 'open',
+        track_title: currentPlayingTrack?.title || 'Unknown',
+        container_scope: 'drawer:stream_platforms'
+      });
       requestAnimationFrame(() => {
         streamDrawerPanel.classList.add('active-drawer');
         audioBarStreamBtn.classList.add('active');
@@ -694,6 +710,9 @@ export function initAudioPlayer() {
     }
 
     if (vaultAudioPlayer && previewUrl) {
+      trackMilestonesFired = { m25: false, m50: false, m75: false, completed: false };
+      trackAudioMilestone(trackObj.title, trackObj.artist || 'Kins', 'play_start', 0);
+
       vaultAudioPlayer.src = previewUrl;
       vaultAudioPlayer.play().then(() => {
         isPlayingAudio = true;
@@ -726,6 +745,9 @@ export function initAudioPlayer() {
       isPlayingAudio = false;
       stopTimelineAnimation();
       updateToggleBtnState(false);
+      if (currentPlayingTrack && vaultAudioPlayer) {
+        trackAudioMilestone(currentPlayingTrack.title, currentPlayingTrack.artist || 'Kins', 'pause', vaultAudioPlayer.currentTime || 0);
+      }
     });
 
     vaultAudioPlayer.addEventListener('ended', () => {
@@ -734,9 +756,35 @@ export function initAudioPlayer() {
       stopTimelineAnimation();
       updateTimelineUI();
       updateToggleBtnState(false);
+
+      if (currentPlayingTrack && !trackMilestonesFired.completed) {
+        trackMilestonesFired.completed = true;
+        trackAudioMilestone(currentPlayingTrack.title, currentPlayingTrack.artist || 'Kins', 'track_completed', vaultAudioPlayer?.duration || 30);
+      }
     });
 
-    vaultAudioPlayer.addEventListener('timeupdate', updateTimelineUI);
+    vaultAudioPlayer.addEventListener('timeupdate', () => {
+      updateTimelineUI();
+
+      if (vaultAudioPlayer && currentPlayingTrack && !isScrubbing) {
+        const dur = vaultAudioPlayer.duration || 30;
+        const curr = vaultAudioPlayer.currentTime || 0;
+        const pct = (curr / dur) * 100;
+
+        if (pct >= 25 && !trackMilestonesFired.m25) {
+          trackMilestonesFired.m25 = true;
+          trackAudioMilestone(currentPlayingTrack.title, currentPlayingTrack.artist || 'Kins', 'milestone_25%', curr);
+        }
+        if (pct >= 50 && !trackMilestonesFired.m50) {
+          trackMilestonesFired.m50 = true;
+          trackAudioMilestone(currentPlayingTrack.title, currentPlayingTrack.artist || 'Kins', 'milestone_50%', curr);
+        }
+        if (pct >= 75 && !trackMilestonesFired.m75) {
+          trackMilestonesFired.m75 = true;
+          trackAudioMilestone(currentPlayingTrack.title, currentPlayingTrack.artist || 'Kins', 'milestone_75%', curr);
+        }
+      }
+    });
     vaultAudioPlayer.addEventListener('loadedmetadata', updateTimelineUI);
   }
 

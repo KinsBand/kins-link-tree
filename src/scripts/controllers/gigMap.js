@@ -1,4 +1,5 @@
 import { showToast } from './toast.js';
+import { trackKinsInteraction } from '../../lib/analytics';
 
 function lockScroll() {
   document.body.classList.add('modal-open');
@@ -1749,6 +1750,7 @@ export function initGigMapModule() {
         setSnapState('peek');
       } else {
         gigMapModal.classList.remove('active');
+        gigMapModal.classList.add('hidden');
         unlockScroll();
       }
     }
@@ -1762,6 +1764,10 @@ export function initGigMapModule() {
   if (floatingGigPillBtn) {
     floatingGigPillBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      trackKinsInteraction('gig_map_opened', 'tour', {
+        source: 'bottom_dock',
+        container_scope: 'modal:gig_map'
+      });
       showToast("🎸 Gig map is coming soon! No shows announced yet.");
     });
   }
@@ -1769,12 +1775,14 @@ export function initGigMapModule() {
   if (closeGigMapSheet && gigMapModal) {
     closeGigMapSheet.addEventListener('click', () => {
       gigMapModal.classList.remove('active');
+      gigMapModal.classList.add('hidden');
       unlockScroll();
     });
 
     gigMapModal.addEventListener('click', (e) => {
       if (e.target === gigMapModal) {
         gigMapModal.classList.remove('active');
+        gigMapModal.classList.add('hidden');
         unlockScroll();
       }
     });

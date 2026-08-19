@@ -1,10 +1,12 @@
 import { showToast } from './toast.js';
 import { animateCopySuccess } from './clipboard.js';
+import { trackKinsInteraction } from '../../lib/analytics';
 
-const trackClick = (event, data) => {
-  if (typeof window !== 'undefined' && window.trackClick) {
-    window.trackClick(event, data);
-  }
+const trackClick = (event, data = {}) => {
+  trackKinsInteraction(event, 'social', {
+    container_scope: 'modal:share',
+    ...data
+  });
 };
 
 function lockScroll() {
@@ -237,12 +239,6 @@ export function initShareModal() {
   const shareUrlInput = document.getElementById('shareUrlInput');
   const handleCopyBtn = document.getElementById('handleCopyBtn');
 
-  // Quick share buttons
-  const shareWhatsappBtn = document.getElementById('shareWhatsappBtn');
-  const shareSmsBtn = document.getElementById('shareSmsBtn');
-  const shareTwitterBtn = document.getElementById('shareTwitterBtn');
-  const shareFacebookBtn = document.getElementById('shareFacebookBtn');
-
   // QR fullscreen & format selector modal elements
   const qrcodeCanvasWrapper = document.getElementById('qrcodeCanvasWrapper');
   const qrFullscreenModal = document.getElementById('qrFullscreenModal');
@@ -260,24 +256,6 @@ export function initShareModal() {
 
   if (shareUrlInput) {
     shareUrlInput.value = directLinkUrl;
-  }
-
-  // Setup Quick Share URLs
-  if (shareWhatsappBtn) {
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent('Check out Kins Official Link in Bio: ' + baseDomain + '?utm_source=share_modal&utm_medium=whatsapp')}`;
-    shareWhatsappBtn.setAttribute('href', waUrl);
-  }
-  if (shareSmsBtn) {
-    const smsUrl = `sms:?body=${encodeURIComponent('Check out Kins Official Link in Bio: ' + baseDomain + '?utm_source=share_modal&utm_medium=sms')}`;
-    shareSmsBtn.setAttribute('href', smsUrl);
-  }
-  if (shareTwitterBtn) {
-    const twUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out Kins Official Link in Bio!')}&url=${encodeURIComponent(baseDomain + '?utm_source=share_modal&utm_medium=twitter')}`;
-    shareTwitterBtn.setAttribute('href', twUrl);
-  }
-  if (shareFacebookBtn) {
-    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(baseDomain + '?utm_source=share_modal&utm_medium=facebook')}`;
-    shareFacebookBtn.setAttribute('href', fbUrl);
   }
 
   // Handle Copy Button Micro-Interactions

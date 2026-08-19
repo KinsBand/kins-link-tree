@@ -2,6 +2,7 @@ import { openCoverVideoModal } from './videoModalController.js';
 import { handleSongRequestSubmit } from './requestSongController.js';
 import { getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from './inspirationVault.js';
 import { getSubscriptionState, getSubscriberEmail } from './subscribeController.js';
+import { trackKinsInteraction } from '../../lib/analytics';
 
 export const KINS_COVERS_DATA = [];
 
@@ -329,6 +330,10 @@ export function initCoversSearchEngine() {
     if (topNav) topNav.classList.add('search-active');
     document.body.classList.add('modal-open');
 
+    trackKinsInteraction('covers_search_opened', 'music', {
+      container_scope: 'modal:covers_search'
+    });
+
     if (overlayInput) {
       setTimeout(() => overlayInput.focus(), 150);
     }
@@ -386,8 +391,15 @@ export function initCoversSearchEngine() {
       updateSearchUI();
       clearTimeout(searchDebounceTimeout);
       searchDebounceTimeout = setTimeout(() => {
+        const q = overlayInput.value.trim();
+        if (q.length >= 2) {
+          trackKinsInteraction('covers_query_typed', 'music', {
+            search_query: q,
+            container_scope: 'modal:covers_search'
+          });
+        }
         filterAndRenderCovers();
-      }, 150);
+      }, 300);
     });
   }
 
@@ -396,6 +408,10 @@ export function initCoversSearchEngine() {
       const query = btn.getAttribute('data-search');
       if (query && overlayInput) {
         overlayInput.value = query;
+        trackKinsInteraction('covers_suggestion_chip_clicked', 'music', {
+          search_term: query,
+          container_scope: 'modal:covers_search'
+        });
         updateSearchUI();
         filterAndRenderCovers();
         overlayInput.focus();
@@ -408,6 +424,10 @@ export function initCoversSearchEngine() {
       categoryBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeCategory = btn.getAttribute('data-category') || 'all';
+      trackKinsInteraction('covers_category_filtered', 'music', {
+        category_name: activeCategory,
+        container_scope: 'modal:covers_search'
+      });
       filterAndRenderCovers();
     });
   });

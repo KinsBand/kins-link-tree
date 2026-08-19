@@ -387,6 +387,7 @@ const artists = [
 <script>
   import { INSPIRED_ARTISTS_DATA, getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from '../../scripts/controllers/inspirationVault.js';
   import { stopVinylSpinSmoothly } from '../../scripts/controllers/audioPlayer.js';
+  import { trackKinsInteraction } from '../../lib/analytics';
 
   const container = document.getElementById('inspiredTracksContainer');
   const dotsContainer = document.getElementById('dotsPaginationContainer');
@@ -536,6 +537,12 @@ const artists = [
         });
 
         card.addEventListener('click', () => {
+          trackKinsInteraction('vault_track_card_clicked', 'music', {
+            track_title: track.title,
+            artist: track.artist,
+            genre: track.genre,
+            container_scope: 'main:vault'
+          });
           if ((window as any).playTrackPreview) {
             (window as any).playTrackPreview(track);
           }
@@ -545,6 +552,12 @@ const artists = [
         if (playBtn) {
           playBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            trackKinsInteraction('vault_track_card_clicked', 'music', {
+              track_title: track.title,
+              artist: track.artist,
+              genre: track.genre,
+              container_scope: 'main:vault'
+            });
             if ((window as any).playTrackPreview) {
               (window as any).playTrackPreview(track);
             }
@@ -581,6 +594,11 @@ const artists = [
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const key = btn.getAttribute('data-artist-key') || 'the-cure';
+      trackKinsInteraction('vault_artist_tab_switched', 'music', {
+        selected_artist: btn.innerText?.trim() || key,
+        artist_key: key,
+        container_scope: 'main:vault'
+      });
       renderArtistPage(key, 0);
     });
   });

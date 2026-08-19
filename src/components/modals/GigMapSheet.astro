@@ -1,7 +1,7 @@
 ---
 ---
 
-<div class="bottom-sheet-backdrop" id="gigMapModal" role="dialog" aria-modal="true" aria-label="Kins Live Tour & Gig Map">
+<div class="bottom-sheet-backdrop hidden" id="gigMapModal" role="dialog" aria-modal="true" aria-label="Kins Live Tour & Gig Map">
   <div class="bottom-sheet-container" id="bottomSheetContainer">
     
     <!-- Full-Screen Interactive Map Canvas -->
@@ -155,7 +155,7 @@
 </div>
 
 <!-- Concert Photo Lightbox Modal -->
-<div class="gig-lightbox-backdrop" id="gigPhotoLightbox" role="dialog" aria-modal="true" aria-label="Concert Photo Preview">
+<div class="gig-lightbox-backdrop hidden" id="gigPhotoLightbox" role="dialog" aria-modal="true" aria-label="Concert Photo Preview">
   <div class="gig-lightbox-content">
     <button type="button" class="gig-lightbox-close" id="gigLightboxClose" aria-label="Close photo preview">
       <i class="fa-solid fa-xmark"></i>
@@ -178,12 +178,23 @@
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s var(--ease-snappy);
+    visibility: hidden;
+    transition: opacity 0.25s var(--ease-snappy), visibility 0.25s;
+  }
+
+  .bottom-sheet-backdrop.hidden,
+  .bottom-sheet-backdrop:not(:global(.active)) {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    display: none !important;
   }
 
   .bottom-sheet-backdrop:global(.active) {
-    opacity: 1;
-    pointer-events: auto;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+    display: flex !important;
   }
 
   .bottom-sheet-container {

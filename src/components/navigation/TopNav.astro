@@ -22,13 +22,24 @@
     justify-content: space-between;
     align-items: center;
     gap: 8px;
-    padding: 0;
+    padding: 4px 0 8px;
     margin-top: 0;
     position: relative;
     z-index: 100;
+    isolation: isolate;
     width: 100%;
     box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
     transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease;
+  }
+
+  .top-nav *,
+  .top-nav *::before,
+  .top-nav *::after {
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .top-nav:global(.nav-hidden) {
@@ -41,6 +52,8 @@
   #topSubscribeBtn, #shareBtn, .header-search-pill-btn {
     will-change: opacity, transform;
     transition: opacity 0.22s var(--ease-snappy), transform 0.16s var(--ease-tactile), background-color 0.18s ease, box-shadow 0.18s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .top-nav.search-active #topSubscribeBtn,
@@ -67,16 +80,33 @@
     white-space: nowrap;
     box-sizing: border-box;
     user-select: none;
-    flex: 0 0 auto;
-    width: 46px;
-    height: 46px;
-    min-width: 46px;
-    min-height: 46px;
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    z-index: 2;
   }
 
-  .nav-brutal-btn .nav-icon {
+  /* Invisible hit area extender — covers shadow region + padding around the button */
+  .nav-brutal-btn::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -6px;
+    bottom: -6px;
+    z-index: 1;
+  }
+
+  .nav-brutal-btn .nav-icon,
+  .nav-brutal-btn i {
     font-size: 1.05rem;
     color: var(--text-card-primary);
+    pointer-events: none;
   }
 
   .nav-brutal-btn:hover {
@@ -90,12 +120,16 @@
     box-shadow: 1px 1px 0px #000000;
   }
 
+  .nav-brutal-btn:focus-visible {
+    outline: 3px solid var(--accent-neon-yellow);
+    outline-offset: 2px;
+  }
+
   /* Subscribed Bell State */
   #topSubscribeBtn.bell-subscribed {
     background: var(--accent-neon-yellow);
     border-color: #000000;
     box-shadow: 2px 2px 0px #000000;
-    position: relative;
   }
 
   #topSubscribeBtn.bell-subscribed::after {
@@ -107,6 +141,7 @@
     height: 7px;
     border-radius: 50%;
     background: #000000;
+    pointer-events: none;
   }
 
   .bell-ring-shake {
@@ -126,14 +161,16 @@
 
   /* Neo-Brutalist Search Pill Button */
   .header-search-pill-btn {
-    flex: 1 1 auto;
+    flex: 1 1 0%;
     width: 100%;
+    min-width: 0;
     background: var(--surface-card-light);
     border: 3px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 24px;
     color: var(--text-card-primary);
     padding: 0 16px;
+    margin: 0;
     font-family: var(--font-secondary);
     font-size: 0.85rem;
     font-weight: 600;
@@ -143,10 +180,24 @@
     align-items: center;
     justify-content: flex-start;
     gap: 10px;
-    height: 46px;
-    min-height: 46px;
+    height: 48px;
+    min-height: 48px;
     box-sizing: border-box;
     user-select: none;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Invisible hit area extender — covers shadow region + padding around the pill */
+  .header-search-pill-btn::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -6px;
+    bottom: -6px;
+    border-radius: 28px;
+    z-index: 1;
   }
 
   .header-search-pill-btn:hover {
@@ -160,9 +211,16 @@
     box-shadow: 1px 1px 0px #000000;
   }
 
+  .header-search-pill-btn:focus-visible {
+    outline: 3px solid var(--accent-neon-yellow);
+    outline-offset: 2px;
+  }
+
   .search-pill-icon {
     font-size: 0.88rem;
     color: var(--text-card-primary);
+    flex-shrink: 0;
+    pointer-events: none;
   }
 
   .search-pill-placeholder {
@@ -170,8 +228,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--text-card-secondary);
-    flex: 1;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
     text-align: left;
+    pointer-events: none;
   }
 
   .search-pill-clear-action {
@@ -181,6 +242,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
   }
 </style>
 

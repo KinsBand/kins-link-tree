@@ -41,10 +41,10 @@ const secondaryStreams = [
 <section class="tabbed-links-section">
   <!-- Neo-Brutalist Segmented Tabs -->
   <div class="brutal-tab-switcher">
-    <button class="brutal-tab-btn active" id="tabSocialsBtn" data-target="socialsTab">
+    <button class="brutal-tab-btn active" id="tabSocialsBtn" data-target="socialsTab" data-track="tab-btn-socials" data-track-container="main:tabs">
       SOCIALS
     </button>
-    <button class="brutal-tab-btn" id="tabStreamsBtn" data-target="streamsTab">
+    <button class="brutal-tab-btn" id="tabStreamsBtn" data-target="streamsTab" data-track="tab-btn-streams" data-track-container="main:tabs">
       STREAMS
     </button>
   </div>
@@ -52,7 +52,7 @@ const secondaryStreams = [
   <div class="tab-content active" id="socialsTab">
     <div class="buttons-list">
       {primarySocials.map((link) => (
-        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform}>
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-track={`social-btn-${link.platform}`} data-track-container="main:socials_tab">
           <div class="link-left-group">
             <div class="link-icon-box">
               <i class={link.icon}></i>
@@ -70,7 +70,7 @@ const secondaryStreams = [
     <div class="more-socials-container" id="moreSocialsContainer">
       <div class="buttons-list more-socials-list">
         {secondarySocials.map((link) => (
-          <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform}>
+          <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-track={`secondary-social-${link.platform}`} data-track-container="main:socials_drawer">
             <div class="link-left-group">
               <div class="link-icon-box">
                 <i class={link.icon}></i>
@@ -85,7 +85,7 @@ const secondaryStreams = [
       </div>
     </div>
 
-    <button class="toggle-more-socials-btn" id="toggleMoreSocialsBtn" type="button" aria-label="Toggle all social channels" data-count={secondarySocials.length}>
+    <button class="toggle-more-socials-btn" id="toggleMoreSocialsBtn" type="button" aria-label="Toggle all social channels" data-count={secondarySocials.length} data-track="toggle-more-socials" data-track-container="main:socials_tab">
       <div class="mini-icon-preview">
         {secondarySocials.slice(0, 4).map((link) => (
           <span class="mini-icon-chip" title={link.name}>
@@ -101,7 +101,7 @@ const secondaryStreams = [
   <div class="tab-content" id="streamsTab">
     <div class="buttons-list">
       {primaryStreams.map((link) => (
-        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform}>
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform} data-track={`stream-btn-${link.platform}`} data-track-container="main:streams_tab">
           <div class="link-left-group">
             <div class="link-icon-box">
               <i class={link.icon}></i>
@@ -119,7 +119,7 @@ const secondaryStreams = [
     <div class="more-socials-container" id="moreStreamsContainer">
       <div class="buttons-list more-socials-list">
         {secondaryStreams.map((link) => (
-          <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform}>
+          <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform} data-track={`secondary-stream-${link.platform}`} data-track-container="main:streams_drawer">
             <div class="link-left-group">
               <div class="link-icon-box">
                 <i class={link.icon}></i>
@@ -134,7 +134,7 @@ const secondaryStreams = [
       </div>
     </div>
 
-    <button class="toggle-more-socials-btn" id="toggleMoreStreamsBtn" type="button" aria-label="Toggle all streaming services" data-count={secondaryStreams.length}>
+    <button class="toggle-more-socials-btn" id="toggleMoreStreamsBtn" type="button" aria-label="Toggle all streaming services" data-count={secondaryStreams.length} data-track="toggle-more-streams" data-track-container="main:streams_tab">
       <div class="mini-icon-preview">
         {secondaryStreams.slice(0, 4).map((link) => (
           <span class="mini-icon-chip" title={link.name}>

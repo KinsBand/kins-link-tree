@@ -1,3 +1,5 @@
+import { trackKinsInteraction } from '../../lib/analytics';
+
 export function setupSegmentedSwitcher(tabSelector, contentSelector) {
   const tabs = document.querySelectorAll(tabSelector);
   const contents = document.querySelectorAll(contentSelector);
@@ -48,6 +50,13 @@ export function setupSegmentedSwitcher(tabSelector, contentSelector) {
         siblingTabs.forEach(t => t.classList.remove('active'));
       }
       tab.classList.add('active');
+
+      // Track Tab Switch Interaction
+      trackKinsInteraction('links_tab_switched', 'social', {
+        selected_tab: tab.innerText?.trim() || targetId,
+        target_id: targetId || '',
+        container_scope: 'main:links'
+      });
 
       if (parentContainer && parentContainer.classList.contains('segmented-switcher-box')) {
         const pill = parentContainer.querySelector('.switcher-active-pill');
