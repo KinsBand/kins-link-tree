@@ -339,14 +339,8 @@ export function initAttribution(): InboundAttribution {
     } catch (e) {}
   }
 
-  // Default fallback if no signal matched
+  // Direct / Fallback
   if (!matchedChannel) {
-    const existing = sessionStorage.getItem(STORAGE_INBOUND_KEY);
-    if (existing) {
-      try {
-        return JSON.parse(existing);
-      } catch (e) {}
-    }
     matchedChannel = 'Direct';
     matchedAlias = 'Direct';
   }
@@ -361,12 +355,9 @@ export function initAttribution(): InboundAttribution {
     entry_timestamp: new Date().toISOString()
   };
 
-  // Persist for session & first-touch lifetime
+  // Always store current navigation attribution in sessionStorage for the active session
   try {
     sessionStorage.setItem(STORAGE_INBOUND_KEY, JSON.stringify(attributionRecord));
-    if (!localStorage.getItem(STORAGE_FIRST_TOUCH_KEY)) {
-      localStorage.setItem(STORAGE_FIRST_TOUCH_KEY, JSON.stringify(attributionRecord));
-    }
   } catch (e) {}
 
   return attributionRecord;
@@ -375,12 +366,6 @@ export function initAttribution(): InboundAttribution {
 export function getInboundAttribution(): InboundAttribution {
   if (typeof window === 'undefined') {
     return { channel: 'Direct', alias: 'Direct', entry_timestamp: new Date().toISOString() };
-  }
-  const existing = sessionStorage.getItem(STORAGE_INBOUND_KEY);
-  if (existing) {
-    try {
-      return JSON.parse(existing);
-    } catch (e) {}
   }
   return initAttribution();
 }
