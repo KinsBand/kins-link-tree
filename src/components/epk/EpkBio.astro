@@ -1,0 +1,198 @@
+---
+import { epkConfig } from '../../settings/epk.config';
+const { bio } = epkConfig;
+---
+
+<section class="epk-section epk-bio-section" id="epk-bio">
+  <div class="epk-section-header">
+    <div class="epk-header-tag">
+      <i class="fa-solid fa-file-lines"></i> BIOGRAPHY
+    </div>
+    <h2 class="epk-section-title">Band Biography</h2>
+    <p class="epk-section-subtitle">Official 1-paragraph press biography for promoters, festival programs, and media.</p>
+  </div>
+
+  <div class="epk-bio-card">
+    <div class="bio-card-top">
+      <div class="bio-card-tags">
+        <span class="bio-word-badge">{bio.wordCount}</span>
+        <span class="bio-status-badge">PRESS & PROGRAM READY</span>
+      </div>
+
+      <button 
+        type="button" 
+        class="epk-copy-bio-btn" 
+        id="epkCopyBioBtn"
+        data-copy-text={bio.text}
+        aria-label="Copy band biography to clipboard"
+      >
+        <i class="fa-regular fa-copy"></i>
+        <span>Copy Bio Text</span>
+      </button>
+    </div>
+
+    <div class="bio-card-body">
+      <p class="bio-text-paragraph">{bio.text}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .epk-section {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 48px 14px;
+    box-sizing: border-box;
+    border-bottom: 3px solid #000000;
+  }
+
+  /* Left-aligned Section Header */
+  .epk-section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    margin-bottom: 24px;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .epk-header-tag {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+  }
+
+  .epk-section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .epk-section-subtitle {
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    max-width: 650px;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* Single-Panel Bio Card */
+  .epk-bio-card {
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 10px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .bio-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 2px dashed rgba(0, 0, 0, 0.2);
+  }
+
+  [data-theme="dark"] .bio-card-top {
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .bio-card-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .bio-word-badge {
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .bio-status-badge {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-card-primary);
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+  }
+
+  [data-theme="dark"] .bio-status-badge {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .epk-copy-bio-btn {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .epk-copy-bio-btn:hover {
+    background: var(--surface-card-light-hover);
+    color: var(--text-card-primary);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .bio-card-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bio-text-paragraph {
+    font-family: var(--font-primary);
+    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+    font-weight: 450;
+    line-height: 1.65;
+    color: var(--text-card-primary);
+    margin: 0;
+  }
+</style>

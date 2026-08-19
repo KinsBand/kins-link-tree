@@ -1,0 +1,393 @@
+---
+import { epkConfig } from '../../settings/epk.config';
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<header class="epk-hero-viewport" id="epk-hero">
+  <div class="epk-hero-bg-layer">
+    <!-- Clean Background Layer with Visual Poster -->
+    <img 
+      src={`${baseUrl}${epkConfig.heroImage}`} 
+      alt="KINS Band Visual" 
+      class="epk-hero-photo"
+      loading="eager"
+    />
+    <div class="epk-hero-overlay-gradient"></div>
+  </div>
+
+  <div class="epk-hero-content-container">
+    <!-- Small Centered Band Logo at Top Center -->
+    <div class="epk-hero-center-logo-box">
+      <img 
+        src={`${baseUrl}${epkConfig.logoImage}`} 
+        alt={epkConfig.bandName} 
+        class="epk-hero-center-logo"
+        width="100"
+        height="32"
+        style="height: 32px; width: auto; max-width: 100px; object-fit: contain; display: block;"
+      />
+    </div>
+
+    <!-- Explicit Geographic Anchor Badge -->
+    <div class="epk-hero-top-badges">
+      <span class="epk-badge-origin" title="East Coast Australia Tour Routing Anchor">
+        <i class="fa-solid fa-location-dot"></i> {epkConfig.origin}
+        <span class="origin-sublabel">• {epkConfig.originDetails}</span>
+      </span>
+    </div>
+
+    <!-- Editorial Genre & RIYL Reference Block -->
+    <div class="epk-hero-genre-block">
+      <div class="epk-hero-genre-row">
+        {epkConfig.subGenres.map(genre => (
+          <span class="epk-genre-tag">{genre}</span>
+        ))}
+      </div>
+      
+      <!-- Promoters RIYL ("Sounds Like") Compatibility Comp -->
+      <div class="epk-riyl-badge">
+        <span class="riyl-label">RIYL / SOUNDS LIKE:</span>
+        <span class="riyl-artists">{epkConfig.riyl.join(' • ')}</span>
+      </div>
+    </div>
+
+    <!-- Sonic Positioning Statement Card -->
+    <div class="epk-hero-pitch-card">
+      <p class="epk-hero-pitch-text">
+        {epkConfig.tagline}
+      </p>
+    </div>
+
+    <!-- Day-0 Clean Verified CTAs -->
+    <div class="epk-hero-cta-grid">
+      <a href="#epk-contact" class="epk-hero-primary-btn">
+        <i class="fa-solid fa-calendar-check"></i> Booking Inquiries
+      </a>
+      <a href="#epk-repertoire" class="epk-hero-secondary-btn">
+        <i class="fa-solid fa-bolt"></i> Live Repertoire
+      </a>
+      <a href="#epk-members" class="epk-hero-deck-btn">
+        <i class="fa-solid fa-users"></i> Band Lineup
+      </a>
+      <a href="#epk-downloads" class="epk-hero-deck-btn">
+        <i class="fa-solid fa-sliders"></i> Stage Plot & Specs
+      </a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .epk-hero-viewport {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-height: 58vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 44px 14px 48px;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-bottom: 4px solid #000000;
+  }
+
+  .epk-hero-bg-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+    background: #0d0d10;
+  }
+
+  .epk-hero-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    filter: brightness(0.4) contrast(1.15) grayscale(20%);
+    transform: scale(1.02);
+    z-index: 0;
+  }
+
+  .epk-hero-overlay-gradient {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: radial-gradient(circle at 50% 35%, rgba(15, 15, 18, 0.45) 0%, rgba(10, 10, 12, 0.88) 85%, #08080a 100%),
+                linear-gradient(to bottom, rgba(14, 14, 18, 0.65) 0%, rgba(14, 14, 18, 0.96) 100%);
+  }
+
+  .epk-hero-content-container {
+    position: relative;
+    z-index: 3;
+    max-width: 960px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  /* Small Centered Band Logo */
+  .epk-hero-center-logo-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .epk-hero-center-logo {
+    height: 32px !important;
+    width: auto !important;
+    max-width: 100px !important;
+    object-fit: contain !important;
+    filter: drop-shadow(2px 2px 0px #000000);
+    display: block;
+    transition: transform 0.2s var(--ease-tactile);
+  }
+
+  .epk-hero-center-logo:hover {
+    transform: scale(1.05);
+  }
+
+  .epk-hero-top-badges {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .epk-badge-origin {
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 3px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .origin-sublabel {
+    color: var(--text-card-secondary);
+    font-weight: 600;
+    font-size: 0.68rem;
+  }
+
+  .epk-hero-genre-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .epk-hero-genre-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .epk-genre-tag {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    color: #f5f5f7;
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* RIYL / Compatibility Bar */
+  .epk-riyl-badge {
+    background: rgba(0, 0, 0, 0.65);
+    border: 1.5px solid var(--accent-neon-yellow);
+    border-radius: 4px;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .riyl-label {
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    color: var(--accent-neon-yellow);
+  }
+
+  .riyl-artists {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
+
+  .epk-hero-pitch-card {
+    width: 100%;
+    max-width: 760px;
+    background: rgba(18, 18, 22, 0.88);
+    backdrop-filter: blur(12px);
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px var(--accent-neon-yellow), 3px 3px 0px 2px #000000;
+    border-radius: 8px;
+    padding: 14px 18px;
+    box-sizing: border-box;
+  }
+
+  .epk-hero-pitch-text {
+    font-family: var(--font-primary);
+    font-size: clamp(0.95rem, 2.2vw, 1.12rem);
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--text-white);
+    margin: 0;
+    word-break: break-word;
+  }
+
+  /* Day-0 CTAs */
+  .epk-hero-cta-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 380px;
+    gap: 8px;
+    margin-top: 4px;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 600px) {
+    .epk-hero-cta-grid {
+      flex-direction: row;
+      max-width: 100%;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+  }
+
+  .epk-hero-primary-btn {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2.5px solid #000000;
+    box-shadow: 2.5px 2.5px 0px #000000;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-sizing: border-box;
+    width: 100%;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
+  @media (min-width: 600px) {
+    .epk-hero-primary-btn {
+      width: auto;
+    }
+  }
+
+  .epk-hero-primary-btn:hover {
+    background: var(--surface-card-light-hover);
+    color: var(--text-card-primary);
+    transform: translate(-1px, -1px);
+    box-shadow: 3.5px 3.5px 0px #000000;
+  }
+
+  .epk-hero-secondary-btn {
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 2.5px solid #000000;
+    box-shadow: 2.5px 2.5px 0px #000000;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-sizing: border-box;
+    width: 100%;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
+  @media (min-width: 600px) {
+    .epk-hero-secondary-btn {
+      width: auto;
+    }
+  }
+
+  .epk-hero-secondary-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3.5px 3.5px 0px #000000;
+  }
+
+  .epk-hero-deck-btn {
+    background: rgba(20, 20, 24, 0.85);
+    color: var(--text-white);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 2.5px 2.5px 0px #000000;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-sizing: border-box;
+    width: 100%;
+    transition: transform 0.16s var(--ease-tactile), border-color 0.16s ease, color 0.16s ease;
+  }
+
+  @media (min-width: 600px) {
+    .epk-hero-deck-btn {
+      width: auto;
+    }
+  }
+
+  .epk-hero-deck-btn:hover {
+    border-color: var(--accent-neon-yellow);
+    color: var(--accent-neon-yellow);
+    transform: translate(-1px, -1px);
+  }
+</style>

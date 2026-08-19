@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { epkConfig } from '../settings/epk.config';
+
+// Day-0 Verified EPK Section Components
+import EpkNav from '../components/epk/EpkNav.astro';
+import EpkHero from '../components/epk/EpkHero.astro';
+import EpkMembers from '../components/epk/EpkMembers.astro';
+import EpkRepertoire from '../components/epk/EpkRepertoire.astro';
+import EpkBio from '../components/epk/EpkBio.astro';
+import EpkPhotos from '../components/epk/EpkPhotos.astro';
+import EpkContactMatrix from '../components/epk/EpkContactMatrix.astro';
+import EpkDownloadDeck from '../components/epk/EpkDownloadDeck.astro';
+import EpkFooter from '../components/epk/EpkFooter.astro';
+
+// UI Feedback
+import ToastContainer from '../components/ui/ToastContainer.astro';
+---
+
+<BaseLayout 
+  title={`${epkConfig.bandName} | Official Electronic Press Kit (EPK) 2026`}
+  description={`Official Electronic Press Kit for ${epkConfig.bandName} (${epkConfig.handle}) - ${epkConfig.origin}. Band lineup, live repertoire, press photography, booking contacts, and technical stage plot downloads.`}
+>
+  <div class="epk-app-wrapper">
+    <EpkNav />
+    <main class="epk-main-content">
+      <EpkHero />
+      <EpkMembers />
+      <EpkRepertoire />
+      <EpkBio />
+      <EpkPhotos />
+      <EpkContactMatrix />
+      <EpkDownloadDeck />
+    </main>
+    <EpkFooter />
+  </div>
+
+  <ToastContainer />
+</BaseLayout>
+
+<style>
+  .epk-app-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+    background-color: var(--bg-chalkboard);
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 70%),
+      radial-gradient(circle at 100% 100%, rgba(242, 253, 67, 0.03) 0%, transparent 60%);
+  }
+
+  .epk-main-content {
+    width: 100%;
+    max-width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+</style>
+
+<script>
+  import { initTheme } from '../scripts/controllers/themeController.js';
+  import { initEpkController } from '../scripts/controllers/epkController.js';
+
+  // Initialize theme state & EPK interactions
+  initTheme();
+  initEpkController();
+</script>

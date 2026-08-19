@@ -1,0 +1,266 @@
+---
+import { epkConfig } from '../../settings/epk.config';
+const baseUrl = import.meta.env.BASE_URL;
+const { pressPhotos } = epkConfig;
+---
+
+<section class="epk-section epk-photos-section" id="epk-photos">
+  <div class="epk-section-header">
+    <div class="epk-header-tag">
+      <i class="fa-solid fa-camera"></i> VISUALS
+    </div>
+    <h2 class="epk-section-title">Press Photography & Logos</h2>
+    <p class="epk-section-subtitle">High-resolution 300 DPI promotional portraits, live stage shots, and vector branding.</p>
+  </div>
+
+  <div class="epk-photos-wrapper">
+    <div class="epk-photos-grid">
+      {pressPhotos.map((photo) => (
+        <div class="epk-photo-card">
+          <div class="epk-photo-box">
+            <img 
+              src={`${baseUrl}${photo.imgUrl}`} 
+              alt={photo.title} 
+              class="epk-photo-img" 
+              loading="lazy"
+            />
+            <span class="epk-photo-badge">{photo.badge}</span>
+          </div>
+
+          <div class="epk-photo-details">
+            <div class="epk-photo-meta">
+              <h4 class="epk-photo-title">{photo.title}</h4>
+              <span class="epk-photo-type">{photo.type}</span>
+            </div>
+
+            <a 
+              href={`${baseUrl}${photo.downloadUrl}`} 
+              download 
+              class="epk-photo-download-btn"
+              title={`Download ${photo.title}`}
+            >
+              <i class="fa-solid fa-download"></i>
+              <span>Download 300 DPI</span>
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .epk-section {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 48px 14px;
+    box-sizing: border-box;
+    border-bottom: 3px solid #000000;
+  }
+
+  /* Left-aligned Section Header */
+  .epk-section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    margin-bottom: 24px;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .epk-header-tag {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+  }
+
+  .epk-section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .epk-section-subtitle {
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    max-width: 650px;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* Photos Swipe Row on Mobile, Grid on Desktop */
+  .epk-photos-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: 10px;
+    box-sizing: border-box;
+  }
+
+  .epk-photos-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 14px;
+    scroll-snap-type: x mandatory;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 768px) {
+    .epk-photos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      scroll-snap-type: none;
+    }
+  }
+
+  .epk-photo-card {
+    flex: 0 0 calc(78vw - 20px);
+    width: calc(78vw - 20px);
+    max-width: 340px;
+    scroll-snap-align: start;
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  @media (min-width: 768px) {
+    .epk-photo-card {
+      flex: initial;
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  .epk-photo-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .epk-photo-box {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    background: #0d0d10;
+    overflow: hidden;
+    border-bottom: 2.5px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .epk-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.25s ease;
+  }
+
+  .epk-photo-card:hover .epk-photo-img {
+    transform: scale(1.05);
+  }
+
+  .epk-photo-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    border: 1px solid var(--accent-neon-yellow);
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    z-index: 2;
+  }
+
+  .epk-photo-details {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    flex: 1;
+    box-sizing: border-box;
+  }
+
+  .epk-photo-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .epk-photo-title {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .epk-photo-type {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-card-secondary);
+  }
+
+  .epk-photo-download-btn {
+    background: var(--surface-card-light-hover);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-sizing: border-box;
+    width: 100%;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease;
+  }
+
+  .epk-photo-download-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+</style>

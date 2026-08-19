@@ -1,0 +1,274 @@
+---
+import { epkConfig } from '../../settings/epk.config';
+const { contacts } = epkConfig;
+---
+
+<section class="epk-section epk-contact-section" id="epk-contact">
+  <div class="epk-section-header">
+    <div class="epk-header-tag">
+      <i class="fa-solid fa-envelope"></i> CONTACT
+    </div>
+    <h2 class="epk-section-title">Direct Contact</h2>
+    <p class="epk-section-subtitle">Official booking and general inquiries channels.</p>
+  </div>
+
+  <!-- Strictly 2 Contact Cards Grid -->
+  <div class="epk-contacts-grid">
+    {contacts.map((contact) => (
+      <div class="epk-contact-card">
+        <div class="contact-card-top">
+          <div class="contact-icon-box">
+            <i class={`fa-solid ${contact.icon}`}></i>
+          </div>
+          <h4 class="contact-role-title">{contact.role}</h4>
+        </div>
+
+        <p class="contact-desc">{contact.description}</p>
+
+        <div class="contact-action-row">
+          <!-- Copy Email Button (mimicking Link-in-Bio) -->
+          <button 
+            type="button" 
+            class="epk-email-copy-btn" 
+            data-email={contact.email}
+            title={`Copy ${contact.email} to clipboard`}
+          >
+            <i class="fa-solid fa-copy"></i>
+            <span class="copy-email-text">{contact.email}</span>
+            <span class="copy-badge">Copy</span>
+          </button>
+
+          <!-- Open Email Client Button -->
+          <a 
+            href={`mailto:${contact.email}?subject=KINS%20Inquiry%20-%20${encodeURIComponent(contact.role)}`} 
+            class="epk-email-open-btn"
+            title={`Open email to ${contact.email}`}
+          >
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Send Email</span>
+          </a>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .epk-section {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 48px 14px;
+    box-sizing: border-box;
+    border-bottom: 3px solid #000000;
+  }
+
+  /* Left-aligned Section Header */
+  .epk-section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    margin-bottom: 24px;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .epk-header-tag {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+  }
+
+  .epk-section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .epk-section-subtitle {
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    max-width: 600px;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* 2-Card Responsive Grid */
+  .epk-contacts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 768px) {
+    .epk-contacts-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+  }
+
+  .epk-contact-card {
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  .epk-contact-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .contact-card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .contact-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--accent-neon-yellow);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .contact-role-title {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .contact-desc {
+    font-family: var(--font-primary);
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: var(--text-card-secondary);
+    margin: 0;
+    flex: 1;
+  }
+
+  /* Action Row with Copy and Open Email buttons */
+  .contact-action-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  @media (min-width: 520px) {
+    .contact-action-row {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .epk-email-copy-btn {
+    flex: 1;
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 9px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 800;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .epk-email-copy-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .copy-email-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .copy-badge {
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    padding: 2px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .epk-email-open-btn {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 9px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .epk-email-open-btn:hover {
+    background: var(--surface-card-light-hover);
+    color: var(--text-card-primary);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+</style>

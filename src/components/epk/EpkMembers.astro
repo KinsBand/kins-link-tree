@@ -1,0 +1,412 @@
+---
+import { epkConfig } from '../../settings/epk.config';
+const baseUrl = import.meta.env.BASE_URL;
+
+const members = [
+  {
+    id: "vivian",
+    name: "Vivian",
+    role: "Lead Vocals & Rhythm Guitar",
+    badge: "VOCALS & GUITAR",
+    icon: "fa-microphone",
+    initial: "V",
+    photoUrl: "kins-studio/pfp.jpg",
+    instruments: ["Lead Vocals", "Rhythm Guitar"],
+    gearSummary: "Vocal Mic SM58/Beta58, Fender Combo, Pedalboard"
+  },
+  {
+    id: "charlie",
+    name: "Charlie",
+    role: "Lead Guitar & Backing Vocals",
+    badge: "LEAD GUITAR",
+    icon: "fa-guitar",
+    initial: "C",
+    photoUrl: "pfp.jpg",
+    instruments: ["Lead Electric Guitar", "Backing Vocals"],
+    gearSummary: "Guitar Head/Cab, Dual Chorus & Fuzz, Backing Mic"
+  },
+  {
+    id: "oscar",
+    name: "Oscar",
+    role: "Bass Guitar & Synthesizers",
+    badge: "BASS & SYNTH",
+    icon: "fa-sliders",
+    initial: "O",
+    photoUrl: "kins-studio/pfp.jpg",
+    instruments: ["4-String Bass", "Analog Synth"],
+    gearSummary: "Active DI, Bass Preamp/Cab, Synth Line"
+  },
+  {
+    id: "trai",
+    name: "Trai",
+    role: "Drums & Percussion",
+    badge: "DRUMS",
+    icon: "fa-drum",
+    initial: "T",
+    photoUrl: "pfp.jpg",
+    instruments: ["5-Piece Drum Kit", "Percussion"],
+    gearSummary: "Snare, cymbals, kick pedal (Requires venue shell pack)"
+  }
+];
+---
+
+<section class="epk-section epk-members-section" id="epk-members">
+  <div class="epk-members-header-wrap">
+    <div class="epk-header-left">
+      <div class="epk-header-tag">
+        <i class="fa-solid fa-user-group fa-fw"></i> BAND MEMBERS
+      </div>
+      <h2 class="epk-section-title">Band Members</h2>
+      <p class="epk-section-subtitle">Official 4-piece lineup, roles, and stage equipment.</p>
+    </div>
+
+    <!-- Arrow Navigation Buttons -->
+    <div class="section-scroll-controls">
+      <button type="button" class="scroll-arrow-btn" id="epkMembersScrollPrev" aria-label="Scroll members left">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button type="button" class="scroll-arrow-btn" id="epkMembersScrollNext" aria-label="Scroll members right">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Horizontal Scroll Container -->
+  <div class="epk-members-scroll-container" id="epkMembersScrollContainer">
+    {members.map((member) => (
+      <div class="epk-member-card" data-member-id={member.id}>
+        <!-- Top: Square Avatar Photo Box with Badge & Initials -->
+        <div class="member-avatar-box">
+          <img 
+            src={`${baseUrl}${member.photoUrl}`} 
+            alt={`${member.name} - KINS`} 
+            class="member-photo-img" 
+            loading="lazy"
+          />
+          <div class="avatar-initials-overlay">{member.initial}</div>
+          <i class={`fa-solid ${member.icon} avatar-bg-icon`}></i>
+          <span class="member-badge">{member.badge}</span>
+        </div>
+
+        <!-- Bottom: Member Information Underneath -->
+        <div class="member-info-body">
+          <h4 class="member-name">{member.name}</h4>
+          <p class="member-role">{member.role}</p>
+
+          <div class="member-instruments-pills">
+            {member.instruments.map((inst) => (
+              <span class="member-inst-tag">{inst}</span>
+            ))}
+          </div>
+
+          <div class="member-gear-snippet">
+            <span class="gear-snippet-label"><i class="fa-solid fa-plug"></i> Gear:</span>
+            <span class="gear-snippet-text">{member.gearSummary}</span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .epk-section {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 48px 14px;
+    box-sizing: border-box;
+    border-bottom: 3px solid #000000;
+  }
+
+  .epk-members-header-wrap {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .epk-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .epk-header-tag {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+  }
+
+  .epk-section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.4rem, 3.2vw, 2rem);
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .epk-section-subtitle {
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* Scroll Navigation Arrow Buttons */
+  .section-scroll-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scroll-arrow-btn {
+    background: var(--surface-card-light);
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--text-card-primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 900;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease, opacity 0.16s ease;
+  }
+
+  .scroll-arrow-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .scroll-arrow-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  /* Horizontal Scroll Container mimicking Link-in-Bio page */
+  .epk-members-scroll-container {
+    display: flex;
+    flex-direction: row;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 4px 4px 16px 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-neon-yellow) transparent;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .epk-members-scroll-container::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .epk-members-scroll-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+
+  .epk-members-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--accent-neon-yellow);
+    border: 1px solid #000000;
+    border-radius: 3px;
+  }
+
+  /* Neo-Brutalist Member Card */
+  .epk-member-card {
+    flex: 0 0 220px;
+    scroll-snap-align: start;
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px var(--accent-neon-yellow), 3px 3px 0px 1px #000000;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.18s var(--ease-tactile), box-shadow 0.18s ease, border-color 0.18s ease;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 768px) {
+    .epk-member-card {
+      flex: 0 0 240px;
+    }
+  }
+
+  .epk-member-card:hover,
+  .epk-member-card.is-scroll-active {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px var(--accent-neon-yellow), 5px 5px 0px 1px #000000;
+  }
+
+  /* Square Avatar Box */
+  .member-avatar-box {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    border-radius: 6px;
+    background: #121216;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2.5px solid #000000;
+  }
+
+  .member-photo-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+    filter: contrast(1.08) brightness(0.85);
+    transition: transform 0.25s ease;
+  }
+
+  .epk-member-card:hover .member-photo-img {
+    transform: scale(1.06);
+  }
+
+  .avatar-initials-overlay {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 900;
+    color: rgba(242, 253, 67, 0.4);
+    z-index: 1;
+    user-select: none;
+  }
+
+  .avatar-bg-icon {
+    position: absolute;
+    right: -8px;
+    bottom: -8px;
+    font-size: 4.5rem;
+    color: rgba(255, 255, 255, 0.08);
+    z-index: 1;
+  }
+
+  .member-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 1.5px solid #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.56rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    z-index: 3;
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  /* Member Information Underneath */
+  .member-info-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .member-name {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .member-role {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--text-card-secondary);
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .member-instruments-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  .member-inst-tag {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-card-primary);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+  }
+
+  [data-theme="dark"] .member-inst-tag {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .member-gear-snippet {
+    margin-top: 4px;
+    padding: 5px 8px;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1.5px dashed rgba(0, 0, 0, 0.22);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  [data-theme="dark"] .member-gear-snippet {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .gear-snippet-label {
+    font-family: var(--font-secondary);
+    font-size: 0.54rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--text-card-secondary);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .gear-snippet-text {
+    font-family: var(--font-primary);
+    font-size: 0.68rem;
+    color: var(--text-card-secondary);
+    line-height: 1.3;
+  }
+</style>

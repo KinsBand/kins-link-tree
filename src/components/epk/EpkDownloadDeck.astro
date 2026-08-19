@@ -1,0 +1,289 @@
+---
+import { epkConfig } from '../../settings/epk.config';
+const { downloadDeck } = epkConfig;
+---
+
+<section class="epk-section epk-download-section" id="epk-downloads">
+  <div class="epk-download-header-row">
+    <div class="epk-section-header">
+      <div class="epk-header-tag">
+        <i class="fa-solid fa-download"></i> ASSETS
+      </div>
+      <h2 class="epk-section-title">Asset Downloads</h2>
+      <p class="epk-section-subtitle">Official one-sheet, hi-res media, and production riders.</p>
+    </div>
+
+    <!-- Master Download All (.ZIP) Button -->
+    <div class="epk-master-download-box">
+      <button 
+        type="button" 
+        class="epk-master-download-btn"
+        id="epkMasterDownloadBtn"
+        data-filename="KINS_Complete_PressKit_2026.zip"
+        data-asset-title="Complete Production & Press Kit Pack"
+      >
+        <i class="fa-solid fa-file-zipper"></i>
+        <span>Download All Assets (.ZIP)</span>
+        <span class="master-zip-size">53.5 MB</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="epk-download-grid">
+    {downloadDeck.map((card) => (
+      <div class="epk-deck-card">
+        <div class="deck-card-top">
+          <div class="deck-icon-badge">
+            <i class={`fa-solid ${card.icon}`}></i>
+          </div>
+          <span class="deck-format-badge">{card.format} • {card.size}</span>
+        </div>
+
+        <div class="deck-card-body">
+          <h4 class="deck-card-title">{card.title}</h4>
+          <p class="deck-card-desc">{card.description}</p>
+        </div>
+
+        <button 
+          type="button" 
+          class="epk-deck-download-btn"
+          data-filename={card.downloadFilename}
+          data-asset-title={card.title}
+        >
+          <i class="fa-solid fa-download"></i> Download {card.format}
+        </button>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .epk-section {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 48px 14px 60px;
+    box-sizing: border-box;
+  }
+
+  .epk-download-header-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* Left-aligned Section Header */
+  .epk-section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 6px;
+    width: fit-content;
+  }
+
+  .epk-header-tag {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+  }
+
+  .epk-section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .epk-section-subtitle {
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    max-width: 600px;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* Master Download All (.ZIP) Button */
+  .epk-master-download-box {
+    display: flex;
+    align-items: center;
+  }
+
+  .epk-master-download-btn {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
+  .epk-master-download-btn:hover {
+    background: var(--surface-card-light-hover);
+    color: var(--text-card-primary);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .master-zip-size {
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* 4-Card Responsive Grid */
+  .epk-download-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 540px) {
+    .epk-download-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .epk-download-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+  }
+
+  .epk-deck-card {
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  .epk-deck-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .deck-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .deck-icon-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: var(--accent-neon-yellow);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    font-size: 1rem;
+  }
+
+  .deck-format-badge {
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .deck-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .deck-card-title {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .deck-card-desc {
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    color: var(--text-card-secondary);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .epk-deck-download-btn {
+    background: #000000;
+    color: #ffffff;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease;
+  }
+
+  .epk-deck-download-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+</style>

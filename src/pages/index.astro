@@ -28,6 +28,8 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
 // UI Components
 import AudioPlayer from '../components/ui/AudioPlayer.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
+
+const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout title="Kins | Official Link in Bio">
@@ -65,7 +67,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
               <span class="legal-bullet" aria-hidden="true">•</span>
               <button type="button" id="openTermsFooterBtn" class="footer-legal-btn">Fan Submission Terms</button>
               <span class="legal-bullet" aria-hidden="true">•</span>
-              <a href="https://kinsband.com/epk" target="_blank" rel="noopener noreferrer" class="footer-legal-btn" id="footerEpkLink">Band EPK</a>
+              <a href={`${baseUrl}epk`} class="footer-legal-btn" id="footerEpkLink">Band EPK</a>
             </nav>
 
             <div class="footer-theme-toggle-wrap">

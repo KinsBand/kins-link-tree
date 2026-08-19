@@ -1,0 +1,573 @@
+---
+import { epkConfig } from '../../settings/epk.config';
+const baseUrl = import.meta.env.BASE_URL;
+---
+
+<nav class="epk-nav-sticky" id="epkNavSticky">
+  <div class="epk-nav-container">
+    <div class="epk-nav-left">
+      <a href={baseUrl} class="epk-nav-back-btn" title="Back to Official Link-in-Bio">
+        <i class="fa-solid fa-arrow-left epk-back-icon"></i>
+        <span class="epk-back-text-full">Link-in-Bio</span>
+        <span class="epk-back-text-mobile">Back</span>
+      </a>
+      <a href="#epk-hero" class="epk-nav-brand" title="KINS Official EPK">
+        <img 
+          src={`${baseUrl}${epkConfig.logoImage}`} 
+          alt={epkConfig.bandName} 
+          class="epk-nav-logo-img" 
+          width="76"
+          height="24"
+          style="height: 24px; width: auto; max-width: 80px; object-fit: contain;"
+        />
+        <span class="epk-brand-badge">EPK '26</span>
+      </a>
+    </div>
+
+    <!-- Desktop Navigation Links -->
+    <div class="epk-nav-links">
+      <a href="#epk-members" class="epk-nav-link"><i class="fa-solid fa-users"></i> Lineup</a>
+      <a href="#epk-repertoire" class="epk-nav-link"><i class="fa-solid fa-bolt"></i> Repertoire</a>
+      <a href="#epk-bio" class="epk-nav-link"><i class="fa-solid fa-file-lines"></i> Bio</a>
+      <a href="#epk-photos" class="epk-nav-link"><i class="fa-solid fa-camera"></i> Photos</a>
+      <a href="#epk-contact" class="epk-nav-link"><i class="fa-solid fa-envelope"></i> Contact</a>
+      <a href="#epk-downloads" class="epk-nav-link"><i class="fa-solid fa-download"></i> Assets</a>
+    </div>
+
+    <!-- Desktop Right Action Buttons & Mobile Hamburger -->
+    <div class="epk-nav-right">
+      <a href="#epk-downloads" class="epk-nav-download-cta" title="Jump to Downloadable Production Deck">
+        <i class="fa-solid fa-download"></i>
+        <span class="epk-cta-text">Asset Deck</span>
+      </a>
+
+      <button type="button" id="themeToggleBtn" class="epk-nav-theme-btn" aria-label="Toggle Theme" title="Toggle Theme">
+        <span class="theme-toggle-icon-badge">
+          <i class="theme-toggle-icon fa-solid fa-sun" id="themeToggleIcon"></i>
+        </span>
+      </button>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" id="epkHamburgerBtn" class="epk-hamburger-btn" aria-label="Open navigation menu" aria-expanded="false">
+        <i class="fa-solid fa-bars" id="epkHamburgerIcon"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Drawer Slide-Over Menu -->
+  <div class="epk-drawer-backdrop" id="epkDrawerBackdrop"></div>
+  <aside class="epk-mobile-drawer" id="epkMobileDrawer" aria-hidden="true">
+    <div class="epk-drawer-header">
+      <div class="drawer-brand">
+        <img 
+          src={`${baseUrl}${epkConfig.logoImage}`} 
+          alt={epkConfig.bandName} 
+          class="drawer-logo-img" 
+          width="70"
+          height="22"
+          style="height: 22px; width: auto; max-width: 75px; object-fit: contain;"
+        />
+        <span class="epk-brand-badge">EPK '26</span>
+      </div>
+      <button type="button" id="epkCloseDrawerBtn" class="drawer-close-btn" aria-label="Close navigation menu">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="epk-drawer-links">
+      <a href="#epk-members" class="epk-drawer-link">
+        <i class="fa-solid fa-users link-icon"></i>
+        <span class="link-label">Band Lineup</span>
+        <i class="fa-solid fa-chevron-right link-arrow"></i>
+      </a>
+      <a href="#epk-repertoire" class="epk-drawer-link">
+        <i class="fa-solid fa-bolt link-icon"></i>
+        <span class="link-label">Live Repertoire</span>
+        <i class="fa-solid fa-chevron-right link-arrow"></i>
+      </a>
+      <a href="#epk-bio" class="epk-drawer-link">
+        <i class="fa-solid fa-file-lines link-icon"></i>
+        <span class="link-label">Band Biography</span>
+        <i class="fa-solid fa-chevron-right link-arrow"></i>
+      </a>
+      <a href="#epk-photos" class="epk-drawer-link">
+        <i class="fa-solid fa-camera link-icon"></i>
+        <span class="link-label">Press Photos</span>
+        <i class="fa-solid fa-chevron-right link-arrow"></i>
+      </a>
+      <a href="#epk-contact" class="epk-drawer-link">
+        <i class="fa-solid fa-envelope link-icon"></i>
+        <span class="link-label">Direct Contact</span>
+        <i class="fa-solid fa-chevron-right link-arrow"></i>
+      </a>
+      <a href="#epk-downloads" class="epk-drawer-link">
+        <i class="fa-solid fa-download link-icon"></i>
+        <span class="link-label">Production Assets</span>
+        <i class="fa-solid fa-chevron-right link-arrow"></i>
+      </a>
+    </div>
+
+    <div class="epk-drawer-footer">
+      <button type="button" id="drawerThemeToggleBtn" class="drawer-theme-btn">
+        <span class="theme-toggle-icon-badge">
+          <i class="theme-toggle-icon fa-solid fa-sun" id="drawerThemeToggleIcon"></i>
+        </span>
+        <span class="drawer-theme-label" id="drawerThemeToggleLabel">Standard Mode</span>
+      </button>
+
+      <a href={baseUrl} class="drawer-return-link">
+        <i class="fa-solid fa-arrow-left"></i> Return to Link-in-Bio
+      </a>
+    </div>
+  </aside>
+</nav>
+
+<style>
+  .epk-nav-sticky {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    z-index: 950;
+    background: rgba(20, 20, 24, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 3px solid #000000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    user-select: none;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease;
+  }
+
+  [data-theme="dark"] .epk-nav-sticky {
+    background: rgba(14, 14, 18, 0.96);
+  }
+
+  .epk-nav-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    box-sizing: border-box;
+  }
+
+  .epk-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .epk-nav-back-btn {
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .epk-nav-back-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .epk-back-text-full {
+    display: inline-block;
+  }
+
+  .epk-back-text-mobile {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .epk-back-text-full {
+      display: none;
+    }
+    .epk-back-text-mobile {
+      display: inline-block;
+    }
+  }
+
+  .epk-nav-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    min-width: 0;
+  }
+
+  /* Small Logo in Header */
+  .epk-nav-logo-img {
+    height: 22px !important;
+    width: auto !important;
+    max-width: 75px !important;
+    object-fit: contain !important;
+    filter: drop-shadow(1px 1px 0px #000000);
+    display: block;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .epk-nav-brand:hover .epk-nav-logo-img {
+    transform: scale(1.04);
+  }
+
+  .epk-brand-badge {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 1.5px solid #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.55rem;
+    font-weight: 900;
+    padding: 1px 4px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+
+  /* Desktop Navigation Links */
+  .epk-nav-links {
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+
+  @media (min-width: 960px) {
+    .epk-nav-links {
+      display: flex;
+    }
+  }
+
+  .epk-nav-link {
+    color: var(--text-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.16s ease, background-color 0.16s ease;
+  }
+
+  .epk-nav-link:hover {
+    color: var(--accent-neon-yellow);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .epk-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .epk-nav-download-cta {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  .epk-nav-download-cta:hover {
+    background: var(--surface-card-light-hover);
+    color: var(--text-card-primary);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .epk-nav-theme-btn {
+    background: var(--surface-card-light);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .epk-nav-theme-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .theme-toggle-icon {
+    font-size: 0.82rem;
+    color: #000000;
+  }
+
+  /* Hamburger Menu Button on Mobile */
+  .epk-hamburger-btn {
+    display: none;
+    background: var(--surface-card-light);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-card-primary);
+    font-size: 1rem;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .epk-hamburger-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  /* Responsive Rules: Hide desktop CTAs on mobile, show hamburger */
+  @media (max-width: 767px) {
+    .epk-nav-download-cta {
+      display: none !important;
+    }
+    .epk-nav-theme-btn {
+      display: none !important;
+    }
+    .epk-hamburger-btn {
+      display: inline-flex;
+    }
+  }
+
+  /* Mobile Drawer Overlay */
+  .epk-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .epk-drawer-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .epk-mobile-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(85vw, 320px);
+    height: 100vh;
+    background: #141418;
+    border-left: 3px solid #000000;
+    box-shadow: -6px 0 0px #000000;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 16px;
+    box-sizing: border-box;
+    transform: translateX(105%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s ease;
+    overflow-y: auto;
+  }
+
+  [data-theme="dark"] .epk-mobile-drawer {
+    background: #0e0e12;
+  }
+
+  .epk-mobile-drawer.is-open {
+    transform: translateX(0%);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .epk-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #000000;
+  }
+
+  .drawer-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .drawer-logo-img {
+    height: 22px !important;
+    width: auto !important;
+    max-width: 75px !important;
+    object-fit: contain !important;
+  }
+
+  .drawer-close-btn {
+    background: var(--surface-card-light);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-card-primary);
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .drawer-close-btn:hover {
+    background: var(--accent-crimson);
+    color: #ffffff;
+    transform: scale(1.05);
+  }
+
+  .epk-drawer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 20px 0;
+  }
+
+  .epk-drawer-link {
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .epk-drawer-link:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .link-icon {
+    font-size: 0.95rem;
+    color: var(--text-card-primary);
+    width: 24px;
+  }
+
+  .link-label {
+    flex: 1;
+    text-align: left;
+    margin-left: 6px;
+  }
+
+  .link-arrow {
+    font-size: 0.75rem;
+    color: var(--text-card-muted);
+  }
+
+  .epk-drawer-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 2px solid #000000;
+  }
+
+  .drawer-theme-btn {
+    width: 100%;
+    min-height: 44px;
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .drawer-theme-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .drawer-theme-label {
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-card-primary);
+  }
+
+  .drawer-return-link {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .drawer-return-link:hover {
+    color: var(--accent-neon-yellow);
+  }
+</style>

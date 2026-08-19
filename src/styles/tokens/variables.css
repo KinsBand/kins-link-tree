@@ -85,7 +85,10 @@
 /* ==========================================================================
    Stealth Dark Mode Palette (No Harsh Yellow, No Harsh White)
    ========================================================================== */
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+html[data-theme="dark"],
+body[data-theme="dark"],
+[data-theme="dark"] {
   /* System Color Tokens */
   --md-sys-color-primary: #d4af37;
   --md-sys-color-on-primary: #000000;

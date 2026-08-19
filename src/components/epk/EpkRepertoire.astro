@@ -1,0 +1,445 @@
+---
+import { epkConfig } from '../../settings/epk.config';
+const { repertoire } = epkConfig;
+---
+
+<section class="epk-section epk-repertoire-section" id="epk-repertoire">
+  <div class="epk-section-header">
+    <div class="epk-header-tag">
+      <i class="fa-solid fa-bolt"></i> LIVE SHOW
+    </div>
+    <h2 class="epk-section-title">Live Repertoire & Performance</h2>
+    <p class="epk-section-subtitle">{repertoire.subtitle}</p>
+  </div>
+
+  <!-- Repertoire Live Container -->
+  <div class="epk-repertoire-container">
+    <!-- Top Header Strip -->
+    <div class="repertoire-header-strip">
+      <div class="repertoire-title-box">
+        <i class="fa-solid fa-music repertoire-icon"></i>
+        <h3 class="repertoire-title">Turnkey Set Configurations</h3>
+      </div>
+      <span class="repertoire-live-badge"><span class="pulse-dot"></span> READY TO BOOK</span>
+    </div>
+
+    <!-- Set Options Row -->
+    <div class="repertoire-set-options-grid">
+      {repertoire.setOptions.map((opt) => (
+        <div class="set-option-card">
+          <div class="set-option-header">
+            <span class="set-length-badge">{opt.length}</span>
+            <h4 class="set-option-title">{opt.label}</h4>
+          </div>
+          <p class="set-option-desc">{opt.desc}</p>
+        </div>
+      ))}
+    </div>
+
+    <!-- Setlist Breakdown Cards -->
+    <div class="repertoire-breakdown-grid">
+      {repertoire.setBreakdown.map((item) => (
+        <div class="repertoire-feature-card">
+          <div class="feature-card-icon-box">
+            <i class={`fa-solid ${item.icon}`}></i>
+          </div>
+          <div class="feature-card-content">
+            <h4 class="feature-card-title">{item.title}</h4>
+            <p class="feature-card-desc">{item.description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- Booking Inquiries Footer Strip -->
+    <div class="repertoire-booking-strip">
+      <div class="booking-note-wrap">
+        <i class="fa-solid fa-calendar-check booking-icon"></i>
+        <span class="booking-note-text">Available for club bookings, festival slots & East Coast tour routing:</span>
+      </div>
+      <div class="booking-actions-row">
+        <button 
+          type="button" 
+          class="epk-email-copy-btn" 
+          data-email="booking@kinsband.com" 
+          title="Copy booking@kinsband.com to clipboard"
+        >
+          <i class="fa-solid fa-copy"></i>
+          <span class="copy-email-text">booking@kinsband.com</span>
+          <span class="copy-badge">Copy</span>
+        </button>
+
+        <a 
+          href="mailto:booking@kinsband.com?subject=Live%20Booking%20Inquiry%20-%20KINS" 
+          class="booking-send-btn" 
+          title="Open email to booking@kinsband.com"
+        >
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>Inquire Now</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .epk-section {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 48px 14px;
+    box-sizing: border-box;
+    border-bottom: 3px solid #000000;
+  }
+
+  /* Left-aligned Section Header */
+  .epk-section-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    margin-bottom: 24px;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .epk-header-tag {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+  }
+
+  .epk-section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .epk-section-subtitle {
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    max-width: 650px;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* Tactile Repertoire Container */
+  .epk-repertoire-container {
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .repertoire-header-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: #141418;
+    border-bottom: 3px solid #000000;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .repertoire-title-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .repertoire-icon {
+    font-size: 1rem;
+    color: var(--accent-neon-yellow);
+  }
+
+  .repertoire-title {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .repertoire-live-badge {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.04em;
+  }
+
+  .pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #16a34a;
+  }
+
+  /* Set Options Grid */
+  .repertoire-set-options-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 16px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.03);
+    border-bottom: 2px dashed rgba(0, 0, 0, 0.2);
+  }
+
+  @media (min-width: 720px) {
+    .repertoire-set-options-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+  }
+
+  .set-option-card {
+    background: var(--surface-card-light-hover);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-sizing: border-box;
+  }
+
+  .set-option-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .set-length-badge {
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .set-option-title {
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
+    margin: 0;
+  }
+
+  .set-option-desc {
+    font-family: var(--font-primary);
+    font-size: 0.74rem;
+    color: var(--text-card-secondary);
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  /* Setlist Breakdown Features Grid */
+  .repertoire-breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 768px) {
+    .repertoire-breakdown-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+  }
+
+  .repertoire-feature-card {
+    background: var(--surface-card-light-hover);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  .repertoire-feature-card:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3.5px 3.5px 0px #000000;
+  }
+
+  .feature-card-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: var(--accent-neon-yellow);
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .feature-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .feature-card-title {
+    font-family: var(--font-heading);
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
+    margin: 0;
+  }
+
+  .feature-card-desc {
+    font-family: var(--font-primary);
+    font-size: 0.74rem;
+    color: var(--text-card-secondary);
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  /* Booking Footer Strip */
+  .repertoire-booking-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 18px;
+    background: rgba(0, 0, 0, 0.06);
+    border-top: 2px dashed rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+  }
+
+  [data-theme="dark"] .repertoire-booking-strip {
+    background: rgba(255, 255, 255, 0.03);
+    border-top-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .booking-note-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .booking-icon {
+    color: var(--accent-neon-yellow);
+    font-size: 0.95rem;
+  }
+
+  .booking-note-text {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
+  }
+
+  .booking-actions-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .epk-email-copy-btn {
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 7px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 800;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .epk-email-copy-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .copy-badge {
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    font-family: var(--font-secondary);
+    font-size: 0.55rem;
+    font-weight: 900;
+    padding: 2px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .booking-send-btn {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 7px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .booking-send-btn:hover {
+    background: var(--surface-card-light-hover);
+    color: var(--text-card-primary);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+</style>

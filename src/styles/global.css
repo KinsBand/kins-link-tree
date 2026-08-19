@@ -1735,5 +1735,64 @@ html.low-power-mode .sheet-container {
   color: #000000 !important;
 }
 
+/* ==========================================================================
+   6. EPK Global Branding & Logo Rules (Zero-Unstyled Protection)
+   ========================================================================== */
+.epk-nav-logo-img {
+  height: 24px !important;
+  width: auto !important;
+  max-width: 80px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+.epk-hero-center-logo {
+  height: 36px !important;
+  width: auto !important;
+  max-width: 120px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+.drawer-logo-img {
+  height: 22px !important;
+  width: auto !important;
+  max-width: 75px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+/* ==========================================================================
+   7. Strict Mobile Horizontal Overflow Elimination
+   ========================================================================== */
+html, body {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  position: relative !important;
+}
+
+.app-wrapper,
+.epk-app-wrapper,
+.site-container,
+.epk-main-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure mobile swipe wrappers remain horizontally scrollable without overflowing page */
+.artist-filter-scroll-container,
+.epk-video-grid-wrapper,
+.epk-photos-grid-wrapper,
+.epk-tour-table-wrapper {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+
+
 
 
