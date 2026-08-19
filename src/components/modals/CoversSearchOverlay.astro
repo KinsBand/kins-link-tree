@@ -7,18 +7,18 @@ const categories = [
 ];
 ---
 
-<div class="covers-search-overlay" id="coversSearchOverlay" role="dialog" aria-modal="true" aria-label="Search Cover Videos">
+<div class="covers-search-overlay" id="coversSearchOverlay" role="dialog" aria-modal="true" aria-label="Search Cover Videos" data-track-container="modal:covers_search">
   <div class="command-palette-container" id="commandPaletteContainer">
     <div class="search-overlay-header">
       <div class="expanded-search-input-box">
         <i class="fa-solid fa-magnifying-glass search-box-icon"></i>
-        <input type="text" id="overlaySearchInput" placeholder="Search covers by title, artist, or tag..." autocomplete="off">
+        <input type="text" id="overlaySearchInput" placeholder="Search covers by title, artist, or tag..." autocomplete="off" data-track="covers_search:input">
         <span class="cmd-k-badge"><kbd>Ctrl</kbd> <kbd>K</kbd></span>
-        <button type="button" class="clear-search-btn hidden" id="clearSearchInputBtn" aria-label="Clear search text">
+        <button type="button" class="clear-search-btn hidden" id="clearSearchInputBtn" aria-label="Clear search text" data-track="covers_search:clear">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <button class="close-overlay-btn" id="closeSearchOverlayBtn" aria-label="Close cover search">
+      <button class="close-overlay-btn" id="closeSearchOverlayBtn" aria-label="Close cover search" data-track="covers_search:close">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
@@ -27,7 +27,7 @@ const categories = [
       <!-- Category Filter Pills Row -->
       <div class="category-pills-row">
         {categories.map((cat) => (
-          <button class={`cover-category-pill ${cat.active ? 'active' : ''}`} data-category={cat.key}>
+          <button class={`cover-category-pill ${cat.active ? 'active' : ''}`} data-category={cat.key} data-track={`covers_search:cat_${cat.key}`}>
             {cat.label}
           </button>
         ))}

@@ -2,8 +2,7 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   output: 'static',
-  site: 'https://kinsband.github.io',
-  base: '/kins-link-tree/',
+  site: 'https://kins-link-tree.vercel.app',
   build: {
     format: 'directory'
   }

@@ -1,7 +1,7 @@
 ---
 ---
 
-<div class="modal-backdrop hidden" id="communitySubmissionModal" role="dialog" aria-modal="true" aria-label="Submit Fan Clip">
+<div class="modal-backdrop hidden" id="communitySubmissionModal" role="dialog" aria-modal="true" aria-label="Submit Fan Clip" data-track-container="modal:community">
   <div class="modal-content community-modal-enhanced">
     <div class="modal-header">
       <div class="modal-title-group">
@@ -14,10 +14,10 @@
         </div>
       </div>
       <div class="modal-header-actions">
-        <button type="button" class="disclaimer-info-btn" id="openTermsInfoBtn" title="View Fan Submission Agreement" aria-label="View Fan Submission Agreement">
+        <button type="button" class="disclaimer-info-btn" id="openTermsInfoBtn" title="View Fan Submission Agreement" aria-label="View Fan Submission Agreement" data-track="community:open_terms">
           <i class="fa-solid fa-circle-info"></i>
         </button>
-        <button class="close-modal-btn" id="closeCommunityModal" aria-label="Close modal">
+        <button class="close-modal-btn" id="closeCommunityModal" aria-label="Close modal" data-track="community:close">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -116,7 +116,7 @@
 
         <!-- Submit Button -->
         <div class="form-actions">
-          <button type="submit" class="submit-clip-btn" id="submitCommunityClipBtn">
+          <button type="submit" class="submit-clip-primary-btn" id="submitClipBtn" data-track="community:submit">
             <span class="btn-text">Submit Clip</span>
             <i class="fa-solid fa-paper-plane btn-icon"></i>
             <div class="btn-spinner hidden" id="clipSpinner"></div>
@@ -133,10 +133,10 @@
         <p>Thanks for sharing your clip with Kins! We'll review your link and feature it on the community spotlight.</p>
         
         <div class="success-actions">
-          <button type="button" class="reset-submission-btn" id="submitAnotherClipBtn">
+          <button type="button" class="reset-submission-btn" id="submitAnotherClipBtn" data-track="community:submit_another">
             <i class="fa-solid fa-rotate-left"></i> Submit Another
           </button>
-          <button type="button" class="close-done-btn" id="closeCommunityDoneBtn">
+          <button type="button" class="close-done-btn" id="closeCommunityDoneBtn" data-track="community:done">
             Done
           </button>
         </div>

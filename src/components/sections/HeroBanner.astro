@@ -9,7 +9,7 @@ interface Props {
 const { image = kinsLogoNew } = Astro.props;
 ---
 
-<div class="hero-banner-container" id="heroBannerContainer">
+<div class="hero-banner-container" id="heroBannerContainer" data-track-container="main:hero">
   <div class="hero-banner-glow"></div>
   {
     typeof image === 'string' ? (

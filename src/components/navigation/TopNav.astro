@@ -1,17 +1,17 @@
 ---
 ---
 
-<header class="top-nav">
-  <button class="nav-brutal-btn nav-icon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates" title="Subscribe">
+<header class="top-nav" data-track-container="nav:top_bar">
+  <button class="nav-brutal-btn nav-icon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates" title="Subscribe" data-track="nav:subscribe">
     <i class="fa-solid fa-bell nav-icon"></i>
   </button>
 
-  <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label="Search cover videos">
+  <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label="Search cover videos" data-track="nav:search_pill">
     <i class="fa-solid fa-magnifying-glass search-pill-icon"></i>
     <span class="search-pill-placeholder">search covers...</span>
   </button>
 
-  <button class="nav-brutal-btn nav-icon-btn" id="shareBtn" aria-label="Share page" title="Share">
+  <button class="nav-brutal-btn nav-icon-btn" id="shareBtn" aria-label="Share page" title="Share" data-track="nav:share">
     <i class="fa-solid fa-share-nodes nav-icon"></i>
   </button>
 </header>
@@ -284,7 +284,7 @@
       heroBannerImg = document.getElementById('heroBannerImg') || document.querySelector('.hero-banner-img');
     }
 
-    const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, shareBtn, heroBannerImg];
+    const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, shareBtn];
     const isTransparent = targetOpacity <= 0.02;
 
     elementsToFade.forEach(el => {

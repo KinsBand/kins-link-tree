@@ -1,7 +1,7 @@
 ---
 ---
 
-<div class="bottom-sheet-backdrop hidden" id="gigMapModal" role="dialog" aria-modal="true" aria-label="Kins Live Tour & Gig Map">
+<div class="bottom-sheet-backdrop hidden" id="gigMapModal" role="dialog" aria-modal="true" aria-label="Kins Live Tour & Gig Map" data-track-container="modal:gig_map">
   <div class="bottom-sheet-container" id="bottomSheetContainer">
     
     <!-- Full-Screen Interactive Map Canvas -->
@@ -17,17 +17,17 @@
           </div>
           <h3 class="gig-modal-heading">Sydney & Newcastle</h3>
         </div>
-        <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map" title="Close Gig Map (Esc)">
+        <button class="close-sheet-btn" id="closeGigMapSheet" aria-label="Close Gig Map" title="Close Gig Map (Esc)" data-track="gig_map:close">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
       <!-- Floating Map Control Buttons (Top-Right) -->
       <div class="map-floating-overlay-controls">
-        <button type="button" class="map-control-glass-btn" id="mapFitBoundsBtn" title="Fit all tour venues in view" aria-label="Fit All Venues">
+        <button type="button" class="map-control-glass-btn" id="mapFitBoundsBtn" title="Fit all tour venues in view" aria-label="Fit All Venues" data-track="gig_map:fit_bounds">
           <i class="fa-solid fa-expand"></i>
         </button>
-        <button type="button" class="map-control-glass-btn desktop-only" id="toggleMapDetailsBtn" title="Toggle venue details panel" aria-label="Toggle Details Panel">
+        <button type="button" class="map-control-glass-btn desktop-only" id="toggleMapDetailsBtn" title="Toggle venue details panel" aria-label="Toggle Details Panel" data-track="gig_map:toggle_details">
           <i class="fa-solid fa-layer-group"></i>
         </button>
       </div>

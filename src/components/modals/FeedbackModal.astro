@@ -1,7 +1,7 @@
 ---
 ---
 
-<div class="modal-backdrop hidden" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
+<div class="modal-backdrop hidden" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle" data-track-container="modal:feedback">
   <div class="modal-content feedback-modal-enhanced">
     <div class="modal-header">
       <div class="modal-title-group">
@@ -13,7 +13,7 @@
           <p class="modal-subtitle-text">Help us make the Kins site better</p>
         </div>
       </div>
-      <button class="close-modal-btn" id="closeFeedbackModal" aria-label="Close feedback modal">
+      <button class="close-modal-btn" id="closeFeedbackModal" aria-label="Close feedback modal" data-track="feedback:close">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
@@ -185,7 +185,7 @@
 
         <!-- Submit Button -->
         <div class="form-actions">
-          <button type="submit" class="submit-feedback-btn" id="submitFeedbackBtn">
+          <button type="submit" class="submit-feedback-btn" id="submitFeedbackBtn" data-track="feedback:submit">
             <span class="btn-text">Send Improvement</span>
             <i class="fa-solid fa-paper-plane btn-icon"></i>
             <div class="btn-spinner hidden" id="feedbackSpinner"></div>
@@ -208,6 +208,7 @@
             rel="noopener noreferrer" 
             class="discord-cta-btn" 
             id="feedbackDiscordCtaBtn"
+            data-track="feedback:discord_join"
           >
             <i class="fa-brands fa-discord"></i>
             <span>Join our Discord</span>
@@ -216,10 +217,10 @@
         </div>
 
         <div class="success-actions">
-          <button type="button" class="reset-feedback-btn" id="submitAnotherFeedbackBtn">
+          <button type="button" class="reset-feedback-btn" id="submitAnotherFeedbackBtn" data-track="feedback:submit_another">
             <i class="fa-solid fa-rotate-left"></i> Suggest Another
           </button>
-          <button type="button" class="close-done-btn" id="closeFeedbackDoneBtn">
+          <button type="button" class="close-done-btn" id="closeFeedbackDoneBtn" data-track="feedback:done">
             Done
           </button>
         </div>

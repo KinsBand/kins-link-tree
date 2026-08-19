@@ -3,7 +3,7 @@
 
 <div class="bottom-floating-controls-wrapper" id="bottomFloatingControls">
   <!-- Full-Width Streaming Drawer Panel -->
-  <div class="stream-drawer-panel hidden" id="streamDrawerPanel">
+  <div class="stream-drawer-panel hidden" id="streamDrawerPanel" data-track-container="drawer:stream_platforms">
     <div class="stream-drawer-header">
       <span class="stream-drawer-title">
         <i class="fa-solid fa-compact-disc"></i> Stream on
@@ -11,43 +11,43 @@
       <span class="stream-drawer-song" id="streamDrawerSongName"></span>
     </div>
     <div class="stream-platforms-row">
-      <a href="https://open.spotify.com/artist/57aKk67k5L7iL13C0d7g5Y" target="_blank" rel="noopener noreferrer" class="stream-platform-btn spotify" id="streamLinkSpotify" title="Spotify" aria-label="Spotify">
+      <a href="https://open.spotify.com/artist/57aKk67k5L7iL13C0d7g5Y" target="_blank" rel="noopener noreferrer" class="stream-platform-btn spotify" id="streamLinkSpotify" title="Spotify" aria-label="Spotify" data-track="stream:spotify" data-platform="spotify">
         <i class="fa-brands fa-spotify" aria-hidden="true"></i>
         <span class="sr-only">Stream on Spotify</span>
       </a>
-      <a href="https://music.apple.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn apple" id="streamLinkApple" title="Apple Music" aria-label="Apple Music">
+      <a href="https://music.apple.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn apple" id="streamLinkApple" title="Apple Music" aria-label="Apple Music" data-track="stream:apple" data-platform="apple">
         <i class="fa-brands fa-apple" aria-hidden="true"></i>
         <span class="sr-only">Stream on Apple Music</span>
       </a>
-      <a href="https://music.youtube.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn youtube" id="streamLinkYoutube" title="YouTube Music" aria-label="YouTube Music">
+      <a href="https://music.youtube.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn youtube" id="streamLinkYoutube" title="YouTube Music" aria-label="YouTube Music" data-track="stream:youtube" data-platform="youtube">
         <i class="fa-brands fa-youtube" aria-hidden="true"></i>
         <span class="sr-only">Stream on YouTube Music</span>
       </a>
-      <a href="https://music.amazon.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn amazon" id="streamLinkAmazon" title="Amazon Music" aria-label="Amazon Music">
+      <a href="https://music.amazon.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn amazon" id="streamLinkAmazon" title="Amazon Music" aria-label="Amazon Music" data-track="stream:amazon" data-platform="amazon">
         <i class="fa-brands fa-amazon" aria-hidden="true"></i>
         <span class="sr-only">Stream on Amazon Music</span>
       </a>
-      <a href="https://soundcloud.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn soundcloud" id="streamLinkSoundcloud" title="SoundCloud" aria-label="SoundCloud">
+      <a href="https://soundcloud.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn soundcloud" id="streamLinkSoundcloud" title="SoundCloud" aria-label="SoundCloud" data-track="stream:soundcloud" data-platform="soundcloud">
         <i class="fa-brands fa-soundcloud" aria-hidden="true"></i>
         <span class="sr-only">Stream on SoundCloud</span>
       </a>
-      <a href="https://www.deezer.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn deezer" id="streamLinkDeezer" title="Deezer" aria-label="Deezer">
+      <a href="https://www.deezer.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn deezer" id="streamLinkDeezer" title="Deezer" aria-label="Deezer" data-track="stream:deezer" data-platform="deezer">
         <i class="fa-brands fa-deezer" aria-hidden="true"></i>
         <span class="sr-only">Stream on Deezer</span>
       </a>
-      <a href="https://tidal.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn tidal" id="streamLinkTidal" title="Tidal" aria-label="Tidal">
+      <a href="https://tidal.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn tidal" id="streamLinkTidal" title="Tidal" aria-label="Tidal" data-track="stream:tidal" data-platform="tidal">
         <i class="fa-solid fa-water" aria-hidden="true"></i>
         <span class="sr-only">Stream on Tidal</span>
       </a>
-      <a href="https://bandcamp.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn bandcamp" id="streamLinkBandcamp" title="Bandcamp" aria-label="Bandcamp">
+      <a href="https://bandcamp.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn bandcamp" id="streamLinkBandcamp" title="Bandcamp" aria-label="Bandcamp" data-track="stream:bandcamp" data-platform="bandcamp">
         <i class="fa-brands fa-bandcamp" aria-hidden="true"></i>
         <span class="sr-only">Stream on Bandcamp</span>
       </a>
-      <a href="https://audiomack.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn audiomack" id="streamLinkAudiomack" title="Audiomack" aria-label="Audiomack">
+      <a href="https://audiomack.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn audiomack" id="streamLinkAudiomack" title="Audiomack" aria-label="Audiomack" data-track="stream:audiomack" data-platform="audiomack">
         <i class="fa-solid fa-headphones" aria-hidden="true"></i>
         <span class="sr-only">Stream on Audiomack</span>
       </a>
-      <a href="https://www.qobuz.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn qobuz" id="streamLinkQobuz" title="Qobuz" aria-label="Qobuz">
+      <a href="https://www.qobuz.com" target="_blank" rel="noopener noreferrer" class="stream-platform-btn qobuz" id="streamLinkQobuz" title="Qobuz" aria-label="Qobuz" data-track="stream:qobuz" data-platform="qobuz">
         <i class="fa-solid fa-compact-disc" aria-hidden="true"></i>
         <span class="sr-only">Stream on Qobuz</span>
       </a>
@@ -55,7 +55,7 @@
   </div>
 
   <!-- Neo-Brutalist Dual-Card Bottom Dock -->
-  <div class="brutal-bottom-dock" id="bottomAudioBar">
+  <div class="brutal-bottom-dock" id="bottomAudioBar" data-track-container="dock:audio_player">
     <audio id="vaultAudioPlayer" preload="none"></audio>
 
     <!-- Left Card: PLAYER (58%) -->
@@ -107,7 +107,7 @@
           <span class="idle-mix-subtitle">listen to what inspires ...</span>
         </div>
 
-        <button class="idle-play-btn brutal-press" id="idlePlayBtn" aria-label="Play random inspiration song">
+        <button class="idle-play-btn brutal-press" id="idlePlayBtn" aria-label="Play random inspiration song" data-track="player:idle_play">
           <i class="fa-solid fa-play"></i>
         </button>
       </div>
@@ -131,10 +131,10 @@
         </div>
 
         <div class="audio-bar-right">
-          <button class="audio-bar-stream-btn brutal-press" id="audioBarStreamBtn" aria-label="Streaming options" title="Stream or Add to Playlist">
+          <button class="audio-bar-stream-btn brutal-press" id="audioBarStreamBtn" aria-label="Streaming options" title="Stream or Add to Playlist" data-track="player:stream_options">
             <i class="fa-solid fa-arrow-up-right-from-square"></i>
           </button>
-          <button class="audio-bar-toggle-btn brutal-press" id="audioBarToggleBtn" aria-label="Toggle playback">
+          <button class="audio-bar-toggle-btn brutal-press" id="audioBarToggleBtn" aria-label="Toggle playback" data-track="player:toggle">
             <i class="fa-solid fa-pause"></i>
           </button>
         </div>
@@ -142,7 +142,7 @@
     </div>
 
     <!-- Right Card: GIG MAP (42%) -->
-    <div class="brutal-gig-card" id="floatingGigPillBtn" role="button" aria-label="Tour dates & Gig Map">
+    <div class="brutal-gig-card" id="floatingGigPillBtn" role="button" aria-label="Tour dates & Gig Map" data-track="gig:open_map">
       <!-- Folder Tab Sticking Up From Top Left -->
       <div class="card-folder-tab tab-gigmap">GIG MAP</div>
       

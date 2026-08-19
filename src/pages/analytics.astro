@@ -5,7 +5,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 const baseUrl = import.meta.env.BASE_URL;
 ---
 
-<BaseLayout title="Observability Dashboard | Kins Band" description="Real-time analytics, inbound social attribution, and system health for Kins Band.">
+<BaseLayout title="Observability Dashboard | Kins Band" description="Real-time analytics, inbound social attribution, touch ergonomics, and system health for Kins Band.">
   <div class="dash-page-wrapper" data-no-track="true">
     
     <!-- AUTHENTICATION SCREEN (Shown when locked) -->
@@ -14,7 +14,7 @@ const baseUrl = import.meta.env.BASE_URL;
         <i class="fa-solid fa-chart-pie"></i>
       </div>
       <h1 class="auth-title">KINS OBSERVABILITY</h1>
-      <p class="auth-subtitle">Enter Admin Passcode to view live traffic, inbound attribution & heatmaps.</p>
+      <p class="auth-subtitle">Enter Admin Passcode to view live traffic, inbound attribution, touch ergonomics & heatmaps.</p>
 
       <form id="dash-login-form" class="auth-form">
         <input 
@@ -52,17 +52,25 @@ const baseUrl = import.meta.env.BASE_URL;
                 <span class="live-dot"></span> LIVE TELEMETRY
               </span>
             </div>
-            <p class="dash-subtitle">Inbound Social Attribution • Semantic Element Tracking • Zero Admin Noise</p>
+            <p class="dash-subtitle">Inbound Social Attribution • Touch Target Intelligence • Zero Admin Noise</p>
           </div>
         </div>
 
-        <!-- Controls: Timeframe, Heatmap trigger, Settings, Logout -->
+        <!-- Controls: Timeframe, Auto-Poll, Heatmap trigger, Exports, Settings, Logout -->
         <div class="dash-controls">
           <div class="time-filter-pill-box" id="dash-time-filters">
             <button data-range="24h" class="dash-range-btn active">24H</button>
             <button data-range="7d" class="dash-range-btn">7D</button>
             <button data-range="30d" class="dash-range-btn">30D</button>
             <button data-range="all" class="dash-range-btn">ALL</button>
+          </div>
+
+          <!-- Auto Refresh Selector -->
+          <div class="time-filter-pill-box" id="dash-poll-filters" title="Auto-Refresh Interval">
+            <button data-poll="0" class="dash-poll-btn active">OFF</button>
+            <button data-poll="5000" class="dash-poll-btn">5s</button>
+            <button data-poll="15000" class="dash-poll-btn">15s</button>
+            <button data-poll="30000" class="dash-poll-btn">30s</button>
           </div>
 
           <button id="export-leads-csv-btn" class="dash-action-btn export-btn" title="Export VIP Leads Spreadsheet (CSV)">
@@ -90,6 +98,22 @@ const baseUrl = import.meta.env.BASE_URL;
           </button>
         </div>
       </header>
+
+      <!-- REAL-TIME PULSE & RECENT ACTIVITY TICKER BAR -->
+      <section class="dash-pulse-bar" id="dash-pulse-bar">
+        <div class="pulse-left">
+          <span class="pulse-icon"><i class="fa-solid fa-bolt text-yellow"></i></span>
+          <span class="pulse-label">LIVE STREAM:</span>
+          <div class="pulse-ticker-items" id="pulse-ticker-items">
+            <!-- Dynamically populated -->
+            <span class="pulse-item"><i class="fa-brands fa-spotify text-emerald"></i> Spotify Stream Click • <small>Just now</small></span>
+          </div>
+        </div>
+        <div class="pulse-right">
+          <span>Active Sessions: <strong class="text-emerald font-mono" id="pulse-active-sessions">1</strong></span>
+          <span>Conversion: <strong class="text-cyan font-mono" id="pulse-conversion-rate">--%</strong></span>
+        </div>
+      </section>
 
       <!-- KPI Summary Cards Strip (6 KPIs) -->
       <section class="kpi-grid">
@@ -133,11 +157,11 @@ const baseUrl = import.meta.env.BASE_URL;
 
         <div class="kpi-card">
           <div class="kpi-header">
-            <span>Avg Speed (LCP)</span>
-            <i class="fa-solid fa-bolt text-amber"></i>
+            <span>Touch Accuracy</span>
+            <i class="fa-solid fa-hand-pointer text-cyan"></i>
           </div>
-          <div class="kpi-value text-amber" id="kpi-lcp">--</div>
-          <div class="kpi-trend text-emerald">Status: Excellent</div>
+          <div class="kpi-value text-cyan" id="kpi-touch-acc">--%</div>
+          <div class="kpi-sub" id="kpi-touch-ratio">Mobile vs Desktop</div>
         </div>
 
         <div class="kpi-card">
@@ -150,7 +174,7 @@ const baseUrl = import.meta.env.BASE_URL;
         </div>
       </section>
 
-      <!-- NEW ROW: INBOUND BIO LINK PERFORMANCE & CAMPAIGN BUILDER -->
+      <!-- ROW: INBOUND BIO LINK PERFORMANCE & CAMPAIGN BUILDER -->
       <section class="dash-grid-2-1">
         <!-- Inbound Bio Links Performance Table -->
         <div class="dash-panel">
@@ -319,7 +343,66 @@ const baseUrl = import.meta.env.BASE_URL;
         </div>
       </section>
 
-      <!-- ROW 3: PERFORMANCE, CORE WEB VITALS & ERROR STREAM (PILLARS 3 & 4) -->
+      <!-- ROW 3: TOUCH ERGONOMICS, SEARCH INTELLIGENCE & UX FRICTION -->
+      <section class="dash-grid-2-1">
+        <!-- Touch Ergonomics & UX Friction Panel -->
+        <div class="dash-panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">TOUCH ERGONOMICS & UX FRICTION</h2>
+              <p class="panel-sub">Touch centering accuracy, rage clicks & dead clicks diagnostics</p>
+            </div>
+            <span class="panel-badge"><i class="fa-solid fa-shield-halved text-emerald"></i> Touch QA</span>
+          </div>
+
+          <div class="friction-grid">
+            <div class="friction-card">
+              <span class="friction-label">Rage Clicks</span>
+              <span class="friction-val text-rose" id="stat-rage-clicks">0</span>
+              <span class="friction-sub">Rapid repeated taps</span>
+            </div>
+            <div class="friction-card">
+              <span class="friction-label">Dead Clicks</span>
+              <span class="friction-val text-amber" id="stat-dead-clicks">0</span>
+              <span class="friction-sub">Taps on unlinked areas</span>
+            </div>
+            <div class="friction-card">
+              <span class="friction-label">Near Misses</span>
+              <span class="friction-val text-yellow" id="stat-near-misses">0</span>
+              <span class="friction-sub">&lt;16px off button hitbox</span>
+            </div>
+            <div class="friction-card">
+              <span class="friction-label">Touch Share</span>
+              <span class="friction-val text-cyan" id="stat-touch-share">--%</span>
+              <span class="friction-sub">Mobile pointer events</span>
+            </div>
+          </div>
+
+          <div class="friction-tip">
+            <i class="fa-solid fa-fingerprint text-yellow"></i>
+            <span>Press <kbd>Ctrl+Shift+H</kbd> and switch to <strong>RAGE</strong> or <strong>BOXES</strong> mode to inspect hitbox heat directly on live buttons.</span>
+          </div>
+        </div>
+
+        <!-- Covers Search Intelligence Panel -->
+        <div class="dash-panel flex-col-between">
+          <div>
+            <h2 class="panel-title">COVERS SEARCH INTELLIGENCE</h2>
+            <p class="panel-sub">Top artist and track keywords searched by fans</p>
+          </div>
+
+          <div class="search-queries-list" id="search-queries-list">
+            <!-- Populated via JS -->
+          </div>
+
+          <div class="campaign-tip">
+            <i class="fa-solid fa-magnifying-glass text-cyan"></i>
+            <span>Helps the band choose upcoming video covers based on real fan demand!</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROW 4: PERFORMANCE, CORE WEB VITALS & ERROR STREAM (PILLARS 3 & 4) -->
       <section class="dash-grid-1-2">
         <!-- Core Web Vitals Scorecards -->
         <div class="dash-panel flex-col-between">
@@ -677,19 +760,19 @@ const baseUrl = import.meta.env.BASE_URL;
     box-shadow: 2px 2px 0px #000000;
   }
 
-  .dash-range-btn {
+  .dash-range-btn, .dash-poll-btn {
     background: transparent;
     border: none;
     color: #a1a1aa;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     font-weight: 900;
-    padding: 6px 14px;
+    padding: 6px 12px;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.15s ease;
   }
 
-  .dash-range-btn.active {
+  .dash-range-btn.active, .dash-poll-btn.active {
     background: #f2fd43;
     color: #000000;
     box-shadow: 0 0 12px rgba(242, 253, 67, 0.4), 2px 2px 0px #000000;
@@ -735,10 +818,66 @@ const baseUrl = import.meta.env.BASE_URL;
     border-color: #fb7185;
   }
 
+  /* Live Pulse Ticker Bar */
+  .dash-pulse-bar {
+    background: #121216;
+    border: 2px solid #27272a;
+    border-radius: 14px;
+    padding: 10px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.78rem;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .pulse-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  .pulse-label {
+    font-weight: 900;
+    color: #f2fd43;
+    letter-spacing: 0.05em;
+    font-size: 0.72rem;
+  }
+
+  .pulse-ticker-items {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #d4d4d8;
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+
+  .pulse-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #181822;
+    border: 1px solid #27272a;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  .pulse-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 0.78rem;
+    color: #a1a1aa;
+  }
+
   /* KPI Grid Strip */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 14px;
   }
 
@@ -984,7 +1123,7 @@ const baseUrl = import.meta.env.BASE_URL;
     box-shadow: 4px 4px 0px #000000;
   }
 
-  .campaign-tip {
+  .campaign-tip, .friction-tip {
     background: rgba(242, 253, 67, 0.08);
     border: 1.5px solid rgba(242, 253, 67, 0.25);
     border-radius: 12px;
@@ -995,6 +1134,15 @@ const baseUrl = import.meta.env.BASE_URL;
     align-items: center;
     gap: 10px;
     line-height: 1.4;
+  }
+
+  .friction-tip kbd {
+    background: #1c1c24;
+    color: #f2fd43;
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid #3f3f46;
+    font-family: monospace;
   }
 
   /* Charts */
@@ -1025,6 +1173,52 @@ const baseUrl = import.meta.env.BASE_URL;
 
   .panel-footer-stat { margin-top: 12px; text-align: center; font-size: 0.78rem; color: #a1a1aa; }
 
+  /* Friction Grid */
+  .friction-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  @media (max-width: 768px) {
+    .friction-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .friction-card {
+    background: #181822;
+    border: 1.5px solid #27272a;
+    border-radius: 12px;
+    padding: 12px 10px;
+    text-align: center;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .friction-label { display: block; font-size: 0.68rem; font-weight: 900; color: #a1a1aa; text-transform: uppercase; }
+  .friction-val { display: block; font-size: 1.3rem; font-weight: 900; font-family: ui-monospace, monospace; margin: 4px 0 2px 0; }
+  .friction-sub { display: block; font-size: 0.65rem; color: #71717a; }
+
+  /* Search Queries List */
+  .search-queries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+
+  .search-query-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #181822;
+    border: 1.5px solid #27272a;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
   /* Top Elements List */
   .top-elements-list {
     display: flex;
@@ -1047,9 +1241,7 @@ const baseUrl = import.meta.env.BASE_URL;
     box-shadow: 2px 2px 0px #000000;
   }
 
-  .top-el-row:hover {
-    border-color: #3f3f46;
-  }
+  .top-el-row:hover { border-color: #3f3f46; }
 
   /* Leads Box */
   .lead-box {
@@ -1207,6 +1399,7 @@ const baseUrl = import.meta.env.BASE_URL;
 
   let activeRange: '24h' | '7d' | '30d' | 'all' = '24h';
   let chartInstances: Record<string, any> = {};
+  let autoPollTimer: any = null;
 
   const authScreen = document.getElementById('dashboard-auth-screen');
   const dashContent = document.getElementById('dashboard-content');
@@ -1282,6 +1475,27 @@ const baseUrl = import.meta.env.BASE_URL;
       });
     });
   }
+
+  // Auto-Poll Selector
+  const pollBtns = document.querySelectorAll('#dash-poll-filters .dash-poll-btn');
+  pollBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      pollBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const intervalMs = Number(btn.getAttribute('data-poll') || '0');
+
+      if (autoPollTimer) {
+        clearInterval(autoPollTimer);
+        autoPollTimer = null;
+      }
+
+      if (intervalMs > 0) {
+        autoPollTimer = setInterval(() => {
+          refreshDashboardData();
+        }, intervalMs);
+      }
+    });
+  });
 
   function triggerHeatmapShortcut() {
     const event = new KeyboardEvent('keydown', {
@@ -1392,7 +1606,36 @@ const baseUrl = import.meta.env.BASE_URL;
     if (el('kpi-outbound')) el('kpi-outbound')!.textContent = data.outbound.toLocaleString();
     if (el('kpi-audio-plays')) el('kpi-audio-plays')!.textContent = data.audioPlays.toLocaleString();
     if (el('kpi-avg-listen')) el('kpi-avg-listen')!.textContent = `${data.avgListen} avg listen`;
-    if (el('kpi-lcp')) el('kpi-lcp')!.textContent = data.lcp;
+    if (el('kpi-touch-acc')) el('kpi-touch-acc')!.textContent = `${data.touchMetrics.touchAccuracyScore}%`;
+    if (el('kpi-touch-ratio')) el('kpi-touch-ratio')!.textContent = `${data.mobilePct}% Mobile • ${data.desktopPct}% Desk`;
+
+    // Pulse Bar
+    if (el('pulse-active-sessions')) el('pulse-active-sessions')!.textContent = `${data.visitors}`;
+    if (el('pulse-conversion-rate')) el('pulse-conversion-rate')!.textContent = `${data.conversionRate}%`;
+
+    const tickerBox = el('pulse-ticker-items');
+    if (tickerBox && data.recentActivities) {
+      tickerBox.innerHTML = data.recentActivities.map((act: any) => `
+        <span class="pulse-item"><i class="${act.icon} ${act.color}"></i> ${act.text} • <small style="color: #71717a;">${act.time}</small></span>
+      `).join('');
+    }
+
+    // Touch & Friction Stats
+    if (el('stat-rage-clicks')) el('stat-rage-clicks')!.textContent = `${data.touchMetrics.rageClicksCount}`;
+    if (el('stat-dead-clicks')) el('stat-dead-clicks')!.textContent = `${data.touchMetrics.deadClicksCount}`;
+    if (el('stat-near-misses')) el('stat-near-misses')!.textContent = `${data.touchMetrics.nearMissCount}`;
+    if (el('stat-touch-share')) el('stat-touch-share')!.textContent = `${data.touchMetrics.touchPct}%`;
+
+    // Search Queries
+    const searchBox = el('search-queries-list');
+    if (searchBox && data.topSearches) {
+      searchBox.innerHTML = data.topSearches.map((sq: any) => `
+        <div class="search-query-row">
+          <span style="font-weight: 700; color: #ffffff;"><i class="fa-solid fa-magnifying-glass text-yellow" style="font-size: 0.75rem; margin-right: 6px;"></i>"${sq.term}"</span>
+          <span class="font-mono text-cyan font-bold">${sq.count} searches</span>
+        </div>
+      `).join('');
+    }
 
     const igCount = data.referrers['Instagram'] || 0;
     const ttCount = data.referrers['TikTok'] || 0;
@@ -1418,7 +1661,7 @@ const baseUrl = import.meta.env.BASE_URL;
     // Populate Inbound Channels Table
     const tbody = el('inbound-channels-tbody');
     if (tbody && data.inboundChannels) {
-      tbody.innerHTML = data.inboundChannels.map(ch => `
+      tbody.innerHTML = data.inboundChannels.map((ch: any) => `
         <tr>
           <td>
             <div style="font-weight: 800; color: #ffffff;">${ch.channel}</div>
@@ -1435,7 +1678,7 @@ const baseUrl = import.meta.env.BASE_URL;
     // Populate Top Elements List
     const topElList = el('top-elements-list');
     if (topElList && data.topElements) {
-      topElList.innerHTML = data.topElements.map(te => `
+      topElList.innerHTML = data.topElements.map((te: any) => `
         <div class="top-el-row">
           <span style="color: #d4d4d8; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">
             ${te.label}

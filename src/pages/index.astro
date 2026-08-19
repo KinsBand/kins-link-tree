@@ -233,6 +233,62 @@ const baseUrl = import.meta.env.BASE_URL;
     .right-main-content > :global(.site-footer) { order: 10; }
   }
 
+  /* Heatmap HUD Mobile Emulator Mode Overrides on Desktop */
+  :global(body.hud-mobile-emulator-mode) .app-wrapper {
+    width: 393px !important;
+    max-width: 393px !important;
+    min-height: 852px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.98), 0 0 0 12px #181820, 0 0 0 14px #383842 !important;
+    border-radius: 44px !important;
+    overflow-x: hidden !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    background: #141417 !important;
+  }
+
+  :global(body.hud-mobile-emulator-mode) .site-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding: 16px 14px 110px !important;
+    box-shadow: none !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    min-height: auto !important;
+  }
+
+  :global(body.hud-mobile-emulator-mode) .left-sidebar,
+  :global(body.hud-mobile-emulator-mode) .right-main-content {
+    display: contents !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  :global(body.hud-mobile-emulator-mode) .left-sidebar > :global(.top-nav) { order: 1 !important; }
+  :global(body.hud-mobile-emulator-mode) .left-sidebar > :global(.hero-banner-container) { order: 2 !important; }
+  :global(body.hud-mobile-emulator-mode) .left-sidebar > :global(.profile-section) { order: 3 !important; }
+  :global(body.hud-mobile-emulator-mode) .left-sidebar > :global(.hero-feature-card-wrapper) { order: 4 !important; }
+  :global(body.hud-mobile-emulator-mode) .left-sidebar > :global(.tabbed-links-section) { order: 5 !important; }
+  :global(body.hud-mobile-emulator-mode) .right-main-content > :global(.members-section) { order: 6 !important; }
+  :global(body.hud-mobile-emulator-mode) .right-main-content > :global(.spotlight-section) { order: 7 !important; }
+  :global(body.hud-mobile-emulator-mode) .right-main-content > :global(.inspired-section) { order: 8 !important; }
+  :global(body.hud-mobile-emulator-mode) .left-sidebar > :global(.subscribe-section) { order: 9 !important; }
+  :global(body.hud-mobile-emulator-mode) .right-main-content > :global(.site-footer) { order: 10 !important; }
+
   .site-footer {
     width: 100%;
     display: flex;

@@ -4,7 +4,7 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
 ---
 
 <!-- Share Modal Backdrop -->
-<div class="modal-backdrop hidden" id="shareModal" role="dialog" aria-modal="true" aria-label="Share Kins Official Page">
+<div class="modal-backdrop hidden" id="shareModal" role="dialog" aria-modal="true" aria-label="Share Kins Official Page" data-track-container="modal:share">
   <div class="modal-content share-modal-enhanced">
     <!-- Header -->
     <div class="modal-header">
@@ -12,14 +12,14 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
         <span class="brand-mini-badge">Kins • Official Link Tree</span>
         <h3>Share Official Page</h3>
       </div>
-      <button class="close-modal-btn" id="closeShareModal" aria-label="Close share modal">
+      <button class="close-modal-btn" id="closeShareModal" aria-label="Close share modal" data-track="share:close">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
     <div class="modal-body share-modal-body">
       <!-- 1. Native Web Share CTA -->
-      <button type="button" class="native-share-primary-btn" id="nativeShareCtaBtn">
+      <button type="button" class="native-share-primary-btn" id="nativeShareCtaBtn" data-track="share:native_app">
         <i class="fa-solid fa-arrow-up-from-bracket"></i>
         <span>Share via App...</span>
       </button>
@@ -32,7 +32,7 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
             <i class="fa-solid fa-link link-input-icon"></i>
             <input type="text" id="shareUrlInput" value="https://kinsband.com/?utm_source=share_modal&utm_medium=direct_link" readonly>
           </div>
-          <button id="copyUrlBtn" class="icon-only-copy-btn" title="Copy website link" aria-label="Copy website link">
+          <button id="copyUrlBtn" class="icon-only-copy-btn" title="Copy website link" aria-label="Copy website link" data-track="share:copy_url">
             <i class="fa-regular fa-copy"></i>
           </button>
         </div>
@@ -46,7 +46,7 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
             <i class="fa-solid fa-at handle-at-icon"></i>
             <span class="handle-handle-text">@KinsBandOfficial</span>
           </div>
-          <button class="icon-only-copy-btn" id="handleCopyBtn" title="Copy handle @KinsBandOfficial" aria-label="Copy handle @KinsBandOfficial">
+          <button class="icon-only-copy-btn" id="handleCopyBtn" title="Copy handle @KinsBandOfficial" aria-label="Copy handle @KinsBandOfficial" data-track="share:copy_handle">
             <i class="fa-regular fa-copy"></i>
           </button>
         </div>

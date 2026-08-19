@@ -43,6 +43,9 @@ const recordingTotalVotes = poll.recording_cover.options.reduce((acc, opt) => ac
 const setlistTotalVotes = poll.setlist_song.options.reduce((acc, opt) => acc + opt.votes, 0);
 const merchTotalVotes = poll.merch_design.options.reduce((acc, opt) => acc + opt.votes, 0);
 const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.votes, 0);
+
+const baseUrl = import.meta.env.BASE_URL;
+const resolveImg = (src?: string) => !src ? `${baseUrl}pfp.jpg` : src.startsWith('http') ? src : `${baseUrl}${src.replace(/^\//, '')}`;
 ---
 
 <div class="hero-feature-card-wrapper" id="heroFeatureCardWrapper">
@@ -271,7 +274,7 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
             return (
               <button type="button" class="merch-card-item poll-option-btn" data-poll-type="merch" data-option-id={opt.id} data-votes={opt.votes}>
                 <div class="merch-card-thumb-box">
-                  <img src={opt.img || '/pfp.jpg'} alt={opt.text} class="merch-card-img" />
+                  <img src={resolveImg(opt.img)} alt={opt.text} class="merch-card-img" />
                   <div class="merch-card-icon-badge">
                     <i class={`fa-solid ${opt.icon || 'fa-shirt'}`}></i>
                   </div>
@@ -324,7 +327,7 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
       <div class="sub-var-panel var-preview-inspired_demo" id="varPreviewInspiredDemo">
         <div class="inspired-style-preview-card">
           <div class="preview-thumb-box" id="previewDiscBox">
-            <img src={preview.inspired_demo.coverImg} alt={preview.inspired_demo.title} class="preview-thumb-img" />
+            <img src={resolveImg(preview.inspired_demo.coverImg)} alt={preview.inspired_demo.title} class="preview-thumb-img" />
             <i class="fa-solid fa-compact-disc preview-fallback-icon"></i>
           </div>
 
@@ -565,7 +568,7 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
       <div class="sub-var-panel var-spotlight-member_spotlight" id="varSpotlightMember">
         <div class="spotlight-card-content">
           <div class="spotlight-thumb-box">
-            <img src={spotlight.member_spotlight.img} alt={spotlight.member_spotlight.name} class="spotlight-img" />
+            <img src={resolveImg(spotlight.member_spotlight.img)} alt={spotlight.member_spotlight.name} class="spotlight-img" />
           </div>
           <div class="spotlight-details">
             <span class="tour-badge">{spotlight.member_spotlight.role}</span>
@@ -593,7 +596,7 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
           {spotlight.gear_showcase.items.map((item) => (
             <div class="merch-card-item">
               <div class="merch-card-thumb-box">
-                <img src={item.img} alt={item.name} class="merch-card-img" />
+                <img src={resolveImg(item.img)} alt={item.name} class="merch-card-img" />
                 <div class="merch-card-icon-badge">
                   <i class={`fa-solid ${item.icon}`}></i>
                 </div>

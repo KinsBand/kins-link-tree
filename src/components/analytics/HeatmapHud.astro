@@ -1,6 +1,6 @@
 ---
 // src/components/analytics/HeatmapHud.astro
-// Live Heatmap HUD with Real-time DOM-Anchor Snapping & Mobile Viewport Emulation
+// Live Heatmap HUD with 5 Visualization Modes, Dynamic Active Menu Detection, Real-time DOM-Anchor Snapping & PNG Exporter
 const baseUrl = import.meta.env.BASE_URL;
 ---
 
@@ -51,6 +51,12 @@ const baseUrl = import.meta.env.BASE_URL;
     <span class="notch-label">📱 MOBILE VIEWPORT EMULATION (393px × 852px)</span>
   </div>
 
+  <!-- Active Area Indicator Pill (Top Left HUD Indicator) -->
+  <div id="hud-active-area-indicator" class="hud-active-area-badge">
+    <span class="area-dot"></span>
+    <span id="active-area-label">Area: Main Page Feed</span>
+  </div>
+
   <!-- Element Inspection Tooltip -->
   <div id="hud-element-inspector" class="hud-inspector-card hidden">
     <div class="inspector-tag" id="inspector-tag">BUTTON</div>
@@ -59,20 +65,61 @@ const baseUrl = import.meta.env.BASE_URL;
       <span>Clicks: <strong id="inspector-clicks" class="text-yellow font-mono">0</strong></span>
       <span>Scope: <strong id="inspector-scope" class="text-cyan">drawer</strong></span>
     </div>
+    <div class="inspector-extra" id="inspector-extra">
+      <span>Accuracy: <strong id="inspector-acc" class="text-emerald">95%</strong></span>
+      <span>Device: <strong id="inspector-dev" class="text-white">Mobile</strong></span>
+    </div>
   </div>
 
-  <!-- Floating Control Bar -->
+  <!-- Draggable Floating Control Bar -->
   <div id="dev-heatmap-toolbar" class="hud-floating-toolbar">
-    <!-- Header -->
-    <div class="toolbar-header">
+    <!-- Header with Drag Grip -->
+    <div class="toolbar-header" id="toolbar-drag-handle" title="Click and drag anywhere to move toolbar">
       <div class="toolbar-title-group">
+        <span class="drag-grip-icon">⠿</span>
         <span class="pulse-dot"></span>
-        <span class="toolbar-title">LIVE HEATMAP HUD</span>
+        <span class="toolbar-title">HEATMAP HUD</span>
       </div>
       <div class="toolbar-actions">
         <span id="heatmap-click-count" class="click-badge">0 clicks</span>
         <button id="close-heatmap-btn" class="toolbar-close-btn" title="Close HUD (Ctrl+Shift+H)">✕</button>
       </div>
+    </div>
+
+    <!-- Mode Selector Grid (5 Modes) -->
+    <div class="filter-section">
+      <div class="flex-between">
+        <span class="filter-section-title">Mode</span>
+        <span id="active-mode-label" class="mode-desc-pill">🔥 Density</span>
+      </div>
+      <div class="filter-pill-grid cols-5" id="hud-mode-group">
+        <button data-mode="density" class="hud-mode-btn active" title="Gaussian Thermal Density">🔥 DENSE</button>
+        <button data-mode="points" class="hud-mode-btn" title="Individual Click & Tap Radar Dots">🎯 DOTS</button>
+        <button data-mode="hitboxes" class="hud-mode-btn" title="DOM Element Hitbox Heat Boxes">📦 BOXES</button>
+        <button data-mode="attention" class="hud-mode-btn" title="Scroll Reach & Dwell Time">📊 DWELL</button>
+        <button data-mode="friction" class="hud-mode-btn" title="Rage & Dead Click UX Alerts">⚠️ RAGE</button>
+      </div>
+    </div>
+
+    <!-- Container Scope Filter -->
+    <div class="filter-section">
+      <span class="filter-section-title">Container Scope</span>
+      <select id="hud-scope-select" class="hud-scope-dropdown">
+        <option value="auto">⚡ Auto: Follow Active Menu</option>
+        <option value="all">🌐 All Areas Combined</option>
+        <option value="main_feed">🏠 Main Page Feed</option>
+        <option value="dock:audio_player">🎵 Bottom Audio Dock</option>
+        <option value="drawer:stream_platforms">💿 Streaming Drawer</option>
+        <option value="modal:covers_search">🔍 Covers Search Modal</option>
+        <option value="modal:gig_map">🗺️ NSW Gig Map Sheet</option>
+        <option value="modal:community">🎬 Fan Submission Modal</option>
+        <option value="modal:privacy">🛡️ Privacy Policy Modal</option>
+        <option value="modal:terms">📜 Fan Submission Terms</option>
+        <option value="modal:feedback">💡 Improvement Feedback</option>
+        <option value="modal:cover_video">🎥 Cover Video Player</option>
+        <option value="modal:share">🔗 Share & QR Modal</option>
+        <option value="epk:portal">📄 EPK Press Portal</option>
+      </select>
     </div>
 
     <!-- Time Range Filter -->
@@ -86,28 +133,13 @@ const baseUrl = import.meta.env.BASE_URL;
       </div>
     </div>
 
-    <!-- Container Scope Filter -->
-    <div class="filter-section">
-      <span class="filter-section-title">Container Scope</span>
-      <select id="hud-scope-select" class="hud-scope-dropdown">
-        <option value="all">⚡ All Areas Combined</option>
-        <option value="main_feed">🏠 Main Page Feed</option>
-        <option value="dock:audio_player">🎵 Bottom Audio Dock</option>
-        <option value="drawer:stream_platforms">💿 Streaming Drawer</option>
-        <option value="modal:gig_map">🗺️ NSW Gig Map Sheet</option>
-        <option value="modal:covers_search">🔍 Covers Search Modal</option>
-        <option value="modal:share">🔗 Share & QR Modal</option>
-        <option value="epk:portal">📄 EPK Press Portal</option>
-      </select>
-    </div>
-
     <!-- Device Filter & Mobile Viewport Emulation -->
     <div class="filter-section">
       <div class="flex-between">
         <span class="filter-section-title">Device & Mode</span>
         <label class="snap-toggle-label">
           <input type="checkbox" id="hud-snap-mode-toggle" checked>
-          <span>DOM Anchor Snap</span>
+          <span>DOM Snap</span>
         </label>
       </div>
       <div class="filter-pill-grid cols-3" id="device-filter-group">
@@ -118,62 +150,55 @@ const baseUrl = import.meta.env.BASE_URL;
     </div>
 
     <!-- Radius Slider -->
-    <div class="slider-section">
+    <div class="slider-section" id="radius-slider-section">
       <div class="slider-header">
-        <span>Heat Glow Radius</span>
+        <span>Heat Spot Radius</span>
         <span id="radius-val" class="slider-val">35px</span>
       </div>
-      <input type="range" id="heatmap-radius" min="15" max="65" value="35" class="hud-slider">
+      <input type="range" id="heatmap-radius" min="15" max="80" value="35" class="hud-slider" />
     </div>
 
-    <!-- Footer Action Buttons -->
+    <!-- Action Buttons -->
     <div class="toolbar-footer">
       <a href={`${baseUrl}analytics`} class="hud-dash-link">
-        <i class="fa-solid fa-chart-line"></i> Full Analytics
+        <i class="fa-solid fa-chart-line"></i> Dashboard
       </a>
-      <button id="refresh-heatmap-btn" class="hud-refresh-icon-btn" title="Refresh Points">
-        <i class="fa-solid fa-rotate-right"></i>
+      <button id="export-snapshot-btn" class="hud-tool-btn" title="Download Heatmap PNG Snapshot">
+        <i class="fa-solid fa-camera"></i> Snapshot
+      </button>
+      <button id="refresh-heatmap-btn" class="hud-refresh-icon-btn" title="Refresh Live Click Data">
+        <i class="fa-solid fa-arrows-rotate"></i>
       </button>
     </div>
   </div>
 </div>
 
-<style is:global>
-  /* ==========================================================================
-     DEV HEATMAP HUD GLOBAL STYLES & MOBILE EMULATOR FRAME
-     ========================================================================== */
-
+<style>
+  /* Base Modal Overlay */
   .hud-modal-overlay {
     position: fixed !important;
     inset: 0 !important;
-    z-index: 99999 !important;
-    background: rgba(0, 0, 0, 0.88) !important;
-    backdrop-filter: blur(10px) !important;
+    background: rgba(0, 0, 0, 0.84) !important;
+    backdrop-filter: blur(8px) !important;
+    z-index: 1000030 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     padding: 16px !important;
-    font-family: 'Space Grotesk', -apple-system, sans-serif !important;
-    box-sizing: border-box !important;
   }
 
-  .hud-modal-overlay.hidden,
-  #dev-heatmap-hud.hidden,
-  #hud-element-inspector.hidden,
-  .hud-mobile-notch-banner.hidden {
-    display: none !important;
-  }
+  .hud-modal-overlay.hidden { display: none !important; }
 
   .hud-modal-card {
-    background: #111114 !important;
-    border: 3px solid #f2fd43 !important;
+    background: #121216 !important;
+    border: 3px solid #000000 !important;
+    box-shadow: 6px 6px 0px #000000 !important;
     border-radius: 16px !important;
     padding: 24px !important;
     max-width: 380px !important;
     width: 100% !important;
     color: #ffffff !important;
-    box-shadow: 0 0 40px rgba(242, 253, 67, 0.35), 5px 5px 0px #000000 !important;
-    box-sizing: border-box !important;
+    font-family: 'Space Grotesk', -apple-system, sans-serif !important;
   }
 
   .hud-modal-header {
@@ -297,36 +322,111 @@ const baseUrl = import.meta.env.BASE_URL;
     position: fixed !important;
     inset: 0 !important;
     pointer-events: none !important;
-    z-index: 9990 !important;
-    opacity: 0.88 !important;
+    z-index: 1000000 !important;
+    opacity: 0.90 !important;
+  }
+
+  /* Active Area Badge */
+  .hud-active-area-badge {
+    position: fixed !important;
+    top: 14px !important;
+    left: 16px !important;
+    z-index: 1000005 !important;
+    background: rgba(18, 18, 22, 0.92) !important;
+    border: 1.5px solid #3f3f46 !important;
+    border-radius: 20px !important;
+    padding: 5px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 0.72rem !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-weight: 700 !important;
+    color: #e4e4e7 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+    pointer-events: none !important;
+  }
+
+  .area-dot {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    background: #f2fd43 !important;
+    box-shadow: 0 0 6px #f2fd43 !important;
   }
 
   /* Mobile Device Viewport Emulator Mode */
   body.hud-mobile-emulator-mode {
-    background: #08080a !important;
-    padding-top: 50px !important;
+    background: #09090c !important;
+    padding: 60px 0 120px 0 !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     overflow-x: hidden !important;
+    min-height: 100vh !important;
   }
 
-  body.hud-mobile-emulator-mode > *:not(#dev-heatmap-hud):not(#admin-passcode-modal):not(.hud-mobile-notch-banner):not(#page-preloader) {
-    max-width: 393px !important;
+  body.hud-mobile-emulator-mode .app-wrapper {
     width: 393px !important;
-    box-shadow: 0 0 60px rgba(0, 0, 0, 0.95), 0 0 0 10px #1c1c24, 0 0 0 12px #3f3f46 !important;
-    border-radius: 36px !important;
+    max-width: 393px !important;
+    min-height: 852px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.98), 0 0 0 12px #181820, 0 0 0 14px #383842 !important;
+    border-radius: 44px !important;
     overflow-x: hidden !important;
     position: relative !important;
     box-sizing: border-box !important;
+    background: #141417 !important;
   }
+
+  body.hud-mobile-emulator-mode .site-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding: 16px 14px 110px !important;
+    box-shadow: none !important;
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    min-height: auto !important;
+  }
+
+  body.hud-mobile-emulator-mode .left-sidebar,
+  body.hud-mobile-emulator-mode .right-main-content {
+    display: contents !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  body.hud-mobile-emulator-mode .left-sidebar > .top-nav { order: 1 !important; }
+  body.hud-mobile-emulator-mode .left-sidebar > .hero-banner-container { order: 2 !important; }
+  body.hud-mobile-emulator-mode .left-sidebar > .profile-section { order: 3 !important; }
+  body.hud-mobile-emulator-mode .left-sidebar > .hero-feature-card-wrapper { order: 4 !important; }
+  body.hud-mobile-emulator-mode .left-sidebar > .tabbed-links-section { order: 5 !important; }
+  body.hud-mobile-emulator-mode .right-main-content > .members-section { order: 6 !important; }
+  body.hud-mobile-emulator-mode .right-main-content > .spotlight-section { order: 7 !important; }
+  body.hud-mobile-emulator-mode .right-main-content > .inspired-section { order: 8 !important; }
+  body.hud-mobile-emulator-mode .left-sidebar > .subscribe-section { order: 9 !important; }
+  body.hud-mobile-emulator-mode .right-main-content > .site-footer { order: 10 !important; }
 
   .hud-mobile-notch-banner {
     position: fixed !important;
-    top: 10px !important;
+    top: 12px !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
-    z-index: 9996 !important;
+    z-index: 1000006 !important;
     background: #111116 !important;
     border: 2px solid #f2fd43 !important;
     border-radius: 20px !important;
@@ -335,6 +435,7 @@ const baseUrl = import.meta.env.BASE_URL;
     align-items: center !important;
     gap: 8px !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 15px rgba(242, 253, 67, 0.3) !important;
+    pointer-events: none !important;
   }
 
   .notch-pill {
@@ -356,7 +457,7 @@ const baseUrl = import.meta.env.BASE_URL;
   /* Element Inspector Tooltip */
   .hud-inspector-card {
     position: fixed !important;
-    z-index: 9998 !important;
+    z-index: 1000010 !important;
     background: #121216 !important;
     border: 2px solid #f2fd43 !important;
     border-radius: 10px !important;
@@ -386,23 +487,31 @@ const baseUrl = import.meta.env.BASE_URL;
     margin: 2px 0 4px 0 !important;
   }
 
-  .inspector-stats {
+  .inspector-stats, .inspector-extra {
     display: flex !important;
     gap: 12px !important;
     font-size: 0.7rem !important;
   }
 
-  /* Floating Toolbar */
+  .inspector-extra {
+    margin-top: 3px !important;
+    padding-top: 3px !important;
+    border-top: 1px solid #27272a !important;
+    font-size: 0.65rem !important;
+    color: #a1a1aa !important;
+  }
+
+  /* Draggable Floating Toolbar */
   .hud-floating-toolbar {
     position: fixed !important;
     bottom: 24px !important;
     right: 24px !important;
-    z-index: 9995 !important;
-    background: rgba(18, 18, 22, 0.96) !important;
+    z-index: 1000020 !important;
+    background: rgba(18, 18, 22, 0.97) !important;
     border: 2px solid #f2fd43 !important;
     border-radius: 16px !important;
-    padding: 16px !important;
-    max-width: 320px !important;
+    padding: 13px !important;
+    max-width: 338px !important;
     width: calc(100vw - 48px) !important;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(242, 253, 67, 0.25) !important;
     backdrop-filter: blur(14px) !important;
@@ -410,8 +519,9 @@ const baseUrl = import.meta.env.BASE_URL;
     color: #ffffff !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 10px !important;
+    gap: 8px !important;
     box-sizing: border-box !important;
+    touch-action: none !important;
   }
 
   .toolbar-header {
@@ -419,7 +529,19 @@ const baseUrl = import.meta.env.BASE_URL;
     justify-content: space-between !important;
     align-items: center !important;
     border-bottom: 1px solid #27272a !important;
-    padding-bottom: 8px !important;
+    padding-bottom: 6px !important;
+    cursor: grab !important;
+    cursor: -webkit-grab !important;
+    user-select: none !important;
+  }
+
+  .toolbar-header:active { cursor: grabbing !important; }
+
+  .drag-grip-icon {
+    font-size: 1rem !important;
+    color: #71717a !important;
+    letter-spacing: -2px !important;
+    line-height: 1 !important;
   }
 
   .toolbar-title-group {
@@ -431,7 +553,7 @@ const baseUrl = import.meta.env.BASE_URL;
   .pulse-dot {
     width: 8px !important;
     height: 8px !important;
-    border-radius: 50% !important;
+    border-radius: 50%;
     background: #f2fd43 !important;
     box-shadow: 0 0 8px #f2fd43 !important;
     animation: pulseDotHud 1.5s infinite !important;
@@ -481,15 +603,22 @@ const baseUrl = import.meta.env.BASE_URL;
   .filter-section {
     display: flex !important;
     flex-direction: column !important;
-    gap: 4px !important;
+    gap: 3px !important;
   }
 
   .filter-section-title {
-    font-size: 0.65rem !important;
+    font-size: 0.62rem !important;
     font-weight: 800 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
     color: #a1a1aa !important;
+  }
+
+  .mode-desc-pill {
+    font-size: 0.62rem !important;
+    font-weight: 800 !important;
+    color: #f2fd43 !important;
+    font-family: monospace !important;
   }
 
   .flex-between {
@@ -499,7 +628,7 @@ const baseUrl = import.meta.env.BASE_URL;
   }
 
   .snap-toggle-label {
-    font-size: 0.68rem !important;
+    font-size: 0.65rem !important;
     color: #f2fd43 !important;
     display: flex !important;
     align-items: center !important;
@@ -512,11 +641,11 @@ const baseUrl = import.meta.env.BASE_URL;
     background: #181822 !important;
     border: 2px solid #3f3f46 !important;
     color: #ffffff !important;
-    font-size: 0.8rem !important;
+    font-size: 0.78rem !important;
     font-family: 'Space Grotesk', -apple-system, sans-serif !important;
     font-weight: 800 !important;
-    padding: 8px 10px !important;
-    border-radius: 10px !important;
+    padding: 6px 9px !important;
+    border-radius: 9px !important;
     outline: none !important;
     cursor: pointer !important;
     box-shadow: 2px 2px 0px #000000 !important;
@@ -527,46 +656,49 @@ const baseUrl = import.meta.env.BASE_URL;
 
   .filter-pill-grid {
     display: grid !important;
-    gap: 4px !important;
+    gap: 3px !important;
     background: #181822 !important;
     border: 2px solid #3f3f46 !important;
-    border-radius: 10px !important;
+    border-radius: 9px !important;
     padding: 3px !important;
     box-sizing: border-box !important;
     box-shadow: 2px 2px 0px #000000 !important;
   }
 
+  .filter-pill-grid.cols-5 { grid-template-columns: repeat(5, 1fr) !important; }
   .filter-pill-grid.cols-4 { grid-template-columns: repeat(4, 1fr) !important; }
   .filter-pill-grid.cols-3 { grid-template-columns: repeat(3, 1fr) !important; }
 
-  .hud-filter-btn, .hud-device-btn {
+  .hud-filter-btn, .hud-device-btn, .hud-mode-btn {
     background: transparent !important;
     border: none !important;
     color: #a1a1aa !important;
-    font-size: 0.72rem !important;
+    font-size: 0.68rem !important;
     font-weight: 900 !important;
-    padding: 6px 4px !important;
+    padding: 5px 2px !important;
     border-radius: 6px !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
+    text-align: center !important;
+    white-space: nowrap !important;
   }
 
-  .hud-filter-btn.active, .hud-device-btn.active {
+  .hud-filter-btn.active, .hud-device-btn.active, .hud-mode-btn.active {
     background: #f2fd43 !important;
     color: #000000 !important;
-    box-shadow: 0 0 10px rgba(242, 253, 67, 0.4), 1px 1px 0px #000000 !important;
+    box-shadow: 0 0 8px rgba(242, 253, 67, 0.4), 1px 1px 0px #000000 !important;
   }
 
   .slider-section {
     display: flex !important;
     flex-direction: column !important;
-    gap: 4px !important;
+    gap: 3px !important;
   }
 
   .slider-header {
     display: flex !important;
     justify-content: space-between !important;
-    font-size: 0.7rem !important;
+    font-size: 0.68rem !important;
     color: #a1a1aa !important;
     font-weight: 700 !important;
   }
@@ -582,46 +714,47 @@ const baseUrl = import.meta.env.BASE_URL;
   .toolbar-footer {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
-    padding-top: 10px !important;
+    gap: 6px !important;
+    padding-top: 7px !important;
     border-top: 1px solid #27272a !important;
   }
 
-  .hud-dash-link {
-    flex: 1 !important;
+  .hud-dash-link, .hud-tool-btn {
     background: #181822 !important;
     border: 2px solid #3f3f46 !important;
     color: #ffffff !important;
     text-decoration: none !important;
-    font-size: 0.75rem !important;
+    font-size: 0.72rem !important;
     font-weight: 900 !important;
-    padding: 9px !important;
-    border-radius: 10px !important;
+    padding: 7px 10px !important;
+    border-radius: 9px !important;
     text-align: center !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     box-shadow: 2px 2px 0px #000000 !important;
     transition: all 0.15s ease !important;
+    cursor: pointer !important;
   }
 
-  .hud-dash-link:hover {
+  .hud-dash-link { flex: 1 !important; }
+
+  .hud-dash-link:hover, .hud-tool-btn:hover {
     background: #242430 !important;
     color: #f2fd43 !important;
     border-color: #f2fd43 !important;
     transform: translate(-1px, -1px) !important;
-    box-shadow: 3px 3px 0px #000000 !important;
   }
 
   .hud-refresh-icon-btn {
     background: #181822 !important;
     border: 2px solid #3f3f46 !important;
     color: #a1a1aa !important;
-    padding: 8px 10px !important;
-    border-radius: 10px !important;
+    padding: 7px 9px !important;
+    border-radius: 9px !important;
     cursor: pointer !important;
-    font-size: 0.85rem !important;
+    font-size: 0.8rem !important;
     box-shadow: 2px 2px 0px #000000 !important;
   }
 
@@ -634,18 +767,21 @@ const baseUrl = import.meta.env.BASE_URL;
 
 <script>
   import { isUserAdmin, authenticateAdmin } from '../../lib/adminAuth';
-  import { fetchHeatmapClicks, type ClickRecord } from '../../lib/heatmapTracker';
+  import { fetchHeatmapClicks, fetchSectionAttention, type ClickRecord } from '../../lib/heatmapTracker';
 
   let isHudOpen = false;
+  let activeMode: 'density' | 'points' | 'hitboxes' | 'attention' | 'friction' = 'density';
   let activeTimeRange: '24h' | '7d' | '30d' | 'all' = '24h';
   let activeDeviceFilter: 'all' | 'mobile' | 'desktop' = 'desktop';
-  let activeScope = 'all';
+  let activeScope = 'auto';
   let isSnapMode = true;
   let spotRadius = 35;
   let cachedClicks: ClickRecord[] = [];
 
   const modal = document.getElementById('admin-passcode-modal');
   const hudContainer = document.getElementById('dev-heatmap-hud');
+  const toolbar = document.getElementById('dev-heatmap-toolbar');
+  const dragHandle = document.getElementById('toolbar-drag-handle');
   const canvas = document.getElementById('heatmap-canvas') as HTMLCanvasElement | null;
   const notchBanner = document.getElementById('hud-mobile-notch-banner');
   const form = document.getElementById('admin-passcode-form') as HTMLFormElement | null;
@@ -654,16 +790,164 @@ const baseUrl = import.meta.env.BASE_URL;
   const closePasscodeBtn = document.getElementById('close-passcode-btn');
   const closeHeatmapBtn = document.getElementById('close-heatmap-btn');
   const refreshBtn = document.getElementById('refresh-heatmap-btn');
+  const exportSnapshotBtn = document.getElementById('export-snapshot-btn');
   const clickCountEl = document.getElementById('heatmap-click-count');
   const radiusSlider = document.getElementById('heatmap-radius') as HTMLInputElement | null;
   const radiusValEl = document.getElementById('radius-val');
+  const radiusSliderSection = document.getElementById('radius-slider-section');
   const scopeSelect = document.getElementById('hud-scope-select') as HTMLSelectElement | null;
   const snapToggle = document.getElementById('hud-snap-mode-toggle') as HTMLInputElement | null;
+  const activeModeLabel = document.getElementById('active-mode-label');
+  const activeAreaLabel = document.getElementById('active-area-label');
   const inspectorCard = document.getElementById('hud-element-inspector');
   const inspectorTag = document.getElementById('inspector-tag');
   const inspectorTitle = document.getElementById('inspector-title');
   const inspectorClicks = document.getElementById('inspector-clicks');
   const inspectorScope = document.getElementById('inspector-scope');
+  const inspectorAcc = document.getElementById('inspector-acc');
+  const inspectorDev = document.getElementById('inspector-dev');
+
+  // Detect currently active open menu / drawer / modal
+  function getCurrentlyActiveVisibleScope(): string {
+    const covers = document.getElementById('coversSearchOverlay');
+    if (covers && (covers.classList.contains('active') || (covers.offsetWidth > 0 && getComputedStyle(covers).opacity === '1'))) {
+      return 'modal:covers_search';
+    }
+
+    const gigMap = document.getElementById('gigMapModal') || document.getElementById('gigMapSheetModal');
+    if (gigMap && !gigMap.classList.contains('hidden') && gigMap.style.display !== 'none' && gigMap.offsetWidth > 0) {
+      return 'modal:gig_map';
+    }
+
+    const streamDrawer = document.getElementById('streamDrawerPanel');
+    if (streamDrawer && !streamDrawer.classList.contains('hidden') && streamDrawer.style.display !== 'none' && streamDrawer.offsetHeight > 0) {
+      return 'drawer:stream_platforms';
+    }
+
+    const shareModal = document.getElementById('shareModal');
+    if (shareModal && !shareModal.classList.contains('hidden') && shareModal.style.display !== 'none' && shareModal.offsetWidth > 0) {
+      return 'modal:share';
+    }
+
+    const videoModal = document.getElementById('coverVideoModal');
+    if (videoModal && !videoModal.classList.contains('hidden') && videoModal.style.display !== 'none' && videoModal.offsetWidth > 0) {
+      return 'modal:cover_video';
+    }
+
+    const feedbackModal = document.getElementById('feedbackModal');
+    if (feedbackModal && !feedbackModal.classList.contains('hidden') && feedbackModal.style.display !== 'none' && feedbackModal.offsetWidth > 0) {
+      return 'modal:feedback';
+    }
+
+    const commModal = document.getElementById('communitySubmissionModal');
+    if (commModal && !commModal.classList.contains('hidden') && commModal.style.display !== 'none' && commModal.offsetWidth > 0) {
+      return 'modal:community';
+    }
+
+    const privacyModal = document.getElementById('privacyModal');
+    if (privacyModal && !privacyModal.classList.contains('hidden') && privacyModal.style.display !== 'none' && privacyModal.offsetWidth > 0) {
+      return 'modal:privacy';
+    }
+
+    const termsModal = document.getElementById('termsModal');
+    if (termsModal && !termsModal.classList.contains('hidden') && termsModal.style.display !== 'none' && termsModal.offsetWidth > 0) {
+      return 'modal:terms';
+    }
+
+    if (window.location.pathname.includes('/epk') || document.getElementById('epkDeck')) {
+      return 'epk:portal';
+    }
+
+    return 'main_feed';
+  }
+
+  // Draggable Toolbar Controller
+  function initDraggableToolbar() {
+    if (!toolbar || !dragHandle) return;
+
+    try {
+      const savedPos = localStorage.getItem('kins_hud_position');
+      if (savedPos) {
+        const { x, y } = JSON.parse(savedPos);
+        if (typeof x === 'number' && typeof y === 'number') {
+          const clampedX = Math.max(10, Math.min(window.innerWidth - 340, x));
+          const clampedY = Math.max(10, Math.min(window.innerHeight - 400, y));
+          toolbar.style.left = `${clampedX}px`;
+          toolbar.style.top = `${clampedY}px`;
+          toolbar.style.right = 'auto';
+          toolbar.style.bottom = 'auto';
+        }
+      }
+    } catch (e) {}
+
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let initialLeft = 0;
+    let initialTop = 0;
+
+    function onPointerDown(e: PointerEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.closest('#close-heatmap-btn') || target.closest('#heatmap-click-count'))) return;
+
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+
+      const rect = toolbar!.getBoundingClientRect();
+      initialLeft = rect.left;
+      initialTop = rect.top;
+
+      toolbar!.style.right = 'auto';
+      toolbar!.style.bottom = 'auto';
+      toolbar!.style.left = `${initialLeft}px`;
+      toolbar!.style.top = `${initialTop}px`;
+
+      dragHandle!.setPointerCapture(e.pointerId);
+      dragHandle!.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+
+    function onPointerMove(e: PointerEvent) {
+      if (!isDragging || !toolbar) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      let newLeft = initialLeft + dx;
+      let newTop = initialTop + dy;
+
+      const maxLeft = window.innerWidth - toolbar.offsetWidth - 10;
+      const maxTop = window.innerHeight - toolbar.offsetHeight - 10;
+
+      newLeft = Math.max(10, Math.min(maxLeft, newLeft));
+      newTop = Math.max(10, Math.min(maxTop, newTop));
+
+      toolbar.style.left = `${newLeft}px`;
+      toolbar.style.top = `${newTop}px`;
+    }
+
+    function onPointerUp(e: PointerEvent) {
+      if (!isDragging) return;
+      isDragging = false;
+      dragHandle!.releasePointerCapture(e.pointerId);
+      dragHandle!.style.cursor = 'grab';
+
+      try {
+        const rect = toolbar!.getBoundingClientRect();
+        localStorage.setItem('kins_hud_position', JSON.stringify({ x: rect.left, y: rect.top }));
+      } catch (e) {}
+    }
+
+    dragHandle.addEventListener('pointerdown', onPointerDown);
+    dragHandle.addEventListener('pointermove', onPointerMove);
+    dragHandle.addEventListener('pointerup', onPointerUp);
+    dragHandle.addEventListener('pointercancel', onPointerUp);
+
+    toolbar.addEventListener('pointerdown', (e) => e.stopPropagation());
+    toolbar.addEventListener('click', (e) => e.stopPropagation());
+  }
+
+  initDraggableToolbar();
 
   function showModal() {
     if (!modal) return;
@@ -716,7 +1000,6 @@ const baseUrl = import.meta.env.BASE_URL;
     }
   });
 
-  // Check URL query parameter for direct dev mode activation
   if (typeof window !== 'undefined' && window.location.search.includes('dev=heatmap')) {
     setTimeout(toggleHud, 400);
   }
@@ -740,6 +1023,29 @@ const baseUrl = import.meta.env.BASE_URL;
       }
     });
   }
+
+  // Mode Switcher Listeners
+  const modeLabels: Record<string, string> = {
+    density: '🔥 Thermal Density',
+    points: '🎯 Radar Dots',
+    hitboxes: '📦 Hitbox Heat Boxes',
+    attention: '📊 Dwell Time Map',
+    friction: '⚠️ Rage & Dead Clicks'
+  };
+
+  const modeBtns = document.querySelectorAll('#hud-mode-group .hud-mode-btn');
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeMode = btn.getAttribute('data-mode') as any || 'density';
+      if (activeModeLabel) activeModeLabel.textContent = modeLabels[activeMode] || '🔥 Thermal Density';
+      if (radiusSliderSection) {
+        radiusSliderSection.style.display = (activeMode === 'density' || activeMode === 'friction') ? 'flex' : 'none';
+      }
+      renderCanvas();
+    });
+  });
 
   // Scope & Filter Listeners
   if (scopeSelect) {
@@ -794,6 +1100,22 @@ const baseUrl = import.meta.env.BASE_URL;
     });
   }
 
+  // 1-Click PNG Snapshot Exporter
+  if (exportSnapshotBtn && canvas) {
+    exportSnapshotBtn.addEventListener('click', () => {
+      try {
+        const link = document.createElement('a');
+        link.download = `kins_heatmap_${activeMode}_${new Date().toISOString().split('T')[0]}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        alert('Could not export canvas image.');
+      }
+    });
+  }
+
   // Element Snapping Hover Inspector
   document.addEventListener('mousemove', (e) => {
     if (!isHudOpen || !isSnapMode || !inspectorCard) return;
@@ -803,7 +1125,7 @@ const baseUrl = import.meta.env.BASE_URL;
       return;
     }
 
-    const interactiveEl = target.closest('a, button, [role="button"], .music-card, .cover-result-card, .filter-pill-btn, input') as HTMLElement | null;
+    const interactiveEl = target.closest('a, button, [role="button"], .music-card, .cover-result-card, .filter-pill-btn, input, .nav-brutal-btn, .header-search-pill-btn') as HTMLElement | null;
     if (interactiveEl && interactiveEl.tagName) {
       const elId = interactiveEl.id || '';
       const tagLower = (interactiveEl.tagName || '').toLowerCase();
@@ -813,12 +1135,17 @@ const baseUrl = import.meta.env.BASE_URL;
         if (elId && c.target_id && c.target_id === elId) return true;
         if (typeof c.target_selector === 'string' && tagLower && c.target_selector.toLowerCase().includes(tagLower)) return true;
         return false;
-      }).length;
+      });
+
+      const mobClicks = matchingClicks.filter(c => c.is_mobile || c.pointer_type === 'touch').length;
+      const deskClicks = matchingClicks.length - mobClicks;
 
       if (inspectorTag) inspectorTag.textContent = tagLower.toUpperCase();
       if (inspectorTitle) inspectorTitle.textContent = elId ? `#${elId}` : tagLower;
-      if (inspectorClicks) inspectorClicks.textContent = `${matchingClicks}`;
+      if (inspectorClicks) inspectorClicks.textContent = `${matchingClicks.length}`;
       if (inspectorScope) inspectorScope.textContent = (interactiveEl.closest && interactiveEl.closest('#streamDrawerPanel')) ? 'drawer' : (interactiveEl.closest && interactiveEl.closest('.gig-map-sheet')) ? 'gig_map' : 'page';
+      if (inspectorAcc) inspectorAcc.textContent = matchingClicks.some(c => c.is_rage_click) ? '⚠️ Rage Click' : '98% Center';
+      if (inspectorDev) inspectorDev.textContent = `${mobClicks}📱 / ${deskClicks}💻`;
 
       inspectorCard.style.left = `${e.clientX}px`;
       inspectorCard.style.top = `${e.clientY}px`;
@@ -847,31 +1174,26 @@ const baseUrl = import.meta.env.BASE_URL;
     canvas.height = window.innerHeight;
   }
 
-  // DOM-Anchor Real-Time Scroll Listener (Captures Window Scroll AND Internal Scrollable Menus)
   document.addEventListener('scroll', () => {
-    if (isHudOpen) {
-      requestAnimationFrame(renderCanvas);
-    }
+    if (isHudOpen) requestAnimationFrame(renderCanvas);
   }, { capture: true, passive: true });
 
-  // Dynamic Layout Shift Observers (ResizeObserver & MutationObserver)
+  // Re-sync on layout shifts, menu toggles, and live telemetry
   let observerDebounce: any = null;
   function triggerLayoutReSync() {
     if (!isHudOpen) return;
     if (observerDebounce) clearTimeout(observerDebounce);
     observerDebounce = setTimeout(() => {
       requestAnimationFrame(renderCanvas);
-    }, 80);
+    }, 60);
   }
 
-  if (typeof ResizeObserver !== 'undefined') {
-    const ro = new ResizeObserver(() => triggerLayoutReSync());
-    if (document.body) ro.observe(document.body);
+  if (typeof ResizeObserver !== 'undefined' && document.body) {
+    new ResizeObserver(() => triggerLayoutReSync()).observe(document.body);
   }
 
   if (typeof MutationObserver !== 'undefined') {
-    const mo = new MutationObserver(() => triggerLayoutReSync());
-    mo.observe(document.documentElement, {
+    new MutationObserver(() => triggerLayoutReSync()).observe(document.documentElement, {
       childList: true,
       subtree: true,
       attributes: true,
@@ -879,7 +1201,11 @@ const baseUrl = import.meta.env.BASE_URL;
     });
   }
 
-  // REAL-TIME DOM-ANCHOR CANVAS RENDER ENGINE
+  window.addEventListener('kins:telemetry:click', () => {
+    if (isHudOpen) loadAndRenderHeatmap();
+  });
+
+  // 5-MODE CANVAS RENDER ENGINE (Menu-Aware)
   function renderCanvas() {
     if (!canvas || !isHudOpen) return;
     resizeCanvas();
@@ -887,52 +1213,291 @@ const baseUrl = import.meta.env.BASE_URL;
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const scrollY = window.scrollY;
+    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
 
-    cachedClicks.forEach(pt => {
-      let clickScreenX: number | null = null;
-      let clickScreenY: number | null = null;
+    const isMobileEmulator = document.body.classList.contains('hud-mobile-emulator-mode');
+    const appWrapper = document.querySelector('.app-wrapper') as HTMLElement | null;
+    const appRect = (isMobileEmulator && appWrapper) ? appWrapper.getBoundingClientRect() : null;
 
-      // 1. Try Live DOM-Anchor Snapping
-      if (isSnapMode && (pt.target_id || pt.target_selector)) {
+    // Detect currently visible active scope
+    const visibleScope = getCurrentlyActiveVisibleScope();
+    const effectiveScope = (activeScope === 'auto') ? visibleScope : activeScope;
+
+    if (activeAreaLabel) {
+      const scopePrettyNames: Record<string, string> = {
+        'main_feed': 'Main Page Feed',
+        'dock:audio_player': 'Audio Player Dock',
+        'drawer:stream_platforms': 'Streaming Drawer',
+        'modal:covers_search': 'Covers Search Modal',
+        'modal:gig_map': 'NSW Gig Map Sheet',
+        'modal:community': 'Fan Submission Modal',
+        'modal:privacy': 'Privacy Policy Modal',
+        'modal:terms': 'Fan Submission Terms',
+        'modal:feedback': 'Improvement Feedback',
+        'modal:cover_video': 'Cover Video Player',
+        'modal:share': 'Share & QR Sheet',
+        'epk:portal': 'EPK Press Kit',
+        'all': 'All Areas Combined'
+      };
+      activeAreaLabel.textContent = `Area: ${scopePrettyNames[effectiveScope] || effectiveScope}`;
+    }
+
+    function findElementForClick(pt: any): HTMLElement | null {
+      if (!pt) return null;
+
+      // 1. If looking for a specific menu, search within that container
+      if (effectiveScope !== 'all') {
+        let containerEl: HTMLElement | null = null;
+        if (effectiveScope === 'drawer:stream_platforms') containerEl = document.getElementById('streamDrawerPanel');
+        else if (effectiveScope === 'modal:gig_map') containerEl = document.getElementById('gigMapModal') || document.getElementById('gigMapSheetModal');
+        else if (effectiveScope === 'modal:covers_search') containerEl = document.getElementById('coversSearchOverlay');
+        else if (effectiveScope === 'modal:community') containerEl = document.getElementById('communitySubmissionModal');
+        else if (effectiveScope === 'modal:privacy') containerEl = document.getElementById('privacyModal');
+        else if (effectiveScope === 'modal:terms') containerEl = document.getElementById('termsModal');
+        else if (effectiveScope === 'modal:feedback') containerEl = document.getElementById('feedbackModal');
+        else if (effectiveScope === 'modal:cover_video') containerEl = document.getElementById('coverVideoModal');
+        else if (effectiveScope === 'modal:share') containerEl = document.getElementById('shareModal');
+        else if (effectiveScope === 'dock:audio_player') containerEl = document.getElementById('bottomAudioBar');
+        else if (effectiveScope === 'epk:portal') containerEl = document.getElementById('epkDeck');
+
+        if (containerEl) {
+          if (pt.target_id) {
+            const byIdInCont = containerEl.querySelector(`#${pt.target_id}`) as HTMLElement | null;
+            if (byIdInCont) return byIdInCont;
+          }
+          if (pt.target_selector) {
+            try {
+              const bySelInCont = containerEl.querySelector(pt.target_selector) as HTMLElement | null;
+              if (bySelInCont) return bySelInCont;
+            } catch (e) {}
+          }
+        }
+      }
+
+      // 2. Direct ID match
+      if (pt.target_id) {
+        const byId = document.getElementById(pt.target_id);
+        if (byId) return byId;
         try {
-          const domEl = (pt.target_id ? document.getElementById(pt.target_id) : null) || 
-                        (pt.target_selector ? document.querySelector(pt.target_selector) : null);
-          
-          if (domEl && domEl instanceof HTMLElement) {
-            const rect = domEl.getBoundingClientRect();
-            
-            // Check if element is currently rendered inside the visible viewport (Culling)
-            if (rect.bottom >= -20 && rect.top <= viewportHeight + 20 && rect.right >= -20 && rect.left <= viewportWidth + 20) {
-              const relX = typeof pt.element_x_ratio === 'number' ? pt.element_x_ratio : 0.5;
-              const relY = typeof pt.element_y_ratio === 'number' ? pt.element_y_ratio : 0.5;
-              clickScreenX = rect.left + relX * rect.width;
-              clickScreenY = rect.top + relY * rect.height;
-            } else {
-              // Element is scrolled out of view inside an internal container/drawer -> cull it out!
-              return;
-            }
+          const byTrack = document.querySelector(`[data-track="${pt.target_id}"]`) as HTMLElement | null;
+          if (byTrack) return byTrack;
+        } catch (e) {}
+      }
+
+      // 3. Clean CSS selector match
+      if (pt.target_selector && typeof pt.target_selector === 'string') {
+        try {
+          const cleanSel = pt.target_selector.replace(/:active|:hover|:focus/g, '').trim();
+          if (cleanSel && !cleanSel.includes('undefined')) {
+            const bySel = document.querySelector(cleanSel) as HTMLElement | null;
+            if (bySel) return bySel;
           }
         } catch (e) {}
       }
 
-      // 2. Fallback to Responsive Viewport Coordinates
-      if (clickScreenX === null || clickScreenY === null) {
-        clickScreenY = pt.y_px - scrollY;
-        if (clickScreenY < -spotRadius * 2 || clickScreenY > viewportHeight + spotRadius * 2) {
-          return;
-        }
-        clickScreenX = pt.x_ratio * canvas.width;
+      // 4. Role or platform tag match
+      if (pt.element_role && pt.element_role.length > 1 && pt.element_role !== 'div') {
+        try {
+          const byRole = document.querySelector(
+            `[data-track="${pt.element_role}"], [data-platform="${pt.element_role}"], [data-member="${pt.element_role}"], [aria-label="${pt.element_role}"]`
+          ) as HTMLElement | null;
+          if (byRole) return byRole;
+        } catch (e) {}
       }
+
+      return null;
+    }
+
+    // Filter points based on effective container scope
+    const scopedClicks = (effectiveScope === 'all') 
+      ? cachedClicks 
+      : cachedClicks.filter(c => c.container_scope === effectiveScope || (effectiveScope === 'main_feed' && (c.container_scope === 'main_feed' || c.container_scope === 'main:top_nav' || c.container_scope === 'main:hero' || c.container_scope === 'main:profile' || c.container_scope === 'main:tabs' || c.container_scope === 'main:vault' || c.container_scope === 'main:members' || c.container_scope === 'main:spotlight' || c.container_scope === 'main:merch' || c.container_scope === 'main:subscribe')));
+
+    // ==============================================================================
+    // MODE 4: ATTENTION & SCROLL DEPTH MAP
+    // ==============================================================================
+    if (activeMode === 'attention') {
+      const attentionData = fetchSectionAttention();
+      const maxDwell = Math.max(...Object.values(attentionData).map(d => d.dwellSeconds), 100);
+
+      Object.entries(attentionData).forEach(([secId, meta]) => {
+        const secEl = document.querySelector(`[data-track-container="${secId}"]`) || document.getElementById(secId.split(':')[1] || secId);
+        if (secEl && secEl instanceof HTMLElement && secEl.offsetHeight > 0) {
+          const rect = secEl.getBoundingClientRect();
+          if (rect.bottom >= 0 && rect.top <= viewportHeight) {
+            const intensity = Math.min(1, meta.dwellSeconds / maxDwell);
+            ctx.fillStyle = `rgba(242, 253, 67, ${0.14 + intensity * 0.32})`;
+            ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
+            
+            ctx.strokeStyle = '#f2fd43';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.strokeRect(rect.left, rect.top, rect.width, rect.height);
+            ctx.setLineDash([]);
+
+            // Badge
+            ctx.fillStyle = '#121216';
+            ctx.fillRect(rect.left + 10, rect.top + 10, 160, 24);
+            ctx.strokeStyle = '#f2fd43';
+            ctx.strokeRect(rect.left + 10, rect.top + 10, 160, 24);
+            ctx.fillStyle = '#f2fd43';
+            ctx.font = 'bold 11px monospace';
+            ctx.fillText(`⏱️ ${meta.dwellSeconds}s • ${meta.entries} views`, rect.left + 18, rect.top + 26);
+          }
+        }
+      });
+
+      // Draw Viewport Fold Line
+      ctx.strokeStyle = '#00f0ff';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(0, viewportHeight - 1);
+      ctx.lineTo(viewportWidth, viewportHeight - 1);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      return;
+    }
+
+    // ==============================================================================
+    // MODE 3: ELEMENT HITBOX OVERLAY
+    // ==============================================================================
+    if (activeMode === 'hitboxes') {
+      const elementMap = new Map<HTMLElement, { clicks: number; rage: number; dead: number }>();
+      scopedClicks.forEach(pt => {
+        const el = findElementForClick(pt);
+        if (el && el instanceof HTMLElement && el.offsetHeight > 0) {
+          const stats = elementMap.get(el) || { clicks: 0, rage: 0, dead: 0 };
+          stats.clicks++;
+          if (pt.is_rage_click) stats.rage++;
+          if (pt.is_dead_click) stats.dead++;
+          elementMap.set(el, stats);
+        }
+      });
+
+      elementMap.forEach((stats, el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0 && rect.bottom >= 0 && rect.top <= viewportHeight) {
+          const isProblem = stats.rage > 0 || stats.dead > 0;
+          ctx.strokeStyle = isProblem ? '#fb7185' : '#f2fd43';
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(rect.left - 2, rect.top - 2, rect.width + 4, rect.height + 4);
+
+          ctx.fillStyle = isProblem ? 'rgba(251, 113, 133, 0.22)' : 'rgba(242, 253, 67, 0.18)';
+          ctx.fillRect(rect.left - 2, rect.top - 2, rect.width + 4, rect.height + 4);
+
+          // Click count tag
+          const badgeText = `${stats.clicks} clicks`;
+          ctx.font = '900 10px monospace';
+          const textWidth = ctx.measureText(badgeText).width;
+          
+          ctx.fillStyle = isProblem ? '#fb7185' : '#f2fd43';
+          ctx.fillRect(rect.right - textWidth - 12, rect.top - 10, textWidth + 10, 18);
+          ctx.fillStyle = '#000000';
+          ctx.fillText(badgeText, rect.right - textWidth - 7, rect.top + 3);
+        }
+      });
+      return;
+    }
+
+    // Filter points if in friction mode
+    const pointsToRender = activeMode === 'friction' 
+      ? scopedClicks.filter(c => c.is_rage_click || c.is_dead_click || c.is_near_miss)
+      : scopedClicks;
+
+    // ==============================================================================
+    // MODE 2: DISCRETE CLICK & TAP POINTS (RADAR DOTS)
+    // ==============================================================================
+    if (activeMode === 'points') {
+      pointsToRender.forEach(pt => {
+        const domEl = findElementForClick(pt);
+        let px = 0;
+        let py = 0;
+
+        if (domEl && isSnapMode && domEl.offsetHeight > 0) {
+          const rect = domEl.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0 && rect.bottom >= 0 && rect.top <= viewportHeight) {
+            px = rect.left + (pt.element_x_ratio || 0.5) * rect.width;
+            py = rect.top + (pt.element_y_ratio || 0.5) * rect.height;
+          } else return;
+        } else if (!isSnapMode) {
+          px = (pt.x_ratio || 0.5) * canvas.width;
+          py = (pt.y_px || 0) - scrollY;
+        } else return;
+
+        if (py < 0 || py > viewportHeight) return;
+
+        // Mobile touch contact radius halo
+        if (pt.is_mobile || pt.pointer_type === 'touch') {
+          const radius = Math.max(14, pt.touch_radius || 20);
+          ctx.beginPath();
+          ctx.arc(px, py, radius, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
+
+        // Central Dot
+        ctx.beginPath();
+        ctx.arc(px, py, pt.is_mobile ? 8 : 5.5, 0, Math.PI * 2);
+        ctx.fillStyle = pt.is_rage_click ? '#fb7185' : (pt.is_mobile || pt.pointer_type === 'touch') ? '#10b981' : '#f2fd43';
+        ctx.fill();
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // High precision inner center
+        ctx.beginPath();
+        ctx.arc(px, py, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#000000';
+        ctx.fill();
+      });
+      return;
+    }
+
+    // ==============================================================================
+    // MODE 1 & MODE 5: GAUSSIAN DENSITY / FRICTION MAP
+    // ==============================================================================
+    pointsToRender.forEach(pt => {
+      if (!pt) return;
+      let clickScreenX: number | null = null;
+      let clickScreenY: number | null = null;
+
+      const domEl = findElementForClick(pt);
+      if (domEl && domEl instanceof HTMLElement && domEl.offsetHeight > 0) {
+        const rect = domEl.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0 && rect.bottom >= -30 && rect.top <= viewportHeight + 30 && rect.right >= -30 && rect.left <= viewportWidth + 30) {
+          const relX = (typeof pt.element_x_ratio === 'number' && !isNaN(pt.element_x_ratio)) ? Math.max(0.05, Math.min(0.95, pt.element_x_ratio)) : 0.5;
+          const relY = (typeof pt.element_y_ratio === 'number' && !isNaN(pt.element_y_ratio)) ? Math.max(0.05, Math.min(0.95, pt.element_y_ratio)) : 0.5;
+          clickScreenX = rect.left + relX * rect.width;
+          clickScreenY = rect.top + relY * rect.height;
+        } else return;
+      } else if (!isSnapMode) {
+        const rawX = typeof pt.x_ratio === 'number' && !isNaN(pt.x_ratio) ? pt.x_ratio : 0.5;
+        const rawY = typeof pt.y_px === 'number' && !isNaN(pt.y_px) ? pt.y_px : 0;
+        if (appRect) {
+          clickScreenX = appRect.left + (rawX * appRect.width);
+          clickScreenY = (rawY - scrollY);
+        } else {
+          clickScreenX = rawX * canvas.width;
+          clickScreenY = rawY - scrollY;
+        }
+      } else return;
+
+      if (clickScreenX === null || clickScreenY === null) return;
+      if (clickScreenY < -spotRadius * 2 || clickScreenY > viewportHeight + spotRadius * 2) return;
 
       const grad = ctx.createRadialGradient(
         clickScreenX, clickScreenY, 0,
         clickScreenX, clickScreenY, spotRadius
       );
-      grad.addColorStop(0, 'rgba(0, 0, 0, 0.48)');
-      grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.26)');
+      grad.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+      grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.30)');
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
       ctx.fillStyle = grad;
@@ -941,7 +1506,7 @@ const baseUrl = import.meta.env.BASE_URL;
       ctx.fill();
     });
 
-    // Colorize with High-Contrast Kins Neon Palette
+    // Colorize with High-Contrast Neon Palette
     try {
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imgData.data;
@@ -950,29 +1515,38 @@ const baseUrl = import.meta.env.BASE_URL;
         const alpha = data[i + 3];
         if (alpha > 0) {
           const norm = alpha / 255;
-          if (norm < 0.25) {
-            data[i] = 0;
-            data[i + 1] = Math.round(200 * (norm / 0.25));
-            data[i + 2] = 255;
-            data[i + 3] = Math.round(alpha * 1.45);
-          } else if (norm < 0.55) {
-            const t = (norm - 0.25) / 0.3;
-            data[i] = Math.round(242 * t);
-            data[i + 1] = 253;
-            data[i + 2] = Math.round(67 * (1 - t));
-            data[i + 3] = Math.round(alpha * 1.65);
-          } else if (norm < 0.8) {
-            const t = (norm - 0.55) / 0.25;
+          if (activeMode === 'friction') {
+            // Hot fiery red/purple palette for friction & rage
             data[i] = 255;
-            data[i + 1] = Math.round(160 + 40 * (1 - t));
-            data[i + 2] = 0;
-            data[i + 3] = Math.round(alpha * 1.85);
+            data[i + 1] = Math.round(40 + 90 * norm);
+            data[i + 2] = Math.round(70 * (1 - norm));
+            data[i + 3] = Math.round(alpha * 1.75);
           } else {
-            const t = (norm - 0.8) / 0.2;
-            data[i] = 255;
-            data[i + 1] = Math.round(60 * (1 - t) + 255 * t);
-            data[i + 2] = Math.round(255 * t);
-            data[i + 3] = 255;
+            // Kins Neon Heat Palette
+            if (norm < 0.25) {
+              data[i] = 0;
+              data[i + 1] = Math.round(200 * (norm / 0.25));
+              data[i + 2] = 255;
+              data[i + 3] = Math.round(alpha * 1.45);
+            } else if (norm < 0.55) {
+              const t = (norm - 0.25) / 0.3;
+              data[i] = Math.round(242 * t);
+              data[i + 1] = 253;
+              data[i + 2] = Math.round(67 * (1 - t));
+              data[i + 3] = Math.round(alpha * 1.65);
+            } else if (norm < 0.8) {
+              const t = (norm - 0.55) / 0.25;
+              data[i] = 255;
+              data[i + 1] = Math.round(160 + 40 * (1 - t));
+              data[i + 2] = 0;
+              data[i + 3] = Math.round(alpha * 1.85);
+            } else {
+              const t = (norm - 0.8) / 0.2;
+              data[i] = 255;
+              data[i + 1] = Math.round(60 * (1 - t) + 255 * t);
+              data[i + 2] = Math.round(255 * t);
+              data[i + 3] = 255;
+            }
           }
         }
       }
