@@ -70,6 +70,7 @@ const ALIAS_DICTIONARY: Record<string, { channel: string; defaultAlias: string }
   // Threads
   'threadsbio': { channel: 'Threads', defaultAlias: 'ThreadsBio' },
   'threads': { channel: 'Threads', defaultAlias: 'ThreadsBio' },
+  'th': { channel: 'Threads', defaultAlias: 'ThreadsBio' },
 
   // Apple Music
   'applebio': { channel: 'Apple Music', defaultAlias: 'AppleBio' },
@@ -79,7 +80,101 @@ const ALIAS_DICTIONARY: Record<string, { channel: string; defaultAlias: string }
   // X / Twitter
   'twbiopage': { channel: 'X/Twitter', defaultAlias: 'TwitterBio' },
   'twitter': { channel: 'X/Twitter', defaultAlias: 'TwitterBio' },
-  'x': { channel: 'X/Twitter', defaultAlias: 'TwitterBio' }
+  'x': { channel: 'X/Twitter', defaultAlias: 'TwitterBio' },
+
+  // LinkedIn
+  'in': { channel: 'LinkedIn', defaultAlias: 'LinkedInBio' },
+  'linkedin': { channel: 'LinkedIn', defaultAlias: 'LinkedInBio' },
+  'linkedinbio': { channel: 'LinkedIn', defaultAlias: 'LinkedInBio' },
+
+  // Pinterest
+  'pin': { channel: 'Pinterest', defaultAlias: 'PinterestBio' },
+  'pinterest': { channel: 'Pinterest', defaultAlias: 'PinterestBio' },
+  'pinterestbio': { channel: 'Pinterest', defaultAlias: 'PinterestBio' },
+
+  // Twitch
+  'ttv': { channel: 'Twitch', defaultAlias: 'TwitchBio' },
+  'twitch': { channel: 'Twitch', defaultAlias: 'TwitchBio' },
+  'twitchbio': { channel: 'Twitch', defaultAlias: 'TwitchBio' },
+
+  // Reddit
+  'rd': { channel: 'Reddit', defaultAlias: 'RedditBio' },
+  'reddit': { channel: 'Reddit', defaultAlias: 'RedditBio' },
+  'redditbio': { channel: 'Reddit', defaultAlias: 'RedditBio' },
+
+  // Patreon
+  'pat': { channel: 'Patreon', defaultAlias: 'PatreonBio' },
+  'patreon': { channel: 'Patreon', defaultAlias: 'PatreonBio' },
+  'patreonbio': { channel: 'Patreon', defaultAlias: 'PatreonBio' },
+
+  // Amazon Music
+  'amz': { channel: 'Amazon Music', defaultAlias: 'AmazonBio' },
+  'amazon': { channel: 'Amazon Music', defaultAlias: 'AmazonBio' },
+  'amazonmusic': { channel: 'Amazon Music', defaultAlias: 'AmazonBio' },
+
+  // YT Music
+  'ytm': { channel: 'YT Music', defaultAlias: 'YTMusicBio' },
+  'ytmusic': { channel: 'YT Music', defaultAlias: 'YTMusicBio' },
+
+  // SoundCloud
+  'snd': { channel: 'SoundCloud', defaultAlias: 'SoundCloudBio' },
+  'soundcloud': { channel: 'SoundCloud', defaultAlias: 'SoundCloudBio' },
+
+  // Deezer
+  'dz': { channel: 'Deezer', defaultAlias: 'DeezerBio' },
+  'deezer': { channel: 'Deezer', defaultAlias: 'DeezerBio' },
+
+  // Tidal
+  'td': { channel: 'Tidal', defaultAlias: 'TidalBio' },
+  'tidal': { channel: 'Tidal', defaultAlias: 'TidalBio' },
+
+  // Bandcamp
+  'bc': { channel: 'Bandcamp', defaultAlias: 'BandcampBio' },
+  'bandcamp': { channel: 'Bandcamp', defaultAlias: 'BandcampBio' },
+
+  // Audiomack
+  'amk': { channel: 'Audiomack', defaultAlias: 'AudiomackBio' },
+  'audiomack': { channel: 'Audiomack', defaultAlias: 'AudiomackBio' },
+
+  // Qobuz
+  'qbz': { channel: 'Qobuz', defaultAlias: 'QobuzBio' },
+  'qobuz': { channel: 'Qobuz', defaultAlias: 'QobuzBio' }
+};
+
+// Subdomain prefix mapping (e.g. in-kins-link-tree.vercel.app -> LinkedIn)
+const SUBDOMAIN_MAP: Record<string, { channel: string; defaultAlias: string }> = {
+  // Socials (14)
+  'ig': { channel: 'Instagram', defaultAlias: 'IGBioPage' },
+  'igkins': { channel: 'Instagram', defaultAlias: 'IGBioPage' },
+  'tt': { channel: 'TikTok', defaultAlias: 'TKBioPage' },
+  'tk': { channel: 'TikTok', defaultAlias: 'TKBioPage' },
+  'fb': { channel: 'Facebook', defaultAlias: 'FBBioPage' },
+  'yt': { channel: 'YouTube', defaultAlias: 'YTBioPage' },
+  'x': { channel: 'X/Twitter', defaultAlias: 'TwitterBio' },
+  'tw': { channel: 'X/Twitter', defaultAlias: 'TwitterBio' },
+  'dc': { channel: 'Discord', defaultAlias: 'DCBioPage' },
+  'sub': { channel: 'Substack', defaultAlias: 'SubstackBio' },
+  'substack': { channel: 'Substack', defaultAlias: 'SubstackBio' },
+  'th': { channel: 'Threads', defaultAlias: 'ThreadsBio' },
+  'sc': { channel: 'Snapchat', defaultAlias: 'SnapchatBio' },
+  'rd': { channel: 'Reddit', defaultAlias: 'RedditBio' },
+  'pat': { channel: 'Patreon', defaultAlias: 'PatreonBio' },
+  'ttv': { channel: 'Twitch', defaultAlias: 'TwitchBio' },
+  'pin': { channel: 'Pinterest', defaultAlias: 'PinterestBio' },
+  'in': { channel: 'LinkedIn', defaultAlias: 'LinkedInBio' },
+
+  // Streams (10)
+  'sp': { channel: 'Spotify', defaultAlias: 'SPBioPage' },
+  'am': { channel: 'Apple Music', defaultAlias: 'AppleBio' },
+  'apple': { channel: 'Apple Music', defaultAlias: 'AppleBio' },
+  'ytm': { channel: 'YT Music', defaultAlias: 'YTMusicBio' },
+  'amz': { channel: 'Amazon Music', defaultAlias: 'AmazonBio' },
+  'snd': { channel: 'SoundCloud', defaultAlias: 'SoundCloudBio' },
+  'dz': { channel: 'Deezer', defaultAlias: 'DeezerBio' },
+  'td': { channel: 'Tidal', defaultAlias: 'TidalBio' },
+  'bc': { channel: 'Bandcamp', defaultAlias: 'BandcampBio' },
+  'amk': { channel: 'Audiomack', defaultAlias: 'AudiomackBio' },
+  'qbz': { channel: 'Qobuz', defaultAlias: 'QobuzBio' }
 };
 
 function normalizeLookupKey(str: string): string {
@@ -94,6 +189,7 @@ export function initAttribution(): InboundAttribution {
 
   const href = window.location.href;
   const url = new URL(href);
+  const hostname = url.hostname.toLowerCase();
   const searchParams = url.searchParams;
 
   let matchedChannel = '';
@@ -101,6 +197,20 @@ export function initAttribution(): InboundAttribution {
   let utmSource = searchParams.get('utm_source') || '';
   let utmMedium = searchParams.get('utm_medium') || '';
   let utmCampaign = searchParams.get('utm_campaign') || '';
+
+  // 0. Check Dedicated Subdomains (e.g. in-kins-link-tree.vercel.app, igkins-link-tree.vercel.app)
+  const hostParts = hostname.split('.');
+  if (hostParts.length > 0) {
+    const sub = hostParts[0]; // e.g. "in-kins-link-tree" or "igkins-link-tree"
+    const prefix = sub.split('-')[0]; // e.g. "in", "pin", "ttv", "igkins"
+    if (SUBDOMAIN_MAP[sub]) {
+      matchedChannel = SUBDOMAIN_MAP[sub].channel;
+      matchedAlias = SUBDOMAIN_MAP[sub].defaultAlias;
+    } else if (SUBDOMAIN_MAP[prefix]) {
+      matchedChannel = SUBDOMAIN_MAP[prefix].channel;
+      matchedAlias = SUBDOMAIN_MAP[prefix].defaultAlias;
+    }
+  }
 
   // 1. Check Standard Named Query Parameters (?alias=..., ?src=..., ?ref=..., ?source=..., ?bio=..., ?from=...)
   const candidateKeys = ['alias', 'src', 'ref', 'source', 'bio', 'from', 'c', 'campaign', 'channel'];
