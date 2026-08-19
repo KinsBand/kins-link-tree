@@ -5,6 +5,11 @@ export default defineConfig({
   site: 'https://kins-link-tree.vercel.app',
   build: {
     format: 'directory'
+  },
+  vite: {
+    server: {
+      allowedHosts: ['sb-4dn1wlyjamnj.vercel.run']
+    }
   }
 });
 
