@@ -1,4 +1,6 @@
 ---
+const baseUrl = import.meta.env.BASE_URL;
+
 const primarySocials = [
   { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://instagram.com/KinsBandOfficial", platform: "instagram" },
   { name: "TikTok", icon: "fa-brands fa-tiktok", url: "https://tiktok.com/@KinsBandOfficial", platform: "tiktok" },
@@ -37,6 +39,26 @@ const secondaryStreams = [
 ---
 
 <section class="tabbed-links-section">
+  <!-- Prominent Official EPK Featured Card -->
+  <a href={`${baseUrl}epk`} class="epk-featured-banner-card" id="mainEpkLinkBtn" title="View Official Band EPK (Press Kit)">
+    <div class="epk-featured-left">
+      <div class="epk-featured-icon">
+        <i class="fa-solid fa-file-lines"></i>
+      </div>
+      <div class="epk-featured-text">
+        <div class="epk-featured-title-row">
+          <span class="epk-featured-title">Official Band EPK</span>
+          <span class="epk-live-chip">2026 KIT</span>
+        </div>
+        <span class="epk-featured-subtitle">Lineup • Live Repertoire • Tech Rider & Specs</span>
+      </div>
+    </div>
+    <div class="epk-featured-arrow-box">
+      <span class="epk-cta-word">VIEW</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </div>
+  </a>
+
   <!-- Neo-Brutalist Segmented Tabs -->
   <div class="brutal-tab-switcher">
     <button class="brutal-tab-btn active" id="tabSocialsBtn" data-target="socialsTab">
@@ -153,6 +175,118 @@ const secondaryStreams = [
     gap: 12px;
     width: 100%;
     margin-top: 4px;
+  }
+
+  /* Featured EPK Banner Card */
+  .epk-featured-banner-card {
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px var(--accent-neon-yellow), 3px 3px 0px 2px #000000;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-decoration: none;
+    box-sizing: border-box;
+    width: 100%;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
+  .epk-featured-banner-card:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px var(--accent-neon-yellow), 4px 4px 0px 2px #000000;
+  }
+
+  .epk-featured-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .epk-featured-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 6px;
+    background: var(--accent-neon-yellow);
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .epk-featured-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .epk-featured-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .epk-featured-title {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    line-height: 1.2;
+  }
+
+  .epk-live-chip {
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 900;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+  }
+
+  .epk-featured-subtitle {
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-card-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .epk-featured-arrow-box {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: 6px;
+    padding: 6px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .epk-featured-banner-card:hover .epk-featured-arrow-box {
+    transform: translateX(2px);
   }
 
   /* Neo-Brutalist Tab Switcher */
