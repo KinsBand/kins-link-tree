@@ -4,6 +4,7 @@ node_modules/
 # Build artifacts
 dist/
 build/
+.vercel/
 *.min.js
 *.min.css
 *.bundle.js
