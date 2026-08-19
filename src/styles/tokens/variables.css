@@ -1,43 +1,143 @@
 /* ==========================================================================
-   Kins (@KinsBandOfficial) - Visual System Design Tokens & Variables
+   Kins (@KinsBandOfficial) - Neo-Brutalist Rock Visual System Tokens
    ========================================================================== */
 
 :root {
-  /* System Color Tokens - Tactile Editorial Dark Mode */
-  --md-sys-color-primary: #f2f0eb;
-  --md-sys-color-on-primary: #0a0a0a;
+  /* System Color Tokens - High-Contrast Neo-Brutalist Canvas */
+  --md-sys-color-primary: #f2fd43;
+  --md-sys-color-on-primary: #000000;
   --md-sys-color-primary-container: #1a1a1a;
-  --md-sys-color-surface: #0a0a0c;
-  --md-sys-color-surface-container: #121214;
-  --md-sys-color-surface-container-high: #1c1c1f;
-  --md-sys-color-on-surface: #f2f0eb;
+  --md-sys-color-surface: #141416;
+  --md-sys-color-surface-container: #1c1c20;
+  --md-sys-color-surface-container-high: #24242a;
+  --md-sys-color-on-surface: #f5f5f7;
   --md-sys-color-on-surface-variant: #a1a1aa;
-  --md-sys-color-outline: rgba(255, 255, 255, 0.12);
-  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.06);
-  --md-sys-color-inverse-surface: #f2f0eb;
+  --md-sys-color-outline: #000000;
+  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.12);
+  --md-sys-color-inverse-surface: #f5f4ef;
 
-  /* Theme Colors & Gradients */
-  --bg-dark: #0d0d0f;
-  --bg-dark-gradient: linear-gradient(180deg, #141417 0%, #0a0a0c 100%);
-  --btn-green: #f2f0eb;
-  --btn-green-hover: #ffffff;
-  --btn-green-shadow: rgba(0, 0, 0, 0.6);
-  --btn-text-color: #0a0a0c;
-  --card-white: #f2f0eb;
-  --card-bg: rgba(18, 18, 20, 0.85);
-  --card-white-shadow: rgba(0, 0, 0, 0.5);
+  /* Surfaces & Backgrounds */
+  --bg-chalkboard: #161618;
+  --bg-dark: #0f0f12;
+  --bg-dark-gradient: radial-gradient(circle at 50% 20%, #202026 0%, #111114 60%, #0a0a0c 100%);
+  --surface-card: #18181c;
+  --surface-card-light: #f5f4ef;
+  --surface-card-light-hover: #ffffff;
+  --surface-tape: rgba(245, 245, 240, 0.95);
+  --surface-input: #ffffff;
+  --surface-input-border: #000000;
+
+  /* Accents & Highlights */
+  --accent-neon-yellow: #f2fd43;
+  --accent-neon-yellow-glow: rgba(242, 253, 67, 0.35);
+  --accent-neon: #f2fd43;
+  --accent-crimson: #ef4444;
+
+  /* Brutalist Borders & Radii */
+  --border-brutal: 3px solid #000000;
+  --border-brutal-sm: 2px solid #000000;
+  --border-brutal-lg: 4px solid #000000;
+  --border-subtle: rgba(255, 255, 255, 0.15);
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 9999px;
+
+  /* Hard Offset Drop Shadows */
+  --shadow-brutal-black: 3px 3px 0px #000000;
+  --shadow-brutal-black-lg: 4px 4px 0px #000000;
+  --shadow-brutal-yellow: 3px 3px 0px #f2fd43;
+  --shadow-brutal-yellow-lg: 4px 4px 0px #f2fd43;
+  --shadow-ambient: 0 10px 30px rgba(0, 0, 0, 0.6);
+
+  /* Button Tokens */
+  --btn-green: #f2fd43;
+  --btn-green-hover: #faff60;
+  --btn-green-shadow: 3px 3px 0px #000000;
+  --btn-text-color: #000000;
+  --card-white: #f5f4ef;
+  --card-bg: #18181c;
+  --card-white-shadow: 3px 3px 0px #000000;
+
+  /* Typography & Text Colors */
   --text-dark: #0a0a0c;
-  --text-white: #f2f0eb;
+  --text-card-primary: #000000;
+  --text-card-secondary: #4b4b4b;
+  --text-card-subtle: #555555;
+  --text-card-muted: #71717a;
+  --text-white: #f5f5f7;
   --text-muted: #8e8e93;
-  --accent-crimson: #d93838;
-  
+
   /* Typographic Hierarchy */
   --font-display: 'Cinzel', 'Syne', Georgia, serif;
-  --font-heading: 'Syne', 'Outfit', sans-serif;
+  --font-heading: 'Syne', 'Outfit', -apple-system, sans-serif;
   --font-primary: 'Space Grotesk', 'Outfit', sans-serif;
-  --font-secondary: 'Space Grotesk', -apple-system, sans-serif;
-  
-  /* Micro-interaction Spring & Curves */
+  --font-secondary: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Tactile Micro-Interaction Spring Curves */
   --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-tactile: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+  --ease-tactile: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+/* ==========================================================================
+   Stealth Dark Mode Palette (No Harsh Yellow, No Harsh White)
+   ========================================================================== */
+:root[data-theme="dark"] {
+  /* System Color Tokens */
+  --md-sys-color-primary: #d4af37;
+  --md-sys-color-on-primary: #000000;
+  --md-sys-color-primary-container: #222228;
+  --md-sys-color-surface: #0e0e12;
+  --md-sys-color-surface-container: #15151a;
+  --md-sys-color-surface-container-high: #1e1e24;
+  --md-sys-color-on-surface: #f5f5f7;
+  --md-sys-color-on-surface-variant: #a1a1aa;
+  --md-sys-color-outline: #000000;
+  --md-sys-color-outline-variant: rgba(255, 255, 255, 0.12);
+  --md-sys-color-inverse-surface: #1c1c22;
+
+  /* Surfaces & Backgrounds */
+  --bg-chalkboard: #0d0d10;
+  --bg-dark: #08080a;
+  --bg-dark-gradient: radial-gradient(circle at 50% 20%, #16161c 0%, #0c0c0f 60%, #060608 100%);
+  --surface-card: #141418;
+  --surface-card-light: #1c1c22;
+  --surface-card-light-hover: #26262e;
+  --surface-tape: rgba(38, 38, 46, 0.95);
+  --surface-input: #141418;
+  --surface-input-border: #33333f;
+
+  /* Muted Warm Gold / Amber Accents */
+  --accent-neon-yellow: #d4af37;
+  --accent-neon-yellow-glow: rgba(212, 175, 55, 0.22);
+  --accent-neon: #d4af37;
+  --accent-crimson: #ef4444;
+
+  /* Hard Offset Drop Shadows */
+  --shadow-brutal-black: 3px 3px 0px #000000;
+  --shadow-brutal-black-lg: 4px 4px 0px #000000;
+  --shadow-brutal-yellow: 3px 3px 0px #000000;
+  --shadow-brutal-yellow-lg: 4px 4px 0px #000000;
+
+  /* Button Tokens */
+  --btn-green: #d4af37;
+  --btn-green-hover: #e5c07b;
+  --btn-green-shadow: 3px 3px 0px #000000;
+  --btn-text-color: #000000;
+  --card-white: #1c1c22;
+  --card-bg: #141418;
+  --card-white-shadow: 3px 3px 0px #000000;
+
+  /* Typography & Text Colors */
+  --text-dark: #f4f4f6;
+  --text-card-primary: #f4f4f6;
+  --text-card-secondary: #a1a1aa;
+  --text-card-subtle: #8e8e93;
+  --text-card-muted: #71717a;
+  --text-white: #f5f5f7;
+  --text-muted: #a1a1aa;
+}
+

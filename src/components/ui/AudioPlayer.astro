@@ -54,59 +54,60 @@
     </div>
   </div>
 
-  <!-- Unified Combined Bottom Deck Bar -->
-  <div class="bottom-deck-bar" id="bottomAudioBar">
+  <!-- Neo-Brutalist Dual-Card Bottom Dock -->
+  <div class="brutal-bottom-dock" id="bottomAudioBar">
     <audio id="vaultAudioPlayer" preload="none"></audio>
 
-    <!-- Music Player Section -->
-    <div class="deck-music-section" id="deckMusicSection">
-      <!-- Vinyl Stylus riding on top of the music section timeline -->
+    <!-- Left Card: PLAYER (58%) -->
+    <div class="brutal-player-card deck-music-section" id="deckMusicSection">
+      <!-- Folder Tab Sticking Up From Top Left -->
+      <div class="card-folder-tab tab-player">PLAYER</div>
+
+      <!-- Minimalist Turntable Stylus Indicator at Top Edge -->
       <div class="vinyl-stylus-wrapper" id="vinylStylusWrapper">
-        <svg class="vinyl-stylus-svg" viewBox="0 0 28 45" width="28" height="45">
-          <defs>
-            <linearGradient id="kins_aluminum" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#a1a1aa" />
-              <stop offset="50%" stop-color="#f4f4f5" />
-              <stop offset="100%" stop-color="#71717a" />
-            </linearGradient>
-          </defs>
-          <line x1="14" y1="2" x2="14" y2="23" stroke="url(#kins_aluminum)" stroke-width="2.5" stroke-linecap="round"/>
-          <rect x="7" y="23" width="14" height="11" rx="2" fill="#09090b" stroke="#3f3f46" stroke-width="1"/>
-          <rect x="9" y="25" width="10" height="2.5" fill="#ffffff" rx="1"/>
-          <line x1="14" y1="34" x2="14" y2="39" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-          <polygon points="14,41 12,38 16,38" fill="#ffffff"/>
+        <svg class="stylus-turntable-svg" viewBox="0 0 22 18" width="22" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g class="stylus-head-group" id="stylusTonearmWand">
+            <!-- Turntable Cartridge Mount Body -->
+            <polygon points="5,1 17,1 18,7 4,7" fill="#141416" stroke="#000000" stroke-width="1.8" stroke-linejoin="round" />
+            <!-- Neon Yellow Stylus Grip Body -->
+            <polygon points="4,7 18,7 16,13 6,13" fill="#F2FD43" stroke="#000000" stroke-width="1.8" stroke-linejoin="round" />
+            <!-- Cartridge Nose / Diamond Needle -->
+            <polygon points="8,13 14,13 12,17.5 10,17.5" fill="#141416" stroke="#000000" stroke-width="1.2" />
+            <circle cx="11" cy="17.5" r="1.2" fill="#ffffff" stroke="#000000" stroke-width="0.8" />
+            <!-- Center Calibration Line -->
+            <line x1="11" y1="2" x2="11" y2="10" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round" />
+          </g>
         </svg>
       </div>
 
-      <!-- Strictly Clipped Card Container (Timeline Progress & Wave Sheen) -->
+      <!-- Clipped Progress Fill -->
       <div class="deck-timeline-clip-box">
         <div class="audio-bar-timeline-progress" id="audioBarTimelineProgress"></div>
-        <div class="wave-wipe-overlay" id="waveWipeOverlay"></div>
       </div>
 
-      <!-- IDLE STATE: INSPIRATION MIX -->
+      <!-- IDLE STATE: INSPIRATIONAL -->
       <div class="deck-idle-view" id="deckIdleView">
         <div class="stacked-album-covers" id="stackedAlbumCovers">
           <div class="cover-stack-item item-1">
-            <img class="stack-cover-img hidden" id="stackCover1" alt="Album cover 1" width="48" height="48" loading="lazy" decoding="async">
+            <img class="stack-cover-img hidden" id="stackCover1" alt="Album cover 1" width="36" height="36" loading="lazy" decoding="async">
             <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
           </div>
           <div class="cover-stack-item item-2">
-            <img class="stack-cover-img hidden" id="stackCover2" alt="Album cover 2" width="48" height="48" loading="lazy" decoding="async">
+            <img class="stack-cover-img hidden" id="stackCover2" alt="Album cover 2" width="36" height="36" loading="lazy" decoding="async">
             <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
           </div>
           <div class="cover-stack-item item-3">
-            <img class="stack-cover-img hidden" id="stackCover3" alt="Album cover 3" width="48" height="48" loading="lazy" decoding="async">
+            <img class="stack-cover-img hidden" id="stackCover3" alt="Album cover 3" width="36" height="36" loading="lazy" decoding="async">
             <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
           </div>
         </div>
 
         <div class="idle-text-info">
-          <span class="idle-mix-title">INSPIRATION MIX</span>
-          <span class="idle-mix-subtitle">listen to what inspires the kins!</span>
+          <span class="idle-mix-title">INSPIRATIONAL</span>
+          <span class="idle-mix-subtitle">listen to what inspires ...</span>
         </div>
 
-        <button class="idle-play-btn" id="idlePlayBtn" aria-label="Play random inspiration song">
+        <button class="idle-play-btn brutal-press" id="idlePlayBtn" aria-label="Play random inspiration song">
           <i class="fa-solid fa-play"></i>
         </button>
       </div>
@@ -115,7 +116,7 @@
       <div class="deck-active-view hidden" id="deckActiveView">
         <div class="audio-bar-left">
           <div class="audio-bar-icon-box" id="audioBarIconBox">
-            <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover" width="48" height="48" loading="lazy" decoding="async">
+            <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover" width="36" height="36" loading="lazy" decoding="async">
             <i class="fa-solid fa-compact-disc audio-icon-anim" id="audioBarFallbackIcon"></i>
           </div>
           <div class="audio-bar-details">
@@ -130,34 +131,33 @@
         </div>
 
         <div class="audio-bar-right">
-          <button class="audio-bar-stream-btn" id="audioBarStreamBtn" aria-label="Streaming options" title="Stream or Add to Playlist">
+          <button class="audio-bar-stream-btn brutal-press" id="audioBarStreamBtn" aria-label="Streaming options" title="Stream or Add to Playlist">
             <i class="fa-solid fa-arrow-up-right-from-square"></i>
           </button>
-          <button class="audio-bar-toggle-btn" id="audioBarToggleBtn" aria-label="Toggle playback">
+          <button class="audio-bar-toggle-btn brutal-press" id="audioBarToggleBtn" aria-label="Toggle playback">
             <i class="fa-solid fa-pause"></i>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Visual Separator Divider -->
-    <div class="deck-divider"></div>
-
-    <!-- Gig Location Button Section (40% Width) -->
-    <div class="deck-gig-section" id="floatingGigPillBtn" role="button" aria-label="Open Tour & Gig Map">
-      <div class="gig-pill-left-box">
-        <div class="gig-pill-live-badge">
-          <span class="live-pulse-dot"></span>
-          <span class="gig-pill-tag" id="gigPillTag">NEXT SHOW</span>
-        </div>
-        <div class="gig-pill-text-info">
-          <span class="gig-pill-title" id="gigPillTitle">TOUR MAP</span>
-          <span class="gig-pill-sub" id="gigPillLocation">The Cambridge, Newcastle</span>
-        </div>
+    <!-- Right Card: GIG MAP (42%) -->
+    <div class="brutal-gig-card" id="floatingGigPillBtn" role="button" aria-label="Tour dates & Gig Map">
+      <!-- Folder Tab Sticking Up From Top Left -->
+      <div class="card-folder-tab tab-gigmap">GIG MAP</div>
+      
+      <div class="gig-card-left">
+        <span class="gig-card-title">Coming Soon</span>
+        <span class="gig-card-sub">Currently unavailable</span>
       </div>
-      <div class="gig-pill-right-box">
-        <i class="fa-solid fa-map-location-dot pill-map-icon"></i>
-        <i class="fa-solid fa-chevron-right pill-arrow-icon"></i>
+
+      <div class="gig-card-icon-box">
+        <i class="fa-solid fa-map-location-dot"></i>
+      </div>
+
+      <!-- High Contrast Diagonal Ribbon -->
+      <div class="gig-soon-ribbon">
+        SOON - UNAVAILABLE
       </div>
     </div>
   </div>
@@ -172,19 +172,18 @@
     left: 0;
     right: 0;
     width: 100%;
-    height: 95px;
+    height: 75px;
     pointer-events: none;
     z-index: 750;
     background: linear-gradient(to top, 
-      rgba(10, 10, 12, 0.94) 0%, 
-      rgba(10, 10, 12, 0.72) 45%, 
-      rgba(10, 10, 12, 0.25) 75%, 
-      rgba(10, 10, 12, 0) 100%
+      rgba(16, 16, 18, 0.45) 0%, 
+      rgba(16, 16, 18, 0.15) 60%, 
+      rgba(16, 16, 18, 0) 100%
     );
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.75) 55%, rgba(0, 0, 0, 0) 100%);
-    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.75) 55%, rgba(0, 0, 0, 0) 100%);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
     transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
   }
 
@@ -198,7 +197,7 @@
 
   .bottom-floating-controls-wrapper {
     position: fixed;
-    bottom: 18px;
+    bottom: 16px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 900;
@@ -213,19 +212,19 @@
     pointer-events: none !important;
   }
 
+  /* Streaming Drawer */
   .stream-drawer-panel {
     pointer-events: auto;
-    background: rgba(18, 18, 20, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 6px;
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
     padding: 8px 12px;
-    margin-bottom: 6px;
-    backdrop-filter: blur(16px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+    margin-bottom: 14px;
     opacity: 0;
     transform: translateY(12px) scale(0.97);
-    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .stream-drawer-panel.active-drawer {
@@ -239,16 +238,16 @@
     justify-content: space-between;
     margin-bottom: 6px;
     padding-bottom: 4px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 2px solid #000000;
   }
 
   .stream-drawer-title {
     font-family: var(--font-secondary);
-    font-size: 0.62rem;
-    font-weight: 800;
+    font-size: 0.65rem;
+    font-weight: 900;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--text-card-primary);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -256,9 +255,9 @@
 
   .stream-drawer-song {
     font-family: var(--font-heading);
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--text-white);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
     max-width: 170px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -274,104 +273,142 @@
 
   .stream-platform-btn {
     flex: 1;
-    height: 36px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 5px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-white);
+    border-radius: 4px;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    color: var(--text-card-primary);
     text-decoration: none;
-    font-size: 1.15rem;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 1.1rem;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .stream-platform-btn:hover {
     transform: translateY(-2px);
+    background: var(--accent-neon-yellow);
+    color: #000000;
   }
 
-  .stream-platform-btn.spotify:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.4);
-    color: #ffffff;
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
-  }
-
-  .stream-platform-btn.apple:hover {
-    background: rgba(252, 60, 80, 0.22);
-    border-color: rgba(252, 60, 80, 0.5);
-    color: #FC3C50;
-    box-shadow: 0 0 12px rgba(252, 60, 80, 0.3);
-  }
-
-  .stream-platform-btn.youtube:hover {
-    background: rgba(255, 0, 0, 0.22);
-    border-color: rgba(255, 0, 0, 0.5);
-    color: #FF0000;
-    box-shadow: 0 0 12px rgba(255, 0, 0, 0.3);
-  }
-
-  .stream-platform-btn.soundcloud:hover {
-    background: rgba(255, 85, 0, 0.22);
-    border-color: rgba(255, 85, 0, 0.5);
-    color: #FF5500;
-    box-shadow: 0 0 12px rgba(255, 85, 0, 0.3);
-  }
-
-  .stream-platform-btn.amazon:hover {
-    background: rgba(0, 168, 225, 0.22);
-    border-color: rgba(0, 168, 225, 0.5);
-    color: #00A8E1;
-    box-shadow: 0 0 12px rgba(0, 168, 225, 0.3);
-  }
-
-  .stream-platform-btn.tidal:hover {
-    background: rgba(0, 229, 255, 0.22);
-    border-color: rgba(0, 229, 255, 0.5);
-    color: #00E5FF;
-    box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
-  }
-
-  /* Combined Deck Bar */
-  .bottom-deck-bar {
+  /* Neo-Brutalist Dual-Card Dock */
+  .brutal-bottom-dock {
     pointer-events: auto;
-    background: rgba(18, 18, 22, 0.94);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 8px;
-    padding: 0;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
-    position: relative;
-    overflow: visible;
     display: flex;
-    align-items: stretch;
-    gap: 0;
+    align-items: flex-end;
+    gap: 8px;
+    width: 100%;
     user-select: none;
-    touch-action: none;
-    transition: border-color 0.25s ease, box-shadow 0.25s ease;
-  }
-
-  .bottom-deck-bar:hover {
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.8), 0 0 14px rgba(255, 255, 255, 0.06);
-  }
-
-  .deck-music-section {
-    flex: 0 0 60%;
-    max-width: 60%;
-    min-width: 0;
-    position: relative;
-    display: flex;
-    align-items: center;
-    min-height: 48px;
-    overflow: visible;
-    border-radius: 7px 0 0 7px;
     box-sizing: border-box;
   }
 
-  /* Strictly Clipped Card Container for Timeline Fill & Sheen */
+  /* Folder Tab Sticking Up from Top Left */
+  .card-folder-tab {
+    position: absolute;
+    top: -22px;
+    left: -3px;
+    height: 22px;
+    padding: 0 10px;
+    border: 3px solid #000000;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-secondary);
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    color: var(--text-card-primary);
+    text-transform: uppercase;
+    user-select: none;
+    z-index: 10;
+    box-sizing: border-box;
+  }
+
+  .card-folder-tab.tab-player {
+    background: var(--surface-card-light);
+  }
+
+  .card-folder-tab.tab-gigmap {
+    background: #9ca3af;
+    color: #000000;
+  }
+
+  /* Left Player Card - Dark Neo-Brutalist Surface */
+  .brutal-player-card {
+    flex: 0 0 58%;
+    max-width: 58%;
+    background: #141416;
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 0 8px 8px 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    height: 54px;
+    box-sizing: border-box;
+    overflow: visible;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  .brutal-player-card:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  /* Minimalist Stylus Needle Indicator - Top Edge Accent */
+  .vinyl-stylus-wrapper {
+    position: absolute;
+    top: -16px;
+    left: 0%;
+    transform: translateX(-11px);
+    pointer-events: none;
+    z-index: 35;
+    transition: left 0.1s linear, opacity 0.25s ease;
+    opacity: 0;
+    width: 22px;
+    height: 18px;
+    filter: drop-shadow(1.5px 1.5px 0px #000000);
+  }
+
+  .vinyl-stylus-wrapper.stylus-visible {
+    opacity: 1;
+  }
+
+  .stylus-turntable-svg {
+    display: block;
+    width: 22px;
+    height: 18px;
+    overflow: visible;
+  }
+
+  .stylus-head-group {
+    transform-origin: 11px 4px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateY(-4px) rotate(-8deg);
+    will-change: transform;
+  }
+
+  .vinyl-stylus-wrapper.is-playing .stylus-head-group,
+  :global(body.is-audio-playing) .stylus-head-group {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  .vinyl-stylus-wrapper.is-paused .stylus-head-group {
+    transform: translateY(-4px) rotate(-8deg);
+  }
+
+  .vinyl-stylus-wrapper.tilt-forward .stylus-head-group {
+    transform: translateY(0px) rotate(5deg);
+  }
+
+  .vinyl-stylus-wrapper.tilt-backward .stylus-head-group {
+    transform: translateY(0px) rotate(-8deg);
+  }
+
   .deck-timeline-clip-box {
     position: absolute;
     top: 0;
@@ -379,319 +416,79 @@
     right: 0;
     bottom: 0;
     overflow: hidden;
-    border-radius: 7px 0 0 7px;
+    border-radius: 0 5px 5px 5px;
     pointer-events: none;
     z-index: 1;
   }
 
-  /* Soft Translucent Wipe Sheen — Contained strictly inside Clip Box */
-  .wave-wipe-overlay {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    height: 100%;
-    width: 32px;
-    z-index: 30;
-    pointer-events: none;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.12) 30%,
-      rgba(255, 255, 255, 0.35) 50%,
-      rgba(255, 255, 255, 0.12) 70%,
-      transparent 100%
-    );
-    opacity: 0;
-    transform: translateX(-50%);
-  }
-
-  /* Synchronized Curved Curtain Wipe Animation (Left -> Right) */
-  .deck-music-section.is-transitioning .wave-wipe-overlay,
-  .deck-music-section.is-song-changing .wave-wipe-overlay {
-    animation: waveLineSweep 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-
-  @keyframes waveLineSweep {
-    0% {
-      left: 0%;
-      opacity: 0;
-    }
-    15% {
-      opacity: 1;
-    }
-    85% {
-      opacity: 1;
-    }
-    100% {
-      left: 100%;
-      opacity: 0;
-    }
-  }
-
-  .deck-music-section.is-transitioning .deck-idle-view {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    animation: wipeOutIdleView 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-
-  @keyframes wipeOutIdleView {
-    0% {
-      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 50%);
-    }
-    50% {
-      clip-path: polygon(45% 0, 100% 0, 100% 100%, 45% 100%, 52% 50%);
-    }
-    100% {
-      clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%, 100% 50%);
-    }
-  }
-
-  .deck-music-section.is-transitioning .deck-active-view {
-    display: flex !important;
+  .audio-bar-timeline-progress {
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
     bottom: 0;
-    width: 100%;
     height: 100%;
-    z-index: 10;
-    animation: revealActiveView 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    width: 0%;
+    background: rgba(242, 253, 67, 0.25);
+    pointer-events: none;
+    will-change: width;
+    z-index: 1;
   }
 
-  @keyframes revealActiveView {
-    0% {
-      clip-path: polygon(0 0, 0 0, 0 50%, 0 100%, 0 100%);
-    }
-    50% {
-      clip-path: polygon(0 0, 45% 0, 52% 50%, 45% 100%, 0 100%);
-    }
-    100% {
-      clip-path: polygon(0 0, 100% 0, 100% 50%, 100% 100%, 0 100%);
-    }
-  }
-
-  /* Song -> Song Curved Wipe Reveal Animation */
-  .deck-music-section.is-song-changing .deck-active-view {
-    animation: songChangeWipe 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-
-  @keyframes songChangeWipe {
-    0% {
-      filter: blur(4px);
-      clip-path: polygon(0 0, 0 0, 0 50%, 0 100%, 0 100%);
-    }
-    50% {
-      filter: blur(2px);
-      clip-path: polygon(0 0, 45% 0, 52% 50%, 45% 100%, 0 100%);
-    }
-    100% {
-      filter: blur(0px);
-      clip-path: polygon(0 0, 100% 0, 100% 50%, 100% 100%, 0 100%);
-    }
-  }
-
-  .deck-divider {
-    width: 1px;
-    align-self: center;
-    height: 34px;
-    background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.22) 30%, rgba(255, 255, 255, 0.22) 70%, transparent 100%);
-    flex-shrink: 0;
-  }
-
-  /* 40% Width Gig Section - Variation 1: Live Tour Pass */
-  .deck-gig-section {
-    flex: 0 0 calc(40% - 1px);
-    max-width: calc(40% - 1px);
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    align-self: stretch;
-    padding: 6px 12px;
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    border-radius: 0 7px 7px 0;
-    cursor: pointer;
-    font-family: var(--font-secondary);
-    transition: transform 0.2s var(--ease-snappy), background-color 0.2s ease, box-shadow 0.2s ease;
-    border: none;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-
-  .deck-gig-section:hover {
-    background: var(--btn-green-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 18px rgba(255, 255, 255, 0.3);
-  }
-
-  .gig-pill-left-box {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 1px;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .gig-pill-live-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .live-pulse-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--btn-text-color);
-    display: inline-block;
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0.4);
-    animation: livePulseAnim 1.8s infinite;
-    flex-shrink: 0;
-  }
-
-  @keyframes livePulseAnim {
-    0% {
-      transform: scale(0.95);
-      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.5);
-    }
-    70% {
-      transform: scale(1);
-      box-shadow: 0 0 0 5px rgba(0, 0, 0, 0);
-    }
-    100% {
-      transform: scale(0.95);
-      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-    }
-  }
-
-  .gig-pill-tag {
-    font-size: 0.5rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    opacity: 0.9;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  .gig-pill-text-info {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
-    min-width: 0;
-  }
-
-  .gig-pill-title {
-    font-family: var(--font-heading);
-    font-size: clamp(0.64rem, 2.4vw, 0.76rem);
-    font-weight: 800;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-transform: uppercase;
-  }
-
-  .gig-pill-sub {
-    font-size: 0.52rem;
-    font-weight: 700;
-    opacity: 0.85;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .gig-pill-right-box {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    flex-shrink: 0;
-  }
-
-  .pill-map-icon {
-    font-size: 0.86rem;
-    color: var(--btn-text-color);
-  }
-
-  .pill-arrow-icon {
-    font-size: 0.62rem;
-    opacity: 0.8;
-    transition: transform 0.2s var(--ease-snappy);
-  }
-
-  .deck-gig-section:hover .pill-arrow-icon {
-    transform: translateX(3px);
-  }
-
-  .deck-gig-section:hover .pill-arrow-icon {
-    transform: translateX(2px);
-  }
-
-  /* IDLE VIEW STYLING */
+  /* Idle View */
   .deck-idle-view {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 12px;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 10px;
     cursor: pointer;
     position: relative;
     z-index: 5;
+    box-sizing: border-box;
   }
 
   .stacked-album-covers {
     position: relative;
-    width: 44px;
-    height: 38px;
+    width: 38px;
+    height: 34px;
     flex-shrink: 0;
   }
 
   .cover-stack-item {
     position: absolute;
-    width: 30px;
-    height: 30px;
+    width: 26px;
+    height: 26px;
     border-radius: 4px;
-    background: #1a1a1e;
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: #111114;
+    border: 1.5px solid #000000;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
-    transition: transform 0.25s var(--ease-snappy);
+    box-shadow: 1px 1px 0px #000000;
+    transition: transform 0.2s var(--ease-snappy);
   }
 
   .cover-stack-item.item-1 {
     left: 0;
-    top: 4px;
+    top: 3px;
     transform: rotate(-10deg);
     z-index: 1;
   }
 
   .cover-stack-item.item-2 {
-    left: 6px;
+    left: 5px;
     top: 2px;
     transform: rotate(0deg);
     z-index: 2;
   }
 
   .cover-stack-item.item-3 {
-    left: 12px;
-    top: 4px;
+    left: 10px;
+    top: 3px;
     transform: rotate(10deg);
     z-index: 3;
-  }
-
-  .deck-idle-view:hover .cover-stack-item.item-1 {
-    transform: rotate(-14deg) translateX(-2px);
-  }
-
-  .deck-idle-view:hover .cover-stack-item.item-3 {
-    transform: rotate(14deg) translateX(2px);
   }
 
   .stack-cover-img {
@@ -701,8 +498,8 @@
   }
 
   .stack-fallback-icon {
-    font-size: 0.75rem;
-    color: var(--text-muted);
+    font-size: 0.72rem;
+    color: var(--accent-neon-yellow);
   }
 
   .idle-text-info {
@@ -716,10 +513,10 @@
 
   .idle-mix-title {
     font-family: var(--font-heading);
-    font-size: clamp(0.64rem, 3.2vw, 0.78rem);
-    font-weight: 800;
+    font-size: 0.82rem;
+    font-weight: 900;
     letter-spacing: 0.04em;
-    color: var(--text-white);
+    color: #ffffff;
     text-transform: uppercase;
     white-space: nowrap;
     overflow: hidden;
@@ -728,141 +525,84 @@
 
   .idle-mix-subtitle {
     font-family: var(--font-secondary);
-    font-size: clamp(0.5rem, 2.4vw, 0.62rem);
-    color: var(--text-muted);
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: #a1a1aa;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .idle-play-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
     border-radius: 4px;
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    border: none;
+    background: var(--surface-input);
+    color: var(--text-card-primary);
+    border: 2.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     flex-shrink: 0;
-    transition: transform 0.2s var(--ease-snappy), background-color 0.2s ease;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .idle-play-btn:hover {
-    transform: scale(1.08);
-    background: var(--btn-green-hover);
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: scale(1.05);
   }
 
-  /* ACTIVE VIEW STYLING */
+  /* Active View */
   .deck-active-view {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 12px;
+    padding: 6px 10px;
     position: relative;
     z-index: 5;
-  }
-
-  .audio-bar-timeline-progress {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, rgba(242, 240, 235, 0.22) 0%, rgba(242, 240, 235, 0.12) 100%);
-    pointer-events: none;
-    will-change: width;
-    z-index: 1;
-  }
-
-  .vinyl-stylus-wrapper {
-    position: absolute;
-    top: -36px;
-    left: 0%;
-    transform: translateX(-50%);
-    z-index: 10;
-    pointer-events: none;
-    will-change: left;
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
-    display: none;
-    opacity: 0;
-    transition: opacity 0.35s ease 0.2s;
-  }
-
-  .vinyl-stylus-wrapper.stylus-visible {
-    display: block;
-    opacity: 1;
-  }
-
-  .vinyl-stylus-svg {
-    display: block;
-    transform-origin: 14px 2px;
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), filter 0.15s ease;
-  }
-
-  .bottom-deck-bar.is-scrubbing .vinyl-stylus-svg {
-    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
-  }
-
-  .vinyl-stylus-wrapper.tilt-forward .vinyl-stylus-svg {
-    transform: rotate(14deg) scale(1.05);
-  }
-
-  .vinyl-stylus-wrapper.tilt-backward .vinyl-stylus-svg {
-    transform: rotate(-14deg) scale(1.05);
-  }
-
-  .bottom-deck-bar.is-scrubbing .audio-bar-timeline-progress {
-    background: linear-gradient(90deg, rgba(242, 240, 235, 0.35) 0%, rgba(242, 240, 235, 0.2) 100%);
+    box-sizing: border-box;
   }
 
   .audio-bar-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex: 1;
     min-width: 0;
     overflow: visible;
   }
 
   .audio-bar-icon-box {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    min-height: 34px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     flex-shrink: 0;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    background: #111114;
+    border: 2px solid #000000;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    color: var(--text-white);
+    color: var(--accent-neon-yellow);
     position: relative;
-    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1), box-shadow 0.4s ease;
-  }
-
-  .audio-bar-cover-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: inherit;
+    box-shadow: 1px 1px 0px #000000;
+    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1),
+                box-shadow 0.4s ease,
+                border-color 0.4s ease;
   }
 
   .audio-bar-icon-box.vinyl-spin-anim {
     border-radius: 50% !important;
-    border-color: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.35), 0 0 3px rgba(255, 255, 255, 0.5), inset 0 0 6px rgba(255, 255, 255, 0.2);
-  }
-
-  .audio-bar-icon-box.vinyl-spin-anim .audio-bar-cover-img {
-    border-radius: 50% !important;
+    border-color: #000000;
+    box-shadow: 0 0 12px var(--accent-neon-yellow-glow);
   }
 
   .audio-bar-icon-box.vinyl-spin-anim::after {
@@ -871,14 +611,24 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     background: #121214;
-    border: 2px solid rgba(255, 255, 255, 0.75);
+    border: 1.5px solid #ffffff;
     border-radius: 50%;
-    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.9);
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.8);
     z-index: 5;
     pointer-events: none;
+  }
+
+  .audio-bar-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    transition: border-radius 0.5s cubic-bezier(0.34, 1.35, 0.64, 1);
   }
 
   .audio-bar-details {
@@ -900,9 +650,9 @@
 
   .audio-bar-title {
     font-family: var(--font-heading);
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--text-white);
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: #ffffff;
     display: inline-block;
     white-space: nowrap;
     will-change: transform;
@@ -930,19 +680,20 @@
 
   .audio-bar-artist {
     font-family: var(--font-secondary);
-    font-size: 0.66rem;
-    color: var(--text-muted);
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: #a1a1aa;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 90px;
+    max-width: 80px;
   }
 
   .audio-bar-time {
     font-family: var(--font-secondary);
-    font-size: 0.62rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
     letter-spacing: 0.04em;
     white-space: nowrap;
     flex-shrink: 0;
@@ -951,49 +702,120 @@
   .audio-bar-right {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     flex-shrink: 0;
   }
 
   .audio-bar-stream-btn, .audio-bar-toggle-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--text-white);
-    width: 30px;
-    height: 30px;
+    background: var(--surface-input);
+    border: 2.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    color: var(--text-card-primary);
+    width: 32px;
+    height: 32px;
     border-radius: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.76rem;
-    transition: all 0.18s ease;
+    font-size: 0.85rem;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .audio-bar-stream-btn:hover, .audio-bar-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: scale(1.05);
   }
 
-  .audio-bar-stream-btn.active {
-    background: rgba(255, 255, 255, 0.22);
-    border-color: rgba(255, 255, 255, 0.4);
-    color: #ffffff;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+  /* Right Gig Map Card - Cream Neo-Brutalist Surface */
+  .brutal-gig-card {
+    flex: 0 0 calc(42% - 8px);
+    max-width: calc(42% - 8px);
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 0 8px 8px 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    min-height: 54px;
+    height: 54px;
+    box-sizing: border-box;
+    cursor: pointer;
+    overflow: visible;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
   }
 
-  .audio-bar-toggle-btn i {
-    display: inline-block;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  .brutal-gig-card:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
   }
 
-  .audio-bar-toggle-btn.icon-morph i {
-    animation: iconMorphAnim 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  .gig-card-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    overflow: hidden;
   }
 
-  @keyframes iconMorphAnim {
-    0% { transform: scale(0.4) rotate(-90deg); opacity: 0.2; }
-    60% { transform: scale(1.18) rotate(15deg); opacity: 1; }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  .gig-card-title {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gig-card-sub {
+    font-family: var(--font-secondary);
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--text-card-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gig-card-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    color: var(--text-card-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .gig-soon-ribbon {
+    position: absolute;
+    top: -1px;
+    right: -4px;
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    border: 1.5px solid #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.48rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 2px;
+    pointer-events: none;
+    transform: rotate(-3deg);
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
   }
 </style>
 
@@ -1001,3 +823,4 @@
   import { initAudioPlayer } from '../../scripts/controllers/audioPlayer.js';
   initAudioPlayer();
 </script>
+

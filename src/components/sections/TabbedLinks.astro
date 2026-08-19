@@ -37,22 +37,29 @@ const secondaryStreams = [
 ---
 
 <section class="tabbed-links-section">
-  <div class="segmented-switcher-box">
-    <button class="switcher-tab active" id="tabSocialsBtn" data-target="socialsTab">
-      Socials
+  <!-- Neo-Brutalist Segmented Tabs -->
+  <div class="brutal-tab-switcher">
+    <button class="brutal-tab-btn active" id="tabSocialsBtn" data-target="socialsTab">
+      SOCIALS
     </button>
-    <button class="switcher-tab" id="tabStreamsBtn" data-target="streamsTab">
-      Streams
+    <button class="brutal-tab-btn" id="tabStreamsBtn" data-target="streamsTab">
+      STREAMS
     </button>
   </div>
 
   <div class="tab-content active" id="socialsTab">
     <div class="buttons-list">
       {primarySocials.map((link) => (
-        <a href={link.url} target="_blank" rel="noopener" class="green-link-btn" data-platform={link.platform}>
-          <div class="btn-icon"><i class={link.icon}></i></div>
-          <span class="btn-text">{link.name}</span>
-          <i class="fa-solid fa-arrow-up-right-from-square btn-arrow"></i>
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform}>
+          <div class="link-left-group">
+            <div class="link-icon-box">
+              <i class={link.icon}></i>
+            </div>
+            <span class="link-title-text">{link.name}</span>
+          </div>
+          <div class="link-arrow-block">
+            <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
+          </div>
         </a>
       ))}
     </div>
@@ -61,10 +68,16 @@ const secondaryStreams = [
     <div class="more-socials-container" id="moreSocialsContainer">
       <div class="buttons-list more-socials-list">
         {secondarySocials.map((link) => (
-          <a href={link.url} target="_blank" rel="noopener" class="green-link-btn" data-platform={link.platform}>
-            <div class="btn-icon"><i class={link.icon}></i></div>
-            <span class="btn-text">{link.name}</span>
-            <i class="fa-solid fa-arrow-up-right-from-square btn-arrow"></i>
+          <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform}>
+            <div class="link-left-group">
+              <div class="link-icon-box">
+                <i class={link.icon}></i>
+              </div>
+              <span class="link-title-text">{link.name}</span>
+            </div>
+            <div class="link-arrow-block">
+              <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
+            </div>
           </a>
         ))}
       </div>
@@ -86,10 +99,16 @@ const secondaryStreams = [
   <div class="tab-content" id="streamsTab">
     <div class="buttons-list">
       {primaryStreams.map((link) => (
-        <a href={link.url} target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform={link.platform}>
-          <div class="btn-icon"><i class={link.icon}></i></div>
-          <span class="btn-text">{link.name}</span>
-          <i class="fa-solid fa-arrow-up-right-from-square btn-arrow"></i>
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform}>
+          <div class="link-left-group">
+            <div class="link-icon-box">
+              <i class={link.icon}></i>
+            </div>
+            <span class="link-title-text">{link.name}</span>
+          </div>
+          <div class="link-arrow-block">
+            <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
+          </div>
         </a>
       ))}
     </div>
@@ -98,10 +117,16 @@ const secondaryStreams = [
     <div class="more-socials-container" id="moreStreamsContainer">
       <div class="buttons-list more-socials-list">
         {secondaryStreams.map((link) => (
-          <a href={link.url} target="_blank" rel="noopener" class="green-link-btn stream-link-only" data-platform={link.platform}>
-            <div class="btn-icon"><i class={link.icon}></i></div>
-            <span class="btn-text">{link.name}</span>
-            <i class="fa-solid fa-arrow-up-right-from-square btn-arrow"></i>
+          <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform}>
+            <div class="link-left-group">
+              <div class="link-icon-box">
+                <i class={link.icon}></i>
+              </div>
+              <span class="link-title-text">{link.name}</span>
+            </div>
+            <div class="link-arrow-block">
+              <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
+            </div>
           </a>
         ))}
       </div>
@@ -125,20 +150,70 @@ const secondaryStreams = [
   .tabbed-links-section {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  /* Neo-Brutalist Tab Switcher */
+  .brutal-tab-switcher {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    user-select: none;
+  }
+
+  .brutal-tab-btn {
+    min-height: 44px;
+    height: 44px;
+    padding: 0 16px;
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 3px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    position: relative;
+    z-index: 5;
+    user-select: none;
+    box-sizing: border-box;
+  }
+
+  .brutal-tab-btn:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .brutal-tab-btn.active {
+    background: #141416 !important;
+    color: var(--accent-neon-yellow) !important;
+    border: 3px solid var(--accent-neon-yellow) !important;
+    box-shadow: 2px 2px 0px #000000, 0 0 12px var(--accent-neon-yellow-glow) !important;
   }
 
   .tab-content {
     display: none;
   }
 
-  .tab-content:global(.active) {
-    display: block;
-    animation: fadeInTab 0.25s var(--ease-snappy) forwards;
+  .tab-content.active,
+  :global(.tab-content.active) {
+    display: block !important;
+    animation: fadeInTab 0.2s var(--ease-snappy) forwards;
   }
 
   @keyframes fadeInTab {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(3px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -148,12 +223,107 @@ const secondaryStreams = [
     gap: 10px;
   }
 
+  /* Neo-Brutalist Link Card */
+  .brutal-link-card {
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px var(--accent-neon-yellow), 3px 3px 0px 1px #000000;
+    border-radius: 6px;
+    padding: 0;
+    min-height: 52px;
+    height: 54px;
+    text-decoration: none;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+    user-select: none;
+    box-sizing: border-box;
+  }
+
+  .brutal-link-card:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px var(--accent-neon-yellow), 5px 5px 0px 1px #000000;
+  }
+
+  .brutal-link-card:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .link-left-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .link-icon-box {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 6px;
+    background: #000000;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    transition: transform 0.18s var(--ease-spring);
+  }
+
+  .brutal-link-card:hover .link-icon-box {
+    transform: scale(1.08);
+  }
+
+  .link-title-text {
+    font-family: var(--font-secondary);
+    font-size: 0.96rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text-card-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .link-arrow-block {
+    width: 48px;
+    min-width: 48px;
+    background: #111114;
+    border-left: 3px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-neon-yellow);
+    flex-shrink: 0;
+    transition: background-color 0.18s ease;
+  }
+
+  .arrow-glyph {
+    font-size: 0.85rem;
+    color: var(--accent-neon-yellow);
+    transition: transform 0.18s var(--ease-spring);
+  }
+
+  .brutal-link-card:hover .arrow-glyph {
+    transform: translate(2px, -2px);
+  }
+
+  /* Expandable Secondary Drawers */
   .more-socials-container {
     max-height: 0;
     overflow: hidden;
     opacity: 0;
     margin-top: 0;
-    transition: max-height 0.4s var(--ease-snappy), opacity 0.3s ease, margin-top 0.3s ease;
+    transition: max-height 0.35s var(--ease-snappy), opacity 0.25s ease, margin-top 0.25s ease;
   }
 
   .more-socials-container.active-drawer {
@@ -162,38 +332,38 @@ const secondaryStreams = [
     margin-top: 10px;
   }
 
+  /* Toggle More Button */
   .toggle-more-socials-btn {
     width: 100%;
-    margin-top: 12px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 9999px;
-    padding: 10px 20px;
-    color: var(--text-white);
+    margin-top: 10px;
+    background: var(--surface-card-light);
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 8px 16px;
+    color: var(--text-card-primary);
     font-family: var(--font-secondary);
     font-size: 0.82rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    backdrop-filter: blur(10px);
-    transition: all 0.25s var(--ease-snappy);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
   }
 
   .toggle-more-socials-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.25);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
   }
 
   .toggle-more-socials-btn:active {
-    transform: translateY(0);
-    background: rgba(255, 255, 255, 0.12);
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   .mini-icon-preview {
@@ -211,18 +381,17 @@ const secondaryStreams = [
   }
 
   .mini-icon-chip {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: #000000;
+    border: 1.5px solid #000000;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.9);
-    margin-left: -6px;
-    backdrop-filter: blur(4px);
+    font-size: 0.62rem;
+    color: #ffffff;
+    margin-left: -5px;
     transition: transform 0.2s ease;
   }
 
@@ -230,95 +399,47 @@ const secondaryStreams = [
     margin-left: 0;
   }
 
-  .toggle-more-socials-btn:hover .mini-icon-chip {
-    border-color: rgba(255, 255, 255, 0.35);
-  }
-
   .toggle-chevron {
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.6);
-    transition: transform 0.3s var(--ease-snappy), color 0.2s ease;
-  }
-
-  .toggle-more-socials-btn:hover .toggle-chevron {
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--text-card-primary);
+    transition: transform 0.25s var(--ease-snappy);
   }
 
   .toggle-more-socials-btn.active .toggle-chevron {
     transform: rotate(180deg);
   }
-
-  .green-link-btn {
-    background: rgba(18, 18, 20, 0.85);
-    color: var(--text-white);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 6px;
-    padding: 14px 18px;
-    min-height: 52px;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    position: relative;
-    cursor: pointer;
-    overflow: hidden;
-    backdrop-filter: blur(12px);
-    transition: transform 0.2s var(--ease-snappy), border-color 0.2s ease, background-color 0.2s ease;
-    user-select: none;
-  }
-
-  .green-link-btn:hover {
-    background: rgba(26, 26, 30, 0.95);
-    border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-  }
-
-  .green-link-btn:active {
-    transform: translateY(0);
-    background: rgba(35, 35, 40, 1);
-  }
-
-  .btn-icon {
-    font-size: 1.15rem;
-    width: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-    color: var(--text-white);
-    flex-shrink: 0;
-    transition: transform 0.2s var(--ease-snappy);
-  }
-
-  .green-link-btn:hover .btn-icon {
-    transform: scale(1.1);
-  }
-
-  .btn-text {
-    font-family: var(--font-secondary);
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    flex: 1;
-    text-align: left;
-    color: var(--text-white);
-  }
-
-  .btn-arrow {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    transition: transform 0.2s var(--ease-snappy), color 0.2s ease;
-  }
-
-  .green-link-btn:hover .btn-arrow {
-    color: var(--text-white);
-    transform: translate(2px, -2px);
-  }
 </style>
 
 <script>
   import { setupSegmentedSwitcher } from '../../scripts/controllers/tabs.js';
-  setupSegmentedSwitcher('.tabbed-links-section .switcher-tab', '.tabbed-links-section .tab-content');
+  setupSegmentedSwitcher('.tabbed-links-section .brutal-tab-btn', '.tabbed-links-section .tab-content');
+
+  const tabSocials = document.getElementById('tabSocialsBtn');
+  const tabStreams = document.getElementById('tabStreamsBtn');
+  const contentSocials = document.getElementById('socialsTab');
+  const contentStreams = document.getElementById('streamsTab');
+
+  if (tabSocials && tabStreams && contentSocials && contentStreams) {
+    tabSocials.addEventListener('click', (e) => {
+      e.preventDefault();
+      tabSocials.classList.add('active');
+      tabStreams.classList.remove('active');
+      contentSocials.classList.add('active');
+      contentSocials.style.display = 'block';
+      contentStreams.classList.remove('active');
+      contentStreams.style.display = 'none';
+    });
+
+    tabStreams.addEventListener('click', (e) => {
+      e.preventDefault();
+      tabStreams.classList.add('active');
+      tabSocials.classList.remove('active');
+      contentStreams.classList.add('active');
+      contentStreams.style.display = 'block';
+      contentSocials.classList.remove('active');
+      contentSocials.style.display = 'none';
+    });
+  }
 
   const toggleSocialsBtn = document.getElementById('toggleMoreSocialsBtn');
   const socialsDrawer = document.getElementById('moreSocialsContainer');
@@ -360,3 +481,4 @@ const secondaryStreams = [
     });
   }
 </script>
+

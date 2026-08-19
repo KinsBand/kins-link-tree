@@ -46,6 +46,7 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
 ---
 
 <div class="hero-feature-card-wrapper" id="heroFeatureCardWrapper">
+  <div class="hero-card-tape-accent"></div>
   <!-- Main Hero Card Container -->
   <div class="hero-feature-card" id="heroFeatureCard" data-active-state={activeState} data-active-var={activeSubvar}>
 
@@ -55,7 +56,7 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
       <div class="sub-var-panel var-upcoming-minimal_teaser" id="varUpcomingMinimalTeaser">
         <div class="upcoming-teaser-card">
           <div class="upcoming-icon-box">
-            <i class="fa-solid fa-compact-disc"></i>
+            <i class="fa-solid fa-compact-disc vinyl-icon-disc"></i>
           </div>
           <div class="upcoming-teaser-content">
             <span class="upcoming-teaser-badge">{upcoming.minimal_teaser.badge}</span>
@@ -64,6 +65,7 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
           </div>
         </div>
       </div>
+
 
       <!-- Sub-Var 0B: Mystery Countdown -->
       <div class="sub-var-panel var-upcoming-mystery_countdown hidden" id="varUpcomingMysteryCountdown">
@@ -664,8 +666,27 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 6px;
+    margin-top: 10px;
     margin-bottom: 12px;
+    position: relative;
+  }
+
+  .hero-card-tape-accent {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-0.5deg);
+    width: 85px;
+    height: 18px;
+    background: var(--surface-tape);
+    border: 1px dashed rgba(0, 0, 0, 0.35);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  [data-theme="dark"] .hero-card-tape-accent {
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   /* Selector Deck for Testing & Previewing */
@@ -747,28 +768,28 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
   }
 
   .state-tab-btn.active, :global(.subvar-pill-btn.active) {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    border-color: transparent;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
     font-weight: 800;
   }
 
-  /* Main Hero Feature Card Container */
+  /* Main Hero Feature Card Container - Neo-Brutalist Light Card */
   .hero-feature-card {
     width: 100%;
-    background: rgba(18, 18, 20, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 10px;
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
     overflow: hidden;
     position: relative;
-    backdrop-filter: blur(16px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     box-sizing: border-box;
-    transition: border-color 0.25s ease;
+    transition: transform 0.18s var(--ease-snappy), box-shadow 0.18s ease;
   }
 
   .hero-feature-card:hover {
-    border-color: rgba(255, 255, 255, 0.3);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
   }
 
   .hero-card-state, .sub-var-panel {
@@ -784,8 +805,9 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
 
   /* STATE 0: UPCOMING & MYSTERY */
   .state-upcoming {
-    padding: 14px 16px;
+    padding: 12px 14px;
     box-sizing: border-box;
+    background: var(--surface-card-light);
   }
 
   .upcoming-teaser-card, .mystery-countdown-card {
@@ -800,47 +822,58 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
     gap: 6px;
   }
 
+  /* Electric Yellow Vinyl Icon Box */
   .upcoming-icon-box {
-    font-size: 1.4rem;
-    color: var(--text-white);
+    font-size: 1.5rem;
+    color: #000000;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 6px;
+    background: var(--accent-neon-yellow);
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
     flex-shrink: 0;
+  }
+
+  .vinyl-icon-disc {
+    animation: vinylSpinContinuous 6s linear infinite;
   }
 
   .upcoming-teaser-content {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
+    min-width: 0;
   }
 
   .upcoming-teaser-badge {
     font-family: var(--font-secondary);
-    font-size: 0.58rem;
-    font-weight: 800;
-    color: var(--text-muted);
-    letter-spacing: 0.08em;
+    font-size: 0.64rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
   .upcoming-teaser-title {
     font-family: var(--font-heading);
-    font-size: 0.92rem;
-    font-weight: 700;
-    color: var(--text-white);
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
     margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
   }
 
   .upcoming-teaser-desc {
     font-family: var(--font-secondary);
-    font-size: 0.74rem;
-    color: var(--text-muted);
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-card-secondary);
     margin: 0;
   }
 
@@ -848,9 +881,10 @@ const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.
     font-family: var(--font-secondary);
     font-size: 0.9rem;
     font-weight: 800;
-    color: var(--btn-green);
+    color: var(--text-card-primary);
     letter-spacing: 0.04em;
   }
+
 
   /* STATE 1: RELEASES */
   .hero-card-media-bg {

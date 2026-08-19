@@ -38,12 +38,12 @@
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-/* Fine Grain Texture Overlay */
+/* Chalkboard Fine Grain Texture Overlay */
 body::before {
   content: "";
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.055'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 999;
 }
@@ -57,13 +57,71 @@ body.modal-open {
   display: none !important;
 }
 
+/* Pure CSS Tape Realism */
+.tape-tag {
+  background: var(--surface-tape);
+  color: var(--text-dark);
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.9);
+  padding: 3px 10px;
+  font-family: var(--font-secondary);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  user-select: none;
+}
+
+.tape-tag::before,
+.tape-tag::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 4px;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+}
+
+.tape-tag::before { left: 0; }
+.tape-tag::after { right: 0; }
+
+.tape-strip-top {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-0.5deg);
+  width: 90px;
+  height: 18px;
+  background: var(--surface-tape);
+  border: 1px dashed rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  pointer-events: none;
+  z-index: 10;
+}
+
+[data-theme="dark"] .tape-strip-top {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 /* Copy Button Spring Micro-Animation */
 .copied-animating {
-  background: var(--btn-green) !important;
-  color: var(--btn-text-color) !important;
-  border-color: var(--btn-green) !important;
+  background: var(--accent-neon-yellow) !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
   transform: scale(1.06) !important;
-  box-shadow: 0 0 14px rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 3px 3px 0px #000000 !important;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
@@ -71,6 +129,198 @@ body.modal-open {
   color: #0b1f18 !important;
   font-weight: 900 !important;
 }
+
+/* ==========================================================================
+   Neo-Brutalist Bottom Dock Global Persistence
+   ========================================================================== */
+.bottom-floating-controls-wrapper {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  width: calc(100% - 24px);
+  max-width: 480px;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+body.modal-open .bottom-floating-controls-wrapper {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.bottom-gradient-blur-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 75px;
+  pointer-events: none;
+  z-index: 750;
+  background: linear-gradient(to top, 
+    rgba(16, 16, 18, 0.45) 0%, 
+    rgba(16, 16, 18, 0.15) 60%, 
+    rgba(16, 16, 18, 0) 100%
+  );
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
+}
+
+body.stream-panel-open .bottom-gradient-blur-overlay {
+  height: 220px;
+}
+
+.brutal-bottom-dock {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.card-folder-tab {
+  position: absolute;
+  top: -22px;
+  left: -3px;
+  height: 22px;
+  padding: 0 10px;
+  border: 3px solid #000000;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-secondary);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #000000;
+  text-transform: uppercase;
+  user-select: none;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.card-folder-tab.tab-player {
+  background: #f5f4ef;
+}
+
+.card-folder-tab.tab-gigmap {
+  background: #9ca3af;
+}
+
+.brutal-player-card {
+  flex: 0 0 58%;
+  max-width: 58%;
+  background: #141416;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  border-radius: 0 8px 8px 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  height: 54px;
+  box-sizing: border-box;
+  overflow: visible;
+  transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+}
+
+.brutal-gig-card {
+  flex: 0 0 calc(42% - 8px);
+  max-width: calc(42% - 8px);
+  background: #f5f4ef;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  border-radius: 0 8px 8px 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  min-height: 54px;
+  cursor: pointer;
+  overflow: visible;
+  transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+}
+
+.audio-bar-icon-box.vinyl-spin-anim {
+  border-radius: 50% !important;
+  border-color: #000000 !important;
+  box-shadow: 0 0 12px var(--accent-neon-yellow-glow) !important;
+}
+
+.audio-bar-icon-box.vinyl-spin-anim::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 9px;
+  height: 9px;
+  background: #121214;
+  border: 1.5px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.8);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.vinyl-stylus-wrapper {
+  position: absolute;
+  top: -16px;
+  left: 0%;
+  transform: translateX(-11px);
+  pointer-events: none;
+  z-index: 35;
+  transition: left 0.1s linear, opacity 0.25s ease;
+  opacity: 0;
+  width: 22px;
+  height: 18px;
+  filter: drop-shadow(1.5px 1.5px 0px #000000);
+}
+
+.vinyl-stylus-wrapper.stylus-visible {
+  opacity: 1;
+}
+
+.stylus-turntable-svg {
+  display: block;
+  width: 22px;
+  height: 18px;
+  overflow: visible;
+}
+
+.stylus-head-group {
+  transform-origin: 11px 4px;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateY(-4px) rotate(-8deg);
+  will-change: transform;
+}
+
+.vinyl-stylus-wrapper.is-playing .stylus-head-group,
+body.is-audio-playing .stylus-head-group {
+  transform: translateY(0px) rotate(0deg);
+}
+
+.vinyl-stylus-wrapper.is-paused .stylus-head-group {
+  transform: translateY(-4px) rotate(-8deg);
+}
+
+.vinyl-stylus-wrapper.tilt-forward .stylus-head-group {
+  transform: translateY(0px) rotate(5deg);
+}
+
+.vinyl-stylus-wrapper.tilt-backward .stylus-head-group {
+  transform: translateY(0px) rotate(-8deg);
+}
+
 
 /* ==========================================================================
    Leaflet Map - Compact Pins & UI Controls
@@ -1040,4 +1290,450 @@ html.low-power-mode .sheet-container {
   outline: 2px solid var(--btn-green);
   outline-offset: 2px;
 }
+
+/* ==========================================================================
+   Global Stealth Dark Mode Overrides & Component Theming
+   ========================================================================== */
+
+[data-theme="dark"] .card-folder-tab.tab-player {
+  background: var(--surface-card-light) !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .brutal-gig-card {
+  background: var(--surface-card-light) !important;
+}
+
+[data-theme="dark"] .gig-card-title {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .gig-card-sub {
+  color: var(--text-card-secondary) !important;
+}
+
+[data-theme="dark"] .gig-card-icon-box {
+  background: #141418 !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .stream-drawer-panel {
+  background: var(--surface-card-light) !important;
+}
+
+[data-theme="dark"] .stream-drawer-title,
+[data-theme="dark"] .stream-drawer-song {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .stream-platform-btn {
+  background: #141418 !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .audio-bar-stream-btn,
+[data-theme="dark"] .audio-bar-toggle-btn {
+  background: #1c1c22 !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .idle-play-btn {
+  background: #1c1c22 !important;
+  color: var(--text-card-primary) !important;
+}
+
+/* Modals Dark Mode Support */
+[data-theme="dark"] .feedback-modal-enhanced,
+[data-theme="dark"] .share-modal-enhanced,
+[data-theme="dark"] .community-modal-enhanced,
+[data-theme="dark"] .privacy-modal-card,
+[data-theme="dark"] .terms-modal-card,
+[data-theme="dark"] .covers-search-modal-container {
+  background: var(--surface-card-light) !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .modal-header {
+  background: var(--surface-card-light) !important;
+}
+
+[data-theme="dark"] .modal-title-group h3,
+[data-theme="dark"] .modal-title-group h4,
+[data-theme="dark"] .legal-title,
+[data-theme="dark"] .legal-modal-title,
+[data-theme="dark"] .form-label,
+[data-theme="dark"] .dynamic-details-label {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .modal-subtitle-text,
+[data-theme="dark"] .legal-text,
+[data-theme="dark"] .legal-modal-subtitle,
+[data-theme="dark"] .legal-bullet-item {
+  color: var(--text-card-secondary) !important;
+}
+
+[data-theme="dark"] .close-modal-btn,
+[data-theme="dark"] .type-pill-btn,
+[data-theme="dark"] .category-chip,
+[data-theme="dark"] .image-upload-skeleton,
+[data-theme="dark"] .image-preview-container,
+[data-theme="dark"] .browse-btn-pill,
+[data-theme="dark"] .remove-image-btn,
+[data-theme="dark"] .input-with-icon,
+[data-theme="dark"] .legal-body-container {
+  background: #141418 !important;
+  color: var(--text-card-primary) !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="dark"] .type-pill-btn span,
+[data-theme="dark"] .category-chip span,
+[data-theme="dark"] .upload-title,
+[data-theme="dark"] .preview-filename-text {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .upload-subtext,
+[data-theme="dark"] .preview-filesize-text {
+  color: var(--text-card-secondary) !important;
+}
+
+[data-theme="dark"] textarea,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="url"],
+[data-theme="dark"] input[type="search"] {
+  background: #141418 !important;
+  color: var(--text-card-primary) !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="dark"] textarea::placeholder,
+[data-theme="dark"] input::placeholder {
+  color: #71717a !important;
+}
+
+[data-theme="dark"] .scroll-fade-edge-right {
+  background: linear-gradient(90deg, transparent, var(--surface-card-light)) !important;
+}
+
+/* Scrollbars in Dark Mode */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--accent-neon-yellow) !important;
+}
+
+/* ==========================================================================
+   Full-Width Theme Toggle Button (Global Neo-Brutalist Styling & Animation)
+   ========================================================================== */
+.footer-theme-toggle-wrap {
+  width: 100%;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+.footer-theme-toggle-btn {
+  width: 100%;
+  min-height: 48px;
+  background: var(--surface-card-light);
+  color: var(--text-card-primary);
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  border-radius: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  user-select: none;
+  box-sizing: border-box;
+  transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+}
+
+.footer-theme-toggle-btn:hover {
+  background: var(--surface-card-light-hover);
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.footer-theme-toggle-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.theme-toggle-icon-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 6px;
+  background: var(--accent-neon-yellow);
+  border: 2px solid #000000;
+  box-shadow: 1.5px 1.5px 0px #000000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ease-snappy);
+}
+
+.theme-toggle-icon {
+  font-size: 0.85rem;
+  color: #000000;
+  line-height: 1;
+  display: inline-block;
+}
+
+.theme-toggle-label {
+  font-family: var(--font-secondary);
+  font-size: 0.84rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-card-primary);
+  line-height: 1;
+}
+
+.theme-toggle-icon-badge.theme-spin-pop {
+  animation: themeSpinPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes themeSpinPop {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  45% {
+    transform: scale(1.3) rotate(180deg);
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   1. Can't Find Your Song? Menu Dark Mode Overrides
+   ========================================================================== */
+[data-theme="dark"] .cant-find-card {
+  background: var(--surface-card-light) !important;
+  color: var(--text-card-primary) !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="dark"] .cant-find-title {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .cant-find-sub {
+  color: var(--text-card-secondary) !important;
+}
+
+[data-theme="dark"] .cant-find-icon-badge {
+  background: var(--accent-neon-yellow) !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="dark"] .subscribed-email-notice-badge,
+[data-theme="dark"] .success-meta-note {
+  background: #141418 !important;
+  border-color: #000000 !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .sub-badge-status,
+[data-theme="dark"] .suggestions-label {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .sub-badge-text,
+[data-theme="dark"] .suggestions-loading-text {
+  color: var(--text-card-secondary) !important;
+}
+
+[data-theme="dark"] .artist-suggestion-pill {
+  background: #141418 !important;
+  color: var(--text-card-primary) !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="dark"] .artist-suggestion-pill:hover,
+[data-theme="dark"] .artist-suggestion-pill.active {
+  background: var(--accent-neon-yellow) !important;
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .cancel-request-btn {
+  background: #141418 !important;
+  color: var(--text-card-primary) !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="dark"] .cancel-request-btn:hover {
+  background: var(--accent-neon-yellow) !important;
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .song-request-success-card {
+  background: var(--surface-card-light) !important;
+  border-color: #000000 !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .success-title {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .success-desc {
+  color: var(--text-card-secondary) !important;
+}
+
+[data-theme="dark"] .bottom-request-pill-btn {
+  background: #141418 !important;
+  border-color: #3f3f46 !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .bottom-request-pill-btn:hover {
+  background: var(--accent-neon-yellow) !important;
+  border-color: #000000 !important;
+  color: #000000 !important;
+}
+
+/* ==========================================================================
+   2. Share Official Page Menu Dark Mode Overrides
+   ========================================================================== */
+[data-theme="dark"] .brand-mini-badge,
+[data-theme="dark"] .share-section-label,
+[data-theme="dark"] .share-field-label,
+[data-theme="dark"] .asset-card-title,
+[data-theme="dark"] .format-name {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .quick-share-chip,
+[data-theme="dark"] .share-copy-handle-wrapper,
+[data-theme="dark"] .copy-input-group,
+[data-theme="dark"] .asset-card,
+[data-theme="dark"] .format-option-card {
+  background: #141418 !important;
+  border-color: #000000 !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .quick-share-chip:hover {
+  background: var(--accent-neon-yellow) !important;
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .format-option-card:hover {
+  background: #202026 !important;
+}
+
+[data-theme="dark"] .format-desc {
+  color: var(--text-card-secondary) !important;
+}
+
+[data-theme="dark"] .format-action-icon {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .qr-format-modal-content,
+[data-theme="dark"] .qr-fullscreen-content {
+  background: var(--surface-card-light) !important;
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .qr-fullscreen-header h2 {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .qr-fullscreen-sub {
+  color: var(--text-card-secondary) !important;
+}
+
+/* ==========================================================================
+   3. Submission Fan Clip Modal (Info & Paste Buttons) Dark Mode Overrides
+   ========================================================================== */
+[data-theme="dark"] .disclaimer-info-btn,
+[data-theme="dark"] .paste-url-btn {
+  background: #141418 !important;
+  color: var(--text-card-primary) !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="dark"] .disclaimer-info-btn:hover,
+[data-theme="dark"] .paste-url-btn:hover {
+  background: var(--accent-neon-yellow) !important;
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .input-validation-msg,
+[data-theme="dark"] .submission-disclaimer-text {
+  color: var(--text-card-secondary) !important;
+}
+
+[data-theme="dark"] .disclaimer-terms-link {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .reset-submission-btn {
+  background: #141418 !important;
+  color: var(--text-card-primary) !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="dark"] .reset-submission-btn:hover {
+  background: var(--accent-neon-yellow) !important;
+  color: #000000 !important;
+}
+
+/* ==========================================================================
+   4. Toast Notifications Dark Mode Overrides
+   ========================================================================== */
+[data-theme="dark"] .toast {
+  background: var(--surface-card-light) !important;
+  color: var(--text-card-primary) !important;
+  border-color: #000000 !important;
+  box-shadow: 3px 3px 0px #000000 !important;
+}
+
+[data-theme="dark"] .toast-text-content {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .toast-close-btn {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .toast-progress-bar {
+  background: var(--accent-neon-yellow) !important;
+}
+
+/* ==========================================================================
+   5. Suggest Improvement / Feedback Modal Icons & Badges
+   ========================================================================== */
+[data-theme="dark"] .input-left-icon {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .category-chip i {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .category-chip:hover i,
+[data-theme="dark"] .category-chip.active i {
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .type-pill-btn i {
+  color: var(--text-card-primary) !important;
+}
+
+[data-theme="dark"] .type-pill-btn:hover i,
+[data-theme="dark"] .type-pill-btn.active i {
+  color: #000000 !important;
+}
+
+
 

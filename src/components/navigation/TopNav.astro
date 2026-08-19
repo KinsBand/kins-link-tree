@@ -2,7 +2,7 @@
 ---
 
 <header class="top-nav">
-  <button class="nav-pill-btn nav-icon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates" title="Subscribe">
+  <button class="nav-brutal-btn nav-icon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates" title="Subscribe">
     <i class="fa-solid fa-bell nav-icon"></i>
   </button>
 
@@ -11,7 +11,7 @@
     <span class="search-pill-placeholder">search covers...</span>
   </button>
 
-  <button class="nav-pill-btn nav-icon-btn" id="shareBtn" aria-label="Share page" title="Share">
+  <button class="nav-brutal-btn nav-icon-btn" id="shareBtn" aria-label="Share page" title="Share">
     <i class="fa-solid fa-share-nodes nav-icon"></i>
   </button>
 </header>
@@ -28,9 +28,7 @@
     z-index: 100;
     width: 100%;
     box-sizing: border-box;
-    transition: opacity 0.35s ease,
-                filter 0.35s ease,
-                transform 0.35s ease;
+    transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease;
   }
 
   .top-nav:global(.nav-hidden) {
@@ -42,7 +40,7 @@
 
   #topSubscribeBtn, #shareBtn, .header-search-pill-btn {
     will-change: opacity, transform;
-    transition: opacity 0.22s var(--ease-snappy), transform 0.22s var(--ease-snappy), background-color 0.18s ease, border-color 0.18s ease;
+    transition: opacity 0.22s var(--ease-snappy), transform 0.16s var(--ease-tactile), background-color 0.18s ease, box-shadow 0.18s ease;
   }
 
   .top-nav.search-active #topSubscribeBtn,
@@ -52,86 +50,61 @@
     transform: scale(0.92) !important;
   }
 
-  .nav-pill-btn {
-    background: rgba(18, 18, 20, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: var(--text-white);
-    padding: 7px 14px;
-    border-radius: 4px;
+  /* Neo-Brutalist Top Action Buttons */
+  .nav-brutal-btn {
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--text-card-primary);
+    border-radius: 8px;
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-size: 0.85rem;
+    font-weight: 800;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    text-align: center;
-    backdrop-filter: blur(12px);
-    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease, border-color 0.18s ease;
     white-space: nowrap;
     box-sizing: border-box;
     user-select: none;
     flex: 0 0 auto;
-    min-height: 38px;
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
   }
 
-  .nav-icon-btn {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    padding: 0;
-    border-radius: 4px;
+  .nav-brutal-btn .nav-icon {
+    font-size: 1.05rem;
+    color: var(--text-card-primary);
   }
 
-  .nav-icon-btn .nav-icon {
-    font-size: 0.88rem;
-    display: inline-block;
+  .nav-brutal-btn:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
   }
 
-  .nav-pill-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.35);
-    color: #ffffff;
-    transform: translateY(-1px);
+  .nav-brutal-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
-  .nav-pill-btn:active {
-    transform: translateY(0);
-    background: rgba(255, 255, 255, 0.2);
-  }
-
-  #topSubscribeBtn,
-  #shareBtn {
-    background-color: var(--btn-green);
-    color: var(--btn-text-color);
-    border-color: transparent;
-    font-weight: 800;
-  }
-
-  #topSubscribeBtn:hover,
-  #shareBtn:hover {
-    background-color: var(--btn-green-hover);
-    color: #000000;
-  }
-
-  /* YouTube-Style Subscriber Bell Visual States & Animation */
+  /* Subscribed Bell State */
   #topSubscribeBtn.bell-subscribed {
-    background: #ffffff;
-    color: #000000;
-    border-color: #ffffff;
-    box-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
+    background: var(--accent-neon-yellow);
+    border-color: #000000;
+    box-shadow: 2px 2px 0px #000000;
     position: relative;
   }
 
   #topSubscribeBtn.bell-subscribed::after {
     content: '';
     position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 6px;
-    height: 6px;
+    top: 5px;
+    right: 5px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: #000000;
   }
@@ -151,44 +124,63 @@
     100% { transform: rotate(0deg); }
   }
 
+  /* Neo-Brutalist Search Pill Button */
   .header-search-pill-btn {
     flex: 1 1 auto;
     width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 0;
-    color: var(--text-muted);
-    padding: 6px 10px;
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 24px;
+    color: var(--text-card-primary);
+    padding: 0 16px;
     font-family: var(--font-secondary);
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
-    backdrop-filter: blur(12px);
-    transition: all 0.2s var(--ease-snappy);
-    min-height: 38px;
+    gap: 10px;
+    height: 46px;
+    min-height: 46px;
+    box-sizing: border-box;
+    user-select: none;
   }
 
   .header-search-pill-btn:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-bottom-color: rgba(255, 255, 255, 0.5);
-    color: var(--text-white);
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .header-search-pill-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   .search-pill-icon {
-    font-size: 0.75rem;
-    color: var(--text-muted);
+    font-size: 0.88rem;
+    color: var(--text-card-primary);
   }
 
   .search-pill-placeholder {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-card-secondary);
+    flex: 1;
+    text-align: left;
+  }
+
+  .search-pill-clear-action {
+    font-size: 0.82rem;
+    color: var(--text-card-muted);
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>
 

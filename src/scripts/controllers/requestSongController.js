@@ -1,4 +1,5 @@
 import { showToast } from './toast.js';
+import { getSubscriptionState, getSubscriberEmail } from './subscribeController.js';
 
 export async function handleSongRequestSubmit(event, prefilledTitle = '') {
   event.preventDefault();
@@ -12,7 +13,13 @@ export async function handleSongRequestSubmit(event, prefilledTitle = '') {
   const songTitle = songTitleInput?.value.trim() || prefilledTitle || 'Untitled Cover';
   const artist = artistInput?.value.trim() || 'Unknown Artist';
   const reason = reasonInput?.value.trim() || 'None provided';
-  const email = emailInput?.value.trim() || 'Not provided';
+  
+  const isSubscribed = getSubscriptionState();
+  const savedEmail = getSubscriberEmail();
+  let email = emailInput?.value.trim() || '';
+  if (!email || email === 'Subscribed Fan') {
+    email = savedEmail || (isSubscribed ? 'Subscribed Fan' : 'Not provided');
+  }
 
   if (!songTitle || !artist) {
     showToast('⚠️ Please provide both Song Title and Original Artist!');
@@ -33,14 +40,15 @@ export async function handleSongRequestSubmit(event, prefilledTitle = '') {
     embeds: [
       {
         title: '🎵 New Cover Song Request',
-        color: 0x5865f2, // #5865F2 Blurple
+        color: isSubscribed ? 0xF2FD43 : 0x5865f2,
         fields: [
           { name: 'Song Title', value: `**${songTitle}**`, inline: true },
           { name: 'Original Artist', value: `**${artist}**`, inline: true },
+          { name: 'Fan Status', value: isSubscribed ? '✅ **Subscribed Fan** (Notified via Substack)' : '👤 Guest / Unsubscribed', inline: true },
           { name: 'Why should Kins cover this?', value: reason, inline: false },
           { name: 'Contact Email', value: email ? `\`${email}\`` : 'Not provided', inline: false }
         ],
-        footer: { text: 'Kins Cover Request System' },
+        footer: { text: 'Kins Cover Request System • Forwarded to HelloKinsBand@gmail.com' },
         timestamp: new Date().toISOString()
       }
     ]
@@ -63,12 +71,16 @@ export async function handleSongRequestSubmit(event, prefilledTitle = '') {
         <div class="success-icon-box">
           <i class="fa-solid fa-circle-check"></i>
         </div>
-        <h4 class="success-title">Request Submitted!</h4>
+        <h4 class="success-title">Cover Request Locked In!</h4>
         <p class="success-desc">
-          Kins has added <strong>"${songTitle}"</strong> by <strong>${artist}</strong> to their cover wishlist!
+          Rock on! Kins added <strong>"${songTitle}"</strong> by <strong>${artist}</strong> to their official cover wishlist.
         </p>
-        <button class="request-another-btn" id="requestAnotherBtn">
-          <i class="fa-solid fa-plus"></i> Request Another Song
+        <div class="success-meta-note">
+          <i class="fa-solid fa-envelope"></i>
+          <span>${isSubscribed ? `We'll update your inbox at <strong>${savedEmail || 'your email'}</strong> when it drops!` : 'You will receive release updates if Kins covers this track.'}</span>
+        </div>
+        <button class="request-another-btn brutal-press" id="requestAnotherBtn">
+          <i class="fa-solid fa-rotate-left"></i> Request Another Song
         </button>
       </div>
     `;

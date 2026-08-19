@@ -233,8 +233,8 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -256,18 +256,19 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   }
 
   .share-modal-enhanced {
-    background: rgba(14, 14, 17, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 12px;
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 6px 6px 0px #000000;
+    border-radius: 10px;
     width: 100%;
     max-width: 440px;
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9);
     max-height: 90vh;
     overflow-y: auto;
+    box-sizing: border-box;
   }
 
   .modal-header {
@@ -275,7 +276,7 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     align-items: center;
     justify-content: space-between;
     padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid #000000;
   }
 
   .modal-title-group {
@@ -287,26 +288,27 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   .brand-mini-badge {
     font-family: var(--font-secondary);
     font-size: 0.65rem;
-    font-weight: 700;
-    color: var(--btn-green);
+    font-weight: 800;
+    color: var(--text-card-primary);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
   .modal-title-group h3 {
     font-family: var(--font-heading);
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text-white);
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
     margin: 0;
-    letter-spacing: 0.02em;
+    letter-spacing: -0.01em;
     text-transform: uppercase;
   }
 
   .close-modal-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--text-white);
+    background: var(--surface-input);
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--text-card-primary);
     width: 36px;
     height: 36px;
     min-width: 36px;
@@ -316,11 +318,13 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .close-modal-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
   }
 
   .share-modal-body {
@@ -330,13 +334,14 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   }
 
   .native-share-primary-btn {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    border: none;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
     padding: 12px 18px;
     font-family: var(--font-secondary);
     font-size: 0.85rem;
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: 0.04em;
     border-radius: 6px;
     cursor: pointer;
@@ -346,12 +351,13 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     gap: 8px;
     width: 100%;
     min-height: 44px;
-    transition: transform 0.18s var(--ease-snappy), background-color 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
   }
 
   .native-share-primary-btn:hover {
-    background: var(--btn-green-hover);
-    transform: translateY(-1px);
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
   }
 
   .quick-share-section {
@@ -362,9 +368,9 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
 
   .share-section-label, .share-field-label {
     font-family: var(--font-secondary);
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
@@ -376,12 +382,13 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   }
 
   .quick-share-chip {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--text-white);
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    color: var(--text-card-primary);
     font-family: var(--font-secondary);
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: 800;
     padding: 10px 6px;
     border-radius: 6px;
     display: flex;
@@ -391,32 +398,13 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     gap: 4px;
     text-decoration: none;
     min-height: 48px;
-    transition: all 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .quick-share-chip:hover {
-    background: rgba(255, 255, 255, 0.14);
+    background: var(--accent-neon-yellow);
+    color: #000000;
     transform: translateY(-2px);
-  }
-
-  .quick-share-chip.whatsapp:hover {
-    color: #25D366;
-    border-color: rgba(37, 211, 102, 0.4);
-  }
-
-  .quick-share-chip.sms:hover {
-    color: #34B7F1;
-    border-color: rgba(52, 183, 241, 0.4);
-  }
-
-  .quick-share-chip.twitter:hover {
-    color: #1DA1F2;
-    border-color: rgba(29, 161, 242, 0.4);
-  }
-
-  .quick-share-chip.facebook:hover {
-    color: #1877F2;
-    border-color: rgba(24, 119, 242, 0.4);
   }
 
   .quick-share-chip i {
@@ -433,8 +421,9 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(10, 10, 12, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
     padding: 6px 8px 6px 12px;
   }
@@ -445,42 +434,45 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     gap: 8px;
     flex: 1;
     min-width: 0;
-    color: var(--text-white);
+    color: var(--text-card-primary);
     font-family: var(--font-secondary);
     font-size: 0.82rem;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .copy-input-wrapper input {
     background: transparent;
     border: none;
-    color: var(--text-white);
+    color: var(--text-card-primary);
     font-family: var(--font-secondary);
     width: 100%;
     outline: none;
     font-size: 0.8rem;
+    font-weight: 700;
     text-overflow: ellipsis;
   }
 
   .icon-only-copy-btn {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
-    border: none;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 1.5px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background-color 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .icon-only-copy-btn:hover {
-    background: var(--btn-green-hover);
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
   }
 
   .dual-asset-box {
@@ -492,18 +484,15 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   }
 
   .asset-card {
-    background: rgba(14, 14, 17, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 12px;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
     padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    transition: border-color 0.2s ease, transform 0.2s ease;
-  }
-
-  .asset-card:hover {
-    border-color: rgba(255, 255, 255, 0.28);
+    transition: transform 0.16s var(--ease-tactile);
   }
 
   .asset-card-header {
@@ -516,32 +505,31 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   .asset-card-title {
     font-family: var(--font-heading);
     font-size: 0.78rem;
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--text-white);
+    color: var(--text-card-primary);
   }
 
   .asset-download-btn {
-    background: var(--text-white);
-    color: var(--text-dark);
-    border: none;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 1.5px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
     width: 28px;
     height: 28px;
-    border-radius: 6px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 0.76rem;
-    transition: all 0.18s var(--ease-snappy);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .asset-download-btn:hover {
-    background: #ffffff;
-    transform: scale(1.08);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
   }
 
   /* Preview Boxes */
@@ -550,14 +538,15 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     position: relative;
     width: 100%;
     aspect-ratio: 1;
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
     cursor: pointer;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s var(--ease-snappy), box-shadow 0.2s ease;
+    border: 2px solid #000000;
+    transition: transform 0.2s var(--ease-snappy);
   }
 
   .qr-canvas-clickable {
@@ -566,16 +555,8 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   }
 
   .band-logo-preview-box {
-    background: #0a0a0c;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #111114;
     padding: 8px;
-    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6);
-  }
-
-  .qr-canvas-clickable:hover,
-  .band-logo-preview-box:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
   }
 
   .qr-canvas-inner {
@@ -597,7 +578,6 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
   }
 
   /* Hover Badges */
@@ -606,7 +586,7 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.78);
-    color: var(--text-white);
+    color: var(--accent-neon-yellow);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -628,16 +608,17 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
 
   /* Format Selector Modal */
   .qr-format-modal-content {
-    background: rgba(14, 14, 17, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 12px;
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 6px 6px 0px #000000;
+    border-radius: 10px;
     width: 100%;
     max-width: 380px;
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95);
+    box-sizing: border-box;
   }
 
   .format-options-grid {
@@ -647,30 +628,29 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   }
 
   .format-option-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
-    padding: 12px 14px;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    text-align: left;
-    transition: all 0.18s var(--ease-snappy);
-    width: 100%;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
   }
 
   .format-option-card:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--btn-green);
-    transform: translateX(4px);
+    background: var(--surface-card-light-hover);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px #000000;
   }
 
   .format-badge-icon {
     width: 42px;
     height: 42px;
     min-width: 42px;
-    border-radius: 6px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -678,7 +658,8 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     font-size: 0.72rem;
     font-weight: 900;
     letter-spacing: 0.04em;
-    color: #0a0a0c;
+    color: #000000;
+    border: 1.5px solid #000000;
   }
 
   .format-badge-icon.jpeg {
@@ -686,17 +667,15 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   }
 
   .format-badge-icon.png {
-    background: var(--btn-green);
+    background: var(--accent-neon-yellow);
   }
 
   .format-badge-icon.eps {
-    background: #3b82f6;
-    color: #ffffff;
+    background: #60a5fa;
   }
 
   .format-badge-icon.svg {
-    background: #ec4899;
-    color: #ffffff;
+    background: #f472b6;
   }
 
   .format-details {
@@ -710,63 +689,61 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     font-family: var(--font-heading);
     font-size: 0.88rem;
     font-weight: 800;
-    color: var(--text-white);
+    color: var(--text-card-primary);
     text-transform: uppercase;
   }
 
   .format-desc {
     font-family: var(--font-secondary);
     font-size: 0.72rem;
-    color: var(--text-muted);
+    font-weight: 600;
+    color: var(--text-card-secondary);
   }
 
   .format-action-icon {
-    color: var(--text-muted);
+    color: var(--text-card-primary);
     font-size: 0.9rem;
-    transition: color 0.18s ease;
-  }
-
-  .format-option-card:hover .format-action-icon {
-    color: var(--btn-green);
   }
 
   /* Fullscreen QR Lightbox Modal */
   .qr-fullscreen-content {
-    background: rgba(14, 14, 17, 0.98);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 16px;
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 6px 6px 0px #000000;
+    border-radius: 10px;
     padding: 32px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
-    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95);
+    gap: 16px;
     position: relative;
     max-width: 360px;
     width: 100%;
     text-align: center;
+    box-sizing: border-box;
   }
 
   .qr-fullscreen-close {
     position: absolute;
-    top: 14px;
-    right: 14px;
+    top: 12px;
+    right: 12px;
   }
 
   .qr-fullscreen-header h2 {
     font-family: var(--font-heading);
     font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--text-white);
+    font-weight: 900;
+    color: var(--text-card-primary);
     text-transform: uppercase;
     margin: 4px 0 0 0;
   }
 
   .qr-fullscreen-canvas-wrapper {
     background: #ffffff;
-    padding: 14px;
-    border-radius: 12px;
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.25);
+    padding: 12px;
+    border-radius: 6px;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -775,7 +752,8 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
   .qr-fullscreen-sub {
     font-family: var(--font-secondary);
     font-size: 0.78rem;
-    color: var(--text-muted);
+    font-weight: 600;
+    color: var(--text-card-secondary);
     margin: 0;
   }
 </style>

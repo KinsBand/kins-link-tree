@@ -1,6 +1,7 @@
 import { openCoverVideoModal } from './videoModalController.js';
 import { handleSongRequestSubmit } from './requestSongController.js';
 import { getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from './inspirationVault.js';
+import { getSubscriptionState, getSubscriberEmail } from './subscribeController.js';
 
 export const KINS_COVERS_DATA = [];
 
@@ -36,46 +37,42 @@ export async function fetchLiveArtistSuggestions(songTitle) {
   } catch (err) {
     console.warn('Error fetching live artist suggestions:', err);
   }
-  const fallback = [];
-  ARTIST_SUGGESTIONS_CACHE[cleanTitle] = fallback;
-  return fallback;
+
+  return [];
 }
 
 function renderCoverCard(cover) {
   const card = document.createElement('div');
-  card.className = 'cover-result-card';
-  card.setAttribute('data-id', cover.id);
-  
-  const hasArtwork = !!(cover.artworkUrl || cover.coverUrl);
-  const thumbSrc = hasArtwork ? (cover.artworkUrl || cover.coverUrl) : cover.thumbnail;
-  
+  card.className = 'cover-result-card brutal-press';
+  card.setAttribute('role', 'button');
+  card.setAttribute('tabindex', '0');
+  card.setAttribute('aria-label', `Play cover of ${cover.title} by ${cover.originalArtist}`);
+
   card.innerHTML = `
-    <div class="cover-card-thumb-box">
-      <img src="${thumbSrc}" alt="${cover.title} thumbnail" class="cover-card-thumb-img" width="160" height="90" loading="lazy" decoding="async">
-      <div class="thumb-play-overlay"><i class="fa-solid fa-play"></i></div>
+    <div class="cover-card-thumb-wrap">
+      <img src="${cover.thumbnail}" alt="${cover.title}" class="cover-card-thumb" loading="lazy" decoding="async">
+      <div class="cover-card-play-overlay">
+        <i class="fa-solid fa-play"></i>
+      </div>
+      <span class="cover-card-duration">${cover.duration}</span>
     </div>
     <div class="cover-card-info">
+      <span class="cover-card-category-badge">${cover.category.toUpperCase()}</span>
       <h4 class="cover-card-title">${cover.title}</h4>
-      <p class="cover-card-sub">Cover of <span class="artist-highlight">${cover.originalArtist}</span></p>
+      <p class="cover-card-artist">Orig. by <strong>${cover.originalArtist}</strong></p>
+      <span class="cover-card-views"><i class="fa-solid fa-fire"></i> ${cover.views}</span>
     </div>
-    <button class="cover-card-action-btn" aria-label="Play ${cover.title}">
-      <i class="${cover.platformIcon || 'fa-solid fa-play'}"></i>
-    </button>
   `;
-
-  if (!hasArtwork && cover.originalArtist && cover.title) {
-    const imgEl = card.querySelector('.cover-card-thumb-img');
-    getITunesTrackData(cover.originalArtist, cover.title).then(meta => {
-      if (meta && meta.artworkUrl) {
-        cover.artworkUrl = meta.artworkUrl;
-        cover.coverUrl = meta.artworkUrl;
-        loadAlbumArt(imgEl, meta.artworkUrl, meta.rawArtworkUrl);
-      }
-    });
-  }
 
   card.addEventListener('click', () => {
     openCoverVideoModal(cover);
+  });
+
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openCoverVideoModal(cover);
+    }
   });
 
   return card;
@@ -86,6 +83,28 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
   container.className = 'request-song-card-container';
   
   const displayTitle = rawQuery.trim() ? rawQuery.trim() : '';
+  const isSubscribed = getSubscriptionState();
+  const savedEmail = getSubscriberEmail();
+
+  const emailSectionHTML = isSubscribed ? `
+    <div class="form-group request-email-group subscribed-state">
+      <div class="subscribed-email-notice-badge">
+        <div class="sub-badge-left">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="sub-badge-content">
+          <span class="sub-badge-status">Subscribed Updates Active</span>
+          <p class="sub-badge-text">You'll receive release updates via your email${savedEmail ? ` (<strong>${savedEmail}</strong>)` : ''}.</p>
+        </div>
+        <input type="hidden" id="reqEmail" value="${savedEmail || 'Subscribed Fan'}">
+      </div>
+    </div>
+  ` : `
+    <div class="form-group request-email-group unsubscribed-state">
+      <label for="reqEmail">Email Address <span class="opt-label">(optional, for release update)</span></label>
+      <input type="email" id="reqEmail" placeholder="fan@example.com">
+    </div>
+  `;
 
   container.innerHTML = `
     <div class="cant-find-card">
@@ -107,13 +126,10 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
 
         <div class="form-group">
           <label for="reqArtist">Original Artist <span class="req-star">*</span></label>
-          <input type="text" id="reqArtist" value="" placeholder="Fetching most likely artist..." required>
+          <input type="text" id="reqArtist" value="" placeholder="Artist name..." required>
           
           <div class="artist-suggestions-box" id="artistSuggestionsBox">
-            <span class="suggestions-label"><i class="fa-solid fa-wand-magic-sparkles" style="font-size: 0.65rem; opacity: 0.7;"></i> Artist Match</span>
-            <div class="artist-pills-scroll-row" id="artistPillsScrollRow">
-              <span class="suggestions-loading-text"><i class="fa-solid fa-compact-disc fa-spin"></i> Searching artist database...</span>
-            </div>
+            <div class="artist-pills-scroll-row" id="artistPillsScrollRow"></div>
           </div>
         </div>
 
@@ -122,10 +138,7 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
           <textarea id="reqReason" rows="2" placeholder="e.g. Your style would sound amazing on this!"></textarea>
         </div>
 
-        <div class="form-group">
-          <label for="reqEmail">Email Address <span class="opt-label">(optional, for release update)</span></label>
-          <input type="email" id="reqEmail" placeholder="fan@example.com">
-        </div>
+        ${emailSectionHTML}
 
         <div class="request-form-actions">
           <button type="submit" class="submit-request-btn">
@@ -149,7 +162,7 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
     if (!pillsContainer) return;
 
     if (!artists || artists.length === 0) {
-      pillsContainer.innerHTML = `<span class="suggestions-loading-text">Type a song title above to auto-detect artists</span>`;
+      pillsContainer.innerHTML = '';
       return;
     }
 
@@ -193,8 +206,6 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
         return;
       }
 
-      pillsContainer.innerHTML = `<span class="suggestions-loading-text"><i class="fa-solid fa-compact-disc fa-spin"></i> Searching artist database...</span>`;
-
       artistFetchDebounceTimeout = setTimeout(() => {
         fetchLiveArtistSuggestions(currentTitle).then(artists => {
           if (artists.length > 0) {
@@ -202,7 +213,7 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
           }
           updatePillsUI(artists);
         });
-      }, 300);
+      }, 250);
     });
   }
 
@@ -399,5 +410,11 @@ export function initCoversSearchEngine() {
       activeCategory = btn.getAttribute('data-category') || 'all';
       filterAndRenderCovers();
     });
+  });
+
+  window.addEventListener('kins:subscription-change', () => {
+    if (searchOverlay?.classList.contains('active')) {
+      filterAndRenderCovers();
+    }
   });
 }

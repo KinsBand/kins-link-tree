@@ -2,29 +2,36 @@
 ---
 
 <section class="profile-section">
-  <p class="profile-bio-text">INDEPENDENT 4-PIECE ROCK BAND</p>
+  <div class="profile-tapes-stack">
+    <div class="tape-tag-item bio-tag">
+      <span>INDEPENDENT 4-PIECE ROCK BAND</span>
+    </div>
 
-  <div class="profile-actions-row">
-    <span class="profile-inline-item location-item">
+    <div class="tape-tag-item location-tag">
       <i class="fa-solid fa-location-dot location-pin-icon"></i>
-      <span>Newcastle, Australia</span>
-      <svg class="aus-flag-img" viewBox="0 0 60 30" width="18" height="12" aria-label="Australia Flag" role="img">
-        <clipPath id="au-flag-clip"><rect width="60" height="30" rx="2"/></clipPath>
-        <g clip-path="url(#au-flag-clip)">
-          <rect width="60" height="30" fill="#012169"/>
-          <path d="M0 0 L30 15 M30 0 L0 15" stroke="#fff" stroke-width="3"/>
-          <path d="M0 0 L30 15 M30 0 L0 15" stroke="#c8102e" stroke-width="1.5"/>
-          <path d="M15 0 v15 M0 7.5 h30" stroke="#fff" stroke-width="5"/>
-          <path d="M15 0 v15 M0 7.5 h30" stroke="#c8102e" stroke-width="3"/>
-          <polygon points="15,19 16.2,21.8 19.1,22.2 16.8,24 17.6,26.9 15,25.2 12.4,26.9 13.2,24 10.9,22.2 13.8,21.8" fill="#fff"/>
-          <polygon points="45,24 45.6,25.5 47.1,25.7 45.9,26.7 46.3,28.2 45,27.3 43.7,28.2 44.1,26.7 42.9,25.7 44.4,25.5" fill="#fff"/>
-          <polygon points="38,14 38.6,15.5 40.1,15.7 38.9,16.7 39.3,18.2 38,17.3 36.7,18.2 37.1,16.7 35.9,15.7 37.4,15.5" fill="#fff"/>
-          <polygon points="45,5 45.6,6.5 47.1,6.7 45.9,7.7 46.3,9.2 45,8.3 43.7,9.2 44.1,7.7 42.9,6.7 44.4,6.5" fill="#fff"/>
-          <polygon points="51,11 51.6,12.5 53.1,12.7 51.9,13.7 52.3,15.2 51,14.3 49.7,15.2 50.1,13.7 48.9,12.7 50.4,12.5" fill="#fff"/>
-          <polygon points="47,17 47.5,18.2 48.8,18.3 47.8,19.1 48.1,20.4 47,19.6 45.9,20.4 46.2,19.1 45.2,18.3 46.5,18.2" fill="#fff"/>
-        </g>
-      </svg>
-    </span>
+      <span>NEWCASTLE, AUSTRALIA</span>
+      <span class="flag-icon" title="Australia" aria-label="Australia Flag">
+        <svg class="au-flag-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" width="18" height="12" aria-hidden="true">
+          <rect width="640" height="320" fill="#00247d"/>
+          <g>
+            <clipPath id="au-canton"><rect width="320" height="160"/></clipPath>
+            <g clip-path="url(#au-canton)">
+              <rect width="320" height="160" fill="#00247d"/>
+              <path d="M0 0l320 160M320 0L0 160" stroke="#fff" stroke-width="32"/>
+              <path d="M0 0l320 160M320 0L0 160" stroke="#cf142b" stroke-width="20" stroke-dasharray="160 160"/>
+              <path d="M160 0v160M0 80h320" stroke="#fff" stroke-width="54"/>
+              <path d="M160 0v160M0 80h320" stroke="#cf142b" stroke-width="32"/>
+            </g>
+          </g>
+          <polygon fill="#fff" points="160,195 167,215 188,212 173,227 184,245 164,238 152,254 148,234 128,237 143,222 132,204 152,211"/>
+          <polygon fill="#fff" points="480,40 483,50 493,48 486,55 491,64 482,60 476,68 474,58 464,60 471,53 466,44 476,48"/>
+          <polygon fill="#fff" points="400,120 403,130 413,128 406,135 411,144 402,140 396,148 394,138 384,140 391,133 386,124 396,128"/>
+          <polygon fill="#fff" points="550,105 553,115 563,113 556,120 561,129 552,125 546,133 544,123 534,125 541,118 536,109 546,113"/>
+          <polygon fill="#fff" points="480,240 483,250 493,248 486,255 491,264 482,260 476,268 474,258 464,260 471,253 466,244 476,248"/>
+          <polygon fill="#fff" points="515,160 518,168 526,168 520,173 522,181 515,176 508,181 510,173 504,168 512,168"/>
+        </svg>
+      </span>
+    </div>
   </div>
 
   <div class="total-followers-card">
@@ -46,54 +53,72 @@
     align-items: center;
     text-align: center;
     margin-top: 0;
+    margin-bottom: 6px;
     padding: 0 4px;
+    position: relative;
+    z-index: 10;
   }
 
-  .profile-bio-text {
-    font-family: var(--font-secondary);
-    font-size: 0.8rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-white);
-    margin: 0 0 6px 0;
-    white-space: nowrap;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
-  }
-
-  .profile-actions-row {
+  .profile-tapes-stack {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    gap: 8px;
   }
 
-  .profile-inline-item {
+  /* Authentic Neo-Brutalist Paper Tape Tags */
+  .tape-tag-item {
+    background: var(--surface-tape);
+    color: var(--text-dark);
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    font-family: var(--font-secondary);
+    font-size: clamp(0.72rem, 2.8vw, 0.82rem);
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 12px;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    font-family: var(--font-secondary);
-    font-size: 0.76rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    user-select: none;
+    position: relative;
+    transition: transform 0.2s var(--ease-spring);
   }
 
-  .aus-flag-img {
-    width: 18px;
-    height: 12px;
-    object-fit: cover;
-    border-radius: 2px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-    flex-shrink: 0;
-    margin-left: 2px;
+  .bio-tag {
+    transform: rotate(-0.8deg);
+  }
+
+  .location-tag {
+    transform: rotate(0.6deg);
+  }
+
+  .tape-tag-item:hover {
+    transform: scale(1.03) rotate(0deg);
   }
 
   .location-pin-icon {
-    color: #ff4d4d;
-    font-size: 0.8rem;
+    color: var(--text-dark);
+    font-size: 0.78rem;
+  }
+
+  .flag-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    margin-left: 2px;
+  }
+
+  .au-flag-svg {
+    width: 17px;
+    height: 11px;
+    border-radius: 2px;
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+    display: inline-block;
   }
 
   .total-followers-card {

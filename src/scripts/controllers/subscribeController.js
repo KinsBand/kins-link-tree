@@ -2,6 +2,7 @@ import { showToast } from './toast.js';
 
 const STORAGE_KEY = 'kins_subscribed';
 const COOKIE_NAME = 'kins_subscribed';
+const EMAIL_KEY = 'kins_subscriber_email';
 
 /**
  * Reads persistent subscription state from localStorage or fallback Cookie.
@@ -14,6 +15,8 @@ export function getSubscriptionState() {
     const localVal = localStorage.getItem(STORAGE_KEY);
     if (localVal === 'true') return true;
     if (localVal === 'false') return false;
+    const emailVal = localStorage.getItem(EMAIL_KEY);
+    if (emailVal && emailVal.length > 3) return true;
   } catch (e) {
     // Ignore storage errors
   }
@@ -27,15 +30,32 @@ export function getSubscriptionState() {
 }
 
 /**
+ * Gets saved subscriber email from localStorage if available.
+ */
+export function getSubscriberEmail() {
+  if (typeof window === 'undefined') return '';
+  try {
+    return localStorage.getItem(EMAIL_KEY) || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+/**
  * Saves subscription state to both localStorage and Cookie, and triggers a sync event.
  */
-export function setSubscriptionState(isSubscribed) {
+export function setSubscriptionState(isSubscribed, email = null) {
   if (typeof window === 'undefined') return;
 
   const valStr = isSubscribed ? 'true' : 'false';
 
   try {
     localStorage.setItem(STORAGE_KEY, valStr);
+    if (isSubscribed && email) {
+      localStorage.setItem(EMAIL_KEY, email.trim());
+    } else if (!isSubscribed) {
+      localStorage.removeItem(EMAIL_KEY);
+    }
   } catch (e) {
     console.warn('localStorage error:', e);
   }
@@ -43,7 +63,7 @@ export function setSubscriptionState(isSubscribed) {
   document.cookie = `${COOKIE_NAME}=${valStr}; path=/; max-age=31536000; SameSite=Lax`;
 
   window.dispatchEvent(new CustomEvent('kins:subscription-change', {
-    detail: { isSubscribed }
+    detail: { isSubscribed, email: email || getSubscriberEmail() }
   }));
 }
 

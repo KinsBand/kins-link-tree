@@ -1,15 +1,50 @@
-/* Micro-Interaction Animations & Keyframes */
+/* ==========================================================================
+   Micro-Interaction Animations & Neo-Brutalist Keyframes
+   ========================================================================== */
+
+/* Tactile Spring Press */
+.brutal-press {
+  transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+}
+
+.brutal-press:active {
+  transform: translate(2px, 2px) scale(0.985) !important;
+  box-shadow: 1px 1px 0px #000000 !important;
+}
+
+/* Arrow Slide on Hover */
+.btn-arrow-slide {
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.brutal-card:hover .btn-arrow-slide,
+.green-link-btn:hover .btn-arrow-slide {
+  transform: translate(3px, -3px);
+}
+
+/* Tape Jitter on Hover */
+.tape-jitter:hover {
+  animation: tapeJitterAnim 0.3s ease infinite alternate;
+}
+
+@keyframes tapeJitterAnim {
+  0% { transform: rotate(-1deg); }
+  100% { transform: rotate(1.5deg); }
+}
+
+/* Section Icon Bounce */
 .section-icon-bounce {
   animation: sectionIconSpinBounce 0.75s var(--ease-snappy) forwards;
 }
 
 @keyframes sectionIconSpinBounce {
   0% { transform: scale(1) rotate(0deg); }
-  40% { transform: scale(1.4) rotate(180deg); color: var(--text-white); }
+  40% { transform: scale(1.3) rotate(180deg); color: var(--accent-neon-yellow); }
   75% { transform: scale(0.9) rotate(360deg); }
   100% { transform: scale(1) rotate(360deg); }
 }
 
+/* Head Bop Animation */
 .head-bop-anim {
   animation: headBop 1.1s var(--ease-snappy) forwards;
 }
@@ -22,15 +57,17 @@
   80% { transform: translateY(2px) rotate(1deg); }
 }
 
+/* Merch Card Pop */
 .merch-pop-anim {
   animation: merchCardPop 1s var(--ease-snappy) forwards;
 }
 
 @keyframes merchCardPop {
   0% { transform: scale(1) rotate(0deg); }
-  20% { transform: scale(1.05) translateY(-10px) rotate(-3deg); border-color: rgba(255, 255, 255, 0.4); }
+  20% { transform: scale(1.05) translateY(-10px) rotate(-3deg); border-color: var(--accent-neon-yellow); }
   40% { transform: scale(0.97) translateY(4px) rotate(2deg); }
   60% { transform: scale(1.02) translateY(-4px) rotate(-1deg); }
   80% { transform: scale(0.99) translateY(1px) rotate(0deg); }
   100% { transform: scale(1) translateY(0) rotate(0deg); }
 }
+

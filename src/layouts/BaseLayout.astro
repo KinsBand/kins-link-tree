@@ -53,7 +53,7 @@ const baseUrl = import.meta.env.BASE_URL;
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Lightweight Hardware Capability Detector -->
+  <!-- Lightweight Hardware & Theme Detector (Zero FOUC) -->
   <script is:inline>
     (function() {
       try {
@@ -62,6 +62,13 @@ const baseUrl = import.meta.env.BASE_URL;
         var isSaveData = navigator.connection && navigator.connection.saveData;
         if (isLowCpu || isLowRam || isSaveData) {
           document.documentElement.classList.add('low-power-mode');
+        }
+
+        var savedTheme = localStorage.getItem('kins-theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'standard');
         }
       } catch (e) {}
     })();

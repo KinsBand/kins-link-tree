@@ -542,6 +542,22 @@ export function initAudioPlayer() {
       });
     }
 
+    if (vinylStylusWrapper) {
+      if (playing) {
+        vinylStylusWrapper.classList.add('is-playing');
+        vinylStylusWrapper.classList.remove('is-paused');
+      } else {
+        vinylStylusWrapper.classList.remove('is-playing');
+        vinylStylusWrapper.classList.add('is-paused');
+      }
+    }
+
+    if (playing) {
+      document.body.classList.add('is-audio-playing');
+    } else {
+      document.body.classList.remove('is-audio-playing');
+    }
+
     if (audioBarIconBox) {
       stopVinylSpinSmoothly(audioBarIconBox, playing);
     }

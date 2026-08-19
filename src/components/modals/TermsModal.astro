@@ -5,8 +5,13 @@
   <div class="modal-content legal-modal-content">
     <div class="modal-header">
       <div class="modal-title-group">
-        <i class="fa-solid fa-file-contract modal-header-icon"></i>
-        <h3>Fan Submission Terms</h3>
+        <div class="header-icon-badge">
+          <i class="fa-solid fa-file-contract"></i>
+        </div>
+        <div class="header-text">
+          <span class="header-badge-tag">CREW GUIDELINES</span>
+          <h3>Fan Submission Terms</h3>
+        </div>
       </div>
       <button class="close-modal-btn" id="closeTermsModal" aria-label="Close Fan Submission Terms">
         <i class="fa-solid fa-xmark"></i>
@@ -15,25 +20,34 @@
 
     <div class="legal-modal-body">
       <div class="agreement-highlight-box">
-        <i class="fa-solid fa-circle-info agreement-icon"></i>
+        <div class="highlight-badge"><i class="fa-solid fa-bolt"></i> SUBMISSION AGREEMENT</div>
         <p class="agreement-main-text">
-          <strong>Submission Agreement:</strong> By sharing your link or clip with Kins, you confirm that you own or have rights to the content and grant Kins permission to feature, repost, or embed your clip on our official website and social media channels. You maintain full ownership of your original video.
+          By sharing your link or clip with Kins, you confirm that you own or have rights to the content and grant Kins permission to feature, repost, or embed your clip on our official website and social media channels. <strong>You maintain 100% full ownership of your original video.</strong>
         </p>
       </div>
 
       <div class="legal-section">
         <h4>1. Ownership & License</h4>
-        <p>You retain 100% ownership and copyright of your original video or audio. Submitting a link grants Kins a non-exclusive, royalty-free license to display, feature, or embed your clip across our official website, social media, and digital channels.</p>
+        <div class="legal-bullet-box">
+          <div class="bullet-item">
+            <span class="bullet-tag">YOUR RIGHTS</span>
+            <p>You retain 100% ownership and copyright of your original video or audio.</p>
+          </div>
+          <div class="bullet-item">
+            <span class="bullet-tag">BAND PERMISSION</span>
+            <p>Submitting a link grants Kins a non-exclusive, royalty-free license to display, feature, or embed your clip across our official website, social media, and digital channels.</p>
+          </div>
+        </div>
       </div>
 
       <div class="legal-section">
         <h4>2. Content Responsibilities</h4>
-        <p>You represent that your submission does not violate any third-party copyrights, trademarks, or privacy rights. Kins reserves the right to remove any featured clip at our discretion.</p>
+        <p class="legal-text">You represent that your submission does not violate any third-party copyrights, trademarks, or privacy rights. Kins reserves the right to remove any featured clip at our discretion.</p>
       </div>
     </div>
 
     <div class="legal-modal-footer">
-      <button type="button" class="close-legal-btn" id="closeTermsFooterBtn">Close</button>
+      <button type="button" class="close-legal-btn" id="closeTermsFooterBtn">I Agree & Close</button>
     </div>
   </div>
 </div>
@@ -43,16 +57,16 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 10050;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 16px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s var(--ease-snappy);
+    transition: opacity 0.22s var(--ease-snappy);
   }
 
   .modal-backdrop:not(.hidden) {
@@ -61,119 +75,145 @@
   }
 
   .legal-modal-content {
-    background: rgba(14, 14, 17, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 12px;
-    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85);
+    background: #141416;
+    border: 3px solid #000000;
+    border-radius: 8px;
+    box-shadow: 6px 6px 0px #000000;
     width: 100%;
     max-width: 520px;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    transform: scale(0.96);
+    transition: transform 0.22s var(--ease-snappy);
+  }
+
+  .modal-backdrop:not(.hidden) .legal-modal-content {
+    transform: scale(1);
   }
 
   .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 16px;
+    background: #1c1c20;
+    border-bottom: 3px solid #000000;
   }
 
   .modal-title-group {
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: var(--text-white);
+    gap: 10px;
     flex: 1;
     min-width: 0;
   }
 
-  .modal-header-icon {
-    color: var(--text-white);
+  .header-icon-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 0.95rem;
     flex-shrink: 0;
   }
 
+  .header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .header-badge-tag {
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: var(--accent-neon-yellow);
+    text-transform: uppercase;
+  }
+
   .modal-title-group h3 {
     font-family: var(--font-heading);
-    font-size: clamp(0.78rem, 3.5vw, 0.95rem);
-    font-weight: 800;
+    font-size: clamp(0.92rem, 3.5vw, 1.05rem);
+    font-weight: 900;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+    color: #ffffff;
     margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .close-modal-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: var(--text-white);
-    width: 32px;
-    height: 32px;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--text-card-primary);
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    font-size: 0.95rem;
     flex-shrink: 0;
-    transition: all 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .close-modal-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.28);
-    transform: scale(1.05);
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
   }
 
   .legal-modal-body {
-    padding: 20px;
+    padding: 16px 18px;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    color: var(--text-muted);
+    gap: 14px;
+    color: #a1a1aa;
     font-family: var(--font-secondary);
     font-size: 0.82rem;
     line-height: 1.5;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-  }
-
-  .legal-modal-body::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  .legal-modal-body::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
+    scrollbar-color: var(--accent-neon-yellow) transparent;
   }
 
   .agreement-highlight-box {
-    background: rgba(18, 18, 20, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-left: 3px solid var(--text-white);
-    padding: 14px 16px;
+    background: #1c1c20;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
+    padding: 12px 14px;
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
+    flex-direction: column;
+    gap: 6px;
   }
 
-  .agreement-icon {
-    color: var(--btn-green);
-    font-size: 1.1rem;
-    margin-top: 2px;
-    flex-shrink: 0;
+  .highlight-badge {
+    align-self: flex-start;
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid #000000;
   }
 
   .agreement-main-text {
-    color: var(--text-white);
+    color: #ffffff;
     font-size: 0.82rem;
     line-height: 1.45;
     margin: 0;
@@ -188,33 +228,79 @@
   .legal-section h4 {
     font-family: var(--font-heading);
     font-size: 0.88rem;
-    font-weight: 800;
-    color: var(--text-white);
-    margin: 4px 0 2px 0;
+    font-weight: 900;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 0;
+  }
+
+  .legal-text {
+    margin: 0;
+    color: #d4d4d8;
+  }
+
+  .legal-bullet-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bullet-item {
+    background: #1c1c20;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .bullet-tag {
+    align-self: flex-start;
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: #000000;
+    background: var(--accent-neon-yellow);
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
+
+  .bullet-item p {
+    margin: 0;
+    color: #d4d4d8;
+    font-size: 0.8rem;
   }
 
   .legal-modal-footer {
-    padding: 12px 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 16px;
+    background: #1c1c20;
+    border-top: 3px solid #000000;
     display: flex;
     justify-content: flex-end;
   }
 
   .close-legal-btn {
-    background: var(--btn-green);
-    color: var(--btn-text-color);
+    background: var(--accent-neon-yellow);
+    color: #000000;
     font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    font-weight: 800;
-    padding: 7px 18px;
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 9px 20px;
     border-radius: 6px;
-    border: none;
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
     cursor: pointer;
-    transition: background-color 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
   }
 
   .close-legal-btn:hover {
-    background: var(--btn-green-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #ffffff;
   }
 </style>
 

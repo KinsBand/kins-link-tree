@@ -6,38 +6,42 @@ export function setupSegmentedSwitcher(tabSelector, contentSelector) {
 
   const containers = new Set();
   tabs.forEach(tab => {
-    const parent = tab.closest('.segmented-switcher-box') || tab.parentElement;
+    const parent = tab.closest('.segmented-switcher-box') || tab.closest('.brutal-tab-switcher') || tab.parentElement;
     if (parent) containers.add(parent);
   });
 
   containers.forEach(container => {
-    let pill = container.querySelector('.switcher-active-pill');
-    if (!pill) {
-      pill = document.createElement('div');
-      pill.className = 'switcher-active-pill';
-      container.insertBefore(pill, container.firstChild);
-    }
-
-    function updatePillPosition() {
-      const activeTab = container.querySelector(`${tabSelector}.active`) || container.querySelector('.switcher-tab.active');
-      if (activeTab && pill) {
-        pill.style.transform = `translateX(${activeTab.offsetLeft}px)`;
-        pill.style.width = `${activeTab.offsetWidth}px`;
-        pill.style.height = `${activeTab.offsetHeight}px`;
-        pill.style.top = `${activeTab.offsetTop}px`;
+    // Only add sliding pill for segmented-switcher-box (not brutal-tab-switcher)
+    if (container.classList.contains('segmented-switcher-box')) {
+      let pill = container.querySelector('.switcher-active-pill');
+      if (!pill) {
+        pill = document.createElement('div');
+        pill.className = 'switcher-active-pill';
+        container.insertBefore(pill, container.firstChild);
       }
+
+      function updatePillPosition() {
+        const activeTab = container.querySelector(`${tabSelector}.active`) || container.querySelector('.switcher-tab.active');
+        if (activeTab && pill) {
+          pill.style.transform = `translateX(${activeTab.offsetLeft}px)`;
+          pill.style.width = `${activeTab.offsetWidth}px`;
+          pill.style.height = `${activeTab.offsetHeight}px`;
+          pill.style.top = `${activeTab.offsetTop}px`;
+        }
+      }
+
+      requestAnimationFrame(() => updatePillPosition());
+      setTimeout(() => updatePillPosition(), 60);
+
+      window.addEventListener('resize', updatePillPosition);
     }
-
-    requestAnimationFrame(() => updatePillPosition());
-    setTimeout(() => updatePillPosition(), 60);
-
-    window.addEventListener('resize', updatePillPosition);
   });
 
   tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
       const targetId = tab.getAttribute('data-target');
-      const parentContainer = tab.closest('.segmented-switcher-box') || tab.parentElement;
+      const parentContainer = tab.closest('.segmented-switcher-box') || tab.closest('.brutal-tab-switcher') || tab.parentElement;
 
       if (parentContainer) {
         const siblingTabs = parentContainer.querySelectorAll(tabSelector);
@@ -45,7 +49,7 @@ export function setupSegmentedSwitcher(tabSelector, contentSelector) {
       }
       tab.classList.add('active');
 
-      if (parentContainer) {
+      if (parentContainer && parentContainer.classList.contains('segmented-switcher-box')) {
         const pill = parentContainer.querySelector('.switcher-active-pill');
         if (pill) {
           pill.style.transform = `translateX(${tab.offsetLeft}px)`;
@@ -58,10 +62,13 @@ export function setupSegmentedSwitcher(tabSelector, contentSelector) {
       contents.forEach(content => {
         if (content.id === targetId) {
           content.classList.add('active');
+          content.style.display = 'block';
         } else {
           content.classList.remove('active');
+          content.style.display = 'none';
         }
       });
     });
   });
 }
+
