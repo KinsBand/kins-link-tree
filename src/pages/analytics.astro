@@ -20,7 +20,7 @@ const baseUrl = import.meta.env.BASE_URL;
         <input 
           type="password" 
           id="dash-login-pin" 
-          placeholder="Enter Passcode (default: kins2026)" 
+          placeholder="Enter Admin Passcode" 
           class="auth-input"
           autocomplete="current-password"
         />
@@ -31,8 +31,8 @@ const baseUrl = import.meta.env.BASE_URL;
       </form>
 
       <div class="auth-footer">
-        <span>Default PIN: <code>kins2026</code></span>
-        <a href={baseUrl} class="auth-back-link">← Back to Site</a>
+        <a href={baseUrl} class="auth-back-link"><i class="fa-solid fa-arrow-left"></i> Back to Website</a>
+        <a href={`${baseUrl}epk/`} class="auth-back-link"><i class="fa-solid fa-file-lines"></i> Electronic Press Kit (EPK)</a>
       </div>
     </div>
 
@@ -54,6 +54,18 @@ const baseUrl = import.meta.env.BASE_URL;
             </div>
             <p class="dash-subtitle">Command Center • Inbound Attribution • Experience Diagnostics</p>
           </div>
+        </div>
+
+        <!-- NAVIGATION SHORTCUTS -->
+        <div class="dash-nav-shortcuts">
+          <a href={baseUrl} class="dash-nav-btn" title="Back to Official Link Tree Website">
+            <i class="fa-solid fa-globe"></i>
+            <span>Website</span>
+          </a>
+          <a href={`${baseUrl}epk/`} class="dash-nav-btn" title="View Electronic Press Kit Portal">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>EPK</span>
+          </a>
         </div>
 
         <!-- 3-VIEW SWITCHER TABS -->
@@ -496,6 +508,47 @@ const baseUrl = import.meta.env.BASE_URL;
             <div class="total-conv-badge">
               <span>Total Direct Conversions:</span>
               <strong class="font-mono text-accent" id="stat-total-conversions">--</strong>
+            </div>
+          </div>
+
+          <!-- SHARE MENU & APP DESTINATIONS INTELLIGENCE (12 Cols) -->
+          <div class="dash-card col-12">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">SHARE MENU & APP DESTINATIONS TELEMETRY</h2>
+                <p class="card-subtitle">Detailed listener breakdown of which messaging & social apps fans use to share the website</p>
+              </div>
+              <div class="card-badge"><i class="fa-solid fa-share-nodes text-accent"></i> Viral Channels</div>
+            </div>
+
+            <div class="share-telemetry-grid">
+              <div class="share-kpi-block">
+                <div class="share-kpi-card">
+                  <div class="share-kpi-label">Share Modal Opens</div>
+                  <div class="share-kpi-val font-mono" id="stat-share-modal-opens">--</div>
+                  <div class="share-kpi-sub">Modal impressions</div>
+                </div>
+                <div class="share-kpi-card">
+                  <div class="share-kpi-label">Total Fan Shares</div>
+                  <div class="share-kpi-val font-mono text-accent" id="stat-share-total-actions">--</div>
+                  <div class="share-kpi-sub">Apps & direct copies</div>
+                </div>
+                <div class="share-kpi-card">
+                  <div class="share-kpi-label">Share Conversion Rate</div>
+                  <div class="share-kpi-val font-mono text-emerald" id="stat-share-conv-rate">--%</div>
+                  <div class="share-kpi-sub">Opens that triggered share</div>
+                </div>
+              </div>
+
+              <div class="share-apps-breakdown-box">
+                <div class="share-apps-header">
+                  <span class="share-apps-header-title"><i class="fa-solid fa-ranking-star text-accent"></i> Top Sharing Apps & Channels</span>
+                  <span class="share-apps-meta font-mono" id="share-apps-total-summary">-- apps tracked</span>
+                </div>
+                <div class="share-apps-bar-list" id="share-apps-bar-list">
+                  <!-- Populated dynamically via JS -->
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1081,6 +1134,41 @@ const baseUrl = import.meta.env.BASE_URL;
     font-size: 0.74rem;
     color: var(--dash-text-muted);
     margin: 2px 0 0 0;
+  }
+
+  /* Navigation Quick Links (Back to Site & EPK) */
+  .dash-nav-shortcuts {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dash-nav-btn {
+    background: var(--dash-surface-raised);
+    border: 1px solid var(--dash-border);
+    color: var(--dash-text-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    padding: 7px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .dash-nav-btn:hover {
+    background: var(--dash-surface-hover);
+    color: var(--dash-accent);
+    border-color: var(--dash-accent);
+    transform: translate(-1px, -1px);
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .dash-nav-btn i {
+    font-size: 0.8rem;
   }
 
   /* 3-View Switcher Tabs */
@@ -1716,6 +1804,117 @@ const baseUrl = import.meta.env.BASE_URL;
     justify-content: space-between;
     align-items: center;
     font-size: 0.76rem;
+  }
+
+  /* Share Menu Telemetry Grid */
+  .share-telemetry-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .share-telemetry-grid { grid-template-columns: 1fr; }
+  }
+
+  .share-kpi-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .share-kpi-card {
+    background: var(--dash-surface-raised);
+    border: 1px solid var(--dash-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .share-kpi-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--dash-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .share-kpi-val {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #ffffff;
+  }
+
+  .share-kpi-sub {
+    font-size: 0.68rem;
+    color: var(--dash-text-dim);
+  }
+
+  .share-apps-breakdown-box {
+    background: var(--dash-surface-raised);
+    border: 1px solid var(--dash-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .share-apps-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--dash-border);
+  }
+
+  .share-apps-header-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .share-apps-meta {
+    font-size: 0.7rem;
+    color: var(--dash-text-muted);
+  }
+
+  .share-apps-bar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .share-app-bar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .share-app-bar-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.74rem;
+  }
+
+  .share-app-name {
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .share-app-stat {
+    color: var(--dash-text-muted);
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
   }
 
   /* CWV Gauges */
@@ -2684,6 +2883,57 @@ const baseUrl = import.meta.env.BASE_URL;
     if (el('stat-newsletter')) el('stat-newsletter')!.textContent = data.newsletter.toLocaleString();
     if (el('stat-feedback')) el('stat-feedback')!.textContent = data.feedback.toLocaleString();
     if (el('stat-total-conversions')) el('stat-total-conversions')!.textContent = data.totalConversions.toLocaleString();
+
+    // Share Menu & Social Apps Breakdown (View B)
+    if (data.shareStats) {
+      if (el('stat-share-modal-opens')) el('stat-share-modal-opens')!.textContent = data.shareStats.modalOpens.toLocaleString();
+      if (el('stat-share-total-actions')) el('stat-share-total-actions')!.textContent = data.shareStats.totalActions.toLocaleString();
+      if (el('stat-share-conv-rate')) el('stat-share-conv-rate')!.textContent = `${data.shareStats.conversionRate}%`;
+      if (el('share-apps-total-summary')) el('share-apps-total-summary')!.textContent = `${data.shareStats.topAppList.length} destinations tracked`;
+
+      const shareBarsContainer = el('share-apps-bar-list');
+      if (shareBarsContainer) {
+        if (data.shareStats.topAppList.length === 0 || data.shareStats.totalActions === 0) {
+          shareBarsContainer.innerHTML = `
+            <div style="color: var(--dash-text-muted); font-size: 0.76rem; padding: 12px 0; text-align: center;">
+              No app shares recorded in this time range yet. Live share clicks will populate here automatically.
+            </div>
+          `;
+        } else {
+          shareBarsContainer.innerHTML = data.shareStats.topAppList.map((appItem: any) => {
+            const appLower = appItem.app.toLowerCase();
+            let iconClass = 'fa-solid fa-share-nodes text-accent';
+            if (appLower.includes('whatsapp')) iconClass = 'fa-brands fa-whatsapp text-emerald';
+            else if (appLower.includes('instagram')) iconClass = 'fa-brands fa-instagram text-rose';
+            else if (appLower.includes('twitter') || appLower.includes('x')) iconClass = 'fa-brands fa-x-twitter text-white';
+            else if (appLower.includes('facebook')) iconClass = 'fa-brands fa-facebook-f text-cyan';
+            else if (appLower.includes('telegram')) iconClass = 'fa-brands fa-telegram text-cyan';
+            else if (appLower.includes('reddit')) iconClass = 'fa-brands fa-reddit-alien text-rose';
+            else if (appLower.includes('sms') || appLower.includes('messages')) iconClass = 'fa-solid fa-comment-sms text-emerald';
+            else if (appLower.includes('email')) iconClass = 'fa-solid fa-envelope text-accent';
+            else if (appLower.includes('native')) iconClass = 'fa-solid fa-arrow-up-from-bracket text-accent';
+            else if (appLower.includes('link')) iconClass = 'fa-solid fa-link text-cyan';
+            else if (appLower.includes('qr')) iconClass = 'fa-solid fa-qrcode text-accent';
+            else if (appLower.includes('logo')) iconClass = 'fa-solid fa-image text-purple';
+
+            return `
+              <div class="share-app-bar-row">
+                <div class="share-app-bar-head">
+                  <span class="share-app-name">
+                    <i class="${iconClass}"></i>
+                    <span>${appItem.app}</span>
+                  </span>
+                  <span class="share-app-stat">${appItem.count} shares (${appItem.percentage}%)</span>
+                </div>
+                <div class="channel-bar-track">
+                  <div class="channel-bar-fill" style="width: ${Math.max(4, appItem.percentage)}%;"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
 
     // UX Health & CWV (View C)
     if (el('vital-lcp')) el('vital-lcp')!.textContent = data.lcp;

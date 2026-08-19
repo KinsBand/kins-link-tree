@@ -766,6 +766,14 @@ export async function fetchLiveAnalyticsData(timeRange: '24h' | '7d' | '30d' | '
       icon = 'fa-solid fa-file-pdf';
       text = `EPK Press Deck Downloaded`;
       color = 'text-rose';
+    } else if (e.event_type === 'share_app_selected' || e.event_type === 'share_action') {
+      icon = 'fa-solid fa-share-nodes';
+      text = `Shared via ${(e.metadata?.app || e.metadata?.destination_app || 'App').toUpperCase()}`;
+      color = 'text-yellow';
+    } else if (e.event_type === 'copy_share_url') {
+      icon = 'fa-solid fa-link';
+      text = 'Direct Website Link Copied';
+      color = 'text-cyan';
     }
 
     return {
@@ -791,7 +799,7 @@ export async function fetchLiveAnalyticsData(timeRange: '24h' | '7d' | '30d' | '
       if (timelineMap[key]) {
         if (e.event_type === 'pageview') timelineMap[key].pageviews++;
         timelineMap[key].visitors.add(e.session_id);
-        if (e.event_type === 'gig_map_ticket_cta_clicked' || e.event_type === 'epk_deck_download' || e.event_type === 'newsletter_signup_submitted' || e.event_type === 'outbound_click') {
+        if (e.event_type === 'gig_map_ticket_cta_clicked' || e.event_type === 'epk_deck_download' || e.event_type === 'newsletter_signup_submitted' || e.event_type === 'outbound_click' || e.event_type === 'share_app_selected') {
           timelineMap[key].conversions++;
         }
       }
@@ -809,7 +817,7 @@ export async function fetchLiveAnalyticsData(timeRange: '24h' | '7d' | '30d' | '
       if (timelineMap[key]) {
         if (e.event_type === 'pageview') timelineMap[key].pageviews++;
         timelineMap[key].visitors.add(e.session_id);
-        if (e.event_type === 'gig_map_ticket_cta_clicked' || e.event_type === 'epk_deck_download' || e.event_type === 'newsletter_signup_submitted' || e.event_type === 'outbound_click') {
+        if (e.event_type === 'gig_map_ticket_cta_clicked' || e.event_type === 'epk_deck_download' || e.event_type === 'newsletter_signup_submitted' || e.event_type === 'outbound_click' || e.event_type === 'share_app_selected') {
           timelineMap[key].conversions++;
         }
       }
@@ -821,7 +829,72 @@ export async function fetchLiveAnalyticsData(timeRange: '24h' | '7d' | '30d' | '
   const timelineVisitors = timelineLabels.map(k => timelineMap[k].visitors.size);
   const timelineConversions = timelineLabels.map(k => timelineMap[k].conversions);
 
-  const totalConversions = epkDownloads + newsletterSignups + gigTicketClicks;
+  // Share Menu & Social Apps Telemetry Breakdown
+  const shareModalOpens = rawEvents.filter(e => e.event_type === 'open_share_modal').length;
+  const shareAppEvents = rawEvents.filter(e => 
+    e.event_type === 'share_app_selected' || 
+    e.event_type === 'native_share_success' || 
+    e.event_type === 'copy_share_url' || 
+    e.event_type === 'copy_band_handle' || 
+    e.event_type === 'share_qr_downloaded' || 
+    e.event_type === 'share_logo_downloaded' || 
+    e.event_type === 'share_action'
+  );
+
+  const shareAppsMap: Record<string, number> = {
+    'WhatsApp': 0,
+    'Native Sheet': 0,
+    'Instagram': 0,
+    'X / Twitter': 0,
+    'Telegram': 0,
+    'Facebook': 0,
+    'Messages (SMS)': 0,
+    'Email': 0,
+    'Reddit': 0,
+    'Direct Link Copy': 0,
+    'QR Code Export': 0,
+    'Brand Logo Export': 0
+  };
+
+  shareAppEvents.forEach(e => {
+    const appKey = (e.metadata?.app || e.metadata?.destination_app || '').toLowerCase();
+    if (appKey === 'whatsapp') shareAppsMap['WhatsApp']++;
+    else if (appKey === 'native' || appKey === 'native_sheet' || e.event_type === 'native_share_success' || e.event_type === 'share_native_invoked') shareAppsMap['Native Sheet']++;
+    else if (appKey === 'instagram') shareAppsMap['Instagram']++;
+    else if (appKey === 'twitter' || appKey === 'x') shareAppsMap['X / Twitter']++;
+    else if (appKey === 'telegram') shareAppsMap['Telegram']++;
+    else if (appKey === 'facebook') shareAppsMap['Facebook']++;
+    else if (appKey === 'sms') shareAppsMap['Messages (SMS)']++;
+    else if (appKey === 'email') shareAppsMap['Email']++;
+    else if (appKey === 'reddit') shareAppsMap['Reddit']++;
+    else if (e.event_type === 'copy_share_url') shareAppsMap['Direct Link Copy']++;
+    else if (e.event_type === 'share_qr_downloaded') shareAppsMap['QR Code Export']++;
+    else if (e.event_type === 'share_logo_downloaded') shareAppsMap['Brand Logo Export']++;
+  });
+
+  const totalShareActions = Object.values(shareAppsMap).reduce((a, b) => a + b, 0);
+  const sortedShareApps = Object.entries(shareAppsMap)
+    .filter(([_, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([app, count]) => ({
+      app,
+      count,
+      percentage: totalShareActions > 0 ? Math.round((count / totalShareActions) * 100) : 0
+    }));
+
+  const shareStats = {
+    modalOpens: shareModalOpens,
+    totalActions: totalShareActions,
+    conversionRate: shareModalOpens > 0 ? Math.round((totalShareActions / shareModalOpens) * 100) : (totalShareActions > 0 ? 100 : 0),
+    topAppList: sortedShareApps.length > 0 ? sortedShareApps : [
+      { app: 'WhatsApp', count: 0, percentage: 0 },
+      { app: 'Native Sheet', count: 0, percentage: 0 },
+      { app: 'Instagram', count: 0, percentage: 0 },
+      { app: 'X / Twitter', count: 0, percentage: 0 }
+    ]
+  };
+
+  const totalConversions = epkDownloads + newsletterSignups + gigTicketClicks + totalShareActions;
   const outboundCtr = uniqueSessions > 0 ? Math.min(100, Math.round((outboundClicks / uniqueSessions) * 100)) : 0;
   const conversionRate = Math.min(100, Math.round((totalConversions / Math.max(1, uniqueSessions)) * 100));
 
@@ -859,13 +932,7 @@ export async function fetchLiveAnalyticsData(timeRange: '24h' | '7d' | '30d' | '
     { match: 'oasis', status: 'Planned', velocity: '+12%' }
   ];
 
-  const enrichedSearches = (topSearches.length > 0 ? topSearches : [
-    { term: 'the cure', count: 18 },
-    { term: 'radiohead', count: 14 },
-    { term: 'deftones', count: 11 },
-    { term: 'fleetwood mac', count: 9 },
-    { term: 'arctic monkeys', count: 7 }
-  ]).map((item, idx) => {
+  const enrichedSearches = topSearches.map((item, idx) => {
     const termLower = item.term.toLowerCase();
     const found = knownRepertoire.find(k => termLower.includes(k.match));
     return {
@@ -939,6 +1006,7 @@ export async function fetchLiveAnalyticsData(timeRange: '24h' | '7d' | '30d' | '
       mousePct: Math.round((mouseClicks.length / totalClicksCount) * 100)
     },
     topSearches: enrichedSearches,
+    shareStats,
     recentActivities: recentActivities.length > 0 ? recentActivities : [
       { icon: 'fa-brands fa-spotify', text: 'Stream on Spotify clicked', color: 'text-emerald', device: 'mobile', time: 'Just now' },
       { icon: 'fa-solid fa-compact-disc', text: 'Played "Inspirational Mix"', color: 'text-purple', device: 'mobile', time: '2m ago' },

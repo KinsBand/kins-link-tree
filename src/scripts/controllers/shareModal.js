@@ -299,8 +299,75 @@ export function initShareModal() {
     });
   }
 
+  // Social App Share Buttons Handler
+  const shareAppButtons = document.querySelectorAll('#shareAppsGrid .share-app-pill-btn');
+  shareAppButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const app = btn.getAttribute('data-share-app') || 'other';
+      const shareTitle = 'Kins | Official Link in Bio';
+      const shareMessage = 'Check out official music releases, merch, and tour dates for Kins!';
+      const appShareUrl = baseDomain + (baseDomain.includes('?') ? '&' : '?') + `utm_source=share_modal&utm_medium=app_${app}&utm_campaign=fan_share`;
+
+      // Track telemetry event for specific app clicked
+      trackClick('share_app_selected', {
+        app: app,
+        app_name: app.toUpperCase(),
+        share_url: appShareUrl,
+        method: 'app_button'
+      });
+      trackClick('share_action', {
+        action_type: 'app_share',
+        destination_app: app
+      });
+
+      if (app === 'whatsapp') {
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareMessage} ${appShareUrl}`)}`;
+        window.open(waUrl, '_blank', 'noopener,noreferrer');
+        showToast('Opening WhatsApp...');
+      } else if (app === 'instagram') {
+        performCopy(appShareUrl, btn, 'Link copied! Open Instagram to share in Stories or DM.');
+      } else if (app === 'twitter') {
+        const twUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(appShareUrl)}`;
+        window.open(twUrl, '_blank', 'noopener,noreferrer');
+        showToast('Opening X / Twitter...');
+      } else if (app === 'facebook') {
+        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(appShareUrl)}`;
+        window.open(fbUrl, '_blank', 'noopener,noreferrer');
+        showToast('Opening Facebook...');
+      } else if (app === 'telegram') {
+        const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(appShareUrl)}&text=${encodeURIComponent(shareMessage)}`;
+        window.open(tgUrl, '_blank', 'noopener,noreferrer');
+        showToast('Opening Telegram...');
+      } else if (app === 'reddit') {
+        const rdUrl = `https://reddit.com/submit?url=${encodeURIComponent(appShareUrl)}&title=${encodeURIComponent(shareTitle)}`;
+        window.open(rdUrl, '_blank', 'noopener,noreferrer');
+        showToast('Opening Reddit...');
+      } else if (app === 'sms') {
+        const smsUrl = `sms:?&body=${encodeURIComponent(`${shareMessage} ${appShareUrl}`)}`;
+        window.location.href = smsUrl;
+        showToast('Opening Messages...');
+      } else if (app === 'email') {
+        const mailUrl = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareMessage}\n\n${appShareUrl}`)}`;
+        window.location.href = mailUrl;
+        showToast('Opening Email...');
+      }
+    });
+  });
+
   // Native Web Share CTA Handler
   async function triggerNativeShare() {
+    trackClick('share_native_invoked', {
+      method: 'native_web_share_api',
+      app: 'native'
+    });
+    trackClick('share_app_selected', {
+      app: 'native',
+      app_name: 'NATIVE_SYSTEM_SHEET',
+      share_url: nativeShareUrl,
+      method: 'native_cta'
+    });
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -308,12 +375,15 @@ export function initShareModal() {
           text: 'Check out official music releases, merch, and tour dates for Kins!',
           url: nativeShareUrl
         });
-        trackClick('native_share_success');
+        trackClick('native_share_success', { app: 'native', outcome: 'completed' });
+        trackClick('share_action', { action_type: 'app_share', destination_app: 'native_sheet' });
       } catch (err) {
+        trackClick('native_share_dismissed', { app: 'native' });
         console.log('Native share dismissed:', err);
       }
     } else {
       performCopy(nativeShareUrl, nativeShareCtaBtn, 'Share link copied to clipboard!');
+      trackClick('share_native_fallback_copy', { app: 'native' });
     }
   }
 
@@ -422,18 +492,26 @@ export function initShareModal() {
       if (format === 'jpeg') {
         createBrandedQrCanvas(qrCodeUrl, 1200, (canvas) => {
           triggerDownload(canvas.toDataURL('image/jpeg', 0.98), 'kins-official-qrcode.jpg');
+          trackClick('share_qr_downloaded', { format: 'jpg' });
+          trackClick('share_action', { action_type: 'qr_download', format: 'jpg' });
         });
       } else if (format === 'png') {
         createBrandedQrCanvas(qrCodeUrl, 1200, (canvas) => {
           triggerDownload(canvas.toDataURL('image/png'), 'kins-official-qrcode.png');
+          trackClick('share_qr_downloaded', { format: 'png' });
+          trackClick('share_action', { action_type: 'qr_download', format: 'png' });
         });
       } else if (format === 'eps') {
         generateVectorQr(qrCodeUrl, 'eps', (dataUrl) => {
           triggerDownload(dataUrl, 'kins-official-qrcode.eps');
+          trackClick('share_qr_downloaded', { format: 'eps' });
+          trackClick('share_action', { action_type: 'qr_download', format: 'eps' });
         });
       } else if (format === 'svg') {
         generateVectorQr(qrCodeUrl, 'svg', (dataUrl) => {
           triggerDownload(dataUrl, 'kins-official-qrcode.svg');
+          trackClick('share_qr_downloaded', { format: 'svg' });
+          trackClick('share_action', { action_type: 'qr_download', format: 'svg' });
         });
       }
     });
@@ -481,6 +559,8 @@ export function initShareModal() {
         a.download = filename;
         a.click();
         showToast(`Downloaded Band Logo (${format.toUpperCase()})!`);
+        trackClick('share_logo_downloaded', { format });
+        trackClick('share_action', { action_type: 'logo_download', format });
       };
 
       if (format === 'png') {

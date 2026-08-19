@@ -21,7 +21,7 @@ const baseUrl = import.meta.env.BASE_URL;
         <input 
           type="password" 
           id="admin-passcode-input" 
-          placeholder="Enter Passcode (default: kins2026)" 
+          placeholder="Enter Admin Passcode" 
           class="hud-input"
           autocomplete="current-password"
         />
@@ -35,7 +35,6 @@ const baseUrl = import.meta.env.BASE_URL;
 
     <div class="hud-modal-footer">
       <span>Shortcut: <kbd>Ctrl+Shift+H</kbd></span>
-      <span>Default: <code>kins2026</code></span>
     </div>
   </div>
 </div>
@@ -82,93 +81,115 @@ const baseUrl = import.meta.env.BASE_URL;
       </div>
       <div class="toolbar-actions">
         <span id="heatmap-click-count" class="click-badge">0 clicks</span>
+        <button id="minimize-heatmap-btn" class="toolbar-icon-btn" title="Minimize / Expand Toolbar" aria-label="Minimize or expand toolbar">−</button>
         <button id="close-heatmap-btn" class="toolbar-close-btn" title="Close HUD (Ctrl+Shift+H)">✕</button>
       </div>
     </div>
 
-    <!-- Mode Selector Grid (5 Modes) -->
-    <div class="filter-section">
-      <div class="flex-between">
-        <span class="filter-section-title">Mode</span>
-        <span id="active-mode-label" class="mode-desc-pill">🔥 Density</span>
+    <!-- Collapsible Toolbar Body -->
+    <div id="hud-toolbar-body" class="hud-toolbar-body">
+      <!-- Mode Selector Grid (5 Modes) -->
+      <div class="filter-section">
+        <div class="flex-between">
+          <span class="filter-section-title">Mode</span>
+          <span id="active-mode-label" class="mode-desc-pill">🔥 Density</span>
+        </div>
+        <div class="filter-pill-grid cols-5" id="hud-mode-group">
+          <button data-mode="density" class="hud-mode-btn active" title="Gaussian Thermal Density">🔥 DENSE</button>
+          <button data-mode="points" class="hud-mode-btn" title="Individual Click & Tap Radar Dots">🎯 DOTS</button>
+          <button data-mode="hitboxes" class="hud-mode-btn" title="DOM Element Hitbox Heat Boxes">📦 BOXES</button>
+          <button data-mode="attention" class="hud-mode-btn" title="Scroll Reach & Dwell Time">📊 DWELL</button>
+          <button data-mode="friction" class="hud-mode-btn" title="Rage & Dead Click UX Alerts">⚠️ RAGE</button>
+        </div>
       </div>
-      <div class="filter-pill-grid cols-5" id="hud-mode-group">
-        <button data-mode="density" class="hud-mode-btn active" title="Gaussian Thermal Density">🔥 DENSE</button>
-        <button data-mode="points" class="hud-mode-btn" title="Individual Click & Tap Radar Dots">🎯 DOTS</button>
-        <button data-mode="hitboxes" class="hud-mode-btn" title="DOM Element Hitbox Heat Boxes">📦 BOXES</button>
-        <button data-mode="attention" class="hud-mode-btn" title="Scroll Reach & Dwell Time">📊 DWELL</button>
-        <button data-mode="friction" class="hud-mode-btn" title="Rage & Dead Click UX Alerts">⚠️ RAGE</button>
-      </div>
-    </div>
 
-    <!-- Container Scope Filter -->
-    <div class="filter-section">
-      <span class="filter-section-title">Container Scope</span>
-      <select id="hud-scope-select" class="hud-scope-dropdown">
-        <option value="auto">⚡ Auto: Follow Active Menu</option>
-        <option value="all">🌐 All Areas Combined</option>
-        <option value="main_feed">🏠 Main Page Feed</option>
-        <option value="dock:audio_player">🎵 Bottom Audio Dock</option>
-        <option value="drawer:stream_platforms">💿 Streaming Drawer</option>
-        <option value="modal:covers_search">🔍 Covers Search Modal</option>
-        <option value="modal:gig_map">🗺️ NSW Gig Map Sheet</option>
-        <option value="modal:community">🎬 Fan Submission Modal</option>
-        <option value="modal:privacy">🛡️ Privacy Policy Modal</option>
-        <option value="modal:terms">📜 Fan Submission Terms</option>
-        <option value="modal:feedback">💡 Improvement Feedback</option>
-        <option value="modal:cover_video">🎥 Cover Video Player</option>
-        <option value="modal:share">🔗 Share & QR Modal</option>
-        <option value="epk:portal">📄 EPK Press Portal</option>
-      </select>
-    </div>
-
-    <!-- Time Range Filter -->
-    <div class="filter-section">
-      <span class="filter-section-title">Time Window</span>
-      <div class="filter-pill-grid cols-4" id="time-filter-group">
-        <button data-range="24h" class="hud-filter-btn active">24H</button>
-        <button data-range="7d" class="hud-filter-btn">7D</button>
-        <button data-range="30d" class="hud-filter-btn">30D</button>
-        <button data-range="all" class="hud-filter-btn">ALL</button>
+      <!-- Container Scope Filter -->
+      <div class="filter-section">
+        <span class="filter-section-title">Container Scope</span>
+        <select id="hud-scope-select" class="hud-scope-dropdown">
+          <option value="auto">⚡ Auto: Follow Active Menu</option>
+          <option value="all">🌐 All Areas Combined</option>
+          <option value="main_feed">🏠 Main Page Feed</option>
+          <option value="dock:audio_player">🎵 Bottom Audio Dock</option>
+          <option value="drawer:stream_platforms">💿 Streaming Drawer</option>
+          <option value="modal:covers_search">🔍 Covers Search Modal</option>
+          <option value="modal:gig_map">🗺️ NSW Gig Map Sheet</option>
+          <option value="modal:community">🎬 Fan Submission Modal</option>
+          <option value="modal:privacy">🛡️ Privacy Policy Modal</option>
+          <option value="modal:terms">📜 Fan Submission Terms</option>
+          <option value="modal:feedback">💡 Improvement Feedback</option>
+          <option value="modal:cover_video">🎥 Cover Video Player</option>
+          <option value="modal:share">🔗 Share & QR Modal</option>
+          <option value="epk:portal">📄 EPK Press Portal</option>
+        </select>
       </div>
-    </div>
 
-    <!-- Device Filter & Mobile Viewport Emulation -->
-    <div class="filter-section">
-      <div class="flex-between">
-        <span class="filter-section-title">Device & Mode</span>
-        <label class="snap-toggle-label">
-          <input type="checkbox" id="hud-snap-mode-toggle" checked>
-          <span>DOM Snap</span>
-        </label>
+      <!-- Time Range Filter -->
+      <div class="filter-section">
+        <span class="filter-section-title">Time Window</span>
+        <div class="filter-pill-grid cols-4" id="time-filter-group">
+          <button data-range="24h" class="hud-filter-btn active">24H</button>
+          <button data-range="7d" class="hud-filter-btn">7D</button>
+          <button data-range="30d" class="hud-filter-btn">30D</button>
+          <button data-range="all" class="hud-filter-btn">ALL</button>
+        </div>
       </div>
-      <div class="filter-pill-grid cols-3" id="device-filter-group">
-        <button data-device="all" class="hud-device-btn">ALL</button>
-        <button data-device="desktop" class="hud-device-btn active">DESKTOP</button>
-        <button data-device="mobile" class="hud-device-btn">📱 MOBILE</button>
-      </div>
-    </div>
 
-    <!-- Radius Slider -->
-    <div class="slider-section" id="radius-slider-section">
-      <div class="slider-header">
-        <span>Heat Spot Radius</span>
-        <span id="radius-val" class="slider-val">35px</span>
+      <!-- Device Filter & Mobile Viewport Emulation -->
+      <div class="filter-section">
+        <div class="flex-between">
+          <span class="filter-section-title">Device & Mode</span>
+          <label class="snap-toggle-label">
+            <input type="checkbox" id="hud-snap-mode-toggle" checked>
+            <span>DOM Snap</span>
+          </label>
+        </div>
+        <div class="filter-pill-grid cols-3" id="device-filter-group">
+          <button data-device="all" class="hud-device-btn">ALL</button>
+          <button data-device="desktop" class="hud-device-btn active">DESKTOP</button>
+          <button data-device="mobile" class="hud-device-btn">📱 MOBILE</button>
+        </div>
       </div>
-      <input type="range" id="heatmap-radius" min="15" max="80" value="35" class="hud-slider" />
-    </div>
 
-    <!-- Action Buttons -->
-    <div class="toolbar-footer">
-      <a href={`${baseUrl}analytics`} class="hud-dash-link">
-        <i class="fa-solid fa-chart-line"></i> Dashboard
-      </a>
-      <button id="export-snapshot-btn" class="hud-tool-btn" title="Download Heatmap PNG Snapshot">
-        <i class="fa-solid fa-camera"></i> Snapshot
-      </button>
-      <button id="refresh-heatmap-btn" class="hud-refresh-icon-btn" title="Refresh Live Click Data">
-        <i class="fa-solid fa-arrows-rotate"></i>
-      </button>
+      <!-- Dual Sliders: Radius & Opacity -->
+      <div class="sliders-dual-row">
+        <!-- Radius Slider -->
+        <div class="slider-section flex-1" id="radius-slider-section">
+          <div class="slider-header">
+            <span>Radius</span>
+            <span id="radius-val" class="slider-val">35px</span>
+          </div>
+          <input type="range" id="heatmap-radius" min="15" max="80" value="35" class="hud-slider" title="Adjust heat spot radius" />
+        </div>
+
+        <!-- Opacity Slider -->
+        <div class="slider-section flex-1" id="opacity-slider-section">
+          <div class="slider-header">
+            <span>Opacity</span>
+            <span id="opacity-val" class="slider-val">90%</span>
+          </div>
+          <input type="range" id="heatmap-opacity" min="20" max="100" value="90" class="hud-slider" title="Adjust heatmap layer transparency" />
+        </div>
+      </div>
+
+      <!-- Action & Quick Nav Buttons -->
+      <div class="toolbar-footer">
+        <a href={baseUrl} class="hud-nav-link" title="Jump to Main Website / Link in Bio">
+          <i class="fa-solid fa-house"></i> Site
+        </a>
+        <a href={`${baseUrl}epk/`} class="hud-nav-link" title="Jump to Electronic Press Kit">
+          <i class="fa-solid fa-file-lines"></i> EPK
+        </a>
+        <a href={`${baseUrl}analytics`} class="hud-dash-link" title="Open Analytics Command Center">
+          <i class="fa-solid fa-chart-line"></i> Dash
+        </a>
+        <button id="export-snapshot-btn" class="hud-tool-btn" title="Download Heatmap PNG Snapshot">
+          <i class="fa-solid fa-camera"></i>
+        </button>
+        <button id="refresh-heatmap-btn" class="hud-refresh-icon-btn" title="Refresh Live Click Data">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -588,6 +609,29 @@ const baseUrl = import.meta.env.BASE_URL;
     border-radius: 6px !important;
   }
 
+  .toolbar-icon-btn {
+    background: #1c1c24 !important;
+    border: 1px solid #27272a !important;
+    color: #a1a1aa !important;
+    font-size: 0.9rem !important;
+    font-weight: 900 !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+  }
+
+  .toolbar-icon-btn:hover {
+    color: #ffffff !important;
+    border-color: #f2fd43 !important;
+    background: #272733 !important;
+  }
+
   .toolbar-close-btn {
     background: none !important;
     border: none !important;
@@ -599,6 +643,64 @@ const baseUrl = import.meta.env.BASE_URL;
   }
 
   .toolbar-close-btn:hover { color: #ffffff !important; }
+
+  /* Collapsible Toolbar States */
+  .hud-floating-toolbar.minimized {
+    max-width: 250px !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+    background: rgba(18, 18, 22, 0.94) !important;
+  }
+
+  .hud-floating-toolbar.minimized .toolbar-header {
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+  }
+
+  .hud-toolbar-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    transition: opacity 0.2s ease !important;
+  }
+
+  .hud-toolbar-body.hidden {
+    display: none !important;
+  }
+
+  .sliders-dual-row {
+    display: flex !important;
+    gap: 10px !important;
+    align-items: center !important;
+  }
+
+  .flex-1 { flex: 1 !important; }
+
+  .hud-nav-link {
+    background: #181822 !important;
+    border: 2px solid #3f3f46 !important;
+    color: #a1a1aa !important;
+    text-decoration: none !important;
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+    padding: 7px 8px !important;
+    border-radius: 9px !important;
+    text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    box-shadow: 2px 2px 0px #000000 !important;
+    transition: all 0.15s ease !important;
+    cursor: pointer !important;
+  }
+
+  .hud-nav-link:hover {
+    background: #242430 !important;
+    color: #f2fd43 !important;
+    border-color: #f2fd43 !important;
+    transform: translate(-1px, -1px) !important;
+  }
 
   .filter-section {
     display: flex !important;
@@ -789,11 +891,15 @@ const baseUrl = import.meta.env.BASE_URL;
   const errorMsg = document.getElementById('passcode-error-msg');
   const closePasscodeBtn = document.getElementById('close-passcode-btn');
   const closeHeatmapBtn = document.getElementById('close-heatmap-btn');
+  const minimizeBtn = document.getElementById('minimize-heatmap-btn');
+  const toolbarBody = document.getElementById('hud-toolbar-body');
   const refreshBtn = document.getElementById('refresh-heatmap-btn');
   const exportSnapshotBtn = document.getElementById('export-snapshot-btn');
   const clickCountEl = document.getElementById('heatmap-click-count');
   const radiusSlider = document.getElementById('heatmap-radius') as HTMLInputElement | null;
   const radiusValEl = document.getElementById('radius-val');
+  const opacitySlider = document.getElementById('heatmap-opacity') as HTMLInputElement | null;
+  const opacityValEl = document.getElementById('opacity-val');
   const radiusSliderSection = document.getElementById('radius-slider-section');
   const scopeSelect = document.getElementById('hud-scope-select') as HTMLSelectElement | null;
   const snapToggle = document.getElementById('hud-snap-mode-toggle') as HTMLInputElement | null;
@@ -888,7 +994,7 @@ const baseUrl = import.meta.env.BASE_URL;
 
     function onPointerDown(e: PointerEvent) {
       const target = e.target as HTMLElement | null;
-      if (target && (target.closest('#close-heatmap-btn') || target.closest('#heatmap-click-count'))) return;
+      if (target && (target.closest('#close-heatmap-btn') || target.closest('#minimize-heatmap-btn') || target.closest('#heatmap-click-count'))) return;
 
       isDragging = true;
       startX = e.clientX;
@@ -1007,6 +1113,42 @@ const baseUrl = import.meta.env.BASE_URL;
   if (closePasscodeBtn) closePasscodeBtn.addEventListener('click', hideModal);
   if (closeHeatmapBtn) closeHeatmapBtn.addEventListener('click', toggleHud);
 
+  // Minimize / Expand Toolbar Logic
+  function setToolbarMinimized(isMin: boolean) {
+    if (!toolbar || !toolbarBody || !minimizeBtn) return;
+    if (isMin) {
+      toolbar.classList.add('minimized');
+      toolbarBody.classList.add('hidden');
+      minimizeBtn.textContent = '+';
+      minimizeBtn.title = 'Expand Toolbar';
+      minimizeBtn.setAttribute('aria-label', 'Expand toolbar');
+    } else {
+      toolbar.classList.remove('minimized');
+      toolbarBody.classList.remove('hidden');
+      minimizeBtn.textContent = '−';
+      minimizeBtn.title = 'Minimize Toolbar';
+      minimizeBtn.setAttribute('aria-label', 'Minimize toolbar');
+    }
+    try {
+      localStorage.setItem('kins_hud_minimized', isMin ? 'true' : 'false');
+    } catch (e) {}
+  }
+
+  if (minimizeBtn) {
+    minimizeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isCurrentlyMin = toolbar?.classList.contains('minimized');
+      setToolbarMinimized(!isCurrentlyMin);
+    });
+  }
+
+  // Restore saved minimize state
+  try {
+    if (localStorage.getItem('kins_hud_minimized') === 'true') {
+      setToolbarMinimized(true);
+    }
+  } catch (e) {}
+
   if (form && input) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1088,6 +1230,16 @@ const baseUrl = import.meta.env.BASE_URL;
       spotRadius = Number((e.target as HTMLInputElement).value);
       radiusValEl.textContent = `${spotRadius}px`;
       renderCanvas();
+    });
+  }
+
+  if (opacitySlider && opacityValEl) {
+    opacitySlider.addEventListener('input', (e) => {
+      const opacityVal = Number((e.target as HTMLInputElement).value);
+      opacityValEl.textContent = `${opacityVal}%`;
+      if (canvas) {
+        canvas.style.opacity = (opacityVal / 100).toString();
+      }
     });
   }
 
