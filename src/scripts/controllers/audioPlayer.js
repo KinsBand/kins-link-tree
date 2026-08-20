@@ -391,10 +391,14 @@ class VinylScratchSynthesizer {
   }
 }
 
-export function stopVinylSpinSmoothly(element, shouldSpin) {
+export function stopVinylSpinSmoothly(element, shouldSpin, durationMs = 500) {
   if (!element) return;
 
   if (shouldSpin) {
+    if (element.classList.contains('vinyl-spin-anim')) {
+      element.classList.remove('vinyl-spin-decelerate');
+      return;
+    }
     element.classList.remove('vinyl-spin-decelerate');
     element.style.transform = '';
     element.classList.add('vinyl-spin-anim');
@@ -403,7 +407,7 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
                        element.classList.contains('spinning') || 
                        element.classList.contains('vinyl-spin-once');
 
-    if (isSpinning || (element.style.transform && element.style.transform !== 'rotate(0deg)')) {
+    if (isSpinning) {
       let currentAngle = 0;
       try {
         const style = window.getComputedStyle(element);
@@ -421,7 +425,7 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
       element.classList.remove('vinyl-spin-anim', 'spinning', 'vinyl-spin-once');
       element.style.transform = `rotate(${currentAngle}deg)`;
 
-      // Smoothly finish at the upright 360° (0°) position
+      // Smoothly finish at the upright 360° (0°) position without extra rotations
       const remainder = currentAngle % 360;
       const extraDeg = 360 - remainder;
       const targetAngle = currentAngle + extraDeg;
@@ -433,7 +437,7 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
         setTimeout(() => {
           element.classList.remove('vinyl-spin-decelerate');
           element.style.transform = 'rotate(0deg)';
-        }, 550);
+        }, durationMs);
       });
     } else {
       element.classList.remove('vinyl-spin-decelerate', 'vinyl-spin-anim', 'spinning');
@@ -594,19 +598,21 @@ export function initAudioPlayer() {
     }));
   }
 
+  let endingStartTime = 0;
+  let endingStartCurrentTime = 0;
+  const ENDING_DURATION_MS = 2400;
+
   function updateTimelineUI() {
     if (!vaultAudioPlayer || isScrubbing) return;
     const duration = 30;
-    const currentTime = Math.min(30, Math.max(0, vaultAudioPlayer.currentTime || 0));
+    let currentTime = Math.min(30, Math.max(0, vaultAudioPlayer.currentTime || 0));
 
-    // Only when the track naturally reaches the end during auto-mix, visually complete to 100%
+    // During the ending crossfade, smoothly interpolate the time counter, progress, and stylus to 30.0s
     if (isEndingSong) {
-      if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `100%`;
-      if (vinylStylusWrapper) vinylStylusWrapper.style.left = `100%`;
-      if (audioBarTime) {
-        audioBarTime.textContent = `0:30 / 0:30`;
-      }
-      return;
+      const elapsed = performance.now() - endingStartTime;
+      const progress = Math.min(1, elapsed / ENDING_DURATION_MS);
+      currentTime = endingStartCurrentTime + (30 - endingStartCurrentTime) * Math.pow(progress, 0.92);
+      currentTime = Math.min(30, Math.max(0, currentTime));
     }
 
     const pct = Math.min(100, Math.max(0, (currentTime / duration) * 100));
@@ -623,6 +629,8 @@ export function initAudioPlayer() {
       updateTimelineUI();
       checkAutoFadeOut();
       animFrameId = requestAnimationFrame(renderPlaybackLoop);
+    } else {
+      animFrameId = null;
     }
   }
 
@@ -960,31 +968,18 @@ export function initAudioPlayer() {
     const duration = vaultAudioPlayer.duration || 30;
     if (duration && duration > 5) {
       const timeLeft = duration - vaultAudioPlayer.currentTime;
-      // Start smooth vinyl spin-down deceleration 2.2s before track finishes naturally
-      if (timeLeft <= 2.2 && timeLeft > 0.3) {
+      // Start smooth continuous transition 2.4s before track ends
+      if (timeLeft <= 2.4 && timeLeft > 0.3) {
         isEndingSong = true;
-        // Smoothly animate the timeline progress and stylus to 100% completion
-        if (audioBarTimelineProgress) {
-          audioBarTimelineProgress.style.transition = 'width 1.8s ease-out';
-          audioBarTimelineProgress.style.width = '100%';
-        }
-        if (vinylStylusWrapper) {
-          vinylStylusWrapper.style.transition = 'left 1.8s ease-out';
-          vinylStylusWrapper.style.left = '100%';
-        }
-        if (audioBarTime) {
-          audioBarTime.textContent = '0:30 / 0:30';
-        }
+        endingStartTime = performance.now();
+        endingStartCurrentTime = vaultAudioPlayer.currentTime || 27.5;
 
-        triggerVinylSpinDownAndStop(1800).then(() => {
-          if (audioBarTimelineProgress) audioBarTimelineProgress.style.transition = '';
-          if (vinylStylusWrapper) vinylStylusWrapper.style.transition = '';
+        triggerVinylSpinDownAndStop(ENDING_DURATION_MS, false).then(() => {
           isEndingSong = false;
           if (!isScrubbing) {
-            // Buffer breather before spinning up into next song
             setTimeout(() => {
               playNextMixSong();
-            }, 300);
+            }, 250);
           }
         });
       }
@@ -1048,84 +1043,21 @@ export function initAudioPlayer() {
     });
   }
 
-  let playbackRateInterval = null;
-
-  function cancelPlaybackRateRamp() {
-    if (playbackRateInterval) {
-      clearInterval(playbackRateInterval);
-      playbackRateInterval = null;
-    }
-  }
-
-  function rampAudioPlaybackRate(startRate = 0.42, targetRate = 1.0, durationMs = 700) {
-    if (!vaultAudioPlayer) return;
-    cancelPlaybackRateRamp();
-
-    try {
-      vaultAudioPlayer.preservesPitch = false;
-      vaultAudioPlayer.mozPreservesPitch = false;
-      vaultAudioPlayer.webkitPreservesPitch = false;
-    } catch (e) {}
-
-    vaultAudioPlayer.playbackRate = startRate;
-    const stepMs = 30;
-    const steps = Math.max(1, Math.floor(durationMs / stepMs));
-    let step = 0;
-
-    playbackRateInterval = setInterval(() => {
-      step++;
-      const progress = step / steps;
-      // Exponential power curve for realistic motor torque spin-up
-      const currentRate = startRate + (targetRate - startRate) * Math.pow(progress, 1.6);
-
-      if (step >= steps) {
-        if (vaultAudioPlayer) vaultAudioPlayer.playbackRate = targetRate;
-        cancelPlaybackRateRamp();
-      } else {
-        if (vaultAudioPlayer) vaultAudioPlayer.playbackRate = Math.min(targetRate, currentRate);
-      }
-    }, stepMs);
-  }
-
-  function rampAudioPlaybackRateDown(startRate = 1.0, endRate = 0.12, durationMs = 600) {
-    return new Promise((resolve) => {
-      if (!vaultAudioPlayer) return resolve();
-      cancelPlaybackRateRamp();
-
-      try {
-        vaultAudioPlayer.preservesPitch = false;
-        vaultAudioPlayer.mozPreservesPitch = false;
-        vaultAudioPlayer.webkitPreservesPitch = false;
-      } catch (e) {}
-
-      vaultAudioPlayer.playbackRate = startRate;
-      const stepMs = 30;
-      const steps = Math.max(1, Math.floor(durationMs / stepMs));
-      let step = 0;
-
-      playbackRateInterval = setInterval(() => {
-        step++;
-        const progress = step / steps;
-        // Deceleration power curve: drops fast then smoothly winds to zero
-        const currentRate = startRate - (startRate - endRate) * Math.pow(progress, 1.35);
-
-        if (step >= steps) {
-          if (vaultAudioPlayer) vaultAudioPlayer.playbackRate = endRate;
-          cancelPlaybackRateRamp();
-          resolve();
-        } else {
-          if (vaultAudioPlayer) vaultAudioPlayer.playbackRate = Math.max(endRate, currentRate);
-        }
-      }, stepMs);
-    });
-  }
-
   function triggerNeedleDropAndSpinUp(isResume = false) {
+    if (vaultAudioPlayer) {
+      vaultAudioPlayer.playbackRate = 1.0;
+      try {
+        vaultAudioPlayer.preservesPitch = true;
+        vaultAudioPlayer.mozPreservesPitch = true;
+        vaultAudioPlayer.webkitPreservesPitch = true;
+      } catch (e) {}
+    }
     if (vinylScratchSynth) {
       vinylScratchSynth.playVinylNeedleSpinUp();
     }
-    // Ramps playback speed and pitch upwards just like a real turntable motor accelerating from stop
-    rampAudioPlaybackRate(isResume ? 0.52 : 0.40, 1.0, isResume ? 550 : 750);
+    if (audioBarIconBox) {
+      stopVinylSpinSmoothly(audioBarIconBox, true);
+    }
 
     if (vinylStylusWrapper) {
       vinylStylusWrapper.classList.remove('needle-drop-bounce');
@@ -1137,7 +1069,7 @@ export function initAudioPlayer() {
     }
   }
 
-  async function triggerVinylSpinDownAndStop(durationMs = 600) {
+  async function triggerVinylSpinDownAndStop(durationMs = 550, morphToSquare = true) {
     if (!vaultAudioPlayer || vaultAudioPlayer.paused) return;
 
     // 1. Play vinyl surface deceleration & brake noise
@@ -1153,19 +1085,22 @@ export function initAudioPlayer() {
       }, durationMs);
     }
 
-    // 3. Audio pitch wind-down and volume fade-out simultaneously
-    const currentRate = vaultAudioPlayer.playbackRate || 1.0;
-    const rampPromise = rampAudioPlaybackRateDown(currentRate, 0.12, durationMs);
-    const fadePromise = fadeOutAudio(durationMs);
+    if (morphToSquare && audioBarIconBox) {
+      stopVinylSpinSmoothly(audioBarIconBox, false, durationMs);
+    }
 
-    await Promise.all([rampPromise, fadePromise]);
+    // 3. Smooth volume fade-out
+    await fadeOutAudio(durationMs);
 
     if (vaultAudioPlayer) {
       vaultAudioPlayer.pause();
       vaultAudioPlayer.playbackRate = 1.0;
     }
-    isPlayingAudio = false;
-    stopTimelineAnimation();
+
+    if (morphToSquare) {
+      isPlayingAudio = false;
+      stopTimelineAnimation();
+    }
   }
 
   function triggerSongChangeWipe() {
@@ -1180,12 +1115,12 @@ export function initAudioPlayer() {
     if (vinylStylusWrapper) {
       vinylStylusWrapper.classList.add('tilt-backward');
       setTimeout(() => {
-        vinylStylusWrapper.classList.remove('tilt-backward');
+        if (vinylStylusWrapper) vinylStylusWrapper.classList.remove('tilt-backward');
       }, 450);
     }
 
     setTimeout(() => {
-      deckMusicSection.classList.remove('is-song-changing');
+      if (deckMusicSection) deckMusicSection.classList.remove('is-song-changing');
     }, 850);
   }
 
@@ -1212,7 +1147,7 @@ export function initAudioPlayer() {
       } else {
         updateToggleBtnState(false);
         showToast(`Paused: "${trackObj.title}"`);
-        await triggerVinylSpinDownAndStop(550);
+        await triggerVinylSpinDownAndStop(550, true);
       }
       return;
     }
@@ -1240,9 +1175,9 @@ export function initAudioPlayer() {
         })
       : Promise.resolve();
 
-    // If another track is currently playing, smoothly spin it down to a stop
+    // If another track is currently playing, dip pitch and maintain the round spinning vinyl platter
     if (isPlayingAudio && vaultAudioPlayer && !vaultAudioPlayer.paused && vaultAudioPlayer.volume > 0.05) {
-      await triggerVinylSpinDownAndStop(380);
+      await triggerVinylSpinDownAndStop(350, false);
     }
 
     // Wait for parallel metadata fetch to complete if it wasn't preloaded
@@ -1290,6 +1225,12 @@ export function initAudioPlayer() {
 
     if (vaultAudioPlayer && previewUrl) {
       vaultAudioPlayer.src = previewUrl;
+      vaultAudioPlayer.playbackRate = 1.0;
+      try {
+        vaultAudioPlayer.preservesPitch = true;
+        vaultAudioPlayer.mozPreservesPitch = true;
+        vaultAudioPlayer.webkitPreservesPitch = true;
+      } catch (e) {}
       vaultAudioPlayer.volume = 0;
       vaultAudioPlayer.play().then(() => {
         if (transitionId !== currentTransitionId) return;
@@ -1378,10 +1319,50 @@ export function initAudioPlayer() {
       } else {
         updateToggleBtnState(false);
         showToast(`Paused: "${currentPlayingTrack.title}"`, 'music');
-        await triggerVinylSpinDownAndStop(550);
+        await triggerVinylSpinDownAndStop(550, true);
       }
     });
   }
+
+  function pauseAudioCleanly() {
+    if (!isPlayingAudio) return;
+    isPlayingAudio = false;
+    updateToggleBtnState(false);
+    if (vaultAudioPlayer) {
+      vaultAudioPlayer.pause();
+    }
+    stopTimelineAnimation();
+    updateTimelineUI();
+  }
+
+  window.pauseAudioPlayback = pauseAudioCleanly;
+
+  // 1. Auto-pause audio when leaving website, switching tabs, minimizing browser, or locking screen
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && isPlayingAudio) {
+      pauseAudioCleanly();
+    }
+  });
+
+  window.addEventListener('pagehide', () => {
+    if (isPlayingAudio) {
+      pauseAudioCleanly();
+    }
+  });
+
+  // 2. Auto-pause audio when clicking external links (e.g. Spotify, Apple Music, social channels)
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link || !link.href) return;
+
+    const href = link.href.trim();
+    const isExternal = link.target === '_blank' || 
+                      (!href.startsWith(window.location.origin) && !href.startsWith('#') && !href.startsWith('javascript:'));
+
+    if (isExternal && isPlayingAudio) {
+      pauseAudioCleanly();
+    }
+  }, { capture: true });
 
   // Background prefetch all inspiration tracks for instant 0ms switching
   setTimeout(() => {
