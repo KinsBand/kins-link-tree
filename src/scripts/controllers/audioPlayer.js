@@ -47,37 +47,51 @@ class VinylScratchSynthesizer {
 
       const now = this.ctx.currentTime;
 
-      // 1. Mechanical stylus contact thump (needle landing on vinyl lead-in groove)
+      // 1. Mechanical stylus contact thump (needle physically landing on vinyl groove)
       const thumpOsc = this.ctx.createOscillator();
       const thumpGain = this.ctx.createGain();
       thumpOsc.type = 'triangle';
-      thumpOsc.frequency.setValueAtTime(165, now);
-      thumpOsc.frequency.exponentialRampToValueAtTime(28, now + 0.08);
+      thumpOsc.frequency.setValueAtTime(190, now);
+      thumpOsc.frequency.exponentialRampToValueAtTime(26, now + 0.08);
 
-      thumpGain.gain.setValueAtTime(0.38, now);
-      thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      thumpGain.gain.setValueAtTime(0.55, now);
+      thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
 
       thumpOsc.connect(thumpGain);
       thumpGain.connect(this.ctx.destination);
       thumpOsc.start(now);
       thumpOsc.stop(now + 0.09);
 
-      // 2. Vinyl groove surface friction & rising acceleration whoosh (from 0 to 33 RPM)
+      // 2. Diamond stylus micro-click impact
+      const clickOsc = this.ctx.createOscillator();
+      const clickGain = this.ctx.createGain();
+      clickOsc.type = 'sawtooth';
+      clickOsc.frequency.setValueAtTime(3600, now);
+      clickOsc.frequency.exponentialRampToValueAtTime(500, now + 0.02);
+
+      clickGain.gain.setValueAtTime(0.28, now);
+      clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+
+      clickOsc.connect(clickGain);
+      clickGain.connect(this.ctx.destination);
+      clickOsc.start(now);
+      clickOsc.stop(now + 0.03);
+
+      // 3. Vinyl groove surface friction & rising acceleration whoosh (from 0 to 33 RPM)
       if (this.noiseBuffer) {
         const noiseSrc = this.ctx.createBufferSource();
         noiseSrc.buffer = this.noiseBuffer;
 
-        // Bandpass filter sweeping upward as vinyl speed accelerates
         const spinFilter = this.ctx.createBiquadFilter();
         spinFilter.type = 'bandpass';
         spinFilter.frequency.setValueAtTime(280, now);
-        spinFilter.frequency.exponentialRampToValueAtTime(3200, now + 0.7);
-        spinFilter.Q.setValueAtTime(2.6, now);
+        spinFilter.frequency.exponentialRampToValueAtTime(3400, now + 0.7);
+        spinFilter.Q.setValueAtTime(2.8, now);
 
         const noiseGain = this.ctx.createGain();
         noiseGain.gain.setValueAtTime(0.001, now);
-        noiseGain.gain.linearRampToValueAtTime(0.24, now + 0.06);
-        noiseGain.gain.setValueAtTime(0.20, now + 0.45);
+        noiseGain.gain.linearRampToValueAtTime(0.32, now + 0.06);
+        noiseGain.gain.setValueAtTime(0.24, now + 0.45);
         noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
 
         noiseSrc.connect(spinFilter);
@@ -88,19 +102,19 @@ class VinylScratchSynthesizer {
         noiseSrc.stop(now + 0.9);
       }
 
-      // 3. Turntable motor torque low-frequency whirr acceleration
+      // 4. Turntable motor torque low-frequency whirr acceleration
       const motorOsc = this.ctx.createOscillator();
       const motorGain = this.ctx.createGain();
       motorOsc.type = 'sawtooth';
       motorOsc.frequency.setValueAtTime(42, now);
-      motorOsc.frequency.exponentialRampToValueAtTime(125, now + 0.65);
+      motorOsc.frequency.exponentialRampToValueAtTime(130, now + 0.65);
 
       const motorFilter = this.ctx.createBiquadFilter();
       motorFilter.type = 'lowpass';
       motorFilter.frequency.setValueAtTime(160, now);
 
       motorGain.gain.setValueAtTime(0.001, now);
-      motorGain.gain.linearRampToValueAtTime(0.08, now + 0.1);
+      motorGain.gain.linearRampToValueAtTime(0.12, now + 0.1);
       motorGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
 
       motorOsc.connect(motorFilter);
@@ -113,7 +127,7 @@ class VinylScratchSynthesizer {
     }
   }
 
-  playVinylNeedleSpinDown(durationMs = 650) {
+  playVinylNeedleSpinDown(durationMs = 600) {
     try {
       this.init();
       if (!this.ctx) return;
@@ -122,19 +136,34 @@ class VinylScratchSynthesizer {
       const now = this.ctx.currentTime;
       const durationSec = durationMs / 1000;
 
-      // 1. Vinyl groove friction decelerating downward in frequency & speed
+      // 1. Stylus needle lift pop / friction unstick sound right as pausing begins
+      const liftPopOsc = this.ctx.createOscillator();
+      const liftPopGain = this.ctx.createGain();
+      liftPopOsc.type = 'triangle';
+      liftPopOsc.frequency.setValueAtTime(260, now);
+      liftPopOsc.frequency.exponentialRampToValueAtTime(40, now + 0.055);
+
+      liftPopGain.gain.setValueAtTime(0.48, now);
+      liftPopGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+      liftPopOsc.connect(liftPopGain);
+      liftPopGain.connect(this.ctx.destination);
+      liftPopOsc.start(now);
+      liftPopOsc.stop(now + 0.065);
+
+      // 2. Vinyl groove friction decelerating downward in frequency & speed
       if (this.noiseBuffer) {
         const noiseSrc = this.ctx.createBufferSource();
         noiseSrc.buffer = this.noiseBuffer;
 
         const brakeFilter = this.ctx.createBiquadFilter();
         brakeFilter.type = 'bandpass';
-        brakeFilter.frequency.setValueAtTime(2800, now);
-        brakeFilter.frequency.exponentialRampToValueAtTime(160, now + durationSec);
-        brakeFilter.Q.setValueAtTime(2.4, now);
+        brakeFilter.frequency.setValueAtTime(2900, now);
+        brakeFilter.frequency.exponentialRampToValueAtTime(140, now + durationSec);
+        brakeFilter.Q.setValueAtTime(2.6, now);
 
         const noiseGain = this.ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.20, now);
+        noiseGain.gain.setValueAtTime(0.28, now);
         noiseGain.gain.exponentialRampToValueAtTime(0.001, now + durationSec);
 
         noiseSrc.connect(brakeFilter);
@@ -145,18 +174,18 @@ class VinylScratchSynthesizer {
         noiseSrc.stop(now + durationSec + 0.05);
       }
 
-      // 2. Motor spin-down deceleration hum
+      // 3. Motor spin-down deceleration hum
       const motorOsc = this.ctx.createOscillator();
       const motorGain = this.ctx.createGain();
       motorOsc.type = 'sawtooth';
-      motorOsc.frequency.setValueAtTime(110, now);
-      motorOsc.frequency.exponentialRampToValueAtTime(25, now + durationSec);
+      motorOsc.frequency.setValueAtTime(115, now);
+      motorOsc.frequency.exponentialRampToValueAtTime(22, now + durationSec);
 
       const motorFilter = this.ctx.createBiquadFilter();
       motorFilter.type = 'lowpass';
       motorFilter.frequency.setValueAtTime(140, now);
 
-      motorGain.gain.setValueAtTime(0.06, now);
+      motorGain.gain.setValueAtTime(0.09, now);
       motorGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
 
       motorOsc.connect(motorFilter);
@@ -165,7 +194,7 @@ class VinylScratchSynthesizer {
       motorOsc.start(now);
       motorOsc.stop(now + durationSec + 0.05);
 
-      // 3. Subtle stylus lift / stop click at the end of deceleration
+      // 4. Subtle diamond stylus disengage click at standstill
       setTimeout(() => {
         try {
           if (!this.ctx) return;
@@ -173,18 +202,18 @@ class VinylScratchSynthesizer {
           const clickOsc = this.ctx.createOscillator();
           const clickGain = this.ctx.createGain();
           clickOsc.type = 'triangle';
-          clickOsc.frequency.setValueAtTime(90, stopNow);
-          clickOsc.frequency.exponentialRampToValueAtTime(25, stopNow + 0.05);
+          clickOsc.frequency.setValueAtTime(110, stopNow);
+          clickOsc.frequency.exponentialRampToValueAtTime(30, stopNow + 0.04);
 
-          clickGain.gain.setValueAtTime(0.18, stopNow);
-          clickGain.gain.exponentialRampToValueAtTime(0.001, stopNow + 0.05);
+          clickGain.gain.setValueAtTime(0.25, stopNow);
+          clickGain.gain.exponentialRampToValueAtTime(0.001, stopNow + 0.04);
 
           clickOsc.connect(clickGain);
           clickGain.connect(this.ctx.destination);
           clickOsc.start(stopNow);
-          clickOsc.stop(stopNow + 0.06);
+          clickOsc.stop(stopNow + 0.05);
         } catch (e) {}
-      }, Math.max(0, durationMs - 50));
+      }, Math.max(0, durationMs - 40));
     } catch (e) {
       console.warn('Vinyl spin-down audio error:', e);
     }
@@ -199,25 +228,39 @@ class VinylScratchSynthesizer {
 
       const now = this.ctx.currentTime;
 
+      // Master Scratch Output Bus
       this.gainNode = this.ctx.createGain();
       this.gainNode.gain.setValueAtTime(0.001, now);
 
+      // Resonant Turntable Platter Bandpass Filter (Formant character)
       this.filterNode = this.ctx.createBiquadFilter();
       this.filterNode.type = 'bandpass';
       this.filterNode.frequency.setValueAtTime(1400, now);
-      this.filterNode.Q.setValueAtTime(3.8, now);
+      this.filterNode.Q.setValueAtTime(4.8, now);
 
+      // Vinyl Surface Crackle & Friction Noise Node
       this.noiseNode = this.ctx.createBufferSource();
       this.noiseNode.buffer = this.noiseBuffer;
       this.noiseNode.loop = true;
       this.noiseNode.connect(this.filterNode);
 
+      // Primary DJ Scratch Carrier Oscillator
       this.oscNode = this.ctx.createOscillator();
       this.oscNode.type = 'sawtooth';
-      this.oscNode.frequency.setValueAtTime(240, now);
+      this.oscNode.frequency.setValueAtTime(260, now);
+
+      // Sub-harmonic FM Modulator (Adds gritty vinyl friction texture)
+      this.modNode = this.ctx.createOscillator();
+      this.modNode.type = 'triangle';
+      this.modNode.frequency.setValueAtTime(45, now);
+
+      this.modGain = this.ctx.createGain();
+      this.modGain.gain.setValueAtTime(35, now);
+      this.modNode.connect(this.modGain);
+      this.modGain.connect(this.oscNode.frequency);
 
       const oscGain = this.ctx.createGain();
-      oscGain.gain.setValueAtTime(0.22, now);
+      oscGain.gain.setValueAtTime(0.35, now);
       this.oscNode.connect(oscGain);
       oscGain.connect(this.filterNode);
 
@@ -226,7 +269,9 @@ class VinylScratchSynthesizer {
 
       this.noiseNode.start(now);
       this.oscNode.start(now);
+      this.modNode.start(now);
       this.isPlaying = true;
+      this.lastVelocity = 0;
     } catch (e) {
       console.warn('Start scratch error:', e);
     }
@@ -237,25 +282,81 @@ class VinylScratchSynthesizer {
     const now = this.ctx.currentTime;
     const speed = Math.abs(velocity);
     const direction = velocity >= 0 ? 1 : -1;
+    const isHardScratch = speed > 0.25;
 
-    const targetGain = Math.min(0.42, Math.max(0.02, speed * 0.3));
+    // Detect sudden direction reversal for classic DJ "wicka" chirp pop
+    if (this.lastVelocity && Math.sign(velocity) !== Math.sign(this.lastVelocity) && speed > 0.18) {
+      this.playScratchChirp(direction);
+    }
+    this.lastVelocity = velocity;
+
+    // Dynamic output gain based on velocity
+    const targetGain = isHardScratch
+      ? Math.min(0.65, 0.15 + speed * 0.45)
+      : Math.min(0.28, Math.max(0.02, speed * 0.22));
+
     this.gainNode.gain.cancelScheduledValues(now);
-    this.gainNode.gain.setTargetAtTime(targetGain, now, 0.015);
+    this.gainNode.gain.setTargetAtTime(targetGain, now, 0.012);
 
-    let targetFreq = direction > 0 ? (280 + speed * 650) : (170 + speed * 480);
-    targetFreq = Math.min(2600, Math.max(90, targetFreq));
+    // DJ formant frequency sweep based on scrubbing speed & direction
+    let targetFreq = direction > 0
+      ? (320 + Math.pow(speed, 0.9) * 1100)
+      : (190 + Math.pow(speed, 0.9) * 750);
+    targetFreq = Math.min(3800, Math.max(80, targetFreq));
 
     this.oscNode.frequency.cancelScheduledValues(now);
-    this.oscNode.frequency.setTargetAtTime(targetFreq, now, 0.015);
+    this.oscNode.frequency.setTargetAtTime(targetFreq, now, 0.012);
 
-    const filterFreq = Math.min(5500, Math.max(500, 900 + speed * 1600));
+    // Dynamic bandpass filter center sweep
+    const filterFreq = Math.min(6800, Math.max(600, 1100 + speed * 2400));
     this.filterNode.frequency.cancelScheduledValues(now);
-    this.filterNode.frequency.setTargetAtTime(filterFreq, now, 0.015);
+    this.filterNode.frequency.setTargetAtTime(filterFreq, now, 0.012);
+    this.filterNode.Q.setTargetAtTime(isHardScratch ? 6.2 : 3.5, now, 0.02);
+
+    if (this.modGain) {
+      this.modGain.gain.setTargetAtTime(Math.min(120, 20 + speed * 80), now, 0.015);
+    }
 
     if (this.noiseNode && this.noiseNode.playbackRate) {
-      const rate = Math.min(2.8, Math.max(0.4, speed * 0.85));
-      this.noiseNode.playbackRate.setTargetAtTime(rate, now, 0.015);
+      const rate = Math.min(3.5, Math.max(0.3, speed * 1.2));
+      this.noiseNode.playbackRate.setTargetAtTime(rate, now, 0.012);
     }
+  }
+
+  playScratchChirp(direction = 1) {
+    try {
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const chirpOsc = this.ctx.createOscillator();
+      const chirpGain = this.ctx.createGain();
+      const chirpFilter = this.ctx.createBiquadFilter();
+
+      chirpOsc.type = 'sawtooth';
+      chirpFilter.type = 'bandpass';
+      chirpFilter.Q.setValueAtTime(5.5, now);
+
+      if (direction > 0) {
+        chirpOsc.frequency.setValueAtTime(450, now);
+        chirpOsc.frequency.exponentialRampToValueAtTime(1400, now + 0.045);
+        chirpFilter.frequency.setValueAtTime(900, now);
+        chirpFilter.frequency.exponentialRampToValueAtTime(2800, now + 0.045);
+      } else {
+        chirpOsc.frequency.setValueAtTime(1200, now);
+        chirpOsc.frequency.exponentialRampToValueAtTime(320, now + 0.045);
+        chirpFilter.frequency.setValueAtTime(2600, now);
+        chirpFilter.frequency.exponentialRampToValueAtTime(800, now + 0.045);
+      }
+
+      chirpGain.gain.setValueAtTime(0.35, now);
+      chirpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+
+      chirpOsc.connect(chirpFilter);
+      chirpFilter.connect(chirpGain);
+      chirpGain.connect(this.ctx.destination);
+
+      chirpOsc.start(now);
+      chirpOsc.stop(now + 0.05);
+    } catch (e) {}
   }
 
   stopScratch() {
@@ -276,6 +377,11 @@ class VinylScratchSynthesizer {
           try { this.oscNode.stop(); } catch (e) {}
           this.oscNode.disconnect();
           this.oscNode = null;
+        }
+        if (this.modNode) {
+          try { this.modNode.stop(); } catch (e) {}
+          this.modNode.disconnect();
+          this.modNode = null;
         }
         this.isPlaying = false;
       }, 80);
@@ -493,8 +599,8 @@ export function initAudioPlayer() {
     const duration = 30;
     const currentTime = Math.min(30, Math.max(0, vaultAudioPlayer.currentTime || 0));
 
-    // When fading out at the end of the song, ensure visual progress displays full 100% completion (0:30 / 0:30)
-    if (isFadingOut) {
+    // Only when the track naturally reaches the end during auto-mix, visually complete to 100%
+    if (isEndingSong) {
       if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `100%`;
       if (vinylStylusWrapper) vinylStylusWrapper.style.left = `100%`;
       if (audioBarTime) {
@@ -594,7 +700,22 @@ export function initAudioPlayer() {
       }
     }
 
+    // Dynamic turntablist DJ scratch audio synthesis
     vinylScratchSynth.updateScratch(velocity);
+
+    // Dynamic pitch modulation on active audio track during aggressive scrubbing
+    if (vaultAudioPlayer) {
+      const speed = Math.abs(velocity);
+      if (speed > 0.08) {
+        try {
+          vaultAudioPlayer.preservesPitch = false;
+          if (vaultAudioPlayer.mozPreservesPitch !== undefined) vaultAudioPlayer.mozPreservesPitch = false;
+          if (vaultAudioPlayer.webkitPreservesPitch !== undefined) vaultAudioPlayer.webkitPreservesPitch = false;
+          vaultAudioPlayer.playbackRate = Math.min(2.8, Math.max(0.3, speed * 2.2));
+        } catch (e) {}
+      }
+    }
+
     seekToPosition(clientX);
   }
 
@@ -773,6 +894,7 @@ export function initAudioPlayer() {
 
   let currentFadeInterval = null;
   let isFadingOut = false;
+  let isEndingSong = false;
   let isTransitioningTrack = false;
   let mixQueue = [];
   let autoMixTimeout = null;
@@ -824,17 +946,18 @@ export function initAudioPlayer() {
   function fadeInAudio(durationMs = 1800, targetVol = 1.0) {
     if (!vaultAudioPlayer) return Promise.resolve();
     isFadingOut = false;
+    isEndingSong = false;
     return fadeAudioVolume(0, targetVol, durationMs);
   }
 
   function checkAutoFadeOut() {
-    if (!vaultAudioPlayer || isScrubbing || !isPlayingAudio || isFadingOut || isTransitioningTrack) return;
+    if (!vaultAudioPlayer || isScrubbing || !isPlayingAudio || isEndingSong || isTransitioningTrack) return;
     const duration = vaultAudioPlayer.duration || 30;
     if (duration && duration > 5) {
       const timeLeft = duration - vaultAudioPlayer.currentTime;
-      // Start smooth vinyl spin-down deceleration 2.2s before track finishes
+      // Start smooth vinyl spin-down deceleration 2.2s before track finishes naturally
       if (timeLeft <= 2.2 && timeLeft > 0.3) {
-        isFadingOut = true;
+        isEndingSong = true;
         // Smoothly animate the timeline progress and stylus to 100% completion
         if (audioBarTimelineProgress) {
           audioBarTimelineProgress.style.transition = 'width 1.8s ease-out';
@@ -845,12 +968,13 @@ export function initAudioPlayer() {
           vinylStylusWrapper.style.left = '100%';
         }
         if (audioBarTime) {
-          audioBarTime.textContent = `${formatTime(duration)} / ${formatTime(duration)}`;
+          audioBarTime.textContent = '0:30 / 0:30';
         }
 
         triggerVinylSpinDownAndStop(1800).then(() => {
           if (audioBarTimelineProgress) audioBarTimelineProgress.style.transition = '';
           if (vinylStylusWrapper) vinylStylusWrapper.style.transition = '';
+          isEndingSong = false;
           if (!isScrubbing) {
             // Buffer breather before spinning up into next song
             setTimeout(() => {
