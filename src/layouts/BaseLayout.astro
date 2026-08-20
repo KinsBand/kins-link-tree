@@ -1,7 +1,6 @@
 ---
 import '../styles/global.css';
 import PagePreloader from '../components/ui/PagePreloader.astro';
-import HeatmapHud from '../components/analytics/HeatmapHud.astro';
 import { siteConfig } from '../settings/site.config';
 
 interface Props {
@@ -78,19 +77,6 @@ const baseUrl = import.meta.env.BASE_URL;
 <body>
   <PagePreloader />
   <slot />
-
-  <HeatmapHud />
-
-  <script>
-    import { initAttribution } from '../lib/attribution';
-    import { initAutoTracker } from '../lib/analytics';
-    import { initHeatmapClickTracker } from '../lib/heatmapTracker';
-
-    // Start inbound attribution & background telemetry
-    initAttribution();
-    initAutoTracker();
-    initHeatmapClickTracker();
-  </script>
 
   <script define:vars={{ baseUrl }}>
     // Register Service Worker for PWA

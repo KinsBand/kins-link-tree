@@ -1,13 +1,5 @@
 import { showToast } from './toast.js';
 import { animateCopySuccess } from './clipboard.js';
-import { trackKinsInteraction } from '../../lib/analytics';
-
-const trackClick = (event, data = {}) => {
-  trackKinsInteraction(event, 'social', {
-    container_scope: 'modal:share',
-    ...data
-  });
-};
 
 function lockScroll() {
   document.body.classList.add('modal-open');
@@ -288,14 +280,12 @@ export function initShareModal() {
   if (handleCopyBtn) {
     handleCopyBtn.addEventListener('click', () => {
       performCopy('@KinsBandOfficial', handleCopyBtn, 'Copied @KinsBandOfficial to clipboard!');
-      trackClick('copy_band_handle');
     });
   }
 
   if (copyUrlBtn && shareUrlInput) {
     copyUrlBtn.addEventListener('click', () => {
       performCopy(shareUrlInput.value, copyUrlBtn, 'Link copied to clipboard!');
-      trackClick('copy_share_url', { url: shareUrlInput.value });
     });
   }
 
@@ -308,18 +298,6 @@ export function initShareModal() {
       const shareTitle = 'Kins | Official Link in Bio';
       const shareMessage = 'Check out official music releases, merch, and tour dates for Kins!';
       const appShareUrl = baseDomain + (baseDomain.includes('?') ? '&' : '?') + `utm_source=share_modal&utm_medium=app_${app}&utm_campaign=fan_share`;
-
-      // Track telemetry event for specific app clicked
-      trackClick('share_app_selected', {
-        app: app,
-        app_name: app.toUpperCase(),
-        share_url: appShareUrl,
-        method: 'app_button'
-      });
-      trackClick('share_action', {
-        action_type: 'app_share',
-        destination_app: app
-      });
 
       if (app === 'whatsapp') {
         const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareMessage} ${appShareUrl}`)}`;
@@ -357,17 +335,6 @@ export function initShareModal() {
 
   // Native Web Share CTA Handler
   async function triggerNativeShare() {
-    trackClick('share_native_invoked', {
-      method: 'native_web_share_api',
-      app: 'native'
-    });
-    trackClick('share_app_selected', {
-      app: 'native',
-      app_name: 'NATIVE_SYSTEM_SHEET',
-      share_url: nativeShareUrl,
-      method: 'native_cta'
-    });
-
     if (navigator.share) {
       try {
         await navigator.share({
@@ -375,15 +342,11 @@ export function initShareModal() {
           text: 'Check out official music releases, merch, and tour dates for Kins!',
           url: nativeShareUrl
         });
-        trackClick('native_share_success', { app: 'native', outcome: 'completed' });
-        trackClick('share_action', { action_type: 'app_share', destination_app: 'native_sheet' });
       } catch (err) {
-        trackClick('native_share_dismissed', { app: 'native' });
         console.log('Native share dismissed:', err);
       }
     } else {
       performCopy(nativeShareUrl, nativeShareCtaBtn, 'Share link copied to clipboard!');
-      trackClick('share_native_fallback_copy', { app: 'native' });
     }
   }
 
@@ -418,7 +381,6 @@ export function initShareModal() {
       shareModal.classList.remove('hidden');
       shareModal.classList.add('active');
       lockScroll();
-      trackClick('open_share_modal');
       renderQrCode('qrcodeCanvas', 100);
     });
 
@@ -492,26 +454,18 @@ export function initShareModal() {
       if (format === 'jpeg') {
         createBrandedQrCanvas(qrCodeUrl, 1200, (canvas) => {
           triggerDownload(canvas.toDataURL('image/jpeg', 0.98), 'kins-official-qrcode.jpg');
-          trackClick('share_qr_downloaded', { format: 'jpg' });
-          trackClick('share_action', { action_type: 'qr_download', format: 'jpg' });
         });
       } else if (format === 'png') {
         createBrandedQrCanvas(qrCodeUrl, 1200, (canvas) => {
           triggerDownload(canvas.toDataURL('image/png'), 'kins-official-qrcode.png');
-          trackClick('share_qr_downloaded', { format: 'png' });
-          trackClick('share_action', { action_type: 'qr_download', format: 'png' });
         });
       } else if (format === 'eps') {
         generateVectorQr(qrCodeUrl, 'eps', (dataUrl) => {
           triggerDownload(dataUrl, 'kins-official-qrcode.eps');
-          trackClick('share_qr_downloaded', { format: 'eps' });
-          trackClick('share_action', { action_type: 'qr_download', format: 'eps' });
         });
       } else if (format === 'svg') {
         generateVectorQr(qrCodeUrl, 'svg', (dataUrl) => {
           triggerDownload(dataUrl, 'kins-official-qrcode.svg');
-          trackClick('share_qr_downloaded', { format: 'svg' });
-          trackClick('share_action', { action_type: 'qr_download', format: 'svg' });
         });
       }
     });
@@ -559,8 +513,6 @@ export function initShareModal() {
         a.download = filename;
         a.click();
         showToast(`Downloaded Band Logo (${format.toUpperCase()})!`);
-        trackClick('share_logo_downloaded', { format });
-        trackClick('share_action', { action_type: 'logo_download', format });
       };
 
       if (format === 'png') {

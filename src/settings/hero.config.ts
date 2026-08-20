@@ -233,7 +233,7 @@ export const heroConfig: HeroConfig = {
   // --------------------------------------------------------------------------
   // ⚡ QUICK CONTROLS: CHANGE ACTIVE STATE & SUB-VARIATION HERE
   // --------------------------------------------------------------------------
-  activeState: 'livestream',
+  activeState: 'upcoming',
 
   activeUpcomingVar: 'minimal_teaser',
   activeReleaseVar: 'cover_video',

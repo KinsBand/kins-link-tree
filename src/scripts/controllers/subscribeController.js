@@ -1,5 +1,4 @@
 import { showToast } from './toast.js';
-import { trackKinsInteraction } from '../../lib/analytics';
 
 const STORAGE_KEY = 'kins_subscribed';
 const COOKIE_NAME = 'kins_subscribed';
@@ -62,17 +61,6 @@ export function setSubscriptionState(isSubscribed, email = null) {
   }
 
   document.cookie = `${COOKIE_NAME}=${valStr}; path=/; max-age=31536000; SameSite=Lax`;
-
-  if (isSubscribed) {
-    trackKinsInteraction('newsletter_signup_submitted', 'conversion', {
-      email_domain: email ? email.split('@')[1] : 'unknown',
-      container_scope: 'main:subscribe'
-    });
-  } else {
-    trackKinsInteraction('newsletter_unsubscribed', 'conversion', {
-      container_scope: 'main:subscribe'
-    });
-  }
 
   window.dispatchEvent(new CustomEvent('kins:subscription-change', {
     detail: { isSubscribed, email: email || getSubscriberEmail() }

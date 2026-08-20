@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { epkConfig } from '../settings/epk.config';
+import { functionalityConfig } from '../settings/functionality.config';
 
 // Day-0 Verified EPK Section Components
 import EpkNav from '../components/epk/EpkNav.astro';
@@ -15,6 +16,13 @@ import EpkFooter from '../components/epk/EpkFooter.astro';
 
 // UI Feedback
 import ToastContainer from '../components/ui/ToastContainer.astro';
+
+const isEpkPageEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.enabled ?? true);
+const baseUrl = import.meta.env.BASE_URL || '/';
+
+if (!isEpkPageEnabled) {
+  return Astro.redirect(baseUrl);
+}
 ---
 
 <BaseLayout 

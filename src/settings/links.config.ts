@@ -20,20 +20,12 @@ export const socialLinks = [
 
 export const mainBioLinks: LinkItem[] = [
   {
-    id: "live-stream-hub",
-    title: "🔴 Watch Live Stream & Concert Hub",
-    url: "live",
-    iconClass: "fa-solid fa-tower-broadcast",
-    badgeText: "LIVE NOW",
-    featured: true,
-  },
-  {
     id: "spotify-latest",
     title: "Stream Latest Release on Spotify",
     url: "https://open.spotify.com",
     iconClass: "fa-brands fa-spotify",
     badgeText: "NEW",
-    featured: false,
+    featured: true,
   },
   {
     id: "gig-tickets",
@@ -52,5 +44,11 @@ export const mainBioLinks: LinkItem[] = [
     title: "Official Kins Apparel & Merch",
     url: "#merch",
     iconClass: "fa-solid fa-shirt",
+  },
+  {
+    id: "live-stream-hub",
+    title: "Live Stream & Concert Hub",
+    url: "live",
+    iconClass: "fa-solid fa-tower-broadcast",
   },
 ];

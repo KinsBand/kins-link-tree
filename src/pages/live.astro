@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { liveConfig } from '../settings/live.config';
+import { functionalityConfig } from '../settings/functionality.config';
 
 // Live Hub UI Components
 import LiveNav from '../components/live/LiveNav.astro';
@@ -22,6 +23,13 @@ import LiveMediaLightbox from '../components/live/LiveMediaLightbox.astro';
 
 // Feedback & Toast
 import ToastContainer from '../components/ui/ToastContainer.astro';
+
+const isLivePageEnabled = (functionalityConfig.enableLivePage ?? true) && (liveConfig.enabled ?? true);
+const baseUrl = import.meta.env.BASE_URL || '/';
+
+if (!isLivePageEnabled) {
+  return Astro.redirect(baseUrl);
+}
 ---
 
 <BaseLayout 

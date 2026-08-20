@@ -1,7 +1,8 @@
 import type { LiveShowConfig } from '../types/live';
 
 export const liveConfig: LiveShowConfig = {
-  status: 'live',
+  enabled: false,
+  status: 'offline',
   venueName: 'THE CAMBRIDGE HOTEL',
   city: 'NEWCASTLE, NSW',
   dateStr: 'TONIGHT • AUG 20, 2026',

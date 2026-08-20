@@ -28,6 +28,7 @@ export interface EpkPressPhoto {
 }
 
 export const epkConfig = {
+  enabled: false,
   // Band Core Identity
   bandName: "KINS",
   handle: "@KinsBandOfficial",
