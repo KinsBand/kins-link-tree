@@ -305,30 +305,12 @@ export function initShareModal() {
         showToast('Opening WhatsApp...');
       } else if (app === 'instagram') {
         performCopy(appShareUrl, btn, 'Link copied! Open Instagram to share in Stories or DM.');
-      } else if (app === 'twitter') {
-        const twUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}&url=${encodeURIComponent(appShareUrl)}`;
-        window.open(twUrl, '_blank', 'noopener,noreferrer');
-        showToast('Opening X / Twitter...');
-      } else if (app === 'facebook') {
-        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(appShareUrl)}`;
-        window.open(fbUrl, '_blank', 'noopener,noreferrer');
-        showToast('Opening Facebook...');
-      } else if (app === 'telegram') {
-        const tgUrl = `https://t.me/share/url?url=${encodeURIComponent(appShareUrl)}&text=${encodeURIComponent(shareMessage)}`;
-        window.open(tgUrl, '_blank', 'noopener,noreferrer');
-        showToast('Opening Telegram...');
-      } else if (app === 'reddit') {
-        const rdUrl = `https://reddit.com/submit?url=${encodeURIComponent(appShareUrl)}&title=${encodeURIComponent(shareTitle)}`;
-        window.open(rdUrl, '_blank', 'noopener,noreferrer');
-        showToast('Opening Reddit...');
       } else if (app === 'sms') {
         const smsUrl = `sms:?&body=${encodeURIComponent(`${shareMessage} ${appShareUrl}`)}`;
         window.location.href = smsUrl;
         showToast('Opening Messages...');
-      } else if (app === 'email') {
-        const mailUrl = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareMessage}\n\n${appShareUrl}`)}`;
-        window.location.href = mailUrl;
-        showToast('Opening Email...');
+      } else if (app === 'discord') {
+        performCopy(appShareUrl, btn, 'Link copied! Open Discord to share in a server or DM.');
       }
     });
   });

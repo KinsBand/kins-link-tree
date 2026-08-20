@@ -26,13 +26,13 @@ const primaryStreams = [
   { name: "Apple Music", icon: "fa-brands fa-apple", url: "https://music.apple.com/search?term=KinsBandOfficial", platform: "apple" },
   { name: "YT Music", icon: "fa-brands fa-youtube", url: "https://music.youtube.com/search?q=KinsBandOfficial", platform: "ytmusic" },
   { name: "Amazon Music", icon: "fa-brands fa-amazon", url: "https://music.amazon.com/search/KinsBandOfficial", platform: "amazon" },
-  { name: "SoundCloud", icon: "fa-brands fa-soundcloud", url: "https://soundcloud.com/KinsBandOfficial", platform: "soundcloud" }
+  { name: "SoundCloud", icon: "fa-brands fa-soundcloud", url: "https://soundcloud.com/KinsBandOfficial", platform: "soundcloud" },
+  { name: "Bandcamp", icon: "fa-brands fa-bandcamp", url: "https://bandcamp.com/search?q=KinsBandOfficial", platform: "bandcamp" }
 ];
 
 const secondaryStreams = [
   { name: "Deezer", icon: "fa-brands fa-deezer", url: "https://www.deezer.com/search/KinsBandOfficial", platform: "deezer" },
   { name: "Tidal", icon: "fa-solid fa-water", url: "https://listen.tidal.com/search?q=KinsBandOfficial", platform: "tidal" },
-  { name: "Bandcamp", icon: "fa-brands fa-bandcamp", url: "https://bandcamp.com/search?q=KinsBandOfficial", platform: "bandcamp" },
   { name: "Audiomack", icon: "fa-solid fa-headphones", url: "https://audiomack.com/search?q=KinsBandOfficial", platform: "audiomack" },
   { name: "Qobuz", icon: "fa-solid fa-compact-disc", url: "https://www.qobuz.com/search?q=KinsBandOfficial", platform: "qobuz" }
 ];
@@ -220,20 +220,20 @@ const secondaryStreams = [
   }
 
   .buttons-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   /* Neo-Brutalist Link Card */
   .brutal-link-card {
     background: var(--surface-card-light);
-    border: 3px solid #000000;
-    box-shadow: 3px 3px 0px var(--accent-neon-yellow), 3px 3px 0px 1px #000000;
+    border: 2.5px solid #000000;
+    box-shadow: 2.5px 2.5px 0px var(--accent-neon-yellow), 2.5px 2.5px 0px 1px #000000;
     border-radius: 6px;
     padding: 0;
-    min-height: 52px;
-    height: 54px;
+    min-height: 48px;
+    height: 48px;
     text-decoration: none;
     display: flex;
     align-items: stretch;
@@ -248,35 +248,35 @@ const secondaryStreams = [
 
   .brutal-link-card:hover {
     background: var(--surface-card-light-hover);
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0px var(--accent-neon-yellow), 5px 5px 0px 1px #000000;
+    transform: translate(-1.5px, -1.5px);
+    box-shadow: 4px 4px 0px var(--accent-neon-yellow), 4px 4px 0px 1px #000000;
   }
 
   .brutal-link-card:active {
-    transform: translate(2px, 2px);
+    transform: translate(1.5px, 1.5px);
     box-shadow: 1px 1px 0px #000000;
   }
 
   .link-left-group {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 6px 12px;
+    gap: 8px;
+    padding: 4px 8px;
     flex: 1;
     min-width: 0;
   }
 
   .link-icon-box {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 5px;
     background: #000000;
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     flex-shrink: 0;
     transition: transform 0.18s var(--ease-spring);
   }
@@ -287,7 +287,7 @@ const secondaryStreams = [
 
   .link-title-text {
     font-family: var(--font-secondary);
-    font-size: 0.96rem;
+    font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: -0.01em;
     color: var(--text-card-primary);
@@ -297,10 +297,10 @@ const secondaryStreams = [
   }
 
   .link-arrow-block {
-    width: 48px;
-    min-width: 48px;
+    width: 30px;
+    min-width: 30px;
     background: #111114;
-    border-left: 3px solid #000000;
+    border-left: 2px solid #000000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -310,13 +310,13 @@ const secondaryStreams = [
   }
 
   .arrow-glyph {
-    font-size: 0.85rem;
+    font-size: 0.72rem;
     color: var(--accent-neon-yellow);
     transition: transform 0.18s var(--ease-spring);
   }
 
   .brutal-link-card:hover .arrow-glyph {
-    transform: translate(2px, -2px);
+    transform: translate(1.5px, -1.5px);
   }
 
   /* Expandable Secondary Drawers */
@@ -468,7 +468,7 @@ const secondaryStreams = [
   const streamsTextEl = document.getElementById('toggleStreamsText');
 
   if (toggleStreamsBtn && streamsDrawer) {
-    const count = toggleStreamsBtn.getAttribute('data-count') || '5';
+    const count = toggleStreamsBtn.getAttribute('data-count') || '4';
     toggleStreamsBtn.addEventListener('click', () => {
       const isOpen = streamsDrawer.classList.contains('active-drawer');
       if (isOpen) {

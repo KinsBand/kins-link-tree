@@ -58,10 +58,10 @@
   <div class="brutal-bottom-dock" id="bottomAudioBar" data-track-container="dock:audio_player">
     <audio id="vaultAudioPlayer" preload="none"></audio>
 
-    <!-- Left Card: PLAYER (58%) -->
+    <!-- Left Card: INSPIRATION PLAYER (Extended Width) -->
     <div class="brutal-player-card deck-music-section" id="deckMusicSection">
       <!-- Folder Tab Sticking Up From Top Left -->
-      <div class="card-folder-tab tab-player">PLAYER</div>
+      <div class="card-folder-tab tab-player">INSPIRATION</div>
 
       <!-- Minimalist Turntable Stylus Indicator at Top Edge -->
       <div class="vinyl-stylus-wrapper" id="vinylStylusWrapper">
@@ -103,12 +103,12 @@
         </div>
 
         <div class="idle-text-info">
-          <span class="idle-mix-title">INSPIRATIONAL</span>
-          <span class="idle-mix-subtitle">listen to what inspires ...</span>
+          <span class="idle-mix-title">WHAT INSPIRES US!</span>
+          <span class="idle-mix-subtitle">listen to what inspires KINS</span>
         </div>
 
-        <button class="idle-play-btn brutal-press" id="idlePlayBtn" aria-label="Play random inspiration song" data-track="player:idle_play">
-          <i class="fa-solid fa-play"></i>
+        <button class="idle-play-btn idle-mix-btn brutal-press" id="idlePlayBtn" aria-label="Auto-mix inspiration songs" title="Auto-Mix Inspiration Songs" data-track="player:idle_mix">
+          <i class="fa-solid fa-shuffle"></i>
         </button>
       </div>
 
@@ -141,23 +141,18 @@
       </div>
     </div>
 
-    <!-- Right Card: GIG MAP (42%) -->
+    <!-- Right Card: GIG MAP (Tab-Sized Compact Width) -->
     <div class="brutal-gig-card" id="floatingGigPillBtn" role="button" aria-label="Tour dates & Gig Map" data-track="gig:open_map">
-      <!-- Folder Tab Sticking Up From Top Left -->
+      <!-- Folder Tab Spanning Full Width of the Button -->
       <div class="card-folder-tab tab-gigmap">GIG MAP</div>
       
-      <div class="gig-card-left">
-        <span class="gig-card-title">Coming Soon</span>
-        <span class="gig-card-sub">Currently unavailable</span>
-      </div>
-
-      <div class="gig-card-icon-box">
+      <div class="gig-card-center-icon">
         <i class="fa-solid fa-map-location-dot"></i>
       </div>
 
-      <!-- High Contrast Diagonal Ribbon -->
-      <div class="gig-soon-ribbon">
-        SOON - UNAVAILABLE
+      <!-- High Contrast Diagonal Ribbon from Bottom-Left to Top-Right -->
+      <div class="gig-soon-diagonal-banner">
+        <span>COMING SOON</span>
       </div>
     </div>
   </div>
@@ -332,14 +327,20 @@
   }
 
   .card-folder-tab.tab-gigmap {
-    background: #9ca3af;
-    color: #000000;
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    left: -3px;
+    right: -3px;
+    width: calc(100% + 6px);
+    padding: 0 2px;
+    text-align: center;
   }
 
   /* Left Player Card - Dark Neo-Brutalist Surface */
   .brutal-player-card {
-    flex: 0 0 58%;
-    max-width: 58%;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
     background: #141416;
     border: 3px solid #000000;
     box-shadow: 3px 3px 0px #000000;
@@ -401,12 +402,23 @@
     transform: translateY(-4px) rotate(-8deg);
   }
 
-  .vinyl-stylus-wrapper.tilt-forward .stylus-head-group {
-    transform: translateY(0px) rotate(5deg);
+  .vinyl-stylus-wrapper.needle-drop-bounce .stylus-head-group {
+    animation: needleDropBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
-  .vinyl-stylus-wrapper.tilt-backward .stylus-head-group {
-    transform: translateY(0px) rotate(-8deg);
+  @keyframes needleDropBounce {
+    0% {
+      transform: translateY(-6px) rotate(-12deg);
+    }
+    40% {
+      transform: translateY(2px) rotate(2deg);
+    }
+    70% {
+      transform: translateY(-1px) rotate(-1deg);
+    }
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
   }
 
   .deck-timeline-clip-box {
@@ -505,32 +517,35 @@
   .idle-text-info {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     line-height: 1.15;
     overflow: hidden;
+    justify-content: center;
   }
 
   .idle-mix-title {
     font-family: var(--font-heading);
-    font-size: 0.82rem;
+    font-size: clamp(0.74rem, 2.4vw, 0.85rem);
     font-weight: 900;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     color: #ffffff;
     text-transform: uppercase;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: block;
   }
 
   .idle-mix-subtitle {
     font-family: var(--font-secondary);
-    font-size: 0.62rem;
-    font-weight: 600;
-    color: #a1a1aa;
+    font-size: clamp(0.56rem, 1.8vw, 0.63rem);
+    font-weight: 700;
+    color: #d4d4d8;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: block;
   }
 
   .idle-play-btn {
@@ -728,10 +743,12 @@
     transform: scale(1.05);
   }
 
-  /* Right Gig Map Card - Cream Neo-Brutalist Surface */
+  /* Right Gig Map Card - Tab-Sized Compact Neo-Brutalist Surface */
   .brutal-gig-card {
-    flex: 0 0 calc(42% - 8px);
-    max-width: calc(42% - 8px);
+    flex: 0 0 76px;
+    width: 76px;
+    min-width: 76px;
+    max-width: 76px;
     background: var(--surface-card-light);
     border: 3px solid #000000;
     box-shadow: 3px 3px 0px #000000;
@@ -739,8 +756,8 @@
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 6px 8px;
+    justify-content: center;
+    padding: 0;
     min-height: 54px;
     height: 54px;
     box-sizing: border-box;
@@ -754,68 +771,42 @@
     box-shadow: 4px 4px 0px #000000;
   }
 
-  .gig-card-left {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .gig-card-title {
-    font-family: var(--font-heading);
-    font-size: 0.8rem;
-    font-weight: 900;
-    color: var(--text-card-primary);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .gig-card-sub {
-    font-family: var(--font-secondary);
-    font-size: 0.6rem;
-    font-weight: 600;
-    color: var(--text-card-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .gig-card-icon-box {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    background: var(--surface-input);
-    border: 2px solid #000000;
-    box-shadow: 1.5px 1.5px 0px #000000;
-    color: var(--text-card-primary);
+  .gig-card-center-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.95rem;
-    flex-shrink: 0;
+    font-size: 1.3rem;
+    color: var(--text-card-primary);
+    opacity: 0.45;
   }
 
-  .gig-soon-ribbon {
+  .gig-soon-diagonal-banner {
     position: absolute;
-    top: -1px;
-    right: -4px;
-    background: #000000;
-    color: var(--accent-neon-yellow);
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 0 5px 5px 5px;
+    z-index: 15;
+  }
+
+  .gig-soon-diagonal-banner span {
+    background: var(--accent-neon-yellow);
+    color: #000000;
     border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
     font-family: var(--font-secondary);
     font-size: 0.48rem;
     font-weight: 900;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 2px;
-    pointer-events: none;
-    transform: rotate(-3deg);
-    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+    padding: 2px 16px;
+    white-space: nowrap;
+    transform: rotate(-35deg);
+    text-align: center;
+    width: 140%;
   }
 </style>
 

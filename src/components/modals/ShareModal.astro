@@ -24,41 +24,25 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
         <span>Share via App...</span>
       </button>
 
-      <!-- 2. Direct Social Apps Share Grid -->
+      <!-- 2. Direct Social Apps Share Grid (Single Horizontal Row) -->
       <div class="share-field-group">
         <label class="share-field-label">Share to App</label>
         <div class="share-apps-grid" id="shareAppsGrid">
+          <button type="button" class="share-app-pill-btn instagram" data-share-app="instagram" title="Share on Instagram">
+            <i class="fa-brands fa-instagram"></i>
+            <span>Instagram</span>
+          </button>
+          <button type="button" class="share-app-pill-btn messages" data-share-app="sms" title="Share via Messages">
+            <i class="fa-solid fa-comment-sms"></i>
+            <span>Messages</span>
+          </button>
           <button type="button" class="share-app-pill-btn whatsapp" data-share-app="whatsapp" title="Share on WhatsApp">
             <i class="fa-brands fa-whatsapp"></i>
             <span>WhatsApp</span>
           </button>
-          <button type="button" class="share-app-pill-btn instagram" data-share-app="instagram" title="Share on Instagram Stories/DM">
-            <i class="fa-brands fa-instagram"></i>
-            <span>Instagram</span>
-          </button>
-          <button type="button" class="share-app-pill-btn twitter" data-share-app="twitter" title="Share on X / Twitter">
-            <i class="fa-brands fa-x-twitter"></i>
-            <span>X / Twitter</span>
-          </button>
-          <button type="button" class="share-app-pill-btn facebook" data-share-app="facebook" title="Share on Facebook">
-            <i class="fa-brands fa-facebook-f"></i>
-            <span>Facebook</span>
-          </button>
-          <button type="button" class="share-app-pill-btn telegram" data-share-app="telegram" title="Share on Telegram">
-            <i class="fa-brands fa-telegram"></i>
-            <span>Telegram</span>
-          </button>
-          <button type="button" class="share-app-pill-btn reddit" data-share-app="reddit" title="Share on Reddit">
-            <i class="fa-brands fa-reddit-alien"></i>
-            <span>Reddit</span>
-          </button>
-          <button type="button" class="share-app-pill-btn messages" data-share-app="sms" title="Share via SMS / Messages">
-            <i class="fa-solid fa-comment-sms"></i>
-            <span>Messages</span>
-          </button>
-          <button type="button" class="share-app-pill-btn email" data-share-app="email" title="Share via Email">
-            <i class="fa-solid fa-envelope"></i>
-            <span>Email</span>
+          <button type="button" class="share-app-pill-btn discord" data-share-app="discord" title="Share on Discord">
+            <i class="fa-brands fa-discord"></i>
+            <span>Discord</span>
           </button>
         </div>
       </div>
@@ -389,17 +373,13 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     box-shadow: 3px 3px 0px #000000;
   }
 
-  /* Social Apps Share Grid */
+  /* Social Apps Share Grid - Single Non-Scrolling Row of 4 */
   .share-apps-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
-
-  @media (max-width: 420px) {
-    .share-apps-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .share-app-pill-btn {
@@ -407,31 +387,37 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
-    padding: 8px 6px;
+    padding: 8px 3px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 4px;
     cursor: pointer;
     font-family: var(--font-secondary);
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     font-weight: 800;
     color: var(--text-card-primary);
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     transition: transform 0.15s var(--ease-tactile), background-color 0.15s ease, box-shadow 0.15s ease;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .share-app-pill-btn i {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     pointer-events: none;
   }
 
   .share-app-pill-btn span {
     pointer-events: none;
-    line-height: 1;
+    line-height: 1.1;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .share-app-pill-btn:hover {
@@ -439,14 +425,10 @@ import kinsLogoImg from '../../assets/kins-logo-new.png';
     box-shadow: 3px 3px 0px #000000;
   }
 
-  .share-app-pill-btn.whatsapp:hover { background: #25D366; color: #000000; }
   .share-app-pill-btn.instagram:hover { background: #E1306C; color: #ffffff; }
-  .share-app-pill-btn.twitter:hover { background: #000000; color: #ffffff; }
-  .share-app-pill-btn.facebook:hover { background: #1877F2; color: #ffffff; }
-  .share-app-pill-btn.telegram:hover { background: #229ED9; color: #ffffff; }
-  .share-app-pill-btn.reddit:hover { background: #FF4500; color: #ffffff; }
   .share-app-pill-btn.messages:hover { background: #34C759; color: #ffffff; }
-  .share-app-pill-btn.email:hover { background: var(--accent-neon-yellow); color: #000000; }
+  .share-app-pill-btn.whatsapp:hover { background: #25D366; color: #000000; }
+  .share-app-pill-btn.discord:hover { background: #5865F2; color: #ffffff; }
 
   .share-section-label, .share-field-label {
     font-family: var(--font-secondary);

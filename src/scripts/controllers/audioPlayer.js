@@ -1,5 +1,5 @@
 import { showToast } from './toast.js';
-import { getITunesTrackData, loadAlbumArt, INSPIRED_ARTISTS_DATA } from './inspirationVault.js';
+import { getITunesTrackData, loadAlbumArt, INSPIRED_ARTISTS_DATA, prefetchTrackArtwork } from './inspirationVault.js';
 
 let isPlayingAudio = false;
 let currentPlayingTrack = null;
@@ -36,27 +36,157 @@ class VinylScratchSynthesizer {
   }
 
   playNeedleDrop() {
+    this.playVinylNeedleSpinUp();
+  }
+
+  playVinylNeedleSpinUp() {
     try {
       this.init();
       if (!this.ctx) return;
       if (this.ctx.state === 'suspended') this.ctx.resume();
 
       const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(160, now);
-      osc.frequency.exponentialRampToValueAtTime(35, now + 0.07);
 
-      gain.gain.setValueAtTime(0.28, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+      // 1. Mechanical stylus contact thump (needle landing on vinyl lead-in groove)
+      const thumpOsc = this.ctx.createOscillator();
+      const thumpGain = this.ctx.createGain();
+      thumpOsc.type = 'triangle';
+      thumpOsc.frequency.setValueAtTime(165, now);
+      thumpOsc.frequency.exponentialRampToValueAtTime(28, now + 0.08);
 
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.08);
+      thumpGain.gain.setValueAtTime(0.38, now);
+      thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      thumpOsc.connect(thumpGain);
+      thumpGain.connect(this.ctx.destination);
+      thumpOsc.start(now);
+      thumpOsc.stop(now + 0.09);
+
+      // 2. Vinyl groove surface friction & rising acceleration whoosh (from 0 to 33 RPM)
+      if (this.noiseBuffer) {
+        const noiseSrc = this.ctx.createBufferSource();
+        noiseSrc.buffer = this.noiseBuffer;
+
+        // Bandpass filter sweeping upward as vinyl speed accelerates
+        const spinFilter = this.ctx.createBiquadFilter();
+        spinFilter.type = 'bandpass';
+        spinFilter.frequency.setValueAtTime(280, now);
+        spinFilter.frequency.exponentialRampToValueAtTime(3200, now + 0.7);
+        spinFilter.Q.setValueAtTime(2.6, now);
+
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.001, now);
+        noiseGain.gain.linearRampToValueAtTime(0.24, now + 0.06);
+        noiseGain.gain.setValueAtTime(0.20, now + 0.45);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+
+        noiseSrc.connect(spinFilter);
+        spinFilter.connect(noiseGain);
+        noiseGain.connect(this.ctx.destination);
+
+        noiseSrc.start(now);
+        noiseSrc.stop(now + 0.9);
+      }
+
+      // 3. Turntable motor torque low-frequency whirr acceleration
+      const motorOsc = this.ctx.createOscillator();
+      const motorGain = this.ctx.createGain();
+      motorOsc.type = 'sawtooth';
+      motorOsc.frequency.setValueAtTime(42, now);
+      motorOsc.frequency.exponentialRampToValueAtTime(125, now + 0.65);
+
+      const motorFilter = this.ctx.createBiquadFilter();
+      motorFilter.type = 'lowpass';
+      motorFilter.frequency.setValueAtTime(160, now);
+
+      motorGain.gain.setValueAtTime(0.001, now);
+      motorGain.gain.linearRampToValueAtTime(0.08, now + 0.1);
+      motorGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
+
+      motorOsc.connect(motorFilter);
+      motorFilter.connect(motorGain);
+      motorGain.connect(this.ctx.destination);
+      motorOsc.start(now);
+      motorOsc.stop(now + 0.8);
     } catch (e) {
-      console.warn('Needle drop audio warning:', e);
+      console.warn('Vinyl spin-up audio error:', e);
+    }
+  }
+
+  playVinylNeedleSpinDown(durationMs = 650) {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+
+      const now = this.ctx.currentTime;
+      const durationSec = durationMs / 1000;
+
+      // 1. Vinyl groove friction decelerating downward in frequency & speed
+      if (this.noiseBuffer) {
+        const noiseSrc = this.ctx.createBufferSource();
+        noiseSrc.buffer = this.noiseBuffer;
+
+        const brakeFilter = this.ctx.createBiquadFilter();
+        brakeFilter.type = 'bandpass';
+        brakeFilter.frequency.setValueAtTime(2800, now);
+        brakeFilter.frequency.exponentialRampToValueAtTime(160, now + durationSec);
+        brakeFilter.Q.setValueAtTime(2.4, now);
+
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.20, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + durationSec);
+
+        noiseSrc.connect(brakeFilter);
+        brakeFilter.connect(noiseGain);
+        noiseGain.connect(this.ctx.destination);
+
+        noiseSrc.start(now);
+        noiseSrc.stop(now + durationSec + 0.05);
+      }
+
+      // 2. Motor spin-down deceleration hum
+      const motorOsc = this.ctx.createOscillator();
+      const motorGain = this.ctx.createGain();
+      motorOsc.type = 'sawtooth';
+      motorOsc.frequency.setValueAtTime(110, now);
+      motorOsc.frequency.exponentialRampToValueAtTime(25, now + durationSec);
+
+      const motorFilter = this.ctx.createBiquadFilter();
+      motorFilter.type = 'lowpass';
+      motorFilter.frequency.setValueAtTime(140, now);
+
+      motorGain.gain.setValueAtTime(0.06, now);
+      motorGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+
+      motorOsc.connect(motorFilter);
+      motorFilter.connect(motorGain);
+      motorGain.connect(this.ctx.destination);
+      motorOsc.start(now);
+      motorOsc.stop(now + durationSec + 0.05);
+
+      // 3. Subtle stylus lift / stop click at the end of deceleration
+      setTimeout(() => {
+        try {
+          if (!this.ctx) return;
+          const stopNow = this.ctx.currentTime;
+          const clickOsc = this.ctx.createOscillator();
+          const clickGain = this.ctx.createGain();
+          clickOsc.type = 'triangle';
+          clickOsc.frequency.setValueAtTime(90, stopNow);
+          clickOsc.frequency.exponentialRampToValueAtTime(25, stopNow + 0.05);
+
+          clickGain.gain.setValueAtTime(0.18, stopNow);
+          clickGain.gain.exponentialRampToValueAtTime(0.001, stopNow + 0.05);
+
+          clickOsc.connect(clickGain);
+          clickGain.connect(this.ctx.destination);
+          clickOsc.start(stopNow);
+          clickOsc.stop(stopNow + 0.06);
+        } catch (e) {}
+      }, Math.max(0, durationMs - 50));
+    } catch (e) {
+      console.warn('Vinyl spin-down audio error:', e);
     }
   }
 
@@ -375,6 +505,7 @@ export function initAudioPlayer() {
   function renderPlaybackLoop() {
     if (isPlayingAudio && vaultAudioPlayer && !isScrubbing) {
       updateTimelineUI();
+      checkAutoFadeOut();
       animFrameId = requestAnimationFrame(renderPlaybackLoop);
     }
   }
@@ -586,29 +717,257 @@ export function initAudioPlayer() {
     }
   }
 
-  function playRandomInspirationSong() {
-    const allTracks = getAllInspiredTracks();
-    if (allTracks.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * allTracks.length);
-    const randomTrack = allTracks[randomIndex];
-    if (window.playTrackPreview) {
-      window.playTrackPreview(randomTrack);
+  let currentFadeInterval = null;
+  let isFadingOut = false;
+  let isTransitioningTrack = false;
+  let mixQueue = [];
+  let autoMixTimeout = null;
+
+  function cancelFade() {
+    if (currentFadeInterval) {
+      clearInterval(currentFadeInterval);
+      currentFadeInterval = null;
     }
   }
 
-  // Click on idle view triggers random song
+  function fadeAudioVolume(startVol, targetVol, durationMs) {
+    return new Promise((resolve) => {
+      if (!vaultAudioPlayer) return resolve();
+      cancelFade();
+
+      vaultAudioPlayer.volume = Math.max(0, Math.min(1, startVol));
+      if (durationMs <= 0 || startVol === targetVol) {
+        vaultAudioPlayer.volume = Math.max(0, Math.min(1, targetVol));
+        return resolve();
+      }
+
+      const stepMs = 40;
+      const totalSteps = Math.max(1, Math.floor(durationMs / stepMs));
+      const delta = (targetVol - startVol) / totalSteps;
+      let currentStep = 0;
+
+      currentFadeInterval = setInterval(() => {
+        currentStep++;
+        const newVol = startVol + (delta * currentStep);
+        if (currentStep >= totalSteps) {
+          if (vaultAudioPlayer) vaultAudioPlayer.volume = Math.max(0, Math.min(1, targetVol));
+          cancelFade();
+          resolve();
+        } else {
+          if (vaultAudioPlayer) vaultAudioPlayer.volume = Math.max(0, Math.min(1, newVol));
+        }
+      }, stepMs);
+    });
+  }
+
+  function fadeOutAudio(durationMs = 2200) {
+    if (!vaultAudioPlayer || vaultAudioPlayer.paused) return Promise.resolve();
+    isFadingOut = true;
+    const currentVol = vaultAudioPlayer.volume;
+    return fadeAudioVolume(currentVol, 0, durationMs);
+  }
+
+  function fadeInAudio(durationMs = 1800, targetVol = 1.0) {
+    if (!vaultAudioPlayer) return Promise.resolve();
+    isFadingOut = false;
+    return fadeAudioVolume(0, targetVol, durationMs);
+  }
+
+  function checkAutoFadeOut() {
+    if (!vaultAudioPlayer || isScrubbing || !isPlayingAudio || isFadingOut || isTransitioningTrack) return;
+    const duration = vaultAudioPlayer.duration;
+    if (duration && duration > 5) {
+      const timeLeft = duration - vaultAudioPlayer.currentTime;
+      // Start smooth vinyl spin-down deceleration 2.2s before track finishes
+      if (timeLeft <= 2.2 && timeLeft > 0.3) {
+        isFadingOut = true;
+        triggerVinylSpinDownAndStop(1800).then(() => {
+          if (!isScrubbing) {
+            // Buffer breather before spinning up into next song
+            setTimeout(() => {
+              playNextMixSong();
+            }, 300);
+          }
+        });
+      }
+    }
+  }
+
+  function shuffleArray(arr) {
+    const shuffled = [...arr];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
+  function getNextMixTrack() {
+    if (mixQueue.length === 0) {
+      const all = getAllInspiredTracks();
+      if (all.length === 0) return null;
+      mixQueue = shuffleArray(all);
+      // Ensure we don't repeat the currently playing track immediately if queue has multiple songs
+      if (currentPlayingTrack && mixQueue.length > 1 && mixQueue[0].title === currentPlayingTrack.title) {
+        mixQueue.push(mixQueue.shift());
+      }
+    }
+    return mixQueue.shift();
+  }
+
+  function playNextMixSong() {
+    clearTimeout(autoMixTimeout);
+    const nextTrack = getNextMixTrack();
+    if (nextTrack && window.playTrackPreview) {
+      window.playTrackPreview(nextTrack);
+    }
+  }
+
+  function startAutoMix() {
+    clearTimeout(autoMixTimeout);
+    const allTracks = getAllInspiredTracks();
+    if (allTracks.length === 0) return;
+    mixQueue = shuffleArray(allTracks);
+    const firstTrack = mixQueue.shift();
+    if (firstTrack && window.playTrackPreview) {
+      window.playTrackPreview(firstTrack);
+      showToast(`🔀 Auto-Mix Started: "${firstTrack.title}"`);
+    }
+  }
+
+  // Click on idle view triggers auto-mix through all tracks
   if (deckIdleView) {
     deckIdleView.addEventListener('click', (e) => {
       e.stopPropagation();
-      playRandomInspirationSong();
+      startAutoMix();
     });
   }
 
   if (idlePlayBtn) {
     idlePlayBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      playRandomInspirationSong();
+      startAutoMix();
     });
+  }
+
+  let playbackRateInterval = null;
+
+  function cancelPlaybackRateRamp() {
+    if (playbackRateInterval) {
+      clearInterval(playbackRateInterval);
+      playbackRateInterval = null;
+    }
+  }
+
+  function rampAudioPlaybackRate(startRate = 0.42, targetRate = 1.0, durationMs = 700) {
+    if (!vaultAudioPlayer) return;
+    cancelPlaybackRateRamp();
+
+    try {
+      vaultAudioPlayer.preservesPitch = false;
+      vaultAudioPlayer.mozPreservesPitch = false;
+      vaultAudioPlayer.webkitPreservesPitch = false;
+    } catch (e) {}
+
+    vaultAudioPlayer.playbackRate = startRate;
+    const stepMs = 30;
+    const steps = Math.max(1, Math.floor(durationMs / stepMs));
+    let step = 0;
+
+    playbackRateInterval = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      // Exponential power curve for realistic motor torque spin-up
+      const currentRate = startRate + (targetRate - startRate) * Math.pow(progress, 1.6);
+
+      if (step >= steps) {
+        if (vaultAudioPlayer) vaultAudioPlayer.playbackRate = targetRate;
+        cancelPlaybackRateRamp();
+      } else {
+        if (vaultAudioPlayer) vaultAudioPlayer.playbackRate = Math.min(targetRate, currentRate);
+      }
+    }, stepMs);
+  }
+
+  function rampAudioPlaybackRateDown(startRate = 1.0, endRate = 0.12, durationMs = 600) {
+    return new Promise((resolve) => {
+      if (!vaultAudioPlayer) return resolve();
+      cancelPlaybackRateRamp();
+
+      try {
+        vaultAudioPlayer.preservesPitch = false;
+        vaultAudioPlayer.mozPreservesPitch = false;
+        vaultAudioPlayer.webkitPreservesPitch = false;
+      } catch (e) {}
+
+      vaultAudioPlayer.playbackRate = startRate;
+      const stepMs = 30;
+      const steps = Math.max(1, Math.floor(durationMs / stepMs));
+      let step = 0;
+
+      playbackRateInterval = setInterval(() => {
+        step++;
+        const progress = step / steps;
+        // Deceleration power curve: drops fast then smoothly winds to zero
+        const currentRate = startRate - (startRate - endRate) * Math.pow(progress, 1.35);
+
+        if (step >= steps) {
+          if (vaultAudioPlayer) vaultAudioPlayer.playbackRate = endRate;
+          cancelPlaybackRateRamp();
+          resolve();
+        } else {
+          if (vaultAudioPlayer) vaultAudioPlayer.playbackRate = Math.max(endRate, currentRate);
+        }
+      }, stepMs);
+    });
+  }
+
+  function triggerNeedleDropAndSpinUp(isResume = false) {
+    if (vinylScratchSynth) {
+      vinylScratchSynth.playVinylNeedleSpinUp();
+    }
+    // Ramps playback speed and pitch upwards just like a real turntable motor accelerating from stop
+    rampAudioPlaybackRate(isResume ? 0.52 : 0.40, 1.0, isResume ? 550 : 750);
+
+    if (vinylStylusWrapper) {
+      vinylStylusWrapper.classList.remove('needle-drop-bounce');
+      void vinylStylusWrapper.offsetWidth; // force reflow
+      vinylStylusWrapper.classList.add('needle-drop-bounce');
+      setTimeout(() => {
+        if (vinylStylusWrapper) vinylStylusWrapper.classList.remove('needle-drop-bounce');
+      }, 450);
+    }
+  }
+
+  async function triggerVinylSpinDownAndStop(durationMs = 600) {
+    if (!vaultAudioPlayer || vaultAudioPlayer.paused) return;
+
+    // 1. Play vinyl surface deceleration & brake noise
+    if (vinylScratchSynth) {
+      vinylScratchSynth.playVinylNeedleSpinDown(durationMs);
+    }
+
+    // 2. Animate stylus tonearm disengage lift
+    if (vinylStylusWrapper) {
+      vinylStylusWrapper.classList.add('tilt-backward');
+      setTimeout(() => {
+        if (vinylStylusWrapper) vinylStylusWrapper.classList.remove('tilt-backward');
+      }, durationMs);
+    }
+
+    // 3. Audio pitch wind-down and volume fade-out simultaneously
+    const currentRate = vaultAudioPlayer.playbackRate || 1.0;
+    const rampPromise = rampAudioPlaybackRateDown(currentRate, 0.12, durationMs);
+    const fadePromise = fadeOutAudio(durationMs);
+
+    await Promise.all([rampPromise, fadePromise]);
+
+    if (vaultAudioPlayer) {
+      vaultAudioPlayer.pause();
+      vaultAudioPlayer.playbackRate = 1.0;
+    }
+    isPlayingAudio = false;
+    stopTimelineAnimation();
   }
 
   function triggerSongChangeWipe() {
@@ -632,24 +991,67 @@ export function initAudioPlayer() {
     }, 850);
   }
 
+  let currentTransitionId = 0;
+
   window.playTrackPreview = async function(trackObj) {
     if (!trackObj || !trackObj.title) return;
+    clearTimeout(autoMixTimeout);
+    const transitionId = ++currentTransitionId;
 
+    // 1. Handling PAUSE & RESUME of the currently playing track
     if (currentPlayingTrack && currentPlayingTrack.title === trackObj.title) {
       isPlayingAudio = !isPlayingAudio;
-      if (vaultAudioPlayer) {
-        if (isPlayingAudio) {
+      if (isPlayingAudio) {
+        updateToggleBtnState(true);
+        triggerNeedleDropAndSpinUp(true);
+        if (vaultAudioPlayer) {
+          vaultAudioPlayer.volume = 0;
           vaultAudioPlayer.play().catch(() => {});
           startTimelineAnimation();
-        } else {
-          vaultAudioPlayer.pause();
-          stopTimelineAnimation();
+          fadeInAudio(600, 1.0);
         }
+        showToast(`Resumed: "${trackObj.title}"`);
+      } else {
+        updateToggleBtnState(false);
+        showToast(`Paused: "${trackObj.title}"`);
+        await triggerVinylSpinDownAndStop(550);
       }
-      updateToggleBtnState(isPlayingAudio);
-      showToast(isPlayingAudio ? `Resumed: "${trackObj.title}"` : `Paused: "${trackObj.title}"`);
       return;
     }
+
+    // 2. Handling SWITCHING to a NEW track while already playing (or from idle)
+    isTransitioningTrack = true;
+
+    // Start fetching metadata / previewUrl in parallel immediately
+    let previewUrl = trackObj.previewUrl;
+    let coverUrl = trackObj.coverUrl || trackObj.artworkUrl;
+
+    const fetchMetaPromise = (!previewUrl || !coverUrl)
+      ? getITunesTrackData(trackObj.artist, trackObj.title).then(meta => {
+          if (meta) {
+            if (meta.previewUrl) {
+              previewUrl = meta.previewUrl;
+              trackObj.previewUrl = previewUrl;
+            }
+            if (meta.artworkUrl) {
+              coverUrl = meta.artworkUrl;
+              trackObj.coverUrl = coverUrl;
+              trackObj.artworkUrl = coverUrl;
+            }
+          }
+        })
+      : Promise.resolve();
+
+    // If another track is currently playing, smoothly spin it down to a stop
+    if (isPlayingAudio && vaultAudioPlayer && !vaultAudioPlayer.paused && vaultAudioPlayer.volume > 0.05) {
+      await triggerVinylSpinDownAndStop(380);
+    }
+
+    // Wait for parallel metadata fetch to complete if it wasn't preloaded
+    await fetchMetaPromise;
+
+    // If another song was requested while we were waiting, abort this stale transition
+    if (transitionId !== currentTransitionId) return;
 
     if (!hasTransitionedToActive) {
       showActiveView();
@@ -673,52 +1075,41 @@ export function initAudioPlayer() {
       });
     }
     if (audioBarArtist) audioBarArtist.textContent = trackObj.artist || 'Kins';
-
-    let coverUrl = trackObj.coverUrl || trackObj.artworkUrl;
-    let previewUrl = trackObj.previewUrl;
-
-    if (coverUrl) {
-      setMiniPlayerCover(coverUrl);
-    } else {
-      setMiniPlayerCover(null);
-    }
-
-    if (!previewUrl || !coverUrl) {
-      updateToggleBtnState(false, true);
-      const meta = await getITunesTrackData(trackObj.artist, trackObj.title);
-      if (meta) {
-        if (meta.previewUrl) {
-          previewUrl = meta.previewUrl;
-          trackObj.previewUrl = previewUrl;
-        }
-        if (meta.artworkUrl) {
-          coverUrl = meta.artworkUrl;
-          trackObj.coverUrl = coverUrl;
-          trackObj.artworkUrl = coverUrl;
-          setMiniPlayerCover(coverUrl);
-        }
-      }
-    }
+    setMiniPlayerCover(coverUrl || null);
 
     if (vaultAudioPlayer && previewUrl) {
       vaultAudioPlayer.src = previewUrl;
+      vaultAudioPlayer.volume = 0;
       vaultAudioPlayer.play().then(() => {
+        if (transitionId !== currentTransitionId) return;
+        triggerNeedleDropAndSpinUp(false);
+        isTransitioningTrack = false;
         isPlayingAudio = true;
         startTimelineAnimation();
         updateToggleBtnState(true);
+        fadeInAudio(1400, 1.0);
         showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
       }).catch(err => {
+        if (transitionId !== currentTransitionId) return;
         console.warn('Playback error:', err);
+        isTransitioningTrack = false;
         isPlayingAudio = false;
         stopTimelineAnimation();
         updateToggleBtnState(false);
         showToast(`Unable to play preview for "${trackObj.title}"`);
+        autoMixTimeout = setTimeout(() => {
+          playNextMixSong();
+        }, 1500);
       });
     } else {
+      isTransitioningTrack = false;
       isPlayingAudio = false;
       stopTimelineAnimation();
       updateToggleBtnState(false);
       showToast(`Audio preview unavailable for "${trackObj.title}"`);
+      autoMixTimeout = setTimeout(() => {
+        playNextMixSong();
+      }, 1500);
     }
   };
 
@@ -741,6 +1132,10 @@ export function initAudioPlayer() {
       stopTimelineAnimation();
       updateTimelineUI();
       updateToggleBtnState(false);
+      // Auto-mix through to the next song continuously with DJ breather
+      autoMixTimeout = setTimeout(() => {
+        playNextMixSong();
+      }, 400);
     });
 
     vaultAudioPlayer.addEventListener('timeupdate', updateTimelineUI);
@@ -755,21 +1150,35 @@ export function initAudioPlayer() {
   }
 
   if (audioBarToggleBtn) {
-    audioBarToggleBtn.addEventListener('click', (e) => {
+    audioBarToggleBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (!currentPlayingTrack) return;
       isPlayingAudio = !isPlayingAudio;
-      if (vaultAudioPlayer) {
-        if (isPlayingAudio) {
+      if (isPlayingAudio) {
+        updateToggleBtnState(true);
+        triggerNeedleDropAndSpinUp(true);
+        if (vaultAudioPlayer) {
+          vaultAudioPlayer.volume = 0;
           vaultAudioPlayer.play().catch(() => {});
           startTimelineAnimation();
-        } else {
-          vaultAudioPlayer.pause();
-          stopTimelineAnimation();
+          fadeInAudio(600, 1.0);
         }
+        showToast(`Resumed: "${currentPlayingTrack.title}"`, 'music');
+      } else {
+        updateToggleBtnState(false);
+        showToast(`Paused: "${currentPlayingTrack.title}"`, 'music');
+        await triggerVinylSpinDownAndStop(550);
       }
-      updateToggleBtnState(isPlayingAudio);
-      showToast(isPlayingAudio ? `Resumed: "${currentPlayingTrack.title}"` : `Paused: "${currentPlayingTrack.title}"`, 'music');
     });
   }
+
+  // Background prefetch all inspiration tracks for instant 0ms switching
+  setTimeout(() => {
+    try {
+      const allTracks = getAllInspiredTracks();
+      if (allTracks && allTracks.length > 0) {
+        prefetchTrackArtwork(allTracks);
+      }
+    } catch (e) {}
+  }, 1200);
 }

@@ -59,15 +59,21 @@ export async function prefetchTrackArtwork(tracks) {
         img.src = url;
         IMAGE_PRELOAD_CACHE.set(url, img);
       }
-    } else if (track.artist && track.title) {
+    }
+    if (track.artist && track.title && (!track.previewUrl || !track.coverUrl)) {
       const meta = await getITunesTrackData(track.artist, track.title);
-      if (meta && meta.artworkUrl) {
-        track.coverUrl = meta.artworkUrl;
-        track.artworkUrl = meta.artworkUrl;
-        if (!IMAGE_PRELOAD_CACHE.has(meta.artworkUrl)) {
-          const img = new Image();
-          img.src = meta.artworkUrl;
-          IMAGE_PRELOAD_CACHE.set(meta.artworkUrl, img);
+      if (meta) {
+        if (meta.artworkUrl) {
+          track.coverUrl = meta.artworkUrl;
+          track.artworkUrl = meta.artworkUrl;
+          if (!IMAGE_PRELOAD_CACHE.has(meta.artworkUrl)) {
+            const img = new Image();
+            img.src = meta.artworkUrl;
+            IMAGE_PRELOAD_CACHE.set(meta.artworkUrl, img);
+          }
+        }
+        if (meta.previewUrl) {
+          track.previewUrl = meta.previewUrl;
         }
       }
     }
@@ -162,7 +168,15 @@ export const INSPIRED_ARTISTS_DATA = {
       ],
       [
         { title: 'Cry', artist: 'The Sundays', duration: '4:06', genre: 'Dream Pop / Jangle Pop', quote: 'Radiant jangle-pop chime & effortless melody', icon: 'fa-sun' },
-        { title: 'A Night Like This', artist: 'The Cure', duration: '4:16', genre: 'Post-Punk / New Wave', quote: 'Moody atmospheric guitars & driving bass hooks', icon: 'fa-moon' }
+        { title: 'A Night Like This', artist: 'The Cure', duration: '4:16', genre: 'Post-Punk / New Wave', quote: 'Moody atmospheric guitars & driving bass hooks', icon: 'fa-moon' },
+        { title: 'Heroes', artist: 'David Bowie', duration: '6:11', genre: 'Art Rock / Glam Rock', quote: 'Anthemic ambient art rock & driving rhythm', icon: 'fa-bolt' },
+        { title: 'Jane!', artist: 'The Long Faces', duration: '3:07', genre: 'Art Rock / Post-Punk', quote: 'Dramatic dynamic shifts & intricate post-punk energy', icon: 'fa-music' }
+      ],
+      [
+        { title: 'Autism', artist: 'Negative XP', duration: '2:34', genre: 'Lo-Fi Punk / Indie Rock', quote: 'Gritty lo-fi DIY chords & raw bedroom punk attitude', icon: 'fa-fire' },
+        { title: 'Quandale Dingle', artist: 'Quandale Dingle', duration: '2:00', genre: 'Meme / Experimental', quote: 'Viral internet culture & underground beat energy', icon: 'fa-compact-disc' },
+        { title: 'Hello Juliet', artist: 'Clarion', duration: '3:28', genre: 'Indie Rock / Alternative', quote: 'Catchy indie guitar riffs & soaring melodic hooks', icon: 'fa-headphones' },
+        { title: 'Made in Japan', artist: 'Buck Owens & His Buckaroos', duration: '2:45', genre: 'Bakersfield Country / Classic Rock', quote: 'Vintage twang, telecaster lead riffs & timeless songwriting', icon: 'fa-guitar' }
       ]
     ]
   },
@@ -297,6 +311,94 @@ export const INSPIRED_ARTISTS_DATA = {
     pages: [
       [
         { title: "She's So Loose", artist: 'Supergrass', duration: '3:42', genre: 'Britpop / Acoustic Rock', quote: 'Acoustic strumming & infectious melody', icon: 'fa-music' }
+      ]
+    ]
+  },
+  'david-bowie': {
+    name: 'David Bowie',
+    genre: 'Art Rock / Glam Rock / Post-Punk',
+    bio: 'Chameleon sonic genius, soaring anthems, and timeless visionary rock songwriting.',
+    iconClass: 'fa-bolt',
+    pages: [
+      [
+        { title: 'Heroes', artist: 'David Bowie', duration: '6:11', genre: 'Art Rock / Glam Rock', quote: 'Anthemic ambient art rock & driving rhythm', icon: 'fa-bolt' }
+      ]
+    ]
+  },
+  'the-long-faces': {
+    name: 'The Long Faces',
+    genre: 'Art Rock / Post-Punk / Baroque Pop',
+    bio: 'Intricate progressive dynamics, melodic math-rock rhythms, and dramatic post-punk vigor.',
+    iconClass: 'fa-music',
+    pages: [
+      [
+        { title: 'Jane!', artist: 'The Long Faces', duration: '3:07', genre: 'Art Rock / Post-Punk', quote: 'Dramatic dynamic shifts & intricate post-punk energy', icon: 'fa-music' }
+      ]
+    ]
+  },
+  'long-faces': {
+    name: 'The Long Faces',
+    genre: 'Art Rock / Post-Punk / Baroque Pop',
+    bio: 'Intricate progressive dynamics, melodic math-rock rhythms, and dramatic post-punk vigor.',
+    iconClass: 'fa-music',
+    pages: [
+      [
+        { title: 'Jane!', artist: 'The Long Faces', duration: '3:07', genre: 'Art Rock / Post-Punk', quote: 'Dramatic dynamic shifts & intricate post-punk energy', icon: 'fa-music' }
+      ]
+    ]
+  },
+  'negative-xp': {
+    name: 'Negative XP',
+    genre: 'Lo-Fi Punk / Bedroom Punk / DIY Rock',
+    bio: 'Raw lo-fi garage riffs, DIY punk grit, and underground bedroom rock energy.',
+    iconClass: 'fa-fire',
+    pages: [
+      [
+        { title: 'Autism', artist: 'Negative XP', duration: '2:34', genre: 'Lo-Fi Punk / Indie Rock', quote: 'Gritty lo-fi DIY chords & raw bedroom punk attitude', icon: 'fa-fire' }
+      ]
+    ]
+  },
+  'quandale-dingle': {
+    name: 'Quandale Dingle',
+    genre: 'Meme Culture / Internet Experimental',
+    bio: 'Unfiltered internet chaos, viral sonic collages, and quirky meme beats.',
+    iconClass: 'fa-compact-disc',
+    pages: [
+      [
+        { title: 'Quandale Dingle', artist: 'Quandale Dingle', duration: '2:00', genre: 'Meme / Experimental', quote: 'Viral internet culture & underground beat energy', icon: 'fa-compact-disc' }
+      ]
+    ]
+  },
+  'clarion': {
+    name: 'Clarion',
+    genre: 'Indie Rock / Alternative',
+    bio: 'Driving melodic indie guitars, heartfelt vocal hooks, and jangly alternative warmth.',
+    iconClass: 'fa-headphones',
+    pages: [
+      [
+        { title: 'Hello Juliet', artist: 'Clarion', duration: '3:28', genre: 'Indie Rock / Alternative', quote: 'Catchy indie guitar riffs & soaring melodic hooks', icon: 'fa-headphones' }
+      ]
+    ]
+  },
+  'buck-owens': {
+    name: 'Buck Owens and The Buckaroos',
+    genre: 'Bakersfield Sound / Classic Country Rock',
+    bio: 'Pioneering crisp Telecaster twang, infectious rhythm drive, and legendary songwriting.',
+    iconClass: 'fa-guitar',
+    pages: [
+      [
+        { title: 'Made in Japan', artist: 'Buck Owens & His Buckaroos', duration: '2:45', genre: 'Bakersfield Country / Classic Rock', quote: 'Vintage twang, telecaster lead riffs & timeless songwriting', icon: 'fa-guitar' }
+      ]
+    ]
+  },
+  'buck-owens-and-the-buckaroos': {
+    name: 'Buck Owens and The Buckaroos',
+    genre: 'Bakersfield Sound / Classic Country Rock',
+    bio: 'Pioneering crisp Telecaster twang, infectious rhythm drive, and legendary songwriting.',
+    iconClass: 'fa-guitar',
+    pages: [
+      [
+        { title: 'Made in Japan', artist: 'Buck Owens & His Buckaroos', duration: '2:45', genre: 'Bakersfield Country / Classic Rock', quote: 'Vintage twang, telecaster lead riffs & timeless songwriting', icon: 'fa-guitar' }
       ]
     ]
   }
