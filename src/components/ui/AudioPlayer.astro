@@ -385,6 +385,17 @@
     width: 22px;
     height: 18px;
     filter: drop-shadow(1.5px 1.5px 0px #000000);
+    will-change: left;
+  }
+
+  /* Instant zero-lag 1:1 needle & timeline tracking during scrubbing */
+  .brutal-bottom-dock.is-scrubbing .vinyl-stylus-wrapper,
+  .brutal-player-card.is-scrubbing .vinyl-stylus-wrapper,
+  :global(.is-scrubbing) .vinyl-stylus-wrapper,
+  .brutal-bottom-dock.is-scrubbing .audio-bar-timeline-progress,
+  .brutal-player-card.is-scrubbing .audio-bar-timeline-progress,
+  :global(.is-scrubbing) .audio-bar-timeline-progress {
+    transition: none !important;
   }
 
   .vinyl-stylus-wrapper.stylus-visible {

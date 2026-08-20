@@ -660,15 +660,19 @@ export function initAudioPlayer() {
     }
   }
 
-  function handleScrubStart(clientX, target) {
+  let activePointerId = null;
+
+  function handleScrubStart(clientX, target, pointerId = null) {
     if (!target || !target.closest) return false;
     if (target.closest('button, #floatingGigPillBtn, .tab-gigmap, .gig-soon-diagonal-banner') || !currentPlayingTrack) {
       return false;
     }
 
     isScrubbing = true;
+    activePointerId = pointerId;
     updateCachedMusicSectionRect();
     if (bottomAudioBar) bottomAudioBar.classList.add('is-scrubbing');
+    document.body.classList.add('is-scrubbing');
 
     lastX = clientX;
     lastTime = performance.now();
@@ -722,7 +726,9 @@ export function initAudioPlayer() {
   function handleScrubEnd() {
     if (!isScrubbing) return;
     isScrubbing = false;
+    activePointerId = null;
     if (bottomAudioBar) bottomAudioBar.classList.remove('is-scrubbing');
+    document.body.classList.remove('is-scrubbing');
 
     if (vinylStylusWrapper) {
       vinylStylusWrapper.classList.remove('tilt-forward', 'tilt-backward');
@@ -732,7 +738,7 @@ export function initAudioPlayer() {
 
     if (vaultAudioPlayer) {
       vaultAudioPlayer.playbackRate = 1.0;
-      const duration = vaultAudioPlayer.duration || 30;
+      const duration = 30;
       if (vaultAudioPlayer.currentTime >= duration - 0.05) {
         vaultAudioPlayer.currentTime = duration;
         isPlayingAudio = false;
@@ -748,29 +754,28 @@ export function initAudioPlayer() {
 
   // Interactive Timeline Scrubbing with pointer & mobile touch support
   if (bottomAudioBar) {
+    // 1. Mouse & Desktop Pointer Events
     bottomAudioBar.addEventListener('pointerdown', (e) => {
-      if (handleScrubStart(e.clientX, e.target)) {
+      if (e.pointerType === 'touch') return; // Handled directly with touchstart for zero-lag mobile tracking
+      if (handleScrubStart(e.clientX, e.target, e.pointerId)) {
         try { bottomAudioBar.setPointerCapture(e.pointerId); } catch (err) {}
       }
     });
 
-    bottomAudioBar.addEventListener('pointermove', (e) => {
-      if (isScrubbing) {
+    window.addEventListener('pointermove', (e) => {
+      if (isScrubbing && e.pointerType !== 'touch') {
         handleScrubMove(e.clientX);
       }
     });
 
-    bottomAudioBar.addEventListener('pointerup', (e) => {
-      try { if (e && e.pointerId) bottomAudioBar.releasePointerCapture(e.pointerId); } catch (err) {}
-      handleScrubEnd();
+    window.addEventListener('pointerup', (e) => {
+      if (isScrubbing && e.pointerType !== 'touch') {
+        try { if (e && e.pointerId) bottomAudioBar.releasePointerCapture(e.pointerId); } catch (err) {}
+        handleScrubEnd();
+      }
     });
 
-    bottomAudioBar.addEventListener('pointercancel', (e) => {
-      try { if (e && e.pointerId) bottomAudioBar.releasePointerCapture(e.pointerId); } catch (err) {}
-      handleScrubEnd();
-    });
-
-    // Touch Event Handlers for Mobile WebKit & Android Chrome
+    // 2. Direct Touch Event Handlers for Mobile WebKit & Android Chrome
     bottomAudioBar.addEventListener('touchstart', (e) => {
       if (e.touches && e.touches.length > 0) {
         const touch = e.touches[0];
@@ -787,11 +792,11 @@ export function initAudioPlayer() {
       }
     }, { passive: false });
 
-    window.addEventListener('touchend', () => {
+    window.addEventListener('touchend', (e) => {
       if (isScrubbing) handleScrubEnd();
     }, { passive: true });
 
-    window.addEventListener('touchcancel', () => {
+    window.addEventListener('touchcancel', (e) => {
       if (isScrubbing) handleScrubEnd();
     }, { passive: true });
   }
