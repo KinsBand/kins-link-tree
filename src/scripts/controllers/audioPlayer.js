@@ -315,12 +315,9 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
       element.classList.remove('vinyl-spin-anim', 'spinning', 'vinyl-spin-once');
       element.style.transform = `rotate(${currentAngle}deg)`;
 
-      // Calculate forward deceleration arc to the next upright 360° position (0°)
-      let remainder = currentAngle % 360;
-      let extraDeg = 360 - remainder;
-      if (extraDeg < 90) {
-        extraDeg += 360; // guarantee a realistic momentum friction deceleration curve
-      }
+      // Smoothly finish at the upright 360° (0°) position
+      const remainder = currentAngle % 360;
+      const extraDeg = 360 - remainder;
       const targetAngle = currentAngle + extraDeg;
 
       requestAnimationFrame(() => {
@@ -328,10 +325,9 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
         element.style.transform = `rotate(${targetAngle}deg)`;
 
         setTimeout(() => {
-          // Once deceleration completes, finalize inline style to upright 0deg smoothly without snapping
           element.classList.remove('vinyl-spin-decelerate');
           element.style.transform = 'rotate(0deg)';
-        }, 720);
+        }, 550);
       });
     } else {
       element.classList.remove('vinyl-spin-decelerate', 'vinyl-spin-anim', 'spinning');
@@ -340,11 +336,14 @@ export function stopVinylSpinSmoothly(element, shouldSpin) {
   }
 }
 
-function formatTime(seconds) {
-  if (isNaN(seconds) || seconds < 0) return '0:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+function formatTime(seconds, isTotalDuration = false) {
+  if (isNaN(seconds) || seconds < 0) return isTotalDuration ? '0:30' : '0:00';
+  if (isTotalDuration) return '0:30';
+  let secs = Math.floor(seconds);
+  if (secs > 30) secs = 30;
+  const mins = Math.floor(secs / 60);
+  const remainingSecs = secs % 60;
+  return `${mins}:${remainingSecs < 10 ? '0' : ''}${remainingSecs}`;
 }
 
 function getAllInspiredTracks() {
@@ -491,14 +490,25 @@ export function initAudioPlayer() {
 
   function updateTimelineUI() {
     if (!vaultAudioPlayer || isScrubbing) return;
-    const duration = vaultAudioPlayer.duration || 30;
-    const currentTime = vaultAudioPlayer.currentTime || 0;
+    const duration = 30;
+    const currentTime = Math.min(30, Math.max(0, vaultAudioPlayer.currentTime || 0));
+
+    // When fading out at the end of the song, ensure visual progress displays full 100% completion (0:30 / 0:30)
+    if (isFadingOut) {
+      if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `100%`;
+      if (vinylStylusWrapper) vinylStylusWrapper.style.left = `100%`;
+      if (audioBarTime) {
+        audioBarTime.textContent = `0:30 / 0:30`;
+      }
+      return;
+    }
+
     const pct = Math.min(100, Math.max(0, (currentTime / duration) * 100));
 
     if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `${pct}%`;
     if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${pct}%`;
     if (audioBarTime) {
-      audioBarTime.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+      audioBarTime.textContent = `${formatTime(currentTime)} / 0:30`;
     }
   }
 
@@ -524,15 +534,13 @@ export function initAudioPlayer() {
 
   function seekToPosition(clientX) {
     if (!vaultAudioPlayer) return;
-    if (!cachedMusicSectionRect) {
-      updateCachedMusicSectionRect();
-    }
-    if (!cachedMusicSectionRect || cachedMusicSectionRect.width === 0) return;
+    const musicSection = document.getElementById('deckMusicSection');
+    const rect = musicSection ? musicSection.getBoundingClientRect() : cachedMusicSectionRect;
+    if (!rect || rect.width === 0) return;
 
-    const rect = cachedMusicSectionRect;
     const pctRatio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const pct = pctRatio * 100;
-    const duration = vaultAudioPlayer.duration || 30;
+    const duration = 30;
     const newTime = pctRatio * duration;
 
     if (isFinite(newTime)) {
@@ -542,83 +550,129 @@ export function initAudioPlayer() {
     if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `${pct}%`;
     if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${pct}%`;
     if (audioBarTime) {
-      audioBarTime.textContent = `${formatTime(newTime)} / ${formatTime(duration)}`;
+      audioBarTime.textContent = `${formatTime(newTime)} / 0:30`;
     }
   }
 
-  // Interactive Timeline Scrubbing with cached layout bounds
+  function handleScrubStart(clientX, target) {
+    if (!target || !target.closest) return false;
+    if (target.closest('button, #floatingGigPillBtn, .tab-gigmap, .gig-soon-diagonal-banner') || !currentPlayingTrack) {
+      return false;
+    }
+
+    isScrubbing = true;
+    updateCachedMusicSectionRect();
+    if (bottomAudioBar) bottomAudioBar.classList.add('is-scrubbing');
+
+    lastX = clientX;
+    lastTime = performance.now();
+
+    vinylScratchSynth.playNeedleDrop();
+    vinylScratchSynth.startScratch();
+    seekToPosition(clientX);
+    return true;
+  }
+
+  function handleScrubMove(clientX) {
+    if (!isScrubbing) return;
+
+    const now = performance.now();
+    const dt = Math.max(1, now - lastTime);
+    const dx = clientX - lastX;
+    const velocity = dx / dt;
+
+    lastX = clientX;
+    lastTime = now;
+
+    if (vinylStylusWrapper) {
+      if (velocity > 0.03) {
+        vinylStylusWrapper.classList.add('tilt-forward');
+        vinylStylusWrapper.classList.remove('tilt-backward');
+      } else if (velocity < -0.03) {
+        vinylStylusWrapper.classList.add('tilt-backward');
+        vinylStylusWrapper.classList.remove('tilt-forward');
+      }
+    }
+
+    vinylScratchSynth.updateScratch(velocity);
+    seekToPosition(clientX);
+  }
+
+  function handleScrubEnd() {
+    if (!isScrubbing) return;
+    isScrubbing = false;
+    if (bottomAudioBar) bottomAudioBar.classList.remove('is-scrubbing');
+
+    if (vinylStylusWrapper) {
+      vinylStylusWrapper.classList.remove('tilt-forward', 'tilt-backward');
+    }
+
+    vinylScratchSynth.stopScratch();
+
+    if (vaultAudioPlayer) {
+      vaultAudioPlayer.playbackRate = 1.0;
+      const duration = vaultAudioPlayer.duration || 30;
+      if (vaultAudioPlayer.currentTime >= duration - 0.05) {
+        vaultAudioPlayer.currentTime = duration;
+        isPlayingAudio = false;
+        stopTimelineAnimation();
+        updateTimelineUI();
+        updateToggleBtnState(false);
+        return;
+      }
+    }
+
+    if (isPlayingAudio) startTimelineAnimation();
+  }
+
+  // Interactive Timeline Scrubbing with pointer & mobile touch support
   if (bottomAudioBar) {
     bottomAudioBar.addEventListener('pointerdown', (e) => {
-      if (!e.target || !e.target.closest) return;
-      if (e.target.closest('button, .deck-gig-section, .deck-divider') || !currentPlayingTrack) return;
-
-      isScrubbing = true;
-      updateCachedMusicSectionRect();
-      bottomAudioBar.classList.add('is-scrubbing');
-      try { bottomAudioBar.setPointerCapture(e.pointerId); } catch (err) {}
-
-      lastX = e.clientX;
-      lastTime = performance.now();
-
-      vinylScratchSynth.playNeedleDrop();
-      vinylScratchSynth.startScratch();
-      seekToPosition(e.clientX);
+      if (handleScrubStart(e.clientX, e.target)) {
+        try { bottomAudioBar.setPointerCapture(e.pointerId); } catch (err) {}
+      }
     });
 
     bottomAudioBar.addEventListener('pointermove', (e) => {
-      if (!isScrubbing) return;
-
-      const now = performance.now();
-      const dt = Math.max(1, now - lastTime);
-      const dx = e.clientX - lastX;
-      const velocity = dx / dt;
-
-      lastX = e.clientX;
-      lastTime = now;
-
-      if (vinylStylusWrapper) {
-        if (velocity > 0.03) {
-          vinylStylusWrapper.classList.add('tilt-forward');
-          vinylStylusWrapper.classList.remove('tilt-backward');
-        } else if (velocity < -0.03) {
-          vinylStylusWrapper.classList.add('tilt-backward');
-          vinylStylusWrapper.classList.remove('tilt-forward');
-        }
+      if (isScrubbing) {
+        handleScrubMove(e.clientX);
       }
-
-      vinylScratchSynth.updateScratch(velocity);
-      seekToPosition(e.clientX);
     });
 
-    const endScrubbing = (e) => {
-      if (!isScrubbing) return;
-      isScrubbing = false;
-      bottomAudioBar.classList.remove('is-scrubbing');
+    bottomAudioBar.addEventListener('pointerup', (e) => {
       try { if (e && e.pointerId) bottomAudioBar.releasePointerCapture(e.pointerId); } catch (err) {}
+      handleScrubEnd();
+    });
 
-      if (vinylStylusWrapper) {
-        vinylStylusWrapper.classList.remove('tilt-forward', 'tilt-backward');
-      }
+    bottomAudioBar.addEventListener('pointercancel', (e) => {
+      try { if (e && e.pointerId) bottomAudioBar.releasePointerCapture(e.pointerId); } catch (err) {}
+      handleScrubEnd();
+    });
 
-      vinylScratchSynth.stopScratch();
-
-      if (vaultAudioPlayer) {
-        const duration = vaultAudioPlayer.duration || 30;
-        if (vaultAudioPlayer.currentTime >= duration - 0.05) {
-          vaultAudioPlayer.currentTime = duration;
-          isPlayingAudio = false;
-          stopTimelineAnimation();
-          updateTimelineUI();
-          updateToggleBtnState(false);
-          return;
+    // Touch Event Handlers for Mobile WebKit & Android Chrome
+    bottomAudioBar.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        const touch = e.touches[0];
+        if (handleScrubStart(touch.clientX, e.target)) {
+          e.preventDefault();
         }
       }
+    }, { passive: false });
 
-      if (isPlayingAudio) startTimelineAnimation();
-    };
+    window.addEventListener('touchmove', (e) => {
+      if (isScrubbing && e.touches && e.touches.length > 0) {
+        e.preventDefault();
+        handleScrubMove(e.touches[0].clientX);
+      }
+    }, { passive: false });
 
-    bottomAudioBar.addEventListener('pointerup', endScrubbing);
-    bottomAudioBar.addEventListener('pointercancel', endScrubbing);
+    window.addEventListener('touchend', () => {
+      if (isScrubbing) handleScrubEnd();
+    }, { passive: true });
+
+    window.addEventListener('touchcancel', () => {
+      if (isScrubbing) handleScrubEnd();
+    }, { passive: true });
   }
 
   function updateStreamLinks(trackObj) {
@@ -775,13 +829,28 @@ export function initAudioPlayer() {
 
   function checkAutoFadeOut() {
     if (!vaultAudioPlayer || isScrubbing || !isPlayingAudio || isFadingOut || isTransitioningTrack) return;
-    const duration = vaultAudioPlayer.duration;
+    const duration = vaultAudioPlayer.duration || 30;
     if (duration && duration > 5) {
       const timeLeft = duration - vaultAudioPlayer.currentTime;
       // Start smooth vinyl spin-down deceleration 2.2s before track finishes
       if (timeLeft <= 2.2 && timeLeft > 0.3) {
         isFadingOut = true;
+        // Smoothly animate the timeline progress and stylus to 100% completion
+        if (audioBarTimelineProgress) {
+          audioBarTimelineProgress.style.transition = 'width 1.8s ease-out';
+          audioBarTimelineProgress.style.width = '100%';
+        }
+        if (vinylStylusWrapper) {
+          vinylStylusWrapper.style.transition = 'left 1.8s ease-out';
+          vinylStylusWrapper.style.left = '100%';
+        }
+        if (audioBarTime) {
+          audioBarTime.textContent = `${formatTime(duration)} / ${formatTime(duration)}`;
+        }
+
         triggerVinylSpinDownAndStop(1800).then(() => {
+          if (audioBarTimelineProgress) audioBarTimelineProgress.style.transition = '';
+          if (vinylStylusWrapper) vinylStylusWrapper.style.transition = '';
           if (!isScrubbing) {
             // Buffer breather before spinning up into next song
             setTimeout(() => {
@@ -1076,6 +1145,19 @@ export function initAudioPlayer() {
     }
     if (audioBarArtist) audioBarArtist.textContent = trackObj.artist || 'Kins';
     setMiniPlayerCover(coverUrl || null);
+
+    // Reset timeline progress and transitions for incoming track
+    if (audioBarTimelineProgress) {
+      audioBarTimelineProgress.style.transition = '';
+      audioBarTimelineProgress.style.width = '0%';
+    }
+    if (vinylStylusWrapper) {
+      vinylStylusWrapper.style.transition = '';
+      vinylStylusWrapper.style.left = '0%';
+    }
+    if (audioBarTime) {
+      audioBarTime.textContent = '0:00 / 0:30';
+    }
 
     if (vaultAudioPlayer && previewUrl) {
       vaultAudioPlayer.src = previewUrl;
