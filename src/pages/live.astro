@@ -1,0 +1,846 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { liveConfig } from '../settings/live.config';
+
+// Live Hub UI Components
+import LiveNav from '../components/live/LiveNav.astro';
+import FanCamsReel from '../components/live/FanCamsReel.astro';
+import MasterStreamPlayer from '../components/live/MasterStreamPlayer.astro';
+import LiveSetlistStage from '../components/live/LiveSetlistStage.astro';
+import LiveLyricsStage from '../components/live/LiveLyricsStage.astro';
+import LiveChatReactions from '../components/live/LiveChatReactions.astro';
+import LiveFanWall from '../components/live/LiveFanWall.astro';
+import LiveFloatingUploadBtn from '../components/live/LiveFloatingUploadBtn.astro';
+
+// Live Hub Modals & Overlays
+import LiveUploadModal from '../components/live/LiveUploadModal.astro';
+import LiveTabsLyricsModal from '../components/live/LiveTabsLyricsModal.astro';
+import LiveStreamSettingsModal from '../components/live/LiveStreamSettingsModal.astro';
+import LiveTipJarModal from '../components/live/LiveTipJarModal.astro';
+import LiveAlertsModal from '../components/live/LiveAlertsModal.astro';
+import LiveMediaLightbox from '../components/live/LiveMediaLightbox.astro';
+
+// Feedback & Toast
+import ToastContainer from '../components/ui/ToastContainer.astro';
+---
+
+<BaseLayout 
+  title={`🔴 LIVE NOW: KINS at ${liveConfig.venueName} | Official Live Stream Hub`}
+  description={`Watch KINS (@KinsBandOfficial) live stream direct from ${liveConfig.venueName}, ${liveConfig.city}. Stream master band feed, co-streams, view live setlist & lyrics, join live chat, and upload fan shots.`}
+>
+  <div class="live-app-container">
+    <!-- 1. Top Navigation Header -->
+    <LiveNav />
+
+    <!-- Main Live Content Area -->
+    <main class="live-main-content">
+      <!-- 2. Fan Cams & Co-Streams Reel -->
+      <FanCamsReel />
+
+      <!-- Theater Stage Container (Expands to Fullscreen with Fixed Stream & Scrollable Side Tabs) -->
+      <div class="live-theater-stage-container" id="liveTheaterStageContainer">
+        <!-- 3. Native Band Master Stream Feed & Native Apps Row -->
+        <div class="theater-stream-pane">
+          <MasterStreamPlayer />
+        </div>
+
+        <!-- 4. Tab Switcher + Panel Content Pane -->
+        <div class="theater-tabs-pane">
+          <!-- Tab Switcher Toggle (Setlist | Lyrics | Chat) - NO ICONS in selectors -->
+          <div class="live-stage-tab-switcher" id="liveStageTabSwitcher" role="tablist" aria-label="Live Show Sections">
+            <button 
+              type="button" 
+              class="live-stage-tab-btn active" 
+              id="tabBtnSetlist" 
+              role="tab" 
+              aria-selected="true" 
+              data-tab-target="setlist" 
+              data-track="stage_tab:setlist"
+            >
+              <span>SETLIST</span>
+            </button>
+            <button 
+              type="button" 
+              class="live-stage-tab-btn" 
+              id="tabBtnLyrics" 
+              role="tab" 
+              aria-selected="false" 
+              data-tab-target="lyrics" 
+              data-track="stage_tab:lyrics"
+            >
+              <span>LYRICS</span>
+            </button>
+            <button 
+              type="button" 
+              class="live-stage-tab-btn active" 
+              id="tabBtnChat" 
+              role="tab" 
+              aria-selected="true" 
+              data-tab-target="chat" 
+              data-track="stage_tab:chat"
+            >
+              <span>CHAT</span>
+            </button>
+          </div>
+
+          <!-- Stage Panels Viewport (Dual 2-column on desktop for Setlist+Chat, single for Lyrics) -->
+          <div class="live-stage-panels-wrap" id="liveStagePanelsWrap" data-active-tab="dual">
+            <!-- Panel 1: Current Setlist -->
+            <div class="stage-panel-wrap panel-setlist" id="panelSetlist" role="tabpanel" aria-labelledby="tabBtnSetlist">
+              <LiveSetlistStage />
+            </div>
+
+            <!-- Panel 2: Live Lyrics Teleprompter -->
+            <div class="stage-panel-wrap panel-lyrics panel-hidden" id="panelLyrics" role="tabpanel" aria-labelledby="tabBtnLyrics">
+              <LiveLyricsStage />
+            </div>
+
+            <!-- Panel 3: Live Chat & Reactions -->
+            <div class="stage-panel-wrap panel-chat" id="panelChat" role="tabpanel" aria-labelledby="tabBtnChat">
+              <LiveChatReactions />
+            </div>
+          </div>
+        </div>
+
+        <!-- Portaled Inside Stage Container for Native Fullscreen Top-Layer Compatibility -->
+        <LiveUploadModal />
+        <LiveTabsLyricsModal />
+        <LiveStreamSettingsModal />
+        <LiveTipJarModal />
+        <LiveAlertsModal />
+        <LiveMediaLightbox />
+        <ToastContainer />
+      </div>
+
+      <!-- 5. Live Fan Wall Gallery -->
+      <LiveFanWall />
+    </main>
+
+    <!-- Footer Branding -->
+    <footer class="live-footer">
+      <div class="live-footer-inner">
+        <span class="footer-live-tag">
+          <i class="fa-solid fa-tower-broadcast"></i>
+          <span>KINS OFFICIAL CONCERT BROADCAST • {liveConfig.venueName}</span>
+        </span>
+        <a href={import.meta.env.BASE_URL} class="footer-home-link">Back to Bio Tree</a>
+      </div>
+    </footer>
+    <!-- Bottom-Left Floating Upload Action Button (Neo-Brutalist) -->
+    <LiveFloatingUploadBtn />
+  </div>
+</BaseLayout>
+
+<style>
+  .live-app-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-dark);
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(242, 253, 67, 0.03) 0%, transparent 60%),
+      radial-gradient(circle at 100% 100%, rgba(239, 68, 68, 0.02) 0%, transparent 50%);
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .live-main-content {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* Segmented Control Tab Switcher (Setlist | Lyrics | Chat) - Clean Icon-Free */
+  .live-stage-tab-switcher {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 14px;
+    margin: 6px auto 12px;
+    width: 100%;
+    max-width: 1280px;
+    box-sizing: border-box;
+    touch-action: manipulation;
+  }
+
+  .live-stage-tab-btn {
+    background: #181820;
+    border: 2px solid #000000;
+    box-shadow: 2.5px 2.5px 0px #000000;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text-card-muted);
+    font-family: var(--font-secondary);
+    font-size: 0.84rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.14s ease, color 0.14s ease, transform 0.1s ease, box-shadow 0.12s ease;
+  }
+
+  .live-stage-tab-btn span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .live-stage-tab-btn:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 3.5px 3.5px 0px #000000;
+  }
+
+  .live-stage-tab-btn.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    font-weight: 900;
+    border-color: #000000;
+    box-shadow: 3.5px 3.5px 0px #000000;
+  }
+
+  @media (max-width: 480px) {
+    .live-stage-tab-switcher {
+      padding: 0 10px;
+      gap: 6px;
+    }
+
+    .live-stage-tab-btn {
+      font-size: 0.76rem;
+      padding: 8px 4px;
+    }
+  }
+
+  /* Stage Panels Viewport */
+  .live-stage-panels-wrap {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto 16px;
+    padding: 0 14px;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  /* Desktop Normal Layout (>900px): Dual 2-column grid for Setlist + Chat */
+  @media (min-width: 901px) {
+    .live-stage-panels-wrap[data-active-tab="dual"],
+    .live-stage-panels-wrap:not([data-active-tab="lyrics"]) {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 16px !important;
+    }
+
+    .live-stage-panels-wrap[data-active-tab="lyrics"] {
+      display: flex !important;
+      width: 100% !important;
+    }
+  }
+
+  /* Mobile Layout (<=900px): Single-column stacked */
+  @media (max-width: 900px) {
+    .live-stage-panels-wrap {
+      display: flex !important;
+      flex-direction: column !important;
+      padding: 0 10px;
+      margin: 0 0 14px;
+    }
+  }
+
+  .stage-panel-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+  }
+
+  .stage-panel-wrap.panel-hidden {
+    display: none !important;
+  }
+
+  /* Footer */
+  .live-footer {
+    width: 100%;
+    border-top: 2px solid #000000;
+    background: #0d0d10;
+    padding: 16px 14px;
+    box-sizing: border-box;
+    margin-top: auto;
+  }
+
+  .live-footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .footer-live-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-card-muted);
+  }
+
+  .footer-live-tag i {
+    color: var(--accent-neon-yellow);
+    flex-shrink: 0;
+  }
+
+  .footer-home-link {
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: opacity 0.14s ease;
+  }
+
+  .footer-home-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+  }
+
+  /* Base Live Theater Stage Container */
+  .live-theater-stage-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  .theater-stream-pane {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .theater-tabs-pane {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Universal Exit Fullscreen Button Style */
+  :global(#theaterExitFloatingBtn),
+  :global(.stream-exit-fullscreen-btn) {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border: 2px solid #000000 !important;
+    box-shadow: 2px 2px 0px #000000 !important;
+    border-radius: 6px !important;
+    padding: 0 10px !important;
+    height: 32px !important;
+    font-family: var(--font-secondary) !important;
+    font-size: 0.74rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    cursor: pointer !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    transition: transform 0.12s var(--ease-tactile), background 0.14s ease, box-shadow 0.12s ease !important;
+    box-sizing: border-box !important;
+    display: none;
+  }
+
+  :global(#theaterExitFloatingBtn:hover),
+  :global(.stream-exit-fullscreen-btn:hover) {
+    background: #dc2626 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 3px 3px 0px #000000 !important;
+  }
+
+  /* =========================================================
+     FULLSCREEN / THEATER MODE (Hits top:0, spans full width,
+     fixed stream & header, only setlist/lyrics/chat scrolls)
+     ========================================================= */
+  .live-theater-stage-container:fullscreen,
+  .live-theater-stage-container:-webkit-full-screen,
+  .live-theater-stage-container.theater-fullscreen-active {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    background: #08080b !important;
+    z-index: 99999 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  :global(body.theater-mode-active),
+  :global(html.theater-mode-active) {
+    overflow: hidden !important;
+  }
+
+  /* Desktop Theater Fullscreen (Side-by-Side: Fixed Stream Left | Scrollable Tabs Right) */
+  @media (min-width: 992px) {
+    .live-theater-stage-container:fullscreen,
+    .live-theater-stage-container:-webkit-full-screen,
+    .live-theater-stage-container.theater-fullscreen-active {
+      display: grid !important;
+      grid-template-columns: 1fr clamp(340px, 28vw, 420px) !important;
+      grid-template-rows: 100% !important;
+      gap: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+    }
+
+    /* Left: Fixed Stream Viewport */
+    .live-theater-stage-container:fullscreen .theater-stream-pane,
+    .live-theater-stage-container:-webkit-full-screen .theater-stream-pane,
+    .live-theater-stage-container.theater-fullscreen-active .theater-stream-pane {
+      height: 100vh !important;
+      height: 100dvh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      min-width: 0 !important;
+      background: #000000 !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.master-stream-section),
+    .live-theater-stage-container:-webkit-full-screen :global(.master-stream-section),
+    .live-theater-stage-container.theater-fullscreen-active :global(.master-stream-section) {
+      margin: 0 !important;
+      padding: 0 !important;
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      max-width: 100% !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.master-player-card),
+    .live-theater-stage-container:-webkit-full-screen :global(.master-player-card),
+    .live-theater-stage-container.theater-fullscreen-active :global(.master-player-card) {
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    /* Reduced vertical height top header */
+    .live-theater-stage-container:fullscreen :global(.player-venue-header),
+    .live-theater-stage-container:-webkit-full-screen :global(.player-venue-header),
+    .live-theater-stage-container.theater-fullscreen-active :global(.player-venue-header) {
+      padding: 6px 14px !important;
+      min-height: 38px !important;
+      height: 38px !important;
+      flex-shrink: 0 !important;
+      border-radius: 0 !important;
+    }
+
+    /* Maximize vertical height for video stream */
+    .live-theater-stage-container:fullscreen :global(.master-video-viewport),
+    .live-theater-stage-container:-webkit-full-screen :global(.master-video-viewport),
+    .live-theater-stage-container.theater-fullscreen-active :global(.master-video-viewport) {
+      flex: 1 !important;
+      height: calc(100% - 38px) !important;
+      min-height: 0 !important;
+      aspect-ratio: auto !important;
+      background: #000000 !important;
+      border-radius: 0 !important;
+    }
+
+    /* Hide native apps bar in fullscreen to maximize stream height */
+    .live-theater-stage-container:fullscreen :global(.native-apps-sub-bar),
+    .live-theater-stage-container:-webkit-full-screen :global(.native-apps-sub-bar),
+    .live-theater-stage-container.theater-fullscreen-active :global(.native-apps-sub-bar) {
+      display: none !important;
+    }
+
+    /* Right: Scrollable Side Tabs & Panels */
+    .live-theater-stage-container:fullscreen .theater-tabs-pane,
+    .live-theater-stage-container:-webkit-full-screen .theater-tabs-pane,
+    .live-theater-stage-container.theater-fullscreen-active .theater-tabs-pane {
+      display: flex !important;
+      flex-direction: column !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      border-left: 2.5px solid #000000 !important;
+      background: #111116 !important;
+      overflow: hidden !important;
+    }
+
+    .live-theater-stage-container:fullscreen .live-stage-tab-switcher,
+    .live-theater-stage-container:-webkit-full-screen .live-stage-tab-switcher,
+    .live-theater-stage-container.theater-fullscreen-active .live-stage-tab-switcher {
+      display: grid !important;
+      padding: 8px 10px !important;
+      margin: 0 !important;
+      flex-shrink: 0 !important;
+      background: #181820 !important;
+      border-bottom: 2px solid #000000 !important;
+    }
+
+    .live-theater-stage-container:fullscreen .live-stage-panels-wrap,
+    .live-theater-stage-container:-webkit-full-screen .live-stage-panels-wrap,
+    .live-theater-stage-container.theater-fullscreen-active .live-stage-panels-wrap {
+      display: flex !important;
+      flex-direction: column !important;
+      padding: 10px !important;
+      margin: 0 !important;
+      flex: 1 !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .live-theater-stage-container:fullscreen .stage-panel-wrap,
+    .live-theater-stage-container:-webkit-full-screen .stage-panel-wrap,
+    .live-theater-stage-container.theater-fullscreen-active .stage-panel-wrap {
+      height: auto !important;
+      min-height: 0 !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.setlist-songs-list),
+    .live-theater-stage-container:-webkit-full-screen :global(.setlist-songs-list),
+    .live-theater-stage-container.theater-fullscreen-active :global(.setlist-songs-list) {
+      flex: 1 !important;
+      max-height: none !important;
+      min-height: 0 !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.stage-lyrics-body),
+    .live-theater-stage-container:-webkit-full-screen :global(.stage-lyrics-body),
+    .live-theater-stage-container.theater-fullscreen-active :global(.stage-lyrics-body) {
+      flex: 1 !important;
+      max-height: none !important;
+      min-height: 0 !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.chat-messages-viewport),
+    .live-theater-stage-container:-webkit-full-screen :global(.chat-messages-viewport),
+    .live-theater-stage-container.theater-fullscreen-active :global(.chat-messages-viewport) {
+      flex: 1 !important;
+      max-height: none !important;
+      min-height: 0 !important;
+    }
+  }
+
+  /* Mobile/Tablet Theater Fullscreen (<992px: Fixed Stream Top | Scrollable Tabs Below, NO negative space) */
+  @media (max-width: 991px) {
+    .live-theater-stage-container:fullscreen,
+    .live-theater-stage-container:-webkit-full-screen,
+    .live-theater-stage-container.theater-fullscreen-active {
+      display: flex !important;
+      flex-direction: column !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      height: -webkit-fill-available !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      gap: 0 !important;
+    }
+
+    .live-theater-stage-container:fullscreen .theater-stream-pane,
+    .live-theater-stage-container:-webkit-full-screen .theater-stream-pane,
+    .live-theater-stage-container.theater-fullscreen-active .theater-stream-pane {
+      flex-shrink: 0 !important;
+      width: 100% !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.master-stream-section),
+    .live-theater-stage-container:-webkit-full-screen :global(.master-stream-section),
+    .live-theater-stage-container.theater-fullscreen-active :global(.master-stream-section) {
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.master-player-card),
+    .live-theater-stage-container:-webkit-full-screen :global(.master-player-card),
+    .live-theater-stage-container.theater-fullscreen-active :global(.master-player-card) {
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.player-venue-header),
+    .live-theater-stage-container:-webkit-full-screen :global(.player-venue-header),
+    .live-theater-stage-container.theater-fullscreen-active :global(.player-venue-header) {
+      padding: 4px 10px !important;
+      min-height: 32px !important;
+      height: 32px !important;
+      flex-shrink: 0 !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.master-video-viewport),
+    .live-theater-stage-container:-webkit-full-screen :global(.master-video-viewport),
+    .live-theater-stage-container.theater-fullscreen-active :global(.master-video-viewport) {
+      aspect-ratio: auto !important;
+    }
+
+    .live-theater-stage-container:fullscreen :global(.native-apps-sub-bar),
+    .live-theater-stage-container:-webkit-full-screen :global(.native-apps-sub-bar),
+    .live-theater-stage-container.theater-fullscreen-active :global(.native-apps-sub-bar) {
+      display: none !important;
+    }
+
+    .live-theater-stage-container:fullscreen .theater-tabs-pane,
+    .live-theater-stage-container:-webkit-full-screen .theater-tabs-pane,
+    .live-theater-stage-container.theater-fullscreen-active .theater-tabs-pane {
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .live-theater-stage-container:fullscreen .live-stage-tab-switcher,
+    .live-theater-stage-container:-webkit-full-screen .live-stage-tab-switcher,
+    .live-theater-stage-container.theater-fullscreen-active .live-stage-tab-switcher {
+      flex-shrink: 0 !important;
+      padding: 4px 8px !important;
+      margin: 0 !important;
+    }
+
+    .live-theater-stage-container:fullscreen .live-stage-panels-wrap,
+    .live-theater-stage-container:-webkit-full-screen .live-stage-panels-wrap,
+    .live-theater-stage-container.theater-fullscreen-active .live-stage-panels-wrap {
+      flex: 1 !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      padding: 4px 8px 0 !important;
+      margin: 0 !important;
+    }
+  }
+
+  /* Modals Z-Index Protection in Fullscreen */
+  :global(.modal-backdrop) {
+    z-index: 9900 !important;
+  }
+
+  :global(#toastContainer) {
+    z-index: 9999 !important;
+  }
+</style>
+
+<script>
+  import { initTheme } from '../scripts/controllers/themeController.js';
+  import { initLiveStreamController } from '../scripts/controllers/liveStreamController.js';
+  import { initLiveChatController } from '../scripts/controllers/liveChatController.js';
+  import { initLiveReactionsController } from '../scripts/controllers/liveReactionsController.js';
+  import { initLiveSetlistController } from '../scripts/controllers/liveSetlistController.js';
+  import { initLiveFanWallController } from '../scripts/controllers/liveFanWallController.js';
+
+  function isDesktop() {
+    return window.innerWidth > 900;
+  }
+
+  function switchStageTab(activeTab) {
+    const tabBtnSetlist = document.getElementById('tabBtnSetlist');
+    const tabBtnLyrics = document.getElementById('tabBtnLyrics');
+    const tabBtnChat = document.getElementById('tabBtnChat');
+    const panelSetlist = document.getElementById('panelSetlist');
+    const panelLyrics = document.getElementById('panelLyrics');
+    const panelChat = document.getElementById('panelChat');
+    const panelsWrap = document.getElementById('liveStagePanelsWrap');
+
+    const desktop = isDesktop();
+
+    if (activeTab === 'lyrics') {
+      // Lyrics mode: only lyrics active
+      tabBtnLyrics?.classList.add('active');
+      tabBtnLyrics?.setAttribute('aria-selected', 'true');
+
+      tabBtnSetlist?.classList.remove('active');
+      tabBtnSetlist?.setAttribute('aria-selected', 'false');
+
+      tabBtnChat?.classList.remove('active');
+      tabBtnChat?.setAttribute('aria-selected', 'false');
+
+      panelsWrap?.setAttribute('data-active-tab', 'lyrics');
+
+      if (panelLyrics) {
+        panelLyrics.classList.remove('panel-hidden');
+        panelLyrics.style.setProperty('display', 'flex', 'important');
+      }
+      if (panelSetlist) {
+        panelSetlist.classList.add('panel-hidden');
+        panelSetlist.style.setProperty('display', 'none', 'important');
+      }
+      if (panelChat) {
+        panelChat.classList.add('panel-hidden');
+        panelChat.style.setProperty('display', 'none', 'important');
+      }
+    } else {
+      // Setlist or Chat clicked
+      if (desktop) {
+        // On desktop: BOTH Setlist and Chat are selected and displayed!
+        tabBtnSetlist?.classList.add('active');
+        tabBtnSetlist?.setAttribute('aria-selected', 'true');
+
+        tabBtnChat?.classList.add('active');
+        tabBtnChat?.setAttribute('aria-selected', 'true');
+
+        tabBtnLyrics?.classList.remove('active');
+        tabBtnLyrics?.setAttribute('aria-selected', 'false');
+
+        panelsWrap?.setAttribute('data-active-tab', 'dual');
+
+        if (panelSetlist) {
+          panelSetlist.classList.remove('panel-hidden');
+          panelSetlist.style.setProperty('display', 'flex', 'important');
+        }
+        if (panelChat) {
+          panelChat.classList.remove('panel-hidden');
+          panelChat.style.setProperty('display', 'flex', 'important');
+        }
+        if (panelLyrics) {
+          panelLyrics.classList.add('panel-hidden');
+          panelLyrics.style.setProperty('display', 'none', 'important');
+        }
+      } else {
+        // On mobile: single tab selection
+        if (activeTab === 'setlist') {
+          tabBtnSetlist?.classList.add('active');
+          tabBtnSetlist?.setAttribute('aria-selected', 'true');
+          tabBtnChat?.classList.remove('active');
+          tabBtnChat?.setAttribute('aria-selected', 'false');
+          tabBtnLyrics?.classList.remove('active');
+          tabBtnLyrics?.setAttribute('aria-selected', 'false');
+
+          panelsWrap?.setAttribute('data-active-tab', 'setlist');
+
+          if (panelSetlist) {
+            panelSetlist.classList.remove('panel-hidden');
+            panelSetlist.style.setProperty('display', 'flex', 'important');
+          }
+          if (panelChat) {
+            panelChat.classList.add('panel-hidden');
+            panelChat.style.setProperty('display', 'none', 'important');
+          }
+          if (panelLyrics) {
+            panelLyrics.classList.add('panel-hidden');
+            panelLyrics.style.setProperty('display', 'none', 'important');
+          }
+        } else if (activeTab === 'chat') {
+          tabBtnChat?.classList.add('active');
+          tabBtnChat?.setAttribute('aria-selected', 'true');
+          tabBtnSetlist?.classList.remove('active');
+          tabBtnSetlist?.setAttribute('aria-selected', 'false');
+          tabBtnLyrics?.classList.remove('active');
+          tabBtnLyrics?.setAttribute('aria-selected', 'false');
+
+          panelsWrap?.setAttribute('data-active-tab', 'chat');
+
+          if (panelChat) {
+            panelChat.classList.remove('panel-hidden');
+            panelChat.style.setProperty('display', 'flex', 'important');
+          }
+          if (panelSetlist) {
+            panelSetlist.classList.add('panel-hidden');
+            panelSetlist.style.setProperty('display', 'none', 'important');
+          }
+          if (panelLyrics) {
+            panelLyrics.classList.add('panel-hidden');
+            panelLyrics.style.setProperty('display', 'none', 'important');
+          }
+
+          const chatViewport = document.querySelector('.chat-messages-viewport');
+          if (chatViewport) {
+            requestAnimationFrame(() => {
+              chatViewport.scrollTo({ top: chatViewport.scrollHeight, behavior: 'auto' });
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // Expose globally for controllers and direct calls
+  window.switchStageTab = switchStageTab;
+
+  // Direct click bindings for the 3 tab buttons
+  function bindStageTabButtons() {
+    const tabBtns = document.querySelectorAll('.live-stage-tab-btn');
+    tabBtns.forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const tab = btn.getAttribute('data-tab-target') || 'setlist';
+        switchStageTab(tab);
+      };
+    });
+  }
+
+  // Delegated click listener on document for 100% touch & click reliability
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!target) return;
+    const tabBtn = target.closest('.live-stage-tab-btn');
+    if (tabBtn) {
+      e.preventDefault();
+      const tab = tabBtn.getAttribute('data-tab-target') || 'setlist';
+      switchStageTab(tab);
+    }
+  });
+
+  // Responsive window resize listener
+  window.addEventListener('resize', () => {
+    const panelsWrap = document.getElementById('liveStagePanelsWrap');
+    const currentActive = panelsWrap?.getAttribute('data-active-tab');
+    if (currentActive === 'lyrics') {
+      switchStageTab('lyrics');
+    } else {
+      switchStageTab(isDesktop() ? 'setlist' : (currentActive === 'chat' ? 'chat' : 'setlist'));
+    }
+  });
+
+  function setupLiveApp() {
+    bindStageTabButtons();
+
+    try { initTheme(); } catch (e) { console.warn('initTheme error', e); }
+    try { initLiveStreamController(); } catch (e) { console.warn('initLiveStreamController error', e); }
+    try { initLiveChatController(); } catch (e) { console.warn('initLiveChatController error', e); }
+    try { initLiveReactionsController(); } catch (e) { console.warn('initLiveReactionsController error', e); }
+    try { initLiveSetlistController(); } catch (e) { console.warn('initLiveSetlistController error', e); }
+    try { initLiveFanWallController(); } catch (e) { console.warn('initLiveFanWallController error', e); }
+
+    // Default initial tab
+    switchStageTab(isDesktop() ? 'setlist' : 'setlist');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupLiveApp, { once: true });
+  } else {
+    setupLiveApp();
+  }
+
+  document.addEventListener('astro:page-load', setupLiveApp);
+</script>

@@ -1,0 +1,189 @@
+---
+---
+
+<button 
+  type="button" 
+  class="live-floating-upload-btn open-live-upload-modal-btn" 
+  id="liveFloatingUploadBtn" 
+  aria-label="Upload live photo or video to fan wall" 
+  title="Upload Fan Cam (#KinsLive)" 
+  data-track="live:floating_upload"
+>
+  <div class="fab-icon-box">
+    <i class="fa-solid fa-camera fab-camera-icon" aria-hidden="true"></i>
+    <span class="fab-mini-plus"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+  </div>
+  <div class="fab-text-wrap">
+    <span class="fab-main-label">UPLOAD SHOT</span>
+    <span class="fab-sub-badge">#KINSLIVE</span>
+  </div>
+</button>
+
+<style>
+  .live-floating-upload-btn {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: calc(20px + env(safe-area-inset-left, 0px));
+    z-index: 8500;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent-neon-yellow, #f2fd43);
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: 9999px;
+    padding: 6px 16px 6px 8px;
+    color: #000000;
+    font-family: var(--font-secondary, 'Syne', sans-serif);
+    cursor: pointer;
+    user-select: none;
+    text-decoration: none;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease, opacity 0.2s ease;
+    will-change: transform, box-shadow;
+  }
+
+  .live-floating-upload-btn:hover {
+    background: #ffffff;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000000;
+  }
+
+  .live-floating-upload-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .fab-icon-box {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    background: #000000;
+    color: var(--accent-neon-yellow, #f2fd43);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+
+  .live-floating-upload-btn:hover .fab-icon-box {
+    background: #ef4444;
+    color: #ffffff;
+    transform: rotate(-10deg) scale(1.08);
+  }
+
+  .fab-mini-plus {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.58rem;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1.5px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+  }
+
+  .fab-text-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.15;
+  }
+
+  .fab-main-label {
+    font-size: 0.86rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: #000000;
+    white-space: nowrap;
+  }
+
+  .fab-sub-badge {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: rgba(0, 0, 0, 0.75);
+    letter-spacing: 0.02em;
+  }
+
+  /* Fade out when modals are open */
+  :global(body.modal-open) .live-floating-upload-btn {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: scale(0.9) !important;
+  }
+
+  /* Hide during theater fullscreen mode */
+  :global(.live-theater-stage-container:fullscreen ~ .live-floating-upload-btn),
+  :global(.live-theater-stage-container:-webkit-full-screen ~ .live-floating-upload-btn),
+  :global(.live-theater-stage-container.theater-fullscreen-active ~ .live-floating-upload-btn) {
+    display: none !important;
+  }
+
+  /* Mobile Responsive FAB (≤640px) - Keep Text and Badge Visible */
+  @media (max-width: 640px) {
+    .live-floating-upload-btn {
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      left: calc(14px + env(safe-area-inset-left, 0px));
+      padding: 5px 12px 5px 6px;
+      gap: 8px;
+      border-width: 2.5px;
+      box-shadow: 3px 3px 0px #000000;
+    }
+
+    .fab-icon-box {
+      width: 30px;
+      height: 30px;
+      font-size: 0.85rem;
+    }
+
+    .fab-mini-plus {
+      top: -2px;
+      right: -2px;
+      width: 13px;
+      height: 13px;
+      font-size: 0.5rem;
+    }
+
+    .fab-text-wrap {
+      display: flex;
+    }
+
+    .fab-main-label {
+      font-size: 0.76rem;
+    }
+
+    .fab-sub-badge {
+      font-size: 0.58rem;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .live-floating-upload-btn {
+      padding: 4px 10px 4px 5px;
+      gap: 6px;
+    }
+
+    .fab-icon-box {
+      width: 28px;
+      height: 28px;
+      font-size: 0.8rem;
+    }
+
+    .fab-main-label {
+      font-size: 0.72rem;
+    }
+
+    .fab-sub-badge {
+      font-size: 0.55rem;
+    }
+  }
+</style>

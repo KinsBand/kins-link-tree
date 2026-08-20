@@ -20,12 +20,20 @@ export const socialLinks = [
 
 export const mainBioLinks: LinkItem[] = [
   {
+    id: "live-stream-hub",
+    title: "🔴 Watch Live Stream & Concert Hub",
+    url: "live",
+    iconClass: "fa-solid fa-tower-broadcast",
+    badgeText: "LIVE NOW",
+    featured: true,
+  },
+  {
     id: "spotify-latest",
     title: "Stream Latest Release on Spotify",
     url: "https://open.spotify.com",
     iconClass: "fa-brands fa-spotify",
     badgeText: "NEW",
-    featured: true,
+    featured: false,
   },
   {
     id: "gig-tickets",

@@ -1,4 +1,8 @@
 ---
+import { liveConfig } from '../../settings/live.config';
+
+const baseUrl = import.meta.env.BASE_URL;
+const isLive = liveConfig.status === 'live';
 ---
 
 <header class="top-nav" data-track-container="nav:top_bar">
@@ -6,10 +10,20 @@
     <i class="fa-solid fa-bell nav-icon"></i>
   </button>
 
-  <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label="Search cover videos" data-track="nav:search_pill">
-    <i class="fa-solid fa-magnifying-glass search-pill-icon"></i>
-    <span class="search-pill-placeholder">search covers...</span>
-  </button>
+  {isLive ? (
+    <!-- Expanded LIVE NOW Button taking the full search covers space when live -->
+    <a href={`${baseUrl}live`} class="header-live-now-full-btn" id="headerLiveNowBtn" aria-label="Watch Live Stream Now" data-track="nav:live_stream_full">
+      <span class="nav-live-pulse-dot"></span>
+      <span class="nav-live-full-text">🔴 LIVE NOW • KINS LIVE</span>
+      <i class="fa-solid fa-arrow-right nav-live-arrow-icon"></i>
+    </a>
+  ) : (
+    <!-- Standard Search Covers Pill Button when not live -->
+    <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label="Search cover videos" data-track="nav:search_pill">
+      <i class="fa-solid fa-magnifying-glass search-pill-icon"></i>
+      <span class="search-pill-placeholder">search covers...</span>
+    </button>
+  )}
 
   <button class="nav-brutal-btn nav-icon-btn" id="shareBtn" aria-label="Share page" title="Share" data-track="nav:share">
     <i class="fa-solid fa-share-nodes nav-icon"></i>
@@ -49,7 +63,7 @@
     transform: translateY(-12px);
   }
 
-  #topSubscribeBtn, #shareBtn, .header-search-pill-btn {
+  #topSubscribeBtn, #shareBtn, .header-search-pill-btn, .header-live-now-full-btn {
     will-change: opacity, transform;
     transition: opacity 0.22s var(--ease-snappy), transform 0.16s var(--ease-tactile), background-color 0.18s ease, box-shadow 0.18s ease;
     touch-action: manipulation;
@@ -61,6 +75,80 @@
     opacity: 0 !important;
     pointer-events: none !important;
     transform: scale(0.92) !important;
+  }
+
+  /* Expanded Live Stream Button (Takes full search pill center area) */
+  .header-live-now-full-btn {
+    flex: 1 1 0%;
+    width: 100%;
+    min-width: 0;
+    background: #ef4444;
+    border: 3px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 24px;
+    color: #ffffff;
+    padding: 0 16px;
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.84rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    min-height: 48px;
+    box-sizing: border-box;
+    user-select: none;
+    position: relative;
+    z-index: 2;
+  }
+
+  .header-live-now-full-btn:hover {
+    background: #dc2626;
+    color: #ffffff;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .header-live-now-full-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .header-live-now-full-btn:focus-visible {
+    outline: 3px solid var(--accent-neon-yellow);
+    outline-offset: 2px;
+  }
+
+  .nav-live-full-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+  }
+
+  .nav-live-arrow-icon {
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .nav-live-pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    box-shadow: 0 0 6px #ffffff;
+    animation: topLiveDotPulse 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes topLiveDotPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.7; }
   }
 
   /* Neo-Brutalist Top Action Buttons */
@@ -251,6 +339,7 @@
 
   const topSubscribeBtn = document.getElementById('topSubscribeBtn');
   const headerSearchPillBtn = document.getElementById('headerSearchPillBtn');
+  const headerLiveNowBtn = document.getElementById('headerLiveNowBtn');
   const shareBtn = document.getElementById('shareBtn');
   const leftSidebar = document.getElementById('leftSidebar');
 
@@ -276,7 +365,6 @@
     const rawProgress = Math.min(1, Math.max(0, scrollOffset / maxFadeDistance));
 
     // Deceleration Easing Curve: 1 - (1 - x)^2.5 (Ease-Out Cubic-Bezier)
-    // Eliminates harsh linear cuts and produces a gradual, ultra-smooth transparency decay
     const easedProgress = 1 - Math.pow(1 - rawProgress, 2.5);
     const targetOpacity = Math.max(0, 1 - easedProgress);
 
@@ -284,7 +372,7 @@
       heroBannerImg = document.getElementById('heroBannerImg') || document.querySelector('.hero-banner-img');
     }
 
-    const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, shareBtn];
+    const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, headerLiveNowBtn, shareBtn];
     const isTransparent = targetOpacity <= 0.02;
 
     elementsToFade.forEach(el => {

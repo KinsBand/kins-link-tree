@@ -142,36 +142,128 @@ export async function getITunesTrackData(artist, title) {
 }
 
 export const INSPIRED_ARTISTS_DATA = {
-  'the-cure': {
-    name: 'The Cure',
-    genre: 'Post-Punk / Goth Rock / New Wave',
-    bio: 'Shimmering post-punk guitars, atmospheric basslines, and melancholic pop melodies.',
-    iconClass: 'fa-heart',
+  'all': {
+    name: 'All Inspirations',
+    genre: 'Indie Rock / Alternative / Psychedelic',
+    bio: 'The seminal tracks, fuzz-drenched guitars, and psych hooks shaping the Kins sound.',
+    iconClass: 'fa-record-vinyl',
     pages: [
       [
-        { title: 'Just Like Heaven', artist: 'The Cure', duration: '3:32', genre: 'Post-Punk', quote: 'Shimmering guitar chorus & bass drive', icon: 'fa-heart' },
-        { title: "Boys Don't Cry", artist: 'The Cure', duration: '2:37', genre: 'Post-Punk', quote: 'Bouncy guitar riff & iconic vocal hook', icon: 'fa-bolt' },
-        { title: "Friday I'm in Love", artist: 'The Cure', duration: '3:35', genre: 'Jangle Pop', quote: 'Uplifting 12-string guitar jangle', icon: 'fa-sun' },
-        { title: 'Lovesong', artist: 'The Cure', duration: '3:29', genre: 'Goth Rock', quote: 'Melodic bassline & lush synth arrangement', icon: 'fa-music' }
+        { title: 'Turnip Farm', artist: 'Dinosaur Jr.', duration: '4:51', genre: 'Alt Rock / Grunge', quote: 'Sludge fuzz guitar and explosive leads', icon: 'fa-guitar' },
+        { title: '(David Bowie I Love You) Since I Was Six', artist: 'The Brian Jonestown Massacre', duration: '3:25', genre: 'Neo-Psychedelia', quote: 'Hypnotic drone & psych shimmer harmonies', icon: 'fa-eye' },
+        { title: 'Underwear', artist: 'Pulp', duration: '4:06', genre: 'Britpop / Art Pop', quote: 'Dramatic synth swells & cabaret tension', icon: 'fa-mask' },
+        { title: 'Unmade Bed', artist: 'Sonic Youth', duration: '3:53', genre: 'Noise Rock / Post-Punk', quote: 'Alternate tuning chime & raw warmth', icon: 'fa-bolt' }
+      ],
+      [
+        { title: "She's So Loose", artist: 'Supergrass', duration: '3:42', genre: 'Britpop / Acoustic Rock', quote: 'Acoustic strumming & infectious melody', icon: 'fa-music' },
+        { title: 'One Time', artist: 'beabadoobee', duration: '3:05', genre: 'Indie Rock / Bedroom Pop', quote: 'Warm acoustic strumming & bittersweet hooks', icon: 'fa-heart' },
+        { title: 'Bluebeard', artist: 'Cocteau Twins', duration: '3:56', genre: 'Dream Pop / Ethereal Wave', quote: 'Lush shimmering guitars & soaring dreamscapes', icon: 'fa-cloud' },
+        { title: 'A Letter to Elise', artist: 'The Cure', duration: '5:12', genre: 'Post-Punk / Jangle Pop', quote: 'Lush melancholic jangle & romantic heartache', icon: 'fa-envelope' }
+      ],
+      [
+        { title: 'Cry', artist: 'The Sundays', duration: '4:06', genre: 'Dream Pop / Jangle Pop', quote: 'Radiant jangle-pop chime & effortless melody', icon: 'fa-sun' },
+        { title: 'A Night Like This', artist: 'The Cure', duration: '4:16', genre: 'Post-Punk / New Wave', quote: 'Moody atmospheric guitars & driving bass hooks', icon: 'fa-moon' }
       ]
     ]
   },
-  'weezer': {
-    name: 'Weezer',
-    genre: 'Alternative Rock / Power Pop',
-    bio: 'Crunchy fuzz guitar riffs, anthemic power pop harmonies, and raw emotional hooks.',
-    iconClass: 'fa-glasses',
+  'beabadoobee': {
+    name: 'beabadoobee',
+    genre: 'Indie Rock / Bedroom Pop / Alt Rock',
+    bio: 'Nostalgic 90s alt-rock riffs, sweet confessional lyrics, and fuzz-pop melodies.',
+    iconClass: 'fa-heart',
     pages: [
       [
-        { title: 'Do You Wanna Get High?', artist: 'Weezer', duration: '3:27', genre: 'Alt Rock', quote: 'Pinkerton-era heavy fuzz guitar crunch', icon: 'fa-fire' },
-        { title: 'Go Away', artist: 'Weezer', duration: '3:13', genre: 'Power Pop', quote: 'Catchy dual-vocal power pop harmony', icon: 'fa-guitar' },
-        { title: 'Jamie', artist: 'Weezer', duration: '4:19', genre: 'Power Pop', quote: 'Raw early Weezer garage charm', icon: 'fa-radio' },
-        { title: 'Hash Pipe', artist: 'Weezer', duration: '3:06', genre: 'Heavy Power Pop', quote: 'Aggressive staccato riffing & driving beat', icon: 'fa-drum' }
-      ],
+        { title: 'One Time', artist: 'beabadoobee', duration: '3:05', genre: 'Indie Rock / Bedroom Pop', quote: 'Warm acoustic strumming & bittersweet hooks', icon: 'fa-heart' }
+      ]
+    ]
+  },
+  'cocteau-twins': {
+    name: 'Cocteau Twins',
+    genre: 'Dream Pop / Ethereal Wave / Shoegaze',
+    bio: 'Cascading chorus pedals, ethereal soundscapes, and otherworldly vocal magic.',
+    iconClass: 'fa-cloud',
+    pages: [
       [
-        { title: 'Pink Triangle', artist: 'Weezer', duration: '3:58', genre: 'Power Pop', quote: 'Heartfelt distortion & anthemic chorus', icon: 'fa-compact-disc' },
-        { title: 'Buddy Holly', artist: 'Weezer', duration: '2:39', genre: 'Power Pop', quote: 'Iconic synth-guitar lead & tight rhythm', icon: 'fa-headphones' },
-        { title: 'Across The Sea', artist: 'Weezer', duration: '4:32', genre: 'Alt Rock', quote: 'Dynamic arrangement & soaring guitar solo', icon: 'fa-sliders' }
+        { title: 'Bluebeard', artist: 'Cocteau Twins', duration: '3:56', genre: 'Dream Pop / Ethereal Wave', quote: 'Lush shimmering guitars & soaring dreamscapes', icon: 'fa-cloud' }
+      ]
+    ]
+  },
+  'the-cure': {
+    name: 'The Cure',
+    genre: 'Post-Punk / Gothic Rock / New Wave',
+    bio: 'Emotive melancholia, intricate flanged guitars, and legendary atmospheric post-punk.',
+    iconClass: 'fa-moon',
+    pages: [
+      [
+        { title: 'A Letter to Elise', artist: 'The Cure', duration: '5:12', genre: 'Post-Punk / Jangle Pop', quote: 'Lush melancholic jangle & romantic heartache', icon: 'fa-envelope' },
+        { title: 'A Night Like This', artist: 'The Cure', duration: '4:16', genre: 'Post-Punk / New Wave', quote: 'Moody atmospheric guitars & driving bass hooks', icon: 'fa-moon' }
+      ]
+    ]
+  },
+  'cure': {
+    name: 'The Cure',
+    genre: 'Post-Punk / Gothic Rock / New Wave',
+    bio: 'Emotive melancholia, intricate flanged guitars, and legendary atmospheric post-punk.',
+    iconClass: 'fa-moon',
+    pages: [
+      [
+        { title: 'A Letter to Elise', artist: 'The Cure', duration: '5:12', genre: 'Post-Punk / Jangle Pop', quote: 'Lush melancholic jangle & romantic heartache', icon: 'fa-envelope' },
+        { title: 'A Night Like This', artist: 'The Cure', duration: '4:16', genre: 'Post-Punk / New Wave', quote: 'Moody atmospheric guitars & driving bass hooks', icon: 'fa-moon' }
+      ]
+    ]
+  },
+  'the-sundays': {
+    name: 'The Sundays',
+    genre: 'Dream Pop / Jangle Pop / Indie Pop',
+    bio: 'Bright jangle-pop guitars, soaring melodic vocals, and acoustic warmth.',
+    iconClass: 'fa-sun',
+    pages: [
+      [
+        { title: 'Cry', artist: 'The Sundays', duration: '4:06', genre: 'Dream Pop / Jangle Pop', quote: 'Radiant jangle-pop chime & effortless melody', icon: 'fa-sun' }
+      ]
+    ]
+  },
+  'sundays': {
+    name: 'The Sundays',
+    genre: 'Dream Pop / Jangle Pop / Indie Pop',
+    bio: 'Bright jangle-pop guitars, soaring melodic vocals, and acoustic warmth.',
+    iconClass: 'fa-sun',
+    pages: [
+      [
+        { title: 'Cry', artist: 'The Sundays', duration: '4:06', genre: 'Dream Pop / Jangle Pop', quote: 'Radiant jangle-pop chime & effortless melody', icon: 'fa-sun' }
+      ]
+    ]
+  },
+  'dinosaur-jr': {
+    name: 'Dinosaur Jr.',
+    genre: 'Alternative Rock / Grunge / Noise Pop',
+    bio: 'Heavy wall-of-sound fuzz, melancholic drawl, and shredding guitar leads.',
+    iconClass: 'fa-guitar',
+    pages: [
+      [
+        { title: 'Turnip Farm', artist: 'Dinosaur Jr.', duration: '4:51', genre: 'Alt Rock / Grunge', quote: 'Sludge fuzz guitar and explosive leads', icon: 'fa-guitar' }
+      ]
+    ]
+  },
+  'brian-jonestown-massacre': {
+    name: 'The Brian Jonestown Massacre',
+    genre: 'Neo-Psychedelia / Shoegaze / Folk Rock',
+    bio: 'Hypnotic drone, 12-string acoustic jangles, and vintage psych mysticism.',
+    iconClass: 'fa-eye',
+    pages: [
+      [
+        { title: '(David Bowie I Love You) Since I Was Six', artist: 'The Brian Jonestown Massacre', duration: '3:25', genre: 'Neo-Psychedelia', quote: 'Hypnotic drone & psych shimmer harmonies', icon: 'fa-eye' }
+      ]
+    ]
+  },
+  'the-brian-jonestown-massacre': {
+    name: 'The Brian Jonestown Massacre',
+    genre: 'Neo-Psychedelia / Shoegaze / Folk Rock',
+    bio: 'Hypnotic drone, 12-string acoustic jangles, and vintage psych mysticism.',
+    iconClass: 'fa-eye',
+    pages: [
+      [
+        { title: '(David Bowie I Love You) Since I Was Six', artist: 'The Brian Jonestown Massacre', duration: '3:25', genre: 'Neo-Psychedelia', quote: 'Hypnotic drone & psych shimmer harmonies', icon: 'fa-eye' }
       ]
     ]
   },
@@ -182,31 +274,29 @@ export const INSPIRED_ARTISTS_DATA = {
     iconClass: 'fa-compact-disc',
     pages: [
       [
-        { title: 'Common People', artist: 'Pulp', duration: '5:51', genre: 'Britpop', quote: 'Building crescendo synth & theatrical delivery', icon: 'fa-layer-group' },
-        { title: 'Babies', artist: 'Pulp', duration: '4:04', genre: 'Britpop', quote: 'Driving bassline & storytelling lyrics', icon: 'fa-microphone' },
-        { title: 'Do You Remember the First Time?', artist: 'Pulp', duration: '4:22', genre: 'Britpop', quote: 'Melodic guitar riff & bittersweet vocal hook', icon: 'fa-certificate' },
-        { title: 'Underwear', artist: 'Pulp', duration: '4:06', genre: 'Britpop', quote: 'Dramatic synth swells & cabaret tension', icon: 'fa-mask' }
-      ],
-      [
-        { title: 'I Want You', artist: 'Pulp', duration: '4:42', genre: 'Alt Rock', quote: 'Raw emotional guitar crunch & pulse', icon: 'fa-fire' },
-        { title: 'Have You Seen Her Lately?', artist: 'Pulp', duration: '4:21', genre: 'Chamber Pop', quote: 'Lush orchestral pop textures & storytelling', icon: 'fa-eye' }
+        { title: 'Underwear', artist: 'Pulp', duration: '4:06', genre: 'Britpop / Art Pop', quote: 'Dramatic synth swells & cabaret tension', icon: 'fa-mask' }
       ]
     ]
   },
-  'the-long-faces': {
-    name: 'The Long Faces',
-    genre: 'Art Rock / Math Rock / Neo-Psychedelia',
-    bio: 'Complex polyrhythms, intricate jazzy guitar weaves, and theatrical art-rock arrangements.',
-    iconClass: 'fa-masks-theater',
+  'sonic-youth': {
+    name: 'Sonic Youth',
+    genre: 'Noise Rock / Post-Punk / Alt Rock',
+    bio: 'Experimental tunings, dissonant feedback art, and NYC post-punk coolness.',
+    iconClass: 'fa-bolt',
     pages: [
       [
-        { title: 'Jane!', artist: 'The Long Faces', duration: '3:45', genre: 'Art Rock', quote: 'Complex polyrhythms & theatrical vocals', icon: 'fa-masks-theater' },
-        { title: 'Cadillac', artist: 'The Long Faces', duration: '4:12', genre: 'Art Rock', quote: 'Jazzy guitar weaves & dramatic brass energy', icon: 'fa-car' },
-        { title: 'Sail Away', artist: 'The Long Faces', duration: '3:58', genre: 'Indie Rock', quote: 'Swelling guitar textures & soaring hooks', icon: 'fa-compass' },
-        { title: 'Documentaries', artist: 'The Long Faces', duration: '4:05', genre: 'Art Rock', quote: 'Intricate basswork & cinematic dynamics', icon: 'fa-film' }
-      ],
+        { title: 'Unmade Bed', artist: 'Sonic Youth', duration: '3:53', genre: 'Noise Rock / Post-Punk', quote: 'Alternate tuning chime & raw warmth', icon: 'fa-bolt' }
+      ]
+    ]
+  },
+  'supergrass': {
+    name: 'Supergrass',
+    genre: 'Britpop / Glam Rock / Acoustic Rock',
+    bio: 'Energetic britpop melodies, soulful harmonies, and sunny melodic hooks.',
+    iconClass: 'fa-music',
+    pages: [
       [
-        { title: 'Oberon', artist: 'The Long Faces', duration: '3:50', genre: 'Math Rock', quote: 'Energetic math-rock tempo changes', icon: 'fa-bolt' }
+        { title: "She's So Loose", artist: 'Supergrass', duration: '3:42', genre: 'Britpop / Acoustic Rock', quote: 'Acoustic strumming & infectious melody', icon: 'fa-music' }
       ]
     ]
   }

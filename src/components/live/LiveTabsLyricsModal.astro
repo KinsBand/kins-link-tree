@@ -1,0 +1,220 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="liveTabsLyricsModal" role="dialog" aria-modal="true" aria-label="Live Lyrics Teleprompter Drawer" data-track-container="modal:lyrics_drawer">
+  <div class="drawer-content live-tabs-drawer">
+    <!-- Drawer Header -->
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <span class="drawer-mini-tag">STAGE TELEPROMPTER</span>
+        <h3 id="tabsModalSongTitle">Midnight Electricity</h3>
+        <div class="song-meta-pill-row">
+          <span class="meta-pill" id="tabsModalSongKey">Key: E Minor</span>
+          <span class="meta-pill" id="tabsModalSongTempo">Tempo: 155 BPM</span>
+        </div>
+      </div>
+      <button class="close-modal-btn" id="closeTabsLyricsDrawer" aria-label="Close drawer" data-track="lyrics_drawer:close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Drawer Body -->
+    <div class="drawer-body">
+      <div class="lyrics-teleprompter-wrap">
+        <div class="teleprompter-status-bar">
+          <span class="pulse-red-dot"></span>
+          <span>SYNCED LIVE WITH STAGE MIC</span>
+        </div>
+        <ul class="lyrics-lines-list" id="liveLyricsTeleprompterList">
+          <!-- Populated dynamically via liveSetlistController.js -->
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .modal-backdrop.hidden {
+    display: none !important;
+  }
+
+  .live-tabs-drawer {
+    background: #181820;
+    border-top: 3px solid #000000;
+    border-left: 3px solid #000000;
+    border-right: 3px solid #000000;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-width: 680px;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: drawerSlideUp 0.26s var(--ease-snappy) forwards;
+  }
+
+  @keyframes drawerSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .drawer-header {
+    background: #20202a;
+    border-bottom: 2px solid #000000;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .drawer-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .drawer-mini-tag {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
+    letter-spacing: 0.06em;
+  }
+
+  .drawer-title-group h3 {
+    font-family: var(--font-secondary);
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .song-meta-pill-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .meta-pill {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: #d1d1d6;
+  }
+
+  .close-modal-btn {
+    width: 36px;
+    height: 36px;
+    background: var(--surface-card-light);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    font-size: 1rem;
+  }
+
+  .close-modal-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+  }
+
+  /* Drawer Content Body */
+  .drawer-body {
+    padding: 16px 18px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: 60vh;
+    box-sizing: border-box;
+  }
+
+  /* Teleprompter */
+  .lyrics-teleprompter-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .teleprompter-status-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #ef4444;
+  }
+
+  .pulse-red-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 6px #ef4444;
+  }
+
+  .lyrics-lines-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  :global(.lyrics-line-item) {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  :global(.lyrics-line-item.active-singing-line) {
+    background: rgba(242, 253, 67, 0.15);
+    border-left: 3px solid var(--accent-neon-yellow);
+    transform: scale(1.02);
+  }
+
+  :global(.lyrics-line-item.active-singing-line .lyrics-text) {
+    color: var(--accent-neon-yellow);
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  :global(.lyrics-timestamp) {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-card-muted);
+    min-width: 38px;
+  }
+
+  :global(.lyrics-text) {
+    font-family: var(--font-secondary);
+    font-size: 0.9rem;
+    color: #f5f5f7;
+  }
+</style>

@@ -1,6 +1,5 @@
-const CACHE_NAME = 'kins-link-bio-v26';
+const CACHE_NAME = 'kins-link-bio-v27';
 const PRECACHE_ASSETS = [
-  './',
   './manifest.json',
   './pfp.jpg',
   './kins-logo-new.png',
@@ -40,6 +39,22 @@ self.addEventListener('fetch', (event) => {
 
   // Skip non-http/https requests
   if (!url.protocol.startsWith('http')) return;
+
+  // Network-First for HTML navigation requests to always show live edits
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
 
   // Stale-While-Revalidate strategy for static assets
   event.respondWith(

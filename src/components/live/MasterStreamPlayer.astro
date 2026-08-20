@@ -1,0 +1,560 @@
+---
+import { liveConfig } from '../../settings/live.config';
+import NativeAppsGrid from './NativeAppsGrid.astro';
+
+const baseUrl = import.meta.env.BASE_URL;
+const resolveUrl = (url: string) => !url ? `${baseUrl}pfp.jpg` : url.startsWith('http') ? url : `${baseUrl}${url.replace(/^\//, '')}`;
+---
+
+<section class="master-stream-section" aria-label="Master Live Stream Feed" data-track-container="section:master_stream">
+  <div class="master-player-card">
+    <!-- Player Top Venue Header with Gear & Exit Fullscreen Action Buttons -->
+    <div class="player-venue-header">
+      <!-- Title Bar: Pulsating [LIVE] badge + KINS LIVE (No location) -->
+      <div class="stream-title-badge-group">
+        <span class="live-tag-pill">
+          <span class="live-dot-pulse" aria-hidden="true"></span>
+          <span>LIVE</span>
+        </span>
+        <span class="stream-title-text">KINS LIVE</span>
+      </div>
+
+      <!-- Controls: Stream Settings Gear & Inline Exit Fullscreen Button -->
+      <div class="player-header-actions">
+        <!-- Settings Gear Modal Trigger -->
+        <button 
+          type="button" 
+          class="stream-gear-btn" 
+          id="openStreamSettingsBtn" 
+          aria-label="Stream video and audio quality settings" 
+          title="Stream Quality Settings"
+          data-track="player:open_settings"
+        >
+          <i class="fa-solid fa-gear"></i>
+        </button>
+
+        <!-- Inline Exit Fullscreen Button (Shown in Theater Mode) -->
+        <button 
+          type="button" 
+          class="stream-exit-fullscreen-btn" 
+          id="playerInlineExitFullscreenBtn" 
+          aria-label="Exit Fullscreen Theater View"
+          title="Exit Fullscreen Theater View"
+          data-track="player:exit_fullscreen"
+        >
+          <i class="fa-solid fa-compress"></i>
+          <span>EXIT</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Video Frame Viewport -->
+    <div class="master-video-viewport" id="masterVideoWrapper">
+      <!-- Fallback Concert Loop Video / HLS Stream Source -->
+      <video 
+        id="masterVideoPlayer" 
+        class="native-hls-video" 
+        playsinline 
+        autoplay 
+        muted 
+        loop
+        poster={resolveUrl("pfp.jpg")}
+      >
+        <source src={liveConfig.streamSources.fallbackVideoUrl} type="video/mp4" />
+        Your browser does not support HTML5 live stream video.
+      </video>
+
+      <!-- Visual Stage Atmosphere Overlay -->
+      <div class="stage-lighting-overlay" aria-hidden="true"></div>
+
+      <!-- Top Overlay: Venue Location Pill with Map Button & Copy Functionality -->
+      <div class="video-overlay-top">
+        <div class="venue-location-pill" id="venueLocationPill">
+          <!-- Navigation Button (Directions to Venue in Google Maps) -->
+          <a 
+            href="https://www.google.com/maps/dir/?api=1&destination=The+Cambridge+Hotel+789+Hunter+St+Newcastle+NSW+2300" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="venue-map-icon-btn" 
+            title="Open directions in Google Maps"
+            aria-label="Get directions to The Cambridge Hotel in Google Maps"
+            data-track="player:venue_directions"
+          >
+            <i class="fa-solid fa-location-arrow"></i>
+          </a>
+
+          <!-- Interactive Copy Text Pill Button -->
+          <button 
+            type="button" 
+            class="venue-copy-pill-btn" 
+            id="venueCopyPillBtn" 
+            title="Click to copy venue address"
+            data-track="player:copy_venue"
+          >
+            <span class="venue-name-text">THE CAMBRIDGE HOTEL</span>
+            <i class="fa-regular fa-copy venue-copy-icon" id="venueCopyIcon"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom In-Player Controls Overlay -->
+      <div class="video-overlay-bottom">
+        <div class="controls-group-left">
+          <!-- [⏸] Play/Pause -->
+          <button type="button" class="player-ctrl-btn" id="livePlayPauseBtn" aria-label="Pause stream" data-track="player:play_pause">
+            <i class="fa-solid fa-pause" id="livePlayPauseIcon"></i>
+          </button>
+
+          <!-- [🔊] Speaker Icon & Vertical Pop-out Volume Slider -->
+          <div class="volume-control-wrap" id="liveVolumeControlWrap">
+            <!-- Vertical Pop-out Slider Container -->
+            <div class="volume-slider-popout" id="volumeSliderPopout">
+              <input 
+                type="range" 
+                id="liveVolumeSlider" 
+                class="player-vertical-volume-range" 
+                min="0" 
+                max="1" 
+                step="0.05" 
+                value="0.85" 
+                orient="vertical"
+                aria-label="Volume slider"
+              />
+            </div>
+
+            <!-- Speaker Mute/Unmute Toggle Button -->
+            <button type="button" class="player-ctrl-btn" id="liveVolumeBtn" aria-label="Toggle mute" data-track="player:volume_mute">
+              <i class="fa-solid fa-volume-high" id="liveVolumeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="controls-group-right">
+          <!-- [📱↻] Rotate Phone / Fullscreen Button -->
+          <button type="button" class="player-ctrl-btn" id="liveFullscreenBtn" aria-label="Rotate to fullscreen" title="Rotate Phone for Fullscreen" data-track="player:fullscreen">
+            <i class="fa-solid fa-mobile-screen-button rotate-phone-icon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub-bar: Watch Else Where (Horizontal Scroll Row) -->
+    <NativeAppsGrid />
+  </div>
+</section>
+
+<style>
+  .master-stream-section {
+    width: 100%;
+    max-width: 1280px;
+    margin: 6px auto 12px;
+    padding: 0 14px;
+    box-sizing: border-box;
+  }
+
+  .master-player-card {
+    background: #0e0e12;
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Compact Header Bar with Pulsating [LIVE] badge + Action Buttons */
+  .player-venue-header {
+    background: #141418;
+    border-bottom: 2px solid #000000;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    box-sizing: border-box;
+  }
+
+  .stream-title-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .live-tag-pill {
+    background: #ef4444;
+    color: #ffffff;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .live-dot-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    box-shadow: 0 0 8px #ffffff;
+    animation: livePulseAnim 1.2s ease-in-out infinite;
+  }
+
+  @keyframes livePulseAnim {
+    0%, 100% { transform: scale(0.9); opacity: 0.8; }
+    50% { transform: scale(1.4); opacity: 1; }
+  }
+
+  .stream-title-text {
+    font-family: var(--font-secondary);
+    font-weight: 900;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    color: #ffffff;
+    text-transform: uppercase;
+  }
+
+  .player-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* In-Player [⚙️] Gear Button */
+  .stream-gear-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--surface-card-light);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    color: #000000;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.14s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .stream-gear-btn:hover {
+    background: var(--accent-neon-yellow);
+    transform: rotate(30deg) scale(1.05);
+  }
+
+  /* Exit Fullscreen Button (Right of Settings Button) */
+  .stream-exit-fullscreen-btn {
+    display: none;
+    background: #ef4444;
+    color: #ffffff;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 0 10px;
+    height: 32px;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    align-items: center;
+    gap: 5px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s var(--ease-tactile), background 0.14s ease, box-shadow 0.12s ease;
+  }
+
+  .stream-exit-fullscreen-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  :global(.live-theater-stage-container:fullscreen) .stream-exit-fullscreen-btn,
+  :global(.live-theater-stage-container:-webkit-full-screen) .stream-exit-fullscreen-btn,
+  :global(.live-theater-stage-container.theater-fullscreen-active) .stream-exit-fullscreen-btn {
+    display: inline-flex !important;
+  }
+
+  /* Rotate Phone Icon in the Fullscreen Button */
+  .rotate-phone-icon {
+    transform: rotate(-45deg);
+    transition: transform 0.25s var(--ease-tactile);
+  }
+
+  .player-ctrl-btn:hover .rotate-phone-icon {
+    transform: rotate(45deg);
+  }
+
+  /* Video Viewport Container */
+  .master-video-viewport {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000000;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .native-hls-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: object-fit 0.2s ease;
+  }
+
+  /* Fullscreen & Theater Letterboxing */
+  :global(.live-theater-stage-container:fullscreen) .native-hls-video,
+  :global(.live-theater-stage-container:-webkit-full-screen) .native-hls-video,
+  :global(.live-theater-stage-container.theater-fullscreen-active) .native-hls-video {
+    object-fit: contain !important;
+    background: #000000;
+  }
+
+  .stage-lighting-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 30%, rgba(242, 253, 67, 0.08) 0%, rgba(0, 0, 0, 0.4) 80%);
+    pointer-events: none;
+  }
+
+  /* Top-Left Overlay: Interactive Venue Location Pill */
+  .video-overlay-top {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .venue-location-pill {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(14, 14, 18, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 9999px;
+    padding: 2px 4px;
+    gap: 4px;
+    transition: transform 0.14s var(--ease-tactile), border-color 0.16s ease;
+  }
+
+  .venue-location-pill:hover {
+    border-color: var(--accent-neon-yellow);
+    transform: translateY(-1px);
+  }
+
+  .venue-map-icon-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 1.5px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 0.72rem;
+    transition: transform 0.12s ease, background 0.14s ease;
+  }
+
+  .venue-map-icon-btn:hover {
+    background: #ffffff;
+    transform: scale(1.1);
+  }
+
+  .venue-copy-pill-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px 3px 3px;
+    color: #ffffff;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    user-select: none;
+  }
+
+  .venue-name-text {
+    white-space: nowrap;
+  }
+
+  .venue-copy-icon {
+    font-size: 0.78rem;
+    color: var(--accent-neon-yellow);
+    transition: transform 0.15s ease, color 0.15s ease;
+  }
+
+  :global(.venue-copy-icon.text-success) {
+    color: #53fc18 !important;
+    transform: scale(1.25);
+  }
+
+  /* Bottom In-Player Controls Overlay */
+  .video-overlay-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 12px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, transparent 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .controls-group-left,
+  .controls-group-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .player-ctrl-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease, transform 0.12s var(--ease-tactile);
+  }
+
+  .player-ctrl-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    transform: scale(1.06);
+  }
+
+  /* Vertical Pop-Out Volume Slider Container */
+  .volume-control-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .volume-slider-popout {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(14, 14, 18, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
+    padding: 10px 8px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.2s var(--ease-snappy), transform 0.2s var(--ease-snappy), visibility 0.2s;
+    z-index: 20;
+  }
+
+  .volume-control-wrap:hover .volume-slider-popout,
+  .volume-control-wrap:focus-within .volume-slider-popout,
+  .volume-control-wrap.popout-open .volume-slider-popout {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .player-vertical-volume-range {
+    -webkit-appearance: slider-vertical;
+    writing-mode: bt-lr;
+    width: 8px;
+    height: 70px;
+    accent-color: var(--accent-neon-yellow);
+    cursor: pointer;
+    background: #24242c;
+  }
+
+  /* Tap-to-toggle overlays: hidden state */
+  .video-overlay-top,
+  .video-overlay-bottom {
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .master-video-viewport.controls-hidden .video-overlay-top,
+  .master-video-viewport.controls-hidden .video-overlay-bottom {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Legacy idle-hidden class (kept for compatibility) */
+  .master-video-viewport.controls-idle-hidden .video-overlay-top,
+  .master-video-viewport.controls-idle-hidden .video-overlay-bottom {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  @media (max-width: 640px) {
+    .player-venue-header {
+      padding: 4px 8px;
+      min-height: 36px;
+    }
+
+    .stream-title-text {
+      font-size: 0.82rem;
+    }
+
+    .video-overlay-top {
+      top: 6px;
+      left: 6px;
+      max-width: calc(100% - 12px);
+    }
+
+    .venue-name-text {
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.68rem;
+    }
+
+    .player-ctrl-btn {
+      width: 32px;
+      height: 32px;
+      font-size: 0.82rem;
+    }
+  }
+</style>

@@ -1,0 +1,144 @@
+---
+import { liveConfig } from '../../settings/live.config';
+---
+
+<div class="native-apps-sub-bar" data-track-container="player:native_apps">
+  <div class="native-apps-header">
+    <i class="fa-solid fa-arrow-up-right-from-square apps-globe-icon"></i>
+    <span class="native-apps-label">Watch Else Where</span>
+  </div>
+
+  <div class="native-apps-row">
+    {liveConfig.nativeAppLinks.map((link) => (
+      <a 
+        href={link.url} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        class="native-app-btn" 
+        style={`--platform-color: ${link.color};`}
+        data-track={`watch_app:${link.platform}`}
+        title={`Watch on ${link.label}`}
+      >
+        <span class="app-btn-inner">
+          <i class={`${link.iconClass} app-white-icon`}></i>
+          <span class="app-btn-text">{link.shortLabel}</span>
+        </span>
+      </a>
+    ))}
+  </div>
+</div>
+
+<style>
+  .native-apps-sub-bar {
+    background: #111116;
+    border-top: 2px solid #000000;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .native-apps-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    color: var(--text-card-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .apps-globe-icon {
+    color: var(--accent-neon-yellow);
+    font-size: 0.8rem;
+  }
+
+  .native-apps-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 2px;
+  }
+
+  .native-apps-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .native-app-btn {
+    background: #1c1c24;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 6px 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    white-space: nowrap;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.14s ease, border-color 0.14s ease;
+    user-select: none;
+  }
+
+  .native-app-btn:hover {
+    background: var(--platform-color);
+    color: #ffffff;
+    border-color: #000000;
+    transform: translateY(-2px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .app-btn-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .app-white-icon {
+    color: #ffffff !important;
+    font-size: 0.92rem;
+    flex-shrink: 0;
+  }
+
+  .app-btn-text {
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+
+  @media (max-width: 640px) {
+    .native-apps-sub-bar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 8px 10px;
+    }
+
+    .native-apps-row {
+      width: 100%;
+    }
+
+    .native-app-btn {
+      padding: 5px 12px;
+      font-size: 0.74rem;
+    }
+  }
+</style>

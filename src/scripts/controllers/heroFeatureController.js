@@ -41,7 +41,9 @@ export function initHeroFeatureController() {
       { key: 'press_quote', label: 'Press / Blog Quote' }
     ],
     livestream: [
-      { key: 'live_now', label: '🔴 Live Stream Now' },
+      { key: 'preshow', label: '🟡 Pre-Show (Doors)' },
+      { key: 'live_now', label: '🔴 Showtime (Live Now)' },
+      { key: 'postshow', label: '🏁 Post-Show (Replay)' },
       { key: 'upcoming_stream', label: 'Stream Countdown' },
       { key: 'listening_party', label: 'Listening Party' }
     ],
@@ -305,5 +307,48 @@ export function initHeroFeatureController() {
   const previewPreSaveBtn = document.getElementById('previewPreSaveBtn');
   previewPreSaveBtn?.addEventListener('click', () => {
     showToast("Pre-save confirmed! You will be notified when Chemical Fires drops.");
+  });
+
+  // --- ACTIONS: LIVESTREAM CTA TRIGGERS ---
+  const heroLiveNotifyBtn = document.getElementById('heroLiveNotifyBtn');
+  heroLiveNotifyBtn?.addEventListener('click', () => {
+    const topSubscribeBtn = document.getElementById('topSubscribeBtn');
+    if (topSubscribeBtn) {
+      topSubscribeBtn.click();
+    } else {
+      showToast("🔔 You'll be notified as soon as KINS goes live!", "success");
+    }
+  });
+
+  document.querySelectorAll('.hero-community-upload-btn, #heroLiveUploadBtn, #heroPostShowUploadBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const uploadModal = document.getElementById('liveUploadModal') || document.getElementById('communitySubmissionModal');
+      if (uploadModal) {
+        uploadModal.classList.remove('hidden');
+        document.body.classList.add('modal-open');
+      } else {
+        window.location.href = `${window.location.origin}/live#upload`;
+      }
+    });
+  });
+
+  // Live Upload Shot Modal Handlers on Home Page
+  const closeLiveUploadModalBtn = document.getElementById('closeLiveUploadModal');
+  const liveUploadModal = document.getElementById('liveUploadModal');
+  closeLiveUploadModalBtn?.addEventListener('click', () => {
+    if (liveUploadModal) {
+      liveUploadModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    }
+  });
+
+  const liveMediaUploadForm = document.getElementById('liveMediaUploadForm');
+  liveMediaUploadForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    showToast('🎉 Photo/Video submitted! Live on Fan Wall.', 'success');
+    if (liveUploadModal) {
+      liveUploadModal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+    }
   });
 }

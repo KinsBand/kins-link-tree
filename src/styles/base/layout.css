@@ -56,8 +56,14 @@ body {
 .artist-filter-scroll-container,
 .epk-video-grid-wrapper,
 .epk-photos-grid-wrapper,
-.epk-tour-table-wrapper {
+.epk-tour-table-wrapper,
+.fan-cams-reel-container,
+.tablature-code-block,
+.fan-wall-filter-bar {
   overflow-x: auto !important;
   max-width: 100% !important;
+  min-width: 0 !important;
   box-sizing: border-box !important;
+  -webkit-overflow-scrolling: touch;
 }
+

@@ -1,0 +1,307 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="liveAlertsModal" role="dialog" aria-modal="true" aria-label="Show Alerts Preferences" data-track-container="modal:alerts">
+  <div class="modal-content live-alerts-modal-content">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="brand-mini-badge">REAL-TIME GIG NOTIFICATIONS</span>
+        <h3>Live Show Alerts</h3>
+      </div>
+      <button class="close-modal-btn" id="closeAlertsModal" aria-label="Close alerts modal" data-track="alerts:close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <p class="alerts-intro">Never miss the biggest moments on stage. Toggle the alerts you want pushed directly to your screen:</p>
+
+      <div class="alerts-toggles-list">
+        <!-- 1. Encore Alert -->
+        <div class="alert-toggle-card">
+          <div class="alert-info-wrap">
+            <span class="alert-title">⭐ Encore &amp; Mystery Song Alert</span>
+            <span class="alert-desc">Instant notification 2 minutes before the band returns for the encore</span>
+          </div>
+          <label class="switch-toggle" for="alertEncoreToggle">
+            <input type="checkbox" id="alertEncoreToggle" checked />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- 2. Setlist Transition Alert -->
+        <div class="alert-toggle-card">
+          <div class="alert-info-wrap">
+            <span class="alert-title">🎵 Setlist Track Transitions</span>
+            <span class="alert-desc">Live banner popups when new songs start on stage</span>
+          </div>
+          <label class="switch-toggle" for="alertSetlistToggle" checked>
+            <input type="checkbox" id="alertSetlistToggle" checked />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- 3. Next Tour Gig Drops -->
+        <div class="alert-toggle-card">
+          <div class="alert-info-wrap">
+            <span class="alert-title">🎟️ Next Tour Gig Pre-Sale Drops</span>
+            <span class="alert-desc">Get notified when East Coast headline dates and tickets drop</span>
+          </div>
+          <label class="switch-toggle" for="alertTourToggle">
+            <input type="checkbox" id="alertTourToggle" checked />
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button type="button" class="modal-primary-btn" id="saveAlertsPrefsBtn" data-track="alerts:save">
+        <i class="fa-solid fa-bell"></i>
+        <span>SAVE ALERT PREFERENCES</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .modal-backdrop.hidden {
+    display: none !important;
+  }
+
+  .live-alerts-modal-content {
+    background: #181820;
+    border: 3px solid #000000;
+    box-shadow: 6px 6px 0px #000000;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 460px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalScaleIn 0.22s var(--ease-snappy) forwards;
+  }
+
+  @keyframes modalScaleIn {
+    from { transform: scale(0.92) translateY(12px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    background: #20202a;
+    border-bottom: 2px solid #000000;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-mini-badge {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
+    letter-spacing: 0.05em;
+  }
+
+  .modal-title-group h3 {
+    font-family: var(--font-secondary);
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .close-modal-btn {
+    width: 36px;
+    height: 36px;
+    background: var(--surface-card-light);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    font-size: 1rem;
+  }
+
+  .close-modal-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+  }
+
+  .modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .alerts-intro {
+    font-family: var(--font-primary);
+    font-size: 0.82rem;
+    color: #d1d1d6;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .alerts-toggles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .alert-toggle-card {
+    background: #111116;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .alert-info-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .alert-title {
+    font-family: var(--font-secondary);
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .alert-desc {
+    font-family: var(--font-primary);
+    font-size: 0.72rem;
+    color: var(--text-card-muted);
+  }
+
+  .switch-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .switch-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #33333a;
+    border: 1.5px solid #000000;
+    transition: 0.2s;
+    border-radius: 24px;
+  }
+
+  .switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+  }
+
+  .switch-toggle input:checked + .switch-slider {
+    background-color: var(--accent-neon-yellow);
+  }
+
+  .switch-toggle input:checked + .switch-slider:before {
+    transform: translateX(20px);
+    background-color: #000000;
+  }
+
+  .modal-primary-btn {
+    width: 100%;
+    height: 44px;
+    background: var(--accent-neon-yellow);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    color: #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.86rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.12s var(--ease-tactile), background 0.14s ease;
+  }
+
+  .modal-primary-btn:hover {
+    background: #ffffff;
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+  }
+</style>
+
+<script>
+  import { showToast } from '../../scripts/controllers/toast.js';
+
+  const closeBtn = document.getElementById('closeAlertsModal');
+  const saveBtn = document.getElementById('saveAlertsPrefsBtn');
+  const modal = document.getElementById('liveAlertsModal');
+
+  function closeModal() {
+    modal?.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  }
+
+  closeBtn?.addEventListener('click', closeModal);
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  saveBtn?.addEventListener('click', () => {
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission().then(() => {
+        showToast('🔔 Show notifications enabled for KINS Live!', 'success');
+      });
+    } else {
+      showToast('🔔 Show alert preferences updated!', 'success');
+    }
+    closeModal();
+  });
+</script>

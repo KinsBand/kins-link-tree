@@ -21,7 +21,7 @@ export interface HeroConfig {
   activePreviewVar: 'inspired_demo' | 'studio_bts';
   activeTourVar: 'next_show' | 'aftermovie' | 'sold_out';
   activeMilestoneVar: 'follower_milestone' | 'stream_milestone' | 'press_quote';
-  activeLivestreamVar: 'live_now' | 'upcoming_stream' | 'listening_party';
+  activeLivestreamVar: 'preshow' | 'live_now' | 'postshow' | 'upcoming_stream' | 'listening_party';
   activeSpotlightVar: 'member_spotlight' | 'origin_story' | 'gear_showcase';
   activeCollabVar: 'collab_single' | 'featured_playlist' | 'tiktok_challenge';
 
@@ -151,11 +151,30 @@ export interface HeroConfig {
   };
 
   livestream: {
-    live_now: {
-      badge: string;
+    preshow: {
+      statusLine: string;
       title: string;
+      subtitle: string;
+      leftCta: string;
+      rightCta: string;
+      ticketsUrl: string;
+    };
+    live_now: {
+      statusLine: string;
+      title: string;
+      subtitle: string;
+      leftCta: string;
+      rightCta: string;
       streamUrl: string;
       viewerCount: string;
+    };
+    postshow: {
+      statusLine: string;
+      title: string;
+      subtitle: string;
+      leftCta: string;
+      rightCta: string;
+      replayUrl: string;
     };
     upcoming_stream: {
       badge: string;
@@ -214,7 +233,7 @@ export const heroConfig: HeroConfig = {
   // --------------------------------------------------------------------------
   // ⚡ QUICK CONTROLS: CHANGE ACTIVE STATE & SUB-VARIATION HERE
   // --------------------------------------------------------------------------
-  activeState: 'upcoming',
+  activeState: 'livestream',
 
   activeUpcomingVar: 'minimal_teaser',
   activeReleaseVar: 'cover_video',
@@ -370,11 +389,30 @@ export const heroConfig: HeroConfig = {
   },
 
   livestream: {
+    preshow: {
+      statusLine: "🟡 Doors Open 7:30 PM • Set at 9:00 PM",
+      title: "KINS at The Cambridge Hotel",
+      subtitle: "Headline Tour • Newcastle, NSW",
+      leftCta: "🎟️ GET TICKETS / INFO",
+      rightCta: "🔔 NOTIFY ME",
+      ticketsUrl: "https://www.bandsintown.com"
+    },
     live_now: {
-      badge: "LIVE NOW",
-      title: "Acoustic Studio Session",
-      streamUrl: "https://www.youtube.com/embed/n3nPiBaiZrg?autoplay=1",
+      statusLine: "🔴 Now Playing: Midnight Electricity",
+      title: "KINS LIVE BROADCAST",
+      subtitle: "Master Band Feed & Pit Fan-Cams",
+      leftCta: "⚡ ENTER LIVE",
+      rightCta: "📤 UPLOAD VIDEO",
+      streamUrl: "/live",
       viewerCount: "342 watching"
+    },
+    postshow: {
+      statusLine: "🏁 Show Concluded • Thanks for coming!",
+      title: "Relive KINS Live in Newcastle",
+      subtitle: "Full Concert Master Replay & Fan Wall",
+      leftCta: "▶️ RELIVE SHOW (REPLAY)",
+      rightCta: "📸 UPLOAD FOOTAGE",
+      replayUrl: "/live"
     },
     upcoming_stream: {
       badge: "UPCOMING LIVESTREAM",

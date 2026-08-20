@@ -1,0 +1,303 @@
+---
+import { liveConfig } from '../../settings/live.config';
+
+// Calculate setlist stats
+const totalSongs = liveConfig.setlist.length;
+const completedSongs = liveConfig.setlist.filter(s => s.status === 'completed').length;
+const progressPercent = Math.round(((completedSongs + 0.6) / totalSongs) * 100);
+---
+
+<div class="live-column-card live-setlist-card" data-track-container="section:setlist">
+  <!-- Card Header -->
+  <div class="column-card-header">
+    <div class="header-left">
+      <i class="fa-solid fa-list-ol header-icon"></i>
+      <h3 class="column-title">CURRENT SETLIST</h3>
+    </div>
+    <!-- Percentage Badge (Replaces Track X of Y) -->
+    <span class="setlist-badge">
+      <span class="pulse-green-dot"></span>
+      <span class="setlist-percent-text">{progressPercent}%</span>
+    </span>
+  </div>
+
+  <!-- Songs List -->
+  <ul class="setlist-songs-list">
+    {liveConfig.setlist.map((song) => {
+      const isCompleted = song.status === 'completed';
+      const isActive = song.status === 'active';
+      const isEncore = song.status === 'encore';
+      const isUpcoming = song.status === 'upcoming';
+
+      return (
+        <li 
+          class={`setlist-song-item status-${song.status}`}
+          data-song-id={song.id}
+          role="button"
+          tabindex="0"
+          aria-label={`Select song ${song.title} to view lyrics`}
+        >
+          <div class="song-main-row">
+            <!-- Status Icon -->
+            <div class="song-status-icon-wrap">
+              {isCompleted && <i class="fa-solid fa-check check-icon" title="Completed"></i>}
+              {isActive && (
+                <div class="active-equalizer-bars" title="Playing Now">
+                  <span></span><span></span><span></span>
+                </div>
+              )}
+              {isUpcoming && <span class="upcoming-dash">-</span>}
+              {isEncore && <i class="fa-solid fa-star encore-star-icon" title="Encore"></i>}
+            </div>
+
+            <!-- Song Title & Order -->
+            <div class="song-details-wrap">
+              <div class="song-title-row">
+                <span class="song-order-num">{song.order}.</span>
+                <span class="song-title-text">{song.title}</span>
+                {isEncore && <span class="encore-pill-tag">ENCORE</span>}
+              </div>
+              {song.duration && <span class="song-duration-tag">{song.duration}</span>}
+            </div>
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+</div>
+
+<style>
+  .live-column-card {
+    background: #141418;
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .column-card-header {
+    background: #1c1c22;
+    border-bottom: 2px solid #000000;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .header-icon {
+    color: var(--accent-neon-yellow);
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .column-title {
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: 0.04em;
+    margin: 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .setlist-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9999px;
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .setlist-percent-text {
+    color: var(--accent-neon-yellow);
+    font-weight: 900;
+  }
+
+  .pulse-green-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #53fc18;
+    box-shadow: 0 0 6px #53fc18;
+  }
+
+  /* Songs List */
+  .setlist-songs-list {
+    list-style: none;
+    padding: 10px 12px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    max-height: 420px;
+  }
+
+  .setlist-song-item {
+    background: #1a1a20;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease, transform 0.12s var(--ease-tactile), border-color 0.15s ease;
+  }
+
+  .setlist-song-item:hover {
+    background: #22222a;
+    border-color: rgba(242, 253, 67, 0.5);
+    transform: translateX(2px);
+  }
+
+  .setlist-song-item:focus-visible {
+    outline: 2px solid var(--accent-neon-yellow);
+    outline-offset: 2px;
+  }
+
+  /* Active Song Glow */
+  .setlist-song-item.status-active {
+    background: #242416;
+    border: 2px solid var(--accent-neon-yellow);
+    box-shadow: 0 0 12px rgba(242, 253, 67, 0.2);
+  }
+
+  .song-main-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .song-status-icon-wrap {
+    width: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  .check-icon {
+    color: #53fc18;
+    font-size: 0.9rem;
+  }
+
+  .upcoming-dash {
+    color: var(--text-card-muted);
+    font-weight: 800;
+    font-size: 1.1rem;
+  }
+
+  .encore-star-icon {
+    color: #f59e0b;
+  }
+
+  /* Animated Equalizer Bars */
+  .active-equalizer-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 14px;
+    width: 14px;
+  }
+
+  .active-equalizer-bars span {
+    width: 3px;
+    background-color: var(--accent-neon-yellow);
+    border-radius: 1px;
+    animation: eqBounce 0.8s ease-in-out infinite alternate;
+  }
+
+  .active-equalizer-bars span:nth-child(1) { height: 60%; animation-delay: 0.1s; }
+  .active-equalizer-bars span:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+  .active-equalizer-bars span:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+
+  @keyframes eqBounce {
+    0% { height: 30%; }
+    100% { height: 100%; }
+  }
+
+  .song-details-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .song-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .song-order-num {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--text-card-muted);
+  }
+
+  .song-title-text {
+    font-family: var(--font-secondary);
+    font-weight: 800;
+    font-size: 0.88rem;
+    color: var(--text-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-active .song-title-text {
+    color: var(--accent-neon-yellow);
+  }
+
+  .status-completed .song-title-text {
+    color: #a1a1aa;
+  }
+
+  .encore-pill-tag {
+    background: #f59e0b;
+    color: #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.6rem;
+    font-weight: 900;
+    padding: 1px 6px;
+    border-radius: 9999px;
+  }
+
+  .song-duration-tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-card-muted);
+  }
+</style>

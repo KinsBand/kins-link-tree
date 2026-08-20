@@ -511,25 +511,70 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}pfp.jpg` : src.startsWith
 
     <!-- ==================== STATE 6: LIVESTREAM & EVENTS ==================== -->
     <div class="hero-card-state state-livestream hidden" id="stateLivestream">
-      <!-- Sub-Var 6A: Live Now -->
-      <div class="sub-var-panel var-livestream-live_now" id="varLivestreamLiveNow">
-        <div class="livestream-card-content">
-          <div class="live-pulse-badge-row">
-            <span class="live-pulse-badge"><span class="live-dot"></span> LIVE NOW</span>
-            <span class="live-viewers-count"><i class="fa-solid fa-eye"></i> {livestream.live_now.viewerCount}</span>
+      <!-- Sub-Var 6A: Pre-Show -->
+      <div class="sub-var-panel var-livestream-preshow" id="varLivestreamPreshow">
+        <div class="livestream-card-content preshow-theme">
+          <div class="live-status-line-badge preshow-badge">
+            <span class="status-indicator-dot yellow-dot"></span>
+            <span class="status-line-text">{livestream.preshow.statusLine}</span>
           </div>
-          <h3 class="livestream-title">{livestream.live_now.title}</h3>
-          <div class="livestream-actions-row">
-            <button type="button" class="hero-btn-primary live-join-btn release-play-trigger">
-              <i class="fa-solid fa-tower-broadcast"></i>
-              <span>JOIN STREAM NOW</span>
+          <h3 class="livestream-title">{livestream.preshow.title}</h3>
+          <p class="livestream-subtitle">{livestream.preshow.subtitle}</p>
+          <div class="hero-action-buttons-row">
+            <a href={livestream.preshow.ticketsUrl} target="_blank" rel="noopener noreferrer" class="hero-btn-primary">
+              <span>{livestream.preshow.leftCta}</span>
               <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </a>
+            <button type="button" class="hero-btn-secondary" id="heroLiveNotifyBtn">
+              <span>{livestream.preshow.rightCta}</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Sub-Var 6B: Upcoming Stream -->
+      <!-- Sub-Var 6B: Showtime (Live Now) -->
+      <div class="sub-var-panel var-livestream-live_now" id="varLivestreamLiveNow">
+        <div class="livestream-card-content live-theme">
+          <div class="live-status-line-badge live-badge">
+            <span class="status-indicator-dot red-pulse-dot"></span>
+            <span class="status-line-text">{livestream.live_now.statusLine}</span>
+          </div>
+          <h3 class="livestream-title">{livestream.live_now.title}</h3>
+          <p class="livestream-subtitle">{livestream.live_now.subtitle}</p>
+          <div class="hero-action-buttons-row">
+            <a href={`${baseUrl}live`} class="hero-btn-primary enter-live-btn">
+              <span>{livestream.live_now.leftCta}</span>
+              <i class="fa-solid fa-arrow-right hero-launch-icon"></i>
+            </a>
+            <button type="button" class="hero-btn-secondary hero-community-upload-btn" id="heroLiveUploadBtn">
+              <span>{livestream.live_now.rightCta}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 6C: Post-Show -->
+      <div class="sub-var-panel var-livestream-postshow" id="varLivestreamPostshow">
+        <div class="livestream-card-content postshow-theme">
+          <div class="live-status-line-badge postshow-badge">
+            <span class="status-indicator-dot check-dot">🏁</span>
+            <span class="status-line-text">{livestream.postshow.statusLine}</span>
+          </div>
+          <h3 class="livestream-title">{livestream.postshow.title}</h3>
+          <p class="livestream-subtitle">{livestream.postshow.subtitle}</p>
+          <div class="hero-action-buttons-row">
+            <a href={`${baseUrl}live`} class="hero-btn-primary">
+              <span>{livestream.postshow.leftCta}</span>
+              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
+            </a>
+            <button type="button" class="hero-btn-secondary hero-community-upload-btn" id="heroPostShowUploadBtn">
+              <span>{livestream.postshow.rightCta}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Var 6D: Upcoming Stream Countdown -->
       <div class="sub-var-panel var-livestream-upcoming_stream hidden" id="varLivestreamUpcoming">
         <div class="livestream-card-content">
           <span class="tour-badge"><i class="fa-solid fa-clock"></i> {livestream.upcoming_stream.badge}</span>
@@ -545,7 +590,7 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}pfp.jpg` : src.startsWith
         </div>
       </div>
 
-      <!-- Sub-Var 6C: Listening Party -->
+      <!-- Sub-Var 6E: Listening Party -->
       <div class="sub-var-panel var-livestream-listening_party hidden" id="varLivestreamParty">
         <div class="livestream-card-content">
           <span class="tour-badge party-badge"><i class="fa-solid fa-headphones"></i> {livestream.listening_party.badge}</span>
@@ -1775,57 +1820,101 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}pfp.jpg` : src.startsWith
     color: var(--btn-green);
   }
 
-  /* STATE 6: LIVESTREAM */
-  .live-pulse-badge-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .live-pulse-badge {
-    background: #ff3b30;
-    color: #ffffff;
-    font-family: var(--font-secondary);
-    font-size: 0.58rem;
-    font-weight: 900;
-    padding: 3px 8px;
-    border-radius: 4px;
+  /* STATE 6: LIVESTREAM (Pre-Show, Live Showtime, Post-Show) */
+  .live-status-line-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    letter-spacing: 0.08em;
-  }
-
-  .live-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #ffffff;
-    animation: livePulse 1.2s infinite;
-  }
-
-  @keyframes livePulse {
-    0% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(1.3); }
-    100% { opacity: 1; transform: scale(1); }
-  }
-
-  .live-viewers-count {
+    gap: 7px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
     font-family: var(--font-secondary);
     font-size: 0.68rem;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    user-select: none;
+  }
+
+  .preshow-badge {
+    background: #f59e0b;
+    color: #000000;
+  }
+
+  .live-badge {
+    background: #ef4444;
+    color: #ffffff;
+  }
+
+  .postshow-badge {
+    background: #1c1c24;
+    color: #f4f4f5;
+    border-color: #000000;
+  }
+
+  .status-indicator-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .yellow-dot {
+    background: #000000;
+  }
+
+  .red-pulse-dot {
+    background: #ffffff;
+    box-shadow: 0 0 6px #ffffff;
+    animation: liveDotPulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes liveDotPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.7; }
+  }
+
+  .check-dot {
+    font-size: 0.75rem;
+    line-height: 1;
+    width: auto;
+    height: auto;
+  }
+
+  .status-line-text {
+    font-weight: 800;
   }
 
   .livestream-title {
     font-family: var(--font-heading);
-    font-size: 1.1rem;
-    font-weight: 800;
+    font-size: 1.12rem;
+    font-weight: 900;
     color: var(--text-white);
+    margin: 2px 0 0 0;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .livestream-subtitle {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    color: var(--text-muted);
     margin: 0;
+    font-weight: 600;
+  }
+
+  .enter-live-btn {
+    background: var(--accent-neon-yellow) !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
+    box-shadow: 2px 2px 0px #000000 !important;
+    font-weight: 900 !important;
+  }
+
+  .enter-live-btn:hover {
+    background: #ffffff !important;
+    transform: translate(-1px, -1px) !important;
+    box-shadow: 3px 3px 0px #000000 !important;
   }
 
   /* STATE 7: SPOTLIGHT */

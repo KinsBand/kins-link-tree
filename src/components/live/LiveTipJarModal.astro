@@ -1,0 +1,334 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="liveTipJarModal" role="dialog" aria-modal="true" aria-label="Tip the Band" data-track-container="modal:tip_jar">
+  <div class="modal-content live-tip-modal-content">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="brand-mini-badge">🔥 SUPPORT THE BAND DIRECTLY</span>
+        <h3>Kins Tip Jar &amp; Superchat</h3>
+      </div>
+      <button class="close-modal-btn" id="closeTipJarModal" aria-label="Close tip modal" data-track="tip:close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <p class="tip-subtitle">100% of tips go straight to the band touring van &amp; upcoming studio records!</p>
+
+      <!-- Preset Amount Chips -->
+      <div class="tip-amount-chips-grid">
+        <button type="button" class="tip-amount-chip" data-amount="$3.00">
+          <span class="chip-label">☕ $3</span>
+          <span class="chip-desc">Buy Trai a Coffee</span>
+        </button>
+        <button type="button" class="tip-amount-chip active" data-amount="$5.00">
+          <span class="chip-label">🍺 $5</span>
+          <span class="chip-desc">Pint of Beer</span>
+        </button>
+        <button type="button" class="tip-amount-chip" data-amount="$10.00">
+          <span class="chip-label">🎸 $10</span>
+          <span class="chip-desc">Guitar Strings</span>
+        </button>
+        <button type="button" class="tip-amount-chip" data-amount="$25.00">
+          <span class="chip-label">⚡ $25</span>
+          <span class="chip-desc">Tour Van Fuel</span>
+        </button>
+      </div>
+
+      <!-- Custom Amount Option -->
+      <div class="form-group">
+        <label class="form-label" for="liveCustomTipAmount">Or Enter Custom Amount ($ AUD)</label>
+        <input 
+          type="number" 
+          id="liveCustomTipAmount" 
+          class="modal-text-input" 
+          placeholder="$5.00" 
+          min="1" 
+          step="1" 
+        />
+      </div>
+
+      <!-- Fan Shoutout Message Input -->
+      <div class="form-group">
+        <label class="form-label" for="liveTipShoutoutMsg">Stage Shoutout Message (Optional)</label>
+        <input 
+          type="text" 
+          id="liveTipShoutoutMsg" 
+          class="modal-text-input" 
+          placeholder="Play Midnight Electricity encore!! 🔥" 
+          maxlength="100" 
+        />
+      </div>
+
+      <!-- Action Button -->
+      <button type="button" class="modal-primary-btn tip-submit-btn" id="confirmTipAndSendBtn" data-track="tip:confirm_send">
+        <i class="fa-solid fa-bolt"></i>
+        <span>SEND SUPER TIP TO LIVE CHAT</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .modal-backdrop.hidden {
+    display: none !important;
+  }
+
+  .live-tip-modal-content {
+    background: #181820;
+    border: 3px solid #000000;
+    box-shadow: 6px 6px 0px #000000;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 460px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalScaleIn 0.22s var(--ease-snappy) forwards;
+  }
+
+  @keyframes modalScaleIn {
+    from { transform: scale(0.92) translateY(12px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    background: #20202a;
+    border-bottom: 2px solid #000000;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-mini-badge {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-weight: 800;
+    color: #53fc18;
+    letter-spacing: 0.05em;
+  }
+
+  .modal-title-group h3 {
+    font-family: var(--font-secondary);
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .close-modal-btn {
+    width: 36px;
+    height: 36px;
+    background: var(--surface-card-light);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    font-size: 1rem;
+  }
+
+  .close-modal-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+  }
+
+  .modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .tip-subtitle {
+    font-family: var(--font-primary);
+    font-size: 0.8rem;
+    color: #d1d1d6;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .tip-amount-chips-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .tip-amount-chip {
+    background: #111116;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    cursor: pointer;
+    transition: background 0.14s ease, transform 0.12s var(--ease-tactile);
+  }
+
+  .tip-amount-chip:hover {
+    background: #24242e;
+    transform: translateY(-2px);
+  }
+
+  .tip-amount-chip.active {
+    background: #53fc18;
+    color: #000000;
+  }
+
+  .chip-label {
+    font-family: var(--font-secondary);
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: #ffffff;
+  }
+
+  .tip-amount-chip.active .chip-label {
+    color: #000000;
+  }
+
+  .chip-desc {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-card-muted);
+  }
+
+  .tip-amount-chip.active .chip-desc {
+    color: #000000;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-label {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--text-white);
+    text-transform: uppercase;
+  }
+
+  .modal-text-input {
+    width: 100%;
+    background: #0f0f14;
+    border: 2px solid #000000;
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.84rem;
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  .modal-text-input:focus {
+    border-color: #53fc18;
+  }
+
+  .modal-primary-btn.tip-submit-btn {
+    width: 100%;
+    height: 44px;
+    background: #53fc18;
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    color: #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+    transition: transform 0.12s var(--ease-tactile), background 0.14s ease;
+  }
+
+  .modal-primary-btn.tip-submit-btn:hover {
+    background: #7aff48;
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+  }
+</style>
+
+<script>
+  const closeBtn = document.getElementById('closeTipJarModal');
+  const modal = document.getElementById('liveTipJarModal');
+  const chips = document.querySelectorAll('.tip-amount-chip');
+  const customInput = document.getElementById('liveCustomTipAmount') as HTMLInputElement | null;
+  const shoutoutInput = document.getElementById('liveTipShoutoutMsg') as HTMLInputElement | null;
+  const sendBtn = document.getElementById('confirmTipAndSendBtn');
+
+  let selectedAmount = '$5.00';
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedAmount = chip.getAttribute('data-amount') || '$5.00';
+      if (customInput) customInput.value = '';
+    });
+  });
+
+  if (customInput) {
+    customInput.addEventListener('input', () => {
+      if (customInput.value) {
+        chips.forEach(c => c.classList.remove('active'));
+        selectedAmount = `$${parseFloat(customInput.value).toFixed(2)}`;
+      }
+    });
+  }
+
+  function closeModal() {
+    modal?.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  }
+
+  closeBtn?.addEventListener('click', closeModal);
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  sendBtn?.addEventListener('click', () => {
+    const shoutout = shoutoutInput?.value.trim() || '';
+    if ((window as any).triggerLiveTipSuperchat) {
+      (window as any).triggerLiveTipSuperchat(selectedAmount, shoutout);
+    }
+    if (shoutoutInput) shoutoutInput.value = '';
+    closeModal();
+  });
+</script>

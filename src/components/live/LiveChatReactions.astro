@@ -1,0 +1,504 @@
+---
+import { liveConfig } from '../../settings/live.config';
+---
+
+<div class="live-column-card live-chat-card" data-track-container="section:live_chat">
+  <!-- Card Header -->
+  <div class="column-card-header">
+    <div class="header-left">
+      <i class="fa-solid fa-comments header-icon"></i>
+      <h3 class="column-title">LIVE CHAT</h3>
+    </div>
+    <span class="chat-live-badge">
+      <span class="pulse-red-dot"></span>
+      <span>REALTIME</span>
+    </span>
+  </div>
+
+  <!-- Pinned Announcement Banner -->
+  <div class="pinned-announcement-banner" id="livePinnedAnnouncement">
+    <div class="pinned-text-wrap">
+      <i class="fa-solid fa-thumbtack pin-icon"></i>
+      <span class="pinned-tag">Pinned:</span>
+      <span class="pinned-msg-text">{liveConfig.pinnedAnnouncement.text}</span>
+    </div>
+    <button type="button" class="dismiss-pinned-btn" id="dismissPinnedAnnouncementBtn" aria-label="Dismiss pinned announcement">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Chat Messages Stream -->
+  <div class="chat-messages-viewport">
+    <ul class="chat-messages-list" id="liveChatMessagesList">
+      {liveConfig.initialChatMessages.map((msg) => (
+        <li class="live-chat-message-item">
+          <div class="chat-msg-header">
+            <div class="chat-author-wrap">
+              <span class="chat-author-name">{msg.username}</span>
+              {msg.badge && (
+                <span class={`chat-user-badge badge-${msg.badge.type}`} style={`--badge-accent: ${msg.badge.color};`}>
+                  {msg.badge.label}
+                </span>
+              )}
+            </div>
+            <span class="chat-msg-time">{msg.timestamp}</span>
+          </div>
+          <div class="chat-msg-body">{msg.message}</div>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <!-- Chat Input Bar & Reaction Tray -->
+  <div class="chat-bottom-control-tray">
+    <!-- Message Input Form -->
+    <form class="chat-input-form" id="liveChatForm">
+      <input 
+        type="text" 
+        id="liveChatInput" 
+        class="chat-text-input" 
+        placeholder="Say something to Kins in the pit..." 
+        maxlength="200" 
+        autocomplete="off"
+        aria-label="Chat message"
+      />
+      <button type="submit" class="chat-send-btn" id="liveChatSendBtn" aria-label="Send message" data-track="chat:send_message">
+        <span>SEND</span>
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </form>
+
+    <!-- Reaction Emoji Buttons & [💰 TIP] Button Row -->
+    <div class="chat-actions-row">
+      <!-- Reaction Emojis [🔥] [⚡] [🎸] [💀] -->
+      <div class="quick-reactions-tray" aria-label="Crowd reactions">
+        <button type="button" class="live-reaction-btn" data-emoji="🔥" aria-label="Fire reaction" data-track="reaction:fire">🔥</button>
+        <button type="button" class="live-reaction-btn" data-emoji="⚡" aria-label="Lightning reaction" data-track="reaction:lightning">⚡</button>
+        <button type="button" class="live-reaction-btn" data-emoji="🎸" aria-label="Guitar reaction" data-track="reaction:guitar">🎸</button>
+        <button type="button" class="live-reaction-btn" data-emoji="💀" aria-label="Skull reaction" data-track="reaction:skull">💀</button>
+      </div>
+
+      <!-- [💰 TIP] Trigger Button -->
+      <button type="button" class="live-tip-jar-btn" id="liveOpenTipModalBtn" aria-label="Tip the band" title="Send Band Tip / Superchat" data-track="chat:open_tip_modal">
+        <i class="fa-solid fa-coins"></i>
+        <span>TIP</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .live-column-card {
+    background: #141418;
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .column-card-header {
+    background: #1c1c22;
+    border-bottom: 2px solid #000000;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .header-icon {
+    color: var(--accent-neon-yellow);
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .column-title {
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: 0.04em;
+    margin: 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .chat-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9999px;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #ef4444;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .pulse-red-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ef4444;
+    box-shadow: 0 0 6px #ef4444;
+  }
+
+  /* Pinned Announcement Banner */
+  .pinned-announcement-banner {
+    background: rgba(242, 253, 67, 0.12);
+    border-bottom: 1.5px solid var(--accent-neon-yellow);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .pinned-text-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-white);
+    min-width: 0;
+  }
+
+  .pin-icon {
+    color: var(--accent-neon-yellow);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .pinned-tag {
+    font-weight: 900;
+    color: var(--accent-neon-yellow);
+    flex-shrink: 0;
+  }
+
+  .pinned-msg-text {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dismiss-pinned-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-card-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 2px;
+    flex-shrink: 0;
+  }
+
+  .dismiss-pinned-btn:hover {
+    color: #ffffff;
+  }
+
+  /* Chat Messages Viewport */
+  .chat-messages-viewport {
+    flex: 1;
+    min-height: 220px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.25);
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-neon-yellow) transparent;
+  }
+
+  .chat-messages-viewport::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .chat-messages-viewport::-webkit-scrollbar-thumb {
+    background: var(--accent-neon-yellow);
+    border-radius: 4px;
+  }
+
+  .chat-messages-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  :global(.live-chat-message-item) {
+    background: #1c1c24;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: chatMsgAppear 0.2s var(--ease-snappy) forwards;
+  }
+
+  :global(.live-chat-message-item.user-self-message) {
+    background: #242416;
+    border-color: var(--accent-neon-yellow);
+  }
+
+  :global(.live-chat-message-item.super-tip-message) {
+    background: linear-gradient(135deg, rgba(83, 252, 24, 0.15) 0%, rgba(242, 253, 67, 0.15) 100%);
+    border: 2px solid #53fc18;
+    box-shadow: 0 0 10px rgba(83, 252, 24, 0.3);
+  }
+
+  :global(.chat-tip-banner) {
+    background: #53fc18;
+    color: #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+
+  @keyframes chatMsgAppear {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  :global(.chat-msg-header) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  :global(.chat-author-wrap) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  :global(.chat-author-name) {
+    font-family: var(--font-secondary);
+    font-weight: 800;
+    font-size: 0.8rem;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  :global(.chat-user-badge) {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 900;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--badge-accent, #f2fd43);
+    color: #000000;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  :global(.chat-msg-time) {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--text-card-muted);
+    flex-shrink: 0;
+  }
+
+  :global(.chat-msg-body) {
+    font-family: var(--font-primary);
+    font-size: 0.82rem;
+    color: #f5f5f7;
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* Bottom Control Tray */
+  .chat-bottom-control-tray {
+    background: #181820;
+    border-top: 2px solid #000000;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .chat-input-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .chat-text-input {
+    flex: 1;
+    min-width: 0;
+    width: 0;
+    height: 38px;
+    background: #0f0f14;
+    border: 2px solid #000000;
+    border-radius: 6px;
+    padding: 0 12px;
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.82rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+  }
+
+  .chat-text-input:focus {
+    border-color: var(--accent-neon-yellow);
+  }
+
+  .chat-send-btn {
+    flex-shrink: 0;
+    height: 38px;
+    padding: 0 14px;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.12s var(--ease-tactile), background 0.14s ease;
+  }
+
+  .chat-send-btn:hover {
+    background: #ffffff;
+    transform: translate(-1px, -1px);
+  }
+
+  .chat-send-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  /* Reactions & Tip Row */
+  .chat-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .quick-reactions-tray {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .live-reaction-btn {
+    width: 36px;
+    height: 36px;
+    background: #24242e;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.1s var(--ease-tactile), background 0.14s ease;
+  }
+
+  .live-reaction-btn:hover {
+    background: #323240;
+    transform: translateY(-2px) scale(1.1);
+  }
+
+  .live-reaction-btn:active,
+  :global(.reaction-btn-bounce) {
+    transform: scale(0.85);
+    background: var(--accent-neon-yellow);
+  }
+
+  /* [💰 TIP] Button */
+  .live-tip-jar-btn {
+    height: 36px;
+    padding: 0 12px;
+    background: #53fc18;
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    transition: transform 0.12s var(--ease-tactile), background 0.14s ease;
+  }
+
+  .live-tip-jar-btn:hover {
+    background: #7aff48;
+    transform: translate(-1px, -1px);
+  }
+
+  .live-tip-jar-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  @media (max-width: 360px) {
+    .quick-reactions-tray {
+      gap: 4px;
+    }
+
+    .live-reaction-btn {
+      width: 32px;
+      height: 32px;
+      font-size: 0.95rem;
+    }
+
+    .live-tip-jar-btn {
+      height: 32px;
+      padding: 0 8px;
+      font-size: 0.74rem;
+    }
+  }
+</style>

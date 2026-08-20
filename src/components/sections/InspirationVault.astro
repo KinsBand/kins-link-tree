@@ -1,9 +1,15 @@
 ---
 const artists = [
-  { key: "the-cure", label: "The Cure", active: true },
-  { key: "weezer", label: "Weezer", active: false },
+  { key: "all", label: "All", active: true },
+  { key: "beabadoobee", label: "beabadoobee", active: false },
+  { key: "cocteau-twins", label: "Cocteau Twins", active: false },
+  { key: "dinosaur-jr", label: "Dinosaur Jr.", active: false },
   { key: "pulp", label: "Pulp", active: false },
-  { key: "the-long-faces", label: "The Long Faces", active: false }
+  { key: "sonic-youth", label: "Sonic Youth", active: false },
+  { key: "supergrass", label: "Supergrass", active: false },
+  { key: "brian-jonestown-massacre", label: "The Brian Jonestown Massacre", active: false },
+  { key: "the-cure", label: "The Cure", active: false },
+  { key: "the-sundays", label: "The Sundays", active: false }
 ];
 ---
 
@@ -393,7 +399,7 @@ const artists = [
   const dotsContainer = document.getElementById('dotsPaginationContainer');
   const filterBtns = document.querySelectorAll('#artistFilterBar .filter-pill-btn');
 
-  let currentArtistKey = 'the-cure';
+  let currentArtistKey = 'all';
   let currentPageIndex = 0;
 
   let currentPlaybackTrack: any = null;
@@ -446,7 +452,7 @@ const artists = [
     if (!container) return;
 
     currentArtistKey = artistKey;
-    const artistData = (INSPIRED_ARTISTS_DATA as any)[artistKey] || INSPIRED_ARTISTS_DATA['the-cure'];
+    const artistData = (INSPIRED_ARTISTS_DATA as any)[artistKey] || INSPIRED_ARTISTS_DATA['all'];
     const totalPages = artistData.pages.length;
     currentPageIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
 
@@ -593,7 +599,7 @@ const artists = [
     btn.addEventListener('click', () => {
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const key = btn.getAttribute('data-artist-key') || 'the-cure';
+      const key = btn.getAttribute('data-artist-key') || 'all';
       trackKinsInteraction('vault_artist_tab_switched', 'music', {
         selected_artist: btn.innerText?.trim() || key,
         artist_key: key,
@@ -603,5 +609,5 @@ const artists = [
     });
   });
 
-  renderArtistPage('the-cure', 0);
+  renderArtistPage('all', 0);
 </script>

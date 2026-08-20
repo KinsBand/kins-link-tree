@@ -1,0 +1,260 @@
+---
+import { liveConfig } from '../../settings/live.config';
+
+const activeSong = liveConfig.setlist.find(s => s.status === 'active') || liveConfig.setlist[0];
+---
+
+<div class="live-column-card live-lyrics-stage-card" id="liveLyricsStageCard" data-track-container="section:lyrics_stage">
+  <!-- Card Header -->
+  <div class="column-card-header">
+    <div class="header-left">
+      <h3 class="column-title">LIVE LYRICS</h3>
+    </div>
+    <span class="lyrics-live-badge">
+      <span class="pulse-green-dot"></span>
+      <span id="lyricsStageActiveBadge">LIVE SYNCED</span>
+    </span>
+  </div>
+
+  <!-- Song Banner / Meta Bar -->
+  <div class="lyrics-song-header">
+    <div class="song-header-main">
+      <span class="song-prefix-tag">CURRENT TRACK:</span>
+      <h4 class="stage-song-title" id="stageLyricsSongTitle">{activeSong.title}</h4>
+    </div>
+    <div class="stage-meta-pills" id="stageLyricsMetaPills">
+      {activeSong.key && <span class="stage-pill pill-key" id="stageLyricsKeyPill">{activeSong.key}</span>}
+      {activeSong.tempo && <span class="stage-pill pill-tempo" id="stageLyricsTempoPill">{activeSong.tempo}</span>}
+    </div>
+  </div>
+
+  <!-- Main Teleprompter Body -->
+  <div class="stage-lyrics-body">
+    <div class="teleprompter-live-indicator">
+      <span class="pulse-red-dot"></span>
+      <span>STAGE TELEPROMPTER • SYNCED TO VOCAL MIC</span>
+    </div>
+    <ul class="stage-lyrics-list" id="stageLyricsList">
+      {activeSong.lyrics && activeSong.lyrics.length > 0 ? (
+        activeSong.lyrics.map((line, idx) => (
+          <li class={`stage-lyrics-line ${idx === 3 ? 'active-singing-line' : ''}`} data-line-index={idx}>
+            <span class="line-time">{Math.floor(line.time / 60)}:{(line.time % 60).toString().padStart(2, '0')}</span>
+            <span class="line-text">{line.text}</span>
+          </li>
+        ))
+      ) : (
+        <li class="stage-lyrics-line">
+          <span class="line-text">Lyrics coming soon for this track...</span>
+        </li>
+      )}
+    </ul>
+  </div>
+</div>
+
+<style>
+  .live-lyrics-stage-card {
+    background: #141418;
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .column-card-header {
+    background: #1c1c22;
+    border-bottom: 2px solid #000000;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .column-title {
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--text-white);
+    letter-spacing: 0.04em;
+    margin: 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .lyrics-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9999px;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--accent-neon-yellow);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .pulse-green-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #53fc18;
+    box-shadow: 0 0 6px #53fc18;
+  }
+
+  .pulse-red-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ef4444;
+    box-shadow: 0 0 6px #ef4444;
+  }
+
+  /* Song Header */
+  .lyrics-song-header {
+    background: rgba(0, 0, 0, 0.35);
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.08);
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .song-header-main {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .song-prefix-tag {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
+    letter-spacing: 0.04em;
+  }
+
+  .stage-song-title {
+    font-family: var(--font-secondary);
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stage-meta-pills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stage-pill {
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: #d1d1d6;
+  }
+
+  /* Main Body & Teleprompter */
+  .stage-lyrics-body {
+    padding: 14px 16px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 420px;
+    min-height: 240px;
+    background: rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .teleprompter-live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #ef4444;
+    margin-bottom: 2px;
+  }
+
+  .stage-lyrics-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  :global(.stage-lyrics-line) {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  :global(.stage-lyrics-line.active-singing-line) {
+    background: rgba(242, 253, 67, 0.15);
+    border-left: 3px solid var(--accent-neon-yellow);
+    transform: scale(1.01);
+  }
+
+  :global(.stage-lyrics-line.active-singing-line .line-text) {
+    color: var(--accent-neon-yellow);
+    font-weight: 800;
+    font-size: 0.95rem;
+  }
+
+  :global(.line-time) {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-card-muted);
+    min-width: 32px;
+  }
+
+  :global(.line-text) {
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    color: #f5f5f7;
+    line-height: 1.4;
+  }
+</style>

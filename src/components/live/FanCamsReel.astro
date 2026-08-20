@@ -1,0 +1,373 @@
+---
+import { liveConfig } from '../../settings/live.config';
+
+const baseUrl = import.meta.env.BASE_URL;
+const resolveUrl = (url: string) => !url ? `${baseUrl}pfp.jpg` : url.startsWith('http') ? url : `${baseUrl}${url.replace(/^\//, '')}`;
+---
+
+<section class="fan-cams-section" aria-label="Fan Cams and Co-Streams" data-track-container="section:fan_cams">
+  <div class="fan-cams-header">
+    <div class="section-title-wrap">
+      <i class="fa-solid fa-users-viewfinder title-icon"></i>
+      <h2 class="fan-cams-title">FAN CAMS &amp; CO-STREAMS</h2>
+    </div>
+    <div class="section-scroll-controls">
+      <button type="button" class="scroll-arrow-btn" id="fanCamsScrollPrev" aria-label="Scroll fan streams left" data-track="fancam:scroll_prev">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <button type="button" class="scroll-arrow-btn" id="fanCamsScrollNext" aria-label="Scroll fan streams right" data-track="fancam:scroll_next">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="fan-cams-reel-container" id="fanCamsReel">
+    <div class="fan-cams-track">
+      <!-- Dynamic Streamer Cards -->
+      {liveConfig.fanCams.map((stream) => (
+        <a 
+          href={stream.streamUrl} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="fan-cam-card" 
+          data-track={`fancam:${stream.handle}`}
+          title={`Watch ${stream.handle} on ${stream.platform}`}
+        >
+          <div class="fan-cam-avatar-frame" style={`--platform-accent: ${stream.platformColor};`}>
+            <div class="fan-cam-live-pill">
+              <span class="live-mini-dot"></span>
+              <span>LIVE</span>
+            </div>
+            <img src={resolveUrl(stream.avatarUrl)} alt={stream.handle} class="streamer-avatar-img" loading="lazy" />
+            <div class="platform-icon-bubble" style={`background-color: ${stream.platformColor};`}>
+              <i class={stream.platformIcon}></i>
+            </div>
+          </div>
+          <div class="fan-cam-info">
+            <span class="streamer-handle">{stream.handle}</span>
+            <span class="streamer-viewers">{stream.viewers} watching</span>
+          </div>
+        </a>
+      ))}
+
+      <!-- Action Card: Tag Our Hashtag to Join -->
+      <button type="button" class="fan-cam-card tag-hashtag-join-card open-live-upload-modal-btn" data-track="fancam:tag_hashtag_join">
+        <div class="join-card-frame">
+          <i class="fa-solid fa-plus plus-icon"></i>
+          <span class="join-title">TAG OUR</span>
+          <span class="join-hashtag">#KINSLIVE</span>
+          <span class="join-cta">TO JOIN</span>
+        </div>
+        <div class="fan-cam-info">
+          <span class="streamer-handle">Stream The Pit</span>
+          <span class="streamer-viewers">Tag to Join</span>
+        </div>
+      </button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .fan-cams-section {
+    width: 100%;
+    max-width: 1280px;
+    margin: 16px auto 8px;
+    padding: 0 14px;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .fan-cams-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .section-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .title-icon {
+    color: var(--accent-neon-yellow);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .fan-cams-title {
+    font-family: var(--font-secondary);
+    font-size: 0.95rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: var(--text-white);
+    text-transform: uppercase;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 380px) {
+    .fan-cams-title {
+      font-size: 0.82rem;
+    }
+  }
+
+  .section-scroll-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .scroll-arrow-btn {
+    background: var(--surface-card-light);
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--text-card-primary);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 800;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
+  .scroll-arrow-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .scroll-arrow-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  /* Horizontal Scroll Reel */
+  .fan-cams-reel-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-neon-yellow) transparent;
+  }
+
+  .fan-cams-reel-container::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .fan-cams-reel-container::-webkit-scrollbar-thumb {
+    background: var(--accent-neon-yellow);
+    border-radius: 4px;
+  }
+
+  .fan-cams-track {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    min-width: max-content;
+    padding: 4px 2px;
+  }
+
+  /* Single Streamer Card */
+  .fan-cam-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 105px;
+    padding: 0;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .fan-cam-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .fan-cam-avatar-frame {
+    position: relative;
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    padding: 3px;
+    background: linear-gradient(135deg, #ef4444 0%, var(--platform-accent, #f2fd43) 100%);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .streamer-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #18181c;
+    border: 2px solid #000000;
+  }
+
+  .fan-cam-live-pill {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ef4444;
+    color: #ffffff;
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    border: 1.5px solid #000000;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    z-index: 2;
+  }
+
+  .live-mini-dot {
+    width: 5px;
+    height: 5px;
+    background: #ffffff;
+    border-radius: 50%;
+  }
+
+  .platform-icon-bubble {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #000000;
+    color: #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+  }
+
+  .fan-cam-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 6px;
+    text-align: center;
+    width: 100%;
+  }
+
+  .streamer-handle {
+    font-family: var(--font-secondary);
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: var(--text-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .streamer-platform {
+    font-family: var(--font-primary);
+    font-size: 0.72rem;
+    color: var(--text-card-muted);
+  }
+
+  .streamer-viewers {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--accent-neon-yellow);
+    margin-top: 1px;
+  }
+
+  /* Tag Our Hashtag Join Card */
+  .tag-hashtag-join-card {
+    text-align: center;
+  }
+
+  .join-card-frame {
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    border: 2.5px dashed var(--accent-neon-yellow);
+    background: rgba(242, 253, 67, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-neon-yellow);
+    font-family: var(--font-secondary);
+    font-weight: 900;
+    box-sizing: border-box;
+    padding: 4px;
+    transition: background 0.16s ease, border-color 0.16s ease;
+  }
+
+  .tag-hashtag-join-card:hover .join-card-frame {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-style: solid;
+  }
+
+  .plus-icon {
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+  }
+
+  .join-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  .join-hashtag {
+    font-size: 0.64rem;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+
+  .join-cta {
+    font-size: 0.54rem;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
+  }
+</style>
+
+<script>
+  const reel = document.getElementById('fanCamsReel');
+  const prevBtn = document.getElementById('fanCamsScrollPrev');
+  const nextBtn = document.getElementById('fanCamsScrollNext');
+
+  if (reel && prevBtn && nextBtn) {
+    prevBtn.addEventListener('click', () => {
+      reel.scrollBy({ left: -220, behavior: 'smooth' });
+    });
+
+    nextBtn.addEventListener('click', () => {
+      reel.scrollBy({ left: 220, behavior: 'smooth' });
+    });
+  }
+</script>
+

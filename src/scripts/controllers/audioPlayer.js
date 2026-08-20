@@ -221,11 +221,18 @@ function formatTime(seconds) {
 
 function getAllInspiredTracks() {
   const tracks = [];
+  const seen = new Set();
   if (!INSPIRED_ARTISTS_DATA) return tracks;
   Object.values(INSPIRED_ARTISTS_DATA).forEach(artistObj => {
     if (artistObj.pages) {
       artistObj.pages.forEach(page => {
-        page.forEach(track => tracks.push(track));
+        page.forEach(track => {
+          const key = `${track.artist} - ${track.title}`.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            tracks.push(track);
+          }
+        });
       });
     }
   });

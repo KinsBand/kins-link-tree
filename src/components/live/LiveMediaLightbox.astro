@@ -1,0 +1,133 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="liveMediaLightbox" role="dialog" aria-modal="true" aria-label="Media Preview" data-track-container="modal:lightbox">
+  <div class="lightbox-dialog">
+    <button class="close-lightbox-btn" id="closeLiveLightboxBtn" aria-label="Close lightbox">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <div class="lightbox-media-container" id="liveLightboxMediaContainer">
+      <!-- Injected dynamically by liveFanWallController.js -->
+    </div>
+
+    <div class="lightbox-caption-bar">
+      <span class="lightbox-author-tag" id="liveLightboxAuthor">@author</span>
+      <p class="lightbox-caption-text" id="liveLightboxCaption">Live photo caption</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .modal-backdrop.hidden {
+    display: none !important;
+  }
+
+  .lightbox-dialog {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #141418;
+    border: 3px solid #000000;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: lightboxPopIn 0.2s var(--ease-snappy) forwards;
+  }
+
+  @keyframes lightboxPopIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .close-lightbox-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 38px;
+    height: 38px;
+    background: #000000;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: background 0.14s ease, transform 0.1s ease;
+  }
+
+  .close-lightbox-btn:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    transform: scale(1.1);
+  }
+
+  .lightbox-media-container {
+    width: 100%;
+    max-width: 800px;
+    max-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000000;
+    overflow: hidden;
+  }
+
+  :global(.lightbox-image) {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    display: block;
+  }
+
+  :global(.lightbox-video) {
+    max-width: 100%;
+    max-height: 70vh;
+    display: block;
+  }
+
+  .lightbox-caption-bar {
+    width: 100%;
+    background: #1c1c24;
+    border-top: 2px solid #000000;
+    padding: 12px 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .lightbox-author-tag {
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
+  }
+
+  .lightbox-caption-text {
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    color: #ffffff;
+    margin: 0;
+  }
+</style>

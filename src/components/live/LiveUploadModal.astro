@@ -1,0 +1,322 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="liveUploadModal" role="dialog" aria-modal="true" aria-label="Upload Live Photo or Video" data-track-container="modal:live_upload">
+  <div class="modal-content live-upload-modal-content">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="brand-mini-badge">🔴 LIVE AT THE CAMBRIDGE</span>
+        <h3>Upload Live Shot</h3>
+      </div>
+      <button class="close-modal-btn" id="closeLiveUploadModal" aria-label="Close upload modal" data-track="upload:close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <form id="liveMediaUploadForm" class="live-upload-form">
+        <!-- Media Dropzone / File Picker -->
+        <div class="form-group">
+          <label class="form-label">Photo or Video Clip</label>
+          <label for="liveMediaFileInput" class="media-dropzone-box">
+            <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+            <span class="dropzone-text">Tap to select photo / video or snap with camera</span>
+            <span class="dropzone-hint">PNG, JPG, MP4 up to 50MB</span>
+            <input type="file" id="liveMediaFileInput" accept="image/*,video/*" class="file-hidden-input" />
+          </label>
+
+          <!-- Live Preview -->
+          <div class="media-preview-box hidden" id="liveMediaPreviewContainer">
+            <img id="liveMediaPreviewImg" src="" alt="Upload preview" class="preview-thumb" />
+            <span class="preview-badge">Ready to Post</span>
+          </div>
+        </div>
+
+        <!-- Fan Handle Input -->
+        <div class="form-group">
+          <label class="form-label" for="liveUploadHandleInput">Your Social Handle</label>
+          <div class="input-with-prefix">
+            <input 
+              type="text" 
+              id="liveUploadHandleInput" 
+              class="modal-text-input" 
+              placeholder="@yourname (TikTok / IG / X)" 
+              required 
+            />
+          </div>
+        </div>
+
+        <!-- Caption Input with Hashtag Note -->
+        <div class="form-group">
+          <label class="form-label" for="liveUploadCaptionInput">Caption</label>
+          <textarea 
+            id="liveUploadCaptionInput" 
+            class="modal-textarea-input" 
+            rows="2" 
+            placeholder="Tell us where you are watching from! (Tag #KinsLive)"
+          ></textarea>
+          <div class="hashtag-helper-pill">
+            <i class="fa-solid fa-hashtag"></i>
+            <span>#KinsLive automatically tagged</span>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="modal-primary-btn" id="submitLiveUploadBtn" data-track="upload:submit">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>POST TO LIVE FAN WALL</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .modal-backdrop.hidden {
+    display: none !important;
+  }
+
+  .live-upload-modal-content {
+    background: #181820;
+    border: 3px solid #000000;
+    box-shadow: 6px 6px 0px #000000;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalScaleIn 0.22s var(--ease-snappy) forwards;
+  }
+
+  @keyframes modalScaleIn {
+    from { transform: scale(0.92) translateY(12px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    background: #20202a;
+    border-bottom: 2px solid #000000;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-mini-badge {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-weight: 800;
+    color: #ef4444;
+    letter-spacing: 0.05em;
+  }
+
+  .modal-title-group h3 {
+    font-family: var(--font-secondary);
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .close-modal-btn {
+    width: 36px;
+    height: 36px;
+    background: var(--surface-card-light);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    font-size: 1rem;
+    transition: transform 0.1s ease, background 0.14s ease;
+  }
+
+  .close-modal-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .live-upload-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-label {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--text-white);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .media-dropzone-box {
+    border: 2px dashed rgba(242, 253, 67, 0.4);
+    background: rgba(242, 253, 67, 0.04);
+    border-radius: 8px;
+    padding: 18px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .media-dropzone-box:hover {
+    background: rgba(242, 253, 67, 0.1);
+    border-color: var(--accent-neon-yellow);
+  }
+
+  .dropzone-icon {
+    font-size: 1.8rem;
+    color: var(--accent-neon-yellow);
+    margin-bottom: 2px;
+  }
+
+  .dropzone-text {
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .dropzone-hint {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-card-muted);
+  }
+
+  .file-hidden-input {
+    display: none;
+  }
+
+  .media-preview-box {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #000000;
+    margin-top: 6px;
+  }
+
+  .preview-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .preview-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: #53fc18;
+    color: #000000;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .modal-text-input,
+  .modal-textarea-input {
+    width: 100%;
+    background: #0f0f14;
+    border: 2px solid #000000;
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.84rem;
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  .modal-text-input:focus,
+  .modal-textarea-input:focus {
+    border-color: var(--accent-neon-yellow);
+  }
+
+  .hashtag-helper-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent-neon-yellow);
+    margin-top: 2px;
+  }
+
+  .modal-primary-btn {
+    width: 100%;
+    height: 44px;
+    background: var(--accent-neon-yellow);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    color: #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+    transition: transform 0.12s var(--ease-tactile), background 0.14s ease;
+  }
+
+  .modal-primary-btn:hover {
+    background: #ffffff;
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .modal-primary-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+</style>
