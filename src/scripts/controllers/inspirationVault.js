@@ -173,8 +173,7 @@ export const INSPIRED_ARTISTS_DATA = {
         { title: 'Jane!', artist: 'The Long Faces', duration: '3:07', genre: 'Art Rock / Post-Punk', quote: 'Dramatic dynamic shifts & intricate post-punk energy', icon: 'fa-music' }
       ],
       [
-        { title: 'Autism', artist: 'Negative XP', duration: '2:34', genre: 'Lo-Fi Punk / Indie Rock', quote: 'Gritty lo-fi DIY chords & raw bedroom punk attitude', icon: 'fa-fire' },
-        { title: 'Quandale Dingle', artist: 'Quandale Dingle', duration: '2:00', genre: 'Meme / Experimental', quote: 'Viral internet culture & underground beat energy', icon: 'fa-compact-disc' },
+        { title: 'negative xp - autism', artist: 'Quandale Dingle', duration: '2:34', genre: 'Lo-Fi Punk / Internet Rock', quote: 'Gritty lo-fi DIY chords & internet culture energy', icon: 'fa-fire' },
         { title: 'Hello Juliet', artist: 'Clarion', duration: '3:28', genre: 'Indie Rock / Alternative', quote: 'Catchy indie guitar riffs & soaring melodic hooks', icon: 'fa-headphones' },
         { title: 'Made in Japan', artist: 'Buck Owens & His Buckaroos', duration: '2:45', genre: 'Bakersfield Country / Classic Rock', quote: 'Vintage twang, telecaster lead riffs & timeless songwriting', icon: 'fa-guitar' }
       ]
@@ -347,25 +346,14 @@ export const INSPIRED_ARTISTS_DATA = {
       ]
     ]
   },
-  'negative-xp': {
-    name: 'Negative XP',
-    genre: 'Lo-Fi Punk / Bedroom Punk / DIY Rock',
-    bio: 'Raw lo-fi garage riffs, DIY punk grit, and underground bedroom rock energy.',
+  'quandale-dingle': {
+    name: 'Quandale Dingle',
+    genre: 'Lo-Fi Punk / Internet Rock',
+    bio: 'Viral internet culture, raw DIY indie punk distortion, and quirky underground energy.',
     iconClass: 'fa-fire',
     pages: [
       [
-        { title: 'Autism', artist: 'Negative XP', duration: '2:34', genre: 'Lo-Fi Punk / Indie Rock', quote: 'Gritty lo-fi DIY chords & raw bedroom punk attitude', icon: 'fa-fire' }
-      ]
-    ]
-  },
-  'quandale-dingle': {
-    name: 'Quandale Dingle',
-    genre: 'Meme Culture / Internet Experimental',
-    bio: 'Unfiltered internet chaos, viral sonic collages, and quirky meme beats.',
-    iconClass: 'fa-compact-disc',
-    pages: [
-      [
-        { title: 'Quandale Dingle', artist: 'Quandale Dingle', duration: '2:00', genre: 'Meme / Experimental', quote: 'Viral internet culture & underground beat energy', icon: 'fa-compact-disc' }
+        { title: 'negative xp - autism', artist: 'Quandale Dingle', duration: '2:34', genre: 'Lo-Fi Punk / Internet Rock', quote: 'Gritty lo-fi DIY chords & internet culture energy', icon: 'fa-fire' }
       ]
     ]
   },
