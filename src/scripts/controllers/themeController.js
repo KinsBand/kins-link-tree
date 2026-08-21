@@ -33,7 +33,7 @@ export function updateThemeButtonUI(theme) {
   const isDark = theme === 'dark';
   
   if (toggleLabel) {
-    toggleLabel.textContent = isDark ? 'Dark Mode' : 'Standard Mode';
+    toggleLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
   }
 
   if (toggleIcon) {

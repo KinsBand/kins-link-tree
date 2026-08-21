@@ -1,96 +1,308 @@
 import type { APIRoute } from 'astro';
+import { supabase } from '../../lib/supabase';
+import { validateRealEmail } from '../../scripts/utils/emailValidator.js';
 
 export const prerender = false;
 
-const DEFAULT_SUBSTACK_DOMAIN = 'kinsbandoffical.substack.com';
+const getEnv = (key: string): string => {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+    return import.meta.env[key];
+  }
+  if (typeof process !== 'undefined' && process.env && process.env[key]) {
+    return process.env[key] || '';
+  }
+  return '';
+};
+
+// Generates modern brutalist HTML Welcome Email for Kins Band
+function generateWelcomeEmailHtml(email: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Kins Band!</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f7;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #111111;
+    }
+    .email-container {
+      max-width: 580px;
+      margin: 30px auto;
+      background: #ffffff;
+      border: 3px solid #000000;
+      border-radius: 8px;
+      box-shadow: 5px 5px 0px #000000;
+      overflow: hidden;
+    }
+    .email-header {
+      background: #ffeb3b;
+      border-bottom: 3px solid #000000;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .email-header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #000000;
+      text-transform: uppercase;
+    }
+    .email-header p {
+      margin: 6px 0 0 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #222222;
+      letter-spacing: 0.5px;
+    }
+    .email-body {
+      padding: 28px 24px;
+    }
+    .email-body h2 {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0 0 12px 0;
+      color: #111111;
+    }
+    .email-body p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #333333;
+      margin: 0 0 16px 0;
+    }
+    .card-highlight {
+      background: #fdfdfd;
+      border: 2px solid #000000;
+      border-radius: 6px;
+      box-shadow: 3px 3px 0px #000000;
+      padding: 16px 18px;
+      margin: 20px 0;
+    }
+    .card-highlight ul {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+    .card-highlight li {
+      font-size: 14px;
+      font-weight: 600;
+      color: #222222;
+      margin-bottom: 8px;
+    }
+    .btn-row {
+      text-align: center;
+      margin: 28px 0 20px 0;
+    }
+    .cta-btn {
+      display: inline-block;
+      background: #ffeb3b;
+      color: #000000 !important;
+      text-decoration: none;
+      font-weight: 900;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 24px;
+      border: 2.5px solid #000000;
+      border-radius: 6px;
+      box-shadow: 3px 3px 0px #000000;
+    }
+    .socials-row {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 2px solid #eaeaea;
+    }
+    .socials-row a {
+      color: #111111;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 13px;
+      margin: 0 8px;
+      display: inline-block;
+    }
+    .socials-row a:hover {
+      text-decoration: underline;
+    }
+    .email-footer {
+      background: #111111;
+      color: #888888;
+      padding: 16px 20px;
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .email-footer a {
+      color: #ffeb3b;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1>KINS BAND</h1>
+      <p>Official Fan Club & VIP Drops</p>
+    </div>
+    <div class="email-body">
+      <h2>You're In! 🎸🔥</h2>
+      <p>Thanks for subscribing! You are now locked in to receive the latest updates directly from Kins.</p>
+      
+      <div class="card-highlight">
+        <strong style="font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px;">What you'll get:</strong>
+        <ul>
+          <li>🔥 <strong>Early Releases:</strong> Hear new covers & original tracks before anyone else.</li>
+          <li>🎟️ <strong>Gig & Tour Alerts:</strong> First access to show dates & secret gigs.</li>
+          <li>🎬 <strong>Behind-The-Scenes:</strong> Studio footage, jam sessions & band diaries.</li>
+          <li>🎵 <strong>Cover Request Priority:</strong> Your song suggestions move straight to the top of our queue.</li>
+        </ul>
+      </div>
+
+      <div class="btn-row">
+        <a href="https://kinsband.com" class="cta-btn" target="_blank">Explore Kins Site & Music</a>
+      </div>
+
+      <div class="socials-row">
+        <a href="https://open.spotify.com/artist/0F4YhJc3cI8rVq6U7v7q7C" target="_blank">Spotify</a> •
+        <a href="https://www.youtube.com/@KinsBand" target="_blank">YouTube</a> •
+        <a href="https://www.instagram.com/kinsbandofficial/" target="_blank">Instagram</a> •
+        <a href="https://www.tiktok.com/@kinsbandofficial" target="_blank">TikTok</a>
+      </div>
+    </div>
+    <div class="email-footer">
+      <p>You received this email because you subscribed at <a href="https://kinsband.com">kinsband.com</a> (${email}).</p>
+      <p>&copy; ${new Date().getFullYear()} Kins Band. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { email } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const email = body.email;
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || typeof email !== 'string' || !emailRegex.test(email.trim())) {
+    const validation = await validateRealEmail(email);
+    if (!validation.valid) {
       return new Response(
-        JSON.stringify({ status: 'error', message: 'Please enter a complete and valid email address (e.g. name@example.com).' }),
+        JSON.stringify({ status: 'error', message: validation.error || 'Please enter a valid, active email address.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const cleanEmail = email.toLowerCase().trim();
-    const rawDomain = import.meta.env.SUBSTACK_DOMAIN || process.env.SUBSTACK_DOMAIN || DEFAULT_SUBSTACK_DOMAIN;
-    const substackDomain = rawDomain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const cleanEmail = validation.cleanEmail!;
+    let dbSuccess = false;
+    let welcomeEmailSent = false;
 
-    let substackSuccess = false;
-    let errorMessage = '';
+    // 1. Save Subscriber to Supabase Database (subscribers table)
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('subscribers')
+          .upsert(
+            {
+              email: cleanEmail,
+              source: body.source || 'website',
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: 'email', ignoreDuplicates: false }
+          );
 
-    // 1. Submit email to Substack free subscription API (form-encoded)
-    try {
-      const substackUrl = `https://${substackDomain}/api/v1/free?nojs=true`;
-      const formData = new URLSearchParams();
-      formData.append('email', cleanEmail);
-      formData.append('source', 'website_footer');
+        if (!error) {
+          dbSuccess = true;
+        } else {
+          console.error('Supabase subscribers upsert error:', error);
+        }
+      } catch (dbErr) {
+        console.error('Supabase connection error:', dbErr);
+      }
+    } else {
+      console.warn('Supabase client is not initialized. Please verify SUPABASE_URL & SUPABASE_SERVICE_ROLE_KEY.');
+    }
 
-      const response = await fetch(substackUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Referer': `https://${substackDomain}/`
-        },
-        body: formData.toString()
-      });
+    // 2. Send Welcome Email via Resend
+    const resendApiKey = getEnv('RESEND_API_KEY');
+    const fromEmail = getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>';
 
-      if (response.ok) {
-        substackSuccess = true;
-      } else {
-        // Fallback: Attempt JSON payload to Substack API
-        const jsonResponse = await fetch(`https://${substackDomain}/api/v1/free`, {
+    if (resendApiKey) {
+      try {
+        const resendPayload = {
+          from: fromEmail,
+          to: [cleanEmail],
+          subject: 'Welcome to the Kins Band Fan Club! 🎸✨',
+          html: generateWelcomeEmailHtml(cleanEmail)
+        };
+
+        const resendRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': `https://${substackDomain}/`
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ email: cleanEmail, domain: 'substack.com', source: 'subscribe_page' })
+          body: JSON.stringify(resendPayload)
         });
 
-        if (jsonResponse.ok) {
-          substackSuccess = true;
+        if (resendRes.ok) {
+          welcomeEmailSent = true;
+          // Mark welcome_email_sent = true in Supabase
+          if (supabase) {
+            await supabase
+              .from('subscribers')
+              .update({ welcome_email_sent: true })
+              .eq('email', cleanEmail);
+          }
         } else {
-          const text = await response.text().catch(() => '');
-          errorMessage = `Substack responded with status ${response.status}`;
-          console.warn('Substack subscription response warning:', response.status, text);
+          const resendErrText = await resendRes.text().catch(() => '');
+          console.warn('Resend email delivery warning:', resendRes.status, resendErrText);
         }
+      } catch (emailErr) {
+        console.error('Resend dispatch error:', emailErr);
       }
-    } catch (err: any) {
-      console.error('Substack fetch error:', err);
-      errorMessage = err?.message || 'Network error reaching Substack.';
     }
 
-    if (substackSuccess) {
-      return new Response(
-        JSON.stringify({
-          status: 'success',
-          message: "Subscribed to Kins on Substack! Check your inbox to confirm."
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-    } else {
-      // Return success to the user so client UX remains smooth while providing fallback notice
-      return new Response(
-        JSON.stringify({
-          status: 'success',
-          message: "Welcome to Kins! Redirecting to Substack to complete subscription...",
-          redirectUrl: `https://${substackDomain}/subscribe?email=${encodeURIComponent(cleanEmail)}`
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+    // 3. Optional Discord backup notification so no subscriber is ever missed
+    const discordWebhookUrl = getEnv('DISCORD_FEEDBACK_WEBHOOK_URL') ||
+      'https://discord.com/api/webhooks/1537823822240026705/Gw3XTHhEbpqIGGxhXvQx6yeOoAOWVwCVLyo-36DtwqXNptDHR69KqN-4286oMpHfSB7G';
+
+    if (discordWebhookUrl) {
+      try {
+        await fetch(discordWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: 'Kins Subscribers Bot',
+            avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/pfp.jpg',
+            embeds: [
+              {
+                title: '✉️ New Fan Club Subscriber!',
+                description: `**Email:** \`${cleanEmail}\`\n• **Database Saved:** ${dbSuccess ? '✅ Yes' : '⚠️ Pending Setup'}\n• **Welcome Email:** ${welcomeEmailSent ? '✅ Sent via Resend' : (resendApiKey ? '⚠️ Failed/Queued' : 'ℹ️ Resend Key Not Set')}\n• **Timestamp:** ${new Date().toISOString()}`,
+                color: 0xffeb3b, // Neon Yellow
+                footer: { text: 'Kins Subscription System' }
+              }
+            ]
+          })
+        }).catch(() => {});
+      } catch (_) {}
     }
-  } catch (err: any) {
+
     return new Response(
-      JSON.stringify({ status: 'error', message: 'Subscription processing error.' }),
+      JSON.stringify({
+        status: 'success',
+        message: "You're subscribed! Check your inbox for your welcome email.",
+        email: cleanEmail
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (err: any) {
+    console.error('Subscription API fatal error:', err);
+    return new Response(
+      JSON.stringify({ status: 'error', message: 'Subscription processing error. Please try again.' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 };
-

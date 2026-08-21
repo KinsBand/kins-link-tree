@@ -1,7 +1,9 @@
 import { defineConfig } from 'astro/config';
+import vercel from '@astrojs/vercel/serverless';
 
 export default defineConfig({
-  output: 'static',
+  output: 'hybrid',
+  adapter: vercel(),
   site: 'https://kins-link-tree.vercel.app',
   build: {
     format: 'directory'

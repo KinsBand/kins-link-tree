@@ -190,7 +190,7 @@ function initEpkMobileDrawer() {
       drawerThemeIcon.className = `theme-toggle-icon fa-solid ${isDark ? 'fa-moon' : 'fa-sun'}`;
     }
     if (drawerThemeLabel) {
-      drawerThemeLabel.textContent = isDark ? 'Dark Mode' : 'Standard Mode';
+      drawerThemeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
     }
   }
 
