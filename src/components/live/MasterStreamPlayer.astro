@@ -3,7 +3,7 @@ import { liveConfig } from '../../settings/live.config';
 import NativeAppsGrid from './NativeAppsGrid.astro';
 
 const baseUrl = import.meta.env.BASE_URL;
-const resolveUrl = (url: string) => !url ? `${baseUrl}pfp.jpg` : url.startsWith('http') ? url : `${baseUrl}${url.replace(/^\//, '')}`;
+const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith('http') ? url : `${baseUrl}${url.replace(/^\//, '')}`;
 ---
 
 <section class="master-stream-section" aria-label="Master Live Stream Feed" data-track-container="section:master_stream">
@@ -58,7 +58,7 @@ const resolveUrl = (url: string) => !url ? `${baseUrl}pfp.jpg` : url.startsWith(
         autoplay 
         muted 
         loop
-        poster={resolveUrl("pfp.jpg")}
+        poster={resolveUrl("new.png")}
       >
         <source src={liveConfig.streamSources.fallbackVideoUrl} type="video/mp4" />
         Your browser does not support HTML5 live stream video.

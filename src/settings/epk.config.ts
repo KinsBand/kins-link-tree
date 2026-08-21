@@ -39,8 +39,8 @@ export const epkConfig = {
   riyl: ["Fontaines D.C.", "IDLES", "The Murder Capital", "The Cure", "Gang of Youths"],
   yearFormed: "2024",
   tagline: "Newcastle's visceral post-punk four-piece delivering high-voltage hooks, driving rhythm section urgency, and atmospheric wall-of-sound energy.",
-  heroImage: "kins-studio/pfp.jpg",
-  logoImage: "kins-logo-new.png",
+  heroImage: "new.png",
+  logoImage: "new.png",
 
   // Band Members Roster (Day-0 Verified Lineup & Equipment)
   members: [
@@ -49,7 +49,7 @@ export const epkConfig = {
       role: "Lead Vocals & Rhythm Guitar", 
       instruments: ["Lead Vocals", "Rhythm Electric Guitar"], 
       icon: "fa-microphone",
-      photoUrl: "kins-studio/pfp.jpg",
+      photoUrl: "new.png",
       gearSummary: "Vocal Mic (SM58/Beta58), Fender Combo / Head, Pedalboard"
     },
     { 
@@ -57,24 +57,24 @@ export const epkConfig = {
       role: "Lead Guitar & Backing Vocals", 
       instruments: ["Lead Electric Guitar", "Backing Vocals"], 
       icon: "fa-guitar",
-      photoUrl: "pfp.jpg",
+      photoUrl: "new.png",
       gearSummary: "Guitar Head/Cab, Dual Chorus & Fuzz Pedalboard, Backing Mic"
     },
     { 
       name: "Oscar", 
       role: "Bass Guitar & Synthesizers", 
-      instruments: ["4-String Bass", "Analog Synthesizer"], 
+      instruments: ["Electric Bass", "Bass Synth / Moog"], 
       icon: "fa-sliders",
-      photoUrl: "kins-studio/pfp.jpg",
-      gearSummary: "Active DI, Bass Preamp / Cab, Synth DI Line"
+      photoUrl: "new.png",
+      gearSummary: "Bass Head/Cab, DI Box (Radial J48), Drive/Chorus Board"
     },
     { 
       name: "Trai", 
       role: "Drums & Percussion", 
-      instruments: ["5-Piece Drum Kit", "Percussion Pads"], 
+      instruments: ["Acoustic Drum Kit", "Sample Pad (SPD-SX)"], 
       icon: "fa-drum",
-      photoUrl: "pfp.jpg",
-      gearSummary: "Band brings snare, cymbals, kick pedal (Requires venue shell pack)"
+      photoUrl: "new.png",
+      gearSummary: "Drum Rug, Cymbals, Snare, Kick Pedal, SPD-SX Trigger Unit"
     }
   ] as EpkMember[],
 
@@ -118,24 +118,24 @@ export const epkConfig = {
       id: "photo-1",
       title: "Official Studio Portrait",
       type: "Landscape / 300 DPI",
-      imgUrl: "kins-studio/pfp.jpg",
-      downloadUrl: "kins-studio/pfp.jpg",
+      imgUrl: "new.png",
+      downloadUrl: "new.png",
       badge: "PRINT & WEB"
     },
     {
       id: "photo-2",
       title: "Live Stage Photography",
       type: "Landscape / 300 DPI",
-      imgUrl: "pfp.jpg",
-      downloadUrl: "pfp.jpg",
+      imgUrl: "new.png",
+      downloadUrl: "new.png",
       badge: "HIGH RESOLUTION"
     },
     {
       id: "photo-3",
       title: "Official Vector Band Logo",
       type: "Vector SVG & Transparent PNG",
-      imgUrl: "kins-logo-new.png",
-      downloadUrl: "kins-logo-new.png",
+      imgUrl: "new.png",
+      downloadUrl: "new.png",
       badge: "PROMO BRANDING"
     }
   ] as EpkPressPhoto[],

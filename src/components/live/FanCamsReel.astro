@@ -2,7 +2,7 @@
 import { liveConfig } from '../../settings/live.config';
 
 const baseUrl = import.meta.env.BASE_URL;
-const resolveUrl = (url: string) => !url ? `${baseUrl}pfp.jpg` : url.startsWith('http') ? url : `${baseUrl}${url.replace(/^\//, '')}`;
+const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith('http') ? url : `${baseUrl}${url.replace(/^\//, '')}`;
 ---
 
 <section class="fan-cams-section" aria-label="Fan Cams and Co-Streams" data-track-container="section:fan_cams">

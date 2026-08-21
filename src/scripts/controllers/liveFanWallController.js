@@ -296,7 +296,7 @@ export function initLiveFanWallController() {
       if (!caption) caption = 'Rocking out at The Cambridge Hotel with Kins! 🔥 #KinsLive';
       if (!caption.includes('#KinsLive')) caption += ' #KinsLive';
 
-      const mediaUrl = mediaPreviewImg?.src || 'pfp.jpg';
+      const mediaUrl = mediaPreviewImg?.src || 'new.png';
       const isVideo = selectedFile ? selectedFile.type.startsWith('video') : false;
       const mediaType = isVideo ? 'video' : 'image';
       const newPostId = 'wall-user-' + Date.now();

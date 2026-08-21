@@ -276,7 +276,7 @@ export const POST: APIRoute = async ({ request }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username: 'Kins Subscribers Bot',
-            avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/pfp.jpg',
+            avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png',
             embeds: [
               {
                 title: '✉️ New Fan Club Subscriber!',

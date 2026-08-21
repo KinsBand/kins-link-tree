@@ -1,7 +1,7 @@
 const CACHE_NAME = 'kins-link-bio-v27';
 const PRECACHE_ASSETS = [
   './manifest.json',
-  './pfp.jpg',
+  './new.png',
   './kins-logo-new.png',
   './followers.json'
 ];

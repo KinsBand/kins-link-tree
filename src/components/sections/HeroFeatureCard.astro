@@ -45,7 +45,7 @@ const merchTotalVotes = poll.merch_design.options.reduce((acc, opt) => acc + opt
 const cityTotalVotes = poll.city_request.options.reduce((acc, opt) => acc + opt.votes, 0);
 
 const baseUrl = import.meta.env.BASE_URL;
-const resolveImg = (src?: string) => !src ? `${baseUrl}pfp.jpg` : src.startsWith('http') ? src : `${baseUrl}${src.replace(/^\//, '')}`;
+const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith('http') ? src : `${baseUrl}${src.replace(/^\//, '')}`;
 ---
 
 <div class="hero-feature-card-wrapper" id="heroFeatureCardWrapper">
@@ -944,7 +944,7 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}pfp.jpg` : src.startsWith
     flex-direction: column;
     justify-content: space-between;
     box-sizing: border-box;
-    background-image: url('/pfp.jpg');
+    background-image: url('/new.png');
     background-size: cover;
     background-position: center 30%;
   }

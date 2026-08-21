@@ -270,7 +270,7 @@ export const heroConfig: HeroConfig = {
       footerText: "First official cover • Out now",
       embedUrl: "https://www.youtube.com/embed/n3nPiBaiZrg?autoplay=1",
       watchUrl: "https://www.youtube.com/watch?v=n3nPiBaiZrg",
-      coverImg: "/pfp.jpg"
+      coverImg: "/new.png"
     },
     original_single: {
       title: "Neon Shadows",
@@ -278,7 +278,7 @@ export const heroConfig: HeroConfig = {
       badge: "ALT-ROCK",
       platformIcon: "fa-spotify",
       footerText: "Stream now on Spotify & Apple Music",
-      coverImg: "/pfp.jpg"
+      coverImg: "/new.png"
     },
     ep_preorder: {
       title: "Kins EP Vol. 1",
@@ -286,7 +286,7 @@ export const heroConfig: HeroConfig = {
       badge: "PRE-ORDER",
       platformIcon: "fa-compact-disc",
       footerText: "Includes exclusive bonus track • Ships March 2026",
-      coverImg: "/pfp.jpg"
+      coverImg: "/new.png"
     }
   },
 
@@ -314,9 +314,9 @@ export const heroConfig: HeroConfig = {
     merch_design: {
       question: "Which T-Shirt design should we print for tour?",
       options: [
-        { id: "opt1", text: "Vintage Crest Tee", votes: 165, img: "/pfp.jpg", icon: "fa-shirt" },
-        { id: "opt2", text: "Newcastle Rock Tee", votes: 210, img: "/pfp.jpg", icon: "fa-tshirt" },
-        { id: "opt3", text: "Minimalist Wave Tee", votes: 124, img: "/pfp.jpg", icon: "fa-vector-square" }
+        { id: "opt1", text: "Vintage Crest Tee", votes: 165, img: "/new.png", icon: "fa-shirt" },
+        { id: "opt2", text: "Newcastle Rock Tee", votes: 210, img: "/new.png", icon: "fa-tshirt" },
+        { id: "opt3", text: "Minimalist Wave Tee", votes: 124, img: "/new.png", icon: "fa-vector-square" }
       ]
     },
     city_request: {
@@ -334,7 +334,7 @@ export const heroConfig: HeroConfig = {
       title: "Chemical Fires",
       artist: "Kins (Unreleased Demo)",
       durationSeconds: 30,
-      coverImg: "/pfp.jpg"
+      coverImg: "/new.png"
     },
     studio_bts: {
       title: "Recording Guitars at Newcastle Studio",
@@ -432,7 +432,7 @@ export const heroConfig: HeroConfig = {
       name: "Jack Kins",
       role: "Lead Vocals & Guitar",
       quote: "Heavy reverbs, post-punk basslines, and playing loud is all that matters.",
-      img: "/pfp.jpg"
+      img: "/new.png"
     },
     origin_story: {
       title: "Born in Newcastle, Australia",
@@ -442,9 +442,9 @@ export const heroConfig: HeroConfig = {
     gear_showcase: {
       title: "Signature Band Gear",
       items: [
-        { name: "Fender Jazzmaster", category: "Guitar", img: "/pfp.jpg", icon: "fa-guitar" },
-        { name: "Vox AC30 Top Boost", category: "Amp", img: "/pfp.jpg", icon: "fa-bullhorn" },
-        { name: "Strymon BigSky", category: "Reverb", img: "/pfp.jpg", icon: "fa-sliders" }
+        { name: "Fender Jazzmaster", category: "Guitar", img: "/new.png", icon: "fa-guitar" },
+        { name: "Vox AC30 Top Boost", category: "Amp", img: "/new.png", icon: "fa-bullhorn" },
+        { name: "Strymon BigSky", category: "Reverb", img: "/new.png", icon: "fa-sliders" }
       ]
     }
   },

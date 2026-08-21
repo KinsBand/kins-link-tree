@@ -128,13 +128,8 @@ async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
     const logoImg = new Image();
     logoImg.crossOrigin = 'anonymous';
     logoImg.onload = () => finishCanvas(logoImg);
-    logoImg.onerror = () => {
-      const fallbackImg = new Image();
-      fallbackImg.onload = () => finishCanvas(fallbackImg);
-      fallbackImg.onerror = () => finishCanvas(null);
-      fallbackImg.src = `${baseUrl}/kins-logo-new.jpg`;
-    };
-    logoImg.src = `${baseUrl}/kins-logo-new.png`;
+    logoImg.onerror = () => finishCanvas(null);
+    logoImg.src = `${baseUrl}/new.png`;
   }, 70);
 }
 
@@ -498,7 +493,7 @@ export function initShareModal() {
       };
 
       if (format === 'png') {
-        triggerDownload(`${baseUrl}/kins-logo-new.png`, 'kins-band-official-logo.png');
+        triggerDownload(`${baseUrl}/new.png`, 'kins-band-official-logo.png');
       } else if (format === 'jpeg') {
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -512,7 +507,7 @@ export function initShareModal() {
           ctx.drawImage(img, 0, 0);
           triggerDownload(canvas.toDataURL('image/jpeg', 0.95), 'kins-band-official-logo.jpg');
         };
-        img.src = `${baseUrl}/kins-logo-new.png`;
+        img.src = `${baseUrl}/new.png`;
       } else if (format === 'svg') {
         const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
   <rect width="800" height="400" fill="#0a0a0c"/>
@@ -530,7 +525,7 @@ export function initShareModal() {
           ctx.drawImage(img, 0, 0);
           triggerDownload(canvas.toDataURL('image/webp', 0.95), 'kins-band-official-logo.webp');
         };
-        img.src = `${baseUrl}/kins-logo-new.png`;
+        img.src = `${baseUrl}/new.png`;
       }
     });
   });
