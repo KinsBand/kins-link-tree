@@ -1,15 +1,39 @@
 {
-  "short_name": "Kins",
-  "name": "Kins Official Link in Bio",
+  "short_name": "KINS",
+  "name": "KINS - Official",
+  "description": "Official link in bio and website for Kins (@KinsBandOfficial). Stream latest tracks, tour updates, merch, and EPK.",
   "icons": [
     {
-      "src": "/new.png",
-      "sizes": "192x192 512x512",
-      "type": "image/png"
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "start_url": "/",
-  "background_color": "#0b1f18",
-  "theme_color": "#53c678",
-  "display": "standalone"
+  "id": "/",
+  "scope": "/",
+  "background_color": "#0a0a0c",
+  "theme_color": "#0e0e0e",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["music", "entertainment"]
 }

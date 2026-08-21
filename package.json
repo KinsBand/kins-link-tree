@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "icons": "node scripts/generate_pwa_icons.js",
     "postinstall": "node scripts/patch-vercel.js"
   },
   "engines": {

@@ -41,9 +41,20 @@ const baseUrl = import.meta.env.BASE_URL;
   <meta name="twitter:description" content={description}>
   <meta name="twitter:image" content={image}>
 
-  <!-- PWA Manifest & Theme Color -->
+  <!-- Favicon & Touch Icons -->
+  <link rel="icon" type="image/x-icon" href={`${baseUrl}favicon.ico`}>
+  <link rel="icon" type="image/png" sizes="32x32" href={`${baseUrl}favicon-32x32.png`}>
+  <link rel="icon" type="image/png" sizes="16x16" href={`${baseUrl}favicon-16x16.png`}>
+  <link rel="apple-touch-icon" sizes="180x180" href={`${baseUrl}apple-touch-icon.png`}>
+
+  <!-- PWA Manifest & App Capabilities -->
   <link rel="manifest" href={`${baseUrl}manifest.json`}>
   <meta name="theme-color" content={siteConfig.themeColor || "#0e0e0e"}>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KINS">
+  <meta name="application-name" content="KINS">
   
   <!-- Google Fonts: Syne, Cinzel, Space Grotesk with display=swap -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,6 +81,11 @@ const baseUrl = import.meta.env.BASE_URL;
         } else {
           document.documentElement.setAttribute('data-theme', 'standard');
         }
+
+        window.addEventListener('beforeinstallprompt', function(e) {
+          e.preventDefault();
+          window.__kinsDeferredInstallPrompt = e;
+        });
       } catch (e) {}
     })();
   </script>

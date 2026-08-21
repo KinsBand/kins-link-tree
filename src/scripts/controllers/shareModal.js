@@ -217,11 +217,28 @@ showpage
   });
 }
 
+let deferredInstallPrompt = (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt) || null;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    window.__kinsDeferredInstallPrompt = e;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    if (typeof window !== 'undefined') window.__kinsDeferredInstallPrompt = null;
+    showToast('🎉 Kins App installed successfully!', 'success');
+  });
+}
+
 export function initShareModal() {
   const shareBtn = document.getElementById('shareBtn');
   const shareModal = document.getElementById('shareModal');
   const closeShareModal = document.getElementById('closeShareModal');
   const nativeShareCtaBtn = document.getElementById('nativeShareCtaBtn');
+  const downloadPwaCtaBtn = document.getElementById('downloadPwaCtaBtn');
   const copyUrlBtn = document.getElementById('copyUrlBtn');
   const shareUrlInput = document.getElementById('shareUrlInput');
   const handleCopyBtn = document.getElementById('handleCopyBtn');
@@ -261,11 +278,20 @@ export function initShareModal() {
         document.body.removeChild(tempInput);
       }
     } catch (err) {
-      success = false;
+      try {
+        const tempInput = document.createElement('input');
+        tempInput.value = textToCopy;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        success = document.execCommand('copy');
+        document.body.removeChild(tempInput);
+      } catch (e) {
+        success = false;
+      }
     }
 
     if (success) {
-      showToast(successMessage);
+      if (successMessage) showToast(successMessage);
       if (btnElement) {
         animateCopySuccess(btnElement);
       }
@@ -299,13 +325,15 @@ export function initShareModal() {
         window.open(waUrl, '_blank', 'noopener,noreferrer');
         showToast('Opening WhatsApp...');
       } else if (app === 'instagram') {
-        performCopy(appShareUrl, btn, 'Link copied! Open Instagram to share in Stories or DM.');
+        performCopy(appShareUrl, btn, 'Link copied! Opening Instagram...');
+        window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
       } else if (app === 'sms') {
         const smsUrl = `sms:?&body=${encodeURIComponent(`${shareMessage} ${appShareUrl}`)}`;
         window.location.href = smsUrl;
         showToast('Opening Messages...');
       } else if (app === 'discord') {
-        performCopy(appShareUrl, btn, 'Link copied! Open Discord to share in a server or DM.');
+        performCopy(appShareUrl, btn, 'Link copied! Opening Discord...');
+        window.open('https://discord.com/channels/@me', '_blank', 'noopener,noreferrer');
       }
     });
   });
@@ -329,6 +357,49 @@ export function initShareModal() {
 
   if (nativeShareCtaBtn) {
     nativeShareCtaBtn.addEventListener('click', triggerNativeShare);
+  }
+
+  // Progressive Web App Download / Install CTA Handler
+  if (downloadPwaCtaBtn) {
+    downloadPwaCtaBtn.addEventListener('click', async () => {
+      // 1. Check if already installed / running in standalone mode
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                           window.navigator.standalone === true ||
+                           (typeof document !== 'undefined' && document.referrer.includes('android-app://'));
+
+      if (isStandalone) {
+        showToast('✓ Kins App is already installed on your device!');
+        return;
+      }
+
+      // 2. Trigger native beforeinstallprompt if available (Chrome, Android, Edge)
+      const promptEvent = deferredInstallPrompt || (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt);
+
+      if (promptEvent) {
+        try {
+          promptEvent.prompt();
+          const choiceResult = await promptEvent.userChoice;
+          if (choiceResult && choiceResult.outcome === 'accepted') {
+            showToast('🎉 Installing Kins App...');
+          }
+          deferredInstallPrompt = null;
+          if (typeof window !== 'undefined') window.__kinsDeferredInstallPrompt = null;
+          return;
+        } catch (err) {
+          console.warn('PWA prompt error:', err);
+        }
+      }
+
+      // 3. iOS Safari detection & instruction
+      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIos) {
+        showToast("📱 On iOS: Tap Share (↑) in Safari, then 'Add to Home Screen' (+)");
+        return;
+      }
+
+      // 4. Fallback for browsers without direct trigger
+      showToast("📱 Tap your browser menu (⋮ or Share) and select 'Install App' or 'Add to Home Screen'");
+    });
   }
 
   // Render High-Resolution QR Code image with 100% scan accuracy

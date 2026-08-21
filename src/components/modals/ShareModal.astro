@@ -10,7 +10,7 @@ import kinsLogoImg from '../../assets/new.png';
     <div class="modal-header">
       <div class="modal-title-group">
         <span class="brand-mini-badge">Kins • Official Link Tree</span>
-        <h3>Share Official Page</h3>
+        <h3>SHARE</h3>
       </div>
       <button class="close-modal-btn" id="closeShareModal" aria-label="Close share modal" data-track="share:close">
         <i class="fa-solid fa-xmark"></i>
@@ -111,6 +111,12 @@ import kinsLogoImg from '../../assets/new.png';
           </div>
         </div>
       </div>
+
+      <!-- 6. Download Progressive Web App CTA Button -->
+      <button type="button" class="download-pwa-primary-btn" id="downloadPwaCtaBtn" data-track="share:download_pwa">
+        <i class="fa-solid fa-download"></i>
+        <span>Download App</span>
+      </button>
     </div>
   </div>
 </div>
@@ -339,7 +345,8 @@ import kinsLogoImg from '../../assets/new.png';
     gap: 14px;
   }
 
-  .native-share-primary-btn {
+  .native-share-primary-btn,
+  .download-pwa-primary-btn {
     background: var(--accent-neon-yellow);
     color: #000000;
     border: 2.5px solid #000000;
@@ -363,11 +370,14 @@ import kinsLogoImg from '../../assets/new.png';
   }
 
   .native-share-primary-btn i,
-  .native-share-primary-btn span {
+  .native-share-primary-btn span,
+  .download-pwa-primary-btn i,
+  .download-pwa-primary-btn span {
     pointer-events: none;
   }
 
-  .native-share-primary-btn:hover {
+  .native-share-primary-btn:hover,
+  .download-pwa-primary-btn:hover {
     background: var(--surface-card-light-hover);
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
