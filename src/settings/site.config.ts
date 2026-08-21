@@ -7,7 +7,7 @@ export const siteConfig = {
   handle: "@KinsBandOfficial",
   artistName: "Kins",
   copyrightYear: 2026,
-  siteUrl: "https://kinsband.github.io/kins-official-website/",
+  siteUrl: "https://kinsband-hub.vercel.app/",
   ogImage: "new.png",
   themeColor: "#0e0e0e",
 };

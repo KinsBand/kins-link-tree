@@ -53,7 +53,7 @@ import kinsLogoImg from '../../assets/new.png';
         <div class="copy-input-group">
           <div class="copy-input-wrapper">
             <i class="fa-solid fa-link link-input-icon"></i>
-            <input type="text" id="shareUrlInput" value="https://kinsband.com/?utm_source=share_modal&utm_medium=direct_link" readonly>
+            <input type="text" id="shareUrlInput" value="https://kinsband-hub.vercel.app/?utm_source=share_modal&utm_medium=direct_link" readonly>
           </div>
           <button id="copyUrlBtn" class="icon-only-copy-btn" title="Copy website link" aria-label="Copy website link" data-track="share:copy_url">
             <i class="fa-regular fa-copy"></i>
@@ -112,10 +112,16 @@ import kinsLogoImg from '../../assets/new.png';
         </div>
       </div>
 
-      <!-- 6. Download Progressive Web App CTA Button -->
-      <button type="button" class="download-pwa-primary-btn" id="downloadPwaCtaBtn" data-track="share:download_pwa">
-        <i class="fa-solid fa-download"></i>
-        <span>Download App</span>
+      <!-- 6. Download Progressive Web App CTA Button with In-Button Progress Timeline -->
+      <button type="button" class="download-pwa-primary-btn" id="downloadPwaCtaBtn" data-track="share:download_pwa" title="One-press download app for offline access">
+        <span class="pwa-progress-track" id="pwaProgressTrack">
+          <span class="pwa-progress-bar" id="pwaProgressBar"></span>
+        </span>
+        <div class="pwa-btn-content" id="pwaBtnContent">
+          <i class="fa-solid fa-download" id="pwaBtnIcon"></i>
+          <span class="pwa-btn-label" id="pwaBtnLabel">Download App</span>
+          <span class="pwa-progress-status hidden" id="pwaProgressStatus"></span>
+        </div>
       </button>
     </div>
   </div>
@@ -345,8 +351,7 @@ import kinsLogoImg from '../../assets/new.png';
     gap: 14px;
   }
 
-  .native-share-primary-btn,
-  .download-pwa-primary-btn {
+  .native-share-primary-btn {
     background: var(--accent-neon-yellow);
     color: #000000;
     border: 2.5px solid #000000;
@@ -370,17 +375,112 @@ import kinsLogoImg from '../../assets/new.png';
   }
 
   .native-share-primary-btn i,
-  .native-share-primary-btn span,
-  .download-pwa-primary-btn i,
-  .download-pwa-primary-btn span {
+  .native-share-primary-btn span {
     pointer-events: none;
   }
 
-  .native-share-primary-btn:hover,
+  .native-share-primary-btn:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  /* PWA Download Button with Live Timeline Progress */
+  .download-pwa-primary-btn {
+    position: relative;
+    overflow: hidden;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    padding: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.85rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
   .download-pwa-primary-btn:hover {
     background: var(--surface-card-light-hover);
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
+  }
+
+  .download-pwa-primary-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .pwa-progress-track {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .pwa-progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: #53c678;
+    border-right: 2px solid #000000;
+    transition: width 0.1s linear;
+    pointer-events: none;
+  }
+
+  .pwa-btn-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 18px;
+    box-sizing: border-box;
+  }
+
+  .pwa-btn-content i,
+  .pwa-btn-content span {
+    pointer-events: none;
+  }
+
+  .pwa-progress-status {
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #000000;
+    background: rgba(255, 255, 255, 0.65);
+    border: 1.5px solid #000000;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .download-pwa-primary-btn.downloading {
+    cursor: wait;
+    background: var(--surface-input);
+  }
+
+  .download-pwa-primary-btn.download-complete {
+    background: #53c678;
+    color: #000000;
   }
 
   /* Social Apps Share Grid - Single Non-Scrolling Row of 4 */

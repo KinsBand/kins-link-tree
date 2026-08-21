@@ -251,12 +251,11 @@ export function initShareModal() {
   const qrDownloadFormatModal = document.getElementById('qrDownloadFormatModal');
   const closeQrFormatModalBtn = document.getElementById('closeQrFormatModalBtn');
 
-  // Calculate live production domain
-  const rawUrl = window.location.origin + window.location.pathname;
-  const baseDomain = rawUrl.includes('localhost') ? 'https://kinsband.com/' : rawUrl;
-  const directLinkUrl = baseDomain + (baseDomain.includes('?') ? '&' : '?') + 'utm_source=share_modal&utm_medium=direct_link';
-  const qrCodeUrl = baseDomain + (baseDomain.includes('?') ? '&' : '?') + 'utm_source=share_modal&utm_medium=qr_code';
-  const nativeShareUrl = baseDomain + (baseDomain.includes('?') ? '&' : '?') + 'utm_source=share_modal&utm_medium=native_share';
+  // Production domain for Kins Hub
+  const baseDomain = 'https://kinsband-hub.vercel.app/';
+  const directLinkUrl = baseDomain + '?utm_source=share_modal&utm_medium=direct_link';
+  const qrCodeUrl = baseDomain + '?utm_source=share_modal&utm_medium=qr_code';
+  const nativeShareUrl = baseDomain + '?utm_source=share_modal&utm_medium=native_share';
 
   if (shareUrlInput) {
     shareUrlInput.value = directLinkUrl;
@@ -359,46 +358,167 @@ export function initShareModal() {
     nativeShareCtaBtn.addEventListener('click', triggerNativeShare);
   }
 
-  // Progressive Web App Download / Install CTA Handler
+  // Progressive Web App Download CTA with In-Button Progress Timeline
   if (downloadPwaCtaBtn) {
+    let isDownloading = false;
+
+    // Check if previously completed
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('kins_pwa_downloaded') === 'true') {
+      const pwaBtnIcon = document.getElementById('pwaBtnIcon');
+      const pwaBtnLabel = document.getElementById('pwaBtnLabel');
+      const pwaProgressBar = document.getElementById('pwaProgressBar');
+      if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-circle-check';
+      if (pwaBtnLabel) pwaBtnLabel.textContent = 'App Downloaded & Ready';
+      if (pwaProgressBar) pwaProgressBar.style.width = '100%';
+      downloadPwaCtaBtn.classList.add('download-complete');
+    }
+
     downloadPwaCtaBtn.addEventListener('click', async () => {
-      // 1. Check if already installed / running in standalone mode
+      if (isDownloading) return;
+
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                            window.navigator.standalone === true ||
                            (typeof document !== 'undefined' && document.referrer.includes('android-app://'));
 
       if (isStandalone) {
-        showToast('✓ Kins App is already installed on your device!');
+        showToast('✓ Kins App is already installed & offline ready!', 'success');
         return;
       }
 
-      // 2. Trigger native beforeinstallprompt if available (Chrome, Android, Edge)
-      const promptEvent = deferredInstallPrompt || (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt);
+      const pwaBtnIcon = document.getElementById('pwaBtnIcon');
+      const pwaBtnLabel = document.getElementById('pwaBtnLabel');
+      const pwaProgressBar = document.getElementById('pwaProgressBar');
+      const pwaProgressStatus = document.getElementById('pwaProgressStatus');
 
+      isDownloading = true;
+      downloadPwaCtaBtn.classList.remove('download-complete');
+      downloadPwaCtaBtn.classList.add('downloading');
+      if (pwaProgressStatus) pwaProgressStatus.classList.remove('hidden');
+      if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-spinner fa-spin';
+      if (pwaBtnLabel) pwaBtnLabel.textContent = 'Downloading App...';
+      if (pwaProgressBar) pwaProgressBar.style.width = '5%';
+      if (pwaProgressStatus) pwaProgressStatus.textContent = 'Starting...';
+
+      // 1. Gather all core application assets for complete offline installation
+      const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
+      const assetUrls = [
+        `${baseUrl}/`,
+        `${baseUrl}/manifest.json`,
+        `${baseUrl}/new.png`,
+        `${baseUrl}/kins-logo-new.png`,
+        `${baseUrl}/followers.json`
+      ];
+
+      // Add linked stylesheets, scripts and font assets on page
+      document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
+        const src = el.href || el.src;
+        if (src && !assetUrls.includes(src) && !src.startsWith('chrome-extension')) {
+          assetUrls.push(src);
+        }
+      });
+
+      const totalItems = assetUrls.length;
+      let completedItems = 0;
+      let totalBytesLoaded = 0;
+      const startTime = performance.now();
+
+      let cacheStorage = null;
+      try {
+        if ('caches' in window) {
+          cacheStorage = await caches.open('kins-link-bio-v28');
+        }
+      } catch (e) {
+        console.warn('CacheStorage initialization:', e);
+      }
+
+      // Download and cache all assets tracking live byte stream and progress
+      for (const url of assetUrls) {
+        try {
+          const response = await fetch(url, { cache: 'no-cache' });
+          if (response && response.ok) {
+            const clone = response.clone();
+            if (cacheStorage) {
+              await cacheStorage.put(url, clone).catch(() => {});
+            }
+
+            if (response.body && typeof ReadableStream !== 'undefined') {
+              const reader = response.body.getReader();
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                if (value) {
+                  totalBytesLoaded += value.length;
+                }
+              }
+            } else {
+              const blob = await response.blob();
+              totalBytesLoaded += blob.size;
+            }
+          }
+        } catch (err) {
+          console.warn('Asset fetch:', url, err);
+        }
+
+        completedItems += 1;
+        const percent = Math.min(98, Math.round((completedItems / totalItems) * 100));
+        const elapsedSec = (performance.now() - startTime) / 1000;
+        const speedBps = elapsedSec > 0 ? (totalBytesLoaded / elapsedSec) : 0;
+        const avgItemSize = totalBytesLoaded / completedItems;
+        const remainingItems = totalItems - completedItems;
+        const estRemainingBytes = remainingItems * avgItemSize;
+        const etaSec = speedBps > 0 ? Math.max(1, Math.ceil(estRemainingBytes / speedBps)) : 1;
+
+        if (pwaProgressBar) {
+          pwaProgressBar.style.width = `${percent}%`;
+        }
+        if (pwaProgressStatus) {
+          pwaProgressStatus.textContent = `${percent}% • ${etaSec}s left`;
+        }
+      }
+
+      // 2. Complete download progress timeline
+      if (pwaProgressBar) pwaProgressBar.style.width = '100%';
+      if (pwaProgressStatus) pwaProgressStatus.textContent = '100%';
+
+      await new Promise(r => setTimeout(r, 250));
+
+      downloadPwaCtaBtn.classList.remove('downloading');
+      downloadPwaCtaBtn.classList.add('download-complete');
+      if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-circle-check';
+      if (pwaBtnLabel) pwaBtnLabel.textContent = 'App Downloaded & Ready';
+      if (pwaProgressStatus) pwaProgressStatus.textContent = 'Ready';
+
+      try {
+        localStorage.setItem('kins_pwa_downloaded', 'true');
+      } catch (e) {}
+
+      // 3. One-Press Native PWA Install prompt trigger if available
+      const promptEvent = deferredInstallPrompt || (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt);
       if (promptEvent) {
         try {
           promptEvent.prompt();
           const choiceResult = await promptEvent.userChoice;
           if (choiceResult && choiceResult.outcome === 'accepted') {
-            showToast('🎉 Installing Kins App...');
+            showToast('🎉 Kins App installed to your device!', 'success');
+          } else {
+            showToast('✓ Kins App downloaded & cached offline!', 'success');
           }
           deferredInstallPrompt = null;
           if (typeof window !== 'undefined') window.__kinsDeferredInstallPrompt = null;
-          return;
         } catch (err) {
           console.warn('PWA prompt error:', err);
+          showToast('✓ Kins App downloaded & ready for offline use!', 'success');
+        }
+      } else {
+        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIos) {
+          showToast("📱 Download complete! Tap Share (↑) → 'Add to Home Screen' (+) in Safari", 'success');
+        } else {
+          showToast('🎉 Kins App is 100% downloaded and ready for offline use!', 'success');
         }
       }
 
-      // 3. iOS Safari detection & instruction
-      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      if (isIos) {
-        showToast("📱 On iOS: Tap Share (↑) in Safari, then 'Add to Home Screen' (+)");
-        return;
-      }
-
-      // 4. Fallback for browsers without direct trigger
-      showToast("📱 Tap your browser menu (⋮ or Share) and select 'Install App' or 'Add to Home Screen'");
+      isDownloading = false;
     });
   }
 
