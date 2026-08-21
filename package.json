@@ -13,6 +13,13 @@
   "engines": {
     "node": "24.x"
   },
+  "overrides": {
+    "@vercel/nft": "^1.11.0"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "sharp": true
+  },
   "dependencies": {
     "@astrojs/vercel": "^7.8.2",
     "@supabase/supabase-js": "^2.112.2",
