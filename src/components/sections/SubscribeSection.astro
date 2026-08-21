@@ -49,8 +49,9 @@
           <i class="fa-solid fa-envelope-open-text"></i>
           <span>Open Email App</span>
         </a>
-        <button type="button" id="unsubscribeBtn" class="unsubscribe-link-btn brutal-press">
-          <i class="fa-solid fa-user-minus"></i> Unsubscribe
+        <button type="button" id="subscribeAgainBtn" class="subscribe-again-btn brutal-press">
+          <i class="fa-solid fa-plus"></i>
+          <span>Subscribe Another Email</span>
         </button>
       </div>
     </div>
@@ -382,26 +383,36 @@
     color: #000000;
   }
 
-  .unsubscribe-link-btn {
+  .subscribe-again-btn {
     background: var(--surface-card-light-hover);
-    border: 1.5px solid #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
     color: var(--text-card-primary);
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    font-size: 0.76rem;
     font-weight: 800;
-    padding: 7px 12px;
+    padding: 7px 14px;
     border-radius: 4px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
   }
 
-  .unsubscribe-link-btn:hover {
-    color: #ffffff;
-    background: var(--accent-crimson, #ff4d4d);
+  .subscribe-again-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .subscribe-again-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   .official-contacts-block {
@@ -574,7 +585,7 @@
   const formContainer = document.getElementById('subscribeFormContainer');
   const successContainer = document.getElementById('subscribeSuccessContainer');
   const subscribeForm = document.getElementById('subscribeForm') as HTMLFormElement;
-  const unsubscribeBtn = document.getElementById('unsubscribeBtn');
+  const subscribeAgainBtn = document.getElementById('subscribeAgainBtn');
 
   function setSubscribedState(isSubbed: boolean) {
     if (isSubbed) {
@@ -681,7 +692,7 @@
       if (!subscribedSuccessfully) {
         try {
           // Direct Webhook backup notification so subscriber is safely recorded and the band is notified
-          const backupWebhook = 'https://discord.com/api/webhooks/1537823822240026705/Gw3XTHhEbpqIGGxhXvQx6yeOoAOWVwCVLyo-36DtwqXNptDHR69KqN-4286oMpHfSB7G';
+          const backupWebhook = 'https://discordapp.com/api/webhooks/1540216715382882416/QNZTqlKy2V3uKofeLLi-tHs46x0evzfdeoy5ZMOckn0l_nF4HaMM6Z9TyO35abgoeMa2';
           await fetch(backupWebhook, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -711,12 +722,51 @@
     });
   }
 
-  if (unsubscribeBtn) {
-    unsubscribeBtn.addEventListener('click', () => {
-      setSubscriptionState(false);
-      showToast("Notifications turned OFF.");
+  function handleSubscribeAnother() {
+    setSubscriptionState(false);
+    setSubscribedState(false);
+
+    const emailInput = document.getElementById('emailInput') as HTMLInputElement;
+    if (emailInput) {
+      emailInput.value = '';
+      setTimeout(() => {
+        emailInput.focus();
+        setInputCaretPosition(emailInput, 0);
+      }, 100);
+    }
+
+    if (subscribeForm) {
+      const submitBtn = subscribeForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-envelope"></i> <span>Subscribe</span>`;
+      }
+    }
+
+    const subscribeFormSection = document.getElementById('subscribeFormSection');
+    if (subscribeFormSection) {
+      subscribeFormSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  if (subscribeAgainBtn) {
+    subscribeAgainBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleSubscribeAnother();
     });
   }
+
+  // Delegated fallback listener for dynamically rendered buttons
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const btn = target?.closest('#subscribeAgainBtn');
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleSubscribeAnother();
+    }
+  });
 
   document.querySelectorAll('.domain-shortcut-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {

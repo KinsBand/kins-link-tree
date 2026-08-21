@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { supabase, getSupabaseClient } from '../../lib/supabase';
 import { validateRealEmail } from '../../scripts/utils/emailValidator.js';
+import { assignSubscriberRoles, getDiscordConfig } from '../../lib/discord';
 
 export const prerender = false;
 
@@ -199,15 +200,19 @@ export const POST: APIRoute = async ({ request }) => {
     let dbSuccess = false;
     let welcomeEmailSent = false;
 
+    const db = getSupabaseClient() || supabase;
+
     // 1. Save Subscriber to Supabase Database (subscribers table)
-    if (supabase) {
+    if (db) {
       try {
-        const { error } = await supabase
+        const { error } = await db
           .from('subscribers')
           .upsert(
             {
               email: cleanEmail,
               source: body.source || 'website',
+              is_subscribed: true,
+              unsubscribed_at: null,
               updated_at: new Date().toISOString()
             },
             { onConflict: 'email', ignoreDuplicates: false }
@@ -216,16 +221,37 @@ export const POST: APIRoute = async ({ request }) => {
         if (!error) {
           dbSuccess = true;
         } else {
-          console.error('Supabase subscribers upsert error:', error);
+          console.error('[Supabase Error] subscribers upsert failed:', error.message || error);
         }
       } catch (dbErr) {
-        console.error('Supabase connection error:', dbErr);
+        console.error('[Supabase Connection Error]:', dbErr);
       }
     } else {
-      console.warn('Supabase client is not initialized. Please verify SUPABASE_URL & SUPABASE_SERVICE_ROLE_KEY.');
+      console.warn('[Supabase Warning] Client not initialized. Ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.');
     }
 
-    // 2. Send Welcome Email via Resend
+    // 2. Assign Subscribed and Listener Roles on Discord
+    let discordRoleResult: {
+      success: boolean;
+      memberFound: boolean;
+      memberId?: string;
+      memberTag?: string;
+      assignedRoles: string[];
+      message: string;
+    } = {
+      success: false,
+      memberFound: false,
+      assignedRoles: [],
+      message: ''
+    };
+
+    try {
+      discordRoleResult = await assignSubscriberRoles(cleanEmail, body.discordId || body.discordUsername);
+    } catch (discordErr) {
+      console.error('Discord role assignment error:', discordErr);
+    }
+
+    // 3. Send Welcome Email via Resend
     const resendApiKey = getEnv('RESEND_API_KEY');
     const fromEmail = getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>';
 
@@ -250,8 +276,8 @@ export const POST: APIRoute = async ({ request }) => {
         if (resendRes.ok) {
           welcomeEmailSent = true;
           // Mark welcome_email_sent = true in Supabase
-          if (supabase) {
-            await supabase
+          if (db) {
+            await db
               .from('subscribers')
               .update({ welcome_email_sent: true })
               .eq('email', cleanEmail);
@@ -265,12 +291,22 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    // 3. Optional Discord backup notification so no subscriber is ever missed
-    const discordWebhookUrl = getEnv('DISCORD_FEEDBACK_WEBHOOK_URL') ||
-      'https://discord.com/api/webhooks/1537823822240026705/Gw3XTHhEbpqIGGxhXvQx6yeOoAOWVwCVLyo-36DtwqXNptDHR69KqN-4286oMpHfSB7G';
+    // 4. Send Discord Webhook notification with role assignment & subscriber details
+    const discordConfig = getDiscordConfig();
+    const discordWebhookUrl = discordConfig.webhookUrl;
 
     if (discordWebhookUrl) {
       try {
+        const roleStatusLine = discordRoleResult.assignedRoles.length > 0
+          ? `✅ Assigned: ${discordRoleResult.assignedRoles.map((r) => `\`@${r}\``).join(', ')}`
+          : (discordRoleResult.memberFound
+              ? `⚠️ Roles Pending (${discordRoleResult.message || 'Check Bot Permissions'})`
+              : `ℹ️ Roles: \`@Subscribed\` + \`@Listener\` (Auto-grants on join / handle match)`);
+
+        const memberLine = discordRoleResult.memberFound
+          ? `• **Discord Account:** ${discordRoleResult.memberTag ? `\`${discordRoleResult.memberTag}\`` : ''} (<@${discordRoleResult.memberId}>)\n`
+          : '';
+
         await fetch(discordWebhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -280,7 +316,7 @@ export const POST: APIRoute = async ({ request }) => {
             embeds: [
               {
                 title: '✉️ New Fan Club Subscriber!',
-                description: `**Email:** \`${cleanEmail}\`\n• **Database Saved:** ${dbSuccess ? '✅ Yes' : '⚠️ Pending Setup'}\n• **Welcome Email:** ${welcomeEmailSent ? '✅ Sent via Resend' : (resendApiKey ? '⚠️ Failed/Queued' : 'ℹ️ Resend Key Not Set')}\n• **Timestamp:** ${new Date().toISOString()}`,
+                description: `**Email:** \`${cleanEmail}\`\n${memberLine}• **Discord Roles:** ${roleStatusLine}\n• **Database Saved:** ${dbSuccess ? '✅ Yes' : '⚠️ Pending Setup'}\n• **Welcome Email:** ${welcomeEmailSent ? '✅ Sent via Resend' : (resendApiKey ? '⚠️ Failed/Queued' : 'ℹ️ Resend Key Not Set')}\n• **Timestamp:** ${new Date().toISOString()}`,
                 color: 0xffeb3b, // Neon Yellow
                 footer: { text: 'Kins Subscription System' }
               }

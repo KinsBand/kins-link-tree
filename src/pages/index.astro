@@ -72,12 +72,18 @@ const baseUrl = import.meta.env.BASE_URL;
             </nav>
 
             <div class="footer-theme-toggle-wrap">
-              <button type="button" id="themeToggleBtn" class="footer-theme-toggle-btn" aria-label="Toggle display theme" aria-pressed="false">
-                <span class="theme-toggle-icon-badge">
-                  <i class="theme-toggle-icon fa-solid fa-sun" id="themeToggleIcon"></i>
-                </span>
-                <span class="theme-toggle-label" id="themeToggleLabel">Light Mode</span>
-              </button>
+              <div class="footer-theme-toggle-btn" id="themeToggleBtn" role="group" aria-label="Toggle Display Theme" data-track="footer:theme_toggle">
+                <span class="theme-current-title" id="themeCurrentTitle">Light</span>
+                <div class="theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
+                  <button type="button" class="theme-pill-btn active" id="themePillLightBtn" data-theme-target="standard" aria-label="Light Mode" title="Switch to Light Mode">
+                    <i class="fa-solid fa-sun" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="theme-pill-btn" id="themePillDarkBtn" data-theme-target="dark" aria-label="Dark Mode" title="Switch to Dark Mode">
+                    <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <span class="theme-mode-label">Mode</span>
+              </div>
             </div>
           </div>
         </footer>
@@ -359,7 +365,7 @@ const baseUrl = import.meta.env.BASE_URL;
     }
   }
 
-  /* Full-Width Theme Toggle Button */
+  /* Full-Width Theme Toggle Button & Segmented Pill Control */
   .footer-theme-toggle-wrap {
     width: 100%;
     margin-top: 10px;
@@ -373,12 +379,12 @@ const baseUrl = import.meta.env.BASE_URL;
     border: 3px solid #000000;
     box-shadow: 3px 3px 0px #000000;
     border-radius: 8px;
-    padding: 10px 18px;
+    padding: 6px 16px;
     cursor: pointer;
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 12px;
     user-select: none;
     box-sizing: border-box;
     transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
@@ -391,41 +397,74 @@ const baseUrl = import.meta.env.BASE_URL;
   }
 
   .footer-theme-toggle-btn:active {
-    transform: translate(2px, 2px);
+    transform: translate(1px, 1px);
     box-shadow: 1px 1px 0px #000000;
   }
 
-  .theme-toggle-icon-badge {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    border-radius: 6px;
-    background: var(--accent-neon-yellow);
+  .theme-current-title {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.92rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-card-primary);
+    flex: 1 1 0;
+    text-align: left;
+  }
+
+  .theme-pill-segmented {
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-input);
     border: 2px solid #000000;
+    border-radius: 20px;
+    padding: 3px;
+    gap: 3px;
     box-shadow: 1.5px 1.5px 0px #000000;
+    flex: 0 0 auto;
+  }
+
+  .theme-pill-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    background: transparent;
+    color: var(--text-card-muted);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    transition: transform 0.2s var(--ease-snappy);
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    font-size: 0.82rem;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.18s ease, color 0.18s ease, box-shadow 0.16s ease;
   }
 
-  .theme-toggle-icon {
-    font-size: 0.85rem;
+  .theme-pill-btn:hover {
+    color: var(--text-card-primary);
+    transform: scale(1.1);
+  }
+
+  .theme-pill-btn.active {
+    background: var(--accent-neon-yellow);
     color: #000000;
-    line-height: 1;
-    display: inline-block;
+    border-color: #000000;
+    box-shadow: 1px 1px 0px #000000;
+    transform: scale(1.06);
   }
 
-  .theme-toggle-label {
-    font-family: var(--font-secondary);
-    font-size: 0.84rem;
-    font-weight: 900;
+  .theme-mode-label {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.85rem;
+    font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--text-card-primary);
-    line-height: 1;
+    color: var(--text-card-secondary);
+    flex: 1 1 0;
+    text-align: right;
   }
 
   .theme-toggle-icon-badge.theme-spin-pop {

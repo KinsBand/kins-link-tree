@@ -83,7 +83,7 @@
 }
 
 /* ==========================================================================
-   Stealth Dark Mode Palette (No Harsh Yellow, No Harsh White)
+   Dark Mode Palette (No Harsh Yellow, No Harsh White)
    ========================================================================== */
 :root[data-theme="dark"],
 html[data-theme="dark"],

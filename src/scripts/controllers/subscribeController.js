@@ -143,7 +143,7 @@ export function initSubscribeBell() {
         if (subscribeFormSection) {
           subscribeFormSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        showToast("You are currently subscribed to Kins! Use the Unsubscribe button below to manage.");
+        showToast("You are already subscribed to Kins! You'll receive drops straight to your inbox.");
       }
     });
   }
