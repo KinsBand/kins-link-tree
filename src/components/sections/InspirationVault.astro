@@ -99,14 +99,38 @@ const artists = [
     align-items: center;
     gap: 8px;
     overflow-x: auto;
+    overflow-y: hidden;
     scroll-snap-type: x mandatory;
-    padding: 2px 2px 8px 2px;
-    scrollbar-width: none;
+    padding: 2px 2px 10px 2px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-neon-yellow) rgba(0, 0, 0, 0.35);
     -webkit-overflow-scrolling: touch;
+    cursor: grab;
+  }
+
+  .artist-filter-scroll-container:active {
+    cursor: grabbing;
   }
 
   .artist-filter-scroll-container::-webkit-scrollbar {
-    display: none;
+    height: 6px;
+    display: block;
+  }
+
+  .artist-filter-scroll-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .artist-filter-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--accent-neon-yellow);
+    border-radius: 6px;
+    border: 1px solid #000000;
+  }
+
+  .artist-filter-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #ffffff;
   }
 
   .filter-pill-btn {
@@ -199,13 +223,15 @@ const artists = [
                 border-color 0.4s ease;
   }
 
+  .inspired-tracks-container :global(.music-card-thumb.is-vinyl-disc),
   .inspired-tracks-container :global(.music-card-thumb.vinyl-spin-anim) {
     border-radius: 50%;
     border-color: #000000;
     box-shadow: 0 0 12px var(--accent-neon-yellow-glow);
+    will-change: transform, border-radius;
   }
 
-  .inspired-tracks-container :global(.music-card-thumb.vinyl-spin-anim::after) {
+  .inspired-tracks-container :global(.music-card-thumb::after) {
     content: '';
     position: absolute;
     top: 50%;
@@ -219,6 +245,13 @@ const artists = [
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.8);
     z-index: 5;
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .inspired-tracks-container :global(.music-card-thumb.is-vinyl-disc::after),
+  .inspired-tracks-container :global(.music-card-thumb.vinyl-spin-anim::after) {
+    opacity: 1;
   }
 
   .inspired-tracks-container :global(.fallback-disc-icon) {
@@ -397,7 +430,6 @@ const artists = [
 
 <script>
   import { INSPIRED_ARTISTS_DATA, getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from '../../scripts/controllers/inspirationVault.js';
-  import { stopVinylSpinSmoothly } from '../../scripts/controllers/audioPlayer.js';
 
   const container = document.getElementById('inspiredTracksContainer');
   const dotsContainer = document.getElementById('dotsPaginationContainer');
@@ -409,6 +441,59 @@ const artists = [
   let currentPlaybackTrack: any = null;
   let isCurrentlyPlaying = false;
 
+  function spinCardToStop(card: HTMLElement, thumb: HTMLElement, durationMs = 480) {
+    if ((card as any)._retireAnimId) {
+      cancelAnimationFrame((card as any)._retireAnimId);
+      (card as any)._retireAnimId = null;
+    }
+
+    // Extract current rotation angle from style.transform
+    const transform = thumb.style.transform || '';
+    const match = transform.match(/rotate\(([\d.-]+)deg\)/);
+    let startAngle = match ? parseFloat(match[1]) : 0;
+    if (isNaN(startAngle)) startAngle = 0;
+
+    const normalizedStart = ((startAngle % 360) + 360) % 360;
+    let distToUpright = 360 - normalizedStart;
+    if (distToUpright === 360) distToUpright = 0;
+    if (distToUpright < 75) {
+      distToUpright += 360;
+    }
+    const targetAngle = startAngle + distToUpright;
+    const startTime = performance.now();
+
+    function step(now: number) {
+      if (card.classList.contains('is-playing')) {
+        (card as any)._retireAnimId = null;
+        return;
+      }
+
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / durationMs);
+      const easeOut = 1 - Math.pow(1 - progress, 3.4);
+      const currentAngle = startAngle + (targetAngle - startAngle) * easeOut;
+
+      thumb.style.transform = `rotate(${(currentAngle % 360).toFixed(2)}deg)`;
+
+      if (progress >= 0.45) {
+        thumb.classList.remove('is-vinyl-disc');
+      } else {
+        thumb.classList.add('is-vinyl-disc');
+      }
+
+      if (progress < 1) {
+        (card as any)._retireAnimId = requestAnimationFrame(step);
+      } else {
+        (card as any)._retireAnimId = null;
+        thumb.style.transform = 'rotate(0deg)';
+        thumb.classList.remove('is-vinyl-disc', 'vinyl-spin-anim', 'vinyl-spin-decelerate');
+        card.classList.remove('is-decelerating', 'is-playing');
+      }
+    }
+
+    (card as any)._retireAnimId = requestAnimationFrame(step);
+  }
+
   function updateCardStates(currentTrack: any, isPlaying: boolean) {
     if (!container) return;
     const cards = container.querySelectorAll('.music-card');
@@ -416,7 +501,7 @@ const artists = [
       const songTitle = card.dataset.songTitle;
       const playBtn = card.querySelector('.play-btn');
       const thumb = card.querySelector('.music-card-thumb');
-      if (!playBtn) return;
+      if (!playBtn || !thumb) return;
 
       const isCurrent = currentTrack && currentTrack.title === songTitle;
       const playingThis = isCurrent && isPlaying;
@@ -436,11 +521,24 @@ const artists = [
       }
 
       if (playingThis) {
+        if (card._retireAnimId) {
+          cancelAnimationFrame(card._retireAnimId);
+          card._retireAnimId = null;
+        }
         card.classList.add('is-playing');
-        stopVinylSpinSmoothly(thumb, true);
+        card.classList.remove('is-decelerating');
+        thumb.classList.remove('vinyl-spin-decelerate');
+        thumb.classList.add('is-vinyl-disc');
       } else {
+        const wasPlaying = card.classList.contains('is-playing');
         card.classList.remove('is-playing');
-        stopVinylSpinSmoothly(thumb, false);
+
+        if (wasPlaying && !card.classList.contains('is-decelerating')) {
+          spinCardToStop(card, thumb);
+        } else if (!card.classList.contains('is-decelerating') && !card._retireAnimId) {
+          thumb.classList.remove('is-vinyl-disc', 'vinyl-spin-anim', 'vinyl-spin-decelerate');
+          thumb.style.transform = 'rotate(0deg)';
+        }
       }
     });
   }
@@ -587,14 +685,141 @@ const artists = [
     }, 180);
   }
 
-  filterBtns.forEach(btn => {
+  function selectArtistByKey(key: string, pageIndex: number = 0) {
+    filterBtns.forEach(b => {
+      const isMatch = b.getAttribute('data-artist-key') === key;
+      b.classList.toggle('active', isMatch);
+      if (isMatch) {
+        b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    });
+    renderArtistPage(key, pageIndex);
+  }
+
+  filterBtns.forEach((btn, idx) => {
     btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
       const key = btn.getAttribute('data-artist-key') || 'all';
-      renderArtistPage(key, 0);
+      selectArtistByKey(key, 0);
+    });
+
+    // Keyboard Left/Right arrow navigation across artist pills
+    btn.addEventListener('keydown', (e: KeyboardEvent) => {
+      const btnArray = Array.from(filterBtns) as HTMLButtonElement[];
+      if (e.key === 'ArrowRight' && idx < btnArray.length - 1) {
+        btnArray[idx + 1].focus();
+        btnArray[idx + 1].click();
+      } else if (e.key === 'ArrowLeft' && idx > 0) {
+        btnArray[idx - 1].focus();
+        btnArray[idx - 1].click();
+      }
     });
   });
+
+  // Touch / Swipe Navigation Support for Inspiration Vault Carousel
+  if (container) {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isSwiping = false;
+
+    container.addEventListener('touchstart', (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchStartTime = performance.now();
+      isSwiping = true;
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e: TouchEvent) => {
+      if (!isSwiping || e.touches.length !== 1) return;
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e: TouchEvent) => {
+      if (!isSwiping) return;
+      isSwiping = false;
+      if (!e.changedTouches || e.changedTouches.length === 0) return;
+
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+      const deltaTime = performance.now() - touchStartTime;
+
+      // Thresholds: minimum 42px horizontal delta, horizontal dominance over vertical scroll, fast or clear swipe
+      const isHorizontalSwipe = Math.abs(deltaX) > 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
+      const isVelocitySwipe = Math.abs(deltaX) > 28 && deltaTime < 240 && Math.abs(deltaX) > Math.abs(deltaY);
+
+      if (isHorizontalSwipe || isVelocitySwipe) {
+        const artistData = (INSPIRED_ARTISTS_DATA as any)[currentArtistKey] || INSPIRED_ARTISTS_DATA['all'];
+        const totalPages = artistData?.pages?.length || 1;
+
+        if (deltaX < 0) {
+          // SWIPE LEFT -> NEXT PAGE or NEXT ARTIST TAB
+          if (currentPageIndex < totalPages - 1) {
+            renderArtistPage(currentArtistKey, currentPageIndex + 1);
+          } else {
+            // Advance to next artist tab
+            const btnArray = Array.from(filterBtns);
+            const currentIndex = btnArray.findIndex(b => b.getAttribute('data-artist-key') === currentArtistKey);
+            if (currentIndex !== -1 && currentIndex < btnArray.length - 1) {
+              const nextBtn = btnArray[currentIndex + 1];
+              const nextKey = nextBtn.getAttribute('data-artist-key') || 'all';
+              selectArtistByKey(nextKey, 0);
+            }
+          }
+        } else {
+          // SWIPE RIGHT -> PREVIOUS PAGE or PREVIOUS ARTIST TAB
+          if (currentPageIndex > 0) {
+            renderArtistPage(currentArtistKey, currentPageIndex - 1);
+          } else {
+            // Go to previous artist tab (to its last page)
+            const btnArray = Array.from(filterBtns);
+            const currentIndex = btnArray.findIndex(b => b.getAttribute('data-artist-key') === currentArtistKey);
+            if (currentIndex > 0) {
+              const prevBtn = btnArray[currentIndex - 1];
+              const prevKey = prevBtn.getAttribute('data-artist-key') || 'all';
+              const prevArtistData = (INSPIRED_ARTISTS_DATA as any)[prevKey] || INSPIRED_ARTISTS_DATA['all'];
+              const prevTotalPages = prevArtistData?.pages?.length || 1;
+              selectArtistByKey(prevKey, prevTotalPages - 1);
+            }
+          }
+        }
+      }
+    }, { passive: true });
+  }
+
+  const artistFilterBar = document.getElementById('artistFilterBar');
+  if (artistFilterBar) {
+    // Desktop mouse wheel horizontal conversion
+    artistFilterBar.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        artistFilterBar.scrollLeft += e.deltaY;
+      } else if (e.deltaX !== 0) {
+        artistFilterBar.scrollLeft += e.deltaX;
+      }
+    }, { passive: false });
+
+    // Desktop mouse drag to scroll
+    let isArtistDown = false;
+    let artistStartX = 0;
+    let artistScrollStart = 0;
+
+    artistFilterBar.addEventListener('mousedown', (e) => {
+      isArtistDown = true;
+      artistStartX = e.pageX - artistFilterBar.offsetLeft;
+      artistScrollStart = artistFilterBar.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', () => { isArtistDown = false; });
+    artistFilterBar.addEventListener('mousemove', (e) => {
+      if (!isArtistDown) return;
+      e.preventDefault();
+      const x = e.pageX - artistFilterBar.offsetLeft;
+      const walk = (x - artistStartX) * 1.5;
+      artistFilterBar.scrollLeft = artistScrollStart - walk;
+    });
+  }
 
   renderArtistPage('all', 0);
 </script>

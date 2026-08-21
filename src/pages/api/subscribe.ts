@@ -8,9 +8,10 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const { email } = await request.json();
 
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || typeof email !== 'string' || !emailRegex.test(email.trim())) {
       return new Response(
-        JSON.stringify({ status: 'error', message: 'Please enter a valid email address.' }),
+        JSON.stringify({ status: 'error', message: 'Please enter a complete and valid email address (e.g. name@example.com).' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }

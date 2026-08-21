@@ -1,52 +1,69 @@
 ---
 import { liveConfig } from '../../settings/live.config';
+import { Image } from 'astro:assets';
+import kinsLogoNew from '../../assets/kins-logo-new.png';
 
 const baseUrl = import.meta.env.BASE_URL;
 const isLive = liveConfig.status === 'live';
 ---
 
-<header class="top-nav" data-track-container="nav:top_bar">
-  <button class="nav-brutal-btn nav-icon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates" title="Subscribe" data-track="nav:subscribe">
-    <i class="fa-solid fa-bell nav-icon"></i>
-  </button>
-
-  {isLive ? (
-    <!-- Expanded LIVE NOW Button taking the full search covers space when live -->
-    <a href={`${baseUrl}live`} class="header-live-now-full-btn" id="headerLiveNowBtn" aria-label="Watch Live Stream Now" data-track="nav:live_stream_full">
-      <span class="nav-live-pulse-dot"></span>
-      <span class="nav-live-full-text">🔴 LIVE NOW • KINS LIVE</span>
-      <i class="fa-solid fa-arrow-right nav-live-arrow-icon"></i>
+<header class="top-nav" id="topNavHeader" data-track-container="nav:top_bar">
+  <!-- Desktop View: Top-Left Brand Logo & Badge -->
+  <div class="top-nav-brand-col">
+    <a href={baseUrl} class="top-nav-brand-link" aria-label="Kins Band Homepage" title="KINS Official" data-track="nav:brand_home">
+      <img src={kinsLogoNew.src} alt="KINS" class="nav-brand-logo-img" width="110" height="30" loading="eager" decoding="async" />
+      <span class="nav-brand-badge">✦ OFFICIAL</span>
     </a>
-  ) : (
-    <!-- Standard Search Covers Pill Button when not live -->
-    <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label="Search cover videos" data-track="nav:search_pill">
-      <i class="fa-solid fa-magnifying-glass search-pill-icon"></i>
-      <span class="search-pill-placeholder">search covers...</span>
-    </button>
-  )}
+  </div>
 
-  <button class="nav-brutal-btn nav-icon-btn" id="shareBtn" aria-label="Share page" title="Share" data-track="nav:share">
-    <i class="fa-solid fa-share-nodes nav-icon"></i>
-  </button>
+  <!-- Unified Center Action Cluster: [🔔 Notification] [🔍 Search / LIVE NOW] [↗ Share] -->
+  <div class="top-nav-center-cluster">
+    <button class="nav-brutal-btn nav-icon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates" title="Subscribe" data-track="nav:subscribe">
+      <i class="fa-solid fa-bell nav-icon"></i>
+    </button>
+
+    {isLive ? (
+      <!-- Expanded LIVE NOW Button taking the center space when live -->
+      <a href={`${baseUrl}live`} class="header-live-now-full-btn" id="headerLiveNowBtn" aria-label="Watch Live Stream Now" data-track="nav:live_stream_full">
+        <span class="nav-live-pulse-dot"></span>
+        <span class="nav-live-full-text">🔴 LIVE NOW • KINS LIVE</span>
+        <i class="fa-solid fa-arrow-right nav-live-arrow-icon"></i>
+      </a>
+    ) : (
+      <!-- Standard Search Covers Pill Button when not live -->
+      <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label="Search cover videos" data-track="nav:search_pill">
+        <i class="fa-solid fa-magnifying-glass search-pill-icon"></i>
+        <span class="search-pill-placeholder">search covers...</span>
+        <span class="search-kbd-badge" aria-hidden="true">⌘K</span>
+      </button>
+    )}
+
+    <button class="nav-brutal-btn nav-icon-btn" id="shareBtn" aria-label="Share page" title="Share" data-track="nav:share">
+      <i class="fa-solid fa-share-nodes nav-icon"></i>
+    </button>
+  </div>
+
+  <!-- Desktop View: Top-Right Symmetrical Action -->
+  <div class="top-nav-right-col">
+    <a href={`${baseUrl}epk`} class="top-nav-epk-btn" title="Electronic Press Kit" data-track="nav:epk_link">
+      <span>EPK</span>
+      <i class="fa-solid fa-arrow-up-right-from-square nav-epk-icon"></i>
+    </a>
+  </div>
 </header>
 
 <style>
+  /* ==========================================================================
+     TopNav: Responsive Desktop Header / Mobile Action Bar
+     ========================================================================== */
+
   .top-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 0 8px;
-    margin-top: 0;
-    position: relative;
-    z-index: 100;
-    isolation: isolate;
     width: 100%;
     box-sizing: border-box;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
-    transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease;
+    isolation: isolate;
   }
 
   .top-nav *,
@@ -56,13 +73,216 @@ const isLive = liveConfig.status === 'live';
     -webkit-user-select: none;
   }
 
-  .top-nav:global(.nav-hidden) {
-    opacity: 0;
-    filter: blur(8px);
-    pointer-events: none;
-    transform: translateY(-12px);
+  /* --------------------------------------------------------------------------
+     Desktop View (>= 768px): Unified Fixed Top Header Bar
+     -------------------------------------------------------------------------- */
+  @media (min-width: 768px) {
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 64px;
+      background: rgba(18, 18, 20, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 3px solid #000000;
+      box-shadow: 0 4px 0px rgba(0, 0, 0, 0.5);
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
+      align-items: center;
+      padding: 0 clamp(16px, 2.5vw, 36px);
+      gap: 16px;
+      z-index: 500;
+      transition: none;
+    }
+
+    .top-nav-brand-col {
+      display: flex;
+      align-items: center;
+      justify-self: start;
+      min-width: 0;
+    }
+
+    .top-nav-brand-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      transition: transform 0.16s var(--ease-tactile);
+    }
+
+    .top-nav-brand-link:hover {
+      transform: translateY(-1px);
+    }
+
+    .nav-brand-logo-img {
+      height: 32px;
+      width: auto;
+      max-width: 130px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px rgba(242, 253, 67, 0.25));
+      display: block;
+    }
+
+    .nav-brand-badge {
+      background: var(--accent-neon-yellow);
+      color: #000000;
+      font-family: var(--font-heading, var(--font-secondary));
+      font-size: 0.64rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1.5px solid #000000;
+      box-shadow: 1.5px 1.5px 0px #000000;
+      white-space: nowrap;
+    }
+
+    .top-nav-center-cluster {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      justify-self: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .header-search-pill-btn {
+      width: clamp(280px, 28vw, 440px);
+      flex: 0 0 auto;
+      height: 44px;
+      min-height: 44px;
+    }
+
+    .header-live-now-full-btn {
+      width: clamp(280px, 28vw, 440px);
+      flex: 0 0 auto;
+      height: 44px;
+      min-height: 44px;
+    }
+
+    .nav-brutal-btn {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
+      flex: 0 0 44px;
+    }
+
+    .search-kbd-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: var(--font-secondary);
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-card-muted);
+      margin-left: auto;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
+    }
+
+    .top-nav-right-col {
+      display: flex;
+      align-items: center;
+      justify-self: end;
+    }
+
+    .top-nav-epk-btn {
+      background: var(--surface-card-light);
+      border: 2px solid #000000;
+      box-shadow: 2px 2px 0px #000000;
+      color: var(--text-card-primary);
+      border-radius: 6px;
+      font-family: var(--font-secondary);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 6px 14px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.14s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.14s ease;
+    }
+
+    .top-nav-epk-btn:hover {
+      background: var(--accent-neon-yellow);
+      color: #000000;
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0px #000000;
+    }
+
+    .top-nav-epk-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #000000;
+    }
+
+    .nav-epk-icon {
+      font-size: 0.68rem;
+    }
   }
 
+  /* --------------------------------------------------------------------------
+     Mobile View (< 768px): Inline Top Action Bar (Preserved)
+     -------------------------------------------------------------------------- */
+  @media (max-width: 767px) {
+    .top-nav {
+      display: block;
+      position: relative;
+      padding: 4px 0 8px;
+      margin-top: 0;
+      z-index: 100;
+      transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease;
+    }
+
+    .top-nav-brand-col,
+    .top-nav-right-col,
+    .search-kbd-badge {
+      display: none !important;
+    }
+
+    .top-nav-center-cluster {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .header-search-pill-btn,
+    .header-live-now-full-btn {
+      flex: 1 1 0%;
+      width: 100%;
+      min-width: 0;
+      height: 48px;
+      min-height: 48px;
+    }
+
+    .nav-brutal-btn {
+      flex: 0 0 48px;
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      min-height: 48px;
+    }
+
+    .top-nav:global(.nav-hidden) {
+      opacity: 0;
+      filter: blur(8px);
+      pointer-events: none;
+      transform: translateY(-12px);
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     Interactive Action Buttons Styling (Shared Neo-Brutalist Language)
+     -------------------------------------------------------------------------- */
   #topSubscribeBtn, #shareBtn, .header-search-pill-btn, .header-live-now-full-btn {
     will-change: opacity, transform;
     transition: opacity 0.22s var(--ease-snappy), transform 0.16s var(--ease-tactile), background-color 0.18s ease, box-shadow 0.18s ease;
@@ -79,9 +299,6 @@ const isLive = liveConfig.status === 'live';
 
   /* Expanded Live Stream Button (Takes full search pill center area) */
   .header-live-now-full-btn {
-    flex: 1 1 0%;
-    width: 100%;
-    min-width: 0;
     background: #ef4444;
     border: 3px solid #000000;
     box-shadow: 2px 2px 0px #000000;
@@ -99,8 +316,6 @@ const isLive = liveConfig.status === 'live';
     align-items: center;
     justify-content: center;
     gap: 8px;
-    height: 48px;
-    min-height: 48px;
     box-sizing: border-box;
     user-select: none;
     position: relative;
@@ -168,11 +383,6 @@ const isLive = liveConfig.status === 'live';
     white-space: nowrap;
     box-sizing: border-box;
     user-select: none;
-    flex: 0 0 48px;
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
     padding: 0;
     margin: 0;
     position: relative;
@@ -249,9 +459,6 @@ const isLive = liveConfig.status === 'live';
 
   /* Neo-Brutalist Search Pill Button */
   .header-search-pill-btn {
-    flex: 1 1 0%;
-    width: 100%;
-    min-width: 0;
     background: var(--surface-card-light);
     border: 3px solid #000000;
     box-shadow: 2px 2px 0px #000000;
@@ -268,15 +475,13 @@ const isLive = liveConfig.status === 'live';
     align-items: center;
     justify-content: flex-start;
     gap: 10px;
-    height: 48px;
-    min-height: 48px;
     box-sizing: border-box;
     user-select: none;
     position: relative;
     z-index: 2;
   }
 
-  /* Invisible hit area extender — covers shadow region + padding around the pill */
+  /* Invisible hit area extender */
   .header-search-pill-btn::before {
     content: '';
     position: absolute;
@@ -322,16 +527,6 @@ const isLive = liveConfig.status === 'live';
     text-align: left;
     pointer-events: none;
   }
-
-  .search-pill-clear-action {
-    font-size: 0.82rem;
-    color: var(--text-card-muted);
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-  }
 </style>
 
 <script>
@@ -341,36 +536,30 @@ const isLive = liveConfig.status === 'live';
   const headerSearchPillBtn = document.getElementById('headerSearchPillBtn');
   const headerLiveNowBtn = document.getElementById('headerLiveNowBtn');
   const shareBtn = document.getElementById('shareBtn');
-  const leftSidebar = document.getElementById('leftSidebar');
 
-  let heroBannerImg: HTMLElement | null = null;
   let ticking = false;
-
   const mql = window.matchMedia('(min-width: 768px)');
 
   function updateScrollDrivenFade() {
     ticking = false;
 
-    // Detect active scroll context dynamically:
-    // Desktop (>= 768px): Scroll offset of #leftSidebar
-    // Mobile (< 768px): Scroll offset of window / documentElement
-    const scrollOffset = mql.matches && leftSidebar 
-      ? leftSidebar.scrollTop 
-      : (window.scrollY || document.documentElement.scrollTop || 0);
+    // Desktop view (>= 768px): Unified Top Header Bar remains permanently fixed and defined
+    if (mql.matches) {
+      const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, headerLiveNowBtn, shareBtn];
+      elementsToFade.forEach(el => {
+        if (!el) return;
+        el.style.opacity = '1';
+        el.style.pointerEvents = '';
+      });
+      return;
+    }
 
-    // Distance (in pixels) over which elements transition from opacity 1.0 -> 0.0
+    // Mobile view (< 768px): Scroll offset of window / documentElement
+    const scrollOffset = window.scrollY || document.documentElement.scrollTop || 0;
     const maxFadeDistance = 140;
-
-    // Linear progress ratio between 0.0 and 1.0
     const rawProgress = Math.min(1, Math.max(0, scrollOffset / maxFadeDistance));
-
-    // Deceleration Easing Curve: 1 - (1 - x)^2.5 (Ease-Out Cubic-Bezier)
     const easedProgress = 1 - Math.pow(1 - rawProgress, 2.5);
     const targetOpacity = Math.max(0, 1 - easedProgress);
-
-    if (!heroBannerImg) {
-      heroBannerImg = document.getElementById('heroBannerImg') || document.querySelector('.hero-banner-img');
-    }
 
     const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, headerLiveNowBtn, shareBtn];
     const isTransparent = targetOpacity <= 0.02;
@@ -394,23 +583,12 @@ const isLive = liveConfig.status === 'live';
     }
   }
 
-  function rebindScrollListeners() {
-    window.removeEventListener('scroll', onScroll);
-    if (leftSidebar) {
-      leftSidebar.removeEventListener('scroll', onScroll);
-    }
-
-    if (mql.matches && leftSidebar) {
-      leftSidebar.addEventListener('scroll', onScroll, { passive: true });
-    } else {
-      window.addEventListener('scroll', onScroll, { passive: true });
-    }
-    onScroll();
-  }
-
-  mql.addEventListener('change', rebindScrollListeners);
-  rebindScrollListeners();
+  window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
+  mql.addEventListener('change', () => {
+    onScroll();
+  });
+  onScroll();
 
   // Initialize YouTube-Style Notification Bell Component State
   initSubscribeBell();

@@ -603,6 +603,7 @@
     margin-top: 2px;
   }
 
+  .submit-clip-primary-btn,
   .submit-clip-btn {
     width: 100%;
     background: var(--accent-neon-yellow);
@@ -621,24 +622,51 @@
     justify-content: center;
     gap: 8px;
     cursor: pointer;
+    position: relative;
+    user-select: none;
     transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
   }
 
+  .submit-clip-primary-btn:hover,
   .submit-clip-btn:hover {
-    background: var(--surface-card-light-hover);
+    background: #ffffff;
     transform: translate(-1px, -1px);
     box-shadow: 4px 4px 0px #000000;
   }
 
+  .submit-clip-primary-btn:active,
   .submit-clip-btn:active {
-    transform: translate(1px, 1px);
+    transform: translate(1.5px, 1.5px);
     box-shadow: 1px 1px 0px #000000;
+    background: var(--accent-neon-yellow);
   }
 
+  .submit-clip-primary-btn:focus-visible,
+  .submit-clip-btn:focus-visible {
+    outline: 2.5px solid var(--accent-neon-yellow);
+    outline-offset: 2px;
+  }
+
+  .submit-clip-primary-btn:disabled,
   .submit-clip-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.65;
     cursor: not-allowed;
+    background: var(--surface-input);
+    color: var(--text-card-muted);
+    border-color: rgba(0, 0, 0, 0.4);
+    box-shadow: 1px 1px 0px #000000;
     transform: none !important;
+  }
+
+  .submit-clip-primary-btn .btn-icon,
+  .submit-clip-btn .btn-icon {
+    font-size: 0.9rem;
+    transition: transform 0.16s ease;
+  }
+
+  .submit-clip-primary-btn:hover .btn-icon,
+  .submit-clip-btn:hover .btn-icon {
+    transform: translateX(2px) translateY(-1px);
   }
 
   /* Spinner */

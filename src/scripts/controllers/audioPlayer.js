@@ -54,7 +54,7 @@ class VinylScratchSynthesizer {
       thumpOsc.frequency.setValueAtTime(190, now);
       thumpOsc.frequency.exponentialRampToValueAtTime(26, now + 0.08);
 
-      thumpGain.gain.setValueAtTime(0.55, now);
+      thumpGain.gain.setValueAtTime(0.22, now);
       thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
 
       thumpOsc.connect(thumpGain);
@@ -69,7 +69,7 @@ class VinylScratchSynthesizer {
       clickOsc.frequency.setValueAtTime(3600, now);
       clickOsc.frequency.exponentialRampToValueAtTime(500, now + 0.02);
 
-      clickGain.gain.setValueAtTime(0.28, now);
+      clickGain.gain.setValueAtTime(0.12, now);
       clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
 
       clickOsc.connect(clickGain);
@@ -90,8 +90,8 @@ class VinylScratchSynthesizer {
 
         const noiseGain = this.ctx.createGain();
         noiseGain.gain.setValueAtTime(0.001, now);
-        noiseGain.gain.linearRampToValueAtTime(0.32, now + 0.06);
-        noiseGain.gain.setValueAtTime(0.24, now + 0.45);
+        noiseGain.gain.linearRampToValueAtTime(0.14, now + 0.06);
+        noiseGain.gain.setValueAtTime(0.10, now + 0.45);
         noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
 
         noiseSrc.connect(spinFilter);
@@ -114,7 +114,7 @@ class VinylScratchSynthesizer {
       motorFilter.frequency.setValueAtTime(160, now);
 
       motorGain.gain.setValueAtTime(0.001, now);
-      motorGain.gain.linearRampToValueAtTime(0.12, now + 0.1);
+      motorGain.gain.linearRampToValueAtTime(0.05, now + 0.1);
       motorGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
 
       motorOsc.connect(motorFilter);
@@ -143,7 +143,7 @@ class VinylScratchSynthesizer {
       liftPopOsc.frequency.setValueAtTime(260, now);
       liftPopOsc.frequency.exponentialRampToValueAtTime(40, now + 0.055);
 
-      liftPopGain.gain.setValueAtTime(0.48, now);
+      liftPopGain.gain.setValueAtTime(0.18, now);
       liftPopGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
 
       liftPopOsc.connect(liftPopGain);
@@ -163,7 +163,7 @@ class VinylScratchSynthesizer {
         brakeFilter.Q.setValueAtTime(2.6, now);
 
         const noiseGain = this.ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.28, now);
+        noiseGain.gain.setValueAtTime(0.14, now);
         noiseGain.gain.exponentialRampToValueAtTime(0.001, now + durationSec);
 
         noiseSrc.connect(brakeFilter);
@@ -185,7 +185,7 @@ class VinylScratchSynthesizer {
       motorFilter.type = 'lowpass';
       motorFilter.frequency.setValueAtTime(140, now);
 
-      motorGain.gain.setValueAtTime(0.09, now);
+      motorGain.gain.setValueAtTime(0.04, now);
       motorGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
 
       motorOsc.connect(motorFilter);
@@ -205,7 +205,7 @@ class VinylScratchSynthesizer {
           clickOsc.frequency.setValueAtTime(110, stopNow);
           clickOsc.frequency.exponentialRampToValueAtTime(30, stopNow + 0.04);
 
-          clickGain.gain.setValueAtTime(0.25, stopNow);
+          clickGain.gain.setValueAtTime(0.10, stopNow);
           clickGain.gain.exponentialRampToValueAtTime(0.001, stopNow + 0.04);
 
           clickOsc.connect(clickGain);
@@ -391,58 +391,160 @@ class VinylScratchSynthesizer {
   }
 }
 
-export function stopVinylSpinSmoothly(element, shouldSpin, durationMs = 500) {
-  if (!element) return;
+// --- Unified 60/120 FPS Vinyl Dynamics & Multi-Instance Sync Engine ---
+let globalVinylAngle = 0;
+let vinylAngularVelocity = 0;      // 0.0 to 1.0 multiplier of 120 deg/s (33 RPM)
+let targetAngularVelocity = 0;     // 1.0 when playing, 0.0 when stopped/paused
+let lastVinylFrameTime = performance.now();
+let isDeceleratingToStop = false;
+let stopTimeoutId = null;
 
-  if (shouldSpin) {
-    if (element.classList.contains('vinyl-spin-anim')) {
-      element.classList.remove('vinyl-spin-decelerate');
-      return;
-    }
-    element.classList.remove('vinyl-spin-decelerate');
-    element.style.transform = '';
-    element.classList.add('vinyl-spin-anim');
-  } else {
-    const isSpinning = element.classList.contains('vinyl-spin-anim') || 
-                       element.classList.contains('spinning') || 
-                       element.classList.contains('vinyl-spin-once');
+export function syncVinylInstances(angleDeg, isRoundDisc = true) {
+  const formattedAngle = (angleDeg % 360).toFixed(2);
+  const audioBarIconBox = document.getElementById('audioBarIconBox');
 
-    if (isSpinning) {
-      let currentAngle = 0;
-      try {
-        const style = window.getComputedStyle(element);
-        const transform = style.transform || style.webkitTransform;
-        if (transform && transform !== 'none') {
-          const values = transform.split('(')[1].split(')')[0].split(',');
-          const a = parseFloat(values[0]);
-          const b = parseFloat(values[1]);
-          currentAngle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
-          if (currentAngle < 0) currentAngle += 360;
-        }
-      } catch (e) {}
-
-      // Remove active continuous spin classes and pin element at current exact angle
-      element.classList.remove('vinyl-spin-anim', 'spinning', 'vinyl-spin-once');
-      element.style.transform = `rotate(${currentAngle}deg)`;
-
-      // Smoothly finish at the upright 360° (0°) position without extra rotations
-      const remainder = currentAngle % 360;
-      const extraDeg = 360 - remainder;
-      const targetAngle = currentAngle + extraDeg;
-
-      requestAnimationFrame(() => {
-        element.classList.add('vinyl-spin-decelerate');
-        element.style.transform = `rotate(${targetAngle}deg)`;
-
-        setTimeout(() => {
-          element.classList.remove('vinyl-spin-decelerate');
-          element.style.transform = 'rotate(0deg)';
-        }, durationMs);
-      });
+  // 1. Update Persistent Bottom Dock Vinyl
+  if (audioBarIconBox) {
+    audioBarIconBox.style.transform = `rotate(${formattedAngle}deg)`;
+    if (isRoundDisc) {
+      audioBarIconBox.classList.add('is-vinyl-disc');
     } else {
-      element.classList.remove('vinyl-spin-decelerate', 'vinyl-spin-anim', 'spinning');
-      element.style.transform = 'rotate(0deg)';
+      audioBarIconBox.classList.remove('is-vinyl-disc');
     }
+  }
+
+  // 2. Update Active & Decelerating Playing Cards in Inspiration Vault
+  const targetCards = document.querySelectorAll('.music-card.is-playing .music-card-thumb, .music-card.is-decelerating .music-card-thumb');
+  targetCards.forEach((thumb) => {
+    thumb.style.transform = `rotate(${formattedAngle}deg)`;
+    if (isRoundDisc) {
+      thumb.classList.add('is-vinyl-disc');
+    } else {
+      thumb.classList.remove('is-vinyl-disc');
+    }
+  });
+
+  // 3. Dispatch event for external observers
+  window.dispatchEvent(new CustomEvent('kins:vinyl-sync', {
+    detail: { angle: angleDeg, isRound: isRoundDisc }
+  }));
+}
+
+let vinylDecelAnimId = null;
+
+export function startVinylSpin(startSpeed = 0.25) {
+  clearTimeout(stopTimeoutId);
+  if (vinylDecelAnimId) {
+    cancelAnimationFrame(vinylDecelAnimId);
+    vinylDecelAnimId = null;
+  }
+  isDeceleratingToStop = false;
+  targetAngularVelocity = 1.0;
+  if (vinylAngularVelocity < 0.15) {
+    vinylAngularVelocity = startSpeed;
+  }
+  lastVinylFrameTime = performance.now();
+
+  const audioBarIconBox = document.getElementById('audioBarIconBox');
+  if (audioBarIconBox) {
+    audioBarIconBox.classList.remove('vinyl-spin-decelerate');
+    audioBarIconBox.classList.add('is-vinyl-disc');
+  }
+  const activeCards = document.querySelectorAll('.music-card.is-playing .music-card-thumb, .music-card.is-decelerating .music-card-thumb');
+  activeCards.forEach((thumb) => {
+    thumb.classList.remove('vinyl-spin-decelerate');
+    thumb.classList.add('is-vinyl-disc');
+  });
+
+  if (window._startTimelineAnimation) window._startTimelineAnimation();
+}
+
+export function stopVinylSpin(morphToSquare = true, durationMs = 550) {
+  // If already at standstill (not spinning and not decelerating), ensure clean square state
+  if (vinylAngularVelocity <= 0.001 && targetAngularVelocity === 0 && !isDeceleratingToStop && (globalVinylAngle % 360) === 0) {
+    syncVinylInstances(0, !morphToSquare);
+    return;
+  }
+
+  // If already decelerating to stop, let current deceleration cycle finish cleanly
+  if (isDeceleratingToStop) {
+    return;
+  }
+
+  clearTimeout(stopTimeoutId);
+  if (vinylDecelAnimId) {
+    cancelAnimationFrame(vinylDecelAnimId);
+    vinylDecelAnimId = null;
+  }
+
+  targetAngularVelocity = 0;
+  isDeceleratingToStop = true;
+
+  // Mark all active cards so they participate in deceleration
+  const activeCards = document.querySelectorAll('.music-card.is-playing, .music-card.is-decelerating');
+  activeCards.forEach(card => card.classList.add('is-decelerating'));
+
+  const startAngle = globalVinylAngle;
+  // Calculate forward coasting target: always rotate forward to nearest 360° (0°)
+  const normalizedStart = ((startAngle % 360) + 360) % 360;
+  let distToUpright = 360 - normalizedStart;
+  if (distToUpright === 360) distToUpright = 0;
+  if (vinylAngularVelocity > 0.4 && distToUpright < 90) {
+    distToUpright += 360;
+  }
+  const targetAngle = startAngle + distToUpright;
+  const startTime = performance.now();
+
+  function stepDecel(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(1, elapsed / durationMs);
+
+    // Quintic ease-out deceleration curve: natural turntable friction coasting to standstill
+    const easeOut = 1 - Math.pow(1 - progress, 3.4);
+    const currentAngle = startAngle + (targetAngle - startAngle) * easeOut;
+    globalVinylAngle = currentAngle;
+
+    // Morph shape from circle to curved square in the second half of coasting
+    const isDisc = !morphToSquare || progress < 0.45;
+    syncVinylInstances(globalVinylAngle, isDisc);
+
+    if (progress < 1) {
+      vinylDecelAnimId = requestAnimationFrame(stepDecel);
+    } else {
+      globalVinylAngle = 0;
+      vinylAngularVelocity = 0;
+      isDeceleratingToStop = false;
+      vinylDecelAnimId = null;
+
+      const audioBarIconBox = document.getElementById('audioBarIconBox');
+      if (audioBarIconBox) {
+        audioBarIconBox.style.transform = 'rotate(0deg)';
+        audioBarIconBox.classList.remove('is-vinyl-disc', 'vinyl-spin-anim', 'vinyl-spin-decelerate');
+      }
+
+      document.querySelectorAll('.music-card').forEach(card => {
+        card.classList.remove('is-decelerating', 'is-playing');
+        const thumb = card.querySelector('.music-card-thumb');
+        if (thumb) {
+          thumb.style.transform = 'rotate(0deg)';
+          thumb.classList.remove('is-vinyl-disc', 'vinyl-spin-anim', 'vinyl-spin-decelerate');
+        }
+      });
+
+      window.dispatchEvent(new CustomEvent('kins:vinyl-sync', {
+        detail: { angle: 0, isRound: false }
+      }));
+    }
+  }
+
+  vinylDecelAnimId = requestAnimationFrame(stepDecel);
+}
+
+export function stopVinylSpinSmoothly(element, shouldSpin, durationMs = 600) {
+  if (shouldSpin) {
+    startVinylSpin(0.25);
+  } else {
+    stopVinylSpin(true, durationMs);
   }
 }
 
@@ -624,10 +726,37 @@ export function initAudioPlayer() {
     }
   }
 
-  function renderPlaybackLoop() {
+  function runVinylPhysicsStep(now) {
+    if (!lastVinylFrameTime) lastVinylFrameTime = now;
+    const dt = Math.min(50, Math.max(1, now - lastVinylFrameTime));
+    lastVinylFrameTime = now;
+
+    // Smooth exponential acceleration / deceleration momentum
+    const lerpRate = targetAngularVelocity > vinylAngularVelocity ? 0.005 : 0.007;
+    const lerp = Math.min(1, dt * lerpRate);
+    vinylAngularVelocity += (targetAngularVelocity - vinylAngularVelocity) * lerp;
+
+    if (vinylAngularVelocity > 0.004) {
+      // 360 deg per 3.0s = 120 deg/s standard 33 RPM velocity
+      const dAngle = (120 * dt / 1000) * vinylAngularVelocity;
+      globalVinylAngle += dAngle;
+      syncVinylInstances(globalVinylAngle, true);
+      return true;
+    } else {
+      vinylAngularVelocity = 0;
+      return false;
+    }
+  }
+
+  function renderPlaybackLoop(now = performance.now()) {
     if (isPlayingAudio && vaultAudioPlayer && !isScrubbing) {
       updateTimelineUI();
       checkAutoFadeOut();
+    }
+
+    const isSpinning = runVinylPhysicsStep(now);
+
+    if (isPlayingAudio || isSpinning || isDeceleratingToStop) {
       animFrameId = requestAnimationFrame(renderPlaybackLoop);
     } else {
       animFrameId = null;
@@ -635,16 +764,18 @@ export function initAudioPlayer() {
   }
 
   function startTimelineAnimation() {
+    lastVinylFrameTime = performance.now();
     if (animFrameId) cancelAnimationFrame(animFrameId);
     animFrameId = requestAnimationFrame(renderPlaybackLoop);
   }
 
   function stopTimelineAnimation() {
-    if (animFrameId) {
+    if (animFrameId && !isDeceleratingToStop) {
       cancelAnimationFrame(animFrameId);
       animFrameId = null;
     }
   }
+  window._startTimelineAnimation = startTimelineAnimation;
 
   function seekToPosition(clientX) {
     if (!vaultAudioPlayer) return;
@@ -677,6 +808,7 @@ export function initAudioPlayer() {
     }
 
     isScrubbing = true;
+    cancelVinylSpeedRamp();
     activePointerId = pointerId;
     updateCachedMusicSectionRect();
     if (bottomAudioBar) bottomAudioBar.classList.add('is-scrubbing');
@@ -684,6 +816,7 @@ export function initAudioPlayer() {
 
     lastX = clientX;
     lastTime = performance.now();
+    lastVinylFrameTime = performance.now();
 
     vinylScratchSynth.playNeedleDrop();
     vinylScratchSynth.startScratch();
@@ -701,6 +834,12 @@ export function initAudioPlayer() {
 
     lastX = clientX;
     lastTime = now;
+    lastVinylFrameTime = now;
+
+    // Direct rotational seek mapping: forward scrub rotates forward, backward scrub reverses rotation
+    const scrubAngleDelta = dx * 1.8;
+    globalVinylAngle += scrubAngleDelta;
+    syncVinylInstances(globalVinylAngle, true);
 
     if (vinylStylusWrapper) {
       if (velocity > 0.03) {
@@ -714,19 +853,6 @@ export function initAudioPlayer() {
 
     // Dynamic turntablist DJ scratch audio synthesis
     vinylScratchSynth.updateScratch(velocity);
-
-    // Dynamic pitch modulation on active audio track during aggressive scrubbing
-    if (vaultAudioPlayer) {
-      const speed = Math.abs(velocity);
-      if (speed > 0.08) {
-        try {
-          vaultAudioPlayer.preservesPitch = false;
-          if (vaultAudioPlayer.mozPreservesPitch !== undefined) vaultAudioPlayer.mozPreservesPitch = false;
-          if (vaultAudioPlayer.webkitPreservesPitch !== undefined) vaultAudioPlayer.webkitPreservesPitch = false;
-          vaultAudioPlayer.playbackRate = Math.min(2.8, Math.max(0.3, speed * 2.2));
-        } catch (e) {}
-      }
-    }
 
     seekToPosition(clientX);
   }
@@ -746,10 +872,17 @@ export function initAudioPlayer() {
 
     if (vaultAudioPlayer) {
       vaultAudioPlayer.playbackRate = 1.0;
+      try {
+        vaultAudioPlayer.preservesPitch = true;
+        if (vaultAudioPlayer.mozPreservesPitch !== undefined) vaultAudioPlayer.mozPreservesPitch = true;
+        if (vaultAudioPlayer.webkitPreservesPitch !== undefined) vaultAudioPlayer.webkitPreservesPitch = true;
+      } catch (e) {}
+
       const duration = 30;
       if (vaultAudioPlayer.currentTime >= duration - 0.05) {
         vaultAudioPlayer.currentTime = duration;
         isPlayingAudio = false;
+        targetAngularVelocity = 0;
         stopTimelineAnimation();
         updateTimelineUI();
         updateToggleBtnState(false);
@@ -757,7 +890,12 @@ export function initAudioPlayer() {
       }
     }
 
-    if (isPlayingAudio) startTimelineAnimation();
+    // Resume standard playback rotation velocity upon seek release smoothly
+    if (isPlayingAudio) {
+      targetAngularVelocity = 1.0;
+      vinylAngularVelocity = Math.max(0.7, vinylAngularVelocity);
+      startTimelineAnimation();
+    }
   }
 
   // Interactive Timeline Scrubbing with pointer & mobile touch support
@@ -1043,21 +1181,90 @@ export function initAudioPlayer() {
     });
   }
 
-  function triggerNeedleDropAndSpinUp(isResume = false) {
-    if (vaultAudioPlayer) {
-      vaultAudioPlayer.playbackRate = 1.0;
-      try {
-        vaultAudioPlayer.preservesPitch = true;
-        vaultAudioPlayer.mozPreservesPitch = true;
-        vaultAudioPlayer.webkitPreservesPitch = true;
-      } catch (e) {}
+  let vinylSpeedInterval = null;
+
+  function cancelVinylSpeedRamp() {
+    if (vinylSpeedInterval) {
+      clearInterval(vinylSpeedInterval);
+      vinylSpeedInterval = null;
     }
+  }
+
+  function rampVinylSpeedUp(durationMs = 580, startRate = 0.35) {
+    if (!vaultAudioPlayer) return;
+    cancelVinylSpeedRamp();
+
+    try {
+      vaultAudioPlayer.preservesPitch = false;
+      if (vaultAudioPlayer.mozPreservesPitch !== undefined) vaultAudioPlayer.mozPreservesPitch = false;
+      if (vaultAudioPlayer.webkitPreservesPitch !== undefined) vaultAudioPlayer.webkitPreservesPitch = false;
+    } catch (e) {}
+
+    vaultAudioPlayer.playbackRate = startRate;
+    const startTime = performance.now();
+    const stepMs = 25;
+
+    vinylSpeedInterval = setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(1, elapsed / durationMs);
+      // Realistic turntable torque spin-up curve
+      const currentRate = startRate + (1.0 - startRate) * Math.pow(progress, 1.35);
+
+      if (vaultAudioPlayer) {
+        vaultAudioPlayer.playbackRate = Math.min(1.0, parseFloat(currentRate.toFixed(3)));
+      }
+
+      if (progress >= 1) {
+        cancelVinylSpeedRamp();
+        if (vaultAudioPlayer) {
+          vaultAudioPlayer.playbackRate = 1.0;
+        }
+      }
+    }, stepMs);
+  }
+
+  function rampVinylSpeedDown(durationMs = 550, endRate = 0.12) {
+    return new Promise((resolve) => {
+      if (!vaultAudioPlayer) return resolve();
+      cancelVinylSpeedRamp();
+
+      try {
+        vaultAudioPlayer.preservesPitch = false;
+        if (vaultAudioPlayer.mozPreservesPitch !== undefined) vaultAudioPlayer.mozPreservesPitch = false;
+        if (vaultAudioPlayer.webkitPreservesPitch !== undefined) vaultAudioPlayer.webkitPreservesPitch = false;
+      } catch (e) {}
+
+      const startRate = vaultAudioPlayer.playbackRate || 1.0;
+      const startTime = performance.now();
+      const stepMs = 25;
+
+      vinylSpeedInterval = setInterval(() => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(1, elapsed / durationMs);
+        // Realistic turntable motor brake deceleration curve
+        const currentRate = startRate - (startRate - endRate) * Math.pow(progress, 1.25);
+
+        if (vaultAudioPlayer) {
+          vaultAudioPlayer.playbackRate = Math.max(endRate, parseFloat(currentRate.toFixed(3)));
+        }
+
+        if (progress >= 1) {
+          cancelVinylSpeedRamp();
+          if (vaultAudioPlayer) {
+            vaultAudioPlayer.playbackRate = endRate;
+          }
+          resolve();
+        }
+      }, stepMs);
+    });
+  }
+
+  function triggerNeedleDropAndSpinUp(isResume = false) {
     if (vinylScratchSynth) {
       vinylScratchSynth.playVinylNeedleSpinUp();
     }
-    if (audioBarIconBox) {
-      stopVinylSpinSmoothly(audioBarIconBox, true);
-    }
+    startVinylSpin(isResume ? 0.45 : 0.25);
+    rampVinylSpeedUp(isResume ? 480 : 580, isResume ? 0.48 : 0.35);
 
     if (vinylStylusWrapper) {
       vinylStylusWrapper.classList.remove('needle-drop-bounce');
@@ -1085,12 +1292,15 @@ export function initAudioPlayer() {
       }, durationMs);
     }
 
-    if (morphToSquare && audioBarIconBox) {
-      stopVinylSpinSmoothly(audioBarIconBox, false, durationMs);
+    if (morphToSquare) {
+      stopVinylSpin(true, durationMs);
     }
 
-    // 3. Smooth volume fade-out
-    await fadeOutAudio(durationMs);
+    // 3. Audio pitch wind-down and volume fade-out simultaneously
+    const speedPromise = rampVinylSpeedDown(durationMs, 0.12);
+    const fadePromise = fadeOutAudio(durationMs);
+
+    await Promise.all([speedPromise, fadePromise]);
 
     if (vaultAudioPlayer) {
       vaultAudioPlayer.pause();
@@ -1239,7 +1449,7 @@ export function initAudioPlayer() {
         isPlayingAudio = true;
         startTimelineAnimation();
         updateToggleBtnState(true);
-        fadeInAudio(1400, 1.0);
+        fadeInAudio(600, 1.0);
         showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
       }).catch(err => {
         if (transitionId !== currentTransitionId) return;
@@ -1326,10 +1536,12 @@ export function initAudioPlayer() {
 
   function pauseAudioCleanly() {
     if (!isPlayingAudio) return;
+    cancelVinylSpeedRamp();
     isPlayingAudio = false;
     updateToggleBtnState(false);
     if (vaultAudioPlayer) {
       vaultAudioPlayer.pause();
+      vaultAudioPlayer.playbackRate = 1.0;
     }
     stopTimelineAnimation();
     updateTimelineUI();

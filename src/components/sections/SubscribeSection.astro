@@ -16,7 +16,7 @@
       <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
         <div class="form-group">
           <div class="inline-input-row">
-            <input type="email" name="email" id="emailInput" placeholder="Enter your email..." required autocomplete="email">
+            <input type="text" name="email" id="emailInput" placeholder="Enter your email..." required autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false">
             <!-- Inline Quick Email Domain Shortcuts Row -->
             <div class="email-domain-shortcuts-row" id="emailDomainShortcutsRow">
               <button type="button" class="domain-shortcut-btn" data-domain="@gmail.com">@gmail.com</button>
@@ -201,13 +201,39 @@
     align-items: center;
     gap: 4px;
     overflow-x: auto;
+    overflow-y: hidden;
     max-width: 55%;
-    padding: 2px 0;
+    padding: 2px 2px 5px 2px;
     margin-top: 0;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    -webkit-overflow-scrolling: touch;
     flex-shrink: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-neon-yellow) rgba(0, 0, 0, 0.25);
+    -webkit-overflow-scrolling: touch;
+    cursor: grab;
+  }
+
+  .email-domain-shortcuts-row:active {
+    cursor: grabbing;
+  }
+
+  .email-domain-shortcuts-row::-webkit-scrollbar {
+    height: 4px;
+    display: block;
+  }
+
+  .email-domain-shortcuts-row::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 4px;
+  }
+
+  .email-domain-shortcuts-row::-webkit-scrollbar-thumb {
+    background: var(--accent-neon-yellow);
+    border-radius: 4px;
+    border: 1px solid #000000;
+  }
+
+  .email-domain-shortcuts-row::-webkit-scrollbar-thumb:hover {
+    background: #ffffff;
   }
 
   .email-domain-shortcuts-row::-webkit-scrollbar {
@@ -570,6 +596,21 @@
     }
   });
 
+  function setInputCaretPosition(input: HTMLInputElement, pos: number) {
+    if (!input) return;
+    input.focus();
+    try {
+      input.setSelectionRange(pos, pos);
+    } catch (err) {
+      try {
+        const origType = input.type;
+        input.type = 'text';
+        input.setSelectionRange(pos, pos);
+        input.type = origType;
+      } catch (e) {}
+    }
+  }
+
   if (subscribeForm) {
     subscribeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -579,6 +620,12 @@
       if (!emailInput || !emailInput.value) return;
 
       const email = emailInput.value.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showToast("Please enter a valid email address.");
+        setInputCaretPosition(emailInput, 0);
+        return;
+      }
 
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -595,6 +642,11 @@
           body: JSON.stringify({ email }),
         });
         const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          showToast(data.message || "Subscription error. Please check your email.");
+          return;
+        }
 
         setSubscriptionState(true, email);
         showToast(data.message || "Subscribed on Substack! Check your inbox to confirm.");
@@ -633,32 +685,71 @@
       const domain = btn.getAttribute('data-domain') || '';
       const currentVal = emailInput.value.trim();
 
+      let targetCaretPos = 0;
+
       if (!currentVal) {
+        // User hasn't typed anything: insert preset domain and place caret at position 0 (in front of @)
         emailInput.value = domain;
-        emailInput.focus();
-        emailInput.setSelectionRange(0, 0);
+        targetCaretPos = 0;
       } else {
+        // User typed a username/handle or existing domain
         const handle = currentVal.includes('@') ? currentVal.split('@')[0] : currentVal;
         if (handle && handle.length > 0) {
           emailInput.value = handle + domain;
-          emailInput.focus();
-          emailInput.setSelectionRange(emailInput.value.length, emailInput.value.length);
+          targetCaretPos = handle.length; // Place caret in front of @ symbol
         } else {
           emailInput.value = domain;
-          emailInput.focus();
-          emailInput.setSelectionRange(0, 0);
+          targetCaretPos = 0;
         }
       }
+
+      // Trigger input event for reactive form state
+      emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+      // Set caret position safely across all browsers and frame lifecycles
+      setInputCaretPosition(emailInput, targetCaretPos);
+
+      requestAnimationFrame(() => {
+        setInputCaretPosition(emailInput, targetCaretPos);
+      });
+
+      setTimeout(() => {
+        setInputCaretPosition(emailInput, targetCaretPos);
+      }, 30);
     });
   });
 
   const emailDomainShortcutsRow = document.getElementById('emailDomainShortcutsRow');
   if (emailDomainShortcutsRow) {
+    // Desktop mouse wheel horizontal conversion
     emailDomainShortcutsRow.addEventListener('wheel', (e) => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        emailDomainShortcutsRow.scrollLeft += e.deltaY;
+      } else if (e.deltaX !== 0) {
         emailDomainShortcutsRow.scrollLeft += e.deltaX;
       }
-    }, { passive: true });
+    }, { passive: false });
+
+    // Desktop mouse drag to scroll
+    let isDomainDown = false;
+    let domainStartX = 0;
+    let domainScrollStart = 0;
+
+    emailDomainShortcutsRow.addEventListener('mousedown', (e) => {
+      isDomainDown = true;
+      domainStartX = e.pageX - emailDomainShortcutsRow.offsetLeft;
+      domainScrollStart = emailDomainShortcutsRow.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', () => { isDomainDown = false; });
+    emailDomainShortcutsRow.addEventListener('mousemove', (e) => {
+      if (!isDomainDown) return;
+      e.preventDefault();
+      const x = e.pageX - emailDomainShortcutsRow.offsetLeft;
+      const walk = (x - domainStartX) * 1.5;
+      emailDomainShortcutsRow.scrollLeft = domainScrollStart - walk;
+    });
   }
 
   const privacyModal = document.getElementById('privacyModal');

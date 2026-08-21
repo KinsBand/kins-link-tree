@@ -37,8 +37,10 @@ const baseUrl = import.meta.env.BASE_URL;
   <div class="app-wrapper">
     <div class="site-container" id="siteContainer">
       <!-- Fixed Left Sidebar for Desktop / Top Portion for Mobile -->
+      <TopNav />
+
+      <!-- Fixed Left Sidebar for Desktop / Top Portion for Mobile -->
       <aside class="left-sidebar" id="leftSidebar">
-        <TopNav />
         <HeroBanner />
         <ProfileSection />
         <HeroFeatureCard />
@@ -137,13 +139,13 @@ const baseUrl = import.meta.env.BASE_URL;
       border-radius: 0;
     }
 
-    /* Fixed Left Sidebar - Fluid clamp scaling, spans 100% height of viewport */
+    /* Fixed Left Sidebar - Fluid clamp scaling, spans height below fixed top header */
     .left-sidebar {
       position: fixed;
-      top: 0;
+      top: 64px;
       left: 0;
       width: clamp(300px, 30vw, 420px);
-      height: 100vh;
+      height: calc(100vh - 64px);
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: var(--accent-neon-yellow) transparent;
@@ -173,11 +175,12 @@ const baseUrl = import.meta.env.BASE_URL;
       border-radius: 3px;
     }
 
-    /* Scrollable Right Main Content - Fills 100% remaining width */
+    /* Scrollable Right Main Content - Fills remaining width, offset below top header */
     .right-main-content {
+      margin-top: 64px;
       margin-left: clamp(300px, 30vw, 420px);
       width: calc(100% - clamp(300px, 30vw, 420px));
-      min-height: 100vh;
+      min-height: calc(100vh - 64px);
       display: flex;
       flex-direction: column;
       gap: 28px;
@@ -221,7 +224,7 @@ const baseUrl = import.meta.env.BASE_URL;
     }
 
     /* Mobile Flow Order */
-    .left-sidebar > :global(.top-nav) { order: 1; }
+    :global(.top-nav) { order: 1; }
     .left-sidebar > :global(.hero-banner-container) { order: 2; }
     .left-sidebar > :global(.profile-section) { order: 3; }
     .left-sidebar > :global(.hero-feature-card-wrapper) { order: 4; }
