@@ -3,15 +3,19 @@
 -- Run this in your Supabase SQL Editor (Dashboard -> SQL Editor -> New Query)
 -- =========================================================================
 
--- 1. Create subscribers table
+-- 1. Create subscribers table (with name capture)
 CREATE TABLE IF NOT EXISTS public.subscribers (
     id BIGSERIAL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
+    name TEXT,
     source TEXT DEFAULT 'website',
     welcome_email_sent BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW())
 );
+
+-- Ensure name column exists if table was created previously
+ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS name TEXT;
 
 -- 2. Create index on email for ultra-fast lookup and upserts
 CREATE INDEX IF NOT EXISTS idx_subscribers_email ON public.subscribers (email);

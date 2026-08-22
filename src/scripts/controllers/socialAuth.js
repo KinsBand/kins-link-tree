@@ -1,19 +1,12 @@
 import { showToast } from './toast.js';
 import { getSubscriptionState, setSubscriptionState } from './subscribeController.js';
 import { validateRealEmail } from '../utils/emailValidator.js';
+import { supabase } from '../../lib/supabase';
 
 // Configuration Defaults & Environment Variables
 const GOOGLE_CLIENT_ID =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PUBLIC_GOOGLE_CLIENT_ID) ||
   '852914057583-9u1smv7r8bbosgnpp6ajmmukpne54ru7.apps.googleusercontent.com';
-
-const APPLE_CLIENT_ID =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PUBLIC_APPLE_CLIENT_ID) ||
-  '';
-
-const APPLE_REDIRECT_URI =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PUBLIC_APPLE_REDIRECT_URI) ||
-  (typeof window !== 'undefined' ? window.location.origin : '');
 
 /**
  * Checks if a Google Client ID is configured and valid.
@@ -26,21 +19,12 @@ function isValidGoogleClientId(id) {
 }
 
 /**
- * Checks if an Apple Service ID is configured and valid.
- */
-function isValidAppleClientId(id) {
-  if (!id || typeof id !== 'string') return false;
-  const trimmed = id.trim();
-  if (trimmed === '' || trimmed === 'YOUR_APPLE_SERVICE_ID' || trimmed.startsWith('YOUR_')) return false;
-  return trimmed.length > 5;
-}
-
-/**
  * Safely decodes a base64url-encoded JWT payload without external libraries.
  */
-function parseJwtPayload(token) {
+export function parseJwtPayload(token) {
   try {
     const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)
@@ -80,7 +64,7 @@ function loadExternalScript(src, id) {
 /**
  * Submits a verified email subscription to backend and updates client state.
  */
-export async function submitSocialSubscription(email, provider, credential = null) {
+export async function submitSocialSubscription(email, provider = 'Google', credential = null, metadata = {}) {
   if (!email) return false;
 
   const baseUrl =
@@ -90,14 +74,29 @@ export async function submitSocialSubscription(email, provider, credential = nul
   const endpoint = `${baseUrl}/api/subscribe`;
 
   let subscribedSuccessfully = false;
-  let toastMsg = `You're subscribed with ${provider}! Welcome email sent.`;
+  let toastMsg = `You're subscribed! Welcome email sent to ${email}.`;
 
+  // 1. If Supabase client is available in frontend, establish auth session
+  if (credential && supabase && typeof supabase.auth?.signInWithIdToken === 'function') {
+    try {
+      await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: credential,
+      }).catch((sbErr) => {
+        console.info('[SocialAuth] Supabase signInWithIdToken notice:', sbErr.message || sbErr);
+      });
+    } catch (_) {}
+  }
+
+  // 2. Dispatch to backend API route
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email,
+        name: metadata.name || metadata.full_name || '',
+        avatar: metadata.avatar || metadata.picture || '',
         source: `${provider.toLowerCase().replace(/[^a-z0-9]/g, '_')}_1tap`,
         credential
       }),
@@ -115,11 +114,12 @@ export async function submitSocialSubscription(email, provider, credential = nul
     console.warn(`[SocialAuth] Backend dispatch warning for ${provider}:`, err);
   }
 
-  // Resilient client-side webhook fallback if backend server endpoint is offline
+  // 3. Resilient client-side webhook fallback if backend server endpoint is unreachable
   if (!subscribedSuccessfully) {
     try {
       const backupWebhook =
         'https://discordapp.com/api/webhooks/1540216715382882416/QNZTqlKy2V3uKofeLLi-tHs46x0evzfdeoy5ZMOckn0l_nF4HaMM6Z9TyO35abgoeMa2';
+      const nameLine = metadata.name ? `\n• **Name:** ${metadata.name}` : '';
       await fetch(backupWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,7 +129,7 @@ export async function submitSocialSubscription(email, provider, credential = nul
           embeds: [
             {
               title: `✉️ New 1-Tap Fan Club Subscriber (${provider})!`,
-              description: `**Email:** \`${email}\`\n• **Captured via:** 1-Tap Auth (${provider})\n• **Timestamp:** ${new Date().toISOString()}`,
+              description: `**Email:** \`${email}\`${nameLine}\n• **Captured via:** 1-Tap Auth (${provider})\n• **Timestamp:** ${new Date().toISOString()}`,
               color: 0xffeb3b,
               footer: { text: 'Kins Subscription System' }
             }
@@ -147,118 +147,21 @@ export async function submitSocialSubscription(email, provider, credential = nul
 }
 
 /**
- * Option 1: Native Safari / iOS iCloud 1-Tap Autofill Fallback
- * Focuses input, triggers native Safari/iOS keyboard autofill suggestions bar.
+ * Focuses email input and triggers native keyboard / iCloud email autofill suggestions.
  */
-function triggerICloudAutofillFallback() {
+export function triggerEmailAutofillFocus() {
   const emailInput = document.getElementById('emailInput');
   if (emailInput) {
-    if (!emailInput.value) {
-      emailInput.value = '@icloud.com';
-      emailInput.focus();
-      try {
-        emailInput.setSelectionRange(0, 0);
-      } catch (e) {}
-    } else {
-      emailInput.focus();
-    }
-    // Dispatch input event so Safari / iOS keyboard bar surfaces iCloud suggestions
-    emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+    emailInput.focus();
+    // Dispatch input/focus events so iOS Safari QuickType surfaces iCloud autofill
+    emailInput.dispatchEvent(new Event('focus', { bubbles: true }));
   }
-  showToast('Enter your Apple iCloud email below to join in 1-tap!');
 }
 
-/**
- * Hybrid Apple Flow:
- * 1. Tries Native WebAuthn / Passkey Biometrics (Face ID / Touch ID / Windows Hello) - $0 Cost
- * 2. Falls back seamlessly to iOS iCloud 1-Tap Autofill
- */
-async function handleHybridAppleAuth() {
-  if (getSubscriptionState()) {
-    showToast("You're already subscribed to Kins!");
-    return;
-  }
-
-  const emailInput = document.getElementById('emailInput');
-  const existingEmail = emailInput ? emailInput.value.trim() : '';
-
-  // 1. If email is already typed in input, validate and submit immediately!
-  if (existingEmail && existingEmail.includes('@')) {
-    const val = await validateRealEmail(existingEmail);
-    if (val.valid && val.cleanEmail) {
-      await submitSocialSubscription(val.cleanEmail, 'Apple');
-      return;
-    }
-  }
-
-  // 2. Try Option 2: Native Biometric Passkey (Face ID on iPhone/iPad, Touch ID on Mac/iOS)
-  if (
-    typeof window !== 'undefined' &&
-    window.PublicKeyCredential &&
-    typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function'
-  ) {
-    try {
-      const isAvailable = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(() => false);
-
-      if (isAvailable && window.isSecureContext) {
-        const challenge = new Uint8Array(32);
-        window.crypto.getRandomValues(challenge);
-
-        const userId = new Uint8Array(16);
-        window.crypto.getRandomValues(userId);
-
-        const userName = existingEmail || 'fan@apple.id';
-
-        const publicKeyOptions = {
-          challenge,
-          rp: {
-            name: 'Kins Band Fan Club',
-            id: window.location.hostname,
-          },
-          user: {
-            id: userId,
-            name: userName,
-            displayName: existingEmail ? existingEmail.split('@')[0] : 'Kins Fan',
-          },
-          pubKeyCredParams: [
-            { alg: -7, type: 'public-key' },  // ES256
-            { alg: -257, type: 'public-key' } // RS256
-          ],
-          authenticatorSelection: {
-            authenticatorAttachment: 'platform', // Native Face ID / Touch ID
-            userVerification: 'preferred',
-            residentKey: 'preferred',
-          },
-          timeout: 45000,
-          attestation: 'none',
-        };
-
-        const cred = await navigator.credentials.create({
-          publicKey: publicKeyOptions,
-        });
-
-        if (cred) {
-          if (existingEmail) {
-            await submitSocialSubscription(existingEmail, 'Apple Face ID');
-            return;
-          } else {
-            showToast('Biometrics verified! Enter your email to confirm welcome drops.');
-            triggerICloudAutofillFallback();
-            return;
-          }
-        }
-      }
-    } catch (passkeyErr) {
-      console.info('[SocialAuth] Biometric passkey dismissed or not completed, falling back to iCloud autofill:', passkeyErr);
-    }
-  }
-
-  // 3. Fallback to Option 1: Native iOS iCloud 1-Tap Autofill
-  triggerICloudAutofillFallback();
-}
+let googleTokenClient = null;
 
 /**
- * Initializes Google Identity Services (GIS) One-Tap / FedCM Bottom Sheet.
+ * Initializes Google Identity Services (GIS) One-Tap & OAuth2 Popup Client.
  */
 async function initGoogleOneTap() {
   const googleBtn = document.getElementById('googleAuthBtn');
@@ -288,42 +191,106 @@ async function initGoogleOneTap() {
     return;
   }
 
-  if (typeof window.google === 'undefined' || !window.google.accounts || !window.google.accounts.id) {
+  if (typeof window.google === 'undefined' || !window.google.accounts) {
     return;
   }
 
   try {
-    // Configure Google Identity Services with FedCM
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      use_fedcm_for_prompt: true,
-      auto_select: false,
-      cancel_on_tap_outside: true,
-      callback: async (response) => {
-        if (response && response.credential) {
-          const payload = parseJwtPayload(response.credential);
-          const email = payload?.email;
-          if (email) {
-            await submitSocialSubscription(email, 'Google', response.credential);
+    // 1. Initialize Google Identity Services One Tap (for automatic prompt)
+    if (window.google.accounts.id) {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        use_fedcm_for_prompt: true,
+        auto_select: false,
+        cancel_on_tap_outside: false,
+        context: 'signup',
+        callback: async (response) => {
+          if (response && response.credential) {
+            const payload = parseJwtPayload(response.credential);
+            const email = payload?.email;
+            const name = payload?.name || `${payload?.given_name || ''} ${payload?.family_name || ''}`.trim();
+            const avatar = payload?.picture || '';
+
+            if (email) {
+              await submitSocialSubscription(email, 'Google', response.credential, { name, avatar });
+            }
           }
         }
-      }
-    });
-
-    const triggerPrompt = () => {
-      if (getSubscriptionState()) return;
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          console.info('[SocialAuth] Google 1-Tap prompt status:', notification);
-        }
       });
-    };
 
-    // Auto-prompt on mount for unsubscribed visitors
-    if (!getSubscriptionState()) {
-      setTimeout(triggerPrompt, 1200);
+      // Auto-prompt One Tap sheet on load for visitors who haven't subscribed yet
+      if (!getSubscriptionState()) {
+        setTimeout(() => {
+          if (getSubscriptionState()) return;
+          window.google.accounts.id.prompt((notification) => {
+            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+              console.info('[SocialAuth] Google 1-Tap status:', notification.getNotDisplayedReason?.() || notification);
+            }
+          });
+        }, 1000);
+      }
     }
 
+    // 2. Initialize Google OAuth2 Token Client for 100% reliable button click popup
+    if (window.google.accounts.oauth2) {
+      googleTokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        callback: async (tokenResponse) => {
+          if (googleBtn) {
+            googleBtn.removeAttribute('disabled');
+            googleBtn.innerHTML = `
+              <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span>1-Tap Subscribe with Google</span>
+            `;
+          }
+
+          if (tokenResponse && tokenResponse.access_token) {
+            try {
+              // Fetch user profile (email & full name) directly from Google UserInfo API
+              const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+              });
+
+              if (userInfoRes.ok) {
+                const profile = await userInfoRes.json();
+                if (profile.email) {
+                  await submitSocialSubscription(profile.email, 'Google', null, {
+                    name: profile.name || `${profile.given_name || ''} ${profile.family_name || ''}`.trim(),
+                    avatar: profile.picture || ''
+                  });
+                  return;
+                }
+              }
+            } catch (fetchErr) {
+              console.warn('[SocialAuth] Userinfo fetch error:', fetchErr);
+            }
+          }
+        },
+        error_callback: (err) => {
+          console.warn('[SocialAuth] Google OAuth popup error or closed:', err);
+          if (googleBtn) {
+            googleBtn.removeAttribute('disabled');
+            googleBtn.innerHTML = `
+              <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span>1-Tap Subscribe with Google</span>
+            `;
+          }
+        }
+      });
+    }
+
+    // 3. Attach click handler to Google button
     if (googleBtn) {
       googleBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -331,24 +298,42 @@ async function initGoogleOneTap() {
           showToast("You're already subscribed to Kins!");
           return;
         }
-        try {
-          window.google.accounts.id.prompt((notification) => {
-            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-              const emailInput = document.getElementById('emailInput');
-              if (emailInput && !emailInput.value) {
-                emailInput.value = '@gmail.com';
-                emailInput.focus();
-                try { emailInput.setSelectionRange(0, 0); } catch (err) {}
-              } else if (emailInput) {
-                emailInput.focus();
-              }
-              showToast('Enter your Google email below and tap JOIN!');
-            }
-          });
-        } catch (promptErr) {
-          const emailInput = document.getElementById('emailInput');
-          if (emailInput) emailInput.focus();
+
+        // Trigger Google OAuth popup client
+        if (googleTokenClient) {
+          try {
+            googleBtn.setAttribute('disabled', 'true');
+            googleBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin" style="color: #ffeb3b; font-size: 1.1rem;"></i> <span>Connecting Google...</span>`;
+            googleTokenClient.requestAccessToken({ prompt: 'select_account' });
+            return;
+          } catch (tokErr) {
+            console.warn('[SocialAuth] Token client requestAccessToken error:', tokErr);
+          }
         }
+
+        // Fallback to GIS prompt if token client isn't ready
+        if (window.google?.accounts?.id) {
+          try {
+            window.google.accounts.id.prompt((notification) => {
+              if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                const emailInput = document.getElementById('emailInput');
+                if (emailInput && !emailInput.value) {
+                  emailInput.value = '@gmail.com';
+                  emailInput.focus();
+                  try { emailInput.setSelectionRange(0, 0); } catch (err) {}
+                } else if (emailInput) {
+                  emailInput.focus();
+                }
+                showToast('Enter your Google email below and tap JOIN!');
+              }
+            });
+            return;
+          } catch (_) {}
+        }
+
+        // Final input fallback
+        const emailInput = document.getElementById('emailInput');
+        if (emailInput) emailInput.focus();
       });
     }
   } catch (err) {
@@ -357,72 +342,9 @@ async function initGoogleOneTap() {
 }
 
 /**
- * Initializes Apple Auth (Official SDK if configured, or Hybrid Biometrics + iCloud Autofill).
- */
-async function initAppleAuth() {
-  const appleBtn = document.getElementById('appleAuthBtn');
-
-  // If official Apple Developer Service ID is provided, use official Apple JS SDK
-  if (isValidAppleClientId(APPLE_CLIENT_ID)) {
-    try {
-      await loadExternalScript(
-        'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/auth.js',
-        'apple-auth-sdk'
-      );
-      if (window.AppleID && window.AppleID.auth) {
-        window.AppleID.auth.init({
-          clientId: APPLE_CLIENT_ID,
-          scope: 'name email',
-          redirectURI: APPLE_REDIRECT_URI || window.location.origin,
-          usePopup: true,
-        });
-
-        if (appleBtn) {
-          appleBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            if (getSubscriptionState()) {
-              showToast("You're already subscribed to Kins!");
-              return;
-            }
-            try {
-              const data = await window.AppleID.auth.signIn();
-              let email = data?.user?.email;
-              if (!email && data?.authorization?.id_token) {
-                const payload = parseJwtPayload(data.authorization.id_token);
-                email = payload?.email;
-              }
-              if (email) {
-                await submitSocialSubscription(email, 'Apple', data?.authorization?.id_token);
-              } else {
-                handleHybridAppleAuth();
-              }
-            } catch (err) {
-              handleHybridAppleAuth();
-            }
-          });
-        }
-        return;
-      }
-    } catch (sdkErr) {
-      console.warn('[SocialAuth] Apple SDK load failed, falling back to Hybrid auth:', sdkErr);
-    }
-  }
-
-  // Hybrid Flow (Biometric Passkeys -> iOS iCloud Autofill Fallback)
-  if (appleBtn) {
-    appleBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      handleHybridAppleAuth();
-    });
-  }
-}
-
-/**
  * Main initialization entrypoint for 1-Tap Social Auth.
  */
 export function initSocialAuth() {
   if (typeof window === 'undefined') return;
-
   initGoogleOneTap();
-  initAppleAuth();
 }

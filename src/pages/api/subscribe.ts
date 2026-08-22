@@ -187,17 +187,27 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json().catch(() => ({}));
     let email = body.email;
+    let userName = body.name || body.full_name || '';
+    let avatarUrl = body.avatar || body.picture || '';
 
-    // Backend fallback: extract verified email from Google/Apple JWT credential if needed
-    if (!email && (body.credential || body.id_token)) {
+    // Backend fallback: extract verified email and name from Google JWT credential if needed
+    if ((!email || !userName) && (body.credential || body.id_token)) {
       try {
         const token = body.credential || body.id_token;
         const parts = token.split('.');
         if (parts.length >= 2) {
           const payloadJson = Buffer.from(parts[1], 'base64').toString('utf8');
           const payload = JSON.parse(payloadJson);
-          if (payload && payload.email) {
-            email = payload.email;
+          if (payload) {
+            if (!email && payload.email) {
+              email = payload.email;
+            }
+            if (!userName) {
+              userName = payload.name || `${payload.given_name || ''} ${payload.family_name || ''}`.trim();
+            }
+            if (!avatarUrl && payload.picture) {
+              avatarUrl = payload.picture;
+            }
           }
         }
       } catch (tokenErr) {
@@ -222,23 +232,38 @@ export const POST: APIRoute = async ({ request }) => {
     // 1. Save Subscriber to Supabase Database (subscribers table)
     if (db) {
       try {
+        const subscriberRecord: Record<string, any> = {
+          email: cleanEmail,
+          source: body.source || 'website',
+          is_subscribed: true,
+          unsubscribed_at: null,
+          updated_at: new Date().toISOString()
+        };
+
+        if (userName) {
+          subscriberRecord.name = userName;
+        }
+
         const { error } = await db
           .from('subscribers')
-          .upsert(
-            {
-              email: cleanEmail,
-              source: body.source || 'website',
-              is_subscribed: true,
-              unsubscribed_at: null,
-              updated_at: new Date().toISOString()
-            },
-            { onConflict: 'email', ignoreDuplicates: false }
-          );
+          .upsert(subscriberRecord, { onConflict: 'email', ignoreDuplicates: false });
 
         if (!error) {
           dbSuccess = true;
         } else {
-          console.error('[Supabase Error] subscribers upsert failed:', error.message || error);
+          // If upsert fails because `name` column doesn't exist yet on a legacy schema, retry without `name`
+          if (error.message && error.message.includes('column "name"')) {
+            const fallbackRecord = { ...subscriberRecord };
+            delete fallbackRecord.name;
+            const fallbackRes = await db
+              .from('subscribers')
+              .upsert(fallbackRecord, { onConflict: 'email', ignoreDuplicates: false });
+            if (!fallbackRes.error) {
+              dbSuccess = true;
+            }
+          } else {
+            console.error('[Supabase Error] subscribers upsert failed:', error.message || error);
+          }
         }
       } catch (dbErr) {
         console.error('[Supabase Connection Error]:', dbErr);
@@ -324,6 +349,8 @@ export const POST: APIRoute = async ({ request }) => {
           ? `• **Discord Account:** ${discordRoleResult.memberTag ? `\`${discordRoleResult.memberTag}\`` : ''} (<@${discordRoleResult.memberId}>)\n`
           : '';
 
+        const nameLine = userName ? `\n• **Name:** ${userName}` : '';
+
         await fetch(discordWebhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -333,7 +360,7 @@ export const POST: APIRoute = async ({ request }) => {
             embeds: [
               {
                 title: '✉️ New Fan Club Subscriber!',
-                description: `**Email:** \`${cleanEmail}\`\n${memberLine}• **Discord Roles:** ${roleStatusLine}\n• **Database Saved:** ${dbSuccess ? '✅ Yes' : '⚠️ Pending Setup'}\n• **Welcome Email:** ${welcomeEmailSent ? '✅ Sent via Resend' : (resendApiKey ? '⚠️ Failed/Queued' : 'ℹ️ Resend Key Not Set')}\n• **Timestamp:** ${new Date().toISOString()}`,
+                description: `**Email:** \`${cleanEmail}\`${nameLine}\n${memberLine}• **Discord Roles:** ${roleStatusLine}\n• **Database Saved:** ${dbSuccess ? '✅ Yes' : '⚠️ Pending Setup'}\n• **Welcome Email:** ${welcomeEmailSent ? '✅ Sent via Resend' : (resendApiKey ? '⚠️ Failed/Queued' : 'ℹ️ Resend Key Not Set')}\n• **Timestamp:** ${new Date().toISOString()}`,
                 color: 0xffeb3b, // Neon Yellow
                 footer: { text: 'Kins Subscription System' }
               }
