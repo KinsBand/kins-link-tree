@@ -8,30 +8,54 @@
       <div class="subscribe-header">
         <div class="subscribe-title-row">
           <h3>Subscribe to Kins!</h3>
-          <span class="est-time-pill"><i class="fa-regular fa-clock"></i> ~5 sec</span>
+          <span class="est-time-pill">⚡ 1-Tap</span>
         </div>
-        <p class="subscribe-subtext">Receive new music, behind-the-scenes moments & gig drops straight to your inbox.</p>
+        <p class="subscribe-subtext">Receive new music, behind-the-scenes & gig drops.</p>
       </div>
 
-      <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
-        <div class="form-group">
-          <div class="inline-input-row">
-            <input type="text" name="email" id="emailInput" placeholder="Enter your email..." required autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false">
-            <!-- Inline Quick Email Domain Shortcuts Row -->
-            <div class="email-domain-shortcuts-row" id="emailDomainShortcutsRow">
-              <button type="button" class="domain-shortcut-btn" data-domain="@gmail.com">@gmail.com</button>
-              <button type="button" class="domain-shortcut-btn" data-domain="@outlook.com">@outlook.com</button>
-              <button type="button" class="domain-shortcut-btn" data-domain="@yahoo.com">@yahoo.com</button>
-              <button type="button" class="domain-shortcut-btn" data-domain="@icloud.com">@icloud.com</button>
-              <button type="button" class="domain-shortcut-btn" data-domain="@hotmail.com">@hotmail.com</button>
-              <button type="button" class="domain-shortcut-btn" data-domain="@proton.me">@proton.me</button>
-              <button type="button" class="domain-shortcut-btn" data-domain="@live.com">@live.com</button>
-            </div>
-          </div>
+      <!-- Duo 1-Tap Social Auth Row -->
+      <div class="social-auth-row">
+        <button type="button" class="social-auth-btn google-auth-btn" id="googleAuthBtn" aria-label="1-Tap Subscribe with Google">
+          <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
+          <span>Google</span>
+        </button>
 
-          <button type="submit" class="green-submit-btn">
-            <i class="fa-solid fa-envelope"></i>
-            <span>Subscribe</span>
+        <button type="button" class="social-auth-btn apple-auth-btn" id="appleAuthBtn" aria-label="1-Tap Subscribe with Apple">
+          <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 1.01-2.87-.96.04-2.13.65-2.79 1.41-.58.66-1.1 1.73-.97 2.76 1.08.08 2.16-.57 2.75-1.3z"/>
+          </svg>
+          <span>Apple</span>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="auth-divider">
+        <span class="divider-line"></span>
+        <span class="divider-text">OR WITH EMAIL</span>
+        <span class="divider-line"></span>
+      </div>
+
+      <!-- Unified Inline Email Form -->
+      <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
+        <div class="unified-input-container">
+          <input
+            type="email"
+            name="email"
+            id="emailInput"
+            placeholder="Enter your email..."
+            required
+            autocomplete="email"
+            inputmode="email"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+          <button type="submit" id="subscribeSubmitBtn" class="unified-join-btn" aria-label="Join Kins Fan Club">
+            <span>JOIN ➔</span>
           </button>
         </div>
       </form>
@@ -163,103 +187,8 @@
   .subscribe-form {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 4px;
-  }
-
-  .inline-input-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    position: relative;
-    background: var(--surface-input);
-    border: 2.5px solid #000000;
-    border-radius: 6px;
-    padding: 3px 6px 3px 12px;
-    box-shadow: 2px 2px 0px #000000;
-    transition: border-color 0.2s ease;
-  }
-
-  .inline-input-row input {
-    flex: 1;
-    min-width: 110px;
-    background: transparent;
-    border: none;
-    padding: 8px 4px 8px 0;
-    color: var(--text-card-primary);
-    font-family: var(--font-secondary);
-    font-size: 0.88rem;
-    font-weight: 600;
-    outline: none;
-  }
-
-  .inline-input-row input::placeholder {
-    color: var(--text-card-muted);
-  }
-
-  .email-domain-shortcuts-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    max-width: 55%;
-    padding: 2px 2px 5px 2px;
+    width: 100%;
     margin-top: 0;
-    flex-shrink: 0;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-neon-yellow) rgba(0, 0, 0, 0.25);
-    -webkit-overflow-scrolling: touch;
-    cursor: grab;
-  }
-
-  .email-domain-shortcuts-row:active {
-    cursor: grabbing;
-  }
-
-  .email-domain-shortcuts-row::-webkit-scrollbar {
-    height: 4px;
-    display: block;
-  }
-
-  .email-domain-shortcuts-row::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.25);
-    border-radius: 4px;
-  }
-
-  .email-domain-shortcuts-row::-webkit-scrollbar-thumb {
-    background: var(--accent-neon-yellow);
-    border-radius: 4px;
-    border: 1px solid #000000;
-  }
-
-  .email-domain-shortcuts-row::-webkit-scrollbar-thumb:hover {
-    background: #ffffff;
-  }
-
-  .email-domain-shortcuts-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  .domain-shortcut-btn {
-    flex: 0 0 auto;
-    background: var(--surface-card-light-hover);
-    border: 1.5px solid #000000;
-    color: var(--text-card-primary);
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
-  }
-
-  .domain-shortcut-btn:hover {
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    transform: translateY(-1px);
   }
 
   .subscribe-title-row {
@@ -286,38 +215,157 @@
     white-space: nowrap;
   }
 
-  .green-submit-btn {
+  /* 2. Duo 1-Tap Social Auth Row */
+  .social-auth-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
     width: 100%;
-    margin-top: 6px;
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    border: 2.5px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    border-radius: 6px;
-    padding: 10px 16px;
+    margin-top: 2px;
+  }
+
+  .social-auth-btn {
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    background: #1c1c21;
+    border: 1px solid #2e2e36;
+    border-radius: 12px;
+    color: #ffffff;
     font-family: var(--font-secondary);
-    font-weight: 900;
     font-size: 0.85rem;
-    letter-spacing: 0.04em;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, border-color 0.16s ease;
+    box-sizing: border-box;
+  }
+
+  .social-auth-btn:hover {
+    background: #27272e;
+    border-color: #3f3f4a;
+    transform: translateY(-1px);
+  }
+
+  .social-auth-btn:active {
+    background: #16161a;
+    transform: translateY(0);
+  }
+
+  .social-icon {
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* 3. Divider */
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 2px 0;
+  }
+
+  .divider-line {
+    flex: 1;
+    height: 0;
+    border-top: 1px solid #25252b;
+  }
+
+  .divider-text {
+    font-family: var(--font-secondary);
+    font-size: 10px;
+    font-weight: 700;
+    color: #71717a;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  /* 4. Unified Inline Email Input Field */
+  .unified-input-container {
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    background: #121215;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    padding: 4px 4px 4px 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .unified-input-container:focus-within {
+    border-color: #d4a838;
+    box-shadow: 0 0 0 1px rgba(212, 168, 56, 0.35);
+  }
+
+  .unified-input-container input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-family: var(--font-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0;
+    margin: 0;
+  }
+
+  .unified-input-container input::placeholder {
+    color: #71717a;
+    opacity: 1;
+  }
+
+  .unified-join-btn {
+    height: 36px;
+    min-height: 36px;
+    max-height: 36px;
+    padding: 0 14px;
+    background: #d4a838;
+    border: none;
+    border-radius: 8px;
+    color: #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
-    min-height: 40px;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, opacity 0.16s ease;
+    user-select: none;
   }
 
-  .green-submit-btn:hover {
-    background: var(--surface-card-light-hover);
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
+  .unified-join-btn:hover {
+    background: #e5b948;
+    transform: scale(1.02);
   }
 
-  .green-submit-btn:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px #000000;
+  .unified-join-btn:active {
+    background: #c59727;
+    transform: scale(0.98);
+  }
+
+  .unified-join-btn:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
   }
 
   .subscribed-success-badge {
@@ -581,6 +629,7 @@
 
   import { getSubscriptionState, setSubscriptionState } from '../../scripts/controllers/subscribeController.js';
   import { validateRealEmail } from '../../scripts/utils/emailValidator.js';
+  import { initSocialAuth } from '../../scripts/controllers/socialAuth.js';
 
   const formContainer = document.getElementById('subscribeFormContainer');
   const successContainer = document.getElementById('subscribeSuccessContainer');
@@ -635,7 +684,7 @@
 
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i> <span>Verifying...</span>`;
+        submitBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i>`;
       }
 
       // 1. Verify email syntax, reject throwaways/disposables, and verify real DNS MX reachability
@@ -645,7 +694,7 @@
         setInputCaretPosition(emailInput, 0);
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = `<i class="fa-solid fa-envelope"></i> <span>Subscribe</span>`;
+          submitBtn.innerHTML = `<span>JOIN ➔</span>`;
         }
         return;
       }
@@ -653,7 +702,7 @@
       const email = validation.cleanEmail!;
 
       if (submitBtn) {
-        submitBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i> <span>Subscribing...</span>`;
+        submitBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i>`;
       }
 
       const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
@@ -680,7 +729,7 @@
           showToast(data.message || "Please enter a valid, active email address.");
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `<i class="fa-solid fa-envelope"></i> <span>Subscribe</span>`;
+            submitBtn.innerHTML = `<span>JOIN ➔</span>`;
           }
           return;
         }
@@ -717,7 +766,7 @@
 
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i class="fa-solid fa-envelope"></i> <span>Subscribe</span>`;
+        submitBtn.innerHTML = `<span>JOIN ➔</span>`;
       }
     });
   }
@@ -739,7 +788,7 @@
       const submitBtn = subscribeForm.querySelector('button[type="submit"]') as HTMLButtonElement;
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i class="fa-solid fa-envelope"></i> <span>Subscribe</span>`;
+        submitBtn.innerHTML = `<span>JOIN ➔</span>`;
       }
     }
 
@@ -768,77 +817,8 @@
     }
   });
 
-  document.querySelectorAll('.domain-shortcut-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const emailInput = document.getElementById('emailInput') as HTMLInputElement;
-      if (!emailInput) return;
-
-      const domain = btn.getAttribute('data-domain') || '';
-      const currentVal = emailInput.value.trim();
-
-      let targetCaretPos = 0;
-
-      if (!currentVal) {
-        // User hasn't typed anything: insert preset domain and place caret at position 0 (in front of @)
-        emailInput.value = domain;
-        targetCaretPos = 0;
-      } else if (currentVal.includes('@')) {
-        // User typed a full email or domain: replace the domain part
-        const handle = currentVal.split('@')[0];
-        emailInput.value = (handle || '') + domain;
-        targetCaretPos = emailInput.value.length;
-      } else {
-        // User typed their username/handle (e.g. "john"): append domain -> "john@gmail.com"
-        emailInput.value = currentVal + domain;
-        targetCaretPos = emailInput.value.length;
-      }
-
-      // Trigger input event for reactive form state
-      emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-      // Set caret position safely across all browsers
-      setInputCaretPosition(emailInput, targetCaretPos);
-
-      requestAnimationFrame(() => {
-        setInputCaretPosition(emailInput, targetCaretPos);
-      });
-    });
-  });
-
-  const emailDomainShortcutsRow = document.getElementById('emailDomainShortcutsRow');
-  if (emailDomainShortcutsRow) {
-    // Desktop mouse wheel horizontal conversion
-    emailDomainShortcutsRow.addEventListener('wheel', (e) => {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        emailDomainShortcutsRow.scrollLeft += e.deltaY;
-      } else if (e.deltaX !== 0) {
-        emailDomainShortcutsRow.scrollLeft += e.deltaX;
-      }
-    }, { passive: false });
-
-    // Desktop mouse drag to scroll
-    let isDomainDown = false;
-    let domainStartX = 0;
-    let domainScrollStart = 0;
-
-    emailDomainShortcutsRow.addEventListener('mousedown', (e) => {
-      isDomainDown = true;
-      domainStartX = e.pageX - emailDomainShortcutsRow.offsetLeft;
-      domainScrollStart = emailDomainShortcutsRow.scrollLeft;
-    });
-
-    window.addEventListener('mouseup', () => { isDomainDown = false; });
-    emailDomainShortcutsRow.addEventListener('mousemove', (e) => {
-      if (!isDomainDown) return;
-      e.preventDefault();
-      const x = e.pageX - emailDomainShortcutsRow.offsetLeft;
-      const walk = (x - domainStartX) * 1.5;
-      emailDomainShortcutsRow.scrollLeft = domainScrollStart - walk;
-    });
-  }
+  // Initialize Native 1-Tap Google GIS & Apple JS SDK
+  initSocialAuth();
 
   const privacyModal = document.getElementById('privacyModal');
   const openPrivacyFormBtn = document.getElementById('openPrivacyFormBtn');

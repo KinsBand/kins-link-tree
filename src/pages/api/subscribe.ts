@@ -186,7 +186,24 @@ function generateWelcomeEmailHtml(email: string): string {
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json().catch(() => ({}));
-    const email = body.email;
+    let email = body.email;
+
+    // Backend fallback: extract verified email from Google/Apple JWT credential if needed
+    if (!email && (body.credential || body.id_token)) {
+      try {
+        const token = body.credential || body.id_token;
+        const parts = token.split('.');
+        if (parts.length >= 2) {
+          const payloadJson = Buffer.from(parts[1], 'base64').toString('utf8');
+          const payload = JSON.parse(payloadJson);
+          if (payload && payload.email) {
+            email = payload.email;
+          }
+        }
+      } catch (tokenErr) {
+        console.warn('JWT token decode warning:', tokenErr);
+      }
+    }
 
     const validation = await validateRealEmail(email);
     if (!validation.valid) {
