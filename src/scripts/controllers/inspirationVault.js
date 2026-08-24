@@ -147,247 +147,219 @@ export async function getITunesTrackData(artist, title) {
   return fetchPromise;
 }
 
+/**
+ * @typedef {'Trai' | 'Vivian' | 'Oscar' | 'Charlie'} BandMember
+ * 
+ * @typedef {Object} InspirationTrack
+ * @property {string} id
+ * @property {string} title
+ * @property {string} artist
+ * @property {string} genre - Strictly single primary genre
+ * @property {string} [coverUrl]
+ * @property {string} [audioUrl]
+ * @property {string} [previewUrl]
+ * @property {string} [artworkUrl]
+ * @property {string} [duration]
+ * @property {string} [quote]
+ * @property {string} [icon]
+ * @property {BandMember[]} curatedBy
+ */
+
+export const INSPIRATION_TRACKS = [
+  {
+    id: 'turnip-farm',
+    title: 'Turnip Farm',
+    artist: 'Dinosaur Jr.',
+    genre: 'Grunge',
+    duration: '4:51',
+    quote: 'Sludge fuzz guitar and explosive leads',
+    icon: 'fa-guitar',
+    curatedBy: ['Charlie']
+  },
+  {
+    id: 'david-bowie-six',
+    title: '(David Bowie I Love You) Since I Was Six',
+    artist: 'The Brian Jonestown Massacre',
+    genre: 'Neo-Psychedelia',
+    duration: '3:25',
+    quote: 'Hypnotic drone & psych shimmer harmonies',
+    icon: 'fa-eye',
+    curatedBy: ['Charlie']
+  },
+  {
+    id: 'underwear',
+    title: 'Underwear',
+    artist: 'Pulp',
+    genre: 'Britpop',
+    duration: '4:06',
+    quote: 'Dramatic synth swells & cabaret tension',
+    icon: 'fa-mask',
+    curatedBy: ['Charlie']
+  },
+  {
+    id: 'unmade-bed',
+    title: 'Unmade Bed',
+    artist: 'Sonic Youth',
+    genre: 'Noise Rock',
+    duration: '3:53',
+    quote: 'Alternate tuning chime & raw warmth',
+    icon: 'fa-bolt',
+    curatedBy: ['Charlie']
+  },
+  {
+    id: 'shes-so-loose',
+    title: "She's So Loose",
+    artist: 'Supergrass',
+    genre: 'Britpop',
+    duration: '3:42',
+    quote: 'Acoustic strumming & infectious melody',
+    icon: 'fa-music',
+    curatedBy: ['Charlie']
+  },
+  {
+    id: 'letter-to-elise',
+    title: 'A Letter to Elise',
+    artist: 'The Cure',
+    genre: 'Post-Punk',
+    duration: '5:12',
+    quote: 'Lush melancholic jangle & romantic heartache',
+    icon: 'fa-envelope',
+    curatedBy: ['Vivian']
+  },
+  {
+    id: 'cry',
+    title: 'Cry',
+    artist: 'The Sundays',
+    genre: 'Dream Pop',
+    duration: '4:06',
+    quote: 'Radiant jangle-pop chime & effortless melody',
+    icon: 'fa-sun',
+    curatedBy: ['Vivian']
+  },
+  {
+    id: 'one-time',
+    title: 'One Time',
+    artist: 'beabadoobee',
+    genre: 'Bedroom Pop',
+    duration: '3:05',
+    quote: 'Warm acoustic strumming & bittersweet hooks',
+    icon: 'fa-heart',
+    curatedBy: ['Vivian']
+  },
+  {
+    id: 'bluebeard',
+    title: 'Bluebeard',
+    artist: 'Cocteau Twins',
+    genre: 'Dream Pop',
+    duration: '3:56',
+    quote: 'Lush shimmering guitars & soaring dreamscapes',
+    icon: 'fa-cloud',
+    curatedBy: ['Vivian']
+  },
+  {
+    id: 'night-like-this',
+    title: 'A Night Like This',
+    artist: 'The Cure',
+    genre: 'Post-Punk',
+    duration: '4:16',
+    quote: 'Moody atmospheric guitars & driving bass hooks',
+    icon: 'fa-moon',
+    curatedBy: ['Vivian']
+  },
+  {
+    id: 'heroes',
+    title: 'Heroes',
+    artist: 'David Bowie',
+    genre: 'Art Rock',
+    duration: '6:11',
+    quote: 'Anthemic ambient art rock & driving rhythm',
+    icon: 'fa-bolt',
+    curatedBy: ['Trai']
+  },
+  {
+    id: 'jane',
+    title: 'Jane!',
+    artist: 'The Long Faces',
+    genre: 'Art Rock',
+    duration: '3:07',
+    quote: 'Dramatic dynamic shifts & intricate post-punk energy',
+    icon: 'fa-music',
+    curatedBy: ['Trai']
+  },
+  {
+    id: 'negative-xp',
+    title: 'negative xp - autism',
+    artist: 'Quandale Dingle',
+    genre: 'Lo-Fi Punk',
+    duration: '2:34',
+    quote: 'Gritty lo-fi DIY chords & internet culture energy',
+    icon: 'fa-fire',
+    curatedBy: ['Trai']
+  },
+  {
+    id: 'hello-juliet',
+    title: 'Hello Juliet',
+    artist: 'Clarion',
+    genre: 'Indie Rock',
+    duration: '3:28',
+    quote: 'Catchy indie guitar riffs & soaring melodic hooks',
+    icon: 'fa-headphones',
+    curatedBy: ['Trai']
+  },
+  {
+    id: 'made-in-japan',
+    title: 'Made in Japan',
+    artist: 'Buck Owens & His Buckaroos',
+    genre: 'Country Rock',
+    duration: '2:45',
+    quote: 'Vintage twang, telecaster lead riffs & timeless songwriting',
+    icon: 'fa-guitar',
+    curatedBy: ['Trai']
+  }
+];
+
+function chunkTracks(tracks, pageSize = 4) {
+  const pages = [];
+  for (let i = 0; i < tracks.length; i += pageSize) {
+    pages.push(tracks.slice(i, i + pageSize));
+  }
+  return pages.length > 0 ? pages : [[]];
+}
+
 export const INSPIRED_ARTISTS_DATA = {
   'all': {
     name: 'All Inspirations',
-    genre: 'Indie Rock / Alternative / Psychedelic',
+    genre: 'Indie Rock / Alternative',
     bio: 'The seminal tracks, fuzz-drenched guitars, and psych hooks shaping the Kins sound.',
     iconClass: 'fa-record-vinyl',
-    pages: [
-      [
-        { title: 'Turnip Farm', artist: 'Dinosaur Jr.', duration: '4:51', genre: 'Alt Rock / Grunge', quote: 'Sludge fuzz guitar and explosive leads', icon: 'fa-guitar' },
-        { title: '(David Bowie I Love You) Since I Was Six', artist: 'The Brian Jonestown Massacre', duration: '3:25', genre: 'Neo-Psychedelia', quote: 'Hypnotic drone & psych shimmer harmonies', icon: 'fa-eye' },
-        { title: 'Underwear', artist: 'Pulp', duration: '4:06', genre: 'Britpop / Art Pop', quote: 'Dramatic synth swells & cabaret tension', icon: 'fa-mask' },
-        { title: 'Unmade Bed', artist: 'Sonic Youth', duration: '3:53', genre: 'Noise Rock / Post-Punk', quote: 'Alternate tuning chime & raw warmth', icon: 'fa-bolt' }
-      ],
-      [
-        { title: "She's So Loose", artist: 'Supergrass', duration: '3:42', genre: 'Britpop / Acoustic Rock', quote: 'Acoustic strumming & infectious melody', icon: 'fa-music' },
-        { title: 'One Time', artist: 'beabadoobee', duration: '3:05', genre: 'Indie Rock / Bedroom Pop', quote: 'Warm acoustic strumming & bittersweet hooks', icon: 'fa-heart' },
-        { title: 'Bluebeard', artist: 'Cocteau Twins', duration: '3:56', genre: 'Dream Pop / Ethereal Wave', quote: 'Lush shimmering guitars & soaring dreamscapes', icon: 'fa-cloud' },
-        { title: 'A Letter to Elise', artist: 'The Cure', duration: '5:12', genre: 'Post-Punk / Jangle Pop', quote: 'Lush melancholic jangle & romantic heartache', icon: 'fa-envelope' }
-      ],
-      [
-        { title: 'Cry', artist: 'The Sundays', duration: '4:06', genre: 'Dream Pop / Jangle Pop', quote: 'Radiant jangle-pop chime & effortless melody', icon: 'fa-sun' },
-        { title: 'A Night Like This', artist: 'The Cure', duration: '4:16', genre: 'Post-Punk / New Wave', quote: 'Moody atmospheric guitars & driving bass hooks', icon: 'fa-moon' },
-        { title: 'Heroes', artist: 'David Bowie', duration: '6:11', genre: 'Art Rock / Glam Rock', quote: 'Anthemic ambient art rock & driving rhythm', icon: 'fa-bolt' },
-        { title: 'Jane!', artist: 'The Long Faces', duration: '3:07', genre: 'Art Rock / Post-Punk', quote: 'Dramatic dynamic shifts & intricate post-punk energy', icon: 'fa-music' }
-      ],
-      [
-        { title: 'negative xp - autism', artist: 'Quandale Dingle', duration: '2:34', genre: 'Lo-Fi Punk / Internet Rock', quote: 'Gritty lo-fi DIY chords & internet culture energy', icon: 'fa-fire' },
-        { title: 'Hello Juliet', artist: 'Clarion', duration: '3:28', genre: 'Indie Rock / Alternative', quote: 'Catchy indie guitar riffs & soaring melodic hooks', icon: 'fa-headphones' },
-        { title: 'Made in Japan', artist: 'Buck Owens & His Buckaroos', duration: '2:45', genre: 'Bakersfield Country / Classic Rock', quote: 'Vintage twang, telecaster lead riffs & timeless songwriting', icon: 'fa-guitar' }
-      ]
-    ]
+    pages: chunkTracks(INSPIRATION_TRACKS, 4)
   },
-  'beabadoobee': {
-    name: 'beabadoobee',
-    genre: 'Indie Rock / Bedroom Pop / Alt Rock',
-    bio: 'Nostalgic 90s alt-rock riffs, sweet confessional lyrics, and fuzz-pop melodies.',
-    iconClass: 'fa-heart',
-    pages: [
-      [
-        { title: 'One Time', artist: 'beabadoobee', duration: '3:05', genre: 'Indie Rock / Bedroom Pop', quote: 'Warm acoustic strumming & bittersweet hooks', icon: 'fa-heart' }
-      ]
-    ]
+  'trai': {
+    name: 'Trai Curation',
+    genre: 'Art Rock / Lo-Fi Punk / Indie',
+    bio: 'Seminal songs and driving rhythms curated by Trai.',
+    iconClass: 'fa-drum',
+    pages: chunkTracks(INSPIRATION_TRACKS.filter(t => t.curatedBy.includes('Trai')), 4)
   },
-  'cocteau-twins': {
-    name: 'Cocteau Twins',
-    genre: 'Dream Pop / Ethereal Wave / Shoegaze',
-    bio: 'Cascading chorus pedals, ethereal soundscapes, and otherworldly vocal magic.',
-    iconClass: 'fa-cloud',
-    pages: [
-      [
-        { title: 'Bluebeard', artist: 'Cocteau Twins', duration: '3:56', genre: 'Dream Pop / Ethereal Wave', quote: 'Lush shimmering guitars & soaring dreamscapes', icon: 'fa-cloud' }
-      ]
-    ]
+  'vivian': {
+    name: 'Vivian Curation',
+    genre: 'Post-Punk / Dream Pop / Bedroom Pop',
+    bio: 'Melodic hooks, ethereal soundscapes, and post-punk chime chosen by Vivian.',
+    iconClass: 'fa-microphone',
+    pages: chunkTracks(INSPIRATION_TRACKS.filter(t => t.curatedBy.includes('Vivian')), 4)
   },
-  'the-cure': {
-    name: 'The Cure',
-    genre: 'Post-Punk / Gothic Rock / New Wave',
-    bio: 'Emotive melancholia, intricate flanged guitars, and legendary atmospheric post-punk.',
-    iconClass: 'fa-moon',
-    pages: [
-      [
-        { title: 'A Letter to Elise', artist: 'The Cure', duration: '5:12', genre: 'Post-Punk / Jangle Pop', quote: 'Lush melancholic jangle & romantic heartache', icon: 'fa-envelope' },
-        { title: 'A Night Like This', artist: 'The Cure', duration: '4:16', genre: 'Post-Punk / New Wave', quote: 'Moody atmospheric guitars & driving bass hooks', icon: 'fa-moon' }
-      ]
-    ]
+  'oscar': {
+    name: 'Oscar Curation',
+    genre: 'Bass / Synths',
+    bio: 'Tracks coming soon from Oscar.',
+    iconClass: 'fa-sliders',
+    pages: chunkTracks(INSPIRATION_TRACKS.filter(t => t.curatedBy.includes('Oscar')), 4)
   },
-  'cure': {
-    name: 'The Cure',
-    genre: 'Post-Punk / Gothic Rock / New Wave',
-    bio: 'Emotive melancholia, intricate flanged guitars, and legendary atmospheric post-punk.',
-    iconClass: 'fa-moon',
-    pages: [
-      [
-        { title: 'A Letter to Elise', artist: 'The Cure', duration: '5:12', genre: 'Post-Punk / Jangle Pop', quote: 'Lush melancholic jangle & romantic heartache', icon: 'fa-envelope' },
-        { title: 'A Night Like This', artist: 'The Cure', duration: '4:16', genre: 'Post-Punk / New Wave', quote: 'Moody atmospheric guitars & driving bass hooks', icon: 'fa-moon' }
-      ]
-    ]
-  },
-  'the-sundays': {
-    name: 'The Sundays',
-    genre: 'Dream Pop / Jangle Pop / Indie Pop',
-    bio: 'Bright jangle-pop guitars, soaring melodic vocals, and acoustic warmth.',
-    iconClass: 'fa-sun',
-    pages: [
-      [
-        { title: 'Cry', artist: 'The Sundays', duration: '4:06', genre: 'Dream Pop / Jangle Pop', quote: 'Radiant jangle-pop chime & effortless melody', icon: 'fa-sun' }
-      ]
-    ]
-  },
-  'sundays': {
-    name: 'The Sundays',
-    genre: 'Dream Pop / Jangle Pop / Indie Pop',
-    bio: 'Bright jangle-pop guitars, soaring melodic vocals, and acoustic warmth.',
-    iconClass: 'fa-sun',
-    pages: [
-      [
-        { title: 'Cry', artist: 'The Sundays', duration: '4:06', genre: 'Dream Pop / Jangle Pop', quote: 'Radiant jangle-pop chime & effortless melody', icon: 'fa-sun' }
-      ]
-    ]
-  },
-  'dinosaur-jr': {
-    name: 'Dinosaur Jr.',
-    genre: 'Alternative Rock / Grunge / Noise Pop',
-    bio: 'Heavy wall-of-sound fuzz, melancholic drawl, and shredding guitar leads.',
+  'charlie': {
+    name: 'Charlie Curation',
+    genre: 'Grunge / Britpop / Noise Rock',
+    bio: 'Sludge fuzz, Britpop melodies, and noise rock energy chosen by Charlie.',
     iconClass: 'fa-guitar',
-    pages: [
-      [
-        { title: 'Turnip Farm', artist: 'Dinosaur Jr.', duration: '4:51', genre: 'Alt Rock / Grunge', quote: 'Sludge fuzz guitar and explosive leads', icon: 'fa-guitar' }
-      ]
-    ]
-  },
-  'brian-jonestown-massacre': {
-    name: 'The Brian Jonestown Massacre',
-    genre: 'Neo-Psychedelia / Shoegaze / Folk Rock',
-    bio: 'Hypnotic drone, 12-string acoustic jangles, and vintage psych mysticism.',
-    iconClass: 'fa-eye',
-    pages: [
-      [
-        { title: '(David Bowie I Love You) Since I Was Six', artist: 'The Brian Jonestown Massacre', duration: '3:25', genre: 'Neo-Psychedelia', quote: 'Hypnotic drone & psych shimmer harmonies', icon: 'fa-eye' }
-      ]
-    ]
-  },
-  'the-brian-jonestown-massacre': {
-    name: 'The Brian Jonestown Massacre',
-    genre: 'Neo-Psychedelia / Shoegaze / Folk Rock',
-    bio: 'Hypnotic drone, 12-string acoustic jangles, and vintage psych mysticism.',
-    iconClass: 'fa-eye',
-    pages: [
-      [
-        { title: '(David Bowie I Love You) Since I Was Six', artist: 'The Brian Jonestown Massacre', duration: '3:25', genre: 'Neo-Psychedelia', quote: 'Hypnotic drone & psych shimmer harmonies', icon: 'fa-eye' }
-      ]
-    ]
-  },
-  'pulp': {
-    name: 'Pulp',
-    genre: 'Britpop / Art Pop / Glam Rock',
-    bio: 'Dramatic storytelling, disco-infused synthpop grooves, and theatrical British pop.',
-    iconClass: 'fa-compact-disc',
-    pages: [
-      [
-        { title: 'Underwear', artist: 'Pulp', duration: '4:06', genre: 'Britpop / Art Pop', quote: 'Dramatic synth swells & cabaret tension', icon: 'fa-mask' }
-      ]
-    ]
-  },
-  'sonic-youth': {
-    name: 'Sonic Youth',
-    genre: 'Noise Rock / Post-Punk / Alt Rock',
-    bio: 'Experimental tunings, dissonant feedback art, and NYC post-punk coolness.',
-    iconClass: 'fa-bolt',
-    pages: [
-      [
-        { title: 'Unmade Bed', artist: 'Sonic Youth', duration: '3:53', genre: 'Noise Rock / Post-Punk', quote: 'Alternate tuning chime & raw warmth', icon: 'fa-bolt' }
-      ]
-    ]
-  },
-  'supergrass': {
-    name: 'Supergrass',
-    genre: 'Britpop / Glam Rock / Acoustic Rock',
-    bio: 'Energetic britpop melodies, soulful harmonies, and sunny melodic hooks.',
-    iconClass: 'fa-music',
-    pages: [
-      [
-        { title: "She's So Loose", artist: 'Supergrass', duration: '3:42', genre: 'Britpop / Acoustic Rock', quote: 'Acoustic strumming & infectious melody', icon: 'fa-music' }
-      ]
-    ]
-  },
-  'david-bowie': {
-    name: 'David Bowie',
-    genre: 'Art Rock / Glam Rock / Post-Punk',
-    bio: 'Chameleon sonic genius, soaring anthems, and timeless visionary rock songwriting.',
-    iconClass: 'fa-bolt',
-    pages: [
-      [
-        { title: 'Heroes', artist: 'David Bowie', duration: '6:11', genre: 'Art Rock / Glam Rock', quote: 'Anthemic ambient art rock & driving rhythm', icon: 'fa-bolt' }
-      ]
-    ]
-  },
-  'the-long-faces': {
-    name: 'The Long Faces',
-    genre: 'Art Rock / Post-Punk / Baroque Pop',
-    bio: 'Intricate progressive dynamics, melodic math-rock rhythms, and dramatic post-punk vigor.',
-    iconClass: 'fa-music',
-    pages: [
-      [
-        { title: 'Jane!', artist: 'The Long Faces', duration: '3:07', genre: 'Art Rock / Post-Punk', quote: 'Dramatic dynamic shifts & intricate post-punk energy', icon: 'fa-music' }
-      ]
-    ]
-  },
-  'long-faces': {
-    name: 'The Long Faces',
-    genre: 'Art Rock / Post-Punk / Baroque Pop',
-    bio: 'Intricate progressive dynamics, melodic math-rock rhythms, and dramatic post-punk vigor.',
-    iconClass: 'fa-music',
-    pages: [
-      [
-        { title: 'Jane!', artist: 'The Long Faces', duration: '3:07', genre: 'Art Rock / Post-Punk', quote: 'Dramatic dynamic shifts & intricate post-punk energy', icon: 'fa-music' }
-      ]
-    ]
-  },
-  'quandale-dingle': {
-    name: 'Quandale Dingle',
-    genre: 'Lo-Fi Punk / Internet Rock',
-    bio: 'Viral internet culture, raw DIY indie punk distortion, and quirky underground energy.',
-    iconClass: 'fa-fire',
-    pages: [
-      [
-        { title: 'negative xp - autism', artist: 'Quandale Dingle', duration: '2:34', genre: 'Lo-Fi Punk / Internet Rock', quote: 'Gritty lo-fi DIY chords & internet culture energy', icon: 'fa-fire' }
-      ]
-    ]
-  },
-  'clarion': {
-    name: 'Clarion',
-    genre: 'Indie Rock / Alternative',
-    bio: 'Driving melodic indie guitars, heartfelt vocal hooks, and jangly alternative warmth.',
-    iconClass: 'fa-headphones',
-    pages: [
-      [
-        { title: 'Hello Juliet', artist: 'Clarion', duration: '3:28', genre: 'Indie Rock / Alternative', quote: 'Catchy indie guitar riffs & soaring melodic hooks', icon: 'fa-headphones' }
-      ]
-    ]
-  },
-  'buck-owens': {
-    name: 'Buck Owens and The Buckaroos',
-    genre: 'Bakersfield Sound / Classic Country Rock',
-    bio: 'Pioneering crisp Telecaster twang, infectious rhythm drive, and legendary songwriting.',
-    iconClass: 'fa-guitar',
-    pages: [
-      [
-        { title: 'Made in Japan', artist: 'Buck Owens & His Buckaroos', duration: '2:45', genre: 'Bakersfield Country / Classic Rock', quote: 'Vintage twang, telecaster lead riffs & timeless songwriting', icon: 'fa-guitar' }
-      ]
-    ]
-  },
-  'buck-owens-and-the-buckaroos': {
-    name: 'Buck Owens and The Buckaroos',
-    genre: 'Bakersfield Sound / Classic Country Rock',
-    bio: 'Pioneering crisp Telecaster twang, infectious rhythm drive, and legendary songwriting.',
-    iconClass: 'fa-guitar',
-    pages: [
-      [
-        { title: 'Made in Japan', artist: 'Buck Owens & His Buckaroos', duration: '2:45', genre: 'Bakersfield Country / Classic Rock', quote: 'Vintage twang, telecaster lead riffs & timeless songwriting', icon: 'fa-guitar' }
-      ]
-    ]
+    pages: chunkTracks(INSPIRATION_TRACKS.filter(t => t.curatedBy.includes('Charlie')), 4)
   }
 };

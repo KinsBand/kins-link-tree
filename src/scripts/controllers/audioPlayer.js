@@ -1534,6 +1534,32 @@ export function initAudioPlayer() {
     });
   }
 
+  let isExitFading = false;
+
+  async function fadeOutAndPauseCleanly(durationMs = 600) {
+    if (!isPlayingAudio || !vaultAudioPlayer || isExitFading) return;
+    isExitFading = true;
+    try {
+      if (typeof fadeOutAudio === 'function') {
+        await fadeOutAudio(durationMs);
+      }
+      if (vaultAudioPlayer) {
+        vaultAudioPlayer.pause();
+        vaultAudioPlayer.playbackRate = 1.0;
+        vaultAudioPlayer.volume = 1.0;
+      }
+      cancelVinylSpeedRamp();
+      isPlayingAudio = false;
+      updateToggleBtnState(false);
+      stopTimelineAnimation();
+      updateTimelineUI();
+    } catch (e) {
+      if (vaultAudioPlayer) vaultAudioPlayer.pause();
+    } finally {
+      isExitFading = false;
+    }
+  }
+
   function pauseAudioCleanly() {
     if (!isPlayingAudio) return;
     cancelVinylSpeedRamp();
@@ -1549,20 +1575,32 @@ export function initAudioPlayer() {
 
   window.pauseAudioPlayback = pauseAudioCleanly;
 
-  // 1. Auto-pause audio when leaving website, switching tabs, minimizing browser, or locking screen
+  // 1. Smooth fade-out audio when leaving website, switching tabs, minimizing browser, or locking screen
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && isPlayingAudio) {
-      pauseAudioCleanly();
+      fadeOutAndPauseCleanly(600);
     }
   });
 
   window.addEventListener('pagehide', () => {
     if (isPlayingAudio) {
-      pauseAudioCleanly();
+      fadeOutAndPauseCleanly(450);
     }
   });
 
-  // 2. Auto-pause audio when clicking external links (e.g. Spotify, Apple Music, social channels)
+  window.addEventListener('beforeunload', () => {
+    if (isPlayingAudio) {
+      fadeOutAndPauseCleanly(400);
+    }
+  });
+
+  document.addEventListener('astro:before-swap', () => {
+    if (isPlayingAudio) {
+      fadeOutAndPauseCleanly(450);
+    }
+  });
+
+  // 2. Smooth fade-out audio when clicking external links (e.g. Spotify, Apple Music, social channels)
   document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
     if (!link || !link.href) return;
@@ -1572,7 +1610,7 @@ export function initAudioPlayer() {
                       (!href.startsWith(window.location.origin) && !href.startsWith('#') && !href.startsWith('javascript:'));
 
     if (isExternal && isPlayingAudio) {
-      pauseAudioCleanly();
+      fadeOutAndPauseCleanly(650);
     }
   }, { capture: true });
 

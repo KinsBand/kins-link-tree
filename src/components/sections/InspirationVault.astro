@@ -1,20 +1,10 @@
 ---
-const artists = [
-  { key: "all", label: "All", active: true },
-  { key: "david-bowie", label: "David Bowie", active: false },
-  { key: "the-long-faces", label: "The Long Faces", active: false },
-  { key: "quandale-dingle", label: "Quandale Dingle", active: false },
-  { key: "clarion", label: "Clarion", active: false },
-  { key: "buck-owens", label: "Buck Owens", active: false },
-  { key: "beabadoobee", label: "beabadoobee", active: false },
-  { key: "cocteau-twins", label: "Cocteau Twins", active: false },
-  { key: "dinosaur-jr", label: "Dinosaur Jr.", active: false },
-  { key: "pulp", label: "Pulp", active: false },
-  { key: "sonic-youth", label: "Sonic Youth", active: false },
-  { key: "supergrass", label: "Supergrass", active: false },
-  { key: "brian-jonestown-massacre", label: "The Brian Jonestown Massacre", active: false },
-  { key: "the-cure", label: "The Cure", active: false },
-  { key: "the-sundays", label: "The Sundays", active: false }
+const memberTabs = [
+  { key: "all", label: "ALL" },
+  { key: "trai", label: "TRAI", memberName: "Trai" },
+  { key: "vivian", label: "VIVIAN", memberName: "Vivian" },
+  { key: "oscar", label: "OSCAR", memberName: "Oscar" },
+  { key: "charlie", label: "CHARLIE", memberName: "Charlie" }
 ];
 ---
 
@@ -23,10 +13,17 @@ const artists = [
     <h3 class="inspired-title"><i class="fa-solid fa-record-vinyl fa-fw"></i> What Inspires Us</h3>
   </div>
 
-  <div class="artist-filter-scroll-container" id="artistFilterBar">
-    {artists.map((art) => (
-      <button class={`filter-pill-btn ${art.active ? 'active' : ''}`} data-artist-key={art.key}>
-        {art.label}
+  <div class="member-filter-tabs-container" id="memberFilterBar" role="tablist" aria-label="Band Member Inspiration Tabs">
+    {memberTabs.map((tab) => (
+      <button
+        type="button"
+        role="tab"
+        aria-selected={tab.key === 'all' ? 'true' : 'false'}
+        class={`member-filter-tab-btn ${tab.key === 'all' ? 'active' : ''}`}
+        data-member-key={tab.key}
+        data-member-name={tab.memberName || ''}
+      >
+        {tab.label}
       </button>
     ))}
   </div>
@@ -94,76 +91,73 @@ const artists = [
     flex-shrink: 0;
   }
 
-  .artist-filter-scroll-container {
+  .member-filter-tabs-container {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
     overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    padding: 2px 2px 10px 2px;
+    padding: 2px 2px 8px 2px;
     scrollbar-width: thin;
     scrollbar-color: var(--accent-neon-yellow) rgba(0, 0, 0, 0.35);
     -webkit-overflow-scrolling: touch;
-    cursor: grab;
+    width: 100%;
+    box-sizing: border-box;
   }
 
-  .artist-filter-scroll-container:active {
-    cursor: grabbing;
-  }
-
-  .artist-filter-scroll-container::-webkit-scrollbar {
-    height: 6px;
+  .member-filter-tabs-container::-webkit-scrollbar {
+    height: 4px;
     display: block;
   }
 
-  .artist-filter-scroll-container::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  .member-filter-tabs-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
   }
 
-  .artist-filter-scroll-container::-webkit-scrollbar-thumb {
-    background: var(--accent-neon-yellow);
-    border-radius: 6px;
-    border: 1px solid #000000;
+  .member-filter-tabs-container::-webkit-scrollbar-thumb {
+    background: #fbbf24;
+    border-radius: 4px;
   }
 
-  .artist-filter-scroll-container::-webkit-scrollbar-thumb:hover {
-    background: #ffffff;
-  }
-
-  .filter-pill-btn {
-    flex: 0 0 auto;
-    scroll-snap-align: start;
-    background: var(--surface-card-light);
-    border: 2.5px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    color: var(--text-card-primary);
+  .member-filter-tab-btn {
+    flex: 1 1 0px;
+    min-width: 58px;
+    background: rgba(24, 24, 27, 0.9);
+    border: 1.5px solid #27272a;
+    color: #a1a1aa;
     font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    font-weight: 800;
+    font-size: 0.74rem;
+    font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     cursor: pointer;
-    padding: 6px 14px;
+    padding: 7px 8px;
     border-radius: 6px;
     white-space: nowrap;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.16s var(--ease-tactile);
+    user-select: none;
+    box-sizing: border-box;
   }
 
-  .filter-pill-btn:hover {
-    background: var(--surface-card-light-hover);
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
+  .member-filter-tab-btn:hover:not(.active) {
+    background: #27272a;
+    border-color: #3f3f46;
+    color: #ffffff;
+    transform: translateY(-1px);
   }
 
-  .filter-pill-btn.active {
+  .member-filter-tab-btn.active {
+    background: #fbbf24;
     color: #000000;
-    background: var(--accent-neon-yellow);
     border-color: #000000;
     box-shadow: 2px 2px 0px #000000;
     font-weight: 900;
+    transform: translateY(0);
   }
 
   .inspired-tracks-container {
@@ -320,6 +314,15 @@ const artists = [
     text-overflow: ellipsis;
   }
 
+  .inspired-tracks-container :global(.genre-meta-row) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
   .inspired-tracks-container :global(.genre-tag) {
     font-family: var(--font-secondary);
     font-size: 0.62rem;
@@ -327,6 +330,33 @@ const artists = [
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .inspired-tracks-container :global(.member-badges-container) {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .inspired-tracks-container :global(.member-curator-badge) {
+    height: 16px;
+    min-width: 16px;
+    padding: 0 5px;
+    border-radius: 4px;
+    background-color: #fbbf24;
+    color: #000000;
+    font-family: var(--font-secondary);
+    font-size: 10px;
+    font-weight: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    user-select: none;
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
   }
 
   .inspired-tracks-container :global(.play-btn) {
@@ -350,6 +380,43 @@ const artists = [
     background: var(--surface-card-light-hover);
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
+  }
+
+  .inspired-tracks-container :global(.empty-curation-state) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 16px;
+    background: var(--surface-card-light);
+    border: 2px dashed #000000;
+    border-radius: 8px;
+    text-align: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .inspired-tracks-container :global(.empty-icon) {
+    font-size: 1.6rem;
+    color: #fbbf24;
+    text-shadow: 1px 1px 0px #000000;
+  }
+
+  .inspired-tracks-container :global(.empty-text) {
+    font-family: var(--font-heading);
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
+    margin: 0;
+  }
+
+  .inspired-tracks-container :global(.empty-subtext) {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-card-muted);
+    margin: 0;
   }
 
   .dots-pagination-container {
@@ -415,7 +482,7 @@ const artists = [
   }
 
   .dots-pagination-container :global(.inspired-dot.active) {
-    background: var(--accent-neon-yellow);
+    background: #fbbf24;
     width: 18px;
   }
 
@@ -429,17 +496,20 @@ const artists = [
 </style>
 
 <script>
-  import { INSPIRED_ARTISTS_DATA, getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from '../../scripts/controllers/inspirationVault.js';
+  import { INSPIRATION_TRACKS, getITunesTrackData, loadAlbumArt } from '../../scripts/controllers/inspirationVault.js';
 
-  const container = document.getElementById('inspiredTracksContainer');
-  const dotsContainer = document.getElementById('dotsPaginationContainer');
-  const filterBtns = document.querySelectorAll('#artistFilterBar .filter-pill-btn');
+  const MEMBER_INITIALS: Record<string, string> = {
+    'Trai': 'T',
+    'Vivian': 'V',
+    'Oscar': 'O',
+    'Charlie': 'C'
+  };
 
-  let currentArtistKey = 'all';
+  let currentMemberKey = 'all';
   let currentPageIndex = 0;
-
   let currentPlaybackTrack: any = null;
   let isCurrentlyPlaying = false;
+  let isInitialized = false;
 
   function spinCardToStop(card: HTMLElement, thumb: HTMLElement, durationMs = 480) {
     if ((card as any)._retireAnimId) {
@@ -447,7 +517,6 @@ const artists = [
       (card as any)._retireAnimId = null;
     }
 
-    // Extract current rotation angle from style.transform
     const transform = thumb.style.transform || '';
     const match = transform.match(/rotate\(([\d.-]+)deg\)/);
     let startAngle = match ? parseFloat(match[1]) : 0;
@@ -495,6 +564,7 @@ const artists = [
   }
 
   function updateCardStates(currentTrack: any, isPlaying: boolean) {
+    const container = document.getElementById('inspiredTracksContainer');
     if (!container) return;
     const cards = container.querySelectorAll('.music-card');
     cards.forEach((card: any) => {
@@ -543,19 +613,23 @@ const artists = [
     });
   }
 
-  window.addEventListener('trackPlaybackStateChanged', (e: any) => {
-    const { track, isPlaying } = e.detail || {};
-    currentPlaybackTrack = track;
-    isCurrentlyPlaying = isPlaying;
-    updateCardStates(track, isPlaying);
-  });
+  function getFilteredTracks(memberKey: string) {
+    if (memberKey === 'all') {
+      return INSPIRATION_TRACKS;
+    }
+    const memberName = memberKey.charAt(0).toUpperCase() + memberKey.slice(1).toLowerCase();
+    return INSPIRATION_TRACKS.filter(t => t.curatedBy.some(c => c.toLowerCase() === memberKey.toLowerCase() || c === memberName));
+  }
 
-  function renderArtistPage(artistKey: string, pageIndex: number = 0) {
+  function renderInspirationPage(memberKey: string, pageIndex: number = 0) {
+    const container = document.getElementById('inspiredTracksContainer');
+    const dotsContainer = document.getElementById('dotsPaginationContainer');
     if (!container) return;
 
-    currentArtistKey = artistKey;
-    const artistData = (INSPIRED_ARTISTS_DATA as any)[artistKey] || INSPIRED_ARTISTS_DATA['all'];
-    const totalPages = artistData.pages.length;
+    currentMemberKey = memberKey;
+    const allFiltered = getFilteredTracks(memberKey);
+    const pageSize = 4;
+    const totalPages = Math.max(1, Math.ceil(allFiltered.length / pageSize));
     currentPageIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
 
     if (dotsContainer) {
@@ -572,7 +646,7 @@ const artists = [
             const dot = document.createElement('button');
             dot.className = `inspired-dot ${i === currentPageIndex ? 'active' : ''}`;
             dot.setAttribute('aria-label', `Page ${i + 1}`);
-            dot.addEventListener('click', () => renderArtistPage(currentArtistKey, i));
+            dot.addEventListener('click', () => renderInspirationPage(currentMemberKey, i));
             dotsWrapper.appendChild(dot);
           }
         }
@@ -580,14 +654,14 @@ const artists = [
         if (prevBtn) {
           prevBtn.disabled = (currentPageIndex === 0);
           prevBtn.onclick = () => {
-            if (currentPageIndex > 0) renderArtistPage(currentArtistKey, currentPageIndex - 1);
+            if (currentPageIndex > 0) renderInspirationPage(currentMemberKey, currentPageIndex - 1);
           };
         }
 
         if (nextBtn) {
           nextBtn.disabled = (currentPageIndex === totalPages - 1);
           nextBtn.onclick = () => {
-            if (currentPageIndex < totalPages - 1) renderArtistPage(currentArtistKey, currentPageIndex + 1);
+            if (currentPageIndex < totalPages - 1) renderInspirationPage(currentMemberKey, currentPageIndex + 1);
           };
         }
       } else {
@@ -600,10 +674,27 @@ const artists = [
 
     setTimeout(() => {
       container.innerHTML = '';
-      const rawTracks = artistData.pages[currentPageIndex] || [];
-      const tracks = rawTracks.slice(0, 4);
+      const startIdx = currentPageIndex * pageSize;
+      const tracks = allFiltered.slice(startIdx, startIdx + pageSize);
+
+      if (tracks.length === 0) {
+        const emptyEl = document.createElement('div');
+        emptyEl.className = 'empty-curation-state';
+        const memberDisplayName = memberKey.charAt(0).toUpperCase() + memberKey.slice(1);
+        emptyEl.innerHTML = `
+          <i class="fa-solid fa-sliders empty-icon"></i>
+          <p class="empty-text">No tracks curated yet by ${memberDisplayName}.</p>
+          <span class="empty-subtext">Check back soon for upcoming picks!</span>
+        `;
+        container.appendChild(emptyEl);
+      }
 
       tracks.forEach((track: any) => {
+        const badgesHtml = (track.curatedBy || []).map((m: string) => {
+          const initial = MEMBER_INITIALS[m] || m.charAt(0).toUpperCase();
+          return `<span class="member-curator-badge rounded-md bg-amber-400 text-black font-black text-[10px] px-1.5 h-4 inline-flex items-center justify-center" title="Curated by ${m}">${initial}</span>`;
+        }).join('');
+
         const card = document.createElement('div');
         card.className = 'music-card';
         card.dataset.songTitle = track.title;
@@ -617,7 +708,12 @@ const artists = [
               <span class="song-title">${track.title}</span>
             </div>
             <span class="artist-name">${track.artist}</span>
-            <span class="genre-tag">${track.genre}</span>
+            <div class="genre-meta-row">
+              <span class="genre-tag">${track.genre}</span>
+              <div class="member-badges-container">
+                ${badgesHtml}
+              </div>
+            </div>
           </div>
           <button class="play-btn card-icon-morph" aria-label="Play song">
             <i class="fa-solid fa-play"></i>
@@ -685,38 +781,43 @@ const artists = [
     }, 180);
   }
 
-  function selectArtistByKey(key: string, pageIndex: number = 0) {
-    filterBtns.forEach(b => {
-      const isMatch = b.getAttribute('data-artist-key') === key;
+  function selectMemberTabByKey(key: string, pageIndex: number = 0) {
+    const filterTabs = document.querySelectorAll('#memberFilterBar .member-filter-tab-btn');
+    filterTabs.forEach(b => {
+      const isMatch = b.getAttribute('data-member-key') === key;
       b.classList.toggle('active', isMatch);
+      b.setAttribute('aria-selected', isMatch ? 'true' : 'false');
       if (isMatch) {
         b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       }
     });
-    renderArtistPage(key, pageIndex);
+    renderInspirationPage(key, pageIndex);
   }
 
-  filterBtns.forEach((btn, idx) => {
-    btn.addEventListener('click', () => {
-      const key = btn.getAttribute('data-artist-key') || 'all';
-      selectArtistByKey(key, 0);
+  function initInspirationVault() {
+    const container = document.getElementById('inspiredTracksContainer');
+    const filterTabs = document.querySelectorAll('#memberFilterBar .member-filter-tab-btn');
+    if (!container || !filterTabs.length) return;
+
+    filterTabs.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-member-key') || 'all';
+        selectMemberTabByKey(key, 0);
+      });
+
+      btn.addEventListener('keydown', (e: any) => {
+        const btnArray = Array.from(filterTabs) as HTMLButtonElement[];
+        if (e.key === 'ArrowRight' && idx < btnArray.length - 1) {
+          btnArray[idx + 1].focus();
+          btnArray[idx + 1].click();
+        } else if (e.key === 'ArrowLeft' && idx > 0) {
+          btnArray[idx - 1].focus();
+          btnArray[idx - 1].click();
+        }
+      });
     });
 
-    // Keyboard Left/Right arrow navigation across artist pills
-    btn.addEventListener('keydown', (e: KeyboardEvent) => {
-      const btnArray = Array.from(filterBtns) as HTMLButtonElement[];
-      if (e.key === 'ArrowRight' && idx < btnArray.length - 1) {
-        btnArray[idx + 1].focus();
-        btnArray[idx + 1].click();
-      } else if (e.key === 'ArrowLeft' && idx > 0) {
-        btnArray[idx - 1].focus();
-        btnArray[idx - 1].click();
-      }
-    });
-  });
-
-  // Touch / Swipe Navigation Support for Inspiration Vault Carousel
-  if (container) {
+    // Touch / Swipe Navigation Support
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
@@ -745,81 +846,67 @@ const artists = [
       const deltaY = touch.clientY - touchStartY;
       const deltaTime = performance.now() - touchStartTime;
 
-      // Thresholds: minimum 42px horizontal delta, horizontal dominance over vertical scroll, fast or clear swipe
       const isHorizontalSwipe = Math.abs(deltaX) > 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
       const isVelocitySwipe = Math.abs(deltaX) > 28 && deltaTime < 240 && Math.abs(deltaX) > Math.abs(deltaY);
 
       if (isHorizontalSwipe || isVelocitySwipe) {
-        const artistData = (INSPIRED_ARTISTS_DATA as any)[currentArtistKey] || INSPIRED_ARTISTS_DATA['all'];
-        const totalPages = artistData?.pages?.length || 1;
+        const filtered = getFilteredTracks(currentMemberKey);
+        const totalPages = Math.max(1, Math.ceil(filtered.length / 4));
 
         if (deltaX < 0) {
-          // SWIPE LEFT -> NEXT PAGE or NEXT ARTIST TAB
+          // SWIPE LEFT -> NEXT PAGE or NEXT MEMBER TAB
           if (currentPageIndex < totalPages - 1) {
-            renderArtistPage(currentArtistKey, currentPageIndex + 1);
+            renderInspirationPage(currentMemberKey, currentPageIndex + 1);
           } else {
-            // Advance to next artist tab
-            const btnArray = Array.from(filterBtns);
-            const currentIndex = btnArray.findIndex(b => b.getAttribute('data-artist-key') === currentArtistKey);
+            const btnArray = Array.from(filterTabs);
+            const currentIndex = btnArray.findIndex(b => b.getAttribute('data-member-key') === currentMemberKey);
             if (currentIndex !== -1 && currentIndex < btnArray.length - 1) {
               const nextBtn = btnArray[currentIndex + 1];
-              const nextKey = nextBtn.getAttribute('data-artist-key') || 'all';
-              selectArtistByKey(nextKey, 0);
+              const nextKey = nextBtn.getAttribute('data-member-key') || 'all';
+              selectMemberTabByKey(nextKey, 0);
             }
           }
         } else {
-          // SWIPE RIGHT -> PREVIOUS PAGE or PREVIOUS ARTIST TAB
+          // SWIPE RIGHT -> PREVIOUS PAGE or PREVIOUS MEMBER TAB
           if (currentPageIndex > 0) {
-            renderArtistPage(currentArtistKey, currentPageIndex - 1);
+            renderInspirationPage(currentMemberKey, currentPageIndex - 1);
           } else {
-            // Go to previous artist tab (to its last page)
-            const btnArray = Array.from(filterBtns);
-            const currentIndex = btnArray.findIndex(b => b.getAttribute('data-artist-key') === currentArtistKey);
+            const btnArray = Array.from(filterTabs);
+            const currentIndex = btnArray.findIndex(b => b.getAttribute('data-member-key') === currentMemberKey);
             if (currentIndex > 0) {
               const prevBtn = btnArray[currentIndex - 1];
-              const prevKey = prevBtn.getAttribute('data-artist-key') || 'all';
-              const prevArtistData = (INSPIRED_ARTISTS_DATA as any)[prevKey] || INSPIRED_ARTISTS_DATA['all'];
-              const prevTotalPages = prevArtistData?.pages?.length || 1;
-              selectArtistByKey(prevKey, prevTotalPages - 1);
+              const prevKey = prevBtn.getAttribute('data-member-key') || 'all';
+              const prevFiltered = getFilteredTracks(prevKey);
+              const prevTotalPages = Math.max(1, Math.ceil(prevFiltered.length / 4));
+              selectMemberTabByKey(prevKey, prevTotalPages - 1);
             }
           }
         }
       }
     }, { passive: true });
+
+    renderInspirationPage(currentMemberKey, 0);
   }
 
-  const artistFilterBar = document.getElementById('artistFilterBar');
-  if (artistFilterBar) {
-    // Desktop mouse wheel horizontal conversion
-    artistFilterBar.addEventListener('wheel', (e) => {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        artistFilterBar.scrollLeft += e.deltaY;
-      } else if (e.deltaX !== 0) {
-        artistFilterBar.scrollLeft += e.deltaX;
-      }
-    }, { passive: false });
+  window.addEventListener('trackPlaybackStateChanged', (e: any) => {
+    const { track, isPlaying } = e.detail || {};
+    currentPlaybackTrack = track;
+    isCurrentlyPlaying = isPlaying;
+    updateCardStates(track, isPlaying);
+  });
 
-    // Desktop mouse drag to scroll
-    let isArtistDown = false;
-    let artistStartX = 0;
-    let artistScrollStart = 0;
-
-    artistFilterBar.addEventListener('mousedown', (e) => {
-      isArtistDown = true;
-      artistStartX = e.pageX - artistFilterBar.offsetLeft;
-      artistScrollStart = artistFilterBar.scrollLeft;
-    });
-
-    window.addEventListener('mouseup', () => { isArtistDown = false; });
-    artistFilterBar.addEventListener('mousemove', (e) => {
-      if (!isArtistDown) return;
-      e.preventDefault();
-      const x = e.pageX - artistFilterBar.offsetLeft;
-      const walk = (x - artistStartX) * 1.5;
-      artistFilterBar.scrollLeft = artistScrollStart - walk;
-    });
+  // Handle both initial load and Astro View Transitions
+  if (!isInitialized) {
+    isInitialized = true;
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initInspirationVault);
+    } else {
+      initInspirationVault();
+    }
   }
 
-  renderArtistPage('all', 0);
+  document.addEventListener('astro:page-load', () => {
+    initInspirationVault();
+  });
 </script>
+

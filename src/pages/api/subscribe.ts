@@ -169,9 +169,10 @@ function generateWelcomeEmailHtml(email: string): string {
 
       <div class="socials-row">
         <a href="https://open.spotify.com/artist/0F4YhJc3cI8rVq6U7v7q7C" target="_blank">Spotify</a> •
-        <a href="https://www.youtube.com/@KinsBand" target="_blank">YouTube</a> •
-        <a href="https://www.instagram.com/kinsbandofficial/" target="_blank">Instagram</a> •
-        <a href="https://www.tiktok.com/@kinsbandofficial" target="_blank">TikTok</a>
+        <a href="https://youtube.com/@kinsbandofficial?si=NYyLEYxEDcoH21XZ" target="_blank">YouTube</a> •
+        <a href="https://www.instagram.com/kinsbandofficial?igsi=M21ycDZuemZ0bDIx" target="_blank">Instagram</a> •
+        <a href="https://www.tiktok.com/@kinsbandofficial?_r=1&_t=ZS-995ASSdnVsQ" target="_blank">TikTok</a> •
+        <a href="https://x.com/KinsBandOfficia" target="_blank">X</a>
       </div>
     </div>
     <div class="email-footer">

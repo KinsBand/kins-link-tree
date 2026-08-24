@@ -230,10 +230,11 @@
     height: 46px;
     min-height: 46px;
     max-height: 46px;
-    background: #1c1c21;
-    border: 1.5px solid #2e2e36;
-    border-radius: 10px;
-    color: #ffffff;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
+    color: var(--text-card-primary);
     font-family: var(--font-secondary);
     font-size: 0.88rem;
     font-weight: 700;
@@ -248,21 +249,37 @@
   }
 
   .social-auth-btn:hover {
-    background: #27272e;
-    border-color: #43434f;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
   }
 
   .social-auth-btn:active {
-    background: #16161a;
-    transform: translateY(0);
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   .social-auth-btn:disabled {
     opacity: 0.85;
     cursor: wait;
     transform: none;
+  }
+
+  :global([data-theme="dark"]) .social-auth-btn,
+  :root[data-theme="dark"] .social-auth-btn {
+    background: #1c1c21;
+    border: 1.5px solid #2e2e36;
+    border-radius: 10px;
+    box-shadow: none;
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) .social-auth-btn:hover,
+  :root[data-theme="dark"] .social-auth-btn:hover {
+    background: #27272e;
+    border-color: #43434f;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   }
 
   .social-icon {
@@ -282,6 +299,11 @@
   .divider-line {
     flex: 1;
     height: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.18);
+  }
+
+  :global([data-theme="dark"]) .divider-line,
+  :root[data-theme="dark"] .divider-line {
     border-top: 1px solid #25252b;
   }
 
@@ -289,7 +311,7 @@
     font-family: var(--font-secondary);
     font-size: 10px;
     font-weight: 700;
-    color: #71717a;
+    color: var(--text-card-muted);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -301,9 +323,10 @@
     height: 46px;
     min-height: 46px;
     max-height: 46px;
-    background: #121215;
-    border: 1.5px solid #27272a;
-    border-radius: 10px;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     padding: 4px 4px 4px 14px;
@@ -314,8 +337,8 @@
   }
 
   .unified-input-container:focus-within {
-    border-color: #d4a838;
-    box-shadow: 0 0 0 1px rgba(212, 168, 56, 0.35);
+    border-color: #000000;
+    box-shadow: 3px 3px 0px var(--accent-neon-yellow);
   }
 
   .unified-input-container input {
@@ -324,17 +347,36 @@
     background: transparent;
     border: none;
     outline: none;
-    color: #ffffff;
+    color: var(--text-card-primary);
     font-family: var(--font-secondary);
     font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 600;
     padding: 0;
     margin: 0;
   }
 
   .unified-input-container input::placeholder {
-    color: #71717a;
+    color: var(--text-card-muted);
     opacity: 1;
+  }
+
+  :global([data-theme="dark"]) .unified-input-container,
+  :root[data-theme="dark"] .unified-input-container {
+    background: #121215;
+    border: 1.5px solid #27272a;
+    border-radius: 10px;
+    box-shadow: none;
+  }
+
+  :global([data-theme="dark"]) .unified-input-container:focus-within,
+  :root[data-theme="dark"] .unified-input-container:focus-within {
+    border-color: #d4a838;
+    box-shadow: 0 0 0 1px rgba(212, 168, 56, 0.35);
+  }
+
+  :global([data-theme="dark"]) .unified-input-container input,
+  :root[data-theme="dark"] .unified-input-container input {
+    color: #ffffff;
   }
 
   .unified-join-btn {
@@ -342,9 +384,10 @@
     min-height: 36px;
     max-height: 36px;
     padding: 0 14px;
-    background: #d4a838;
-    border: none;
-    border-radius: 8px;
+    background: var(--accent-neon-yellow);
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: 6px;
     color: #000000;
     font-family: var(--font-secondary);
     font-size: 0.78rem;
@@ -357,24 +400,48 @@
     gap: 4px;
     white-space: nowrap;
     flex-shrink: 0;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, opacity 0.16s ease;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, opacity 0.16s ease, box-shadow 0.16s ease;
     user-select: none;
   }
 
   .unified-join-btn:hover {
-    background: #e5b948;
-    transform: scale(1.02);
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 2.5px 2.5px 0px #000000;
   }
 
   .unified-join-btn:active {
-    background: #c59727;
-    transform: scale(0.98);
+    transform: translate(1px, 1px);
+    box-shadow: 0.5px 0.5px 0px #000000;
   }
 
   .unified-join-btn:disabled {
-    opacity: 0.75;
+    opacity: 0.65;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
+  }
+
+  :global([data-theme="dark"]) .unified-join-btn,
+  :root[data-theme="dark"] .unified-join-btn {
+    background: #d4a838;
+    border: none;
+    border-radius: 8px;
+    box-shadow: none;
+    color: #000000;
+  }
+
+  :global([data-theme="dark"]) .unified-join-btn:hover,
+  :root[data-theme="dark"] .unified-join-btn:hover {
+    background: #e5b948;
+    transform: scale(1.02);
+    box-shadow: none;
+  }
+
+  :global([data-theme="dark"]) .unified-join-btn:active,
+  :root[data-theme="dark"] .unified-join-btn:active {
+    background: #c59727;
+    transform: scale(0.98);
   }
 
   .subscribed-success-badge {
