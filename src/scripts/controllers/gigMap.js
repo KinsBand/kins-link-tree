@@ -1619,6 +1619,7 @@ export function initGigMapModule() {
   const gigPillLocation = document.getElementById('gigPillLocation');
   const gigPillTitle = document.getElementById('gigPillTitle');
   const fitBoundsBtn = document.getElementById('mapFitBoundsBtn');
+  const locateMeBtn = document.getElementById('mapLocateMeBtn');
   const toggleMapDetailsBtn = document.getElementById('toggleMapDetailsBtn');
   const venueDetailCard = document.getElementById('venueDetailBottomCard');
   const lightboxCloseBtn = document.getElementById('gigLightboxClose');

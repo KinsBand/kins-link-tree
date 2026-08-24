@@ -1,8 +1,8 @@
 import { showToast } from './toast.js';
 
-const ITUNES_CACHE = new Map();
-const ITUNES_INFLIGHT_PROMISES = new Map();
-const IMAGE_PRELOAD_CACHE = new Map();
+export const ITUNES_CACHE = new Map();
+export const ITUNES_INFLIGHT_PROMISES = new Map();
+export const IMAGE_PRELOAD_CACHE = new Map();
 
 // Optimized image loader with progressive quality for low-end devices
 export function loadAlbumArt(imgElement, artworkUrl, highResUrl = null) {

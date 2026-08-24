@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kins-link-bio-v28';
+const CACHE_NAME = 'kins-link-bio-v29';
 const PRECACHE_ASSETS = [
   './manifest.json',
   './new.png',
@@ -46,6 +46,20 @@ self.addEventListener('fetch', (event) => {
 
   // Skip non-http/https requests
   if (!url.protocol.startsWith('http')) return;
+
+  // CRITICAL: Never intercept media, range headers, or external audio CDN streams in Service Worker.
+  // Intercepting media in SW breaks byte-range requests (HTTP 206) in WebKit/Safari and Chrome on HTTPS/Vercel.
+  if (
+    request.destination === 'audio' ||
+    request.destination === 'video' ||
+    request.headers.has('range') ||
+    url.hostname.includes('apple.com') ||
+    url.hostname.includes('mzstatic.com') ||
+    /\.(mp3|m4a|aac|wav|ogg|flac|mp4|webm)$/i.test(url.pathname) ||
+    url.origin !== self.location.origin
+  ) {
+    return; // Direct native browser network pass-through
+  }
 
   // Network-First for HTML navigation requests to always show live edits
   if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {

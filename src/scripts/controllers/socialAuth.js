@@ -200,7 +200,6 @@ async function initGoogleOneTap() {
     if (window.google.accounts.id) {
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
-        use_fedcm_for_prompt: true,
         auto_select: false,
         cancel_on_tap_outside: false,
         context: 'signup',
@@ -222,12 +221,12 @@ async function initGoogleOneTap() {
       if (!getSubscriptionState()) {
         setTimeout(() => {
           if (getSubscriptionState()) return;
-          window.google.accounts.id.prompt((notification) => {
-            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-              console.info('[SocialAuth] Google 1-Tap status:', notification.getNotDisplayedReason?.() || notification);
-            }
-          });
-        }, 1000);
+          try {
+            window.google.accounts.id.prompt((notification) => {
+              // Silently handle dismissed or unsupported prompt
+            });
+          } catch (e) {}
+        }, 1200);
       }
     }
 
