@@ -117,7 +117,7 @@ export function initHeroFeatureController() {
 
   document.querySelectorAll('.ep-preorder-trigger').forEach(btn => {
     btn.addEventListener('click', () => {
-      showToast("↗ Redirecting to Kins EP Pre-Order store...");
+      showToast("Redirecting to Kins EP Pre-Order store...");
     });
   });
 
@@ -140,8 +140,7 @@ export function initHeroFeatureController() {
   // --- ACTIONS: GIG MAP TRIGGER ---
   const heroOpenGigMapBtn = document.getElementById('heroOpenGigMapBtn');
   heroOpenGigMapBtn?.addEventListener('click', () => {
-    const floatingGigPillBtn = document.getElementById('floatingGigPillBtn');
-    floatingGigPillBtn?.click();
+    showToast("Live tour dates and gig map coming soon! Stay tuned.");
   });
 
   // --- ACTIONS: POLL VOTING LOGIC WITH DESELECT & REVOTE ---
@@ -315,7 +314,7 @@ export function initHeroFeatureController() {
     if (topSubscribeBtn) {
       topSubscribeBtn.click();
     } else {
-      showToast("🔔 You'll be notified as soon as KINS goes live!", "success");
+      showToast("You'll be notified as soon as KINS goes live!", "success");
     }
   });
 
@@ -344,7 +343,7 @@ export function initHeroFeatureController() {
   const liveMediaUploadForm = document.getElementById('liveMediaUploadForm');
   liveMediaUploadForm?.addEventListener('submit', (e) => {
     e.preventDefault();
-    showToast('🎉 Photo/Video submitted! Live on Fan Wall.', 'success');
+    showToast('Photo/Video submitted! Live on Fan Wall.', 'success');
     if (liveUploadModal) {
       liveUploadModal.classList.add('hidden');
       document.body.classList.remove('modal-open');

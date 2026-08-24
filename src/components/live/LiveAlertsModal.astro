@@ -297,10 +297,10 @@
   saveBtn?.addEventListener('click', () => {
     if ('Notification' in window && Notification.permission !== 'granted') {
       Notification.requestPermission().then(() => {
-        showToast('🔔 Show notifications enabled for KINS Live!', 'success');
+        showToast('Show notifications enabled for KINS Live!', 'success');
       });
     } else {
-      showToast('🔔 Show alert preferences updated!', 'success');
+      showToast('Show alert preferences updated!', 'success');
     }
     closeModal();
   });

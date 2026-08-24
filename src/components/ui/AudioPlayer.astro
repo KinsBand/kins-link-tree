@@ -142,12 +142,17 @@
     </div>
 
     <!-- Right Card: GIG MAP (Tab-Sized Compact Width) -->
-    <div class="brutal-gig-card" id="floatingGigPillBtn" role="button" aria-label="Tour dates & Gig Map" data-track="gig:open_map">
+    <div class="brutal-gig-card" id="floatingGigPillBtn" role="button" aria-label="Tour dates & Gig Map (Coming Soon)" data-track="gig:coming_soon">
       <!-- Folder Tab Spanning Full Width of the Button -->
       <div class="card-folder-tab tab-gigmap">GIG MAP</div>
       
       <div class="gig-card-center-icon">
         <i class="fa-solid fa-map-location-dot"></i>
+      </div>
+
+      <!-- High Contrast Diagonal Ribbon from Bottom-Left to Top-Right -->
+      <div class="gig-soon-diagonal-banner">
+        <span>COMING SOON</span>
       </div>
     </div>
   </div>
@@ -879,13 +884,37 @@
     justify-content: center;
     font-size: 1.35rem;
     color: var(--text-card-primary);
-    opacity: 1;
+    opacity: 0.45;
     transition: transform 0.16s var(--ease-tactile), color 0.16s ease;
   }
 
-  .brutal-gig-card:hover .gig-card-center-icon {
-    color: var(--accent-neon-yellow);
-    transform: scale(1.1);
+  .gig-soon-diagonal-banner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 0 5px 5px 5px;
+    z-index: 15;
+  }
+
+  .gig-soon-diagonal-banner span {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.48rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 16px;
+    white-space: nowrap;
+    transform: rotate(-35deg);
+    text-align: center;
+    width: 140%;
   }
 </style>
 

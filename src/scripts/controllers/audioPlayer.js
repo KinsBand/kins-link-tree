@@ -1165,7 +1165,7 @@ export function initAudioPlayer() {
     const firstTrack = mixQueue.shift();
     if (firstTrack && window.playTrackPreview) {
       window.playTrackPreview(firstTrack);
-      showToast(`🔀 Auto-Mix Started: "${firstTrack.title}"`);
+      showToast(`Auto-Mix Started: "${firstTrack.title}"`);
     }
   }
 
@@ -1437,7 +1437,10 @@ export function initAudioPlayer() {
       }
 
       if (vaultAudioPlayer && pUrl) {
-        vaultAudioPlayer.src = pUrl;
+        const secureUrl = pUrl.replace(/^http:\/\//i, 'https://');
+        if (vaultAudioPlayer.src !== secureUrl) {
+          vaultAudioPlayer.src = secureUrl;
+        }
         vaultAudioPlayer.playbackRate = 1.0;
         vaultAudioPlayer.volume = 1.0;
         try {
@@ -1450,7 +1453,9 @@ export function initAudioPlayer() {
         if (playPromise !== undefined) {
           playPromise.then(() => {
             if (transitionId !== currentTransitionId) return;
-            triggerNeedleDropAndSpinUp(false);
+            try {
+              triggerNeedleDropAndSpinUp(false);
+            } catch (e) {}
             isTransitioningTrack = false;
             isPlayingAudio = true;
             startTimelineAnimation();
@@ -1660,14 +1665,11 @@ export function initAudioPlayer() {
   function initAudioUnlock() {
     const unlock = () => {
       if (vinylScratchSynth) {
-        vinylScratchSynth.init();
-        if (vinylScratchSynth.ctx && vinylScratchSynth.ctx.state === 'suspended') {
-          vinylScratchSynth.ctx.resume().catch(() => {});
-        }
-      }
-      if (vaultAudioPlayer && vaultAudioPlayer.paused && !vaultAudioPlayer.src) {
         try {
-          vaultAudioPlayer.load();
+          vinylScratchSynth.init();
+          if (vinylScratchSynth.ctx && vinylScratchSynth.ctx.state === 'suspended') {
+            vinylScratchSynth.ctx.resume().catch(() => {});
+          }
         } catch (e) {}
       }
     };

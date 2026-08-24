@@ -120,10 +120,10 @@ export async function getITunesTrackData(artist, title) {
 
       if (data.results && data.results.length > 0) {
         const item = data.results[0];
-        const rawArt = item.artworkUrl100 || item.artworkUrl60 || null;
+        const rawArt = (item.artworkUrl100 || item.artworkUrl60 || null)?.replace(/^http:\/\//i, 'https://');
         const lowResUrl = rawArt;
         const highResUrl = rawArt ? rawArt.replace(/100x100bb?\./, '600x600bb.').replace(/100x100/, '600x600') : null;
-        const previewUrl = item.previewUrl || null;
+        const previewUrl = item.previewUrl ? item.previewUrl.replace(/^http:\/\//i, 'https://') : null;
         const result = { 
           artworkUrl: highResUrl, 
           rawArtworkUrl: lowResUrl, 

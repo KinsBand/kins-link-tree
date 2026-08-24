@@ -34,6 +34,14 @@ function getToastIconMarkup(type) {
   }
 }
 
+function stripEmojis(str) {
+  if (!str) return '';
+  return str
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{FE0F}]/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 export function showToast(message, explicitType = null) {
   const toastContainer = document.getElementById('toastContainer');
   if (!toastContainer) return;
@@ -44,14 +52,15 @@ export function showToast(message, explicitType = null) {
     activeToast = null;
   }
 
-  const toastType = inferToastType(message, explicitType);
+  const cleanMessage = stripEmojis(message);
+  const toastType = inferToastType(cleanMessage, explicitType);
   const iconMarkup = getToastIconMarkup(toastType);
 
   const toast = document.createElement('div');
   toast.className = `toast toast-type-${toastType}`;
   toast.innerHTML = `
     <div class="toast-icon-box">${iconMarkup}</div>
-    <span class="toast-text-content">${message}</span>
+    <span class="toast-text-content">${cleanMessage}</span>
     <button type="button" class="toast-close-btn" aria-label="Dismiss notification">
       <i class="fa-solid fa-xmark"></i>
     </button>
