@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import PagePreloader from '../components/ui/PagePreloader.astro';
 import { siteConfig } from '../settings/site.config';
+import SpeedInsights from '@vercel/speed-insights/astro';
 
 interface Props {
   title?: string;
@@ -93,6 +94,7 @@ const baseUrl = import.meta.env.BASE_URL;
 <body>
   <PagePreloader />
   <slot />
+  <SpeedInsights />
 
   <script define:vars={{ baseUrl }}>
     // Register Service Worker for PWA
