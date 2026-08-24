@@ -2155,14 +2155,6 @@ export function initGigMapModule() {
     });
   }
 
-  // Directions HUD Close & Clear buttons
-  if (closeDirectionsHud) {
-    closeDirectionsHud.addEventListener('click', clearActiveRoute);
-  }
-  if (clearRouteHudBtn) {
-    clearRouteHudBtn.addEventListener('click', clearActiveRoute);
-  }
-
   // Delegated click handler for popup action buttons, route triggers, and back to top/map buttons
   document.addEventListener('click', (e) => {
     const backToTopBtn = e.target.closest('.sheet-back-to-top-btn') || e.target.closest('#scrollTopBtn');
