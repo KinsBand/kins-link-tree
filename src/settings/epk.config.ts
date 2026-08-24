@@ -1,3 +1,6 @@
+import { bandMembers } from './members.config';
+import { contacts } from './contact.config';
+
 export interface EpkMember {
   name: string;
   role: string;
@@ -42,41 +45,15 @@ export const epkConfig = {
   heroImage: "new.png",
   logoImage: "new.png",
 
-  // Band Members Roster (Day-0 Verified Lineup & Equipment)
-  members: [
-    { 
-      name: "Vivian", 
-      role: "Lead Vocals & Rhythm Guitar", 
-      instruments: ["Lead Vocals", "Rhythm Electric Guitar"], 
-      icon: "fa-microphone",
-      photoUrl: "new.png",
-      gearSummary: "Vocal Mic (SM58/Beta58), Fender Combo / Head, Pedalboard"
-    },
-    { 
-      name: "Charlie", 
-      role: "Lead Guitar & Backing Vocals", 
-      instruments: ["Lead Electric Guitar", "Backing Vocals"], 
-      icon: "fa-guitar",
-      photoUrl: "new.png",
-      gearSummary: "Guitar Head/Cab, Dual Chorus & Fuzz Pedalboard, Backing Mic"
-    },
-    { 
-      name: "Oscar", 
-      role: "Bass Guitar & Synthesizers", 
-      instruments: ["Electric Bass", "Bass Synth / Moog"], 
-      icon: "fa-sliders",
-      photoUrl: "new.png",
-      gearSummary: "Bass Head/Cab, DI Box (Radial J48), Drive/Chorus Board"
-    },
-    { 
-      name: "Trai", 
-      role: "Drums & Percussion", 
-      instruments: ["Acoustic Drum Kit", "Sample Pad (SPD-SX)"], 
-      icon: "fa-drum",
-      photoUrl: "new.png",
-      gearSummary: "Drum Rug, Cymbals, Snare, Kick Pedal, SPD-SX Trigger Unit"
-    }
-  ] as EpkMember[],
+  // Band Members Roster (single source: members.config.ts)
+  members: bandMembers.map((m) => ({
+    name: m.name,
+    role: m.role,
+    instruments: m.instruments,
+    icon: m.icon,
+    photoUrl: "new.png",
+    gearSummary: m.gearSummary
+  })) as EpkMember[],
 
   // Live Repertoire & Performance Offering (Day-0 Verified for Booking Agents)
   repertoire: {
@@ -157,23 +134,8 @@ export const epkConfig = {
     ]
   },
 
-  // Direct Contact Channels (Strictly 2 Official Emails)
-  contacts: [
-    {
-      role: "Live Booking & Shows",
-      email: "booking@kinsband.com",
-      description: "Headline concerts, festival lineups, venue booking & tour routing inquiries.",
-      cta: "Contact Booking",
-      icon: "fa-calendar-check"
-    },
-    {
-      role: "General & Inquiries",
-      email: "hello@kinsband.com",
-      description: "General artist inquiries, press features, sync licensing & collaborations.",
-      cta: "Contact Hello",
-      icon: "fa-envelope-open-text"
-    }
-  ],
+  // Direct Contact Channels (single source: contact.config.ts)
+  contacts,
 
   // Downloadable Assets Deck (Day-0 Verified Technical Assets)
   downloadDeck: [

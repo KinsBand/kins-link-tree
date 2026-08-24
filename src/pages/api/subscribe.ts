@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase, getSupabaseClient } from '../../lib/supabase';
+import { getSupabaseServiceClient } from '../../lib/supabaseServer';
 import { validateRealEmail } from '../../scripts/utils/emailValidator.js';
 import { assignSubscriberRoles, getDiscordConfig } from '../../lib/discord';
 
@@ -14,6 +14,59 @@ const getEnv = (key: string): string => {
   }
   return '';
 };
+
+// Simple in-memory rate limiter: 10 requests per minute per IP.
+// Per-instance on serverless, but still blunts obvious abuse/flooding.
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const rateBuckets = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const hits = (rateBuckets.get(ip) || []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  hits.push(now);
+  rateBuckets.set(ip, hits);
+  if (rateBuckets.size > 5000) {
+    for (const [k, v] of rateBuckets) {
+      if (v.every((t) => now - t >= RATE_LIMIT_WINDOW_MS)) rateBuckets.delete(k);
+    }
+  }
+  return hits.length > RATE_LIMIT_MAX;
+}
+
+/**
+ * Verifies a Google ID token through Supabase Auth (signature, aud, iss, exp
+ * and optional nonce are all validated server-side). Only verified claims are
+ * returned — raw token payloads are never trusted.
+ */
+async function verifyGoogleCredential(
+  credential: string,
+  nonce?: string
+): Promise<{ email?: string; name?: string; avatar?: string } | null> {
+  const admin = getSupabaseServiceClient();
+  if (!admin) return null;
+  try {
+    const { data, error } = await admin.auth.signInWithIdToken({
+      provider: 'google',
+      token: credential,
+      nonce: nonce || undefined
+    });
+    if (error || !data?.user) {
+      console.warn('[Auth] Google credential rejected by Supabase:', error?.message);
+      return null;
+    }
+    const meta = (data.user.user_metadata || {}) as Record<string, string>;
+    return {
+      email: data.user.email || meta.email,
+      name: meta.full_name || meta.name,
+      avatar: meta.avatar_url || meta.picture
+    };
+  } catch (err) {
+    console.warn('[Auth] Credential verification error:', err);
+    return null;
+  }
+}
+
 
 // Generates modern brutalist HTML Welcome Email for Kins Band
 function generateWelcomeEmailHtml(email: string): string {
@@ -186,34 +239,35 @@ function generateWelcomeEmailHtml(email: string): string {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
+    if (isRateLimited(ip)) {
+      return new Response(
+        JSON.stringify({ status: 'error', message: 'Too many requests. Please wait a minute and try again.' }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     let email = body.email;
     let userName = body.name || body.full_name || '';
     let avatarUrl = body.avatar || body.picture || '';
 
-    // Backend fallback: extract verified email and name from Google JWT credential if needed
-    if ((!email || !userName) && (body.credential || body.id_token)) {
-      try {
-        const token = body.credential || body.id_token;
-        const parts = token.split('.');
-        if (parts.length >= 2) {
-          const payloadJson = Buffer.from(parts[1], 'base64').toString('utf8');
-          const payload = JSON.parse(payloadJson);
-          if (payload) {
-            if (!email && payload.email) {
-              email = payload.email;
-            }
-            if (!userName) {
-              userName = payload.name || `${payload.given_name || ''} ${payload.family_name || ''}`.trim();
-            }
-            if (!avatarUrl && payload.picture) {
-              avatarUrl = payload.picture;
-            }
-          }
-        }
-      } catch (tokenErr) {
-        console.warn('JWT token decode warning:', tokenErr);
+    // If a Google credential is presented, verify it properly via Supabase Auth
+    // and let the VERIFIED claims override anything sent in the request body.
+    if (body.credential || body.id_token) {
+      const verified = await verifyGoogleCredential(body.credential || body.id_token, body.nonce);
+      if (!verified) {
+        return new Response(
+          JSON.stringify({ status: 'error', message: 'Google sign-in could not be verified. Please sign in again.' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        );
       }
+      if (verified.email) email = verified.email;
+      if (verified.name) userName = verified.name;
+      if (verified.avatar) avatarUrl = verified.avatar;
     }
 
     const validation = await validateRealEmail(email);
@@ -228,7 +282,7 @@ export const POST: APIRoute = async ({ request }) => {
     let dbSuccess = false;
     let welcomeEmailSent = false;
 
-    const db = getSupabaseClient() || supabase;
+    const db = getSupabaseServiceClient();
 
     // 1. Save Subscriber to Supabase Database (subscribers table)
     if (db) {

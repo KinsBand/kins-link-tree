@@ -1,4 +1,5 @@
 ---
+import { generalEmail } from '../../settings/contact.config';
 ---
 
 <div class="modal-backdrop hidden" id="privacyModal" role="dialog" aria-modal="true" aria-label="Privacy Policy" data-track-container="modal:privacy">
@@ -52,7 +53,7 @@
 
       <div class="legal-section">
         <h4>4. Unsubscribing</h4>
-        <p class="legal-text">You can opt out of emails at any time by clicking the "Unsubscribe" link at the bottom of any update, or by contacting us directly at <a href="mailto:HelloKinsBand@gmail.com" class="legal-email-link">HelloKinsBand@gmail.com</a>.</p>
+        <p class="legal-text">You can opt out of emails at any time by clicking the "Unsubscribe" link at the bottom of any update, or by contacting us directly at <a href={`mailto:${generalEmail}`} class="legal-email-link">{generalEmail}</a>.</p>
       </div>
 
       <div class="legal-section">
@@ -60,7 +61,7 @@
         <p class="legal-text">For privacy inquiries or data requests, reach out to us at:</p>
         <div class="contact-pill-box">
           <i class="fa-solid fa-envelope"></i>
-          <a href="mailto:HelloKinsBand@gmail.com" class="legal-email-link">HelloKinsBand@gmail.com</a>
+          <a href={`mailto:${generalEmail}`} class="legal-email-link">{generalEmail}</a>
         </div>
       </div>
     </div>

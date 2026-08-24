@@ -9,6 +9,15 @@ let activeCategory = 'all';
 let searchDebounceTimeout = null;
 let artistFetchDebounceTimeout = null;
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const ARTIST_SUGGESTIONS_CACHE = {};
 
 // Live iTunes API fetch for song title -> real original artist suggestions
@@ -50,17 +59,17 @@ function renderCoverCard(cover) {
 
   card.innerHTML = `
     <div class="cover-card-thumb-wrap">
-      <img src="${cover.thumbnail}" alt="${cover.title}" class="cover-card-thumb" loading="lazy" decoding="async">
+      <img src="${escapeHtml(cover.thumbnail)}" alt="${escapeHtml(cover.title)}" class="cover-card-thumb" loading="lazy" decoding="async">
       <div class="cover-card-play-overlay">
         <i class="fa-solid fa-play"></i>
       </div>
-      <span class="cover-card-duration">${cover.duration}</span>
+      <span class="cover-card-duration">${escapeHtml(cover.duration)}</span>
     </div>
     <div class="cover-card-info">
-      <span class="cover-card-category-badge">${cover.category.toUpperCase()}</span>
-      <h4 class="cover-card-title">${cover.title}</h4>
-      <p class="cover-card-artist">Orig. by <strong>${cover.originalArtist}</strong></p>
-      <span class="cover-card-views"><i class="fa-solid fa-fire"></i> ${cover.views}</span>
+      <span class="cover-card-category-badge">${escapeHtml(cover.category.toUpperCase())}</span>
+      <h4 class="cover-card-title">${escapeHtml(cover.title)}</h4>
+      <p class="cover-card-artist">Orig. by <strong>${escapeHtml(cover.originalArtist)}</strong></p>
+      <span class="cover-card-views"><i class="fa-solid fa-fire"></i> ${escapeHtml(cover.views)}</span>
     </div>
   `;
 
@@ -94,9 +103,9 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
         </div>
         <div class="sub-badge-content">
           <span class="sub-badge-status">Subscribed Updates Active</span>
-          <p class="sub-badge-text">You'll receive release updates via your email${savedEmail ? ` (<strong>${savedEmail}</strong>)` : ''}.</p>
+          <p class="sub-badge-text">You'll receive release updates via your email${savedEmail ? ` (<strong>${escapeHtml(savedEmail)}</strong>)` : ''}.</p>
         </div>
-        <input type="hidden" id="reqEmail" value="${savedEmail || 'Subscribed Fan'}">
+        <input type="hidden" id="reqEmail" value="${escapeHtml(savedEmail || 'Subscribed Fan')}">
       </div>
     </div>
   ` : `
@@ -106,6 +115,8 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
     </div>
   `;
 
+  const safeDisplayTitle = escapeHtml(displayTitle);
+
   container.innerHTML = `
     <div class="cant-find-card">
       <div class="cant-find-header">
@@ -114,14 +125,14 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
         </div>
         <div class="cant-find-header-text">
           <h4 class="cant-find-title">Can't Find Your Song?</h4>
-          <p class="cant-find-sub">${displayTitle ? `We haven't covered "${displayTitle}" yet — request it below!` : 'Tell Kins which song to cover next!'}</p>
+          <p class="cant-find-sub">${displayTitle ? `We haven't covered "${safeDisplayTitle}" yet — request it below!` : 'Tell Kins which song to cover next!'}</p>
         </div>
       </div>
 
       <form class="request-song-form" id="requestSongForm">
         <div class="form-group">
           <label for="reqSongTitle">Song Title <span class="req-star">*</span></label>
-          <input type="text" id="reqSongTitle" value="${displayTitle}" placeholder="e.g. Wonderwall" required>
+          <input type="text" id="reqSongTitle" value="${safeDisplayTitle}" placeholder="e.g. Wonderwall" required>
         </div>
 
         <div class="form-group">
@@ -171,8 +182,8 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
     }
 
     pillsContainer.innerHTML = artists.map((art, idx) => `
-      <button type="button" class="artist-suggestion-pill ${idx === 0 ? 'active' : ''}" data-artist="${art}">
-        ${idx === 0 ? '★ ' : '+ '}${art}
+      <button type="button" class="artist-suggestion-pill ${idx === 0 ? 'active' : ''}" data-artist="${escapeHtml(art)}">
+        ${idx === 0 ? '★ ' : '+ '}${escapeHtml(art)}
       </button>
     `).join('');
 

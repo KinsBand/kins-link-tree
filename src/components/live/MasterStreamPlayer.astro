@@ -344,9 +344,8 @@ const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith(
   .venue-location-pill {
     display: inline-flex;
     align-items: center;
-    background: rgba(14, 14, 18, 0.88);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(14, 14, 18, 0.92);
+    /* backdrop-filter removed: blur over a playing <video> re-filters live frames every render */
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 9999px;
@@ -469,9 +468,8 @@ const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith(
     bottom: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%) translateY(10px);
-    background: rgba(14, 14, 18, 0.92);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(14, 14, 18, 0.95);
+    /* backdrop-filter removed (video re-filter cost) */
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 8px;

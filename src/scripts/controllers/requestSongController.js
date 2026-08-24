@@ -1,6 +1,15 @@
 import { showToast } from './toast.js';
 import { getSubscriptionState, getSubscriberEmail } from './subscribeController.js';
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export async function handleSongRequestSubmit(event, prefilledTitle = '') {
   event.preventDefault();
   const form = event.target;
@@ -26,42 +35,30 @@ export async function handleSongRequestSubmit(event, prefilledTitle = '') {
     return;
   }
 
+  const originalBtnHtml = submitBtn?.innerHTML || '';
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i> <span>Submitting...</span>`;
   }
 
-  // Cover Song Request Discord Webhook (#cover-requests)
-  const webhookUrl = 'https://discord.com/api/webhooks/1537817839199854622/MHgzq6-LRPJzNybsWx_wRhR7zDl5sCslZNxzHQtQRcMAn5rrB3Qu46X2IpNaMiP2uYXV';
-
-  const discordPayload = {
-    username: 'Kins Cover Request System',
-    avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png',
-    embeds: [
-      {
-        title: '🎵 New Cover Song Request',
-        color: isSubscribed ? 0xF2FD43 : 0x5865f2,
-        fields: [
-          { name: 'Song Title', value: `**${songTitle}**`, inline: true },
-          { name: 'Original Artist', value: `**${artist}**`, inline: true },
-          { name: 'Fan Status', value: isSubscribed ? '✅ **Subscribed Fan** (Notified via Substack)' : '👤 Guest / Unsubscribed', inline: true },
-          { name: 'Why should Kins cover this?', value: reason, inline: false },
-          { name: 'Contact Email', value: email ? `\`${email}\`` : 'Not provided', inline: false }
-        ],
-        footer: { text: 'Kins Cover Request System • Forwarded to HelloKinsBand@gmail.com' },
-        timestamp: new Date().toISOString()
-      }
-    ]
-  };
-
   try {
-    await fetch(webhookUrl, {
+    const res = await fetch('/api/request-song', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(discordPayload)
+      body: JSON.stringify({ songTitle, artist, reason, email, isSubscribed })
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.message || `Request failed (${res.status})`);
+    }
   } catch (err) {
-    console.warn('Cover request webhook error:', err);
+    console.warn('Cover request submission error:', err);
+    showToast("⚠️ Couldn't submit your request — please try again in a moment.");
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHtml;
+    }
+    return;
   }
 
   const container = form.closest('.request-song-card-container');
@@ -73,11 +70,11 @@ export async function handleSongRequestSubmit(event, prefilledTitle = '') {
         </div>
         <h4 class="success-title">Cover Request Locked In!</h4>
         <p class="success-desc">
-          Rock on! Kins added <strong>"${songTitle}"</strong> by <strong>${artist}</strong> to their official cover wishlist.
+          Rock on! Kins added <strong>"${escapeHtml(songTitle)}"</strong> by <strong>${escapeHtml(artist)}</strong> to their official cover wishlist.
         </p>
         <div class="success-meta-note">
           <i class="fa-solid fa-envelope"></i>
-          <span>${isSubscribed ? `We'll update your inbox at <strong>${savedEmail || 'your email'}</strong> when it drops!` : 'You will receive release updates if Kins covers this track.'}</span>
+          <span>${isSubscribed ? `We'll update your inbox at <strong>${escapeHtml(savedEmail || 'your email')}</strong> when it drops!` : 'You will receive release updates if Kins covers this track.'}</span>
         </div>
         <button class="request-another-btn brutal-press" id="requestAnotherBtn">
           <i class="fa-solid fa-rotate-left"></i> Request Another Song

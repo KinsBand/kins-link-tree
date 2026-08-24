@@ -903,6 +903,15 @@ import kinsLogoImg from '../../assets/new.png';
 </style>
 
 <script>
-  import { initShareModal } from '../../scripts/controllers/shareModal.js';
-  initShareModal();
+  // Idle-loaded: share modal is interaction-gated, never needed for first render
+  const scheduleIdle = (cb) => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(cb, { timeout: 2000 });
+    } else {
+      setTimeout(cb, 1);
+    }
+  };
+  scheduleIdle(() => {
+    import('../../scripts/controllers/shareModal.js').then((m) => m.initShareModal());
+  });
 </script>

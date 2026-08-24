@@ -10,6 +10,6 @@ export const functionalityConfig = {
   enableNewsletter: true,
   enableFollowerCounter: true,
   audioAutoPlay: false,
-  enableLivePage: false,
+  enableLivePage: true,
   enableEpkPage: false,
 };

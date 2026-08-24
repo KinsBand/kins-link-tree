@@ -318,9 +318,10 @@
       overlay?.classList.remove('dismissed');
       overlay?.classList.add('entering');
 
+      // Brief curtain beat, then navigate (kept short — this delays every internal tap)
       setTimeout(() => {
         window.location.href = targetUrl;
-      }, 250);
+      }, 80);
     }
 
     // Dismiss as soon as DOM is interactive (zero artificial delay)
@@ -355,15 +356,6 @@
         e.preventDefault();
         triggerCurtainIn(href);
       }
-    });
-
-    document.addEventListener('astro:before-preparation', () => {
-      overlay?.classList.remove('dismissed');
-      overlay?.classList.add('entering');
-    });
-
-    document.addEventListener('astro:page-load', () => {
-      dismissCurtain();
     });
   }
 

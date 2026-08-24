@@ -1,4 +1,5 @@
 ---
+import { generalEmail, bookingEmail } from '../../settings/contact.config';
 ---
 
 <section class="subscribe-section" id="subscribeFormSection">
@@ -15,6 +16,7 @@
 
       <!-- 1-Tap Social Auth Row -->
       <div class="social-auth-row">
+        <div id="googleBtnHost" class="google-btn-host hidden" data-badged="true"></div>
         <button type="button" class="social-auth-btn google-auth-btn" id="googleAuthBtn" aria-label="1-Tap Subscribe with Google">
           <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
@@ -62,7 +64,7 @@
       </div>
       <p class="subscribed-subtext">Welcome email sent! You'll receive exclusive drops & gig alerts straight to your inbox.</p>
       <div class="subscribed-actions-row">
-        <a href="mailto:HelloKinsBand@gmail.com?subject=Kins%20Subscribed%20Fan" id="openEmailAppBtn" class="open-email-app-btn brutal-press" target="_blank" rel="noopener noreferrer">
+        <a href={`mailto:${generalEmail}?subject=Kins%20Subscribed%20Fan`} id="openEmailAppBtn" class="open-email-app-btn brutal-press" target="_blank" rel="noopener noreferrer">
           <i class="fa-solid fa-envelope-open-text"></i>
           <span>Open Email App</span>
         </a>
@@ -81,36 +83,36 @@
       </div>
 
       <div class="emails-list">
-        <div class="email-row-item copy-email-card" data-email="HelloKinsBand@gmail.com" role="button" tabindex="0" title="Click to copy HelloKinsBand@gmail.com">
+        <div class="email-row-item copy-email-card" data-email={generalEmail} role="button" tabindex="0" title={`Click to copy ${generalEmail}`}>
           <div class="email-icon"><i class="fa-regular fa-paper-plane"></i></div>
           <div class="email-details">
-            <span class="email-address">HelloKinsBand@gmail.com</span>
+            <span class="email-address">{generalEmail}</span>
             <span class="email-desc">General Chat, Help & Site Suggestions</span>
           </div>
           <div class="email-actions-group">
-            <button type="button" class="copy-email-btn" data-email="HelloKinsBand@gmail.com" title="Copy Email" aria-label="Copy email HelloKinsBand@gmail.com">
+            <button type="button" class="copy-email-btn" data-email={generalEmail} title="Copy Email" aria-label={`Copy email ${generalEmail}`}>
               <i class="fa-regular fa-copy" aria-hidden="true"></i>
               <span class="sr-only">Copy email</span>
             </button>
-            <a href="mailto:HelloKinsBand@gmail.com?subject=Kins%20Inquiry%20%26%20Feedback" class="send-email-btn" title="Open Mail App" aria-label="Send email to HelloKinsBand@gmail.com" target="_blank" rel="noopener noreferrer">
+            <a href={`mailto:${generalEmail}?subject=Kins%20Inquiry%20%26%20Feedback`} class="send-email-btn" title="Open Mail App" aria-label={`Send email to ${generalEmail}`} target="_blank" rel="noopener noreferrer">
               <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
               <span class="sr-only">Go to mail app</span>
             </a>
           </div>
         </div>
 
-        <div class="email-row-item copy-email-card" data-email="BookingsKinsBand@gmail.com" role="button" tabindex="0" title="Click to copy BookingsKinsBand@gmail.com">
+        <div class="email-row-item copy-email-card" data-email={bookingEmail} role="button" tabindex="0" title={`Click to copy ${bookingEmail}`}>
           <div class="email-icon"><i class="fa-regular fa-calendar-check"></i></div>
           <div class="email-details">
-            <span class="email-address">BookingsKinsBand@gmail.com</span>
+            <span class="email-address">{bookingEmail}</span>
             <span class="email-desc">Shows, Tours & Live Booking</span>
           </div>
           <div class="email-actions-group">
-            <button type="button" class="copy-email-btn" data-email="BookingsKinsBand@gmail.com" title="Copy Email" aria-label="Copy Bookings Email">
+            <button type="button" class="copy-email-btn" data-email={bookingEmail} title="Copy Email" aria-label={`Copy email ${bookingEmail}`}>
               <i class="fa-regular fa-copy" aria-hidden="true"></i>
               <span class="sr-only">Copy email</span>
             </button>
-            <a href="mailto:BookingsKinsBand@gmail.com?subject=Kins%20Booking%20Inquiry" class="send-email-btn" title="Open Mail App" aria-label="Send email to BookingsKinsBand@gmail.com" target="_blank" rel="noopener noreferrer">
+            <a href={`mailto:${bookingEmail}?subject=Kins%20Booking%20Inquiry`} class="send-email-btn" title="Open Mail App" aria-label={`Send email to ${bookingEmail}`} target="_blank" rel="noopener noreferrer">
               <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
               <span class="sr-only">Go to mail app</span>
             </a>
@@ -224,6 +226,19 @@
     gap: 10px;
     width: 100%;
     margin-top: 2px;
+  }
+
+  /* Host for Google's official Sign In With Google button (rendered by GIS) */
+  .google-btn-host {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 46px;
+    width: 100%;
+  }
+
+  .google-btn-host.hidden {
+    display: none;
   }
 
   .social-auth-btn {
@@ -705,7 +720,25 @@
 
   import { getSubscriptionState, setSubscriptionState } from '../../scripts/controllers/subscribeController.js';
   import { validateRealEmail } from '../../scripts/utils/emailValidator.js';
-  import { initSocialAuth } from '../../scripts/controllers/socialAuth.js';
+
+  // socialAuth pulls in the Supabase SDK (~200KB) — load it lazily so it never
+  // competes with first paint. One shared promise avoids duplicate fetches.
+  let socialAuthPromise: Promise<typeof import('../../scripts/controllers/socialAuth.js')> | null = null;
+
+  function loadSocialAuth() {
+    if (!socialAuthPromise) {
+      socialAuthPromise = import('../../scripts/controllers/socialAuth.js');
+    }
+    return socialAuthPromise;
+  }
+
+  const scheduleIdle = (cb: () => void): void => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(cb, { timeout: 2500 });
+    } else {
+      setTimeout(cb, 1);
+    }
+  };
 
   const formContainer = document.getElementById('subscribeFormContainer');
   const successContainer = document.getElementById('subscribeSuccessContainer');
@@ -784,9 +817,6 @@
       const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
       const endpoint = `${baseUrl}/api/subscribe`;
 
-      let subscribedSuccessfully = false;
-      let toastMsg = "You're subscribed! Check your inbox for your welcome email.";
-
       // 2. Dispatch to Server API endpoint
       try {
         const res = await fetch(endpoint, {
@@ -797,48 +827,17 @@
         
         if (res.ok) {
           const data = await res.json().catch(() => ({}));
-          subscribedSuccessfully = true;
-          if (data.message) toastMsg = data.message;
-        } else if (res.status === 400) {
-          // Explicit validation error from server
+          setSubscriptionState(true, email);
+          showToast(data.message || "You're subscribed! Check your inbox for your welcome email.");
+        } else {
+          // Server rejected the subscription — surface the real reason, keep the form usable
           const data = await res.json().catch(() => ({}));
-          showToast(data.message || "Please enter a valid, active email address.");
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = `<span>JOIN ➔</span>`;
-          }
-          return;
+          showToast(data.message || `Subscription failed (${res.status}). Please try again.`);
         }
       } catch (err) {
         console.warn("Server API dispatch warning:", err);
+        showToast('Could not reach the subscription service. Please try again shortly.');
       }
-
-      // 3. Resilient Client-Side Fallback & Discord Notification
-      if (!subscribedSuccessfully) {
-        try {
-          // Direct Webhook backup notification so subscriber is safely recorded and the band is notified
-          const backupWebhook = 'https://discordapp.com/api/webhooks/1540216715382882416/QNZTqlKy2V3uKofeLLi-tHs46x0evzfdeoy5ZMOckn0l_nF4HaMM6Z9TyO35abgoeMa2';
-          await fetch(backupWebhook, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: 'Kins Subscribers Bot',
-              avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png',
-              embeds: [{
-                title: '✉️ New Fan Club Subscriber!',
-                description: `**Email:** \`${email}\`\n• **Captured via:** Web Client Fallback\n• **Timestamp:** ${new Date().toISOString()}`,
-                color: 0xffeb3b,
-                footer: { text: 'Kins Subscription System' }
-              }]
-            })
-          }).catch(() => {});
-        } catch (_) {}
-
-        subscribedSuccessfully = true;
-      }
-
-      setSubscriptionState(true, email);
-      showToast(toastMsg);
 
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -847,9 +846,16 @@
     });
   }
 
-  function handleSubscribeAnother() {
+  async function handleSubscribeAnother() {
     setSubscriptionState(false);
     setSubscribedState(false);
+    // End any Google/Supabase session and clear auto-select so One Tap can re-prompt cleanly
+    try {
+      const { signOutSocialAuth } = await loadSocialAuth();
+      await signOutSocialAuth();
+    } catch (err) {
+      console.warn('socialAuth sign-out unavailable:', err);
+    }
 
     const emailInput = document.getElementById('emailInput') as HTMLInputElement;
     if (emailInput) {
@@ -893,8 +899,12 @@
     }
   });
 
-  // Initialize Native 1-Tap Google GIS & Apple JS SDK
-  initSocialAuth();
+  // Initialize Native 1-Tap Google GIS & Apple JS SDK (idle-time — after LCP)
+  scheduleIdle(() => {
+    loadSocialAuth()
+      .then((m) => m.initSocialAuth())
+      .catch((err) => console.warn('socialAuth init failed:', err));
+  });
 
   const privacyModal = document.getElementById('privacyModal');
   const openPrivacyFormBtn = document.getElementById('openPrivacyFormBtn');

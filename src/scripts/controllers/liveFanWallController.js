@@ -1,20 +1,22 @@
 /**
  * Live Fan Wall & Upload Controller
  * Handles fan media likes, category filtering, lightbox viewing,
- * dynamic category pill counts, empty state handling, and client
- * media uploads with instant optimistic wall rendering.
+ * dynamic category pill counts, empty state handling, and hydration of
+ * server-approved fan uploads from /api/fan-wall.
  */
 
-import { showToast } from './toast.js';
-import { supabase } from '../../lib/supabase';
+import { initLiveFanUploadForm } from './liveUploadController.js';
+
+let fanWallControllerInitialized = false;
 
 export function initLiveFanWallController() {
+  if (fanWallControllerInitialized) return;
+  fanWallControllerInitialized = true;
+
   const wallGrid = document.getElementById('liveFanWallGrid');
-  const filterPills = document.querySelectorAll('.fan-wall-filter-pill');
   const uploadModal = document.getElementById('liveUploadModal');
   const openUploadBtns = document.querySelectorAll('.open-live-upload-modal-btn');
   const closeUploadBtn = document.getElementById('closeLiveUploadModal');
-  const uploadForm = document.getElementById('liveMediaUploadForm');
   const mediaFileInput = document.getElementById('liveMediaFileInput');
   const mediaPreviewContainer = document.getElementById('liveMediaPreviewContainer');
   const mediaPreviewImg = document.getElementById('liveMediaPreviewImg');
@@ -24,8 +26,8 @@ export function initLiveFanWallController() {
   const lightboxAuthor = document.getElementById('liveLightboxAuthor');
   const lightboxCaption = document.getElementById('liveLightboxCaption');
 
-  let selectedFile = null;
   let activeFilterCategory = 'All';
+  let approvedItemsLoadStarted = false;
 
   // Helper to normalize strings for robust matching
   function normalizeCategory(cat) {
@@ -139,6 +141,16 @@ export function initLiveFanWallController() {
   });
 
   // 3. Like Buttons with Local Storage Persistence & Heart Bounce
+  function safeStorageGet(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function safeStorageSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) {}
+  }
+  function safeStorageRemove(key) {
+    try { localStorage.removeItem(key); } catch (e) {}
+  }
+
   function bindLikeButtons() {
     const likeBtns = wallGrid ? wallGrid.querySelectorAll('.fan-wall-like-btn') : document.querySelectorAll('.fan-wall-like-btn');
     likeBtns.forEach(btn => {
@@ -146,7 +158,7 @@ export function initLiveFanWallController() {
       const countSpan = btn.querySelector('.fan-wall-like-count');
       const heartIcon = btn.querySelector('i');
       const likedKey = `kins_fanwall_liked_${postId}`;
-      const isLiked = localStorage.getItem(likedKey) === 'true';
+      const isLiked = safeStorageGet(likedKey) === 'true';
 
       // Restore initial state on mount
       if (isLiked) {
@@ -157,18 +169,18 @@ export function initLiveFanWallController() {
       // Re-assign onclick to avoid duplicate listeners
       btn.onclick = (e) => {
         e.stopPropagation();
-        const alreadyLiked = localStorage.getItem(likedKey) === 'true';
+        const alreadyLiked = safeStorageGet(likedKey) === 'true';
         let currentCount = parseInt(countSpan?.textContent || '0', 10);
 
         if (alreadyLiked) {
           // Unlike
-          localStorage.removeItem(likedKey);
+          safeStorageRemove(likedKey);
           btn.classList.remove('liked');
           if (countSpan) countSpan.textContent = String(Math.max(0, currentCount - 1));
           if (heartIcon) heartIcon.className = 'fa-regular fa-heart';
         } else {
           // Like
-          localStorage.setItem(likedKey, 'true');
+          safeStorageSet(likedKey, 'true');
           btn.classList.add('liked');
           btn.classList.add('heart-bounce-anim');
           setTimeout(() => btn.classList.remove('heart-bounce-anim'), 350);
@@ -270,7 +282,6 @@ export function initLiveFanWallController() {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      selectedFile = file;
       const reader = new FileReader();
       reader.onload = (ev) => {
         if (mediaPreviewImg) mediaPreviewImg.src = ev.target.result;
@@ -280,89 +291,144 @@ export function initLiveFanWallController() {
     });
   }
 
-  // 7. Form Submission
-  if (uploadForm) {
-    uploadForm.addEventListener('submit', (e) => {
-      e.preventDefault();
+  // 7. Approved Uploads Loader — hydrates moderation-approved media from the API.
+  // Cards mirror the seeded .fan-wall-card DOM exactly; all dynamic strings go
+  // through textContent/createElement (no innerHTML interpolation of API data).
+  function relativeTimeLabel(isoString) {
+    const then = Date.parse(isoString || '');
+    if (isNaN(then)) return 'Recently';
+    const diffMs = Date.now() - then;
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  }
 
-      const handleInput = document.getElementById('liveUploadHandleInput');
-      const captionInput = document.getElementById('liveUploadCaptionInput');
+  function buildApprovedCard(item) {
+    const mediaType = item.mediaType === 'video' ? 'video' : 'image';
+    const category = mediaType === 'video' ? 'Videos' : 'Photos';
+    const handle = item.handle || '@fan';
+    const caption = item.caption || '';
+    const postId = `wall-live-${item.id}`;
 
-      let handle = (handleInput?.value || '').trim();
-      if (!handle) handle = '@fan_' + Math.floor(100 + Math.random() * 900);
-      if (!handle.startsWith('@')) handle = '@' + handle;
+    const card = document.createElement('div');
+    card.className = 'fan-wall-card';
+    card.setAttribute('data-post-id', postId);
+    card.setAttribute('data-category', category);
+    card.setAttribute('data-media-url', item.url || '');
+    card.setAttribute('data-media-type', mediaType);
+    card.setAttribute('data-author', handle);
+    card.setAttribute('data-caption', caption);
 
-      let caption = (captionInput?.value || '').trim();
-      if (!caption) caption = 'Rocking out at The Cambridge Hotel with Kins! 🔥 #KinsLive';
-      if (!caption.includes('#KinsLive')) caption += ' #KinsLive';
+    const mediaWrap = document.createElement('div');
+    mediaWrap.className = 'fan-wall-media-wrap';
 
-      const mediaUrl = mediaPreviewImg?.src || 'new.png';
-      const isVideo = selectedFile ? selectedFile.type.startsWith('video') : false;
-      const mediaType = isVideo ? 'video' : 'image';
-      const newPostId = 'wall-user-' + Date.now();
-      const postCategory = 'Pit Shots';
+    const thumb = document.createElement('img');
+    thumb.className = 'fan-wall-media-thumb';
+    thumb.loading = 'lazy';
+    thumb.src = item.url || '';
+    thumb.alt = caption;
+    mediaWrap.appendChild(thumb);
 
-      // Optimistically insert card at top of grid
-      const card = document.createElement('div');
-      card.className = 'fan-wall-card new-post-pop-anim';
-      card.setAttribute('data-post-id', newPostId);
-      card.setAttribute('data-category', postCategory);
-      card.setAttribute('data-media-url', mediaUrl);
-      card.setAttribute('data-media-type', mediaType);
-      card.setAttribute('data-author', handle);
-      card.setAttribute('data-caption', caption);
+    const categoryTag = document.createElement('span');
+    categoryTag.className = 'fan-wall-category-tag';
+    categoryTag.textContent = category;
+    mediaWrap.appendChild(categoryTag);
 
-      card.innerHTML = `
-        <div class="fan-wall-media-wrap">
-          <img src="${mediaUrl}" alt="${escapeHtml(caption)}" class="fan-wall-media-thumb" loading="lazy" />
-          <span class="fan-wall-category-tag">${postCategory}</span>
-          ${mediaType === 'video' ? `
-            <div class="video-play-indicator" aria-label="Video post">
-              <i class="fa-solid fa-play"></i>
-            </div>
-          ` : ''}
-        </div>
-        <div class="fan-wall-card-content">
-          <div class="fan-wall-card-header">
-            <span class="fan-wall-handle">${escapeHtml(handle)}</span>
-            <span class="fan-wall-time">Just now</span>
-          </div>
-          <p class="fan-wall-caption">${escapeHtml(caption)}</p>
-          <div class="fan-wall-card-footer">
-            <button type="button" class="fan-wall-like-btn" data-post-id="${newPostId}" aria-label="Like post">
-              <i class="fa-regular fa-heart"></i>
-              <span class="fan-wall-like-count">1</span>
-            </button>
-          </div>
-        </div>
-      `;
+    if (mediaType === 'video') {
+      const playIndicator = document.createElement('div');
+      playIndicator.className = 'video-play-indicator';
+      playIndicator.setAttribute('aria-label', 'Video post');
+      const playIcon = document.createElement('i');
+      playIcon.className = 'fa-solid fa-play';
+      playIndicator.appendChild(playIcon);
+      mediaWrap.appendChild(playIndicator);
+    }
 
-      if (wallGrid) {
-        // Insert after empty state if empty state is the first child, or prepend
-        const emptyState = document.getElementById('liveFanWallEmptyState');
-        if (emptyState && emptyState.parentNode === wallGrid && wallGrid.firstElementChild === emptyState) {
-          wallGrid.insertBefore(card, emptyState.nextSibling);
-        } else {
-          wallGrid.prepend(card);
-        }
+    const content = document.createElement('div');
+    content.className = 'fan-wall-card-content';
+
+    const header = document.createElement('div');
+    header.className = 'fan-wall-card-header';
+
+    const handleEl = document.createElement('span');
+    handleEl.className = 'fan-wall-handle';
+    handleEl.textContent = handle;
+
+    const timeEl = document.createElement('span');
+    timeEl.className = 'fan-wall-time';
+    timeEl.textContent = relativeTimeLabel(item.createdAt);
+
+    header.appendChild(handleEl);
+    header.appendChild(timeEl);
+
+    const captionEl = document.createElement('p');
+    captionEl.className = 'fan-wall-caption';
+    captionEl.textContent = caption;
+
+    const footer = document.createElement('div');
+    footer.className = 'fan-wall-card-footer';
+
+    const likeBtn = document.createElement('button');
+    likeBtn.type = 'button';
+    likeBtn.className = 'fan-wall-like-btn';
+    likeBtn.setAttribute('data-post-id', postId);
+    likeBtn.setAttribute('aria-label', 'Like post');
+    const likeIcon = document.createElement('i');
+    likeIcon.className = 'fa-regular fa-heart';
+    const likeCount = document.createElement('span');
+    likeCount.className = 'fan-wall-like-count';
+    likeCount.textContent = '0';
+    likeBtn.appendChild(likeIcon);
+    likeBtn.appendChild(likeCount);
+    footer.appendChild(likeBtn);
+
+    content.appendChild(header);
+    content.appendChild(captionEl);
+    content.appendChild(footer);
+
+    card.appendChild(mediaWrap);
+    card.appendChild(content);
+    return card;
+  }
+
+  async function loadApprovedWallItems() {
+    if (approvedItemsLoadStarted) return;
+    approvedItemsLoadStarted = true;
+
+    try {
+      const res = await fetch('/api/fan-wall', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json().catch(() => null);
+      if (!data || data.status !== 'success' || !Array.isArray(data.items)) {
+        throw new Error('Malformed /api/fan-wall payload');
+      }
+      if (!data.items.length) return;
+
+      const grid = document.getElementById('liveFanWallGrid');
+      if (!grid) return;
+
+      const frag = document.createDocumentFragment();
+      data.items.forEach((item) => frag.appendChild(buildApprovedCard(item)));
+
+      const emptyState = document.getElementById('liveFanWallEmptyState');
+      if (emptyState && emptyState.parentNode === grid && grid.firstElementChild === emptyState) {
+        grid.insertBefore(frag, emptyState.nextSibling);
+      } else {
+        grid.prepend(frag);
       }
 
-      // Update pill counts, category filtering, and re-bind handlers
       updateCategoryPillCounts();
       applyCategoryFilter();
       bindLikeButtons();
       bindLightboxCards();
-
-      // Reset form & preview & close modal
-      uploadForm.reset();
-      selectedFile = null;
-      if (mediaPreviewContainer) mediaPreviewContainer.classList.add('hidden');
-      if (mediaPreviewImg) mediaPreviewImg.src = '';
-      if (uploadModal) uploadModal.classList.add('hidden');
-      document.body.classList.remove('modal-open');
-
-      showToast('🎉 Photo submitted! You are live on the Fan Wall.', 'success');
-    });
+    } catch (err) {
+      // Honest degradation: seeded posts remain, no fake items injected.
+      console.warn('[liveFanWall] could not load approved uploads:', err);
+    }
   }
 
   // Initialize listeners and counts on load
@@ -371,6 +437,12 @@ export function initLiveFanWallController() {
   bindLightboxCards();
   updateCategoryPillCounts();
   applyCategoryFilter();
+
+  // Real upload submission (POST /api/fan-upload). Replaces the old fake-persist path.
+  initLiveFanUploadForm();
+
+  // Hydrate moderation-approved uploads from the server.
+  loadApprovedWallItems();
 }
 
 function escapeHtml(str) {

@@ -1,42 +1,7 @@
 ---
-const members = [
-  {
-    id: "vivian",
-    name: "Vivian",
-    role: "Lead Vocals & Guitar",
-    icon: "fa-microphone",
-    initial: "V",
-    badge: "VOCALS & GUITAR",
-    bio: "Melodies & guitar hooks."
-  },
-  {
-    id: "charlie",
-    name: "Charlie",
-    role: "Guitar & Vocals",
-    icon: "fa-guitar",
-    initial: "C",
-    badge: "GUITAR & VOCALS",
-    bio: "Lyrics, guitar & band energy."
-  },
-  {
-    id: "oscar",
-    name: "Oscar",
-    role: "Bass & Synth",
-    icon: "fa-sliders",
-    initial: "O",
-    badge: "BASS",
-    bio: "Basslines & vintage synths."
-  },
-  {
-    id: "trai",
-    name: "Trai",
-    role: "Drums & Percussion",
-    icon: "fa-drum",
-    initial: "T",
-    badge: "DRUMS",
-    bio: "Drums & driving heartbeat."
-  }
-];
+import { bandMembers } from '../../settings/members.config';
+
+const members = bandMembers;
 ---
 
 <section class="members-section" id="members-section">

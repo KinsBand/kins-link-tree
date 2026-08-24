@@ -425,7 +425,8 @@ export function initShareModal() {
       let cacheStorage = null;
       try {
         if ('caches' in window) {
-          cacheStorage = await caches.open('kins-link-bio-v28');
+          // Keep in sync with CACHE_NAME in public/sw.js — mismatched versions get purged on activate
+          cacheStorage = await caches.open('kins-link-bio-v29');
         }
       } catch (e) {
         console.warn('CacheStorage initialization:', e);

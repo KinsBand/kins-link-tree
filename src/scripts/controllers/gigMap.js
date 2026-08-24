@@ -1,4 +1,15 @@
 import { showToast } from './toast.js';
+import { GIG_VENUES as VENUES_DATA } from '../../settings/gigs.config';
+import { getDeviceId } from './fanIdentity.js';
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function lockScroll() {
   document.body.classList.add('modal-open');
@@ -14,9 +25,9 @@ function unlockScroll() {
   document.documentElement.classList.remove('gig-map-open');
 }
 
-// Tour venues and gig instances (populated dynamically when live tour dates drop)
-export const VENUES = [];
-export const LOCAL_GIGS = [];
+// Tour venues and gig instances — data lives in settings/gigs.config.ts
+export const VENUES = VENUES_DATA;
+export const LOCAL_GIGS = VENUES_DATA.flatMap((v) => v.shows || []);
 
 // NSW Tour Corridor Polyline coordinates (Newcastle -> Central Coast -> Sydney)
 const TOUR_CORRIDOR_PATH = [
@@ -262,6 +273,10 @@ function updateCountdownTimer(targetDate) {
       if (cdHours) cdHours.textContent = '00';
       if (cdMins) cdMins.textContent = '00';
       if (cdSecs) cdSecs.textContent = '00';
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
       return;
     }
 
@@ -602,14 +617,41 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
       };
       updateCheckinUI();
 
-      venueCheckinBtn.onclick = (e) => {
+      venueCheckinBtn.onclick = async (e) => {
         e.preventDefault();
-        show.hasUserCheckedIn = !show.hasUserCheckedIn;
-        updateCheckinUI();
-        if (show.hasUserCheckedIn) {
-          showToast(`Checked in to ${venue.name}! Added to your tour passport.`);
-        } else {
-          showToast(`Removed check-in for ${venue.name}`);
+        if (venueCheckinBtn.dataset.busy === 'true') return;
+        venueCheckinBtn.dataset.busy = 'true';
+
+        try {
+          const res = await fetch('/api/checkin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gigId: show.id, deviceId: getDeviceId() })
+          });
+          const data = await res.json();
+
+          if (res.ok && data.status === 'success') {
+            const badgeNote = Array.isArray(data.newBadges) && data.newBadges.length > 0
+              ? ` Badge earned: ${data.newBadges.map((b) => b.label).join(', ')}!`
+              : '';
+            if (data.alreadyCheckedIn) {
+              showToast(`Already in your passport — ${data.totalGigs} show${data.totalGigs === 1 ? '' : 's'} and counting.`);
+            } else {
+              showToast(`Checked in to ${venue.name}! ${data.totalGigs} show${data.totalGigs === 1 ? '' : 's'} in your passport.${badgeNote}`);
+            }
+            if (venueCheckinBtnText) {
+              venueCheckinBtnText.textContent = `✓ IN YOUR PASSPORT • ${data.totalGigs} SHOW${data.totalGigs === 1 ? '' : 'S'}`;
+            }
+            venueCheckinBtn.className = 'venue-checkin-btn is-checked-in';
+            venueCheckinBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>✓ IN YOUR PASSPORT • ${data.totalGigs} SHOW${data.totalGigs === 1 ? '' : 'S'}</span>`;
+            show.hasUserCheckedIn = true;
+          } else {
+            showToast((data && data.message) || 'Check-in failed right now — try again.');
+          }
+        } catch (_) {
+          showToast('Network issue — check-in not saved. Try again.');
+        } finally {
+          delete venueCheckinBtn.dataset.busy;
         }
       };
     }
@@ -878,16 +920,46 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
         });
       });
 
-      // Song Request Form submission
+      // Song Request Form submission (real endpoint: /api/request-song)
       const songReqBtn = document.getElementById('songRequestSubmitBtn');
       const songReqInput = document.getElementById('songRequestInput');
       const songReqContainer = document.getElementById('songRequestFormContainer');
       if (songReqBtn && songReqInput && songReqContainer) {
-        songReqBtn.onclick = () => {
+        songReqBtn.onclick = async () => {
           const val = songReqInput.value.trim();
-          if (val) {
-            songReqContainer.innerHTML = `<div class="song-request-success">✓ Request for "${val}" sent to the band's setlist board!</div>`;
-            showToast(`Song request submitted! Thanks for voting.`);
+          if (!val || songReqBtn.dataset.busy === 'true') return;
+
+          const separatorIdx = val.lastIndexOf(' - ');
+          const songTitle = separatorIdx > 0 ? val.slice(0, separatorIdx).trim() : val;
+          const artist = separatorIdx > 0 ? val.slice(separatorIdx + 3).trim() : 'Unknown Artist';
+
+          songReqBtn.dataset.busy = 'true';
+          songReqBtn.disabled = true;
+          const originalLabel = songReqBtn.textContent;
+          songReqBtn.textContent = 'Sending…';
+
+          try {
+            const res = await fetch('/api/request-song', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ songTitle, artist, reason: `Gig-night request via venue sheet (${venue.name})` })
+            });
+            const data = await res.json().catch(() => null);
+
+            if (res.ok && data && data.status === 'success') {
+              songReqContainer.innerHTML = `<div class="song-request-success">✓ Request for "${escapeHtml(songTitle)}" sent to the band's setlist board!</div>`;
+              showToast('Song request submitted! Thanks for voting.');
+            } else {
+              showToast((data && data.message) || 'Could not send your request right now.');
+              songReqBtn.textContent = originalLabel;
+              songReqBtn.disabled = false;
+            }
+          } catch (_) {
+            showToast('Network issue — request not sent. Try again.');
+            songReqBtn.textContent = originalLabel;
+            songReqBtn.disabled = false;
+          } finally {
+            delete songReqBtn.dataset.busy;
           }
         };
       }
@@ -1581,18 +1653,38 @@ export function renderChronologicalTourStack(category = 'all', query = currentSe
   });
 
   feed.querySelectorAll('.list-checkin-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const gId = btn.getAttribute('data-gig-id');
       const pair = findVenueAndShow(gId);
-      if (pair.show) {
-        pair.show.hasUserCheckedIn = !pair.show.hasUserCheckedIn;
-        renderChronologicalTourStack(category);
-        if (pair.show.hasUserCheckedIn) {
-          showToast(`Checked in to ${pair.venue ? pair.venue.name : 'show'}! Added to passport.`);
+      if (!pair.show || btn.dataset.busy === 'true') return;
+      btn.dataset.busy = 'true';
+
+      try {
+        const res = await fetch('/api/checkin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gigId: pair.show.id, deviceId: getDeviceId() })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.status === 'success') {
+          const badgeNote = Array.isArray(data.newBadges) && data.newBadges.length > 0
+            ? ` Badge earned: ${data.newBadges.map((b) => b.label).join(', ')}!`
+            : '';
+          if (data.alreadyCheckedIn) {
+            showToast(`Already in your passport — ${data.totalGigs} show${data.totalGigs === 1 ? '' : 's'} and counting.`);
+          } else {
+            showToast(`Checked in to ${pair.venue ? pair.venue.name : 'show'}! ${data.totalGigs} show${data.totalGigs === 1 ? '' : 's'} in your passport.${badgeNote}`);
+          }
+          renderChronologicalTourStack(category);
         } else {
-          showToast(`Removed check-in.`);
+          showToast((data && data.message) || 'Check-in failed right now — try again.');
         }
+      } catch (_) {
+        showToast('Network issue — check-in not saved. Try again.');
+      } finally {
+        delete btn.dataset.busy;
       }
     });
   });
@@ -1658,6 +1750,8 @@ export function initGigMapModule() {
   // Setup List Live Search Input
   const listSearchInput = document.getElementById('gigListSearchInput');
   const listSearchClearBtn = document.getElementById('gigListSearchClearBtn');
+  // Debounced: the tour stack rebuilds a large DOM subtree per render — never do that per keystroke
+  let gigSearchDebounceId = null;
 
   if (listSearchInput) {
     listSearchInput.addEventListener('input', (e) => {
@@ -1665,7 +1759,10 @@ export function initGigMapModule() {
       if (listSearchClearBtn) {
         listSearchClearBtn.classList.toggle('hidden', !currentSearchQuery);
       }
-      renderChronologicalTourStack(activeFilter, currentSearchQuery);
+      clearTimeout(gigSearchDebounceId);
+      gigSearchDebounceId = setTimeout(() => {
+        renderChronologicalTourStack(activeFilter, currentSearchQuery);
+      }, 150);
     });
   }
 
@@ -1864,6 +1961,8 @@ export function initGigMapModule() {
   // ==========================================================================
   const venueCardHeader = document.getElementById('venueCardHeader');
   const desktopSnapToggleBtn = document.getElementById('desktopSnapToggleBtn');
+  // Declared explicitly — previously resolved via implicit window named-access (fragile)
+  const sheetDragHandle = document.getElementById('sheetDragHandle');
 
   let isDraggingSheet = false;
   let dragStartY = 0;

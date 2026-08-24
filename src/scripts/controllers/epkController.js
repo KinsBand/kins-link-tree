@@ -67,15 +67,20 @@ function initEpkMembersScroll() {
   updateArrowsState();
   updateActiveCardHighlight();
 
-  container.addEventListener('scroll', () => {
-    updateArrowsState();
-    updateActiveCardHighlight();
-  }, { passive: true });
+  // rAF-coalesced so scroll/resize never interleave rect reads with class writes (layout thrash)
+  let epkScrollRafId = null;
+  function scheduleEpkUpdate() {
+    if (epkScrollRafId !== null) return;
+    epkScrollRafId = requestAnimationFrame(() => {
+      epkScrollRafId = null;
+      updateArrowsState();
+      updateActiveCardHighlight();
+    });
+  }
 
-  window.addEventListener('resize', () => {
-    updateArrowsState();
-    updateActiveCardHighlight();
-  }, { passive: true });
+  container.addEventListener('scroll', scheduleEpkUpdate, { passive: true });
+
+  window.addEventListener('resize', scheduleEpkUpdate, { passive: true });
 
   prevBtn?.addEventListener('click', (e) => {
     e.preventDefault();

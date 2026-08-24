@@ -1,130 +1,158 @@
 import type { APIRoute } from 'astro';
+import { getClientIp, isRateLimited } from '../../lib/rateLimit';
+import { sanitizeText } from '../../lib/sanitize';
 
 export const prerender = false;
 
+const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
+
+function getWebhookUrl(feedbackType: string): string {
+  const env = (name: string): string =>
+    (import.meta.env[name] as string | undefined) || process.env[name] || '';
+
+  if (feedbackType.includes('Bug')) {
+    return env('DISCORD_FEEDBACK_WEBHOOK_BUG') || env('DISCORD_FEEDBACK_WEBHOOK_URL');
+  }
+  if (feedbackType.includes('Content')) {
+    return env('DISCORD_FEEDBACK_WEBHOOK_CONTENT') || env('DISCORD_FEEDBACK_WEBHOOK_URL');
+  }
+  return env('DISCORD_FEEDBACK_WEBHOOK_IMPROVEMENT') || env('DISCORD_FEEDBACK_WEBHOOK_URL');
+}
+
+function jsonError(message: string, status: number): Response {
+  return new Response(JSON.stringify({ status: 'error', message }), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const body = await request.json().catch(() => null);
+    if (isRateLimited(`feedback:${getClientIp(request)}`, 5, 60 * 1000)) {
+      return jsonError('Too many requests. Please try again in a minute.', 429);
+    }
 
-    if (!body) {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Invalid payload.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return jsonError('Invalid payload.', 400);
     }
 
     const feedback = body.feedback || {};
-    const feedbackType = feedback.type || body.feedbackType || 'Improvement / Idea';
-    const category = feedback.category || body.category || 'General Site';
-    const details = feedback.user_message || feedback.details || body.details || '';
-    const contact = feedback.contact || body.contact || '';
+    const feedbackType = sanitizeText(
+      feedback.type || body.feedbackType || 'Improvement / Idea',
+      40
+    );
+    const category = sanitizeText(feedback.category || body.category || 'General Site', 60);
+    const details = sanitizeText(
+      feedback.user_message || feedback.details || body.details || '',
+      2000
+    );
+    const contact = sanitizeText(feedback.contact || body.contact || '', 200);
 
-    if (!details || typeof details !== 'string') {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Please provide feedback details.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (!details) {
+      return jsonError('Please provide feedback details.', 400);
     }
 
-    const viewport = body.viewportWithDpr || body.viewport || 'N/A';
-    const environment = body.environment || 'Standard Browser';
-    const url = body.url || 'https://kinsband.com';
-    const formattedDate = body.formattedDate || new Date().toISOString();
-    const lastError = body.lastError || '';
-    const buildVersion = body.buildVersion || '2026.08.1-prod';
+    const viewport = sanitizeText(body.viewportWithDpr || body.viewport || 'N/A', 80);
+    const environment = sanitizeText(body.environment || 'Standard Browser', 120);
+    const url = sanitizeText(body.url || '', 300);
+    const formattedDate = sanitizeText(body.formattedDate || new Date().toISOString(), 40);
+    const lastError = sanitizeText(body.lastError || '', 500);
 
     // Route to the correct Discord channel based on feedback type
-    const webhookMap: Record<string, string> = {
-      'Improvement / Idea': 'https://discord.com/api/webhooks/1537823822240026705/Gw3XTHhEbpqIGGxhXvQx6yeOoAOWVwCVLyo-36DtwqXNptDHR69KqN-4286oMpHfSB7G',
-      'Bug / Broken Item': 'https://discord.com/api/webhooks/1537823829039124541/ePyQFBCtvGO9nHQWWopo6l4NDvjiweDq0R1WeURZBxsuAVpqco4hM0LC1r9nXnrpEuJg',
-      'Content Fix / Typo': 'https://discord.com/api/webhooks/1537823842880192573/B11FLr0cU92wYSN_8Jl06K8gARQjvtznFJzL5ZZmXZISABg0RSHHVbxjmS_sjk4LaF8k'
-    };
-
-    let webhookUrl = webhookMap['Improvement / Idea']; // default
-    if (feedbackType.includes('Bug')) {
-      webhookUrl = webhookMap['Bug / Broken Item'];
-    } else if (feedbackType.includes('Content')) {
-      webhookUrl = webhookMap['Content Fix / Typo'];
-    }
-
-    // Allow env override if set
-    const envWebhook =
-      import.meta.env.DISCORD_FEEDBACK_WEBHOOK_URL ||
-      process.env.DISCORD_FEEDBACK_WEBHOOK_URL;
-    if (envWebhook) webhookUrl = envWebhook;
-
-    // Determine color & icon based on feedback type
-    let embedColor = 0x3498db; // #3498DB Blue for improvements
+    let embedColor = 0x3498db;
     let typeEmoji = '💡';
 
     if (feedbackType.includes('Bug') || feedbackType === 'bug_report') {
-      embedColor = 0xe74c3c; // #E74C3C Red for bugs
+      embedColor = 0xe74c3c;
       typeEmoji = '🐛';
     } else if (feedbackType.includes('Content')) {
-      embedColor = 0xe67e22; // #E67E22 Orange for content
+      embedColor = 0xe67e22;
       typeEmoji = '📝';
     }
 
-    if (webhookUrl) {
-      try {
-        const descriptionLines = [
-          `**User Message:**`,
-          `"${details}"`,
-          ``,
-          `• **Category:** ${category}`,
-          `• **Submitter:** ${contact ? `\`${contact}\`` : '*Anonymous Fan*'}`,
-          `• **Viewport:** \`${viewport}\``,
-          `• **Environment:** ${environment}`,
-          `• **Date:** ${formattedDate}`
-        ];
+    const webhookUrl = getWebhookUrl(feedbackType);
+    if (!webhookUrl || !webhookUrl.startsWith('https://')) {
+      console.error('[feedback] No Discord feedback webhook configured for type:', feedbackType);
+      return jsonError('Feedback service is not available right now. Please try again later.', 503);
+    }
 
-        if (lastError) {
-          descriptionLines.push(`• **Last Error:** \`${lastError}\``);
-        }
+    const descriptionLines = [
+      '**User Message:**',
+      `"${details}"`,
+      '',
+      `• **Category:** ${category}`,
+      `• **Submitter:** ${contact ? `\`${contact}\`` : '*Anonymous Fan*'}`,
+      `• **Viewport:** \`${viewport}\``,
+      `• **Environment:** ${environment}`,
+      `• **Date:** ${formattedDate}`
+    ];
 
-        const discordPayload = {
+    if (lastError) {
+      descriptionLines.push(`• **Last Error:** \`${lastError}\``);
+    }
+
+    if (url && url !== 'https://kinsband.com') {
+      descriptionLines.push(`• **Page:** \`${url}\``);
+    }
+
+    const embed: Record<string, unknown> = {
+      title: `${typeEmoji} ${feedbackType}: ${category}`,
+      description: descriptionLines.join('\n').slice(0, 4000),
+      color: embedColor,
+      footer: { text: 'Kins Site Diagnostics' },
+      timestamp: new Date().toISOString()
+    };
+
+    // Optional screenshot attachment sent as data URL by the client
+    const screenshotDataUrl =
+      typeof body.screenshotDataUrl === 'string' &&
+      /^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+/=]+$/.test(body.screenshotDataUrl) &&
+      body.screenshotDataUrl.length <= 2_800_000
+        ? body.screenshotDataUrl
+        : null;
+
+    let discordRes: Response;
+
+    if (screenshotDataUrl) {
+      const [meta, base64] = screenshotDataUrl.split(',');
+      const extMatch = meta.match(/image\/(png|jpe?g|webp)/);
+      const ext = extMatch ? extMatch[1].replace('jpeg', 'jpg') : 'png';
+      const buffer = Buffer.from(base64, 'base64');
+
+      const formData = new FormData();
+      formData.append('payload_json', JSON.stringify({
+        username: 'Kins Website Feedback',
+        avatar_url: AVATAR_URL,
+        embeds: [{ ...embed, image: { url: `attachment://screenshot.${ext}` } }]
+      }));
+      formData.append('files[0]', new Blob([buffer]), `screenshot.${ext}`);
+
+      discordRes = await fetch(webhookUrl, { method: 'POST', body: formData });
+    } else {
+      discordRes = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           username: 'Kins Website Feedback',
-          avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png',
-          embeds: [
-            {
-              title: `${typeEmoji} ${feedbackType}: ${category}`,
-              description: descriptionLines.join('\n'),
-              color: embedColor,
-              footer: {
-                text: 'Kins Site Diagnostics'
-              },
-              timestamp: body.timestamp || new Date().toISOString()
-            }
-          ]
-        };
+          avatar_url: AVATAR_URL,
+          embeds: [embed]
+        })
+      });
+    }
 
-        const discordRes = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(discordPayload)
-        });
-
-        if (!discordRes.ok) {
-          const resText = await discordRes.text().catch(() => '');
-          console.warn('Discord webhook response warning:', discordRes.status, resText);
-        }
-      } catch (webhookErr) {
-        console.error('Error forwarding feedback to Discord webhook:', webhookErr);
-      }
+    if (!discordRes.ok) {
+      const resText = await discordRes.text().catch(() => '');
+      console.error('[feedback] Discord webhook failed:', discordRes.status, resText.slice(0, 200));
+      return jsonError("Couldn't deliver your feedback. Please try again later.", 502);
     }
 
     return new Response(
-      JSON.stringify({
-        status: 'success',
-        message: 'Feedback received! Thank you for helping Kins improve the site.'
-      }),
+      JSON.stringify({ status: 'success', message: 'Feedback received! Thank you for helping Kins improve the site.' }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
-  } catch (err: any) {
+  } catch (err) {
     console.error('Feedback API error:', err);
-    return new Response(
-      JSON.stringify({ status: 'error', message: 'Failed to process feedback.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonError('Failed to process feedback.', 500);
   }
 };

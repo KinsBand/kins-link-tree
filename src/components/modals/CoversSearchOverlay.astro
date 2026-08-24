@@ -896,6 +896,15 @@ const categories = [
 </style>
 
 <script>
-  import { initCoversSearchEngine } from '../../scripts/controllers/coversSearchEngine.js';
-  initCoversSearchEngine();
+  // Idle-loaded: covers search overlay is interaction-gated
+  const scheduleIdle = (cb) => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(cb, { timeout: 2500 });
+    } else {
+      setTimeout(cb, 1);
+    }
+  };
+  scheduleIdle(() => {
+    import('../../scripts/controllers/coversSearchEngine.js').then((m) => m.initCoversSearchEngine());
+  });
 </script>

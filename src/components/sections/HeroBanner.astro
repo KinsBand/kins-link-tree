@@ -15,7 +15,7 @@ const { image = kinsLogoNew } = Astro.props;
     typeof image === 'string' ? (
       <img src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" fetchpriority="high" width="600" height="140" />
     ) : (
-      <Image src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" loading="eager" width={600} height={140} />
+      <Image src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" loading="eager" fetchpriority="high" width={600} height={140} />
     )
   }
 </div>

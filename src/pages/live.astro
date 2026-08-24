@@ -7,6 +7,7 @@ import { functionalityConfig } from '../settings/functionality.config';
 import LiveNav from '../components/live/LiveNav.astro';
 import FanCamsReel from '../components/live/FanCamsReel.astro';
 import MasterStreamPlayer from '../components/live/MasterStreamPlayer.astro';
+import NativeAppsGrid from '../components/live/NativeAppsGrid.astro';
 import LiveSetlistStage from '../components/live/LiveSetlistStage.astro';
 import LiveLyricsStage from '../components/live/LiveLyricsStage.astro';
 import LiveChatReactions from '../components/live/LiveChatReactions.astro';
@@ -25,7 +26,8 @@ import LiveMediaLightbox from '../components/live/LiveMediaLightbox.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
 
 const isLivePageEnabled = (functionalityConfig.enableLivePage ?? true) && (liveConfig.enabled ?? true);
-const baseUrl = import.meta.env.BASE_URL || '/';
+const baseUrl = import.meta.env.BASE_URL;
+const isLiveShowtime = (liveConfig.mode ?? 'offline') === 'live' && liveConfig.status === 'live';
 
 if (!isLivePageEnabled) {
   return Astro.redirect(baseUrl);
@@ -43,9 +45,10 @@ if (!isLivePageEnabled) {
     <!-- Main Live Content Area -->
     <main class="live-main-content">
       <!-- 2. Fan Cams & Co-Streams Reel -->
-      <FanCamsReel />
+      {isLiveShowtime && <FanCamsReel />}
 
       <!-- Theater Stage Container (Expands to Fullscreen with Fixed Stream & Scrollable Side Tabs) -->
+      {isLiveShowtime ? (
       <div class="live-theater-stage-container" id="liveTheaterStageContainer">
         <!-- 3. Native Band Master Stream Feed & Native Apps Row -->
         <div class="theater-stream-pane">
@@ -119,6 +122,28 @@ if (!isLivePageEnabled) {
         <LiveMediaLightbox />
         <ToastContainer />
       </div>
+      ) : (
+        <section class="offline-standby-card" aria-label="Stream offline">
+          <span class="offline-badge"><i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i> OFF AIR • STANDBY</span>
+          <h2 class="offline-title">KINS GOES LIVE HERE</h2>
+          <p class="offline-copy">
+            No stream right now. We broadcast from the room on every show night —
+            master soundboard feed, live setlist, lyrics and chat. Subscribe and you'll
+            get pinged the second we're on air.
+          </p>
+          <div class="offline-actions-row">
+            <a href={`${baseUrl}#subscribeFormSection`} class="offline-cta-btn brutal-press" data-track="live_offline:subscribe">
+              <i class="fa-solid fa-bell"></i>
+              <span>GET SHOW ALERTS</span>
+            </a>
+            <a href={baseUrl} class="offline-secondary-btn brutal-press" data-track="live_offline:home">
+              <i class="fa-solid fa-house"></i>
+              <span>HUB</span>
+            </a>
+          </div>
+          <NativeAppsGrid />
+        </section>
+      )}
 
       <!-- 5. Live Fan Wall Gallery -->
       <LiveFanWall />
@@ -137,6 +162,10 @@ if (!isLivePageEnabled) {
     <!-- Bottom-Left Floating Upload Action Button (Neo-Brutalist) -->
     <LiveFloatingUploadBtn />
   </div>
+
+  <script define:vars={{ liveMode: isLiveShowtime ? 'live' : 'offline' }}>
+    document.body.dataset.liveMode = liveMode;
+  </script>
 </BaseLayout>
 
 <style>
@@ -162,6 +191,108 @@ if (!isLivePageEnabled) {
     flex-direction: column;
     min-width: 0;
     box-sizing: border-box;
+  }
+
+  /* Honest offline standby card (mode: 'offline') */
+  .offline-standby-card {
+    margin: 18px 14px 28px;
+    background: #181820;
+    border: 3px solid #000000;
+    box-shadow: 5px 5px 0px #000000;
+    border-radius: 14px;
+    padding: 34px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .offline-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-neon-yellow);
+    border: 2px solid #000000;
+    background: #111116;
+    border-radius: 999px;
+    padding: 6px 14px;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .offline-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.7rem, 7vw, 2.8rem);
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-white);
+    margin: 0;
+  }
+
+  .offline-copy {
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--text-card-secondary);
+    max-width: 460px;
+    margin: 0;
+  }
+
+  .offline-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .offline-cta-btn,
+  .offline-secondary-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.84rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 0.12s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  .offline-cta-btn {
+    background: var(--btn-green);
+    color: #000000;
+  }
+
+  .offline-secondary-btn {
+    background: #181820;
+    color: #ffffff;
+  }
+
+  .offline-cta-btn:hover,
+  .offline-secondary-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .offline-cta-btn:active,
+  .offline-secondary-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   /* Segmented Control Tab Switcher (Setlist | Lyrics | Chat) - Clean Icon-Free */
@@ -819,15 +950,24 @@ if (!isLivePageEnabled) {
     }
   });
 
-  // Responsive window resize listener
+  // Responsive window resize listener (rAF-gated; mobile URL-bar show/hide fires resize storms)
+  let lastDesktopState = null;
+  let liveResizeRafId = null;
   window.addEventListener('resize', () => {
-    const panelsWrap = document.getElementById('liveStagePanelsWrap');
-    const currentActive = panelsWrap?.getAttribute('data-active-tab');
-    if (currentActive === 'lyrics') {
-      switchStageTab('lyrics');
-    } else {
-      switchStageTab(isDesktop() ? 'setlist' : (currentActive === 'chat' ? 'chat' : 'setlist'));
-    }
+    if (liveResizeRafId !== null) return;
+    liveResizeRafId = requestAnimationFrame(() => {
+      liveResizeRafId = null;
+      const desktopNow = isDesktop();
+      if (desktopNow === lastDesktopState) return; // skip redundant panel relayouts
+      lastDesktopState = desktopNow;
+      const panelsWrap = document.getElementById('liveStagePanelsWrap');
+      const currentActive = panelsWrap?.getAttribute('data-active-tab');
+      if (currentActive === 'lyrics') {
+        switchStageTab('lyrics');
+      } else {
+        switchStageTab(desktopNow ? 'setlist' : (currentActive === 'chat' ? 'chat' : 'setlist'));
+      }
+    });
   });
 
   function setupLiveApp() {

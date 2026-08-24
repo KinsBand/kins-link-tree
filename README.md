@@ -1,10 +1,10 @@
-# 🎵 Kins Band - Official Link in Bio
+# 🎵 Kins Band - Official Hub
 
-> 🌐 **Live Website**: [https://kinsband.github.io/kins-link-tree/](https://kinsband.github.io/kins-link-tree/)
+> 🌐 **Live Website**: [https://kinsband-hub.vercel.app](https://kinsband-hub.vercel.app)
 
 ---
 
-A modern, high-performance **Link in Bio** mobile-first web application for **Kins Band**, built with **Astro**, **React**, and **CSS Design Tokens**.
+A high-performance, mobile-first **direct-to-fan hub** for **Kins Band** — link-in-bio, live show portal, press kit and serverless fan-capture APIs in one Astro hybrid site.
 
 ![Kins Band Banner](./pfp.jpg)
 
@@ -12,23 +12,28 @@ A modern, high-performance **Link in Bio** mobile-first web application for **Ki
 
 ## ✨ Features
 
-- 🎧 **Interactive Audio Player**: Streaming band tracks & singles directly within the app.
-- 📅 **Live Gig Tracker & Map**: View upcoming show dates, venue locations, and interactive map sheets.
-- 🎸 **Covers Search Overlay**: Searchable catalog of covered songs with modal video popups.
-- 🛍️ **Merch Showcase**: Visual cards showcasing official band merchandise.
-- 👥 **Band Members & Crew Spotlight**: Highlights of member bios, instrumentations, and crew members.
-- 💡 **Inspiration Vault**: Dynamic quote & inspiration gallery.
-- ✉️ **Subscribe & Fan Club Form**: Newsletter signups for gig alerts and exclusive releases.
-- 🎨 **Modern Design System**: Dark-themed UI with glassmorphic cards, fluid typography, CSS tokens, and responsive animations.
+- 🎧 **Interactive Audio Player**: Streaming track previews via an animated vinyl deck.
+- 📅 **Live Gig Tracker & Map**: Upcoming/past shows with Leaflet map sheets, setlists and check-ins.
+- 🎸 **Covers Search Overlay**: ⌘K searchable catalog of covered songs with video popups.
+- 🔴 **Live Show Portal (`/live`)**: Master stream player, synced setlist/lyrics/TABs stage, fan wall, chat reactions and tip jar — enabled per-show via config.
+- 🗞️ **Electronic Press Kit (`/epk`)**: Roster, repertoire, backline specs, contacts and download deck — gated by config until assets land.
+- 🔧 **KINS Tuner (`/tuner`)**: Chromatic instrument tuner (guitar/bass) + drum reference tones. No app needed.
+- 👥 **Band Members & Crew Spotlight**: Member bios plus community submission slots.
+- 💡 **Inspiration Vault**: Per-member curated influences with iTunes-enriched artwork/previews.
+- ✉️ **Subscribe & Fan Club Form**: Google One Tap + email capture → Supabase → Resend welcome → Discord roles.
 
 ---
 
 ## 🛠️ Built With
 
-- [Astro](https://astro.build/) - Ultra-fast static site generator
-- [React](https://react.dev/) - Interactive components & modals
-- [Lucide React](https://lucide.dev/) - Modern icon set
-- [CSS Custom Properties](https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties) - Modular design token architecture
+| Layer | Tech |
+|---|---|
+| Framework | [Astro 4](https://astro.build/) — `output: 'hybrid'` (static pages + server endpoints), zero UI framework |
+| Hosting | Vercel serverless (`@astrojs/vercel`), Node 24 |
+| Client JS | Vanilla ES module controllers (`src/scripts/controllers/`) |
+| Server | TypeScript strict API routes (`src/pages/api/*`) + Supabase service-role client + Resend + Discord webhooks |
+| Styling | Plain CSS design tokens (`src/styles/tokens/variables.css`) — neo-brutalist system |
+| Icons | Font Awesome 6.5 (CDN, non-render-blocking) |
 
 ---
 
@@ -51,19 +56,15 @@ npm run dev
 ```
 Open [http://localhost:4321/kins-link-tree/](http://localhost:4321/kins-link-tree/) in your browser.
 
+> **Note:** PowerShell blocks `npm.ps1` — use `npm.cmd run build` on Windows.
+
 ---
 
 ## 📦 Build & Deployment
 
-### Manual Build
 ```bash
-npm run build
+npm.cmd run build
 ```
-Outputs static files to the `./dist` directory.
-
-### GitHub Pages Deployment
-Automated via GitHub Actions. Any push to `main` builds and deploys the site to [https://kinsband.github.io/kins-link-tree/](https://kinsband.github.io/kins-link-tree/).
-
----
+Outputs to `.vercel/output/static` via the Vercel adapter. Deployment is managed through Vercel (connected repo). Feature flags for `/live`, `/epk`, merch etc. live in `src/settings/functionality.config.ts`.
 
 © 2026 **Kins Band**. All rights reserved.

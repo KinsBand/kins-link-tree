@@ -60,12 +60,14 @@ export function showToast(message, explicitType = null) {
   toast.className = `toast toast-type-${toastType}`;
   toast.innerHTML = `
     <div class="toast-icon-box">${iconMarkup}</div>
-    <span class="toast-text-content">${cleanMessage}</span>
+    <span class="toast-text-content"></span>
     <button type="button" class="toast-close-btn" aria-label="Dismiss notification">
       <i class="fa-solid fa-xmark"></i>
     </button>
     <div class="toast-progress-bar"></div>
   `;
+  const messageEl = toast.querySelector('.toast-text-content');
+  if (messageEl) messageEl.textContent = cleanMessage;
 
   const dismissToast = () => {
     clearTimeout(activeToastTimeout);

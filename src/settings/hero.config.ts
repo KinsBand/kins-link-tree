@@ -334,7 +334,8 @@ export const heroConfig: HeroConfig = {
       title: "Chemical Fires",
       artist: "Kins (Unreleased Demo)",
       durationSeconds: 30,
-      coverImg: "/new.png"
+      coverImg: "/new.png",
+      audioUrl: ""
     },
     studio_bts: {
       title: "Recording Guitars at Newcastle Studio",

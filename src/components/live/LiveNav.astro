@@ -51,8 +51,7 @@ const baseUrl = import.meta.env.BASE_URL;
     top: 0;
     z-index: 120;
     background: rgba(20, 20, 22, 0.88);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    /* backdrop-filter removed: sticky header re-blurred scrolling content every frame */
     border-bottom: 2px solid #000000;
   }
 

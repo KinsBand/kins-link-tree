@@ -399,6 +399,23 @@ let lastVinylFrameTime = performance.now();
 let isDeceleratingToStop = false;
 let stopTimeoutId = null;
 
+// Cache the rotating thumbs so the per-frame sync never calls querySelectorAll.
+// Invalidate whenever play state classes change (notifyPlaybackState fires on every transition).
+let cachedVinylThumbs = null;
+
+function invalidateVinylThumbCache() {
+  cachedVinylThumbs = null;
+}
+
+function getCachedVinylThumbs() {
+  if (!cachedVinylThumbs) {
+    cachedVinylThumbs = Array.from(
+      document.querySelectorAll('.music-card.is-playing .music-card-thumb, .music-card.is-decelerating .music-card-thumb')
+    );
+  }
+  return cachedVinylThumbs;
+}
+
 export function syncVinylInstances(angleDeg, isRoundDisc = true) {
   const formattedAngle = (angleDeg % 360).toFixed(2);
   const audioBarIconBox = document.getElementById('audioBarIconBox');
@@ -414,20 +431,16 @@ export function syncVinylInstances(angleDeg, isRoundDisc = true) {
   }
 
   // 2. Update Active & Decelerating Playing Cards in Inspiration Vault
-  const targetCards = document.querySelectorAll('.music-card.is-playing .music-card-thumb, .music-card.is-decelerating .music-card-thumb');
-  targetCards.forEach((thumb) => {
+  const thumbs = getCachedVinylThumbs();
+  for (let i = 0; i < thumbs.length; i++) {
+    const thumb = thumbs[i];
     thumb.style.transform = `rotate(${formattedAngle}deg)`;
     if (isRoundDisc) {
       thumb.classList.add('is-vinyl-disc');
     } else {
       thumb.classList.remove('is-vinyl-disc');
     }
-  });
-
-  // 3. Dispatch event for external observers
-  window.dispatchEvent(new CustomEvent('kins:vinyl-sync', {
-    detail: { angle: angleDeg, isRound: isRoundDisc }
-  }));
+  }
 }
 
 let vinylDecelAnimId = null;
@@ -455,6 +468,7 @@ export function startVinylSpin(startSpeed = 0.25) {
     thumb.classList.remove('vinyl-spin-decelerate');
     thumb.classList.add('is-vinyl-disc');
   });
+  invalidateVinylThumbCache();
 
   if (window._startTimelineAnimation) window._startTimelineAnimation();
 }
@@ -483,6 +497,7 @@ export function stopVinylSpin(morphToSquare = true, durationMs = 550) {
   // Mark all active cards so they participate in deceleration
   const activeCards = document.querySelectorAll('.music-card.is-playing, .music-card.is-decelerating');
   activeCards.forEach(card => card.classList.add('is-decelerating'));
+  invalidateVinylThumbCache();
 
   const startAngle = globalVinylAngle;
   // Calculate forward coasting target: always rotate forward to nearest 360° (0°)
@@ -531,9 +546,7 @@ export function stopVinylSpin(morphToSquare = true, durationMs = 550) {
         }
       });
 
-      window.dispatchEvent(new CustomEvent('kins:vinyl-sync', {
-        detail: { angle: 0, isRound: false }
-      }));
+      invalidateVinylThumbCache();
     }
   }
 
@@ -701,6 +714,8 @@ export function initAudioPlayer() {
     window.dispatchEvent(new CustomEvent('trackPlaybackStateChanged', {
       detail: { track: currentPlayingTrack, isPlaying: isPlayingAudio }
     }));
+    // External listeners (e.g. gig map rows) may have toggled is-playing classes — refresh cache
+    invalidateVinylThumbCache();
   }
 
   let endingStartTime = 0;
@@ -722,11 +737,25 @@ export function initAudioPlayer() {
 
     const pct = Math.min(100, Math.max(0, (currentTime / duration) * 100));
 
-    if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `${pct}%`;
-    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${pct}%`;
+    if (audioBarTimelineProgress) audioBarTimelineProgress.style.transform = `scaleX(${pct / 100})`;
+    setStylusPosition(pct);
     if (audioBarTime) {
       audioBarTime.textContent = `${formatTime(currentTime)} / 0:30`;
     }
+  }
+
+  // Stylus slides via compositor-friendly translateX (px derived from the cached section rect)
+  function setStylusPosition(pct) {
+    if (!vinylStylusWrapper) return;
+    let rect = cachedMusicSectionRect;
+    if (!rect || rect.width === 0) {
+      const musicSection = document.getElementById('deckMusicSection');
+      if (!musicSection) return;
+      rect = musicSection.getBoundingClientRect();
+      cachedMusicSectionRect = rect;
+    }
+    const x = rect.width * (Math.min(100, Math.max(0, pct)) / 100);
+    vinylStylusWrapper.style.transform = `translateX(${x - 11}px)`;
   }
 
   function runVinylPhysicsStep(now) {
@@ -782,8 +811,7 @@ export function initAudioPlayer() {
 
   function seekToPosition(clientX) {
     if (!vaultAudioPlayer) return;
-    const musicSection = document.getElementById('deckMusicSection');
-    const rect = musicSection ? musicSection.getBoundingClientRect() : cachedMusicSectionRect;
+    const rect = cachedMusicSectionRect;
     if (!rect || rect.width === 0) return;
 
     const pctRatio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
@@ -795,8 +823,8 @@ export function initAudioPlayer() {
       vaultAudioPlayer.currentTime = newTime;
     }
 
-    if (audioBarTimelineProgress) audioBarTimelineProgress.style.width = `${pct}%`;
-    if (vinylStylusWrapper) vinylStylusWrapper.style.left = `${pct}%`;
+    if (audioBarTimelineProgress) audioBarTimelineProgress.style.transform = `scaleX(${pctRatio})`;
+    setStylusPosition(pct);
     if (audioBarTime) {
       audioBarTime.textContent = `${formatTime(newTime)} / 0:30`;
     }
@@ -902,6 +930,43 @@ export function initAudioPlayer() {
   }
 
   // Interactive Timeline Scrubbing with pointer & mobile touch support
+  // Pointer moves are rAF-coalesced; the non-passive touchmove is attached only while scrubbing
+  let pendingScrubX = null;
+  let scrubRafId = null;
+
+  function scheduleScrubMove(clientX) {
+    pendingScrubX = clientX;
+    if (scrubRafId !== null) return;
+    scrubRafId = requestAnimationFrame(() => {
+      scrubRafId = null;
+      if (isScrubbing && pendingScrubX !== null) {
+        handleScrubMove(pendingScrubX);
+        pendingScrubX = null;
+      }
+    });
+  }
+
+  function onWindowTouchMove(e) {
+    if (!isScrubbing) return;
+    if (e.touches && e.touches.length > 0) {
+      e.preventDefault();
+      scheduleScrubMove(e.touches[0].clientX);
+    }
+  }
+
+  function attachScrubTouchListeners() {
+    window.addEventListener('touchmove', onWindowTouchMove, { passive: false });
+  }
+
+  function detachScrubTouchListeners() {
+    window.removeEventListener('touchmove', onWindowTouchMove);
+    if (scrubRafId !== null) {
+      cancelAnimationFrame(scrubRafId);
+      scrubRafId = null;
+    }
+    pendingScrubX = null;
+  }
+
   if (bottomAudioBar) {
     // 1. Mouse & Desktop Pointer Events
     bottomAudioBar.addEventListener('pointerdown', (e) => {
@@ -913,9 +978,9 @@ export function initAudioPlayer() {
 
     window.addEventListener('pointermove', (e) => {
       if (isScrubbing && e.pointerType !== 'touch') {
-        handleScrubMove(e.clientX);
+        scheduleScrubMove(e.clientX);
       }
-    });
+    }, { passive: true });
 
     window.addEventListener('pointerup', (e) => {
       if (isScrubbing && e.pointerType !== 'touch') {
@@ -930,23 +995,19 @@ export function initAudioPlayer() {
         const touch = e.touches[0];
         if (handleScrubStart(touch.clientX, e.target)) {
           e.preventDefault();
+          attachScrubTouchListeners();
         }
-      }
-    }, { passive: false });
-
-    window.addEventListener('touchmove', (e) => {
-      if (isScrubbing && e.touches && e.touches.length > 0) {
-        e.preventDefault();
-        handleScrubMove(e.touches[0].clientX);
       }
     }, { passive: false });
 
     window.addEventListener('touchend', (e) => {
       if (isScrubbing) handleScrubEnd();
+      detachScrubTouchListeners();
     }, { passive: true });
 
     window.addEventListener('touchcancel', (e) => {
       if (isScrubbing) handleScrubEnd();
+      detachScrubTouchListeners();
     }, { passive: true });
   }
 
@@ -1279,8 +1340,14 @@ export function initAudioPlayer() {
     }
   }
 
+  // Bumped whenever playback resumes (or a newer stop begins). Any in-flight
+  // spin-down whose generation is stale must NOT call pause() — this kills the
+  // rapid-toggle race where the old fade-out silently killed resumed playback.
+  let vinylStopGeneration = 0;
+
   async function triggerVinylSpinDownAndStop(durationMs = 550, morphToSquare = true) {
     if (!vaultAudioPlayer || vaultAudioPlayer.paused) return;
+    const stopGeneration = ++vinylStopGeneration;
 
     // 1. Play vinyl surface deceleration & brake noise
     if (vinylScratchSynth) {
@@ -1304,6 +1371,9 @@ export function initAudioPlayer() {
     const fadePromise = fadeOutAudio(durationMs);
 
     await Promise.all([speedPromise, fadePromise]);
+
+    // Superseded by a resume/newer transition — leave playback alone
+    if (stopGeneration !== vinylStopGeneration) return;
 
     if (vaultAudioPlayer) {
       vaultAudioPlayer.pause();
@@ -1356,6 +1426,10 @@ export function initAudioPlayer() {
     if (currentPlayingTrack && currentPlayingTrack.title === trackObj.title) {
       isPlayingAudio = !isPlayingAudio;
       if (isPlayingAudio) {
+        // Invalidate any in-flight spin-down so its fade can't kill this resume
+        vinylStopGeneration++;
+        cancelFade();
+        cancelVinylSpeedRamp();
         updateToggleBtnState(true);
         triggerNeedleDropAndSpinUp(true);
         if (vaultAudioPlayer) {
@@ -1426,11 +1500,11 @@ export function initAudioPlayer() {
       // Reset timeline progress and transitions for incoming track
       if (audioBarTimelineProgress) {
         audioBarTimelineProgress.style.transition = '';
-        audioBarTimelineProgress.style.width = '0%';
+        audioBarTimelineProgress.style.transform = 'scaleX(0)';
       }
       if (vinylStylusWrapper) {
         vinylStylusWrapper.style.transition = '';
-        vinylStylusWrapper.style.left = '0%';
+        vinylStylusWrapper.style.transform = 'translateX(-11px)';
       }
       if (audioBarTime) {
         audioBarTime.textContent = '0:00 / 0:30';
@@ -1563,6 +1637,10 @@ export function initAudioPlayer() {
       }
       isPlayingAudio = !isPlayingAudio;
       if (isPlayingAudio) {
+        // Invalidate any in-flight spin-down so its fade can't kill this resume
+        vinylStopGeneration++;
+        cancelFade();
+        cancelVinylSpeedRamp();
         updateToggleBtnState(true);
         triggerNeedleDropAndSpinUp(true);
         if (vaultAudioPlayer) {
@@ -1586,9 +1664,12 @@ export function initAudioPlayer() {
     if (!isPlayingAudio || !vaultAudioPlayer || isExitFading) return;
     isExitFading = true;
     try {
+      const stopGeneration = ++vinylStopGeneration;
       if (typeof fadeOutAudio === 'function') {
         await fadeOutAudio(durationMs);
       }
+      // User resumed/toggled while we were fading — don't pause out from under them
+      if (stopGeneration !== vinylStopGeneration) return;
       if (vaultAudioPlayer) {
         vaultAudioPlayer.pause();
         vaultAudioPlayer.playbackRate = 1.0;

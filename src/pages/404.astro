@@ -1,0 +1,94 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="404 — Page Not Found | KINS"
+  description="That page does not exist. Head back to the Kins official hub."
+>
+  <main class="nf-container">
+    <span class="nf-badge">ERROR 404</span>
+    <h1 class="nf-title">DEAD AIR</h1>
+    <p class="nf-subtext">This page never made it to setlist. The show you're looking for is back at the hub.</p>
+    <a href="/" class="nf-home-btn brutal-press">
+      <i class="fa-solid fa-house"></i>
+      <span>BACK TO KINS</span>
+    </a>
+  </main>
+
+  <style>
+    .nf-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 24px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .nf-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--accent-neon-yellow);
+      color: #000000;
+      border: 2px solid #000000;
+      border-radius: 999px;
+      padding: 4px 12px;
+      box-shadow: 2px 2px 0px #000000;
+    }
+
+    .nf-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.6rem, 10vw, 5rem);
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      color: var(--text-white);
+      margin: 0;
+    }
+
+    .nf-subtext {
+      font-family: var(--font-secondary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-card-secondary);
+      max-width: 420px;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .nf-home-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--btn-green);
+      color: #000000;
+      border: 3px solid #000000;
+      border-radius: 8px;
+      box-shadow: 3px 3px 0px #000000;
+      padding: 12px 22px;
+      font-family: var(--font-secondary);
+      font-size: 0.88rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+    }
+
+    .nf-home-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0px #000000;
+    }
+
+    .nf-home-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #000000;
+    }
+  </style>
+</BaseLayout>

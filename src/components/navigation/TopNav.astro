@@ -11,7 +11,7 @@ const isLive = liveConfig.status === 'live';
   <!-- Desktop View: Top-Left Brand Logo & Badge -->
   <div class="top-nav-brand-col">
     <a href={baseUrl} class="top-nav-brand-link" aria-label="Kins Band Homepage" title="KINS Official" data-track="nav:brand_home">
-      <img src={kinsLogoNew.src} alt="KINS" class="nav-brand-logo-img" width="110" height="30" loading="eager" decoding="async" />
+      <Image src={kinsLogoNew} alt="KINS" class="nav-brand-logo-img nav-brand-logo-webp" width={220} height={96} loading="eager" decoding="async" fetchpriority="high" />
       <span class="nav-brand-badge">✦ OFFICIAL</span>
     </a>
   </div>
@@ -84,8 +84,8 @@ const isLive = liveConfig.status === 'live';
       width: 100%;
       height: 64px;
       background: rgba(18, 18, 20, 0.94);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      /* backdrop-filter removed: 0.94 alpha is near-opaque; the blur repainted the full-width
+         header on every scroll frame. */
       border-bottom: 3px solid #000000;
       box-shadow: 0 4px 0px rgba(0, 0, 0, 0.5);
       display: grid;

@@ -1,0 +1,121 @@
+import type { APIRoute } from 'astro';
+import crypto from 'node:crypto';
+import { getClientIp, isRateLimited } from '../../lib/rateLimit';
+import { sanitizeText } from '../../lib/sanitize';
+import { getSupabaseServiceClient } from '../../lib/supabaseServer';
+
+export const prerender = false;
+
+const ALLOWED_SCOPES = /^hero-poll:[a-z0-9_]{1,40}$|^cover-request:[a-zA-Z0-9_-]{1,60}$/;
+const MAX_CHOICE_LEN = 60;
+
+function getEnv(key: string): string {
+  return (import.meta.env[key] as string | undefined) || process.env[key] || '';
+}
+
+function voterKeyFromRequest(request: Request): string {
+  const ip = getClientIp(request);
+  const salt = getEnv('VOTE_SALT') || 'kins-vote-default-salt';
+  return crypto.createHash('sha256').update(`${salt}:${ip}`).digest('hex');
+}
+
+function json(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+  });
+}
+
+export const GET: APIRoute = async ({ url }) => {
+  try {
+    const scope = sanitizeText(url.searchParams.get('scope') || '', 80);
+    if (!ALLOWED_SCOPES.test(scope)) {
+      return json({ status: 'error', message: 'Invalid poll scope.' }, 400);
+    }
+
+    const supabase = getSupabaseServiceClient();
+    if (!supabase) return json({ status: 'error', message: 'Vote service unavailable.' }, 503);
+
+    const { data, error } = await supabase
+      .from('votes')
+      .select('choice')
+      .eq('scope', scope);
+
+    if (error) {
+      console.error('[vote] tally query failed:', error.message);
+      return json({ status: 'error', message: 'Could not load results.' }, 502);
+    }
+
+    const tallies: Record<string, number> = {};
+    for (const row of data || []) {
+      tallies[row.choice] = (tallies[row.choice] || 0) + 1;
+    }
+
+    return json({ status: 'success', scope, tallies });
+  } catch (err) {
+    console.error('[vote] GET error:', err);
+    return json({ status: 'error', message: 'Could not load results.' }, 500);
+  }
+};
+
+export const POST: APIRoute = async ({ request }) => {
+  try {
+    if (isRateLimited(`vote:${getClientIp(request)}`, 10, 60 * 1000)) {
+      return json({ status: 'error', message: 'Too many votes. Try again shortly.' }, 429);
+    }
+
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return json({ status: 'error', message: 'Invalid payload.' }, 400);
+    }
+
+    const scope = sanitizeText(String(body.scope || ''), 80);
+    const rawChoice = String(body.choice ?? '');
+    const choice = sanitizeText(rawChoice, MAX_CHOICE_LEN);
+
+    if (!ALLOWED_SCOPES.test(scope)) {
+      return json({ status: 'error', message: 'Invalid poll scope.' }, 400);
+    }
+
+    const supabase = getSupabaseServiceClient();
+    if (!supabase) return json({ status: 'error', message: 'Vote service unavailable.' }, 503);
+
+    const voterKey = voterKeyFromRequest(request);
+
+    // Empty choice = explicit deselection (matches the UI's toggle behaviour)
+    if (!choice && !rawChoice) {
+      const { error: delError } = await supabase
+        .from('votes')
+        .delete()
+        .eq('scope', scope)
+        .eq('voter_key', voterKey);
+
+      if (delError) {
+        console.error('[vote] delete failed:', delError.message);
+        return json({ status: 'error', message: 'Could not remove your vote.' }, 502);
+      }
+      return json({ status: 'success', action: 'removed', scope });
+    }
+
+    if (!choice) {
+      return json({ status: 'error', message: 'Invalid selection.' }, 400);
+    }
+
+    const { error: upsertError } = await supabase
+      .from('votes')
+      .upsert(
+        { scope, choice, voter_key: voterKey },
+        { onConflict: 'scope,voter_key' }
+      );
+
+    if (upsertError) {
+      console.error('[vote] upsert failed:', upsertError.message);
+      return json({ status: 'error', message: 'Your vote could not be saved. Please try again.' }, 502);
+    }
+
+    return json({ status: 'success', action: 'recorded', scope });
+  } catch (err) {
+    console.error('[vote] POST error:', err);
+    return json({ status: 'error', message: 'Failed to process vote.' }, 500);
+  }
+};

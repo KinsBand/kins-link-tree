@@ -76,6 +76,7 @@ export interface FanWallPost {
 
 export interface LiveShowConfig {
   enabled?: boolean;
+  mode?: 'offline' | 'live';
   status: LiveStatus;
   venueName: string;
   city: string;

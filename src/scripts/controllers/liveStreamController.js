@@ -7,6 +7,9 @@
 
 import { showToast } from './toast.js';
 
+// Module-level so repeated init never stacks duplicate intervals
+let audienceJitterIntervalId = null;
+
 export function initLiveStreamController() {
   const videoPlayer = document.getElementById('masterVideoPlayer');
   const playPauseBtn = document.getElementById('livePlayPauseBtn');
@@ -386,7 +389,9 @@ export function initLiveStreamController() {
   // 8. Audience Counter Jitter Simulation
   // =============================================
   if (audienceCounter) {
-    setInterval(() => {
+    if (audienceJitterIntervalId !== null) clearInterval(audienceJitterIntervalId);
+    audienceJitterIntervalId = setInterval(() => {
+      if (document.hidden) return;
       const delta = Math.floor(Math.random() * 5) - 2;
       currentAudience = Math.max(310, Math.min(380, currentAudience + delta));
       audienceCounter.textContent = `${currentAudience} watching`;

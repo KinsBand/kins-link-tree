@@ -1,52 +1,66 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const getEnv = (key: string): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return String(import.meta.env[key]).trim();
-  }
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return String(process.env[key] || '').trim();
-  }
+/**
+ * BROWSER Supabase client. Uses ONLY PUBLIC_* variables (safe to ship).
+ * Persists the auth session so Google One Tap sign-ins survive reloads.
+ *
+ * Server-side API routes must import from lib/supabaseServer.ts instead —
+ * that module is physically separate so service keys can never reach this bundle.
+ */
+
+const readViteEnv = (key: string): string => {
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      return String(import.meta.env[key] ?? '').trim();
+    }
+  } catch (_) {}
   return '';
 };
 
 let cachedClient: SupabaseClient | null = null;
 
-/**
- * Returns an active Supabase client instance using available environment variables.
- * Checks for Service Role Key (preferred for server-side endpoints) or Anon Key.
- */
-export function getSupabaseClient(): SupabaseClient | null {
+export function getSupabaseBrowserClient(): SupabaseClient | null {
+  if (typeof window === 'undefined') return null;
+
   const supabaseUrl =
-    getEnv('SUPABASE_URL') ||
-    getEnv('NEXT_PUBLIC_SUPABASE_URL') ||
-    getEnv('PUBLIC_SUPABASE_URL') ||
-    getEnv('VITE_SUPABASE_URL');
+    readViteEnv('PUBLIC_SUPABASE_URL') ||
+    readViteEnv('NEXT_PUBLIC_SUPABASE_URL') ||
+    readViteEnv('VITE_SUPABASE_URL');
 
-  const supabaseKey =
-    getEnv('SUPABASE_SERVICE_ROLE_KEY') ||
-    getEnv('SUPABASE_SECRET_KEY') ||
-    getEnv('SUPABASE_KEY') ||
-    getEnv('SUPABASE_ANON_KEY') ||
-    getEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY') ||
-    getEnv('SUPABASE_PUBLISHABLE_KEY') ||
-    getEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY') ||
-    getEnv('PUBLIC_SUPABASE_ANON_KEY') ||
-    getEnv('VITE_SUPABASE_ANON_KEY');
+  const supabaseAnonKey =
+    readViteEnv('PUBLIC_SUPABASE_ANON_KEY') ||
+    readViteEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY') ||
+    readViteEnv('PUBLIC_SUPABASE_PUBLISHABLE_KEY') ||
+    readViteEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY') ||
+    readViteEnv('PUBLIC_SUPABASE_KEY') ||
+    readViteEnv('VITE_SUPABASE_ANON_KEY');
 
-  if (supabaseUrl && supabaseUrl.startsWith('http') && supabaseKey) {
-    if (!cachedClient) {
-      cachedClient = createClient(supabaseUrl, supabaseKey, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-        }
-      });
-    }
-    return cachedClient;
+  if (!supabaseUrl || !supabaseUrl.startsWith('http') || !supabaseAnonKey) {
+    return null;
   }
 
-  return null;
+  if (!cachedClient) {
+    cachedClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+        storageKey: 'kins-auth',
+      },
+    });
+  }
+  return cachedClient;
 }
 
-export const supabase = getSupabaseClient();
+/**
+ * Back-compat lazy singleton for legacy imports
+ * (`import { supabase } from '../../lib/supabase'`).
+ */
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    const client = getSupabaseBrowserClient();
+    if (!client) return undefined;
+    const value = Reflect.get(client as object, prop, receiver);
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
+});

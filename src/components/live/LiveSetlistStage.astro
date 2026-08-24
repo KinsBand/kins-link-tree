@@ -232,18 +232,21 @@ const progressPercent = Math.round(((completedSongs + 0.6) / totalSongs) * 100);
 
   .active-equalizer-bars span {
     width: 3px;
+    height: 100%;
     background-color: var(--accent-neon-yellow);
     border-radius: 1px;
+    transform-origin: bottom center;
     animation: eqBounce 0.8s ease-in-out infinite alternate;
   }
 
-  .active-equalizer-bars span:nth-child(1) { height: 60%; animation-delay: 0.1s; }
-  .active-equalizer-bars span:nth-child(2) { height: 100%; animation-delay: 0.3s; }
-  .active-equalizer-bars span:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+  .active-equalizer-bars span:nth-child(1) { transform: scaleY(0.6); animation-delay: 0.1s; }
+  .active-equalizer-bars span:nth-child(2) { transform: scaleY(1); animation-delay: 0.3s; }
+  .active-equalizer-bars span:nth-child(3) { transform: scaleY(0.4); animation-delay: 0.2s; }
 
+  /* scaleY only — animating height triggers layout every frame */
   @keyframes eqBounce {
-    0% { height: 30%; }
-    100% { height: 100%; }
+    0% { transform: scaleY(0.3); }
+    100% { transform: scaleY(1); }
   }
 
   .song-details-wrap {

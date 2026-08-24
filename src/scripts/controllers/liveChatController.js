@@ -5,7 +5,7 @@
  */
 
 import { showToast } from './toast.js';
-import { supabase } from '../../lib/supabase';
+import { getSupabaseBrowserClient } from '../../lib/supabase';
 
 const SIMULATED_CROWD_MESSAGES = [
   { username: 'Newcastle_Punk', handle: '@newy_punk', message: 'VIVIAN ON THE MIC IS UNREAL 🔥🔥🔥', badge: { type: 'pit', label: 'PIT CREW', color: '#f2fd43' } },
@@ -17,6 +17,9 @@ const SIMULATED_CROWD_MESSAGES = [
   { username: 'CambridgeCrowd', handle: '@cambridge_fan', message: 'BEER GARDEN SCREAMING!! 🍻🍻', badge: null },
   { username: 'Mia_Riffs', handle: '@miariffs', message: 'Encore better be Shadows in the Mist or we riot!!', badge: null }
 ];
+
+// Module-level so repeated init never stacks duplicate intervals
+let crowdChatterIntervalId = null;
 
 export function initLiveChatController() {
   const chatMessagesList = document.getElementById('liveChatMessagesList');
@@ -38,6 +41,19 @@ export function initLiveChatController() {
         behavior: smooth ? 'smooth' : 'auto'
       });
     });
+  }
+
+  // Cap rendered messages so long sessions don't accumulate unbounded layout/memory cost
+  const MAX_CHAT_MESSAGES = 100;
+
+  function trimChatMessages() {
+    while (chatMessagesList.children.length > MAX_CHAT_MESSAGES) {
+      chatMessagesList.firstElementChild.remove();
+    }
+  }
+
+  function isChatNearBottom() {
+    return chatMessagesList.scrollHeight - chatMessagesList.scrollTop - chatMessagesList.clientHeight < 140;
   }
 
   // 2. Render Single Message
@@ -75,16 +91,48 @@ export function initLiveChatController() {
     `;
 
     chatMessagesList.appendChild(li);
-    scrollToBottom(true);
+    // Smooth scroll only when the user is already near the bottom; otherwise jump (avoids queued smooth-scroll storms)
+    scrollToBottom(!isChatNearBottom());
+    trimChatMessages();
   }
 
   // 3. User Message Submission
+  const MAX_CHAT_LENGTH = 280;
+  const CHAT_SEND_COOLDOWN_MS = 2500;
+  let lastChatSendAt = 0;
+  let lastChatSendText = '';
+
   function handleSendMessage(e) {
     if (e && e.preventDefault) e.preventDefault();
-    const text = (chatInput?.value || '').trim();
-    if (!text) return;
+    if (!chatInput) return;
 
-    const userHandle = localStorage.getItem('kins_fan_handle') || '@fan_' + Math.floor(1000 + Math.random() * 9000);
+    let text = chatInput.value.trim();
+
+    // Basic hygiene: length cap, flood cooldown, identical-message spam guard
+    if (!text) return;
+    if (text.length > MAX_CHAT_LENGTH) {
+      text = text.slice(0, MAX_CHAT_LENGTH);
+      chatInput.value = text;
+      showToast(`⚠️ Messages are capped at ${MAX_CHAT_LENGTH} characters.`);
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastChatSendAt < CHAT_SEND_COOLDOWN_MS) {
+      showToast('⏳ Easy there — wait a moment between messages.');
+      return;
+    }
+    if (text === lastChatSendText && now - lastChatSendAt < 15000) {
+      showToast('⚠️ That message was just posted.');
+      return;
+    }
+
+    lastChatSendAt = now;
+    lastChatSendText = text;
+
+    let storedHandle = null;
+    try { storedHandle = localStorage.getItem('kins_fan_handle'); } catch (err) {}
+    const userHandle = storedHandle || '@fan_' + Math.floor(1000 + Math.random() * 9000);
     const userName = userHandle.replace('@', '');
 
     appendChatMessage({
@@ -101,8 +149,9 @@ export function initLiveChatController() {
     }
 
     // If Supabase is available, insert into live_chat table
-    if (supabase) {
-      supabase.from('live_chat').insert([
+    const supabaseClient = getSupabaseBrowserClient();
+    if (supabaseClient) {
+      supabaseClient.from('live_chat').insert([
         { handle: userHandle, username: userName, message: text, created_at: new Date().toISOString() }
       ]).then(() => {}).catch(() => {});
     }
@@ -113,17 +162,8 @@ export function initLiveChatController() {
     chatForm.addEventListener('submit', handleSendMessage);
   }
 
-  // Direct Click on Send Button
-  if (chatSendBtn) {
-    chatSendBtn.addEventListener('click', (e) => {
-      if (chatForm) {
-        // If inside form, triggering form submit is sufficient, but ensure message sends cleanly
-        handleSendMessage(e);
-      } else {
-        handleSendMessage(e);
-      }
-    });
-  }
+  // Note: the send button is type="submit" inside the form, so it already triggers the
+  // submit handler above. A separate click listener here would double-send every message.
 
   // Direct Enter Key on Input (prevent accidental newlines or forms not submitting)
   if (chatInput) {
@@ -158,9 +198,10 @@ export function initLiveChatController() {
   }
 
   // 6. Supabase Realtime Listener (if table exists)
-  if (supabase) {
+  const supabaseRealtime = getSupabaseBrowserClient();
+  if (supabaseRealtime) {
     try {
-      supabase
+      supabaseRealtime
         .channel('public:live_chat')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat' }, (payload) => {
           if (payload && payload.new) {
@@ -181,7 +222,8 @@ export function initLiveChatController() {
 
   // 7. Dynamic Simulated Crowd Chatter (injects periodic fan excitement)
   let crowdIndex = 0;
-  setInterval(() => {
+  if (crowdChatterIntervalId !== null) clearInterval(crowdChatterIntervalId);
+  crowdChatterIntervalId = setInterval(() => {
     // Only inject if user has not scrolled far up
     const isNearBottom = chatMessagesList.scrollHeight - chatMessagesList.scrollTop - chatMessagesList.clientHeight < 140;
     if (isNearBottom && SIMULATED_CROWD_MESSAGES.length > 0) {
@@ -191,20 +233,46 @@ export function initLiveChatController() {
     }
   }, 7500);
 
-  // Global helper for Tip submission from modal
-  window.triggerLiveTipSuperchat = function(amount, shoutout) {
-    const userHandle = localStorage.getItem('kins_fan_handle') || '@superfan';
-    const userName = userHandle.replace('@', '');
+  // Confirmed tip superchats — the ONLY tip source. Tips render after the
+  // Ko-fi payment webhook confirms them server-side (never optimistically).
+  let tipsPollIntervalId = null;
+  let tipsCursorIso = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+  function renderConfirmedTip(tip) {
     appendChatMessage({
-      username: userName,
-      handle: userHandle,
-      message: shoutout || 'Rock on Kins! Newcastle loves you!! 🔥',
+      username: tip.name,
+      handle: '@kofi',
+      message: tip.message,
       isTip: true,
-      tipAmount: amount,
+      tipAmount: `${tip.amount} ${tip.currency || ''}`.trim(),
       badge: { type: 'vip', label: 'SUPER TIPPER', color: '#53fc18' }
     });
-    showToast(`🎉 Super Tip of ${amount} posted to Live Chat!`, 'success');
-  };
+  }
+
+  async function pollConfirmedTips() {
+    if (document.hidden || document.body.dataset.liveMode !== 'live') return;
+    try {
+      const res = await fetch(`/api/live-tips?after=${encodeURIComponent(tipsCursorIso)}`, { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || data.status !== 'success' || !Array.isArray(data.tips)) return;
+      data.tips.forEach((tip) => {
+        renderConfirmedTip({
+          name: tip.name,
+          message: tip.message,
+          amount: tip.amount,
+          currency: ''
+        });
+      });
+      if (data.serverTime) {
+        tipsCursorIso = new Date(new Date(data.serverTime).getTime() - 15000).toISOString();
+      }
+    } catch (_) {}
+  }
+
+  if (tipsPollIntervalId !== null) clearInterval(tipsPollIntervalId);
+  tipsPollIntervalId = setInterval(pollConfirmedTips, 20000);
+  pollConfirmedTips();
 
   // Initial scroll to bottom
   scrollToBottom(false);

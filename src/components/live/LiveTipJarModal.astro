@@ -1,4 +1,7 @@
 ---
+import { siteConfig } from '../../settings/site.config';
+
+const tipJarUrl = siteConfig.tipJarUrl || '';
 ---
 
 <div class="modal-backdrop hidden" id="liveTipJarModal" role="dialog" aria-modal="true" aria-label="Tip the Band" data-track-container="modal:tip_jar">
@@ -41,33 +44,48 @@
       <!-- Custom Amount Option -->
       <div class="form-group">
         <label class="form-label" for="liveCustomTipAmount">Or Enter Custom Amount ($ AUD)</label>
-        <input 
-          type="number" 
-          id="liveCustomTipAmount" 
-          class="modal-text-input" 
-          placeholder="$5.00" 
-          min="1" 
-          step="1" 
+        <input
+          type="number"
+          id="liveCustomTipAmount"
+          class="modal-text-input"
+          placeholder="$5.00"
+          min="1"
+          step="1"
         />
       </div>
 
       <!-- Fan Shoutout Message Input -->
       <div class="form-group">
         <label class="form-label" for="liveTipShoutoutMsg">Stage Shoutout Message (Optional)</label>
-        <input 
-          type="text" 
-          id="liveTipShoutoutMsg" 
-          class="modal-text-input" 
-          placeholder="Play Midnight Electricity encore!! 🔥" 
-          maxlength="100" 
+        <input
+          type="text"
+          id="liveTipShoutoutMsg"
+          class="modal-text-input"
+          placeholder="Play Midnight Electricity encore!! 🔥"
+          maxlength="200"
         />
       </div>
 
       <!-- Action Button -->
-      <button type="button" class="modal-primary-btn tip-submit-btn" id="confirmTipAndSendBtn" data-track="tip:confirm_send">
-        <i class="fa-solid fa-bolt"></i>
-        <span>SEND SUPER TIP TO LIVE CHAT</span>
-      </button>
+      {tipJarUrl ? (
+        <a
+          href={tipJarUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="modal-primary-btn tip-submit-btn"
+          id="confirmTipAndSendBtn"
+          data-track="tip:open_kofi"
+        >
+          <i class="fa-solid fa-bolt"></i>
+          <span>SEND SUPER TIP VIA KO-FI ↗</span>
+        </a>
+      ) : (
+        <button type="button" class="modal-primary-btn tip-submit-btn" id="tipJarUnavailableBtn" disabled data-track="tip:unavailable">
+          <i class="fa-solid fa-hourglass-half"></i>
+          <span>TIP JAR LAUNCHING SOON</span>
+        </button>
+      )}
+      <p class="tip-honest-note">Payment is processed securely on Ko-fi. Your shoutout is sent to the band now, and confirmed superchats appear in live chat once your payment clears.</p>
     </div>
   </div>
 </div>
@@ -173,6 +191,14 @@
     color: #d1d1d6;
     margin: 0;
     line-height: 1.35;
+  }
+
+  .tip-honest-note {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--text-card-muted);
+    line-height: 1.45;
+    margin: -4px 0 0;
   }
 
   .tip-amount-chips-grid {
@@ -325,10 +351,24 @@
 
   sendBtn?.addEventListener('click', () => {
     const shoutout = shoutoutInput?.value.trim() || '';
-    if ((window as any).triggerLiveTipSuperchat) {
-      (window as any).triggerLiveTipSuperchat(selectedAmount, shoutout);
+
+    if (shoutout && selectedAmount) {
+      fetch('/api/tip-shoutout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: selectedAmount, message: shoutout })
+      })
+        .then(async (res) => {
+          const data = await res.json().catch(() => null);
+          if (res.ok && data && data.status === 'success') {
+            if (shoutoutInput) shoutoutInput.value = '';
+          } else {
+            console.warn('[tip-jar] shoutout not delivered:', data && data.message);
+          }
+        })
+        .catch(() => {
+          console.warn('[tip-jar] network error sending shoutout');
+        });
     }
-    if (shoutoutInput) shoutoutInput.value = '';
-    closeModal();
   });
 </script>

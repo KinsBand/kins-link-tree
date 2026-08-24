@@ -2703,6 +2703,15 @@
 </style>
 
 <script>
-  import { initGigMapModule } from '../../scripts/controllers/gigMap.js';
-  initGigMapModule();
+  // Idle-loaded: gig map sheet is interaction-gated (and its data set is currently empty)
+  const scheduleIdle = (cb) => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(cb, { timeout: 3000 });
+    } else {
+      setTimeout(cb, 1);
+    }
+  };
+  scheduleIdle(() => {
+    import('../../scripts/controllers/gigMap.js').then((m) => m.initGigMapModule());
+  });
 </script>

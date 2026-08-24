@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase, getSupabaseClient } from '../../lib/supabase';
+import { getSupabaseServiceClient } from '../../lib/supabaseServer';
 import { validateRealEmail } from '../../scripts/utils/emailValidator.js';
 import { removeSubscriberRole, getDiscordConfig } from '../../lib/discord';
 
@@ -11,6 +11,26 @@ export const prerender = false;
  */
 export const POST: APIRoute = async ({ request }) => {
   try {
+    // Authenticate the caller (Substack/Zapier must send: Authorization: Bearer <secret>)
+    const webhookSecret =
+      import.meta.env.SUBSTACK_WEBHOOK_SECRET || process.env.SUBSTACK_WEBHOOK_SECRET || '';
+    const authHeader = request.headers.get('authorization') || '';
+
+    if (!webhookSecret) {
+      console.error('[substack-webhook] SUBSTACK_WEBHOOK_SECRET is not configured — rejecting request.');
+      return new Response(
+        JSON.stringify({ status: 'error', message: 'Webhook service is not configured.' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (authHeader !== `Bearer ${webhookSecret}`) {
+      return new Response(
+        JSON.stringify({ status: 'error', message: 'Unauthorized.' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
 
     // Extract email from diverse webhook structures (Substack, Zapier, Make, custom)
@@ -42,7 +62,7 @@ export const POST: APIRoute = async ({ request }) => {
     const cleanEmail = validation.valid ? validation.cleanEmail! : rawEmail.trim().toLowerCase();
 
     let dbUpdated = false;
-    const db = getSupabaseClient() || supabase;
+    const db = getSupabaseServiceClient();
 
     // 1. Update Supabase Database record (is_subscribed = false)
     if (db) {
@@ -125,9 +145,11 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         status: 'success',
-        message: 'Unsubscribed successfully and Discord role removed.',
+        message: dbUpdated
+          ? 'Unsubscribed successfully.'
+          : 'Unsubscribe processed (subscriber record not found in database).',
         email: cleanEmail,
-        discord: discordResult
+        dbUpdated
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

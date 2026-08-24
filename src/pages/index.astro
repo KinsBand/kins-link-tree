@@ -164,8 +164,6 @@ const baseUrl = import.meta.env.BASE_URL;
       gap: 16px;
       z-index: 100;
       box-sizing: border-box;
-      transform: translateZ(0);
-      will-change: transform;
     }
 
     .left-sidebar::-webkit-scrollbar {
@@ -487,6 +485,18 @@ const baseUrl = import.meta.env.BASE_URL;
 <script>
   import { initTheme } from '../scripts/controllers/themeController.js';
   initTheme();
+
+  // Off-screen animation gating: pause infinite CSS animations inside heavy sections
+  // while they are scrolled out of view (idle battery/CPU savings on low-end devices).
+  if ('IntersectionObserver' in window) {
+    const gated = document.querySelectorAll('[data-anim-gated]');
+    const animObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        entry.target.classList.toggle('offscreen', !entry.isIntersecting);
+      });
+    }, { rootMargin: '120px' });
+    gated.forEach((el) => animObserver.observe(el));
+  }
 </script>
 
 <script is:inline>

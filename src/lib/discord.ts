@@ -27,8 +27,7 @@ export function getDiscordConfig(): DiscordConfig {
     guildId: getEnv('DISCORD_GUILD_ID') || getEnv('DISCORD_SERVER_ID'),
     subscribedRoleId: getEnv('DISCORD_SUBSCRIBED_ROLE_ID') || getEnv('DISCORD_ROLE_SUBSCRIBED_ID'),
     listenerRoleId: getEnv('DISCORD_LISTENER_ROLE_ID') || getEnv('DISCORD_ROLE_LISTENER_ID'),
-    webhookUrl: getEnv('DISCORD_SUBSCRIBER_WEBHOOK_URL') ||
-      'https://discordapp.com/api/webhooks/1540216715382882416/QNZTqlKy2V3uKofeLLi-tHs46x0evzfdeoy5ZMOckn0l_nF4HaMM6Z9TyO35abgoeMa2'
+    webhookUrl: getEnv('DISCORD_WEBHOOK_URL') || getEnv('DISCORD_SUBSCRIBER_WEBHOOK_URL')
   };
 }
 

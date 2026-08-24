@@ -38,12 +38,15 @@
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-/* Chalkboard Fine Grain Texture Overlay */
+/* Chalkboard Fine Grain Texture Overlay (pre-rendered tile — feTurbulence removed for GPU cost) */
 body::before {
   content: "";
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.055'/%3E%3C/svg%3E");
+  background-image: url("/noise-tile.png");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+  opacity: 0.055;
   pointer-events: none;
   z-index: 999;
 }
@@ -164,8 +167,8 @@ body.modal-open .bottom-floating-controls-wrapper {
     rgba(16, 16, 18, 0.15) 60%, 
     rgba(16, 16, 18, 0) 100%
   );
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /* backdrop-filter removed: this fixed layer re-blurred all scrolling content every frame.
+     The alpha gradient alone provides the separation. */
   mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
   -webkit-mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
 }
@@ -411,19 +414,31 @@ body.is-audio-playing .stylus-head-group {
 }
 
 .is-next-gig .pin-bubble {
+  position: relative;
   width: 28px;
   height: 28px;
   background: #f2f0eb;
   color: #0a0a0c;
-  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7), 0 4px 12px rgba(0, 0, 0, 0.6);
-  animation: nextGigCompactPulse 2s infinite;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   font-size: 0.72rem;
 }
 
-@keyframes nextGigCompactPulse {
-  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.8), 0 4px 12px rgba(0, 0, 0, 0.6); }
-  70% { box-shadow: 0 0 0 9px rgba(255, 255, 255, 0), 0 4px 12px rgba(0, 0, 0, 0.6); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.8), 0 4px 12px rgba(0, 0, 0, 0.6); }
+/* Pulse ring on a pseudo-element: transform+opacity only (box-shadow interpolation = full repaint per frame) */
+.is-next-gig .pin-bubble::after {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  pointer-events: none;
+  animation: nextGigCompactPulseRing 2s infinite;
+}
+
+@keyframes nextGigCompactPulseRing {
+  0% { transform: scale(1); opacity: 0.8; }
+  70% { transform: scale(1.65); opacity: 0; }
+  100% { transform: scale(1.65); opacity: 0; }
 }
 
 .is-upcoming .pin-bubble {
@@ -1262,6 +1277,49 @@ html.low-power-mode body::before {
   display: none !important;
 }
 
+/* ==========================================================================
+   Live Floating Reactions (DOM built at runtime — must live in global scope)
+   ========================================================================== */
+.live-reactions-floating-overlay {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.floating-reaction-particle {
+  position: absolute;
+  bottom: -30px;
+  font-size: 1.35rem;
+  line-height: 1;
+  will-change: transform, opacity;
+  animation-name: reactionParticleFloat;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation-fill-mode: forwards;
+}
+
+@keyframes reactionParticleFloat {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.6);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.95;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--drift-x, 0px), calc(-1 * var(--travel-y, 70vh))) rotate(var(--rot-deg, 0deg)) scale(var(--scale-target, 1));
+    opacity: 0;
+  }
+}
+
+html.low-power-mode .live-reactions-floating-overlay {
+  display: none !important;
+}
+
 html.low-power-mode *,
 html.low-power-mode *::before,
 html.low-power-mode *::after {
@@ -1283,6 +1341,25 @@ html.low-power-mode .audio-bar-inner,
 html.low-power-mode .sheet-container {
   background: rgba(14, 14, 17, 0.97) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ==========================================================================
+   Off-Screen Animation Gating & Below-Fold Render Deferral
+   ========================================================================== */
+
+/* Elements marked data-anim-gated get `offscreen` toggled by an IntersectionObserver
+   (index.astro). Pauses infinite CSS animations while their section is out of view. */
+[data-anim-gated].offscreen,
+[data-anim-gated].offscreen * {
+  animation-play-state: paused !important;
+}
+
+/* Skip layout/paint of far-below-fold sections until scrolled near (huge low-end win).
+   contain-intrinsic-size keeps the scrollbar stable while deferred. */
+.merch-section,
+.inspired-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
 }
 
 /* Keyboard Focus Trapping & Accessibility Outline */

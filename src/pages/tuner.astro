@@ -1,0 +1,532 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="KINS TUNER — Free Chromatic Tuner for Guitar, Bass & Drums"
+  description="Free browser chromatic tuner by KINS. Presets for acoustic, electric and bass guitar plus drum kit reference tones, a mic pitch detector and a reference tone generator. No app needed."
+>
+  <main class="tuner-page">
+    <header class="tuner-header">
+      <span class="tuner-badge">🔧 FREE UTILITY • NO APP NEEDED</span>
+      <h1 class="tuner-title">KINS TUNER</h1>
+      <p class="tuner-subtitle">Chromatic tuning for acoustic, electric, bass and drums. Pick an instrument, pluck a string, watch the needle.</p>
+    </header>
+
+    <section class="tuner-panel" aria-label="Tuner">
+      <div class="tuner-tabs" id="tunerTabList" role="tablist" aria-label="Instrument">
+        <button type="button" class="tuner-tab-btn active brutal-press" id="tunerTabAcoustic" role="tab" aria-selected="true" data-instrument="acoustic" data-track="tuner:tab_acoustic"><span>🎸 ACOUSTIC</span></button>
+        <button type="button" class="tuner-tab-btn brutal-press" id="tunerTabElectric" role="tab" aria-selected="false" data-instrument="electric" data-track="tuner:tab_electric"><span>⚡ ELECTRIC</span></button>
+        <button type="button" class="tuner-tab-btn brutal-press" id="tunerTabBass" role="tab" aria-selected="false" data-instrument="bass" data-track="tuner:tab_bass"><span>🎻 BASS</span></button>
+        <button type="button" class="tuner-tab-btn brutal-press" id="tunerTabDrums" role="tab" aria-selected="false" data-instrument="drums" data-track="tuner:tab_drums"><span>🥁 DRUMS</span></button>
+      </div>
+
+      <p class="tuner-blurb" id="tunerInstrumentBlurb"></p>
+
+      <div class="tuner-chip-row" id="tunerPresetRow" role="group" aria-label="Tuning preset"></div>
+      <div class="tuner-chip-row" id="tunerStringRow" role="group" aria-label="Target string"></div>
+
+      <div class="tuner-readout" id="tunerReadoutPanel">
+        <div class="tuner-meter" aria-hidden="true">
+          <span class="tuner-meter-zone tuner-meter-flat">FLAT</span>
+          <span class="tuner-meter-zone tuner-meter-sharp">SHARP</span>
+          <div class="tuner-needle" id="tunerNeedle"></div>
+          <div class="tuner-needle-center"></div>
+        </div>
+        <div class="tuner-note" id="tunerDetectedNote">--</div>
+        <p class="tuner-status" id="tunerStatusLine" aria-live="polite">Press START MIC TUNING, then play your loudest open string.</p>
+        <div class="tuner-freq" id="tunerDetectedFreq">-- Hz</div>
+        <p class="tuner-low-mic-hint" id="tunerLowMicHint" hidden></p>
+      </div>
+
+      <button type="button" class="tuner-btn tuner-btn-primary brutal-press" id="tunerMicBtn" data-track="tuner:mic_start">START MIC TUNING</button>
+      <p class="tuner-warning" id="tunerMicWarning" hidden></p>
+    </section>
+
+    <section class="tuner-section" aria-label="Reference tone generator">
+      <h2 class="tuner-section-title">REFERENCE TONE</h2>
+      <p class="tuner-section-note">Plays the selected string's target pitch through your speaker. Keep volume low and mind your ears — sudden sine tones are sharp.</p>
+      <div class="tuner-tone-controls">
+        <button type="button" class="tuner-btn brutal-press" id="tunerPlayRefBtn" data-track="tuner:ref_tone_play">PLAY REFERENCE TONE</button>
+        <button type="button" class="tuner-btn brutal-press" id="tunerToneToggleBtn" data-track="tuner:tone_toggle">PLAY MANUAL TONE</button>
+      </div>
+      <div class="tuner-tone-slider-row">
+        <label class="tuner-tone-label" for="tunerToneSlider">MANUAL TONE</label>
+        <input type="range" id="tunerToneSlider" name="tunerToneSlider" min="40" max="500" step="1" value="110" />
+        <output class="tuner-tone-value" id="tunerToneFreqLabel" for="tunerToneSlider">110 Hz</output>
+      </div>
+    </section>
+
+    <footer class="tuner-footer">
+      <a href="/" class="tuner-back-link">&larr; Back to Kins</a>
+    </footer>
+  </main>
+</BaseLayout>
+
+<style>
+  .tuner-page {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 16px 40px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background-color: var(--bg-dark);
+    background-image: var(--bg-dark-gradient);
+    min-height: 100vh;
+    color: var(--text-white);
+  }
+
+  .tuner-header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .tuner-badge {
+    display: inline-block;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .tuner-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2.4rem, 8vw, 3.4rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--text-white);
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  .tuner-subtitle {
+    font-family: var(--font-secondary);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 46ch;
+  }
+
+  .tuner-panel {
+    background: var(--surface-card);
+    border: var(--border-brutal);
+    box-shadow: var(--shadow-brutal-black-lg);
+    border-radius: var(--radius-md);
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  .tuner-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  @media (min-width: 560px) {
+    .tuner-tabs {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .tuner-tab-btn {
+    background: var(--surface-card-light);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-sm);
+    padding: 10px 6px;
+    color: var(--text-card-primary);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .tuner-tab-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-brutal-black-lg);
+  }
+
+  .tuner-tab-btn.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+  }
+
+  .tuner-blurb {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .tuner-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .tuner-chip-row:empty {
+    display: none;
+  }
+
+  .tuner-readout {
+    background: var(--surface-card-light);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+  }
+
+  .tuner-meter {
+    position: relative;
+    width: min(300px, 82%);
+    height: 104px;
+    overflow: hidden;
+    border-radius: var(--radius-xs);
+    background-image: repeating-linear-gradient(to right, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px calc(100% / 20));
+    background-size: calc(100% - 24px) 26px;
+    background-position: center top;
+    background-repeat: no-repeat;
+  }
+
+  .tuner-meter-zone {
+    position: absolute;
+    top: 34px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+
+  .tuner-meter-flat {
+    left: 6px;
+  }
+
+  .tuner-meter-sharp {
+    right: 6px;
+  }
+
+  .tuner-needle {
+    position: absolute;
+    left: 50%;
+    bottom: 6px;
+    width: 5px;
+    height: 86px;
+    margin-left: -2.5px;
+    border-radius: 3px;
+    background: var(--accent-crimson);
+    transform-origin: bottom center;
+    transform: rotate(0deg);
+    transition: transform 0.09s linear;
+  }
+
+  .tuner-needle-center {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 3px;
+    height: 30px;
+    margin-left: -1.5px;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .tuner-readout.in-tune .tuner-needle {
+    background: var(--btn-green);
+  }
+
+  .tuner-note {
+    font-family: var(--font-heading);
+    font-size: clamp(3rem, 13vw, 4.4rem);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--text-dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tuner-status {
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text-card-secondary);
+    margin: 0;
+    text-align: center;
+    min-height: 1.2em;
+  }
+
+  .tuner-readout.in-tune .tuner-needle {
+    background: var(--btn-green);
+  }
+
+  .tuner-readout.in-tune .tuner-status {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    border-radius: var(--radius-pill);
+    padding: 4px 14px;
+    letter-spacing: 0.1em;
+  }
+
+  .tuner-readout.off-pitch .tuner-status,
+  .tuner-readout.off-pitch .tuner-note {
+    color: var(--accent-crimson);
+  }
+
+  .tuner-freq {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-card-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tuner-low-mic-hint {
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: var(--text-card-secondary);
+    background: rgba(0, 0, 0, 0.07);
+    border-radius: var(--radius-xs);
+    padding: 8px 10px;
+    margin: 0;
+    max-width: 52ch;
+    text-align: center;
+  }
+
+  .tuner-btn {
+    background: var(--surface-card-light);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    color: var(--text-card-primary);
+    font-family: var(--font-secondary);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .tuner-btn-primary {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+    align-self: stretch;
+  }
+
+  .tuner-btn:hover {
+    background: var(--btn-green-hover);
+  }
+
+  .tuner-warning {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--text-white);
+    background: var(--accent-crimson);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-xs);
+    padding: 10px 12px;
+    margin: 0;
+  }
+
+  .tuner-section {
+    background: var(--surface-card);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-md);
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-sizing: border-box;
+  }
+
+  .tuner-section-title {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    margin: 0;
+    color: var(--text-white);
+    text-transform: uppercase;
+  }
+
+  .tuner-section-note {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .tuner-tone-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tuner-tone-controls .tuner-btn {
+    flex: 1 1 180px;
+  }
+
+  .tuner-tone-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .tuner-tone-label {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .tuner-tone-value {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-neon-yellow);
+    white-space: nowrap;
+    min-width: 56px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type='range']#tunerToneSlider {
+    flex: 1;
+    accent-color: var(--accent-neon-yellow);
+    min-width: 0;
+    height: 28px;
+    cursor: pointer;
+  }
+
+  .tuner-footer {
+    text-align: center;
+    padding-top: 6px;
+  }
+
+  .tuner-back-link {
+    font-family: var(--font-secondary);
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--accent-neon-yellow);
+    text-decoration: none;
+    transition: opacity 0.14s ease;
+  }
+
+  .tuner-back-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+  }
+
+  :global(.tuner-chip) {
+    background: var(--surface-card-light);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-pill);
+    padding: 7px 13px;
+    color: var(--text-card-primary);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  :global(.tuner-chip:hover) {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-brutal-black-lg);
+  }
+
+  :global(.tuner-chip.active) {
+    background: var(--btn-green);
+    color: var(--btn-text-color);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tuner-needle {
+      transition: none;
+    }
+
+    .tuner-tab-btn,
+    .tuner-btn,
+    :global(.tuner-chip),
+    .tuner-back-link {
+      transition: none;
+    }
+  }
+
+  :global(html.low-power-mode) .tuner-needle {
+    display: none;
+  }
+</style>
+
+<script>
+  let controllerPromise: Promise<any> | null = null;
+  let armed = true;
+
+  async function loadController() {
+    if (!controllerPromise) controllerPromise = import('../scripts/controllers/tunerController.js');
+    return controllerPromise;
+  }
+
+  document.addEventListener(
+    'click',
+    (e) => {
+      if (!armed) return;
+      const target = e.target as HTMLElement | null;
+      const btn = target?.closest('button');
+      if (!btn || !btn.dataset.track?.startsWith('tuner:')) return;
+      armed = false;
+      loadController()
+        .then((mod) => {
+          mod.initTuner();
+        })
+        .then(() => {
+          btn.click();
+        })
+        .catch((err) => {
+          console.error('KINS Tuner failed to load:', err);
+        });
+    },
+    { passive: true }
+  );
+</script>

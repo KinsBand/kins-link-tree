@@ -1,28 +1,31 @@
-import type { LiveShowConfig } from '../types/live';
+﻿import type { LiveShowConfig } from '../types/live';
 
 export const liveConfig: LiveShowConfig = {
-  enabled: false,
+  enabled: true,
+  // 'offline' = honest standby page (no fabricated show).
+  // Flip to 'live' + fill streamSources/setlist on gig night.
+  mode: 'offline',
   status: 'offline',
   venueName: 'THE CAMBRIDGE HOTEL',
   city: 'NEWCASTLE, NSW',
-  dateStr: 'TONIGHT • AUG 20, 2026',
-  startTimeStr: '9:30 PM AEST',
-  initialAudienceCount: 340,
-  activeCamAngle: 'CAM 1 • MASTER SOUNDBOARD (FOH 4K)',
-  
+  dateStr: 'NEXT SHOW • TBA',
+  startTimeStr: '',
+  initialAudienceCount: 0,
+  activeCamAngle: '',
+
   streamSources: {
     hlsUrl: '', // Plug HLS .m3u8 here when live
     rtmpUrl: '',
-    youtubeLiveId: 'dQw4w9WgXcQ', // Fallback or direct YouTube Live stream ID
+    youtubeLiveId: '', // YouTube Live stream ID on gig night
     twitchChannel: 'kinsbandofficial',
     kickChannel: 'kinsband',
-    fallbackVideoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' // or live loop
+    fallbackVideoUrl: ''
   },
 
   pinnedAnnouncement: {
-    text: 'Merch stand is open at the back! Use code LIVE15 for 15% off official tour tees online tonight.',
-    couponCode: 'LIVE15',
-    linkUrl: '#merch'
+    text: 'Subscribe below and get pinged the second we go LIVE.',
+    couponCode: '',
+    linkUrl: '/#subscribeFormSection'
   },
 
   nativeAppLinks: [
@@ -76,52 +79,8 @@ export const liveConfig: LiveShowConfig = {
     }
   ],
 
-  fanCams: [
-    {
-      id: 'cam-oscar',
-      handle: '@oscar_',
-      platform: 'TikTok',
-      platformIcon: 'fa-brands fa-tiktok',
-      platformColor: '#00f2fe',
-      viewers: 128,
-      avatarUrl: 'new.png',
-      streamUrl: 'https://tiktok.com/@oscar_/live',
-      angleName: 'Bass Rig & Pit Angle'
-    },
-    {
-      id: 'cam-charlie',
-      handle: '@charlie',
-      platform: 'Twitch',
-      platformIcon: 'fa-brands fa-twitch',
-      platformColor: '#9146ff',
-      viewers: 94,
-      avatarUrl: 'new.png',
-      streamUrl: 'https://twitch.tv/charlie_kins',
-      angleName: 'Stage Right Guitar View'
-    },
-    {
-      id: 'cam-fan99',
-      handle: '@fan_99',
-      platform: 'Kick',
-      platformIcon: 'fa-solid fa-bolt',
-      platformColor: '#53fc18',
-      viewers: 65,
-      avatarUrl: 'new.png',
-      streamUrl: 'https://kick.com/fan_99_live',
-      angleName: 'Front Row Barrier Cam'
-    },
-    {
-      id: 'cam-sarah',
-      handle: '@sarah_pit',
-      platform: 'Instagram',
-      platformIcon: 'fa-brands fa-instagram',
-      platformColor: '#e1306c',
-      viewers: 53,
-      avatarUrl: 'new.png',
-      streamUrl: 'https://instagram.com/sarah_pit/live',
-      angleName: 'Mosh Pit Center'
-    }
-  ],
+  // Real fan co-streams get added here on gig night — never seed fictional cams.
+  fanCams: [],
 
   setlist: [
     {
@@ -245,117 +204,9 @@ E|-------0---1---3---|`,
     }
   ],
 
-  initialChatMessages: [
-    {
-      id: 'msg-1',
-      username: 'Sarah_Pit',
-      handle: '@sarah_pit',
-      avatar: 'new.png',
-      message: 'Audio is dialed in so crisp tonight!! 🔥',
-      timestamp: '9:41 PM',
-      badge: { type: 'pit', label: 'PIT CREW', color: '#f2fd43' }
-    },
-    {
-      id: 'msg-2',
-      username: 'Oscar_Bass',
-      handle: '@oscar_kins',
-      avatar: 'new.png',
-      message: 'Cambridge Hotel is PACKED wall to wall let’s goooo 🎸',
-      timestamp: '9:42 PM',
-      badge: { type: 'band', label: 'KINS', color: '#f2fd43' }
-    },
-    {
-      id: 'msg-3',
-      username: 'Liam_Mosh',
-      handle: '@liam99',
-      avatar: 'new.png',
-      message: '🔥🎸🔥 Charlie that fuzz solo was unreal',
-      timestamp: '9:43 PM',
-      badge: { type: 'vip', label: 'VIP', color: '#00f2fe' }
-    },
-    {
-      id: 'msg-4',
-      username: 'Chloe_Sydney',
-      handle: '@chloerocks',
-      avatar: 'new.png',
-      message: 'Unreal view from the pit! Stream quality is 10/10 ⚡',
-      timestamp: '9:44 PM',
-      badge: { type: 'mod', label: 'MOD', color: '#a855f7' }
-    }
-  ],
+  // Seeded chat is disabled — real chat starts empty on the night.
+  initialChatMessages: [],
 
-  fanWallPosts: [
-    {
-      id: 'wall-1',
-      authorHandle: '@pit_queen',
-      authorName: 'Jessie R.',
-      avatarUrl: 'new.png',
-      mediaType: 'image',
-      mediaUrl: 'new.png',
-      caption: 'Front row at The Cambridge! Vivian is on fire tonight 🔥 #KinsLive',
-      timestamp: '2m ago',
-      likes: 47,
-      category: 'Pit Shots'
-    },
-    {
-      id: 'wall-2',
-      authorHandle: '@soundboard_dave',
-      authorName: 'Dave M.',
-      avatarUrl: 'new.png',
-      mediaType: 'image',
-      mediaUrl: 'new.png',
-      caption: 'FOH Desk view. Levels are peak rock perfection 🎛️ #KinsLive',
-      timestamp: '6m ago',
-      likes: 82,
-      category: 'Photos'
-    },
-    {
-      id: 'wall-3',
-      authorHandle: '@merch_hunter',
-      authorName: 'Alex K.',
-      avatarUrl: 'new.png',
-      mediaType: 'image',
-      mediaUrl: 'new.png',
-      caption: 'Snagged the limited tour tee before it sells out! 🖤 #KinsLive',
-      timestamp: '11m ago',
-      likes: 35,
-      category: 'Merch'
-    },
-    {
-      id: 'wall-4',
-      authorHandle: '@guitar_nerd',
-      authorName: 'Sam T.',
-      avatarUrl: 'new.png',
-      mediaType: 'image',
-      mediaUrl: 'new.png',
-      caption: 'Charlie’s pedalboard setup is an absolute dream 🎸 #KinsLive',
-      timestamp: '15m ago',
-      likes: 64,
-      category: 'Photos'
-    },
-    {
-      id: 'wall-5',
-      authorHandle: '@newy_local',
-      authorName: 'Bec W.',
-      avatarUrl: 'new.png',
-      mediaType: 'image',
-      mediaUrl: 'new.png',
-      caption: 'Mosh pit during Midnight Electricity is absolute chaos!! 🤘 #KinsLive',
-      timestamp: '19m ago',
-      likes: 119,
-      category: 'Pit Shots'
-    },
-    {
-      id: 'wall-6',
-      authorHandle: '@trai_drums_fan',
-      authorName: 'Marcus B.',
-      avatarUrl: 'new.png',
-      mediaType: 'image',
-      mediaUrl: 'new.png',
-      caption: 'Trai drumming breakdown in 7/8 time had the whole room jumping! 🥁 #KinsLive',
-      timestamp: '24m ago',
-      likes: 91,
-      category: 'Videos'
-    }
-  ]
+  // Fan-wall seed posts removed; real approved uploads hydrate from /api/fan-wall.
+  fanWallPosts: []
 };

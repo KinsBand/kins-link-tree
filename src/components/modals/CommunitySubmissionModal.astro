@@ -908,29 +908,6 @@
     const category = (document.getElementById('selectedCategoryInput') as HTMLInputElement)?.value || 'Drum Cover';
     const handle = (document.getElementById('creatorHandleInput') as HTMLInputElement)?.value?.trim() || '';
     const title = (document.getElementById('clipTitleInput') as HTMLInputElement)?.value?.trim() || '';
-    const deviceInfo = `${navigator.userAgent} | Screen: ${window.innerWidth}x${window.innerHeight}`;
-    const timestamp = new Date().toISOString();
-
-    const webhookUrl = 'https://discord.com/api/webhooks/1537817848661942372/Kz6jjYs0OU7YP5Xz3TpeaLIivtASMsA9Njb_sGmwoqF_xYKcbVvSP1GuF0AymVZYJv7E';
-
-    const discordPayload = {
-      username: 'Kins Community Hub',
-      avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png',
-      embeds: [
-        {
-          title: '🎬 New Fan Clip Submission',
-          color: 0x57f287, // #57F287 Green
-          fields: [
-            { name: 'Category', value: `**${category}**`, inline: true },
-            { name: 'Social Handle', value: handle ? `\`${handle}\`` : '*Not provided*', inline: true },
-            { name: 'Song / Title', value: title || 'Untitled', inline: true },
-            { name: 'Video / Post Link', value: `[Watch Clip / Open Post](${url})\n\`${url}\``, inline: false }
-          ],
-          footer: { text: 'Kins Community Hub' },
-          timestamp: timestamp
-        }
-      ]
-    };
 
     // UI Loading State
     const submitBtn = document.getElementById('submitCommunityClipBtn') as HTMLButtonElement;
@@ -942,28 +919,24 @@
     spinner?.classList.remove('hidden');
 
     try {
-      const response = await fetch(webhookUrl, {
+      const response = await fetch('/api/community-submission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(discordPayload)
+        body: JSON.stringify({ url, category, handle, title })
       });
 
-      if (response.ok || response.status === 204 || response.status === 200) {
+      if (response.ok) {
         form.classList.add('hidden');
         successView?.classList.remove('hidden');
         showToast("Clip submitted! Thanks for sharing with Kins.");
       } else {
-        const errText = await response.text().catch(() => '');
-        console.warn("Discord clip submission warning:", response.status, errText);
-        form.classList.add('hidden');
-        successView?.classList.remove('hidden');
-        showToast("Clip submitted! Thanks for sharing with Kins.");
+        const data = await response.json().catch(() => null);
+        console.warn("Clip submission failed:", response.status, data?.message || '');
+        showToast(data?.message || "⚠️ Couldn't submit your clip — please try again in a moment.");
       }
     } catch (err) {
-      console.warn("Clip submission network warning:", err);
-      form.classList.add('hidden');
-      successView?.classList.remove('hidden');
-      showToast("Clip submitted! Thanks for sharing with Kins.");
+      console.warn("Clip submission network error:", err);
+      showToast("⚠️ Couldn't submit your clip — please check your connection and try again.");
     } finally {
       if (submitBtn) submitBtn.disabled = false;
       btnIcon?.classList.remove('hidden');

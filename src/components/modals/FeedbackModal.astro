@@ -1481,53 +1481,20 @@
     // Collect Essential Diagnostics
     const diagnostics = getEssentialDiagnostics();
 
-    // Route to the correct Discord channel based on feedback type
-    const webhookMap: Record<string, string> = {
-      'Improvement / Idea': 'https://discord.com/api/webhooks/1537823822240026705/Gw3XTHhEbpqIGGxhXvQx6yeOoAOWVwCVLyo-36DtwqXNptDHR69KqN-4286oMpHfSB7G',
-      'Bug / Broken Item': 'https://discord.com/api/webhooks/1537823829039124541/ePyQFBCtvGO9nHQWWopo6l4NDvjiweDq0R1WeURZBxsuAVpqco4hM0LC1r9nXnrpEuJg',
-      'Content Fix / Typo': 'https://discord.com/api/webhooks/1537823842880192573/B11FLr0cU92wYSN_8Jl06K8gARQjvtznFJzL5ZZmXZISABg0RSHHVbxjmS_sjk4LaF8k'
-    };
-    const webhookUrl = webhookMap[feedbackType] || webhookMap['Improvement / Idea'];
-
-    let embedColor = 0x3498db; // #3498DB Blue for improvements
-    let typeEmoji = '💡';
-    if (feedbackType.includes('Bug')) {
-      embedColor = 0xe74c3c; // #E74C3C Red for bugs
-      typeEmoji = '🐛';
-    } else if (feedbackType.includes('Content')) {
-      embedColor = 0xe67e22; // #E67E22 Orange for content
-      typeEmoji = '📝';
+    // Optional screenshot, sent as data URL (server forwards it to Discord)
+    let screenshotDataUrl: string | null = null;
+    if (currentAttachedFile) {
+      if (currentAttachedFile.size <= 2 * 1024 * 1024) {
+        screenshotDataUrl = await new Promise<string | null>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(currentAttachedFile);
+        });
+      } else {
+        showToast("Screenshot is too large (max 2 MB) — sending feedback without it.");
+      }
     }
-
-    const descriptionLines = [
-      `**User Message:**`,
-      `"${details}"`,
-      ``,
-      `• **Category:** ${category}`,
-      `• **Submitter:** ${contact ? `\`${contact}\`` : '*Anonymous Fan*'}`,
-      `• **Viewport:** \`${diagnostics.viewportWithDpr}\``,
-      `• **Environment:** ${diagnostics.environment}`,
-      `• **Date:** ${diagnostics.formattedDate}`
-    ];
-
-    if (diagnostics.lastError) {
-      descriptionLines.push(`• **Last Error:** \`${diagnostics.lastError}\``);
-    }
-
-    const discordPayload = {
-      username: 'Kins Website Feedback',
-      avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png',
-      embeds: [
-        {
-          title: `${typeEmoji} ${feedbackType}: ${category}`,
-          description: descriptionLines.join('\n'),
-          color: embedColor,
-          image: currentAttachedFile ? { url: 'attachment://screenshot.png' } : undefined,
-          footer: { text: 'Kins Site Diagnostics' },
-          timestamp: diagnostics.timestamp
-        }
-      ]
-    };
 
     // UI Loading State
     if (submitBtn) submitBtn.disabled = true;
@@ -1535,66 +1502,32 @@
     spinner?.classList.remove('hidden');
 
     try {
-      let sentSuccess = false;
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          feedback: {
+            type: feedbackType,
+            category: category,
+            user_message: details,
+            contact: contact
+          },
+          ...diagnostics,
+          screenshotDataUrl
+        })
+      });
 
-      // 1. Direct Webhook Dispatch (Multipart with image attachment or JSON)
-      try {
-        if (currentAttachedFile) {
-          const formData = new FormData();
-          formData.append('payload_json', JSON.stringify(discordPayload));
-          formData.append('files[0]', currentAttachedFile, 'screenshot.png');
-
-          const response = await fetch(webhookUrl, {
-            method: 'POST',
-            body: formData
-          });
-          if (response.ok || response.status === 204 || response.status === 200) {
-            sentSuccess = true;
-          }
-        } else {
-          const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(discordPayload)
-          });
-          if (response.ok || response.status === 204 || response.status === 200) {
-            sentSuccess = true;
-          }
-        }
-      } catch (directErr) {
-        console.warn("Direct webhook attempt error:", directErr);
-      }
-
-      // 2. Server API fallback if direct webhook didn't complete (e.g. client adblocker)
-      if (!sentSuccess) {
-        try {
-          const apiRes = await fetch('/api/feedback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              feedback: {
-                type: feedbackType,
-                category: category,
-                user_message: details,
-                contact: contact
-              },
-              ...diagnostics
-            })
-          });
-          if (apiRes.ok) sentSuccess = true;
-        } catch (apiErr) {
-          console.warn("Server API fallback error:", apiErr);
-        }
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || `Feedback failed (${res.status})`);
       }
 
       form.classList.add('hidden');
       successView?.classList.remove('hidden');
-      showToast("Thanks! Your feedback has been sent to Discord.");
+      showToast("Thanks! Your feedback has been sent.");
     } catch (err) {
-      console.warn("Feedback network warning:", err);
-      form.classList.add('hidden');
-      successView?.classList.remove('hidden');
-      showToast("Thanks! Your feedback has been received.");
+      console.warn("Feedback submission failed:", err);
+      showToast((err instanceof Error && err.message ? err.message : "⚠️ Couldn't send your feedback — please try again in a moment."));
     } finally {
       if (submitBtn) submitBtn.disabled = false;
       btnIcon?.classList.remove('hidden');
