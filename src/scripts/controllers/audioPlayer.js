@@ -1344,6 +1344,14 @@ export function initAudioPlayer() {
     clearTimeout(autoMixTimeout);
     const transitionId = ++currentTransitionId;
 
+    // 0. Synchronously unlock Web Audio API context on mobile touch/click
+    if (vinylScratchSynth) {
+      vinylScratchSynth.init();
+      if (vinylScratchSynth.ctx && vinylScratchSynth.ctx.state === 'suspended') {
+        vinylScratchSynth.ctx.resume().catch(() => {});
+      }
+    }
+
     // 1. Handling PAUSE & RESUME of the currently playing track
     if (currentPlayingTrack && currentPlayingTrack.title === trackObj.title) {
       isPlayingAudio = !isPlayingAudio;
@@ -1367,108 +1375,142 @@ export function initAudioPlayer() {
       return;
     }
 
-    // 2. Handling SWITCHING to a NEW track while already playing (or from idle)
-    isTransitioningTrack = true;
-
-    // Start fetching metadata / previewUrl immediately if not yet populated
+    // 2. Synchronously check if previewUrl and artwork are already available
     let previewUrl = trackObj.previewUrl;
     let coverUrl = trackObj.coverUrl || trackObj.artworkUrl;
 
     if (!previewUrl || !coverUrl) {
-      const meta = await getITunesTrackData(trackObj.artist, trackObj.title);
-      if (meta) {
-        if (meta.previewUrl) {
-          previewUrl = meta.previewUrl;
+      const cacheKey = `${trackObj.artist} - ${trackObj.title}`.toLowerCase().trim();
+      const cached = ITUNES_CACHE.get(cacheKey);
+      if (cached) {
+        if (cached.previewUrl) {
+          previewUrl = cached.previewUrl;
           trackObj.previewUrl = previewUrl;
         }
-        if (meta.artworkUrl) {
-          coverUrl = meta.artworkUrl;
+        if (cached.artworkUrl) {
+          coverUrl = cached.artworkUrl;
           trackObj.coverUrl = coverUrl;
           trackObj.artworkUrl = coverUrl;
         }
       }
     }
 
-    // If another song was requested while we were waiting, abort this stale transition
-    if (transitionId !== currentTransitionId) return;
+    // Helper to start playback once preview URL and cover are ready
+    function startTrackPlayback(pUrl, cUrl) {
+      if (transitionId !== currentTransitionId) return;
 
-    if (!hasTransitionedToActive) {
-      showActiveView();
-    } else {
-      triggerSongChangeWipe();
-    }
+      if (!hasTransitionedToActive) {
+        showActiveView();
+      } else {
+        triggerSongChangeWipe();
+      }
 
-    currentPlayingTrack = trackObj;
-    updateStreamLinks(currentPlayingTrack);
+      currentPlayingTrack = trackObj;
+      updateStreamLinks(currentPlayingTrack);
 
-    if (audioBarTitle) {
-      audioBarTitle.textContent = trackObj.title;
-      audioBarTitle.classList.remove('is-scrolling');
-      requestAnimationFrame(() => {
-        const parent = audioBarTitle.parentElement;
-        if (parent && audioBarTitle.scrollWidth > parent.clientWidth + 2) {
-          const scrollDist = -(audioBarTitle.scrollWidth - parent.clientWidth + 16);
-          audioBarTitle.style.setProperty('--scroll-dist', `${scrollDist}px`);
-          audioBarTitle.classList.add('is-scrolling');
+      if (audioBarTitle) {
+        audioBarTitle.textContent = trackObj.title;
+        audioBarTitle.classList.remove('is-scrolling');
+        requestAnimationFrame(() => {
+          const parent = audioBarTitle.parentElement;
+          if (parent && audioBarTitle.scrollWidth > parent.clientWidth + 2) {
+            const scrollDist = -(audioBarTitle.scrollWidth - parent.clientWidth + 16);
+            audioBarTitle.style.setProperty('--scroll-dist', `${scrollDist}px`);
+            audioBarTitle.classList.add('is-scrolling');
+          }
+        });
+      }
+      if (audioBarArtist) audioBarArtist.textContent = trackObj.artist || 'Kins';
+      setMiniPlayerCover(cUrl || null);
+
+      // Reset timeline progress and transitions for incoming track
+      if (audioBarTimelineProgress) {
+        audioBarTimelineProgress.style.transition = '';
+        audioBarTimelineProgress.style.width = '0%';
+      }
+      if (vinylStylusWrapper) {
+        vinylStylusWrapper.style.transition = '';
+        vinylStylusWrapper.style.left = '0%';
+      }
+      if (audioBarTime) {
+        audioBarTime.textContent = '0:00 / 0:30';
+      }
+
+      if (vaultAudioPlayer && pUrl) {
+        vaultAudioPlayer.src = pUrl;
+        vaultAudioPlayer.playbackRate = 1.0;
+        vaultAudioPlayer.volume = 1.0;
+        try {
+          vaultAudioPlayer.preservesPitch = true;
+          vaultAudioPlayer.mozPreservesPitch = true;
+          vaultAudioPlayer.webkitPreservesPitch = true;
+        } catch (e) {}
+
+        const playPromise = vaultAudioPlayer.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            if (transitionId !== currentTransitionId) return;
+            triggerNeedleDropAndSpinUp(false);
+            isTransitioningTrack = false;
+            isPlayingAudio = true;
+            startTimelineAnimation();
+            updateToggleBtnState(true);
+            showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
+          }).catch(err => {
+            if (transitionId !== currentTransitionId) return;
+            console.warn('Playback error:', err);
+            isTransitioningTrack = false;
+            isPlayingAudio = false;
+            stopTimelineAnimation();
+            updateToggleBtnState(false);
+            showToast(`Unable to play preview for "${trackObj.title}"`);
+            autoMixTimeout = setTimeout(() => {
+              playNextMixSong();
+            }, 1500);
+          });
         }
-      });
-    }
-    if (audioBarArtist) audioBarArtist.textContent = trackObj.artist || 'Kins';
-    setMiniPlayerCover(coverUrl || null);
-
-    // Reset timeline progress and transitions for incoming track
-    if (audioBarTimelineProgress) {
-      audioBarTimelineProgress.style.transition = '';
-      audioBarTimelineProgress.style.width = '0%';
-    }
-    if (vinylStylusWrapper) {
-      vinylStylusWrapper.style.transition = '';
-      vinylStylusWrapper.style.left = '0%';
-    }
-    if (audioBarTime) {
-      audioBarTime.textContent = '0:00 / 0:30';
-    }
-
-    if (vaultAudioPlayer && previewUrl) {
-      vaultAudioPlayer.src = previewUrl;
-      vaultAudioPlayer.playbackRate = 1.0;
-      vaultAudioPlayer.volume = 1.0;
-      try {
-        vaultAudioPlayer.preservesPitch = true;
-        vaultAudioPlayer.mozPreservesPitch = true;
-        vaultAudioPlayer.webkitPreservesPitch = true;
-      } catch (e) {}
-
-      vaultAudioPlayer.play().then(() => {
-        if (transitionId !== currentTransitionId) return;
-        triggerNeedleDropAndSpinUp(false);
-        isTransitioningTrack = false;
-        isPlayingAudio = true;
-        startTimelineAnimation();
-        updateToggleBtnState(true);
-        showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
-      }).catch(err => {
-        if (transitionId !== currentTransitionId) return;
-        console.warn('Playback error:', err);
+      } else {
         isTransitioningTrack = false;
         isPlayingAudio = false;
         stopTimelineAnimation();
         updateToggleBtnState(false);
-        showToast(`Unable to play preview for "${trackObj.title}"`);
+        showToast(`Audio preview unavailable for "${trackObj.title}"`);
         autoMixTimeout = setTimeout(() => {
           playNextMixSong();
         }, 1500);
-      });
-    } else {
-      isTransitioningTrack = false;
-      isPlayingAudio = false;
-      stopTimelineAnimation();
-      updateToggleBtnState(false);
-      showToast(`Audio preview unavailable for "${trackObj.title}"`);
-      autoMixTimeout = setTimeout(() => {
-        playNextMixSong();
-      }, 1500);
+      }
     }
+
+    // FAST-PATH: If previewUrl is available synchronously, play IMMEDIATELY within user-gesture context!
+    if (previewUrl) {
+      isTransitioningTrack = true;
+      startTrackPlayback(previewUrl, coverUrl);
+      return;
+    }
+
+    // ASYNC FALLBACK: If previewUrl is not yet loaded, prime the audio element first, then fetch metadata
+    isTransitioningTrack = true;
+    if (vaultAudioPlayer) {
+      try {
+        vaultAudioPlayer.load();
+      } catch (e) {}
+    }
+
+    const meta = await getITunesTrackData(trackObj.artist, trackObj.title);
+    if (meta) {
+      if (meta.previewUrl) {
+        previewUrl = meta.previewUrl;
+        trackObj.previewUrl = previewUrl;
+      }
+      if (meta.artworkUrl) {
+        coverUrl = meta.artworkUrl;
+        trackObj.coverUrl = coverUrl;
+        trackObj.artworkUrl = coverUrl;
+      }
+    }
+
+    if (transitionId !== currentTransitionId) return;
+    startTrackPlayback(previewUrl, coverUrl);
   };
 
   if (vaultAudioPlayer) {
@@ -1613,6 +1655,30 @@ export function initAudioPlayer() {
       fadeOutAndPauseCleanly(650);
     }
   }, { capture: true });
+
+  // 3. One-time gesture listener to unlock Web Audio API & HTML5 Audio on mobile
+  function initAudioUnlock() {
+    const unlock = () => {
+      if (vinylScratchSynth) {
+        vinylScratchSynth.init();
+        if (vinylScratchSynth.ctx && vinylScratchSynth.ctx.state === 'suspended') {
+          vinylScratchSynth.ctx.resume().catch(() => {});
+        }
+      }
+      if (vaultAudioPlayer && vaultAudioPlayer.paused && !vaultAudioPlayer.src) {
+        try {
+          vaultAudioPlayer.load();
+        } catch (e) {}
+      }
+    };
+
+    window.addEventListener('touchstart', unlock, { capture: true, once: true, passive: true });
+    window.addEventListener('touchend', unlock, { capture: true, once: true, passive: true });
+    window.addEventListener('pointerdown', unlock, { capture: true, once: true, passive: true });
+    window.addEventListener('click', unlock, { capture: true, once: true, passive: true });
+  }
+
+  initAudioUnlock();
 
   // Immediate prefetch of all inspiration tracks on page load so 30s previews & artwork load instantly
   try {

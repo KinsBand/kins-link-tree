@@ -1854,6 +1854,9 @@ export function filterGigs(category) {
     }
   });
 
+  // If in list view, re-render the chronological tour stack
+  renderChronologicalTourStack(category, currentSearchQuery);
+
   // If active venue is not matching, switch to first matching
   const isCurrentMatching = matchingVenues.some(v => v.id === activeVenueId);
   if (!isCurrentMatching && matchingVenues.length > 0) {
@@ -1861,6 +1864,276 @@ export function filterGigs(category) {
   } else if (matchingVenues.length === 0) {
     displayVenueDetails(null);
   }
+}
+
+let currentViewMode = 'map';
+let currentSearchQuery = '';
+
+export function setViewMode(mode) {
+  currentViewMode = mode;
+  const mapBtns = document.querySelectorAll('.view-switch-map-btn');
+  const listBtns = document.querySelectorAll('.view-switch-list-btn');
+  const mapWrapper = document.getElementById('mapViewWrapper');
+  const bottomCard = document.getElementById('venueDetailBottomCard');
+  const listContainer = document.getElementById('gigListViewContainer');
+
+  if (mode === 'list') {
+    mapBtns.forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
+    listBtns.forEach(b => {
+      b.classList.add('active');
+      b.setAttribute('aria-selected', 'true');
+    });
+    if (mapWrapper) mapWrapper.classList.add('hidden');
+    if (bottomCard) bottomCard.classList.add('hidden');
+    if (listContainer) {
+      listContainer.classList.remove('hidden');
+      renderChronologicalTourStack(activeFilter, currentSearchQuery);
+    }
+  } else {
+    mapBtns.forEach(b => {
+      b.classList.add('active');
+      b.setAttribute('aria-selected', 'true');
+    });
+    listBtns.forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
+    if (listContainer) listContainer.classList.add('hidden');
+    if (mapWrapper) mapWrapper.classList.remove('hidden');
+    if (bottomCard) bottomCard.classList.remove('hidden');
+    if (leafletMapInstance) {
+      setTimeout(() => {
+        try {
+          leafletMapInstance.invalidateSize();
+        } catch (e) {}
+      }, 100);
+    }
+  }
+}
+
+export function renderChronologicalTourStack(category = 'all', query = currentSearchQuery) {
+  const feed = document.getElementById('gigListScrollFeed');
+  if (!feed) return;
+
+  const normalizedQuery = (query || '').toLowerCase().trim();
+
+  // Flatten all shows across all venues with their parent venue references
+  const allShowsList = [];
+  VENUES.forEach(v => {
+    (v.shows || []).forEach(s => {
+      let sortTimestamp = 0;
+      if (s.targetDate) {
+        sortTimestamp = new Date(s.targetDate).getTime();
+      } else if (s.dateText) {
+        sortTimestamp = Date.parse(s.dateText.replace('Played ', '').replace('Sat, ', '').replace('Fri, ', '')) || 0;
+      }
+      allShowsList.push({
+        venue: v,
+        show: s,
+        sortTimestamp,
+        isUpcoming: s.type === 'upcoming',
+        isNextShow: !!s.isNextShow
+      });
+    });
+  });
+
+  // Filter shows based on category
+  let filtered = allShowsList.filter(item => {
+    if (category === 'upcoming') return item.isUpcoming;
+    if (category === 'past') return !item.isUpcoming;
+    return true;
+  });
+
+  // Filter shows based on query
+  if (normalizedQuery) {
+    filtered = filtered.filter(item => {
+      const v = item.venue;
+      const s = item.show;
+      const matchVenue = (v.name || '').toLowerCase().includes(normalizedQuery);
+      const matchCity = (v.city || '').toLowerCase().includes(normalizedQuery);
+      const matchAddress = (v.address || '').toLowerCase().includes(normalizedQuery);
+      const matchDate = (s.dateText || '').toLowerCase().includes(normalizedQuery);
+      const matchSupport = (s.supportActs || '').toLowerCase().includes(normalizedQuery);
+      const matchSetlist = (s.asPlayedSetlist || []).some(t => (t.name || '').toLowerCase().includes(normalizedQuery));
+      return matchVenue || matchCity || matchAddress || matchDate || matchSupport || matchSetlist;
+    });
+  }
+
+  // Sort upcoming chronologically (closest date first), and past shows chronologically (most recent played first)
+  const upcomingList = filtered.filter(item => item.isUpcoming).sort((a, b) => a.sortTimestamp - b.sortTimestamp);
+  const pastList = filtered.filter(item => !item.isUpcoming).sort((a, b) => b.sortTimestamp - a.sortTimestamp);
+
+  const displayList = category === 'past' 
+    ? pastList 
+    : (category === 'upcoming' ? upcomingList : [...upcomingList, ...pastList]);
+
+  if (displayList.length === 0) {
+    feed.innerHTML = `
+      <div style="text-align: center; padding: 48px 20px; color: var(--text-card-muted); font-family: var(--font-secondary); font-size: 0.85rem; font-weight: 800;">
+        <i class="fa-solid fa-magnifying-glass" style="font-size: 1.8rem; margin-bottom: 12px; display: block; opacity: 0.4;"></i>
+        <div>No gigs found matching "${query ? query.replace(/</g, '&lt;').replace(/>/g, '&gt;') : 'filter'}"</div>
+        ${query ? `<button type="button" class="venue-action-pill-btn" id="listClearSearchAction" style="margin: 14px auto 0; display: inline-flex;">Clear Search</button>` : ''}
+      </div>
+    `;
+    const clearBtn = document.getElementById('listClearSearchAction');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        const searchInput = document.getElementById('gigListSearchInput');
+        if (searchInput) searchInput.value = '';
+        const searchClear = document.getElementById('gigListSearchClearBtn');
+        if (searchClear) searchClear.classList.add('hidden');
+        currentSearchQuery = '';
+        renderChronologicalTourStack(activeFilter, '');
+      });
+    }
+    return;
+  }
+
+  feed.innerHTML = displayList.map(({ venue, show, isUpcoming, isNextShow }) => {
+    const isSellingFast = show.ticketStatus === 'selling_fast';
+    const priceTag = show.ticketPriceLabel || show.ticketPrice || '$15 (EARLY BIRD)';
+    const statusText = isNextShow 
+      ? '🔥 NEXT GIG' 
+      : (isUpcoming ? (show.urgencyBadgeText ? show.urgencyBadgeText.replace('🔥', '').trim() : 'UPCOMING') : 'PAST SHOW');
+    const statusClass = isNextShow ? 'status-next' : (isUpcoming ? 'status-upcoming' : 'status-past');
+    const avgSpend = getVenueAvgSpend(venue, show);
+
+    const lineupSnippet = isUpcoming
+      ? (show.supportActs ? `Lineup: KINS + ${show.supportActs}` : (show.setTimes ? show.setTimes.map(st => st.act).join(' • ') : 'KINS Live Set + Special Guests'))
+      : (show.asPlayedSetlist ? `As Played: ${show.asPlayedSetlist.slice(0, 3).map(tr => tr.name).join(' • ')}` : 'Recorded Soundboard Master');
+
+    return `
+      <div class="tour-stack-card ${isNextShow ? 'is-next-show' : ''} ${isUpcoming ? 'is-upcoming' : 'is-past'}" data-venue-id="${venue.id}" data-gig-id="${show.id}">
+        <!-- Top Row: Date Badge + Status Badge -->
+        <div class="tour-stack-top-row">
+          <span class="tour-stack-date-badge">
+            <i class="fa-regular fa-calendar-days"></i>
+            <span>${show.dateText}</span>
+          </span>
+          <span class="tour-stack-status-badge ${statusClass}">${statusText}</span>
+        </div>
+
+        <!-- Venue Name & City -->
+        <div>
+          <h3 class="tour-stack-venue-title">${venue.name}</h3>
+          <div class="tour-stack-location-line">${venue.address || venue.city}</div>
+        </div>
+
+        <!-- Quick Info Chips -->
+        <div class="tour-stack-chips-row">
+          <span class="quick-chip"><i class="fa-regular fa-clock"></i> Doors ${show.doorsTime || '7:00 PM'}</span>
+          <span class="quick-chip"><i class="fa-solid fa-id-card"></i> ${show.ageLimit || '18+'}</span>
+          <span class="quick-chip"><i class="fa-solid fa-users"></i> ${show.capacity || '500'} Cap</span>
+          <span class="quick-chip"><i class="fa-solid fa-receipt"></i> ~${avgSpend} pp</span>
+        </div>
+
+        <!-- Lineup Preview Snippet -->
+        <div class="tour-stack-lineup-box">
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><i class="fa-solid fa-guitar" style="margin-right: 5px; color: var(--accent-neon-yellow);"></i> ${lineupSnippet}</span>
+          <button type="button" class="tour-stack-map-jump-btn venue-action-icon-btn" data-jump-venue-id="${venue.id}" data-jump-gig-id="${show.id}" title="Locate on Map" aria-label="Locate venue on map" style="width: 28px; height: 28px; font-size: 0.76rem;">
+            <i class="fa-solid fa-map-pin"></i>
+          </button>
+        </div>
+
+        <!-- Action Row: 1. Directions -> 2. Website -> 3. Menu -> 4. Calendar/Spotify -->
+        <div class="venue-action-chips-row">
+          <button type="button" class="venue-action-icon-btn list-directions-btn" data-venue-id="${venue.id}" aria-label="Directions to ${venue.name}" title="Directions / Navigation">
+            <i class="fa-solid fa-diamond-turn-right"></i>
+          </button>
+          <a href="${getVenueWebsiteUrl(venue)}" target="_blank" rel="noopener noreferrer" class="venue-action-pill-btn" aria-label="Visit ${venue.name} website" title="Venue Official Website">
+            <i class="fa-solid fa-globe"></i>
+            <span>Website</span>
+          </a>
+          <a href="${getVenueMenuUrl(venue)}" target="_blank" rel="noopener noreferrer" class="venue-action-pill-btn" aria-label="View menu for ${venue.name}" title="Food & Drink Menu">
+            <i class="fa-solid fa-utensils"></i>
+            <span>Menu</span>
+          </a>
+          ${isUpcoming ? `
+          <button type="button" class="venue-action-icon-btn list-calendar-btn" data-gig-id="${show.id}" aria-label="Add to calendar" title="Add to Calendar">
+            <i class="fa-regular fa-calendar-plus"></i>
+          </button>
+          ` : `
+          <a href="${show.spotifyPlaylistUrl || 'https://open.spotify.com'}" target="_blank" rel="noopener noreferrer" class="venue-action-icon-btn" aria-label="Play on Spotify" title="Spotify Playlist">
+            <i class="fa-brands fa-spotify" style="color: #1db954 !important;"></i>
+          </a>
+          `}
+        </div>
+
+        <!-- Full Width CTA Button -->
+        ${isUpcoming ? `
+        <a href="${show.ticketUrl || 'https://www.bandsintown.com'}" target="_blank" rel="noopener noreferrer" class="tour-stack-primary-cta" aria-label="Get tickets for ${venue.name}">
+          <i class="fa-solid fa-bolt"></i>
+          <span>GET TICKETS — ${priceTag}</span>
+        </a>
+        ` : `
+        <button type="button" class="tour-stack-primary-cta is-past-cta list-checkin-btn" data-gig-id="${show.id}" aria-label="Check in to show">
+          <i class="fa-solid fa-ticket"></i>
+          <span>${(show.attendanceCount || 340) + (show.hasUserCheckedIn ? 1 : 0)} FANS ATTENDED • ${show.hasUserCheckedIn ? 'CHECKED IN (✓)' : '"I WAS THERE"'}</span>
+        </button>
+        `}
+      </div>
+    `;
+  }).join('');
+
+  // Wire event handlers inside the list feed
+  feed.querySelectorAll('.tour-stack-map-jump-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const vId = btn.getAttribute('data-jump-venue-id');
+      const gId = btn.getAttribute('data-jump-gig-id');
+      const pair = findVenueAndShow(gId || vId);
+      setViewMode('map');
+      if (pair.venue) {
+        displayVenueDetails(pair.venue, pair.show);
+        panToVenueOnMap(pair.venue, true);
+      }
+    });
+  });
+
+  feed.querySelectorAll('.list-directions-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const vId = btn.getAttribute('data-venue-id');
+      const pair = findVenueAndShow(vId);
+      if (pair.venue) openExternalMaps(pair.venue);
+    });
+  });
+
+  feed.querySelectorAll('.list-calendar-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const gId = btn.getAttribute('data-gig-id');
+      const pair = findVenueAndShow(gId);
+      if (pair.show) {
+        const choice = confirm(`Add "${pair.venue ? pair.venue.name : 'Kins'}" show to calendar?\n\nClick OK for Google Calendar\nClick Cancel to download .ics (Apple / Outlook)`);
+        if (choice) {
+          window.open(getGoogleCalendarUrl(pair.show), '_blank', 'noopener,noreferrer');
+        } else {
+          downloadIcsFile(pair.show);
+        }
+      }
+    });
+  });
+
+  feed.querySelectorAll('.list-checkin-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const gId = btn.getAttribute('data-gig-id');
+      const pair = findVenueAndShow(gId);
+      if (pair.show) {
+        pair.show.hasUserCheckedIn = !pair.show.hasUserCheckedIn;
+        renderChronologicalTourStack(category);
+        if (pair.show.hasUserCheckedIn) {
+          showToast(`🎟️ Checked in to ${pair.venue ? pair.venue.name : 'show'}! Added to passport.`);
+        } else {
+          showToast(`Removed check-in.`);
+        }
+      }
+    });
+  });
 }
 
 export function fitAllTourBounds() {
@@ -1904,6 +2177,57 @@ export function initGigMapModule() {
   }
   updateFloatingPill();
 
+  // Setup View Switchers (Map View ⇄ List View) across both header bars
+  document.querySelectorAll('.view-switch-map-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setViewMode('map');
+    });
+  });
+
+  document.querySelectorAll('.view-switch-list-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setViewMode('list');
+    });
+  });
+
+  // Setup List Live Search Input
+  const listSearchInput = document.getElementById('gigListSearchInput');
+  const listSearchClearBtn = document.getElementById('gigListSearchClearBtn');
+
+  if (listSearchInput) {
+    listSearchInput.addEventListener('input', (e) => {
+      currentSearchQuery = e.target.value;
+      if (listSearchClearBtn) {
+        listSearchClearBtn.classList.toggle('hidden', !currentSearchQuery);
+      }
+      renderChronologicalTourStack(activeFilter, currentSearchQuery);
+    });
+  }
+
+  if (listSearchClearBtn) {
+    listSearchClearBtn.addEventListener('click', (e) => {
+      if (listSearchInput) {
+        listSearchInput.value = '';
+        listSearchInput.focus();
+      }
+      listSearchClearBtn.classList.add('hidden');
+      currentSearchQuery = '';
+      renderChronologicalTourStack(activeFilter, '');
+    });
+  }
+
+  // Setup Close Sheet buttons across both Map and List views
+  document.querySelectorAll('.list-close-sheet-btn, #closeGigMapSheet').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (gigMapModal) {
+        gigMapModal.classList.remove('active');
+        unlockScroll();
+      }
+    });
+  });
+
   // Setup Horizontal Expanding Filter Toolbar
   const filterToolbar = document.getElementById('expandingFilterToolbar');
   const filterToggleBtn = document.getElementById('gigFilterToggleBtn');
@@ -1922,7 +2246,7 @@ export function initGigMapModule() {
     });
   }
 
-  // Setup Filter Tabs (All, Upcoming, Archived)
+  // Setup Filter Tabs (All, Upcoming, Past) across both Map and List views
   document.querySelectorAll('.gig-filter-tab').forEach(tab => {
     tab.addEventListener('click', (e) => {
       e.stopPropagation();
