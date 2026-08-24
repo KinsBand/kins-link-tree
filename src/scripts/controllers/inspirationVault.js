@@ -288,8 +288,8 @@ export const INSPIRATION_TRACKS = [
   },
   {
     id: 'negative-xp',
-    title: 'negative xp - autism',
-    artist: 'Quandale Dingle',
+    title: 'Mkultra Victim',
+    artist: 'Negative XP',
     genre: 'Lo-Fi Punk',
     duration: '2:34',
     quote: 'Gritty lo-fi DIY chords & internet culture energy',

@@ -738,7 +738,7 @@ function buildPopupHtml(venue, activeShow) {
   const isNext = show.isNextShow;
   const showCount = venue.shows.length;
 
-  let badgeText = isNext ? '🔥 NEXT GIG' : (isUpcoming ? '🎟️ UPCOMING' : '📼 ARCHIVE');
+  let badgeText = isNext ? '🔥 NEXT GIG' : (isUpcoming ? '🎟️ UPCOMING' : '📼 PAST');
   if (showCount > 1) {
     badgeText = `${badgeText} • ${showCount} SHOWS`;
   }
@@ -927,6 +927,50 @@ function closePhotoLightbox() {
   if (lightbox) lightbox.classList.remove('active');
 }
 
+function getVenueWebsiteUrl(venue) {
+  if (venue.websiteUrl) return venue.websiteUrl;
+  const name = (venue.name || '').toLowerCase();
+  if (name.includes('lansdowne')) return 'https://thelansdownepub.com.au';
+  if (name.includes('metro')) return 'https://www.metrotheatre.com.au';
+  if (name.includes('enmore')) return 'https://www.enmoretheatre.com.au';
+  if (name.includes('oxford')) return 'https://oxfordartfactory.com';
+  if (name.includes('crowbar')) return 'https://crowbarsyd.com';
+  if (name.includes('stag')) return 'https://stagandhunter.com.au';
+  if (name.includes('manning')) return 'https://manningbar.com';
+  if (name.includes('cambridge') || name.includes('king st')) return 'https://www.kingstreet.net.au';
+  if (name.includes('lass')) return 'https://thelass.com.au';
+  if (name.includes('wollongong')) return 'https://wollongongtownhall.com.au';
+  return `https://www.google.com/search?q=${encodeURIComponent((venue.name || '') + ' ' + (venue.city || ''))}`;
+}
+
+function getVenueMenuUrl(venue) {
+  if (venue.menuUrl) return venue.menuUrl;
+  const name = (venue.name || '').toLowerCase();
+  if (name.includes('lansdowne')) return 'https://thelansdownepub.com.au/eat-drink/';
+  if (name.includes('metro')) return 'https://www.metrotheatre.com.au/bars/';
+  if (name.includes('enmore')) return 'https://www.enmoretheatre.com.au/bars/';
+  if (name.includes('oxford')) return 'https://oxfordartfactory.com/food-drink/';
+  if (name.includes('crowbar')) return 'https://crowbarsyd.com/bar-menu/';
+  if (name.includes('stag')) return 'https://stagandhunter.com.au/menu/';
+  if (name.includes('manning')) return 'https://manningbar.com/food-drink/';
+  if (name.includes('cambridge') || name.includes('king st')) return 'https://www.kingstreet.net.au/bars';
+  if (name.includes('lass')) return 'https://thelass.com.au/kitchen/';
+  if (name.includes('wollongong')) return 'https://wollongongtownhall.com.au/visit/';
+  return `https://www.google.com/search?q=${encodeURIComponent((venue.name || '') + ' menu ' + (venue.city || ''))}`;
+}
+
+function getVenueAvgSpend(venue, show) {
+  if (venue.avgSpend) return venue.avgSpend.replace(/^[~$\s]+/, '$').replace(/\s*pp$/i, '');
+  if (show && show.avgSpend) return show.avgSpend.replace(/^[~$\s]+/, '$').replace(/\s*pp$/i, '');
+  const name = (venue.name || '').toLowerCase();
+  if (name.includes('enmore') || name.includes('metro')) return '$42';
+  if (name.includes('lansdowne') || name.includes('oxford') || name.includes('stag')) return '$28';
+  if (name.includes('cambridge') || name.includes('king st')) return '$25';
+  if (name.includes('manning') || name.includes('crowbar')) return '$22';
+  if (name.includes('wollongong') || name.includes('lass')) return '$26';
+  return '$28';
+}
+
 // Render multi-show timeline tabs inside venue detail card
 function renderVenueEditionTimeline(venue, activeShow) {
   const timelineBar = document.getElementById('venueEditionTimelineBar');
@@ -945,7 +989,7 @@ function renderVenueEditionTimeline(venue, activeShow) {
     const isUp = s.type === 'upcoming';
     const isNext = s.isNextShow;
     const iconClass = isNext ? 'fa-fire' : (isUp ? 'fa-ticket' : 'fa-compact-disc');
-    const badgeText = isNext ? 'NEXT SHOW' : (isUp ? 'UPCOMING' : 'ARCHIVE');
+    const badgeText = isNext ? 'NEXT SHOW' : (isUp ? 'UPCOMING' : 'PAST');
 
     return `
       <button type="button" class="venue-edition-tab ${isAct ? 'active' : ''} ${isUp ? 'is-upcoming' : 'is-past'}" data-show-id="${s.id}" aria-label="Show on ${s.dateText}">
@@ -1034,7 +1078,7 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
   if (venueLocationEl) venueLocationEl.textContent = venue.city.split(',')[0].trim();
   if (venuePeekDate) venuePeekDate.textContent = show.dateText;
 
-  // 2. Badges: Urgency Pill (Upcoming) vs Archive Badge (Past)
+  // 2. Badges: Urgency Pill (Upcoming) vs Archive Badge (Past) & Header Share Button
   const venueArchiveBadge = document.getElementById('venueArchiveBadge');
   if (venueUrgencyPill) {
     if (isUpcoming && show.urgencyBadgeText) {
@@ -1051,6 +1095,16 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
     } else {
       venueArchiveBadge.classList.add('hidden');
     }
+  }
+
+  // Header Share Button (Always active and visible in header next to badge)
+  const venueHeaderShareBtn = document.getElementById('venueHeaderShareBtn');
+  if (venueHeaderShareBtn) {
+    venueHeaderShareBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      triggerShareShow(venue, show);
+    };
   }
 
   // 3. Primary Full-Width CTA
@@ -1143,21 +1197,24 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
           <span class="quick-chip"><i class="fa-regular fa-clock"></i> Doors ${show.doorsTime || '7:00 PM'}</span>
           <span class="quick-chip"><i class="fa-solid fa-id-card"></i> ${show.ageLimit || '18+'}</span>
           <span class="quick-chip"><i class="fa-solid fa-users"></i> ${show.capacity || '500'} Cap</span>
+          <span class="quick-chip"><i class="fa-solid fa-receipt"></i> ~${getVenueAvgSpend(venue, show)} pp</span>
         </div>
 
-        <!-- Redesigned Quick Action Row -->
+        <!-- Redesigned Quick Action Row: 1. Directions -> 2. Website -> 3. Menu -> 4. Calendar -->
         <div class="venue-action-chips-row">
-          <button type="button" class="venue-action-chip-btn" id="venueDirectionsAction" aria-label="Directions to venue">
+          <button type="button" class="venue-action-icon-btn" id="venueDirectionsAction" aria-label="Directions to venue" title="Directions / Navigation">
             <i class="fa-solid fa-diamond-turn-right"></i>
-            <span>Navigate</span>
           </button>
-          <button type="button" class="venue-action-chip-btn" id="venueCalendarAction" aria-label="Add show to calendar">
+          <a href="${getVenueWebsiteUrl(venue)}" target="_blank" rel="noopener noreferrer" class="venue-action-pill-btn" aria-label="Visit venue website" title="Venue Official Website">
+            <i class="fa-solid fa-globe"></i>
+            <span>Website</span>
+          </a>
+          <a href="${getVenueMenuUrl(venue)}" target="_blank" rel="noopener noreferrer" class="venue-action-pill-btn" aria-label="View food and drinks menu" title="Food & Drink Menu">
+            <i class="fa-solid fa-utensils"></i>
+            <span>Menu</span>
+          </a>
+          <button type="button" class="venue-action-icon-btn" id="venueCalendarAction" aria-label="Add show to calendar" title="Add to Calendar">
             <i class="fa-regular fa-calendar-plus"></i>
-            <span>+Calendar</span>
-          </button>
-          <button type="button" class="venue-action-chip-btn" id="venueShareAction" aria-label="Share show details">
-            <i class="fa-solid fa-arrow-up-from-bracket"></i>
-            <span>Share</span>
           </button>
         </div>
 
@@ -1439,25 +1496,28 @@ export function displayVenueDetails(targetVenueOrGig, specificShow) {
       venueDynamicBody.innerHTML = `
         <!-- Tier 1 View: Summary, Quick Actions & Drawer Trigger -->
         <div class="venue-quick-info-row">
-          <span class="quick-chip"><i class="fa-solid fa-box-archive"></i> Tour Archive</span>
+          <span class="quick-chip"><i class="fa-solid fa-box-archive"></i> Past</span>
           <span class="quick-chip"><i class="fa-solid fa-id-card"></i> ${show.ageLimit || '18+'}</span>
           <span class="quick-chip"><i class="fa-solid fa-users"></i> ${show.capacity || '500'} Cap</span>
+          <span class="quick-chip"><i class="fa-solid fa-receipt"></i> ~${getVenueAvgSpend(venue, show)} pp</span>
         </div>
 
-        <!-- Quick Action Row -->
+        <!-- Redesigned Quick Action Row: 1. Directions -> 2. Website -> 3. Menu -> 4. Spotify -->
         <div class="venue-action-chips-row">
-          <button type="button" class="venue-action-chip-btn" id="venueArchiveDirectionsAction" aria-label="Directions to venue">
+          <button type="button" class="venue-action-icon-btn" id="venueArchiveDirectionsAction" aria-label="Directions to venue" title="Directions / Navigation">
             <i class="fa-solid fa-diamond-turn-right"></i>
-            <span>Navigate</span>
           </button>
-          <a href="${show.spotifyPlaylistUrl || 'https://open.spotify.com'}" target="_blank" rel="noopener noreferrer" class="venue-action-chip-btn" aria-label="Play on Spotify">
-            <i class="fa-brands fa-spotify" style="color: #1db954 !important;"></i>
-            <span>Spotify</span>
+          <a href="${getVenueWebsiteUrl(venue)}" target="_blank" rel="noopener noreferrer" class="venue-action-pill-btn" aria-label="Visit venue website" title="Venue Official Website">
+            <i class="fa-solid fa-globe"></i>
+            <span>Website</span>
           </a>
-          <button type="button" class="venue-action-chip-btn" id="venueArchiveShareAction" aria-label="Share show details">
-            <i class="fa-solid fa-arrow-up-from-bracket"></i>
-            <span>Share</span>
-          </button>
+          <a href="${getVenueMenuUrl(venue)}" target="_blank" rel="noopener noreferrer" class="venue-action-pill-btn" aria-label="View food and drinks menu" title="Food & Drink Menu">
+            <i class="fa-solid fa-utensils"></i>
+            <span>Menu</span>
+          </a>
+          <a href="${show.spotifyPlaylistUrl || 'https://open.spotify.com'}" target="_blank" rel="noopener noreferrer" class="venue-action-icon-btn" aria-label="Play on Spotify" title="Spotify Playlist">
+            <i class="fa-brands fa-spotify" style="color: #1db954 !important;"></i>
+          </a>
         </div>
 
         <!-- Fixed Interactive Bottom Drawer Trigger (Tier 1 Bottom) -->

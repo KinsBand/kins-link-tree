@@ -1,5 +1,5 @@
 import { showToast } from './toast.js';
-import { getITunesTrackData, loadAlbumArt, INSPIRED_ARTISTS_DATA, prefetchTrackArtwork } from './inspirationVault.js';
+import { getITunesTrackData, loadAlbumArt, INSPIRED_ARTISTS_DATA, INSPIRATION_TRACKS, prefetchTrackArtwork } from './inspirationVault.js';
 
 let isPlayingAudio = false;
 let currentPlayingTrack = null;
@@ -559,6 +559,9 @@ function formatTime(seconds, isTotalDuration = false) {
 }
 
 function getAllInspiredTracks() {
+  if (Array.isArray(INSPIRATION_TRACKS) && INSPIRATION_TRACKS.length > 0) {
+    return INSPIRATION_TRACKS;
+  }
   const tracks = [];
   const seen = new Set();
   if (!INSPIRED_ARTISTS_DATA) return tracks;
@@ -1348,16 +1351,18 @@ export function initAudioPlayer() {
         updateToggleBtnState(true);
         triggerNeedleDropAndSpinUp(true);
         if (vaultAudioPlayer) {
-          vaultAudioPlayer.volume = 0;
-          vaultAudioPlayer.play().catch(() => {});
+          vaultAudioPlayer.volume = 1.0;
+          vaultAudioPlayer.playbackRate = 1.0;
+          vaultAudioPlayer.play().catch((err) => {
+            console.warn('Resume play failed:', err);
+          });
           startTimelineAnimation();
-          fadeInAudio(600, 1.0);
         }
         showToast(`Resumed: "${trackObj.title}"`);
       } else {
         updateToggleBtnState(false);
         showToast(`Paused: "${trackObj.title}"`);
-        await triggerVinylSpinDownAndStop(550, true);
+        await triggerVinylSpinDownAndStop(450, true);
       }
       return;
     }
@@ -1365,33 +1370,24 @@ export function initAudioPlayer() {
     // 2. Handling SWITCHING to a NEW track while already playing (or from idle)
     isTransitioningTrack = true;
 
-    // Start fetching metadata / previewUrl in parallel immediately
+    // Start fetching metadata / previewUrl immediately if not yet populated
     let previewUrl = trackObj.previewUrl;
     let coverUrl = trackObj.coverUrl || trackObj.artworkUrl;
 
-    const fetchMetaPromise = (!previewUrl || !coverUrl)
-      ? getITunesTrackData(trackObj.artist, trackObj.title).then(meta => {
-          if (meta) {
-            if (meta.previewUrl) {
-              previewUrl = meta.previewUrl;
-              trackObj.previewUrl = previewUrl;
-            }
-            if (meta.artworkUrl) {
-              coverUrl = meta.artworkUrl;
-              trackObj.coverUrl = coverUrl;
-              trackObj.artworkUrl = coverUrl;
-            }
-          }
-        })
-      : Promise.resolve();
-
-    // If another track is currently playing, dip pitch and maintain the round spinning vinyl platter
-    if (isPlayingAudio && vaultAudioPlayer && !vaultAudioPlayer.paused && vaultAudioPlayer.volume > 0.05) {
-      await triggerVinylSpinDownAndStop(350, false);
+    if (!previewUrl || !coverUrl) {
+      const meta = await getITunesTrackData(trackObj.artist, trackObj.title);
+      if (meta) {
+        if (meta.previewUrl) {
+          previewUrl = meta.previewUrl;
+          trackObj.previewUrl = previewUrl;
+        }
+        if (meta.artworkUrl) {
+          coverUrl = meta.artworkUrl;
+          trackObj.coverUrl = coverUrl;
+          trackObj.artworkUrl = coverUrl;
+        }
+      }
     }
-
-    // Wait for parallel metadata fetch to complete if it wasn't preloaded
-    await fetchMetaPromise;
 
     // If another song was requested while we were waiting, abort this stale transition
     if (transitionId !== currentTransitionId) return;
@@ -1436,12 +1432,13 @@ export function initAudioPlayer() {
     if (vaultAudioPlayer && previewUrl) {
       vaultAudioPlayer.src = previewUrl;
       vaultAudioPlayer.playbackRate = 1.0;
+      vaultAudioPlayer.volume = 1.0;
       try {
         vaultAudioPlayer.preservesPitch = true;
         vaultAudioPlayer.mozPreservesPitch = true;
         vaultAudioPlayer.webkitPreservesPitch = true;
       } catch (e) {}
-      vaultAudioPlayer.volume = 0;
+
       vaultAudioPlayer.play().then(() => {
         if (transitionId !== currentTransitionId) return;
         triggerNeedleDropAndSpinUp(false);
@@ -1449,7 +1446,6 @@ export function initAudioPlayer() {
         isPlayingAudio = true;
         startTimelineAnimation();
         updateToggleBtnState(true);
-        fadeInAudio(600, 1.0);
         showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
       }).catch(err => {
         if (transitionId !== currentTransitionId) return;
@@ -1514,22 +1510,25 @@ export function initAudioPlayer() {
   if (audioBarToggleBtn) {
     audioBarToggleBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (!currentPlayingTrack) return;
+      if (!currentPlayingTrack) {
+        startAutoMix();
+        return;
+      }
       isPlayingAudio = !isPlayingAudio;
       if (isPlayingAudio) {
         updateToggleBtnState(true);
         triggerNeedleDropAndSpinUp(true);
         if (vaultAudioPlayer) {
-          vaultAudioPlayer.volume = 0;
+          vaultAudioPlayer.volume = 1.0;
+          vaultAudioPlayer.playbackRate = 1.0;
           vaultAudioPlayer.play().catch(() => {});
           startTimelineAnimation();
-          fadeInAudio(600, 1.0);
         }
         showToast(`Resumed: "${currentPlayingTrack.title}"`, 'music');
       } else {
         updateToggleBtnState(false);
         showToast(`Paused: "${currentPlayingTrack.title}"`, 'music');
-        await triggerVinylSpinDownAndStop(550, true);
+        await triggerVinylSpinDownAndStop(450, true);
       }
     });
   }
@@ -1568,6 +1567,7 @@ export function initAudioPlayer() {
     if (vaultAudioPlayer) {
       vaultAudioPlayer.pause();
       vaultAudioPlayer.playbackRate = 1.0;
+      vaultAudioPlayer.volume = 1.0;
     }
     stopTimelineAnimation();
     updateTimelineUI();
@@ -1614,13 +1614,11 @@ export function initAudioPlayer() {
     }
   }, { capture: true });
 
-  // Background prefetch all inspiration tracks for instant 0ms switching
-  setTimeout(() => {
-    try {
-      const allTracks = getAllInspiredTracks();
-      if (allTracks && allTracks.length > 0) {
-        prefetchTrackArtwork(allTracks);
-      }
-    } catch (e) {}
-  }, 1200);
+  // Immediate prefetch of all inspiration tracks on page load so 30s previews & artwork load instantly
+  try {
+    const allTracks = getAllInspiredTracks();
+    if (allTracks && allTracks.length > 0) {
+      prefetchTrackArtwork(allTracks);
+    }
+  } catch (e) {}
 }

@@ -48,7 +48,7 @@
       <div class="gig-bottom-sheet-attached-header" id="gigAttachedTopStack">
         <!-- 1. Top: Horizontal Expanding Filter Toolbar (Left-Anchored, Expands Right) -->
         <div class="expanding-filter-toolbar" id="expandingFilterToolbar">
-          <button type="button" class="filter-toggle-icon-btn" id="gigFilterToggleBtn" aria-label="Toggle Tour Filters" title="Filter Shows (All / Upcoming / Archived)">
+          <button type="button" class="filter-toggle-icon-btn" id="gigFilterToggleBtn" aria-label="Toggle Tour Filters" title="Filter Shows (All / Upcoming / Past)">
             <i class="fa-solid fa-sliders"></i>
             <span class="filter-active-dot" id="filterActiveDot"></span>
           </button>
@@ -64,7 +64,7 @@
             </button>
             <button type="button" class="gig-filter-tab" data-filter="past" role="tab" aria-selected="false">
               <i class="fa-solid fa-box-archive"></i>
-              <span>Archived (6)</span>
+              <span>Past (6)</span>
             </button>
           </div>
         </div>
@@ -89,14 +89,26 @@
       
       <!-- Sticky Header Block -->
       <div class="venue-card-header" id="venueCardHeader">
-        <!-- Row 1: Venue Title + Badge -->
+        <!-- Row 1: Venue Title + Badge + Share Button -->
         <div class="venue-title-full-row">
           <h4 class="venue-card-name" id="venueCardName" title="Select a venue on the map">Select a venue on the map</h4>
           
           <div class="header-badges-group">
             <span class="venue-urgency-pill hidden" id="venueUrgencyPill"><i class="fa-solid fa-fire"></i> IN 8 DAYS</span>
-            <span class="venue-archive-badge hidden" id="venueArchiveBadge"><i class="fa-solid fa-box-archive"></i> TOUR ARCHIVE</span>
+            <span class="venue-archive-badge hidden" id="venueArchiveBadge"><i class="fa-solid fa-box-archive"></i> PAST</span>
             
+            <!-- Share Button (Consistent in Live & Past states) -->
+            <button 
+              type="button" 
+              class="venue-header-share-btn" 
+              id="venueHeaderShareBtn" 
+              aria-label="Share show details" 
+              title="Share show details"
+              data-track="gig_map:share_header"
+            >
+              <i class="fa-solid fa-arrow-up-from-bracket"></i>
+            </button>
+
             <!-- Desktop Snap Toggle -->
             <button 
               type="button" 
@@ -932,6 +944,36 @@
     display: none !important;
   }
 
+  /* Header Share Button */
+  .venue-header-share-btn {
+    background: var(--surface-card-light-hover);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--text-card-primary);
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.76rem;
+    flex-shrink: 0;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
+  .venue-header-share-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .venue-header-share-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
   /* Timeline Bar (Multi-show venues) */
   .venue-edition-timeline-bar {
     display: flex;
@@ -1167,52 +1209,96 @@
     white-space: nowrap;
   }
 
-  /* Action Chips Row */
+  /* Action Chips & Navigation Row (Directions -> Website -> Menu -> Calendar/Spotify) */
   :global(.venue-action-chips-row) {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    display: flex;
+    align-items: center;
     gap: 6px;
     width: 100%;
     margin-top: 2px;
+    box-sizing: border-box;
   }
 
-  :global(.venue-action-chip-btn) {
+  :global(.venue-action-pill-btn) {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 36px;
     background: var(--surface-card-light-hover);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     color: var(--text-card-primary);
     font-family: var(--font-secondary);
-    font-size: 0.74rem;
+    font-size: 0.73rem;
     font-weight: 900;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    padding: 8px 6px;
+    padding: 0 6px;
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 5px;
     cursor: pointer;
     text-decoration: none;
     transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
     user-select: none;
     box-sizing: border-box;
+    white-space: nowrap;
   }
 
-  :global(.venue-action-chip-btn:hover) {
+  :global(.venue-action-pill-btn:hover) {
     background: var(--accent-neon-yellow);
     color: #000000;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
 
-  :global(.venue-action-chip-btn:active) {
+  :global(.venue-action-pill-btn:active) {
     transform: translate(1px, 1px);
     box-shadow: 1px 1px 0px #000000;
   }
 
-  :global(.venue-action-chip-btn i) {
+  :global(.venue-action-pill-btn i) {
     font-size: 0.78rem;
+    color: inherit;
+  }
+
+  :global(.venue-action-icon-btn) {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex-shrink: 0;
+    background: var(--surface-card-light-hover);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--text-card-primary);
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.86rem;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+    user-select: none;
+    box-sizing: border-box;
+    padding: 0;
+  }
+
+  :global(.venue-action-icon-btn:hover) {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  :global(.venue-action-icon-btn:active) {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  :global(.venue-action-icon-btn i) {
+    font-size: 0.86rem;
     color: inherit;
   }
 
