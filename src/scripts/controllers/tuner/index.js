@@ -153,6 +153,16 @@ function detectionLoop(ts) {
   handleReading(r, ts);
 }
 
+async function micPermissionState() {
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      const st = await navigator.permissions.query({ name: 'microphone' });
+      return st.state;
+    }
+  } catch (e) {}
+  return 'unknown';
+}
+
 async function onMicToggle() {
   if (state.starting) return;
   if (state.listening) {
@@ -172,14 +182,26 @@ async function onMicToggle() {
   } catch (err) {
     state.starting = false;
     ui.setMicState(false, false);
-    if (err && err.message === 'unsupported') {
+    const name = err && err.name;
+    if (err && err.code === 'unsupported') {
       ui.showMicWarning(TUNER_COPY.micUnsupported);
-    } else if (err && err.name === 'NotReadableError') {
+    } else if (name === 'NotReadableError' || name === 'TrackStartError') {
       ui.showMicWarning('Microphone is busy in another app. Close it and try again.');
       showToast('Microphone is busy in another app.', 'warning');
+    } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError' || name === 'OverconstrainedError') {
+      showToast(TUNER_COPY.micNotFound, 'warning');
+    } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+      // Default to site-level denial (user clicked "Block" or the padlock is set to deny).
+      // Only escalate to OS-blocked message if the Permissions API explicitly says 'granted'
+      // (meaning the browser allowed it but the OS intercepted it). Treat 'prompt', 'denied',
+      // and 'unknown' all as user-level denial — the padlock message is always actionable.
+      const permState = await micPermissionState();
+      const msg = permState === 'granted' ? TUNER_COPY.micSystemBlocked : TUNER_COPY.micDenied;
+      ui.showMicWarning(msg);
+      showToast(msg, 'warning');
     } else {
-      ui.showMicWarning(TUNER_COPY.micDenied);
-      showToast(TUNER_COPY.micDenied, 'warning');
+      ui.showMicWarning(TUNER_COPY.micSystemBlocked);
+      showToast(TUNER_COPY.micSystemBlocked, 'warning');
     }
   }
 }

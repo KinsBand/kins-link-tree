@@ -61,9 +61,9 @@
   .toast-container :global(.toast-text-content) {
     flex: 1;
     min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .toast-container :global(.toast-close-btn) {

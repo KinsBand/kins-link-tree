@@ -69,6 +69,10 @@ export function showToast(message, explicitType = null) {
   const messageEl = toast.querySelector('.toast-text-content');
   if (messageEl) messageEl.textContent = cleanMessage;
 
+  const duration = Math.min(7000, 2800 + cleanMessage.length * 30);
+  const progressBar = toast.querySelector('.toast-progress-bar');
+  if (progressBar) progressBar.style.animationDuration = duration + 'ms';
+
   const dismissToast = () => {
     clearTimeout(activeToastTimeout);
     toast.classList.add('toast-fade-out');
@@ -91,5 +95,5 @@ export function showToast(message, explicitType = null) {
         if (activeToast === toast) activeToast = null;
       }, 240);
     }
-  }, 2800);
+  }, duration);
 }

@@ -123,9 +123,9 @@ const musicGroupSchema = {
       } catch (e) {}
     })();
   </script>
-  <!-- Vercel Web Analytics (cookieless, DNT-respecting) -->
+  <!-- Vercel Web Analytics (cookieless, DNT-respecting) — script only exists when deployed -->
   <script is:inline>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
-  <script is:inline defer src="/_vercel/insights/script.js"></script>
+  {import.meta.env.PROD && <script is:inline defer src="/_vercel/insights/script.js"></script>}
 
 </head>
 <body>

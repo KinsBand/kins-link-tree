@@ -184,121 +184,96 @@ function fallbackToEmailForm(message) {
 }
 
 /**
- * Swaps the custom button for Google's official Sign In With Google button
- * once it renders successfully. Falls back to the custom button otherwise.
+ * Ensures GIS is loaded and initialized. Runs ONLY after an explicit
+ * button press — nothing Google-related happens at page load.
  */
-function mountOfficialGoogleButton() {
-  const host = document.getElementById('googleBtnHost');
-  const customBtn = document.getElementById('googleAuthBtn');
-  if (!host || !window.google?.accounts?.id) return false;
+let googleReady = false;
+let googleInitPromise = null;
 
-  try {
-    window.google.accounts.id.renderButton(host, {
-      type: 'standard',
-      theme: 'outline',
-      size: 'large',
-      shape: 'pill',
-      text: 'continue_with',
-      logo_alignment: 'left',
-      locale: 'en-US'
-    });
+async function ensureGoogleInitialized() {
+  if (googleReady) return true;
+  if (googleInitPromise) return googleInitPromise;
 
-    // renderButton injects its iframe synchronously in practice; verify next tick
-    requestAnimationFrame(() => {
-      if (host.childElementCount > 0 && customBtn) {
-        customBtn.classList.add('hidden');
-        host.classList.remove('hidden');
-      }
-    });
-    return true;
-  } catch (err) {
-    console.warn('[SocialAuth] renderButton failed:', err);
-    return false;
-  }
+  googleInitPromise = (async () => {
+    const loaded = await loadGsiScript();
+    if (!loaded || !window.google?.accounts?.id) return false;
+
+    let nonceHashed = '';
+    try {
+      const nonce = await generateNonce();
+      oneTapNonceRaw = nonce.raw;
+      nonceHashed = nonce.hashed;
+    } catch (err) {
+      console.warn('[SocialAuth] Nonce generation failed:', err);
+    }
+
+    try {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+        auto_select: true,
+        cancel_on_tap_outside: true,
+        context: 'signup',
+        itp_support: true,
+        ...(nonceHashed ? { nonce: nonceHashed } : {})
+      });
+      googleReady = true;
+      return true;
+    } catch (err) {
+      console.warn('[SocialAuth] GIS initialize exception:', err);
+      return false;
+    }
+  })();
+
+  const ok = await googleInitPromise;
+  if (!ok) googleInitPromise = null;
+  return ok;
 }
 
 /**
- * Initializes Google Identity Services One Tap + official button.
+ * Button-driven sign-in: loads/initializes GIS lazily, then opens the
+ * Google account chooser. Falls back to the email form when the prompt
+ * cannot be shown (blocked script, disallowed origin, dismissed).
  */
-async function initGoogleOneTap() {
-  const googleBtn = document.getElementById('googleAuthBtn');
-
-  if (!isValidGoogleClientId(GOOGLE_CLIENT_ID)) {
-    console.warn('[SocialAuth] PUBLIC_GOOGLE_CLIENT_ID missing or invalid.');
-    googleBtn?.addEventListener('click', (e) => {
-      e.preventDefault();
-      fallbackToEmailForm('Google sign-in is not configured — enter your email below and tap JOIN!');
-    });
-    return;
-  }
-
-  const loaded = await loadGsiScript();
-  if (!loaded || !window.google?.accounts?.id) return;
-
-  let nonceHashed = '';
-  try {
-    const nonce = await generateNonce();
-    oneTapNonceRaw = nonce.raw;
-    nonceHashed = nonce.hashed;
-  } catch (err) {
-    console.warn('[SocialAuth] Nonce generation failed:', err);
-  }
+async function handleGoogleBtnPress(e) {
+  e.preventDefault();
+  const googleBtn = e.currentTarget || document.getElementById('googleAuthBtn');
 
   try {
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredential,
-      auto_select: true,
-      cancel_on_tap_outside: true,
-      context: 'signup',
-      itp_support: true,
-      ...(nonceHashed ? { nonce: nonceHashed } : {})
-    });
-  } catch (err) {
-    console.warn('[SocialAuth] GIS initialize exception:', err);
-    return;
-  }
-
-  mountOfficialGoogleButton();
-
-  // One Tap auto-prompt for visitors who haven't subscribed yet
-  if (!getSubscriptionState()) {
-    setTimeout(() => {
-      if (getSubscriptionState()) return;
-      try {
-        window.google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed()) {
-            console.info('[SocialAuth] One Tap not displayed:', notification.getNotDisplayedReason());
-          } else if (notification.isSkippedMoment()) {
-            console.info('[SocialAuth] One Tap skipped:', notification.getSkippedReason());
-          }
-        });
-      } catch (_) {}
-    }, 1200);
-  }
-
-  // Custom-button fallback path (only visible when the official button fails to render)
-  googleBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
     if (getSubscriptionState()) {
       showToast("You're already subscribed to Kins!");
       return;
     }
-    if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.prompt((notification) => {
-          if (
-            (typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed()) ||
-            (typeof notification.isSkippedMoment === 'function' && notification.isSkippedMoment())
-          ) {
-            fallbackToEmailForm();
-          }
-        });
-        return;
-      } catch (_) {}
+    if (!isValidGoogleClientId(GOOGLE_CLIENT_ID)) {
+      fallbackToEmailForm('Google sign-in is not configured — enter your email below and tap JOIN!');
+      return;
     }
+
+    googleBtn?.setAttribute('disabled', '');
+    const ready = await ensureGoogleInitialized();
+    googleBtn?.removeAttribute('disabled');
+    if (!ready) {
+      fallbackToEmailForm('Google sign-in is unavailable right now — enter your email below and tap JOIN!');
+      return;
+    }
+
+    window.google.accounts.id.prompt((notification) => {
+      const notShown =
+        (typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed()) ||
+        (typeof notification.isSkippedMoment === 'function' && notification.isSkippedMoment());
+      if (notShown) {
+        console.info(
+          '[SocialAuth] One Tap not shown:',
+          notification.getNotDisplayedReason?.() || notification.getSkippedReason?.()
+        );
+        fallbackToEmailForm();
+      }
+    });
+  } catch (err) {
+    console.warn('[SocialAuth] Google sign-in failed:', err);
+    googleBtn?.removeAttribute('disabled');
     fallbackToEmailForm();
-  });
+  }
 }
 
 /**
@@ -347,10 +322,11 @@ export async function signOutSocialAuth() {
 }
 
 /**
- * Main initialization entrypoint for 1-Tap Social Auth.
+ * Main initialization entrypoint. Binds the Google button only — no
+ * network calls to Google happen until the user presses it.
  */
 export function initSocialAuth() {
   if (typeof window === 'undefined') return;
   initSessionBridge();
-  initGoogleOneTap();
+  document.getElementById('googleAuthBtn')?.addEventListener('click', handleGoogleBtnPress);
 }

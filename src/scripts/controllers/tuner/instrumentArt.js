@@ -1,8 +1,31 @@
 /* ==========================================================================
    KINS Tuner — Instrument Headstock SVGs (Neo-Brutalist Harmonized Style)
-   Consistent geometry, tactile drop shadow filter, purfling, yellow inlays,
-   synchronized string highlighting via CSS :has(), and clean string wraps.
+   One visual language across every instrument: same outline weight, purfling
+   inset, hardware stack, nut geometry and peg anatomy. Silhouettes and tuner
+   hardware scale differ only where the instrument demands it (acoustic =
+   rounded classic, electric = beveled solid-body, bass = heavy long-throw).
+
+   Theming: every color flows from --ta-* custom properties declared on the
+   svg root (.tuner-art-svg). Light-mode values are the defaults; the
+   document-level [data-theme="dark"] override flips only the outer strokes
+   that meet the page background — the wood/hardware interior stays dark in
+   both themes so strings and inlays keep identical contrast everywhere.
+   Inline SVG <style> participates in the document stylesheet, so ancestor
+   [data-theme] selectors resolve correctly.
+
+   Peg states: idle -> hover/focus -> active (selected) -> DONE (.is-in-tune).
+   The done state is self-contained (green + black) so it reads identically
+   in both themes, with a transform-only pop gated behind reduced-motion.
    ========================================================================== */
+
+const STRING_HIGHLIGHT_RULES = Array.from({ length: 12 }, (_, i) => `
+      svg:has(.tuner-peg[data-string-index="${i}"]:hover) .str-s${i},
+      svg:has(.tuner-peg[data-string-index="${i}"]:focus-visible) .str-s${i},
+      svg:has(.tuner-peg[data-string-index="${i}"].is-in-tune) .str-s${i},
+      svg:has(.tuner-peg[data-string-index="${i}"].is-active) .str-s${i} {
+        stroke: var(--ta-accent);
+        opacity: 1;
+      }`).join('\n');
 
 const SVG_STYLE_BASE = `
   <defs>
@@ -11,24 +34,45 @@ const SVG_STYLE_BASE = `
     </filter>
 
     <style>
+      .tuner-art-svg {
+        --ta-outline-stroke: #000000;
+        --ta-outline-fill: #161616;
+        --ta-purfling: rgba(255, 255, 255, 0.10);
+        --ta-metal: #F5F4EF;
+        --ta-string: rgba(245, 244, 239, 0.55);
+        --ta-ring: rgba(0, 0, 0, 0.55);
+        --ta-accent: #F2FD43;
+        --ta-done: #53FC18;
+      }
+      [data-theme="dark"] .tuner-art-svg {
+        --ta-outline-stroke: #F5F4EF;
+        --ta-outline-fill: rgba(0, 0, 0, 0.35);
+        --ta-purfling: rgba(255, 255, 255, 0.08);
+        --ta-ring: rgba(245, 244, 239, 0.35);
+      }
+
       .tuner-bg { fill: transparent; }
-      
+
       .tuner-headstock-outline {
-        fill: rgba(0, 0, 0, 0.35);
-        stroke: #F5F4EF;
+        fill: var(--ta-outline-fill);
+        stroke: var(--ta-outline-stroke);
         stroke-width: 3px;
         stroke-linejoin: round;
         stroke-linecap: round;
       }
       .tuner-purfling {
         fill: none;
-        stroke: rgba(255, 255, 255, 0.08);
+        stroke: var(--ta-purfling);
         stroke-width: 1.5px;
       }
       .tuner-headstock-inlay {
-        fill: #F2FD43;
+        fill: var(--ta-accent);
       }
-      
+      .tuner-fb-edge {
+        stroke: var(--ta-purfling);
+        stroke-width: 1.5;
+      }
+
       .tuner-truss-cover {
         fill: #0A0A0A;
         stroke: rgba(255, 255, 255, 0.25);
@@ -36,16 +80,21 @@ const SVG_STYLE_BASE = `
         stroke-linejoin: round;
       }
       .tuner-truss-screw {
-        fill: #F5F4EF;
+        fill: var(--ta-metal);
         opacity: 0.45;
+      }
+      .tuner-truss-bar {
+        stroke: var(--ta-metal);
+        stroke-linecap: round;
+        opacity: 0.6;
       }
       .tuner-fretboard-base {
         fill: #0c0c0c;
-        stroke: #F5F4EF;
+        stroke: var(--ta-outline-stroke);
         stroke-width: 2px;
       }
       .tuner-nut {
-        fill: #F5F4EF;
+        fill: var(--ta-metal);
         stroke: #000000;
         stroke-width: 2px;
       }
@@ -53,15 +102,15 @@ const SVG_STYLE_BASE = `
         stroke: #000000;
         stroke-opacity: 0.4;
       }
-      
+
       .tuner-peg-post {
-        stroke: #F5F4EF;
+        stroke: var(--ta-metal);
         stroke-width: 4.5px;
         stroke-linecap: round;
       }
       .tuner-bushing-washer {
         fill: #141414;
-        stroke: #F5F4EF;
+        stroke: var(--ta-metal);
         stroke-width: 1.5px;
       }
       .tuner-peg-bushing {
@@ -70,18 +119,18 @@ const SVG_STYLE_BASE = `
         stroke-width: 1.2px;
       }
       .tuner-post-core {
-        fill: #F5F4EF;
+        fill: var(--ta-metal);
         opacity: 0.9;
       }
 
       .tuner-string-line {
-        stroke: rgba(245, 244, 239, 0.45);
+        stroke: var(--ta-string);
         stroke-linecap: round;
         transition: stroke 0.2s ease, stroke-width 0.2s ease, opacity 0.2s ease;
       }
       .tuner-string-wrap {
         fill: none;
-        stroke: rgba(245, 244, 239, 0.45);
+        stroke: var(--ta-string);
         transition: stroke 0.2s ease, opacity 0.2s ease;
       }
 
@@ -91,22 +140,24 @@ const SVG_STYLE_BASE = `
         -webkit-tap-highlight-color: transparent;
       }
       .tuner-peg-glow {
-        fill: #F2FD43;
+        fill: var(--ta-accent);
         opacity: 0;
         transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       }
       .tuner-peg-ring {
         fill: none;
-        stroke: #F5F4EF;
+        stroke: var(--ta-ring);
         stroke-width: 1.5px;
         stroke-dasharray: 2.5 3.5;
-        opacity: 0.35;
+        opacity: 0.6;
         transition: stroke 0.2s ease, opacity 0.2s ease, stroke-dasharray 0.2s ease;
       }
       .tuner-peg-circle {
-        fill: #F5F4EF;
+        fill: var(--ta-metal);
         stroke: #000000;
         stroke-width: 2.8px;
+        transform-box: fill-box;
+        transform-origin: center;
         filter: url(#brutal-shadow);
         transition: fill 0.15s ease, stroke 0.15s ease;
       }
@@ -127,7 +178,7 @@ const SVG_STYLE_BASE = `
       .tuner-peg:hover .tuner-peg-ring,
       .tuner-peg:focus-visible .tuner-peg-ring {
         opacity: 0.95;
-        stroke: #F2FD43;
+        stroke: var(--ta-accent);
         stroke-dasharray: none;
       }
       .tuner-peg:hover .tuner-peg-circle,
@@ -137,7 +188,7 @@ const SVG_STYLE_BASE = `
 
       .tuner-peg:active .tuner-peg-circle,
       .tuner-peg.is-active .tuner-peg-circle {
-        fill: #F2FD43;
+        fill: var(--ta-accent);
       }
       .tuner-peg:active .tuner-peg-glow,
       .tuner-peg.is-active .tuner-peg-glow {
@@ -145,90 +196,42 @@ const SVG_STYLE_BASE = `
       }
       .tuner-peg:active .tuner-peg-ring,
       .tuner-peg.is-active .tuner-peg-ring {
-        stroke: #F2FD43;
+        stroke: var(--ta-accent);
         opacity: 1;
         stroke-dasharray: none;
       }
+
+      /* DONE state (.is-in-tune): green face + black label is self-contained
+         contrast, so it renders identically in light and dark themes. Kept
+         after hover/active rules so it wins the cascade at equal specificity. */
       .tuner-peg.is-in-tune .tuner-peg-circle {
-        fill: #53FC18;
+        fill: var(--ta-done);
+        stroke: #000000;
+      }
+      .tuner-peg.is-in-tune .tuner-peg-label {
+        fill: #000000;
       }
       .tuner-peg.is-in-tune .tuner-peg-glow {
-        fill: #53FC18;
-        opacity: 0.6;
+        fill: var(--ta-done);
+        opacity: 0.5;
+      }
+      .tuner-peg.is-in-tune .tuner-peg-ring {
+        stroke: var(--ta-done);
+        opacity: 1;
+        stroke-dasharray: none;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .tuner-peg.is-in-tune .tuner-peg-circle {
+          animation: tuner-peg-pop 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes tuner-peg-pop {
+          0% { transform: scale(0.86); }
+          60% { transform: scale(1.08); }
+          100% { transform: scale(1); }
+        }
       }
 
-      svg:has(.tuner-peg[data-string-index="0"]:hover) .str-s0,
-      svg:has(.tuner-peg[data-string-index="0"]:focus-visible) .str-s0,
-      svg:has(.tuner-peg[data-string-index="0"].is-active) .str-s0 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="1"]:hover) .str-s1,
-      svg:has(.tuner-peg[data-string-index="1"]:focus-visible) .str-s1,
-      svg:has(.tuner-peg[data-string-index="1"].is-active) .str-s1 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="2"]:hover) .str-s2,
-      svg:has(.tuner-peg[data-string-index="2"]:focus-visible) .str-s2,
-      svg:has(.tuner-peg[data-string-index="2"].is-active) .str-s2 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="3"]:hover) .str-s3,
-      svg:has(.tuner-peg[data-string-index="3"]:focus-visible) .str-s3,
-      svg:has(.tuner-peg[data-string-index="3"].is-active) .str-s3 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="4"]:hover) .str-s4,
-      svg:has(.tuner-peg[data-string-index="4"]:focus-visible) .str-s4,
-      svg:has(.tuner-peg[data-string-index="4"].is-active) .str-s4 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="5"]:hover) .str-s5,
-      svg:has(.tuner-peg[data-string-index="5"]:focus-visible) .str-s5,
-      svg:has(.tuner-peg[data-string-index="5"].is-active) .str-s5 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="6"]:hover) .str-s6,
-      svg:has(.tuner-peg[data-string-index="6"]:focus-visible) .str-s6,
-      svg:has(.tuner-peg[data-string-index="6"].is-active) .str-s6 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="7"]:hover) .str-s7,
-      svg:has(.tuner-peg[data-string-index="7"]:focus-visible) .str-s7,
-      svg:has(.tuner-peg[data-string-index="7"].is-active) .str-s7 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="8"]:hover) .str-s8,
-      svg:has(.tuner-peg[data-string-index="8"]:focus-visible) .str-s8,
-      svg:has(.tuner-peg[data-string-index="8"].is-active) .str-s8 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="9"]:hover) .str-s9,
-      svg:has(.tuner-peg[data-string-index="9"]:focus-visible) .str-s9,
-      svg:has(.tuner-peg[data-string-index="9"].is-active) .str-s9 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="10"]:hover) .str-s10,
-      svg:has(.tuner-peg[data-string-index="10"]:focus-visible) .str-s10,
-      svg:has(.tuner-peg[data-string-index="10"].is-active) .str-s10 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
-      svg:has(.tuner-peg[data-string-index="11"]:hover) .str-s11,
-      svg:has(.tuner-peg[data-string-index="11"]:focus-visible) .str-s11,
-      svg:has(.tuner-peg[data-string-index="11"].is-active) .str-s11 {
-        stroke: #F2FD43;
-        opacity: 1;
-      }
+      ${STRING_HIGHLIGHT_RULES}
     </style>
   </defs>
 `;
@@ -236,12 +239,12 @@ const SVG_STYLE_BASE = `
 /* ==========================================================================
    ACOUSTIC GUITAR — 6 STRINGS (3+3)
    ========================================================================== */
-const ACOUSTIC_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const ACOUSTIC_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 88,245 L 88,265 L 232,265 L 232,245 Z" />
-  <line x1="88" y1="262" x2="232" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="88" y1="262" x2="232" y2="262" />
 
   <path class="tuner-headstock-outline" d="
     M 160,20
@@ -270,11 +273,11 @@ const ACOUSTIC_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
     Z" />
 
   <g id="tuner-inlay-group">
-    <polygon fill="#F2FD43" points="160,24 167,31 160,33 153,31" opacity="0.95" />
+    <polygon class="tuner-headstock-inlay"points="160,24 167,31 160,33 153,31" opacity="0.95" />
     <polygon class="tuner-headstock-inlay" points="160,34 165,45 160,56 155,45" />
-    <polygon fill="#F2FD43" points="160,66 167,59 160,57 153,59" opacity="0.95" />
-    <polygon fill="#F2FD43" points="149,45 153,38 153,52" opacity="0.85" />
-    <polygon fill="#F2FD43" points="171,45 167,38 167,52" opacity="0.85" />
+    <polygon class="tuner-headstock-inlay"points="160,66 167,59 160,57 153,59" opacity="0.95" />
+    <polygon class="tuner-headstock-inlay"points="149,45 153,38 153,52" opacity="0.85" />
+    <polygon class="tuner-headstock-inlay"points="171,45 167,38 167,52" opacity="0.85" />
   </g>
 
   <g id="tuner-truss-group">
@@ -405,12 +408,12 @@ const ACOUSTIC_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
 /* ==========================================================================
    ACOUSTIC GUITAR — 5 STRINGS (3+2)
    ========================================================================== */
-const ACOUSTIC_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const ACOUSTIC_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 88,245 L 88,265 L 232,265 L 232,245 Z" />
-  <line x1="88" y1="262" x2="232" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="88" y1="262" x2="232" y2="262" />
 
   <path class="tuner-headstock-outline" d="
     M 160,20
@@ -439,9 +442,9 @@ const ACOUSTIC_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
     Z" />
 
   <g id="tuner-inlay-group">
-    <polygon fill="#F2FD43" points="160,24 167,31 160,33 153,31" opacity="0.95" />
+    <polygon class="tuner-headstock-inlay"points="160,24 167,31 160,33 153,31" opacity="0.95" />
     <polygon class="tuner-headstock-inlay" points="160,34 165,45 160,56 155,45" />
-    <polygon fill="#F2FD43" points="160,66 167,59 160,57 153,59" opacity="0.95" />
+    <polygon class="tuner-headstock-inlay"points="160,66 167,59 160,57 153,59" opacity="0.95" />
   </g>
 
   <g id="tuner-truss-group">
@@ -561,12 +564,12 @@ const ACOUSTIC_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
 /* ==========================================================================
    ELECTRIC GUITAR — 6 STRINGS (Solid Body Beveled Neo-Brutalist 3+3)
    ========================================================================== */
-const ELECTRIC_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const ELECTRIC_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 88,245 L 88,265 L 232,265 L 232,245 Z" />
-  <line x1="88" y1="262" x2="232" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="88" y1="262" x2="232" y2="262" />
 
   <!-- Sharp, Modern Beveled Solid-Body Electric Silhouette -->
   <path class="tuner-headstock-outline" d="
@@ -599,14 +602,14 @@ const ELECTRIC_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
   <!-- Electric Bolt Crest Inlay -->
   <g id="tuner-inlay-group">
     <polygon class="tuner-headstock-inlay" points="160,24 168,42 161,42 165,64 152,46 159,46" />
-    <circle cx="160" cy="74" r="2.5" fill="#F5F4EF" opacity="0.4" />
+    <circle class="tuner-truss-screw" cx="160" cy="74" r="2.5" />
   </g>
 
   <!-- Truss Cover & String Trees -->
   <g id="tuner-truss-group">
     <path class="tuner-truss-cover" d="M 152,192 C 152,185 168,185 168,192 L 172,224 C 172,232 148,232 148,224 Z" />
     <circle class="tuner-truss-screw" cx="160" cy="208" r="1.6" />
-    <line x1="140" y1="135" x2="180" y2="135" stroke="#F5F4EF" stroke-width="2.5" stroke-linecap="round" opacity="0.6" />
+    <line class="tuner-truss-bar" x1="140" y1="135" x2="180" y2="135" stroke-width="2.5" />
   </g>
 
   <g id="tuner-hardware-group">
@@ -723,12 +726,12 @@ const ELECTRIC_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
 /* ==========================================================================
    ELECTRIC GUITAR — 5 STRINGS (3+2)
    ========================================================================== */
-const ELECTRIC_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const ELECTRIC_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 88,245 L 88,265 L 232,265 L 232,245 Z" />
-  <line x1="88" y1="262" x2="232" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="88" y1="262" x2="232" y2="262" />
 
   <path class="tuner-headstock-outline" d="
     M 88,245
@@ -864,12 +867,12 @@ const ELECTRIC_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
 /* ==========================================================================
    ELECTRIC GUITAR — 7 STRINGS (4+3)
    ========================================================================== */
-const ELECTRIC_7_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const ELECTRIC_7_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 88,245 L 88,265 L 232,265 L 232,245 Z" />
-  <line x1="88" y1="262" x2="232" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="88" y1="262" x2="232" y2="262" />
 
   <!-- Sharp, Modern Beveled Solid-Body Electric Silhouette -->
   <path class="tuner-headstock-outline" d="
@@ -901,13 +904,13 @@ const ELECTRIC_7_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
 
   <g id="tuner-inlay-group">
     <polygon class="tuner-headstock-inlay" points="160,24 168,42 161,42 165,64 152,46 159,46" />
-    <circle cx="160" cy="74" r="2.5" fill="#F5F4EF" opacity="0.4" />
+    <circle class="tuner-truss-screw" cx="160" cy="74" r="2.5" />
   </g>
 
   <g id="tuner-truss-group">
     <path class="tuner-truss-cover" d="M 152,192 C 152,185 168,185 168,192 L 172,224 C 172,232 148,232 148,224 Z" />
     <circle class="tuner-truss-screw" cx="160" cy="208" r="1.6" />
-    <line x1="140" y1="135" x2="180" y2="135" stroke="#F5F4EF" stroke-width="2.5" stroke-linecap="round" opacity="0.6" />
+    <line class="tuner-truss-bar" x1="140" y1="135" x2="180" y2="135" stroke-width="2.5" />
   </g>
 
   <g id="tuner-hardware-group">
@@ -1041,12 +1044,12 @@ const ELECTRIC_7_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
 /* ==========================================================================
    BASS GUITAR — 4 STRINGS (2+2)
    ========================================================================== */
-const BASS_4_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const BASS_4_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 94,245 L 94,265 L 226,265 L 226,245 Z" />
-  <line x1="94" y1="262" x2="226" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="94" y1="262" x2="226" y2="262" />
 
   <!-- Iconic Heavy Bass Headstock -->
   <path class="tuner-headstock-outline" d="
@@ -1168,12 +1171,12 @@ const BASS_4_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265
 /* ==========================================================================
    BASS GUITAR — 5 STRINGS (3+2)
    ========================================================================== */
-const BASS_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const BASS_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 88,245 L 88,265 L 232,265 L 232,245 Z" />
-  <line x1="88" y1="262" x2="232" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="88" y1="262" x2="232" y2="262" />
 
   <path class="tuner-headstock-outline" d="
     M 88,245
@@ -1304,12 +1307,12 @@ const BASS_5_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265
 /* ==========================================================================
    BASS GUITAR — 6 STRINGS (3+3)
    ========================================================================== */
-const BASS_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const BASS_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 84,245 L 84,265 L 236,265 L 236,245 Z" />
-  <line x1="84" y1="262" x2="236" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="84" y1="262" x2="236" y2="262" />
 
   <path class="tuner-headstock-outline" d="
     M 84,245
@@ -1454,12 +1457,12 @@ const BASS_6_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265
   </g>
 </svg>`;
 
-const ELECTRIC_8_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const ELECTRIC_8_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 88,245 L 88,265 L 232,265 L 232,245 Z" />
-  <line x1="88" y1="262" x2="232" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="88" y1="262" x2="232" y2="262" />
 
   <path class="tuner-headstock-outline" d="
     M 88,245
@@ -1490,13 +1493,13 @@ const ELECTRIC_8_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
 
   <g id="tuner-inlay-group">
     <polygon class="tuner-headstock-inlay" points="160,24 168,42 161,42 165,64 152,46 159,46" />
-    <circle cx="160" cy="74" r="2.5" fill="#F5F4EF" opacity="0.4" />
+    <circle class="tuner-truss-screw" cx="160" cy="74" r="2.5" />
   </g>
 
   <g id="tuner-truss-group">
     <path class="tuner-truss-cover" d="M 152,192 C 152,185 168,185 168,192 L 172,224 C 172,232 148,232 148,224 Z" />
     <circle class="tuner-truss-screw" cx="160" cy="208" r="1.6" />
-    <line x1="140" y1="135" x2="180" y2="135" stroke="#F5F4EF" stroke-width="2.5" stroke-linecap="round" opacity="0.6" />
+    <line class="tuner-truss-bar" x1="140" y1="135" x2="180" y2="135" stroke-width="2.5" />
   </g>
 
   <g id="tuner-hardware-group">
@@ -1623,12 +1626,12 @@ const ELECTRIC_8_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320
   </g>
 </svg>`;
 
-const ACOUSTIC_12_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 265" width="100%" height="100%">
+const ACOUSTIC_12_SVG = `<svg xmlns="http://www.w3.org/2000/svg" class="tuner-art-svg" viewBox="0 0 320 265" width="100%" height="100%">
   ${SVG_STYLE_BASE}
   <rect class="tuner-bg" width="320" height="265" />
 
   <path class="tuner-fretboard-base" d="M 88,245 L 88,265 L 232,265 L 232,245 Z" />
-  <line x1="88" y1="262" x2="232" y2="262" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <line class="tuner-fb-edge" x1="88" y1="262" x2="232" y2="262" />
 
   <path class="tuner-headstock-outline" d="
     M 160,20
@@ -1657,9 +1660,9 @@ const ACOUSTIC_12_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32
     Z" />
 
   <g id="tuner-inlay-group">
-    <polygon fill="#F2FD43" points="160,24 167,31 160,33 153,31" opacity="0.95" />
+    <polygon class="tuner-headstock-inlay"points="160,24 167,31 160,33 153,31" opacity="0.95" />
     <polygon class="tuner-headstock-inlay" points="160,34 165,45 160,56 155,45" />
-    <polygon fill="#F2FD43" points="160,66 167,59 160,57 153,59" opacity="0.95" />
+    <polygon class="tuner-headstock-inlay"points="160,66 167,59 160,57 153,59" opacity="0.95" />
   </g>
 
   <g id="tuner-truss-group">

@@ -34,7 +34,11 @@ export const GET: APIRoute = async ({ url }) => {
     }
 
     const supabase = getSupabaseServiceClient();
-    if (!supabase) return json({ status: 'error', message: 'Vote service unavailable.' }, 503);
+    if (!supabase) {
+      // Unconfigured environment (local dev / preview): degrade quietly with
+      // empty tallies instead of a console-noisy 503 on page load.
+      return json({ status: 'success', scope, tallies: {}, configured: false });
+    }
 
     const { data, error } = await supabase
       .from('votes')
