@@ -51,6 +51,7 @@ export function createUi(callbacks) {
       materialMenuSlot: document.getElementById('tunerMaterialMenuSlot'),
       readout: document.getElementById('tunerReadoutPanel'),
       micBtn: document.getElementById('tunerMicBtn'),
+      micCta: document.getElementById('tunerMicToggleBtn'),
       meter: document.getElementById('tunerMeter'),
       needle: document.getElementById('tunerNeedle'),
       badgeLow: document.getElementById('tunerBadgeLow'),
@@ -481,7 +482,14 @@ export function createUi(callbacks) {
     }
     els.categoryList.replaceChildren();
 
-    let categories = TUNER_CATEGORY_ORDER.filter((cat) => group.presets.some((p) => p.category === cat));
+    // String-count filtering: only show tunings that match the currently selected string count
+    // Electric == Acoustic pitch-wise; variants only appear when that string count is active
+    const targetCount = state.instrumentId === 'drums' ? null : currentStringCount();
+    const visiblePresets = targetCount === null
+      ? group.presets
+      : group.presets.filter((p) => p.strings.length === targetCount);
+
+    let categories = TUNER_CATEGORY_ORDER.filter((cat) => visiblePresets.some((p) => p.category === cat));
     const isCategoryFilter = activeFilter === 'all' || TUNER_CATEGORY_ORDER.includes(activeFilter);
     if (isCategoryFilter && activeFilter !== 'all') {
       categories = categories.filter((cat) => cat === activeFilter);
@@ -490,7 +498,7 @@ export function createUi(callbacks) {
     let matchCount = 0;
 
     categories.forEach((cat) => {
-      let presets = group.presets.filter((p) => p.category === cat);
+      let presets = visiblePresets.filter((p) => p.category === cat);
       if (!isCategoryFilter) {
         presets = presets.filter((p) => presetMatches(p, activeFilter));
       }
@@ -564,7 +572,7 @@ export function createUi(callbacks) {
 
   function setNeedle(cents) {
     if (!els.needle || !meterWidth) return;
-    const max = meterWidth / 2 - 8;
+    const max = meterWidth / 2 - 18;
     const clamped = Math.max(-max, Math.min(max, (cents / 50) * max));
     els.needle.style.transform = 'translateX(' + clamped.toFixed(1) + 'px)';
   }
@@ -611,6 +619,12 @@ export function createUi(callbacks) {
     state.starting = starting;
     els.micBtn.classList.toggle('listening', listening);
     els.micWarning.hidden = true;
+    if (els.micCta) {
+      const ctaText = els.micCta.querySelector('.tuner-mic-cta-text');
+      if (ctaText) ctaText.textContent = listening ? TUNER_COPY.stopTuner : starting ? TUNER_COPY.starting : TUNER_COPY.startTuner;
+      els.micCta.classList.toggle('listening', listening);
+      els.micCta.setAttribute('aria-label', listening ? 'Stop tuning' : 'Start tuning');
+    }
     if (state.instrumentId === 'drums' && listening) {
       els.lowMicHint.textContent = TUNER_COPY.lowMicWarning;
       els.lowMicHint.hidden = false;
@@ -682,7 +696,8 @@ export function createUi(callbacks) {
   }
 
   function bindStaticEvents() {
-    els.micBtn.addEventListener('click', () => callbacks.onMicToggle());
+    els.readout.addEventListener('click', () => callbacks.onMicToggle());
+    if (els.micCta) els.micCta.addEventListener('click', () => callbacks.onMicToggle());
     Array.from(els.instrumentRow.querySelectorAll('[data-instrument]')).forEach((btn) => {
       btn.addEventListener('click', () => callbacks.onInstrumentChange(btn.getAttribute('data-instrument')));
     });

@@ -39,7 +39,8 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
         </div>
       </div>
 
-      <section class="tuner-readout" id="tunerReadoutPanel" aria-label="Tuning meter">
+      <div class="tuner-middle-scroll">
+        <section class="tuner-readout" id="tunerReadoutPanel" aria-label="Tuning meter">
         <button type="button" class="tuner-meter-btn brutal-press" id="tunerMicBtn" data-track="tuner:mic_start" aria-label="Start or stop mic tuning">
           <span class="tuner-meter" id="tunerMeter" aria-hidden="true">
             <span class="tuner-meter-ticks"></span>
@@ -60,11 +61,16 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
         <p class="tuner-hint" id="tunerDirectionHint" aria-live="polite"></p>
         <p class="tuner-warning" id="tunerMicWarning" hidden></p>
         <p class="tuner-low-mic-hint" id="tunerLowMicHint" hidden></p>
-      </section>
+        </section>
 
-      <section class="tuner-figure" id="tunerFigure" aria-label="String and drum targets"></section>
+        <section class="tuner-figure" id="tunerFigure" aria-label="String and drum targets"></section>
+      </div>
 
       <div class="tuner-footer-group">
+        <button type="button" class="tuner-mic-cta brutal-press" id="tunerMicToggleBtn" data-track="tuner:mic_start" aria-label="Start tuning">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          <span class="tuner-mic-cta-text">START TUNING</span>
+        </button>
         <div class="tuner-instruments" id="tunerInstrumentRow" role="tablist" aria-label="Instrument">
           <button type="button" class="tuner-inst-card active brutal-press" role="tab" aria-selected="true" data-instrument="electric" data-track="tuner:tab_electric">
             <span class="tuner-inst-label">ELECTRIC</span>
@@ -181,6 +187,14 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
   .tuner-view[hidden],
   .tuning-view[hidden] {
     display: none;
+  }
+
+  /* ---------- Middle scroll area (meter + figure) ---------- */
+  .tuner-middle-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
   }
 
   /* ---------- Top bar ---------- */
@@ -600,6 +614,47 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     height: 26px;
   }
 
+  /* ---------- Mic start/stop CTA (above instrument cards) ---------- */
+  .tuner-mic-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: calc(50% - 4px);
+    margin-left: auto;
+    margin-right: auto;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: var(--border-brutal);
+    box-shadow: var(--shadow-brutal-black-lg);
+    border-radius: var(--radius-pill);
+    padding: 14px 18px;
+    font-family: var(--font-secondary);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .tuner-mic-cta:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .tuner-mic-cta.listening {
+    background: var(--btn-green);
+  }
+
+  .tuner-mic-cta svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
   /* ---------- Back pill ---------- */
   .tuner-back-pill {
     display: flex;
@@ -941,12 +996,78 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     white-space: nowrap;
   }
 
+  /* ---------- Mobile app-shell layout ----------
+     Page locks to the dynamic viewport so the whole document never scrolls;
+     each view pins its own top bar / bottom controls and scrolls only its
+     middle content (meter+figure / tuning list). */
+  @media (max-width: 768px) {
+    .tuner-page {
+      height: 100vh;
+      height: 100dvh;
+      min-height: 100vh;
+      min-height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      overflow: hidden;
+    }
+
+    /* Fill the locked page instead of the old calc(100dvh - 46px) math */
+    .tuner-view,
+    .tuning-view {
+      height: auto;
+      min-height: 0;
+      max-height: none;
+    }
+
+    .tuner-view {
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .tuner-topbar {
+      flex-shrink: 0;
+    }
+
+    .tuner-middle-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      gap: 12px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+    }
+
+    .tuner-middle-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .tuner-middle-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 9999px;
+    }
+
+    .tuner-footer-group {
+      flex-shrink: 0;
+      margin-top: 0;
+      gap: 10px;
+    }
+  }
+
   /* ---------- Runtime DOM: menus ---------- */
   :global(.tuner-menu-panel) {
     position: absolute;
     top: calc(100% + 8px);
     z-index: 60;
     min-width: 230px;
+    max-height: min(420px, 70dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
     background: var(--surface-card);
     border: var(--border-brutal-sm);
     box-shadow: var(--shadow-brutal-black-lg);
@@ -955,6 +1076,15 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  :global(.tuner-menu-panel::-webkit-scrollbar) {
+    width: 6px;
+  }
+
+  :global(.tuner-menu-panel::-webkit-scrollbar-thumb) {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 9999px;
   }
 
   :global(.tuner-menu-row) {
@@ -1300,6 +1430,157 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     padding: 18px 2px;
   }
 
+  /* ---------- Desktop (>=768px): two-pane tuner + two-column library ---------- */
+  @media (min-width: 768px) {
+    .tuner-page {
+      max-width: 1080px;
+      padding: 28px 32px 36px;
+    }
+
+    /* Main tuner view: topbar / meter | figure / footer via existing DOM order */
+    .tuner-view {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: 24px 48px;
+      align-items: start;
+    }
+
+    .tuner-topbar,
+    .tuner-footer-group {
+      grid-column: 1 / -1;
+    }
+
+    .tuner-subbar {
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .tuner-anchor-center {
+      flex: 0 1 auto;
+    }
+
+    .tuner-anchor-center .tuner-pill {
+      flex: none;
+      width: auto;
+    }
+
+    .tuner-readout {
+      align-self: center;
+      gap: 14px;
+    }
+
+    /* Chromatic mode hides the figure — readout takes the full row */
+    .tuner-view.mode-chromatic .tuner-readout {
+      grid-column: 1 / -1;
+    }
+
+    .tuner-meter-btn {
+      padding: 16px 22px;
+    }
+
+    .tuner-meter {
+      height: 44px;
+    }
+
+    .tuner-note {
+      font-size: clamp(3.4rem, 5vw, 4.75rem);
+    }
+
+    .tuner-status {
+      font-size: 0.84rem;
+      padding: 8px 20px;
+    }
+
+    .tuner-badge-side {
+      font-size: 0.7rem;
+      padding: 6px 12px;
+    }
+
+    .tuner-hint {
+      font-size: 0.88rem;
+    }
+
+    .tuner-figure {
+      align-self: center;
+      min-height: 260px;
+      max-height: none;
+    }
+
+    .tuner-figure :global(svg) {
+      width: min(420px, 100%);
+      max-height: none;
+    }
+
+    .tuner-footer-group {
+      flex-direction: row;
+      align-items: stretch;
+      gap: 16px;
+    }
+
+    .tuner-instruments {
+      flex: 1 1 auto;
+    }
+
+    .tuner-inst-card {
+      padding: 14px 8px 16px;
+      gap: 8px;
+    }
+
+    .tuner-inst-card svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .tuner-inst-label {
+      font-size: 0.66rem;
+    }
+
+    .tuner-back-pill {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 230px;
+    }
+
+    /* Tuning library: centered shell, one-row search + filters */
+    .tuning-view {
+      height: calc(100vh - 64px);
+      height: calc(100dvh - 64px);
+      max-height: calc(100vh - 64px);
+      max-height: calc(100dvh - 64px);
+    }
+
+    .tuning-top-fixed,
+    .tuning-list,
+    .tuning-bottom-fixed {
+      width: 100%;
+      max-width: 960px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .tuning-search-section {
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tuning-search-box {
+      flex: 1 1 auto;
+    }
+
+    .tuning-filters {
+      flex-wrap: nowrap;
+      width: auto;
+      justify-content: flex-end;
+    }
+
+    :global(.tuning-category.open .tuning-category-body) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .tuner-needle,
     .tuner-toggle-knob,
@@ -1307,6 +1588,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     .tuner-pill,
     .tuner-meter-btn,
     .tuner-inst-card,
+    .tuner-mic-cta,
     .tuner-back-pill,
     .tuning-back-pill,
     .tuning-back-text,

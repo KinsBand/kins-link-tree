@@ -7,6 +7,5 @@ export * from './epk.config';
 export * from './members.config';
 export * from './contact.config';
 export * from './gigs.config';
-export * from './tuner.config';
 export * from './rehearsal.config';
 

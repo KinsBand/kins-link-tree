@@ -130,45 +130,80 @@ function guitarPreset(id: string, name: string, category: TunerCategory, names: 
   return { id, name, category, strings: names.map(s) };
 }
 
+// 6-string: Standard & detuned (same P4-P4-P4-M3-P4, lower pitch)
 const GUITAR_6_STANDARD: TunerPreset[] = [
   guitarPreset('standard', 'Standard', 'standard', ['E2', 'A2', 'D3', 'G3', 'B3', 'E4']),
   guitarPreset('eb-standard', 'Half-Step Down (Eb)', 'standard', ['Eb2', 'Ab2', 'Db3', 'Gb3', 'Bb3', 'Eb4']),
   guitarPreset('d-standard', 'Full-Step Down (D)', 'standard', ['D2', 'G2', 'C3', 'F3', 'A3', 'D4']),
+  guitarPreset('csharp-standard', 'C# Standard (Db)', 'standard', ['C#2', 'F#2', 'B2', 'E3', 'G#3', 'C#4']),
+  guitarPreset('c-standard', 'C Standard', 'standard', ['C2', 'F2', 'Bb2', 'Eb3', 'G3', 'C4']),
+  guitarPreset('b-standard', 'B Standard (Baritone)', 'standard', ['B1', 'E2', 'A2', 'D3', 'F#3', 'B3']),
+  guitarPreset('a-standard', 'A Standard', 'standard', ['A1', 'D2', 'G2', 'C3', 'E3', 'A3'])
+];
+
+const GUITAR_6_DROP: TunerPreset[] = [
   guitarPreset('drop-d', 'Drop D', 'standard', ['D2', 'A2', 'D3', 'G3', 'B3', 'E4']),
-  guitarPreset('double-drop-d', 'Double Drop D', 'standard', ['D2', 'A2', 'D3', 'G3', 'B3', 'D4']),
+  guitarPreset('drop-csharp', 'Drop C#', 'standard', ['C#2', 'G#2', 'C#3', 'F#3', 'A#3', 'D#4']),
   guitarPreset('drop-c', 'Drop C', 'standard', ['C2', 'G2', 'C3', 'F3', 'A3', 'D4']),
-  guitarPreset('dadgad', 'DADGAD (Celtic / D Modal)', 'standard', ['D2', 'A2', 'D3', 'G3', 'A3', 'D4'])
+  guitarPreset('drop-b', 'Drop B', 'standard', ['B1', 'F#2', 'B2', 'E3', 'G#3', 'C#4']),
+  guitarPreset('drop-bb', 'Drop Bb', 'standard', ['Bb1', 'F2', 'Bb2', 'Eb3', 'G3', 'C4']),
+  guitarPreset('drop-a', 'Drop A', 'standard', ['A1', 'E2', 'A2', 'D3', 'F#3', 'B3']),
+  guitarPreset('drop-ab', 'Drop Ab', 'standard', ['Ab1', 'Eb2', 'Ab2', 'Db3', 'F3', 'Bb3']),
+  guitarPreset('drop-g', 'Drop G', 'standard', ['G1', 'D2', 'G2', 'C3', 'E3', 'A3']),
+  guitarPreset('drop-fsharp', 'Drop F#', 'standard', ['F#1', 'C#2', 'F#2', 'B2', 'D#3', 'G#3']),
+  guitarPreset('drop-f', 'Drop F', 'standard', ['F1', 'C2', 'F2', 'Bb2', 'D3', 'G3']),
+  guitarPreset('drop-e', 'Drop E', 'standard', ['E1', 'B1', 'E2', 'A2', 'C#3', 'F#3']),
+  guitarPreset('double-drop-d', 'Double Drop D', 'standard', ['D2', 'A2', 'D3', 'G3', 'B3', 'D4'])
 ];
 
 const GUITAR_6_OPEN: TunerPreset[] = [
   guitarPreset('open-g', 'Open G', 'open', ['D2', 'G2', 'D3', 'G3', 'B3', 'D4']),
   guitarPreset('open-d', 'Open D', 'open', ['D2', 'A2', 'D3', 'F#3', 'A3', 'D4']),
   guitarPreset('open-e', 'Open E', 'open', ['E2', 'B2', 'E3', 'G#3', 'B3', 'E4']),
-  guitarPreset('open-c', 'Open C', 'open', ['C2', 'G2', 'C3', 'G3', 'C4', 'E4'])
+  guitarPreset('open-c', 'Open C', 'open', ['C2', 'G2', 'C3', 'G3', 'C4', 'E4']),
+  guitarPreset('open-a', 'Open A', 'open', ['E2', 'A2', 'E3', 'A3', 'C#4', 'E4']),
+  guitarPreset('open-dm', 'Open Dm', 'open', ['D2', 'A2', 'D3', 'F3', 'A3', 'D4']),
+  guitarPreset('open-em', 'Open Em', 'open', ['E2', 'B2', 'E3', 'G3', 'B3', 'E4']),
+  guitarPreset('open-gm', 'Open Gm', 'open', ['D2', 'G2', 'D3', 'G3', 'Bb3', 'D4'])
 ];
 
 const GUITAR_6_ARTIST: TunerPreset[] = [
-  guitarPreset('orkny', 'ORKNY', 'artist', ['C2', 'G2', 'D3', 'G3', 'C4', 'D4']),
-  guitarPreset('pipe-cello', 'Pipe / Cello (C G C G C D)', 'artist', ['C2', 'G2', 'C3', 'G3', 'C4', 'D4'])
+  guitarPreset('dadgad', 'DADGAD (Celtic / D Modal)', 'artist', ['D2', 'A2', 'D3', 'G3', 'A3', 'D4']),
+  guitarPreset('dsus2', 'Dsus2', 'artist', ['D2', 'A2', 'D3', 'G3', 'B3', 'E4']),
+  guitarPreset('orkny', 'Orkney (CGCGCD)', 'artist', ['C2', 'G2', 'C3', 'G3', 'C4', 'D4']),
+  guitarPreset('cgdgad', 'CGDGAD (Celtic)', 'artist', ['C2', 'G2', 'D3', 'G3', 'A3', 'D4']),
+  guitarPreset('pipe-cello', 'Pipe / Cello (C G C G C D)', 'artist', ['C2', 'G2', 'C3', 'G3', 'C4', 'D4']),
+  guitarPreset('nst', 'NST (New Standard C G D A E G)', 'artist', ['C2', 'G2', 'D3', 'A3', 'E4', 'G4']),
+  guitarPreset('all-fourths', 'All Fourths (E A D G C F)', 'artist', ['E2', 'A2', 'D3', 'G3', 'C4', 'F4']),
+  guitarPreset('major-thirds', 'Major Thirds (C E G#)', 'artist', ['C2', 'E2', 'G#2', 'C3', 'E3', 'G#3']),
+  guitarPreset('ostrich', 'Ostrich (All E)', 'artist', ['E2', 'E2', 'E3', 'E3', 'E3', 'E3']),
+  guitarPreset('c6', 'C6 Slack (C A C E G A)', 'artist', ['C2', 'A2', 'C3', 'E3', 'G3', 'A3']),
+  guitarPreset('nashville', 'Nashville High-Strung', 'artist', ['E3', 'A3', 'D4', 'G4', 'B3', 'E4'])
 ];
 
 const GUITAR_5_PRESETS: TunerPreset[] = [
-  guitarPreset('open-g-5', 'Open G (Keith Richards)', 'open', ['G2', 'D3', 'G3', 'B3', 'D4']),
+  guitarPreset('open-g-5', 'Open G (Keith Richards 5-string)', 'open', ['G2', 'D3', 'G3', 'B3', 'D4']),
   guitarPreset('standard-low-5', 'Standard (Low 5)', 'standard', ['E2', 'A2', 'D3', 'G3', 'B3']),
   guitarPreset('standard-high-5', 'Standard (High 5)', 'standard', ['A2', 'D3', 'G3', 'B3', 'E4']),
-  guitarPreset('drop-d-5', 'Drop D', 'standard', ['D2', 'A2', 'D3', 'G3', 'B3'])
+  guitarPreset('drop-d-5', 'Drop D (5-string)', 'standard', ['D2', 'A2', 'D3', 'G3', 'B3'])
 ];
 
 const GUITAR_7_PRESETS: TunerPreset[] = [
   guitarPreset('7-standard', 'Standard (7-String B)', 'standard', ['B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4']),
-  guitarPreset('7-drop-a', 'Drop A', 'standard', ['A1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4']),
-  guitarPreset('7-eb', 'Half-Step Down (Bb)', 'standard', ['Bb1', 'Eb2', 'Ab2', 'Db3', 'Gb3', 'Bb3', 'Eb4'])
+  guitarPreset('7-drop-a', 'Drop A (7-string)', 'standard', ['A1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4']),
+  guitarPreset('7-eb', 'Half-Step Down (Bb)', 'standard', ['Bb1', 'Eb2', 'Ab2', 'Db3', 'Gb3', 'Bb3', 'Eb4']),
+  guitarPreset('7-d-standard', 'D Standard (7)', 'standard', ['A1', 'D2', 'G2', 'C3', 'F3', 'A3', 'D4'])
 ];
 
 const GUITAR_8_PRESETS: TunerPreset[] = [
   guitarPreset('8-standard', 'Standard (8-String F#)', 'standard', ['F#1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4']),
-  guitarPreset('8-drop-e', 'Drop E', 'standard', ['E1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4']),
+  guitarPreset('8-drop-e', 'Drop E (8-string)', 'standard', ['E1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4']),
   guitarPreset('8-eb', 'Half-Step Down (8)', 'standard', ['F1', 'Bb1', 'Eb2', 'Ab2', 'Db3', 'Gb3', 'Bb3', 'Eb4'])
+];
+
+const GUITAR_9_PRESETS: TunerPreset[] = [
+  guitarPreset('9-standard', 'Standard (9-String C#)', 'standard', ['C#1', 'F#1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4']),
+  guitarPreset('9-drop-e', 'Drop E (9-string)', 'standard', ['B0', 'E1', 'B1', 'E2', 'A2', 'D3', 'G3', 'B3', 'E4'])
 ];
 
 const ACOUSTIC_12_PRESETS: TunerPreset[] = [
@@ -177,6 +212,7 @@ const ACOUSTIC_12_PRESETS: TunerPreset[] = [
 
 const ACOUSTIC_PRESETS: TunerPreset[] = [
   ...GUITAR_6_STANDARD,
+  ...GUITAR_6_DROP,
   ...GUITAR_6_OPEN,
   ...GUITAR_6_ARTIST,
   ...GUITAR_5_PRESETS,
@@ -185,31 +221,41 @@ const ACOUSTIC_PRESETS: TunerPreset[] = [
 
 const ELECTRIC_PRESETS: TunerPreset[] = [
   ...GUITAR_6_STANDARD,
+  ...GUITAR_6_DROP,
   ...GUITAR_6_OPEN,
   ...GUITAR_6_ARTIST,
   ...GUITAR_5_PRESETS,
   ...GUITAR_7_PRESETS,
-  ...GUITAR_8_PRESETS
+  ...GUITAR_8_PRESETS,
+  ...GUITAR_9_PRESETS
 ];
 
 const BASS_4_PRESETS: TunerPreset[] = [
   guitarPreset('bass-standard', 'Standard (E A D G)', 'standard', ['E1', 'A1', 'D2', 'G2']),
   guitarPreset('bass-eb', 'Half-Step Down (Eb)', 'standard', ['Eb1', 'Ab1', 'Db2', 'Gb2']),
-  guitarPreset('bass-d', 'Full-Step Down (D)', 'standard', ['D1', 'G1', 'C2', 'F2']),
-  guitarPreset('bass-drop-d', 'Drop D', 'standard', ['D1', 'A1', 'D2', 'G2']),
-  guitarPreset('bass-drop-c', 'Drop C', 'standard', ['C1', 'G1', 'C2', 'F2'])
+  guitarPreset('bass-d', 'D Standard (D G C F)', 'standard', ['D1', 'G1', 'C2', 'F2']),
+  guitarPreset('bass-c-standard', 'C Standard (C F Bb Eb)', 'standard', ['C1', 'F1', 'Bb1', 'Eb2']),
+  guitarPreset('bass-drop-d', 'Drop D (D A D G)', 'standard', ['D1', 'A1', 'D2', 'G2']),
+  guitarPreset('bass-drop-c', 'Drop C (C G C F)', 'standard', ['C1', 'G1', 'C2', 'F2']),
+  guitarPreset('bass-drop-b', 'Drop B (B F# B E)', 'standard', ['B0', 'F#1', 'B1', 'E2']),
+  guitarPreset('bass-drop-a', 'Drop A (A E A D)', 'standard', ['A0', 'E1', 'A1', 'D2']),
+  guitarPreset('bass-bead', 'B Standard (B E A D) – 5-string set on 4', 'standard', ['B0', 'E1', 'A1', 'D2']),
+  guitarPreset('bass-piccolo', 'Piccolo (E A D G – octave up)', 'standard', ['E2', 'A2', 'D3', 'G3'])
 ];
 
 const BASS_5_PRESETS: TunerPreset[] = [
   guitarPreset('bass-5-standard', 'Standard (B E A D G)', 'standard', ['B0', 'E1', 'A1', 'D2', 'G2']),
   guitarPreset('bass-5-drop-a', 'Drop A (A E A D G)', 'standard', ['A0', 'E1', 'A1', 'D2', 'G2']),
   guitarPreset('bass-5-high-c', 'Tenor / High C (E A D G C)', 'standard', ['E1', 'A1', 'D2', 'G2', 'C3']),
-  guitarPreset('bass-5-eb', 'Half-Step Down (Bb)', 'standard', ['Bb0', 'Eb1', 'Ab1', 'Db2', 'Gb2'])
+  guitarPreset('bass-5-eb', 'Half-Step Down (Bb)', 'standard', ['Bb0', 'Eb1', 'Ab1', 'Db2', 'Gb2']),
+  guitarPreset('bass-5-d-standard', 'D Standard (D G C F A)', 'standard', ['D1', 'G1', 'C2', 'F2', 'A2']),
+  guitarPreset('bass-5-c-standard', 'C Standard (C F Bb Eb G)', 'standard', ['C1', 'F1', 'Bb1', 'Eb2', 'G2'])
 ];
 
 const BASS_6_PRESETS: TunerPreset[] = [
   guitarPreset('bass-6-standard', 'Standard (B E A D G C)', 'standard', ['B0', 'E1', 'A1', 'D2', 'G2', 'C3']),
-  guitarPreset('bass-6-drop-a', 'Drop A (A E A D G C)', 'standard', ['A0', 'E1', 'A1', 'D2', 'G2', 'C3'])
+  guitarPreset('bass-6-drop-a', 'Drop A (A E A D G C)', 'standard', ['A0', 'E1', 'A1', 'D2', 'G2', 'C3']),
+  guitarPreset('bass-vi', 'Bass VI (E A D G B E – octave below guitar)', 'standard', ['E1', 'A1', 'D2', 'G2', 'B2', 'E3'])
 ];
 
 const BASS_PRESETS: TunerPreset[] = [
@@ -231,12 +277,12 @@ const DRUM_KIT_PRESET: TunerPreset = {
 };
 
 export const INSTRUMENT_STRING_COUNTS: Record<TunerInstrumentId, number[]> = {
-  electric: [6, 7, 8],
+  electric: [6, 7, 8, 9],
   acoustic: [6, 12],
   bass: [4, 5, 6],
   drums: []
 };
-// Custom string counts (9+ for electric, 7-9 for acoustic) handled via Custom field in tunerState
+// Custom string counts (10+ for electric, 7-9 for acoustic) handled via Custom field in tunerState
 // 5-string presets remain in library but are not primary string-range options
 
 export const DEFAULT_STRING_COUNTS: Record<TunerInstrumentId, number> = {
@@ -394,6 +440,8 @@ export const DETECT = {
 export const TUNER_COPY = {
   tapToStart: 'TAP TO START TUNING',
   tapToStop: 'TAP TO STOP',
+  startTuner: 'START TUNING',
+  stopTuner: 'STOP TUNING',
   starting: 'STARTING MIC…',
   listening: 'LISTENING…',
   inTune: 'TUNED',

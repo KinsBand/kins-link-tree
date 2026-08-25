@@ -59,56 +59,55 @@ export function createAudioEngine() {
       throw err;
     }
 
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    ctx = new Ctx({ idealSampleRate: 48000 });
-    if (ctx.state === 'suspended') await ctx.resume();
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+        googEchoCancellation: false,
+        googNoiseSuppression: false,
+        googAutoGainControl: false
+      }
+    });
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-          googEchoCancellation: false,
-          googNoiseSuppression: false,
-          googAutoGainControl: false
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      ctx = new Ctx({ idealSampleRate: 48000 });
+      if (ctx.state === 'suspended') await ctx.resume();
+
+      const track = stream.getAudioTracks()[0];
+      if (track && track.getSettings) {
+        try { await track.applyConstraints({ echoCancellation: false, noiseSuppression: false, autoGainControl: false }); } catch (e) {}
+      }
+      bluetoothDetected = await looksBluetooth(track);
+
+      sourceNode = ctx.createMediaStreamSource(stream);
+      usingWorklet = false;
+      if (ctx.audioWorklet) {
+        try {
+          await ctx.audioWorklet.addModule('/tuner-worklet.js');
+          workletNode = new AudioWorkletNode(ctx, 'tuner-capture', { numberOfOutputs: 0 });
+          workletNode.port.onmessage = onWorkletMessage;
+          sourceNode.connect(workletNode);
+          usingWorklet = true;
+        } catch (e) {
+          workletNode = null;
         }
-      });
+      }
+      if (!usingWorklet) {
+        scriptNode = ctx.createScriptProcessor(CHUNK, 1, 1);
+        scriptNode.onaudioprocess = onScriptProcess;
+        muteGain = ctx.createGain();
+        muteGain.gain.value = 0;
+        sourceNode.connect(scriptNode);
+        scriptNode.connect(muteGain);
+        muteGain.connect(ctx.destination);
+      }
+      return ctx;
     } catch (err) {
-      try { ctx.close(); } catch (e) {}
-      ctx = null;
+      stop();
       throw err;
     }
-
-    const track = stream.getAudioTracks()[0];
-    if (track && track.getSettings) {
-      try { await track.applyConstraints({ echoCancellation: false, noiseSuppression: false, autoGainControl: false }); } catch (e) {}
-    }
-    bluetoothDetected = await looksBluetooth(track);
-
-    sourceNode = ctx.createMediaStreamSource(stream);
-    usingWorklet = false;
-    if (ctx.audioWorklet) {
-      try {
-        await ctx.audioWorklet.addModule('/tuner-worklet.js');
-        workletNode = new AudioWorkletNode(ctx, 'tuner-capture', { numberOfOutputs: 0 });
-        workletNode.port.onmessage = onWorkletMessage;
-        sourceNode.connect(workletNode);
-        usingWorklet = true;
-      } catch (e) {
-        workletNode = null;
-      }
-    }
-    if (!usingWorklet) {
-      scriptNode = ctx.createScriptProcessor(CHUNK, 1, 1);
-      scriptNode.onaudioprocess = onScriptProcess;
-      muteGain = ctx.createGain();
-      muteGain.gain.value = 0;
-      sourceNode.connect(scriptNode);
-      scriptNode.connect(muteGain);
-      muteGain.connect(ctx.destination);
-    }
-    return ctx;
   }
 
   function readLatest(target) {
