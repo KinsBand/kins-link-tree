@@ -8,6 +8,7 @@ import {
   A4_REFERENCE,
   noteToFreq
 } from '../../../settings/tuner.config';
+import { midiToNoteName } from './notesUtil.js';
 
 const KEYS = {
   instrument: 'kins-tuner-instrument',
@@ -15,6 +16,7 @@ const KEYS = {
   stringsPrefix: 'kins-tuner-strings-',
   mode: 'kins-tuner-mode',
   autoAdvance: 'kins-tuner-auto-advance',
+  autoId: 'kins-tuner-auto-id',
   materialPrefix: 'kins-tuner-material-',
   a4: 'kins-tuner-a4'
 };
@@ -30,70 +32,51 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-function midiToNote(midi) {
-  return NOTE_NAMES[((midi % 12) + 12) % 12] + (Math.floor(midi / 12) - 1);
-}
 function makeCustomString(midi, a4) {
   return {
-    label: 'String ' + midiToNote(midi),
-    note: midiToNote(midi),
+    label: 'String ' + midiToNoteName(midi),
+    note: midiToNoteName(midi),
     freq: Math.round(noteToFreq(midi, a4) * 100) / 100,
     midi
   };
 }
+
+/* Standard-tuning generators for arbitrary string counts.
+   Extensions follow real-world practice: extra LOW strings descend in
+   fourths below the lowest standard string, extra HIGH strings ascend in
+   fourths above the highest standard string. */
+const GUITAR_BASE = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 E4
+const GUITAR_LOW_EXT = [35, 30, 25, 20, 15, 10]; // B1 F#1 C#1 G#0 D#0 A#0
+const BASS_BASE = [28, 33, 38, 43]; // E1 A1 D2 G2
+
 function generateStandardStrings(instrumentId, count, a4) {
-  // Electric / Acoustic standard intervals: low to high E2 A2 D3 G3 B3 E4
-  const guitarBase = [40, 45, 50, 55, 59, 64];
-  // Bass standard: E1 A1 D2 G2
-  const bassBase = [28, 33, 38, 43];
   if (instrumentId === 'bass') {
-    if (count === 4) return bassBase.map((m) => makeCustomString(m, a4));
-    if (count === 5) return [23, ...bassBase].map((m) => makeCustomString(m, a4)); // B0
-    if (count === 6) return [23, ...bassBase, 48].map((m) => makeCustomString(m, a4)); // B0 + C3
-    if (count < 4) return bassBase.slice(4 - count).map((m) => makeCustomString(m, a4));
-    // >6: extend low and high
-    let mids = [...bassBase];
-    // prepend low: B0(23), F#0(18) etc 5 semitones steps
-    let low = 23;
-    while (mids.length < count) {
-      if (mids.length < 6) {
-        // need to add high C3 already handled, for >6 add additional high strings
-        if (mids.length === 5) {
-          mids.push(48);
-          continue;
-        }
-      }
-      // prepend low
-      low -= 5;
-      mids.unshift(low);
-      if (mids.length >= count) break;
-      // if still need more, add high
-      if (mids.length < count) {
-        const high = mids[mids.length - 1] + 5;
-        mids.push(high);
-      }
-    }
-    return mids.slice(0, count).map((m) => makeCustomString(m, a4));
+    if (count <= 4) return BASS_BASE.slice(4 - count).map((m) => makeCustomString(m, a4));
+    if (count === 5) return [23, ...BASS_BASE].map((m) => makeCustomString(m, a4)); // + B0
+    // >5: alternate extra lows below B0 (F#0, C#0, ...) and highs above C3 (F3, ...)
+    const lowExt = [23, 18, 13, 8];
+    const highExt = [48, 53, 58];
+    const extras = count - BASS_BASE.length;
+    const lows = lowExt.slice(0, Math.min(Math.ceil(extras / 2), lowExt.length)).reverse();
+    const highs = highExt.slice(0, Math.max(0, Math.min(count - BASS_BASE.length - lows.length, highExt.length)));
+    return [...lows, ...BASS_BASE, ...highs].slice(0, count).map((m) => makeCustomString(m, a4));
   }
   // Guitar (electric / acoustic)
   if (count === 12) {
     // 12-string acoustic: 6 courses doubled (octave/unison)
-    // E2/E3 A2/A3 D3/D4 G3/G4 B3/B3 E4/E4  -> 12 notes
+    // E2/E3 A2/A3 D3/D4 G3/G4 B3/B3 E4/E4 -> 12 notes
     const twelve = [40, 52, 45, 57, 50, 62, 55, 67, 59, 59, 64, 64];
     return twelve.slice(0, count).map((m) => makeCustomString(m, a4));
   }
-  if (count === 6) return guitarBase.map((m) => makeCustomString(m, a4));
-  if (count < 6) return guitarBase.slice(6 - count).map((m) => makeCustomString(m, a4));
-  // >6: prepend low strings: B1(35), F#1(30), C#1(25), G#0(20), D#0(15) etc
-  let mids = [...guitarBase];
-  let low = 35; // B1
-  const lowSteps = [35, 30, 25, 20, 15, 10];
+  if (count === 6) return GUITAR_BASE.map((m) => makeCustomString(m, a4));
+  if (count < 6) return GUITAR_BASE.slice(6 - count).map((m) => makeCustomString(m, a4));
+  // >6: prepend low strings in fourths below E2 (B1, F#1, C#1, ...)
+  let mids = [...GUITAR_BASE];
   let idx = 0;
   while (mids.length < count) {
-    mids.unshift(lowSteps[idx] ?? low - 5 * (idx + 1));
+    const low = GUITAR_LOW_EXT[idx] ?? GUITAR_LOW_EXT[GUITAR_LOW_EXT.length - 1] - 5 * (idx - GUITAR_LOW_EXT.length + 1);
+    mids.unshift(low);
     idx++;
-    if (mids.length >= count) break;
   }
   return mids.slice(0, count).map((m) => makeCustomString(m, a4));
 }
@@ -105,6 +88,7 @@ export const state = {
   stringCount: 6,
   mode: 'guided',
   autoAdvance: false,
+  autoIdentify: true,
   materialId: 'avg',
   a4: A4_REFERENCE,
   listening: false,
@@ -272,6 +256,11 @@ export function setAutoAdvance(enabled) {
   storageSet(KEYS.autoAdvance, state.autoAdvance ? '1' : '0');
 }
 
+export function setAutoIdentify(enabled) {
+  state.autoIdentify = !!enabled;
+  storageSet(KEYS.autoId, state.autoIdentify ? '1' : '0');
+}
+
 export function setMaterial(id) {
   state.materialId = id;
   if (materialOptions().length) {
@@ -298,6 +287,8 @@ export function restore() {
   }
   setMode(storageGet(KEYS.mode));
   setAutoAdvance(storageGet(KEYS.autoAdvance) === '1');
+  // Auto string identification defaults ON — only an explicit opt-out persists.
+  state.autoIdentify = storageGet(KEYS.autoId) !== '0';
   const savedA4 = parseInt(storageGet(KEYS.a4) ?? '', 10);
   if (Number.isFinite(savedA4)) setA4(savedA4);
 }

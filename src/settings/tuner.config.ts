@@ -630,13 +630,22 @@ export const DETECT = {
   ATTACK_FREEZE_MS: 100,
   CLIP_LEVEL: 0.98,
   CLIP_RATIO: 0.005,
+  /* Adaptive YIN (Tuneo-style): the CMNDF acceptance threshold relaxes as a
+     pluck decays toward the noise floor, so lock survives the ring-out
+     instead of collapsing into octave/noise errors. Base threshold applies
+     while the signal is healthy; fully relaxed at RMS_RELEASE. */
   YIN_THRESHOLD: 0.1,
-  HPS_HARMONICS: 5,
+  YIN_THRESH_MAX: 0.18,
+  YIN_ADAPT_FULL_RMS: 0.03,
   SUBHARMONIC_RATIO: 0.2,
   POLYPHONY_PEAK_RATIO: 0.3,
   POLYPHONY_MAX: 2,
   MEDIAN_WINDOW: 5,
   EMA_ALPHA: 0.2,
+  /* Fine precision mode: once locked, slower EMA keeps the needle steady
+     enough for sub-cent readings, displayed to one decimal inside ±FINE. */
+  EMA_ALPHA_FINE: 0.08,
+  FINE_CENTS_RANGE: 10,
   OCTAVE_JUMP_CENTS: 600,
   OCTAVE_JUMP_FRAMES: 3,
   CONF_LOCK: 0.8,
@@ -646,7 +655,6 @@ export const DETECT = {
   JITTER_CENTS: 3,
   IN_TUNE_CENTS: 5,
   AUTO_ADVANCE_LOCK_MS: 1500,
-  LABEL_HYSTERESIS_CENTS: 50,
   LABEL_HYSTERESIS_MS: 80,
   /* Hold behaviour: keep the last confident reading on screen instead of
      blanking between plucks. Weak frames (resonance tails, noise) never
@@ -654,6 +662,16 @@ export const DETECT = {
   ONSET_GAP_MS: 350,
   UNRELIABLE_CONF: 0.32,
   MESSAGE_PERSIST_FRAMES: 3,
+  /* FFT harmonic/polyphony verification cadence: the full 4096-pt FFT runs
+     every Nth confident frame (and always on unlock or a >JUMP pitch move)
+     instead of every frame — measurable main-thread saving on low-end. */
+  HARMONIC_CHECK_EVERY: 3,
+  HARMONIC_CHECK_JUMP: 0.03,
+  /* Auto string identification (guided mode): a locked reading within this
+     many cents of a DIFFERENT string's target for HOLD_MS switches the
+     active string automatically — pluck and the tuner follows. */
+  AUTO_ID_CENTS: 40,
+  AUTO_ID_HOLD_MS: 300,
   /* Chromatic rail: cents falloff used to light neighbouring note pills */
   RAIL_RANGE_CENTS: 150,
   /* Meter scale: central ±FINE_CENTS linear core, then log-compressed out to
@@ -668,7 +686,6 @@ export const DETECT = {
 
 export const TUNER_COPY = {
   tapToStart: 'TAP TO START TUNING',
-  tapToStop: 'TAP TO STOP',
   startTuner: 'START TUNING',
   stopTuner: 'STOP TUNING',
   starting: 'STARTING MIC…',
@@ -682,6 +699,7 @@ export const TUNER_COPY = {
   micDenied: 'Microphone permission is blocked for this site. Click the padlock icon in the address bar, set Microphone to Allow, then tap START TUNING again.',
   micSystemBlocked: 'Your system is blocking microphone access. Check your OS privacy settings (Windows: Settings > Privacy > Microphone — allow desktop apps) and your browser mic list, then try again.',
   micNotFound: 'No microphone was detected. Connect or enable a mic, then tap START TUNING again.',
+  micLost: 'Microphone disconnected — tap START TUNING to reconnect.',
   micBlockedHeader: 'Microphone permission is disabled for this site. Enable it in your browser\'s site settings, then reload.',
   audioPrivate: 'Audio never leaves your device.',
   wrongOctave: 'That pitch belongs to another string — check the pegs.',
@@ -691,7 +709,5 @@ export const TUNER_COPY = {
   stress: 'Repeated over-tightening detected. Back off and let the string rest.',
   btMic: 'Bluetooth mic detected — headset audio is too narrow to tune reliably. Use your device mic.',
   lowMicWarning: 'Phone mics roll off below ~40 Hz — kick and floor tom readings may be unreliable.',
-  autoAdvanced: (name: string) => `Tuned — next up: ${name}`,
-  stringSelected: (name: string) => `Targeting ${name}`,
-  resumeNeeded: 'Tap to resume tuning'
+  autoAdvanced: (name: string) => `Tuned — next up: ${name}`
 };

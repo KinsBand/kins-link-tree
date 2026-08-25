@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kins-link-bio-v29';
+const CACHE_NAME = 'kins-link-bio-v30';
 
 // Small, stable shell assets only. Heavy media (new.png) is NOT precached —
 // it competes with first-load bandwidth and is runtime-cached on first view.
@@ -17,7 +17,9 @@ const PRECACHE_ASSETS = [
 
 // Same-origin path prefixes eligible for runtime caching.
 // /api/ is deliberately excluded so authenticated responses are never cached.
-const RUNTIME_CACHEABLE_PREFIXES = ['/_astro/', '/icons/', '/noise-tile.png'];
+// /tuner-worklet.js makes the tuner fully offline-capable (all audio DSP runs
+// locally; the /tuner page itself caches via the network-first HTML handler).
+const RUNTIME_CACHEABLE_PREFIXES = ['/_astro/', '/icons/', '/noise-tile.png', '/tuner-worklet.js'];
 
 // Versioned third-party CDNs safe to cache-first (URLs change when versions bump).
 const CDN_CACHE_RULES = [

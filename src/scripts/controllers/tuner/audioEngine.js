@@ -11,11 +11,19 @@ export function createAudioEngine() {
   let scriptNode = null;
   let muteGain = null;
   let usingWorklet = false;
+  let micLostCb = null;
+  /* Guards the 'ended' listener against firing during our own teardown
+     (track.stop() doesn't fire 'ended', but device unplug/OS revocation does). */
+  let closing = false;
 
   const ring = new Float32Array(RING_SAMPLES);
   let writeIdx = 0;
   let fresh = false;
   let bluetoothDetected = false;
+
+  function handleTrackEnded() {
+    if (!closing && micLostCb) micLostCb();
+  }
 
   function writeSamples(data) {
     const n = data.length;
@@ -59,6 +67,7 @@ export function createAudioEngine() {
       throw err;
     }
 
+    closing = false;
     stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: false,
@@ -78,6 +87,9 @@ export function createAudioEngine() {
       const track = stream.getAudioTracks()[0];
       if (track && track.getSettings) {
         try { await track.applyConstraints({ echoCancellation: false, noiseSuppression: false, autoGainControl: false }); } catch (e) {}
+      }
+      if (track && track.addEventListener) {
+        track.addEventListener('ended', handleTrackEnded);
       }
       bluetoothDetected = await looksBluetooth(track);
 
@@ -140,6 +152,7 @@ export function createAudioEngine() {
   }
 
   function stop() {
+    closing = true;
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       stream = null;
@@ -178,6 +191,7 @@ export function createAudioEngine() {
     suspend,
     readLatest,
     takeFresh,
+    onMicLost(cb) { micLostCb = typeof cb === 'function' ? cb : null; },
     get sampleRate() { return ctx ? ctx.sampleRate : 48000; },
     get bluetooth() { return bluetoothDetected; },
     get running() { return !!ctx && ctx.state === 'running'; }

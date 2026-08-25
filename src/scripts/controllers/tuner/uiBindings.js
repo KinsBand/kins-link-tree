@@ -8,6 +8,7 @@ import {
   DETECT
 } from '../../../settings/tuner.config';
 import { showToast } from '../toast.js';
+import { NOTE_NAMES, noteLetter } from './notesUtil.js';
 import {
   state,
   getGroup,
@@ -19,22 +20,29 @@ import {
 } from './tunerState.js';
 import { getInstrumentArt } from './instrumentArt.js';
 
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const SEARCH_DEBOUNCE_MS = 120;
 
-function noteLetter(note) {
-  return note.replace(/[0-9]/g, '');
+/* Memoized text writes: identical consecutive values (the common case while
+   a string rings) skip DOM invalidation entirely at the 20 Hz tick rate. */
+function setText(memo, el, value) {
+  if (!el || memo.get(el) === value) return;
+  memo.set(el, value);
+  el.textContent = value;
 }
 
 export function createUi(callbacks) {
   let els = null;
   let meterWidth = 0;
   let openMenuName = null;
+  let openTriggerEl = null;
+  let openPanelEl = null;
   let searchTimer = null;
   let figureListenerBound = false;
   let activeTargetEl = null;
   let activeFilter = 'all';
   let railNotes = [];
+  let pegPulseTimer = null;
+  const textMemo = new Map();
 
   function cache() {
     els = {
@@ -105,44 +113,63 @@ export function createUi(callbacks) {
     renderTuningList(getSearchQuery());
   }
 
-  function closeMenus() {
+  function closeMenus(restoreFocus) {
+    const trigger = openTriggerEl;
+    const panel = openPanelEl;
+    const hadMenu = !!openMenuName;
     openMenuName = null;
+    openTriggerEl = null;
+    openPanelEl = null;
     if (!els) return;
+    // Return focus to the trigger when the menu was dismissed without an
+    // explicit choice (Escape / outside click) and focus is loose or inside
+    // the panel that is about to be removed.
+    if (
+      hadMenu &&
+      restoreFocus &&
+      trigger &&
+      (!document.activeElement || document.activeElement === document.body || (panel && panel.contains(document.activeElement)))
+    ) {
+      trigger.focus();
+    }
     if (els.modeMenuSlot) els.modeMenuSlot.innerHTML = '';
     if (els.stringsMenuSlot) els.stringsMenuSlot.innerHTML = '';
     if (els.materialMenuSlot) els.materialMenuSlot.innerHTML = '';
     if (els.instrumentMenuSlot) els.instrumentMenuSlot.innerHTML = '';
   }
 
-  function toggleMenu(name, renderFn) {
+  function toggleMenu(name, renderFn, btn) {
     if (openMenuName === name) {
-      closeMenus();
+      closeMenus(false);
       return;
     }
-    closeMenus();
+    closeMenus(false);
     openMenuName = name;
+    openTriggerEl = btn || null;
     renderFn();
   }
 
   function menuPanel(slot, contentHtml) {
     const panel = document.createElement('div');
     panel.className = 'tuner-menu-panel';
+    panel.setAttribute('role', 'menu');
     panel.innerHTML = contentHtml;
     slot.replaceChildren(panel);
+    openPanelEl = panel;
     return panel;
   }
 
   function renderModeMenu() {
     const guidedActive = state.mode === 'guided';
     const html = `
-      <button type="button" class="tuner-menu-row${guidedActive ? ' active' : ''}" data-mode="guided">
+      <button type="button" class="tuner-menu-row${guidedActive ? ' active' : ''}" role="menuitemradio" aria-checked="${guidedActive}" data-mode="guided">
         <span class="tuner-menu-row-text">
           <span class="tuner-menu-row-title">Guided instrument mode</span>
           <span class="tuner-menu-row-sub">String targets, safety colors, auto-step</span>
         </span>
         <span class="tuner-menu-check" aria-hidden="true">${guidedActive ? '&#10003;' : ''}</span>
       </button>
-      <button type="button" class="tuner-menu-row${guidedActive ? '' : ' active'}" data-mode="chromatic">
+      <button type="button" class="tuner-menu-row${guidedActive ? '' : ' active'}" role="menuitemradio" aria-checked="${!guidedActive}" data-mode="chromatic">
         <span class="tuner-menu-row-text">
           <span class="tuner-menu-row-title">Chromatic free mode</span>
           <span class="tuner-menu-row-sub">Any pitch, no targets</span>
@@ -150,12 +177,21 @@ export function createUi(callbacks) {
         <span class="tuner-menu-check" aria-hidden="true">${guidedActive ? '' : '&#10003;'}</span>
       </button>
       <div class="tuner-menu-divider" role="separator"></div>
-      <button type="button" class="tuner-menu-row tuner-menu-toggle-row${state.mode === 'chromatic' ? ' disabled' : ''}" data-auto-advance aria-disabled="${state.mode === 'chromatic'}">
+      <button type="button" class="tuner-menu-row tuner-menu-toggle-row${state.mode === 'chromatic' ? ' disabled' : ''}" role="menuitemcheckbox" aria-checked="${state.autoAdvance}" data-auto-advance aria-disabled="${state.mode === 'chromatic'}">
         <span class="tuner-menu-row-text">
           <span class="tuner-menu-row-title">Auto-advance</span>
           <span class="tuner-menu-row-sub">Step to next string when tuned</span>
         </span>
         <span class="tuner-toggle${state.autoAdvance ? ' on' : ''}" role="switch" aria-checked="${state.autoAdvance}" aria-label="Auto-advance">
+          <span class="tuner-toggle-knob"></span>
+        </span>
+      </button>
+      <button type="button" class="tuner-menu-row tuner-menu-toggle-row${state.mode === 'chromatic' ? ' disabled' : ''}" role="menuitemcheckbox" aria-checked="${state.autoIdentify}" data-auto-id aria-disabled="${state.mode === 'chromatic'}">
+        <span class="tuner-menu-row-text">
+          <span class="tuner-menu-row-title">Auto string select</span>
+          <span class="tuner-menu-row-sub">Follow whichever string you pluck</span>
+        </span>
+        <span class="tuner-toggle${state.autoIdentify ? ' on' : ''}" role="switch" aria-checked="${state.autoIdentify}" aria-label="Auto string select">
           <span class="tuner-toggle-knob"></span>
         </span>
       </button>
@@ -170,6 +206,11 @@ export function createUi(callbacks) {
       }
       if (e.target.closest('[data-auto-advance]') && state.mode !== 'chromatic') {
         callbacks.onAutoAdvanceToggle(!state.autoAdvance);
+        renderModeMenu();
+        return;
+      }
+      if (e.target.closest('[data-auto-id]') && state.mode !== 'chromatic') {
+        callbacks.onAutoIdToggle(!state.autoIdentify);
         renderModeMenu();
       }
     });
@@ -202,7 +243,7 @@ export function createUi(callbacks) {
       if (count === 8 && state.instrumentId === 'acoustic') subtitle = 'Rare, but used in classical music or specialized modern acoustic genres.';
 
       return `
-        <button type="button" class="tuner-menu-row${active ? ' active' : ''}" data-string-count="${count}">
+        <button type="button" class="tuner-menu-row${active ? ' active' : ''}" role="menuitemradio" aria-checked="${active}" data-string-count="${count}">
           <span class="tuner-menu-row-text">
             <span class="tuner-menu-row-title">${count} STRINGS</span>
             <span class="tuner-menu-row-sub">${subtitle}</span>
@@ -218,16 +259,16 @@ export function createUi(callbacks) {
     const customTitle = isCustomActive ? `${current} STRINGS (Custom)` : 'Custom...';
     const customRow = `
         <div class="tuner-menu-divider" role="separator"></div>
-        <button type="button" class="tuner-menu-row${isCustomActive ? ' active' : ''}" data-string-custom>
+        <button type="button" class="tuner-menu-row${isCustomActive ? ' active' : ''}" role="menuitemradio" aria-checked="${isCustomActive}" data-string-custom>
           <span class="tuner-menu-row-text">
             <span class="tuner-menu-row-title">${customTitle}</span>
             <span class="tuner-menu-row-sub">${customSubtitle}</span>
           </span>
           <span class="tuner-menu-check" aria-hidden="true">${isCustomActive ? '&#10003;' : ''}</span>
         </button>
-        <div class="tuner-custom-field" style="display:${isCustomActive ? 'flex' : 'none'};gap:8px;padding:8px 8px 4px;align-items:center;">
-          <input type="number" min="3" max="12" step="1" aria-label="Custom string count" class="tuner-custom-input" value="${isCustomActive ? current : ''}" placeholder="3-12" style="flex:1;background:rgba(255,255,255,0.07);border:2px solid #000;color:var(--text-white);border-radius:999px;padding:8px 12px;font-family:var(--font-secondary);font-weight:800;width:100%;box-sizing:border-box;" />
-          <button type="button" class="tuner-custom-apply brutal-press" style="background:var(--accent-neon-yellow);color:#000;border:2px solid #000;border-radius:999px;padding:8px 14px;font-family:var(--font-secondary);font-weight:800;cursor:pointer;white-space:nowrap;">Apply</button>
+        <div class="tuner-custom-field" style="display:${isCustomActive ? 'flex' : 'none'}">
+          <input type="number" min="3" max="12" step="1" aria-label="Custom string count" class="tuner-custom-input" value="${isCustomActive ? current : ''}" placeholder="3-12" />
+          <button type="button" class="tuner-custom-apply brutal-press">Apply</button>
         </div>`;
 
     const panel = menuPanel(els.stringsMenuSlot, rows + customRow);
@@ -279,7 +320,7 @@ export function createUi(callbacks) {
       if (!profile) return '';
       const active = state.materialId === id;
       return `
-        <button type="button" class="tuner-menu-row${active ? ' active' : ''}" data-material="${id}">
+        <button type="button" class="tuner-menu-row${active ? ' active' : ''}" role="menuitemradio" aria-checked="${active}" data-material="${id}">
           <span class="tuner-menu-row-text">
             <span class="tuner-menu-row-title">${profile.label}</span>
             <span class="tuner-menu-row-sub">${profile.hint}</span>
@@ -291,7 +332,7 @@ export function createUi(callbacks) {
     const html = `
       ${rows}
       <div class="tuner-menu-divider" role="separator"></div>
-      <button type="button" class="tuner-menu-row${offActive ? ' active' : ''}" data-material="off">
+      <button type="button" class="tuner-menu-row${offActive ? ' active' : ''}" role="menuitemradio" aria-checked="${offActive}" data-material="off">
         <span class="tuner-menu-row-text">
           <span class="tuner-menu-row-title">Off</span>
           <span class="tuner-menu-row-sub">No safety highlighting</span>
@@ -313,7 +354,7 @@ export function createUi(callbacks) {
     const rows = TUNER_INSTRUMENTS.map((group) => {
       const active = group.id === state.instrumentId;
       return `
-        <button type="button" class="tuner-menu-row${active ? ' active' : ''}" data-instrument-menu="${group.id}">
+        <button type="button" class="tuner-menu-row${active ? ' active' : ''}" role="menuitemradio" aria-checked="${active}" data-instrument-menu="${group.id}">
           <span class="tuner-menu-row-text"><span class="tuner-menu-row-title">${group.dropdownLabel}</span></span>
           <span class="tuner-menu-check" aria-hidden="true">${active ? '&#10003;' : ''}</span>
         </button>`;
@@ -702,8 +743,16 @@ export function createUi(callbacks) {
   }
 
   function setPill(text, pillClass) {
-    els.status.textContent = text;
-    els.status.className = 'tuner-status' + (pillClass ? ' ' + pillClass : '');
+    const cls = 'tuner-status' + (pillClass ? ' ' + pillClass : '');
+    setText(textMemo, els.status, text);
+    if (els.status.className !== cls) els.status.className = cls;
+  }
+
+  /* Sub-cent display: one decimal while the detector is locked and inside
+     the fine range, whole cents otherwise (TomSchimansky-style precision). */
+  function formatCents(cents, fine) {
+    const abs = Math.abs(cents);
+    return fine && abs < DETECT.FINE_CENTS_RANGE ? abs.toFixed(1) : String(Math.round(abs));
   }
 
   function resetReadout() {
@@ -712,10 +761,10 @@ export function createUi(callbacks) {
     setNeedle(0);
     els.readout.classList.remove('is-held');
     clearRail();
-    els.note.textContent = '--';
-    els.noteOctave.textContent = '';
-    els.freq.textContent = '';
-    els.hint.textContent = '';
+    setText(textMemo, els.note, '--');
+    setText(textMemo, els.noteOctave, '');
+    setText(textMemo, els.freq, '');
+    setText(textMemo, els.hint, '');
     if (state.listening) {
       setPill(TUNER_COPY.listening, 'pill-neutral');
     } else if (state.starting) {
@@ -774,47 +823,59 @@ export function createUi(callbacks) {
       } else {
         setPill(TUNER_COPY.listening, 'pill-neutral');
       }
-      els.note.textContent = '--';
-      els.noteOctave.textContent = '';
-      els.freq.textContent = '';
-      els.hint.textContent = '';
+      setText(textMemo, els.note, '--');
+      setText(textMemo, els.noteOctave, '');
+      setText(textMemo, els.freq, '');
+      setText(textMemo, els.hint, '');
       return;
     }
 
     const cents = reading.cents;
     setNeedle(cents);
-    els.note.textContent = noteLetter(reading.detectedNote);
-    els.noteOctave.textContent = chromatic ? String(reading.detectedOctave) : '';
-    els.freq.textContent = reading.freq.toFixed(1) + ' Hz';
+    setText(textMemo, els.note, noteLetter(reading.detectedNote));
+    setText(textMemo, els.noteOctave, chromatic ? String(reading.detectedOctave) : '');
+    setText(textMemo, els.freq, reading.freq.toFixed(1) + ' Hz');
 
     if (!chromatic) {
-      const target = reading.target;
       if (reading.zone === 'wrong-octave') {
         setNeedle(0);
         setInTuneHighlight(false);
         setPill('CHECK THE PEGS', 'pill-neutral');
-        els.hint.textContent = '';
+        setText(textMemo, els.hint, '');
         return;
       }
       if (Math.abs(cents) <= DETECT.IN_TUNE_CENTS) {
         setPill(TUNER_COPY.inTune, 'pill-tuned');
         setInTuneHighlight(true);
         els.readout.classList.add('in-tune');
-        els.hint.textContent = '';
+        setText(textMemo, els.hint, '');
       } else {
         const dir = cents < 0 ? TUNER_COPY.tooFlat : TUNER_COPY.tooSharp;
-        setPill(dir + ' \u00B7 ' + Math.abs(Math.round(cents)) + '\u00A2', 'pill-off');
+        setPill(dir + ' \u00B7 ' + formatCents(cents, reading.locked) + '\u00A2', 'pill-off');
         setInTuneHighlight(false);
         els.readout.classList.add('off-pitch');
-        els.hint.textContent = cents < 0 ? 'TIGHTEN \u2191' : 'LOOSEN \u2193';
+        setText(textMemo, els.hint, cents < 0 ? 'TIGHTEN \u2191' : 'LOOSEN \u2193');
       }
       applySafetyClasses(reading.color);
     } else {
       setInTuneHighlight(false);
       updateRail(reading.freq);
-      setPill(reading.nearestName + ' \u00B7 ' + (cents >= 0 ? '+' : '') + Math.round(cents) + '\u00A2', 'pill-neutral');
-      els.hint.textContent = reading.nearestName + ' \u00B7 ' + (cents >= 0 ? '+' : '') + Math.round(cents) + '\u00A2';
+      const signed = (cents >= 0 ? '+' : '-') + formatCents(cents, reading.locked);
+      setPill(reading.nearestName + ' \u00B7 ' + signed + '\u00A2', 'pill-neutral');
+      setText(textMemo, els.hint, reading.nearestName + ' \u00B7 ' + signed + '\u00A2');
     }
+  }
+
+  /* Soft one-shot pop on the active peg after auto string identification —
+     transform-only animation, no toast noise. */
+  function pulseActivePeg() {
+    if (!activeTargetEl) return;
+    activeTargetEl.classList.remove('peg-acquired');
+    requestAnimationFrame(() => activeTargetEl && activeTargetEl.classList.add('peg-acquired'));
+    if (pegPulseTimer) clearTimeout(pegPulseTimer);
+    pegPulseTimer = setTimeout(() => {
+      if (activeTargetEl) activeTargetEl.classList.remove('peg-acquired');
+    }, 450);
   }
 
   function bindStaticEvents() {
@@ -824,10 +885,10 @@ export function createUi(callbacks) {
       btn.addEventListener('click', () => callbacks.onInstrumentChange(btn.getAttribute('data-instrument')));
     });
     els.presetBtn.addEventListener('click', showTuningView);
-    els.modeBtn.addEventListener('click', () => toggleMenu('mode', renderModeMenu));
-    if (els.stringsBtn) els.stringsBtn.addEventListener('click', () => toggleMenu('strings', renderStringsMenu));
-    if (els.materialBtn) els.materialBtn.addEventListener('click', () => toggleMenu('material', renderMaterialMenu));
-    els.instrumentBtn.addEventListener('click', () => toggleMenu('instrument', renderInstrumentMenu));
+    els.modeBtn.addEventListener('click', () => toggleMenu('mode', renderModeMenu, els.modeBtn));
+    if (els.stringsBtn) els.stringsBtn.addEventListener('click', () => toggleMenu('strings', renderStringsMenu, els.stringsBtn));
+    if (els.materialBtn) els.materialBtn.addEventListener('click', () => toggleMenu('material', renderMaterialMenu, els.materialBtn));
+    els.instrumentBtn.addEventListener('click', () => toggleMenu('instrument', renderInstrumentMenu, els.instrumentBtn));
     els.backToTunerBtn.addEventListener('click', showTunerView);
 
     if (els.searchClearBtn) {
@@ -859,13 +920,13 @@ export function createUi(callbacks) {
       if (!openMenuName) return;
       if (e.target.closest('.tuner-menu-panel')) return;
       if (e.target.closest('#tunerModeBtn, #tunerStringsBtn, #tunerMaterialBtn, #tunerInstrumentBtn')) return;
-      closeMenus();
+      closeMenus(true);
     });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (openMenuName) {
-          closeMenus();
+          closeMenus(true);
         } else if (!els.tuningView.hidden) {
           showTunerView();
         }
@@ -911,6 +972,7 @@ export function createUi(callbacks) {
     resetReadout,
     updateReading,
     showMicWarning,
+    pulseActivePeg,
     invalidateMeterRect,
     closeMenus,
     resetFilter,

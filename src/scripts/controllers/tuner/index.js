@@ -1,9 +1,11 @@
 import { TUNER_COPY, DETECT, noteToFreq } from '../../../settings/tuner.config';
 import { showToast } from '../toast.js';
+import { midiToPitchClass } from './notesUtil.js';
 import {
   state,
   getGroup,
   getString,
+  getPreset,
   getProfile,
   setInstrument,
   setPreset,
@@ -12,6 +14,7 @@ import {
   setCustomStringCount,
   setMode,
   setAutoAdvance,
+  setAutoIdentify,
   setMaterial,
   setA4,
   restore
@@ -25,7 +28,6 @@ import {
 import { createSafetyMonitor } from './safetyMonitor.js';
 import { createUi } from './uiBindings.js';
 
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const WORK_WINDOW = DETECT.WORK_WINDOW;
 
 let initialized = false;
@@ -40,6 +42,10 @@ let lastTick = 0;
 let reducedMotion = false;
 let lowPower = false;
 let lockedSince = 0;
+/* Auto string identification hysteresis (guided mode): a locked reading
+   near ANOTHER string's target must persist before the selection follows. */
+let autoIdCandidate = null;
+let autoIdCandidateSince = 0;
 const workBuf = new Float32Array(WORK_WINDOW);
 
 function targetFreq(string) {
@@ -53,9 +59,60 @@ function resetPipeline() {
   noteStab.reset();
   safety.reset();
   lockedSince = 0;
+  autoIdCandidate = null;
+  autoIdCandidateSince = 0;
   lastGood = null;
   clipRun = 0;
   polyRun = 0;
+}
+
+/* Pluck-and-follow: nearest string whose target sits within AUTO_ID_CENTS of
+   the confident reading. Only near-exact matches qualify, so an out-of-tune
+   pluck can never hijack the selection. */
+function findAutoIdString(freq) {
+  const strings = getPreset().strings;
+  let best = null;
+  let bestCents = Infinity;
+  for (let i = 0; i < strings.length; i++) {
+    const target = targetFreq(strings[i]);
+    if (!(target > 0)) continue;
+    const cents = Math.abs(1200 * Math.log2(freq / target));
+    if (cents < bestCents) {
+      bestCents = cents;
+      best = i;
+    }
+  }
+  return best !== null && bestCents <= DETECT.AUTO_ID_CENTS ? best : null;
+}
+
+function autoIdTick(freq, trusted, nowMs) {
+  if (!state.autoIdentify || state.mode !== 'guided' || state.instrumentId === 'drums') return;
+  // Only fully locked readings may steer string selection; weak/unlocked
+  // frames pause evaluation without cancelling confirmation progress.
+  if (!trusted) return;
+  const match = findAutoIdString(freq);
+  if (match === null || match === state.stringIndex) {
+    autoIdCandidate = null;
+    return;
+  }
+  if (autoIdCandidate === match) {
+    if (nowMs - autoIdCandidateSince >= DETECT.AUTO_ID_HOLD_MS) {
+      autoIdCandidate = null;
+      autoIdCandidateSince = 0;
+      setString(match);
+      // Light pipeline refresh — keep detector lock, drop stale smoothing.
+      smoother.reset();
+      noteStab.reset();
+      safety.reset();
+      lockedSince = 0;
+      lastGood = null;
+      ui.renderFigure();
+      ui.pulseActivePeg();
+    }
+  } else {
+    autoIdCandidate = match;
+    autoIdCandidateSince = nowMs;
+  }
 }
 
 function getPresetInternal() {
@@ -101,13 +158,13 @@ function holdFrame() {
 
 function handleReading(r, nowMs) {
   const chromatic = state.mode === 'chromatic';
-  const target = getString();
 
   // A fresh pluck after a gap: measure this attack clean, don't blend it
   // with cents smoothed from the previous note's decaying resonance.
   if (r.onset) {
     smoother.reset();
     noteStab.reset();
+    autoIdCandidate = null;
   }
 
   if (r.status !== 'ok') {
@@ -151,7 +208,7 @@ function handleReading(r, nowMs) {
     detectedNote: '--',
     detectedOctave: 0,
     nearestName: '',
-    target,
+    target: null,
     locked: r.locked,
     held: false
   };
@@ -162,15 +219,21 @@ function handleReading(r, nowMs) {
   // Stabilise the note label in BOTH modes so boundary flicker (A <-> A#)
   // doesn't jitter the readout or the free-mode note rail.
   const stableMidi = noteStab.update(midi, nowMs);
-  reading.detectedNote = NOTE_NAMES[((stableMidi % 12) + 12) % 12];
+  reading.detectedNote = midiToPitchClass(stableMidi);
   reading.detectedOctave = Math.floor(stableMidi / 12) - 1;
+
+  // Pluck-and-follow runs before the target is resolved so this same frame
+  // is already measured against the string it just identified.
+  autoIdTick(r.freq, r.locked, nowMs);
+  const target = getString();
+  reading.target = target;
 
   const rawCents = chromatic
     ? Math.round(1200 * Math.log2(r.freq / noteToFreq(stableMidi, state.a4)))
     : Math.round(1200 * Math.log2(r.freq / targetFreq(target)));
   reading.rawCents = rawCents;
 
-  const smoothed = smoother.push(rawCents);
+  const smoothed = smoother.push(rawCents, r.locked);
   reading.cents = smoothed.cents;
 
   if (chromatic) {
@@ -328,7 +391,9 @@ function onCustomStringCount(count) {
 
 function onModeSelect(mode) {
   setMode(mode);
-  stopMic();
+  // Mic stays alive across mode switches — only an instrument change
+  // restarts capture (different profile/layout).
+  resetPipeline();
   ui.renderTopbar();
   ui.renderFigure();
   ui.resetReadout();
@@ -337,6 +402,11 @@ function onModeSelect(mode) {
 function onAutoAdvanceToggle(enabled) {
   setAutoAdvance(enabled);
   lockedSince = 0;
+}
+
+function onAutoIdToggle(enabled) {
+  setAutoIdentify(enabled);
+  autoIdCandidate = null;
 }
 
 function onMaterialSelect(id) {
@@ -365,6 +435,14 @@ export function initTuner() {
 
   restore();
   engine = createAudioEngine();
+  // Unplugged/OS-revoked mics fire MediaStreamTrack 'ended' — surface it as
+  // an actionable state instead of a stuck LISTENING readout.
+  engine.onMicLost(() => {
+    if (state.listening || state.starting) {
+      stopMic();
+      showToast(TUNER_COPY.micLost, 'warning');
+    }
+  });
   detector = createPitchDetector();
   smoother = createCentsSmoother();
   noteStab = createNoteStabilizer();
@@ -378,6 +456,7 @@ export function initTuner() {
     onCustomStringCount,
     onModeSelect,
     onAutoAdvanceToggle,
+    onAutoIdToggle,
     onMaterialSelect,
     onA4Select
   });
@@ -387,8 +466,17 @@ export function initTuner() {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       engine.suspend();
+      // Fully stop the rAF loop while hidden instead of spinning no-op ticks.
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
     } else if (state.listening) {
       engine.resume();
+      if (rafId === null) {
+        lastTick = 0;
+        rafId = requestAnimationFrame(detectionLoop);
+      }
     }
   });
 }

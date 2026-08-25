@@ -1271,6 +1271,57 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     transform: translateX(20px);
   }
 
+  /* ---------- Runtime DOM: custom string-count field ---------- */
+  :global(.tuner-custom-field) {
+    display: flex;
+    gap: 8px;
+    padding: 8px 8px 4px;
+    align-items: center;
+  }
+
+  :global(.tuner-custom-input) {
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.07);
+    border: 2px solid #000000;
+    color: var(--text-white);
+    border-radius: var(--radius-pill);
+    padding: 8px 12px;
+    font-family: var(--font-secondary);
+    font-weight: 800;
+  }
+
+  :global(.tuner-custom-input:focus-visible) {
+    outline: none;
+    border-color: var(--accent-neon-yellow);
+  }
+
+  :global(.tuner-custom-apply) {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    border-radius: var(--radius-pill);
+    padding: 8px 14px;
+    font-family: var(--font-secondary);
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* ---------- Auto string ID: one-shot peg pop (transform-only) ---------- */
+  @keyframes tuner-peg-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.28); }
+    100% { transform: scale(1); }
+  }
+
+  :global(.tuner-peg.peg-acquired .tuner-peg-circle) {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: tuner-peg-pop 0.32s var(--ease-tactile);
+  }
+
   /* ---------- Runtime DOM: pegs (guitar art ships its own <style>) ---------- */
   :global(.tuner-peg) {
     cursor: pointer;
@@ -1687,6 +1738,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     :global(.tuner-drum-shape),
     :global(.tuner-peg),
     :global(.tuner-peg *),
+    :global(.tuner-peg.peg-acquired .tuner-peg-circle),
     :global(.tuner-drum *),
     .tuner-meter-zone-safety,
     .tuner-chromatic-rail :global(.rail-note),

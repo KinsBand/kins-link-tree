@@ -6,7 +6,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:4321/kins-link-tree',
+    baseURL: 'http://localhost:4321',
     trace: 'retain-on-failure',
     ...devices['Pixel 7']
   },
@@ -18,7 +18,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm.cmd run dev',
-    url: 'http://localhost:4321/kins-link-tree/',
+    url: 'http://localhost:4321/',
     reuseExistingServer: !process.env.CI,
     timeout: 90_000
   }

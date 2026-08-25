@@ -73,6 +73,8 @@ export function createPitchDetector() {
   let jitterEma = 0;
   let lastActiveAt = -1e9;
   let pendingOnset = false;
+  let fftCounter = 0;
+  let lastCheckedFreq = 0;
 
   const result = { status: 'silent', freq: 0, clarity: 0, conf: 0, locked: false, onset: false };
 
@@ -81,14 +83,27 @@ export function createPitchDetector() {
     gateActive = false; silentFrames = 0; onsetAt = 0;
     lockFrames = 0; locked = false; prevFreq = 0; prevConfident = false; jitterEma = 0;
     lastActiveAt = -1e9; pendingOnset = false;
+    fftCounter = 0; lastCheckedFreq = 0;
   }
 
-  function yin(buf, W, minLag, maxLag) {
+  /* Adaptive YIN acceptance threshold (Tuneo-style): healthy signal uses the
+     strict base threshold; as RMS decays toward the release floor the
+     threshold relaxes on a log curve so the true lag keeps winning the CMNDF
+     search through the ring-out instead of losing to noise/octave errors. */
+  function adaptiveYinThreshold(rms) {
+    const lo = DETECT.RMS_RELEASE;
+    const hi = DETECT.YIN_ADAPT_FULL_RMS;
+    if (rms >= hi) return DETECT.YIN_THRESHOLD;
+    if (rms <= lo) return DETECT.YIN_THRESH_MAX;
+    const t = Math.log(rms / lo) / Math.log(hi / lo);
+    return DETECT.YIN_THRESHOLD + (DETECT.YIN_THRESH_MAX - DETECT.YIN_THRESHOLD) * t;
+  }
+
+  function yin(buf, W, minLag, maxLag, thr) {
     let cum = 0;
     let globalMin = Infinity;
     let globalMinLag = -1;
     let chosenLag = -1;
-    let prevCmndf = Infinity;
     for (let lag = minLag; lag <= maxLag; lag++) {
       let sum = 0;
       for (let i = 0; i < W; i += 2) {
@@ -101,11 +116,10 @@ export function createPitchDetector() {
         globalMin = cmndf;
         globalMinLag = lag;
       }
-      if (chosenLag < 0 && cmndf < DETECT.YIN_THRESHOLD) {
+      if (chosenLag < 0 && cmndf < thr) {
         chosenLag = lag;
       }
       corrBuf[lag] = cmndf;
-      prevCmndf = cmndf;
     }
     const lag = chosenLag > 0 ? chosenLag : globalMinLag;
     if (lag < 0) return { lag: -1, cmndfMin: 1 };
@@ -241,7 +255,8 @@ export function createPitchDetector() {
       }
     }
 
-    const { lag, cmndfMin } = yin(buf, W, searchMin, searchMax);
+    const thrEff = adaptiveYinThreshold(rms);
+    const { lag, cmndfMin } = yin(buf, W, searchMin, searchMax, thrEff);
     if (lag <= 0) {
       result.status = 'silent';
       return result;
@@ -252,20 +267,31 @@ export function createPitchDetector() {
       return result;
     }
 
-    for (let i = 0; i < FFT_SIZE; i++) {
-      re[i] = i < size ? buf[i] : 0;
-      im[i] = 0;
-    }
-    fftMagnitudes(mag, re, im, fft);
-    const checked = harmonicCheck(freq, sampleRate);
-    if (checked.polyphonic) {
-      result.status = 'polyphonic';
-      return result;
-    }
-    freq = checked.freq;
-    if (!(freq >= MIN_HZ && freq <= MAX_HZ)) {
-      result.status = 'silent';
-      return result;
+    /* Harmonic/polyphony verification via FFT runs on a cadence instead of
+       every frame: always while unlocked, always after a >3% pitch move
+       (catches octave corrections), otherwise every HARMONIC_CHECK_EVERY'th
+       confident frame. Between checks the YIN estimate is trusted as-is. */
+    fftCounter++;
+    const jumped =
+      lastCheckedFreq > 0 &&
+      Math.abs(freq - lastCheckedFreq) / lastCheckedFreq > DETECT.HARMONIC_CHECK_JUMP;
+    if (!locked || jumped || fftCounter % DETECT.HARMONIC_CHECK_EVERY === 0) {
+      for (let i = 0; i < FFT_SIZE; i++) {
+        re[i] = i < size ? buf[i] : 0;
+        im[i] = 0;
+      }
+      fftMagnitudes(mag, re, im, fft);
+      const checked = harmonicCheck(freq, sampleRate);
+      if (checked.polyphonic) {
+        result.status = 'polyphonic';
+        return result;
+      }
+      freq = checked.freq;
+      if (!(freq >= MIN_HZ && freq <= MAX_HZ)) {
+        result.status = 'silent';
+        return result;
+      }
+      lastCheckedFreq = freq;
     }
 
     const clarity = Math.max(0, Math.min(1, 1 - cmndfMin));
@@ -314,7 +340,10 @@ export function createCentsSmoother() {
     jumpRun = 0;
   }
 
-  function push(rawCents) {
+  /* `fine` = detector lock engaged: slow the EMA down so the needle holds
+     sub-cent steady on a ringing string instead of tracking micro-noise
+     (TomSchimansky-style high-stability display mode). */
+  function push(rawCents, fine) {
     if (ema !== null && Math.abs(rawCents - ema) > DETECT.OCTAVE_JUMP_CENTS) {
       jumpRun++;
       if (jumpRun < DETECT.OCTAVE_JUMP_FRAMES) {
@@ -327,7 +356,8 @@ export function createCentsSmoother() {
     if (buf.length > DETECT.MEDIAN_WINDOW) buf.shift();
     const sorted = buf.slice().sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)];
-    ema = ema === null ? median : ema + DETECT.EMA_ALPHA * (median - ema);
+    const alpha = fine ? DETECT.EMA_ALPHA_FINE : DETECT.EMA_ALPHA;
+    ema = ema === null ? median : ema + alpha * (median - ema);
     return { cents: ema, held: false };
   }
 
