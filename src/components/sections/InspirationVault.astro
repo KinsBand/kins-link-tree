@@ -605,11 +605,28 @@ const memberTabs = [
         thumb.classList.add('is-vinyl-disc');
       } else {
         const wasPlaying = card.classList.contains('is-playing');
+        const wasDecelerating = card.classList.contains('is-decelerating');
         card.classList.remove('is-playing');
 
-        if (wasPlaying && !card.classList.contains('is-decelerating')) {
+        if (wasPlaying) {
+          // Track was playing but a different track is now current — ensure stale global
+          // deceleration state doesn't resurrect it (see audioPlayer startVinylSpin interrupt).
+          card.classList.remove('is-decelerating');
           spinCardToStop(card, thumb);
-        } else if (!card.classList.contains('is-decelerating') && !card._retireAnimId) {
+        } else if (wasDecelerating) {
+          // Stale decelerating card from an interrupted global stopVinylSpin (e.g. auto-mix
+          // switched tracks before the 550ms decel finished). Retire locally so it doesn't
+          // keep spinning via the global cachedVinylThumbs -> stacking.
+          card.classList.remove('is-decelerating');
+          if (!card._retireAnimId) {
+            if (thumb.classList.contains('is-vinyl-disc')) {
+              spinCardToStop(card, thumb);
+            } else {
+              thumb.classList.remove('is-vinyl-disc', 'vinyl-spin-anim', 'vinyl-spin-decelerate');
+              thumb.style.transform = 'rotate(0deg)';
+            }
+          }
+        } else if (!card._retireAnimId) {
           thumb.classList.remove('is-vinyl-disc', 'vinyl-spin-anim', 'vinyl-spin-decelerate');
           thumb.style.transform = 'rotate(0deg)';
         }
@@ -780,6 +797,53 @@ const memberTabs = [
 
       updateCardStates(currentPlaybackTrack, isCurrentlyPlaying);
 
+      // Off-screen sync: if the now-playing track lives in this freshly rendered
+      // page (e.g. different member tab / page 2 of 4) the vinyl should already
+      // be in sync with the dock's global rotation when the user arrives.
+      // Without this, the new card would flash at 0deg or sit detached from the
+      // global rotation until the next cache invalidation.
+      if (isCurrentlyPlaying && currentPlaybackTrack) {
+        const w = window as any;
+        const syncFromWindow = () => {
+          if (typeof w.getCurrentVinylAngle !== 'function' || typeof w.syncVinylInstances !== 'function') return false;
+          const angle = w.getCurrentVinylAngle();
+          const playingThumb = container.querySelector('.music-card.is-playing .music-card-thumb') as HTMLElement;
+          if (playingThumb) {
+            // Suppress the 0.5s border-radius morph so the disc appears instantly as a vinyl
+            const prevTransition = playingThumb.style.transition;
+            playingThumb.style.transition = 'none';
+            if (w.invalidateVinylThumbCache) w.invalidateVinylThumbCache();
+            w.syncVinylInstances(angle, true);
+            void playingThumb.offsetWidth;
+            playingThumb.style.transition = prevTransition;
+          } else {
+            if (w.invalidateVinylThumbCache) w.invalidateVinylThumbCache();
+            w.syncVinylInstances(angle, true);
+          }
+          return true;
+        };
+        if (!syncFromWindow()) {
+          // AudioPlayer not yet idle-loaded (heavy controller loads via requestIdleCallback)
+          // - dynamic import ensures we still sync without forcing an eager static import.
+          import('../../scripts/controllers/audioPlayer.js').then((mod: any) => {
+            if (!mod.getCurrentVinylAngle || !mod.syncVinylInstances) return;
+            const angle = mod.getCurrentVinylAngle();
+            const playingThumb = container.querySelector('.music-card.is-playing .music-card-thumb') as HTMLElement;
+            if (playingThumb) {
+              const prevTransition = playingThumb.style.transition;
+              playingThumb.style.transition = 'none';
+              if (mod.invalidateVinylThumbCache) mod.invalidateVinylThumbCache();
+              mod.syncVinylInstances(angle, true);
+              void playingThumb.offsetWidth;
+              playingThumb.style.transition = prevTransition;
+            } else {
+              if (mod.invalidateVinylThumbCache) mod.invalidateVinylThumbCache();
+              mod.syncVinylInstances(angle, true);
+            }
+          }).catch(() => {});
+        }
+      }
+
       container.style.opacity = '1';
       container.style.transform = 'translateY(0)';
     }, 180);
@@ -897,6 +961,30 @@ const memberTabs = [
     currentPlaybackTrack = track;
     isCurrentlyPlaying = isPlaying;
     updateCardStates(track, isPlaying);
+    // If a track started playing and its card is currently visible (same 4-slot page),
+    // ensure its vinyl is immediately in sync with the dock's global rotation.
+    // Without this, the new card would flash at 0deg for one frame before the
+    // per-frame global sync catches up.
+    if (isPlaying && track) {
+      const w = window as any;
+      if (typeof w.getCurrentVinylAngle === 'function' && typeof w.syncVinylInstances === 'function') {
+        if (w.invalidateVinylThumbCache) w.invalidateVinylThumbCache();
+        // Use rAF so the DOM class changes from updateCardStates are flushed
+        requestAnimationFrame(() => {
+          const angle = w.getCurrentVinylAngle();
+          w.syncVinylInstances(angle, true);
+        });
+      } else {
+        import('../../scripts/controllers/audioPlayer.js').then((mod: any) => {
+          if (!mod.getCurrentVinylAngle || !mod.syncVinylInstances) return;
+          if (mod.invalidateVinylThumbCache) mod.invalidateVinylThumbCache();
+          requestAnimationFrame(() => {
+            const angle = mod.getCurrentVinylAngle();
+            mod.syncVinylInstances(angle, true);
+          });
+        }).catch(() => {});
+      }
+    }
   });
 
   // Handle both initial load and Astro View Transitions

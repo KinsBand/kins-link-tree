@@ -10,6 +10,7 @@ import MembersSection from '../components/sections/MembersSection.astro';
 import KinsCrewSpotlight from '../components/sections/KinsCrewSpotlight.astro';
 import MerchSection from '../components/sections/MerchSection.astro';
 import InspirationVault from '../components/sections/InspirationVault.astro';
+import RehearsalUtilitiesSection from '../components/sections/RehearsalUtilitiesSection.astro';
 import SubscribeSection from '../components/sections/SubscribeSection.astro';
 
 // Navigation Components
@@ -54,6 +55,7 @@ const baseUrl = import.meta.env.BASE_URL;
         <KinsCrewSpotlight />
         <MerchSection />
         <InspirationVault />
+        <RehearsalUtilitiesSection />
 
         <footer class="site-footer">
           <div class="footer-inner-card">
@@ -237,9 +239,10 @@ const baseUrl = import.meta.env.BASE_URL;
     .right-main-content > :global(.members-section) { order: 6; }
     .right-main-content > :global(.spotlight-section) { order: 7; }
     .right-main-content > :global(.inspired-section) { order: 8; }
+    .right-main-content > :global(.rehearsal-utilities-section) { order: 9; }
 
-    .left-sidebar > :global(.subscribe-section) { order: 9; }
-    .right-main-content > :global(.site-footer) { order: 10; }
+    .left-sidebar > :global(.subscribe-section) { order: 10; }
+    .right-main-content > :global(.site-footer) { order: 11; }
   }
 
   .site-footer {

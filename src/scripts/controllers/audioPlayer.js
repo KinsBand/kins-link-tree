@@ -403,8 +403,12 @@ let stopTimeoutId = null;
 // Invalidate whenever play state classes change (notifyPlaybackState fires on every transition).
 let cachedVinylThumbs = null;
 
-function invalidateVinylThumbCache() {
+export function invalidateVinylThumbCache() {
   cachedVinylThumbs = null;
+}
+
+export function getCurrentVinylAngle() {
+  return globalVinylAngle;
 }
 
 function getCachedVinylThumbs() {
@@ -443,9 +447,19 @@ export function syncVinylInstances(angleDeg, isRoundDisc = true) {
   }
 }
 
+// Expose for vault's off-screen sync without requiring a static import (keeps audioPlayer lazy)
+if (typeof window !== 'undefined') {
+  window.getCurrentVinylAngle = getCurrentVinylAngle;
+  window.invalidateVinylThumbCache = invalidateVinylThumbCache;
+  window.syncVinylInstances = syncVinylInstances;
+}
+
 let vinylDecelAnimId = null;
 
 export function startVinylSpin(startSpeed = 0.25) {
+  // Skip stale thumbs for the previous track when switching tracks before the
+  // previous visual decel/rotation finished - otherwise the global sync would
+  // keep the old card spinning alongside the new one -> stacking.
   clearTimeout(stopTimeoutId);
   if (vinylDecelAnimId) {
     cancelAnimationFrame(vinylDecelAnimId);
@@ -465,6 +479,19 @@ export function startVinylSpin(startSpeed = 0.25) {
   }
   const activeCards = document.querySelectorAll('.music-card.is-playing .music-card-thumb, .music-card.is-decelerating .music-card-thumb');
   activeCards.forEach((thumb) => {
+    const card = thumb.closest('.music-card');
+    const title = card && card.dataset ? card.dataset.songTitle : null;
+    // Don't resurrect a stale thumb for the previous track when switching tracks
+    // before the previous visual decel finished. The previous card will be retired
+    // locally by InspirationVault's updateCardStates (wasPlaying/wasDecelerating).
+    // Without this guard the global sync would keep it spinning -> stacking.
+    if (currentPlayingTrack && title && title !== currentPlayingTrack.title) {
+      // For the specific case of interrupting a global decel, wasDecelerating is true,
+      // but also for a mid-play switch (no decel yet) we still want to skip stale
+      // is-playing thumbs - otherwise startVinylSpin would re-add is-vinyl-disc to the
+      // old card right before updateCardStates removes is-playing.
+      return;
+    }
     thumb.classList.remove('vinyl-spin-decelerate');
     thumb.classList.add('is-vinyl-disc');
   });

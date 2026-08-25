@@ -1,0 +1,652 @@
+---
+import { rehearsalConfig } from '../../settings/rehearsal.config';
+
+const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = rehearsalConfig;
+---
+
+<section class="rehearsal-utilities-section" id="rehearsalUtilitiesSection" data-anim-gated>
+  <div class="rehearsal-card">
+    <!-- Header -->
+    <div class="rehearsal-header">
+      <div class="rehearsal-title-row">
+        <div class="rehearsal-icon-box">
+          <i class={icon} aria-hidden="true"></i>
+        </div>
+        <div class="rehearsal-header-text">
+          <h3 class="rehearsal-title">{title}</h3>
+          <p class="rehearsal-subtitle desktop-only">{desktopSubtitle}</p>
+          <p class="rehearsal-subtitle mobile-only">{mobileSubtitle}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop 3-Column Grid / Mobile Stacked Cards -->
+    <div class="tools-grid">
+      {tools.map((tool) => (
+        <article class={`tool-card tool-card-${tool.id}`}>
+          <div class="tool-card-inner">
+            <!-- Tool Header -->
+            <div class="tool-card-header">
+              <div class="tool-icon-badge">
+                <i class={tool.icon} aria-hidden="true"></i>
+              </div>
+              <div class="tool-title-wrap">
+                <h4 class="tool-card-name">{tool.title}</h4>
+              </div>
+              {tool.badge && (
+                <span class="tool-roadmap-badge">{tool.badge}</span>
+              )}
+            </div>
+
+            <!-- Desktop Bullet Points -->
+            <ul class="tool-bullet-list desktop-only" aria-label={`${tool.title} features`}>
+              {tool.desktopBullets.map((bullet) => (
+                <li class="tool-bullet-item">
+                  <span class="bullet-marker" aria-hidden="true"></span>
+                  <span class="bullet-text">{bullet}</span>
+                </li>
+              ))}
+            </ul>
+
+            <!-- Mobile Compact Summary -->
+            <p class="tool-mobile-blurb mobile-only">{tool.mobileBlurb}</p>
+
+            <!-- Action Button -->
+            <div class="tool-action-wrap">
+              {tool.url !== '#' ? (
+                <a
+                  href={tool.url}
+                  class="tool-action-btn tool-btn-primary brutal-press"
+                  data-track={`utilities:${tool.id}`}
+                  aria-label={`${tool.desktopBtn} - Open ${tool.title}`}
+                >
+                  <span class="desktop-only">{tool.desktopBtn}</span>
+                  <span class="mobile-only">{tool.mobileBtn}</span>
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  class={`tool-action-btn ${tool.badge ? 'tool-btn-roadmap' : 'tool-btn-secondary'} brutal-press`}
+                  data-tool-id={tool.id}
+                  data-tool-name={tool.title}
+                  data-track={`utilities:${tool.id}`}
+                  aria-label={`${tool.desktopBtn} - ${tool.title}`}
+                >
+                  <span class="desktop-only">{tool.desktopBtn}</span>
+                  <span class="mobile-only">{tool.mobileBtn}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <!-- Offline Footer Banner -->
+    <div class="rehearsal-offline-banner">
+      <div class="banner-pill">
+        <i class={`${offlineBanner.icon} banner-bolt-icon`} aria-hidden="true"></i>
+        <span class="banner-text desktop-only">{offlineBanner.desktop}</span>
+        <span class="banner-text mobile-only">{offlineBanner.mobile}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function initUtilitiesSection() {
+    const section = document.getElementById('rehearsalUtilitiesSection');
+    if (!section) return;
+
+    const actionButtons = section.querySelectorAll<HTMLButtonElement>('.tool-btn-secondary, .tool-btn-roadmap');
+    actionButtons.forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const toolId = btn.getAttribute('data-tool-id');
+        const toolName = btn.getAttribute('data-tool-name') || 'This tool';
+        
+        try {
+          const { showToast } = await import('../../scripts/controllers/toast.js');
+          if (toolId === 'metronome') {
+            showToast('Metronome is in development — dropping backstage soon!', 'info');
+          } else if (toolId === 'chords') {
+            showToast('Chord & Scale library is on our 2026 rehearsal roadmap!', 'info');
+          } else {
+            showToast(`${toolName} is coming soon!`, 'info');
+          }
+        } catch {
+          // Toast graceful fallback
+        }
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUtilitiesSection);
+  } else {
+    initUtilitiesSection();
+  }
+</script>
+
+<style>
+  .rehearsal-utilities-section {
+    width: 100%;
+    margin-top: 14px;
+    margin-bottom: 10px;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 340px;
+    box-sizing: border-box;
+  }
+
+  .rehearsal-card {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: var(--card-white);
+    border: var(--border-brutal);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-md);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  /* Header */
+  .rehearsal-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 14px;
+  }
+
+  .rehearsal-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .rehearsal-icon-box {
+    width: 36px;
+    height: 36px;
+    background: var(--accent-neon-yellow);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .rehearsal-icon-box i {
+    color: #000000;
+    font-size: 1rem;
+  }
+
+  .rehearsal-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .rehearsal-title {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-card-primary);
+    margin: 0;
+    line-height: 1.15;
+  }
+
+  .rehearsal-subtitle {
+    font-family: var(--font-secondary);
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: var(--text-card-secondary);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  /* Responsive visibility switches */
+  .desktop-only {
+    display: block;
+  }
+  .mobile-only {
+    display: none;
+  }
+
+  /* 3-Column Desktop Grid */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .tool-card {
+    background: #ffffff;
+    border: 2px solid #000000;
+    box-shadow: 2.5px 2.5px 0px #000000;
+    border-radius: var(--radius-sm);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+  }
+
+  .tool-card:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3.5px 3.5px 0px #000000;
+  }
+
+  .tool-card-inner {
+    padding: 16px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  .tool-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .tool-icon-badge {
+    width: 28px;
+    height: 28px;
+    background: #f4f4f5;
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tool-icon-badge i {
+    font-size: 0.85rem;
+    color: #000000;
+  }
+
+  .tool-title-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tool-card-name {
+    font-family: var(--font-heading);
+    font-size: 0.92rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #000000;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tool-roadmap-badge {
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    background: #e4e4e7;
+    color: #27272a;
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Desktop Bullets */
+  .tool-bullet-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .tool-bullet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    line-height: 1.35;
+  }
+
+  .bullet-marker {
+    width: 5px;
+    height: 5px;
+    background-color: #000000;
+    border-radius: 1px;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .bullet-text {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #3f3f46;
+  }
+
+  /* Action Buttons */
+  .tool-action-wrap {
+    margin-top: auto;
+    padding-top: 4px;
+  }
+
+  .tool-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 9px 12px;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs);
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .tool-btn-primary {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+  }
+
+  .tool-btn-primary:hover {
+    background: #faff60;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .tool-btn-secondary {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .tool-btn-secondary:hover {
+    background: #f4f4f5;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .tool-btn-roadmap {
+    background: #f4f4f5;
+    color: #52525b;
+  }
+
+  .tool-btn-roadmap:hover {
+    background: #e4e4e7;
+    color: #18181b;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  /* Offline Banner */
+  .rehearsal-offline-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 2px dashed #000000;
+    padding-top: 14px;
+    width: 100%;
+  }
+
+  .banner-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: #ffffff;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: var(--radius-pill);
+    text-align: center;
+  }
+
+  .banner-bolt-icon {
+    color: #000000;
+    font-size: 0.82rem;
+  }
+
+  .banner-text {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--text-card-primary);
+    text-transform: uppercase;
+  }
+
+  /* ==========================================================================
+     Dark Mode Adjustments
+     ========================================================================== */
+  :global([data-theme="dark"]) .rehearsal-card {
+    background-color: var(--md-sys-color-surface-container, #18181c);
+    border-color: #000000;
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.9);
+  }
+
+  :global([data-theme="dark"]) .rehearsal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+
+  :global([data-theme="dark"]) .rehearsal-icon-box {
+    background: var(--accent-neon-yellow, #f2fd43);
+    border-color: #000000;
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+  }
+
+  :global([data-theme="dark"]) .rehearsal-icon-box i {
+    color: #000000;
+  }
+
+  :global([data-theme="dark"]) .rehearsal-title {
+    color: var(--text-white, #f5f5f7);
+  }
+
+  :global([data-theme="dark"]) .rehearsal-subtitle {
+    color: var(--text-muted, #a1a1aa);
+  }
+
+  :global([data-theme="dark"]) .tool-card {
+    background: var(--md-sys-color-surface-container-high, #222228);
+    border-color: #000000;
+    box-shadow: 2.5px 2.5px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .tool-card:hover {
+    box-shadow: 3.5px 3.5px 0px var(--accent-neon-yellow, #f2fd43);
+  }
+
+  :global([data-theme="dark"]) .tool-icon-badge {
+    background: #18181c;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  :global([data-theme="dark"]) .tool-icon-badge i {
+    color: var(--accent-neon-yellow, #f2fd43);
+  }
+
+  :global([data-theme="dark"]) .tool-card-name {
+    color: var(--text-white, #f5f5f7);
+  }
+
+  :global([data-theme="dark"]) .tool-roadmap-badge {
+    background: #1c1c22;
+    color: #a1a1aa;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  :global([data-theme="dark"]) .bullet-marker {
+    background-color: var(--accent-neon-yellow, #f2fd43);
+  }
+
+  :global([data-theme="dark"]) .bullet-text {
+    color: #d4d4d8;
+  }
+
+  :global([data-theme="dark"]) .tool-btn-primary {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .tool-btn-secondary {
+    background: #27272a;
+    color: var(--text-white, #f5f5f7);
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .tool-btn-secondary:hover {
+    background: #3f3f46;
+  }
+
+  :global([data-theme="dark"]) .tool-btn-roadmap {
+    background: #1c1c20;
+    color: #a1a1aa;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  :global([data-theme="dark"]) .tool-btn-roadmap:hover {
+    background: #27272a;
+    color: #f5f5f7;
+  }
+
+  :global([data-theme="dark"]) .rehearsal-offline-banner {
+    border-top-color: rgba(255, 255, 255, 0.15);
+  }
+
+  :global([data-theme="dark"]) .banner-pill {
+    background: #18181c;
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 1.5px 1.5px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .banner-bolt-icon {
+    color: var(--accent-neon-yellow, #f2fd43);
+  }
+
+  :global([data-theme="dark"]) .banner-text {
+    color: var(--text-muted, #a1a1aa);
+  }
+
+  /* ==========================================================================
+     Mobile Stacked View (< 768px)
+     ========================================================================== */
+  @media (max-width: 767px) {
+    .rehearsal-card {
+      padding: 16px 14px;
+      gap: 14px;
+    }
+
+    .rehearsal-header {
+      padding-bottom: 10px;
+    }
+
+    .rehearsal-icon-box {
+      width: 32px;
+      height: 32px;
+    }
+
+    .rehearsal-icon-box i {
+      font-size: 0.9rem;
+    }
+
+    .rehearsal-title {
+      font-size: 1.05rem;
+    }
+
+    .rehearsal-subtitle {
+      font-size: 0.78rem;
+    }
+
+    .desktop-only {
+      display: none !important;
+    }
+
+    .mobile-only {
+      display: block !important;
+    }
+
+    .tools-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .tool-card {
+      border-width: 2px;
+    }
+
+    .tool-card-inner {
+      padding: 12px 14px;
+      gap: 8px;
+    }
+
+    .tool-card-header {
+      margin-bottom: 0;
+    }
+
+    .tool-card-name {
+      font-size: 0.88rem;
+    }
+
+    .tool-mobile-blurb {
+      font-family: var(--font-secondary);
+      font-size: 0.76rem;
+      font-weight: 500;
+      color: var(--text-card-secondary);
+      margin: 0;
+      line-height: 1.35;
+    }
+
+    :global([data-theme="dark"]) .tool-mobile-blurb {
+      color: var(--text-muted, #a1a1aa);
+    }
+
+    .tool-action-wrap {
+      padding-top: 2px;
+    }
+
+    .tool-action-btn {
+      padding: 8px 12px;
+      font-size: 0.78rem;
+    }
+
+    .rehearsal-offline-banner {
+      padding-top: 10px;
+    }
+
+    .banner-pill {
+      padding: 5px 12px;
+      gap: 6px;
+    }
+
+    .banner-text {
+      font-size: 0.72rem;
+    }
+  }
+</style>
