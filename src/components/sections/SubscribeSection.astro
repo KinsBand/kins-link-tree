@@ -896,6 +896,11 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
   const openPrivacyFormBtn = document.getElementById('openPrivacyFormBtn');
 
   openPrivacyFormBtn?.addEventListener('click', () => {
+    if (typeof (window as any).openPrivacyModal === 'function') {
+      (window as any).openPrivacyModal();
+      return;
+    }
+    privacyModal?.classList.remove('is-closing');
     privacyModal?.classList.remove('hidden');
     document.body.classList.add('modal-open');
   });

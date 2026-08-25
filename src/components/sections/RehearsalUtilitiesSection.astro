@@ -86,9 +86,21 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     <div class="rehearsal-offline-banner">
       <div class="banner-pill">
         <i class={`${offlineBanner.icon} banner-bolt-icon`} aria-hidden="true"></i>
-        <span class="banner-text desktop-only">{offlineBanner.desktop}</span>
-        <span class="banner-text mobile-only">{offlineBanner.mobile}</span>
+        <span class="banner-text">{offlineBanner.desktop}</span>
       </div>
+      <button
+        type="button"
+        class="kins-tools-pwa-btn brutal-press"
+        id="kinsToolsPwaBtn"
+        data-track="utilities:pwa_download"
+        aria-label="Download app for offline use"
+      >
+        <span class="pwa-btn-progress" id="kinsToolsPwaProgress" aria-hidden="true"></span>
+        <span class="pwa-btn-inner">
+          <i class="fa-solid fa-download" id="kinsToolsPwaIcon" aria-hidden="true"></i>
+          <span id="kinsToolsPwaLabel">Download</span>
+        </span>
+      </button>
     </div>
   </div>
 </section>
@@ -98,25 +110,120 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     const section = document.getElementById('rehearsalUtilitiesSection');
     if (!section) return;
 
-    const actionButtons = section.querySelectorAll<HTMLButtonElement>('.tool-btn-secondary, .tool-btn-roadmap');
+    const actionButtons = section.querySelectorAll('.tool-btn-secondary, .tool-btn-roadmap');
     actionButtons.forEach((btn) => {
       btn.addEventListener('click', async () => {
-        const toolId = btn.getAttribute('data-tool-id');
         const toolName = btn.getAttribute('data-tool-name') || 'This tool';
-        
         try {
           const { showToast } = await import('../../scripts/controllers/toast.js');
-          if (toolId === 'metronome') {
-            showToast('Metronome is in development — dropping backstage soon!', 'info');
-          } else if (toolId === 'chords') {
-            showToast('Chord & Scale library is on our 2026 rehearsal roadmap!', 'info');
-          } else {
-            showToast(`${toolName} is coming soon!`, 'info');
-          }
-        } catch {
-          // Toast graceful fallback
-        }
+          showToast(`${toolName} is coming soon!`, 'info');
+        } catch {}
       });
+    });
+
+    const pwaBtn = document.getElementById('kinsToolsPwaBtn');
+    const pwaIcon = document.getElementById('kinsToolsPwaIcon');
+    const pwaLabel = document.getElementById('kinsToolsPwaLabel');
+    const pwaProgress = document.getElementById('kinsToolsPwaProgress');
+
+    if (!pwaBtn || !pwaIcon || !pwaLabel || !pwaProgress) return;
+
+    let isDownloading = false;
+
+    function setProgress(percent) {
+      const clamped = Math.max(0, Math.min(100, percent)) / 100;
+      pwaProgress.style.transform = `scaleX(${clamped})`;
+    }
+
+    function markComplete() {
+      pwaBtn.classList.remove('downloading');
+      pwaBtn.classList.add('download-complete');
+      pwaIcon.className = 'fa-solid fa-circle-check';
+      pwaLabel.textContent = 'Downloaded';
+      setProgress(100);
+      pwaBtn.setAttribute('aria-label', 'App downloaded and ready offline');
+    }
+
+    function markDownloading() {
+      pwaBtn.classList.remove('download-complete');
+      pwaBtn.classList.add('downloading');
+      pwaIcon.className = 'fa-solid fa-spinner fa-spin';
+      pwaLabel.textContent = 'Downloading…';
+      setProgress(5);
+    }
+
+    function resetIdle() {
+      pwaBtn.classList.remove('downloading', 'download-complete');
+      pwaIcon.className = 'fa-solid fa-download';
+      pwaLabel.textContent = 'Download';
+      setProgress(0);
+    }
+
+    function isStandalone() {
+      return (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true ||
+        (typeof document !== 'undefined' && document.referrer.includes('android-app://'))
+      );
+    }
+
+    // Initial state: already installed or previously cached
+    try {
+      if (isStandalone() || localStorage.getItem('kins_pwa_downloaded') === 'true') {
+        markComplete();
+      }
+    } catch {}
+
+    // React to system install event
+    window.addEventListener('kins:pwa-installed', markComplete);
+    window.addEventListener('appinstalled', markComplete);
+
+    pwaBtn.addEventListener('click', async () => {
+      if (isDownloading) return;
+
+      if (isStandalone()) {
+        try {
+          const { showToast } = await import('../../scripts/controllers/toast.js');
+          showToast('✓ Kins App is already installed & offline ready!', 'success');
+        } catch {}
+        markComplete();
+        return;
+      }
+
+      // If already marked complete but not standalone, allow re-trigger
+      isDownloading = true;
+      markDownloading();
+      pwaBtn.disabled = true;
+
+      try {
+        const { installPwa } = await import('../../scripts/controllers/pwaInstall.js');
+        const result = await installPwa({
+          onProgress: ({ percent, eta }) => {
+            setProgress(percent);
+            if (percent < 100) {
+              pwaLabel.textContent = `${percent}% • ${eta}s`;
+            } else {
+              pwaLabel.textContent = 'Finalizing…';
+            }
+          },
+        });
+
+        if (result && (result.status === 'already-installed' || result.status === 'installed' || result.status === 'cached' || result.status === 'dismissed' || result.status === 'ios-manual')) {
+          markComplete();
+        } else {
+          resetIdle();
+        }
+      } catch (err) {
+        console.warn('KINS TOOLS PWA download failed', err);
+        try {
+          const { showToast } = await import('../../scripts/controllers/toast.js');
+          showToast('Download failed — please try again.', 'error');
+        } catch {}
+        resetIdle();
+      } finally {
+        isDownloading = false;
+        pwaBtn.disabled = false;
+      }
     });
   }
 
@@ -219,10 +326,10 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     display: none;
   }
 
-  /* 3-Column Desktop Grid */
+  /* 2-Column Grid — Tuner + Metronome side by side */
   .tools-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 14px;
     width: 100%;
     box-sizing: border-box;
@@ -404,14 +511,17 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     box-shadow: 3px 3px 0px #000000;
   }
 
-  /* Offline Banner */
+  /* Offline Banner — text + PWA download */
   .rehearsal-offline-banner {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
     border-top: 2px dashed #000000;
     padding-top: 14px;
     width: 100%;
+    box-sizing: border-box;
   }
 
   .banner-pill {
@@ -425,11 +535,14 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     box-shadow: 1.5px 1.5px 0px #000000;
     border-radius: var(--radius-pill);
     text-align: center;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .banner-bolt-icon {
     color: #000000;
     font-size: 0.82rem;
+    flex-shrink: 0;
   }
 
   .banner-text {
@@ -439,6 +552,87 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     letter-spacing: 0.03em;
     color: var(--text-card-primary);
     text-transform: uppercase;
+  }
+
+  .kins-tools-pwa-btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 116px;
+    padding: 0;
+    background: var(--accent-neon-yellow);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .kins-tools-pwa-btn:hover {
+    background: #faff60;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .kins-tools-pwa-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .kins-tools-pwa-btn:disabled {
+    cursor: wait;
+    opacity: 0.95;
+  }
+
+  .pwa-btn-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: #53c678;
+    border-right: 2px solid #000000;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.12s linear;
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  .pwa-btn-inner {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #000000;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .kins-tools-pwa-btn.downloading {
+    background: #ffffff;
+  }
+
+  .kins-tools-pwa-btn.download-complete {
+    background: #53c678;
+  }
+
+  .kins-tools-pwa-btn.download-complete .pwa-btn-progress {
+    background: #53c678;
+    width: 100% !important;
+    border-right: none;
   }
 
   /* ==========================================================================
@@ -554,13 +748,37 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     color: var(--text-muted, #a1a1aa);
   }
 
+  :global([data-theme="dark"]) .kins-tools-pwa-btn {
+    background: var(--accent-neon-yellow, #f2fd43);
+    border-color: #000000;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .kins-tools-pwa-btn.downloading {
+    background: #27272a;
+    color: var(--text-white, #f5f5f7);
+  }
+
+  :global([data-theme="dark"]) .kins-tools-pwa-btn.downloading .pwa-btn-inner {
+    color: var(--text-white, #f5f5f7);
+  }
+
+  :global([data-theme="dark"]) .kins-tools-pwa-btn.download-complete {
+    background: #53c678;
+  }
+
+  :global([data-theme="dark"]) .kins-tools-pwa-btn.download-complete .pwa-btn-inner {
+    color: #000000;
+  }
+
   /* ==========================================================================
-     Mobile Stacked View (< 768px)
+     Mobile Side-by-Side View (< 768px)
      ========================================================================== */
   @media (max-width: 767px) {
     .rehearsal-card {
-      padding: 16px 14px;
-      gap: 14px;
+      padding: 14px 10px;
+      gap: 12px;
+      overflow: hidden;
     }
 
     .rehearsal-header {
@@ -568,12 +786,12 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     }
 
     .rehearsal-icon-box {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
     }
 
     .rehearsal-icon-box i {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     .rehearsal-title {
@@ -593,34 +811,64 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     }
 
     .tools-grid {
-      grid-template-columns: 1fr;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .tool-card {
+      width: 100%;
+      min-width: 0;
       border-width: 2px;
+      box-sizing: border-box;
     }
 
     .tool-card-inner {
-      padding: 12px 14px;
-      gap: 8px;
+      padding: 10px 8px;
+      gap: 6px;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .tool-card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
       margin-bottom: 0;
     }
 
+    .tool-icon-badge {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .tool-icon-badge i {
+      font-size: 0.75rem;
+    }
+
     .tool-card-name {
-      font-size: 0.88rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .tool-mobile-blurb {
       font-family: var(--font-secondary);
-      font-size: 0.76rem;
+      font-size: 0.70rem;
       font-weight: 500;
       color: var(--text-card-secondary);
       margin: 0;
-      line-height: 1.35;
+      line-height: 1.3;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      flex: 1;
     }
 
     :global([data-theme="dark"]) .tool-mobile-blurb {
@@ -629,24 +877,67 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
 
     .tool-action-wrap {
       padding-top: 2px;
+      width: 100%;
+      min-width: 0;
     }
 
     .tool-action-btn {
-      padding: 8px 12px;
-      font-size: 0.78rem;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 7px 4px;
+      font-size: 0.72rem;
+      letter-spacing: 0.02em;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .rehearsal-offline-banner {
       padding-top: 10px;
+      gap: 8px;
+      justify-content: center;
     }
 
     .banner-pill {
-      padding: 5px 12px;
+      padding: 5px 10px;
       gap: 6px;
+      max-width: 100%;
+      box-sizing: border-box;
+      flex: 1 1 auto;
     }
 
     .banner-text {
-      font-size: 0.72rem;
+      font-size: 0.70rem;
+      white-space: normal;
+    }
+
+    .kins-tools-pwa-btn {
+      min-width: 102px;
+      flex-shrink: 0;
+    }
+
+    .pwa-btn-inner {
+      padding: 6px 12px;
+      font-size: 0.70rem;
+      gap: 5px;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .rehearsal-offline-banner {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .banner-pill {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .kins-tools-pwa-btn {
+      width: 100%;
     }
   }
 </style>

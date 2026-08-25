@@ -22,6 +22,42 @@ import { getInstrumentArt } from './instrumentArt.js';
 
 const SEARCH_DEBOUNCE_MS = 120;
 
+/**
+ * Title sanitization: strip explicit string-count indicators from tuning display names.
+ * Pattern matches optional parens, count, optional hyphen/space, "string"/"strings"
+ * with optional " version" suffix, case-insensitive, globally.
+ * e.g. "Drop D (6 String)" -> "Drop D", "Open G 7 Strings Version" -> "Open G"
+ * @param {string} name
+ * @returns {string}
+ */
+export const TUNING_TITLE_SANITIZE_RE = /\s*\(?\d+[- ]?strings?(\s*version)?\)?/gi;
+export function sanitizeTuningName(name) {
+  if (typeof name !== 'string') return '';
+  let out = name.replace(TUNING_TITLE_SANITIZE_RE, '').trim().replace(/\s{2,}/g, ' ');
+  // Cleanup artifacts from partial parenthetical matches (e.g. "Standard (7-String B)" -> "Standard B)")
+  // 1. Remove empty parentheses left behind: "()" or "( )"
+  out = out.replace(/\(\s*\)/g, '').trim().replace(/\s{2,}/g, ' ');
+  // 2. Fix stray closing paren without opening: "Standard B)" -> "Standard (B)"
+  //    Detect trailing "<space>X)" without prior "("
+  if (!out.includes('(') && /\s+[A-Za-z0-9]\)\s*$/.test(out)) {
+    out = out.replace(/\s+([A-Za-z0-9])\)\s*$/, ' ($1)');
+  } else if ((out.match(/\(/g) || []).length < (out.match(/\)/g) || []).length) {
+    // More closes than opens: strip excess trailing closes
+    out = out.replace(/\s*\)\s*$/, '').trim();
+  }
+  // 3. Fix stray opening paren without closing: "Open G (Keith Richards" -> "Open G (Keith Richards)"
+  if ((out.match(/\(/g) || []).length > (out.match(/\)/g) || []).length) {
+    // If there's an unmatched open, close it at end (preserving inner text)
+    out = out.trim() + ')';
+    out = out.replace(/\(\s+/g, '(').replace(/\s+\)/g, ')');
+  }
+  // 4. Final normalisation of spacing around parentheses
+  out = out.replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').replace(/\s{2,}/g, ' ').trim();
+  // 5. Remove isolated stray parentheses at edges
+  out = out.replace(/^\s*\(\s*$/, '').replace(/^\s*\)\s*$/, '').trim();
+  return out;
+}
+
 /* Memoized text writes: identical consecutive values (the common case while
    a string rings) skip DOM invalidation entirely at the 20 Hz tick rate. */
 function setText(memo, el, value) {
@@ -40,8 +76,20 @@ export function createUi(callbacks) {
   let figureListenerBound = false;
   let activeTargetEl = null;
   let activeFilter = 'all';
+  const START_MIDI = 20;
+  const NOTE_SPACING_PX = 56;
   let railNotes = [];
+  let activeRailMidi = null;
+  let activeRailExact = false;
+  let activeRailNearEl = null;
   let pegPulseTimer = null;
+  let sheetOpen = false;
+  let activeSheetPanel = null;
+  let sheetTrigger = null;
+  let copyBadgeTimer = null;
+  let sheetDrag = null;
+  let sheetDragRafId = null;
+  let sheetReducedMotion = false;
   const textMemo = new Map();
 
   function cache() {
@@ -69,8 +117,12 @@ export function createUi(callbacks) {
       zoneDead: document.getElementById('tunerZoneDead'),
       zoneLoose: document.getElementById('tunerZoneLoose'),
       chromRail: document.getElementById('tunerChromRail'),
+      chromTape: document.getElementById('tunerChromTape'),
       badgeLow: document.getElementById('tunerBadgeLow'),
       badgeHigh: document.getElementById('tunerBadgeHigh'),
+      cents: document.getElementById('tunerCentsReadout'),
+      settingsBtn: document.getElementById('tunerSettingsBtn'),
+      settingsBtnBottom: document.getElementById('tunerSettingsBtnBottom'),
       status: document.getElementById('tunerStatusLine'),
       note: document.getElementById('tunerDetectedNote'),
       noteOctave: document.getElementById('tunerDetectedNoteOctave'),
@@ -88,13 +140,34 @@ export function createUi(callbacks) {
       backToTunerBtn: document.getElementById('tunerBackToTunerBtn'),
       searchClearBtn: document.getElementById('tunerSearchClearBtn'),
       searchInput: document.getElementById('tunerSearchInput'),
-      filterChips: Array.from(document.querySelectorAll('.tuning-filter-chip'))
+      filterChips: Array.from(document.querySelectorAll('.tuning-filter-chip')),
+      sheetBackdrop: document.getElementById('tunerSheetBackdrop'),
+      sheet: document.getElementById('tunerSheet'),
+      sheetHandle: document.getElementById('tunerSheetHandle'),
+      panelSettings: document.getElementById('tunerPanelSettings'),
+      sheetInstrumentRow: document.getElementById('tunerSheetInstrumentRow'),
+      sheetModeRow: document.getElementById('tunerSheetModeRow'),
+      sheetStringsBtn: document.getElementById('tunerSheetStringsBtn'),
+      sheetStringsLabelSheet: document.getElementById('tunerSheetStringsLabel'),
+      sheetStringsSlot: document.getElementById('tunerSheetStringsSlot'),
+      sheetMaterialBtnSheet: document.getElementById('tunerSheetMaterialBtn'),
+      sheetMaterialLabelSheet: document.getElementById('tunerSheetMaterialLabelSheet'),
+      sheetMaterialSlot: document.getElementById('tunerSheetMaterialSlot'),
+      sheetMaterialRow: document.getElementById('tunerSheetMaterialRow'),
+      sheetA4Row: document.getElementById('tunerSheetA4Row'),
+      sheetAutoAdvance: document.getElementById('tunerSheetAutoAdvance'),
+      sheetAutoId: document.getElementById('tunerSheetAutoId'),
+      copyLinkBtn: document.getElementById('tunerCopyLinkBtn'),
+      copyBadge: document.getElementById('tunerCopyBadge')
     };
   }
 
   function invalidateMeterRect() {
     if (!els || !els.meter) return;
     meterWidth = els.meter.offsetWidth || 0;
+    if (state && state.mode === 'chromatic') {
+      centerRailDefault();
+    }
   }
 
   function showTunerView() {
@@ -136,6 +209,10 @@ export function createUi(callbacks) {
     if (els.stringsMenuSlot) els.stringsMenuSlot.innerHTML = '';
     if (els.materialMenuSlot) els.materialMenuSlot.innerHTML = '';
     if (els.instrumentMenuSlot) els.instrumentMenuSlot.innerHTML = '';
+    if (els.sheetStringsSlot) els.sheetStringsSlot.innerHTML = '';
+    if (els.sheetMaterialSlot) els.sheetMaterialSlot.innerHTML = '';
+    if (els.sheetStringsBtn) els.sheetStringsBtn.setAttribute('aria-expanded', 'false');
+    if (els.sheetMaterialBtnSheet) els.sheetMaterialBtnSheet.setAttribute('aria-expanded', 'false');
   }
 
   function toggleMenu(name, renderFn, btn) {
@@ -144,9 +221,299 @@ export function createUi(callbacks) {
       return;
     }
     closeMenus(false);
+    if (sheetOpen) closeSheet();
     openMenuName = name;
     openTriggerEl = btn || null;
     renderFn();
+  }
+
+  function toggleSheetMenu(name, renderFn, btn) {
+    // Sheet-internal dropdowns open upward without closing the sheet
+    if (openMenuName === name) {
+      closeMenus(false);
+      return;
+    }
+    // clear only menu panels, keep sheet open
+    if (els.modeMenuSlot) els.modeMenuSlot.innerHTML = '';
+    if (els.stringsMenuSlot) els.stringsMenuSlot.innerHTML = '';
+    if (els.materialMenuSlot) els.materialMenuSlot.innerHTML = '';
+    if (els.instrumentMenuSlot) els.instrumentMenuSlot.innerHTML = '';
+    if (els.sheetStringsSlot) els.sheetStringsSlot.innerHTML = '';
+    if (els.sheetMaterialSlot) els.sheetMaterialSlot.innerHTML = '';
+    if (els.sheetStringsBtn) els.sheetStringsBtn.setAttribute('aria-expanded', 'false');
+    if (els.sheetMaterialBtnSheet) els.sheetMaterialBtnSheet.setAttribute('aria-expanded', 'false');
+    openMenuName = name;
+    openTriggerEl = btn || null;
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    renderFn();
+  }
+
+  /* ---------- Tuner settings sheet (mirrors metronome sheet) ---------- */
+  function openSheet(panel, trigger) {
+    if (!els || !els.sheet || !els.sheetBackdrop || !panel) return;
+    closeMenus(false);
+    if (sheetOpen && activeSheetPanel === panel) return;
+    if (els.panelSettings) els.panelSettings.hidden = els.panelSettings !== panel;
+    if (sheetTrigger && sheetTrigger !== trigger) {
+      sheetTrigger.setAttribute('aria-expanded', 'false');
+    }
+    sheetTrigger = trigger || null;
+    if (els.settingsBtn) els.settingsBtn.setAttribute('aria-expanded', sheetTrigger === els.settingsBtn ? 'true' : 'false');
+    if (els.settingsBtnBottom) els.settingsBtnBottom.setAttribute('aria-expanded', sheetTrigger === els.settingsBtnBottom ? 'true' : 'false');
+    renderSheetSettings();
+    els.sheet.hidden = false;
+    els.sheetBackdrop.hidden = false;
+    requestAnimationFrame(() => {
+      if (!els.sheet || !els.sheetBackdrop) return;
+      els.sheet.classList.add('open');
+      els.sheetBackdrop.classList.add('open');
+    });
+    els.sheet.focus({ preventScroll: true });
+    sheetOpen = true;
+    activeSheetPanel = panel;
+  }
+
+  function closeSheet() {
+    if (!sheetOpen || !els || !els.sheet || !els.sheetBackdrop) return;
+    sheetOpen = false;
+    activeSheetPanel = null;
+    els.sheet.classList.remove('open');
+    els.sheetBackdrop.classList.remove('open');
+    els.sheet.style.transform = '';
+    if (sheetTrigger) {
+      sheetTrigger.setAttribute('aria-expanded', 'false');
+      // also reset the other trigger
+      if (els.settingsBtn && sheetTrigger !== els.settingsBtn) els.settingsBtn.setAttribute('aria-expanded', 'false');
+      if (els.settingsBtnBottom && sheetTrigger !== els.settingsBtnBottom) els.settingsBtnBottom.setAttribute('aria-expanded', 'false');
+      sheetTrigger.focus({ preventScroll: true });
+      sheetTrigger = null;
+    } else {
+      if (els.settingsBtn) els.settingsBtn.setAttribute('aria-expanded', 'false');
+      if (els.settingsBtnBottom) els.settingsBtnBottom.setAttribute('aria-expanded', 'false');
+    }
+    const done = () => {
+      if (sheetOpen || !els.sheet || !els.sheetBackdrop) return;
+      els.sheet.hidden = true;
+      els.sheetBackdrop.hidden = true;
+    };
+    if (sheetReducedMotion) {
+      done();
+    } else {
+      setTimeout(done, 240);
+    }
+  }
+
+  function attachSheetDrag() {
+    if (!els || !els.sheet || !els.sheetHandle) return;
+    els.sheet.addEventListener('touchstart', (e) => {
+      if (!sheetOpen || e.touches.length !== 1) return;
+      sheetDrag = {
+        startY: e.touches[0].clientY,
+        lastY: e.touches[0].clientY,
+        startTime: performance.now(),
+        engaged: false,
+        translateY: 0
+      };
+      document.addEventListener('touchmove', onSheetDragMove, { passive: false });
+      document.addEventListener('touchend', onSheetDragEnd, { passive: true });
+      document.addEventListener('touchcancel', onSheetDragEnd, { passive: true });
+    }, { passive: true });
+  }
+
+  function onSheetDragMove(e) {
+    if (!sheetDrag || !els || !els.sheet || !els.sheetHandle) return;
+    const touch = e.touches[0];
+    const dy = touch.clientY - sheetDrag.startY;
+    sheetDrag.lastY = touch.clientY;
+    if (!sheetDrag.engaged) {
+      const atTop = els.sheet.scrollTop <= 2;
+      const onHandle = e.target === els.sheetHandle || els.sheetHandle.contains(e.target);
+      if (dy > 8 && (atTop || onHandle)) {
+        sheetDrag.engaged = true;
+        els.sheet.classList.add('dragging');
+      } else if (Math.abs(dy) > 8) {
+        cleanupSheetDragListeners();
+        sheetDrag = null;
+        return;
+      } else {
+        return;
+      }
+    }
+    if (e.cancelable) e.preventDefault();
+    let targetY = Math.max(0, dy);
+    if (targetY > 0) {
+      targetY = targetY * 0.82;
+    }
+    sheetDrag.translateY = targetY;
+    if (!sheetDragRafId) {
+      sheetDragRafId = requestAnimationFrame(() => {
+        sheetDragRafId = null;
+        if (sheetDrag && els.sheet) els.sheet.style.transform = `translate3d(0, ${Math.round(sheetDrag.translateY)}px, 0)`;
+      });
+    }
+  }
+
+  function onSheetDragEnd() {
+    cleanupSheetDragListeners();
+    if (!sheetDrag || !els || !els.sheet) return;
+    const wasEngaged = sheetDrag.engaged;
+    const translateY = sheetDrag.translateY;
+    const elapsed = Math.max(1, performance.now() - sheetDrag.startTime);
+    const velocity = (sheetDrag.lastY - sheetDrag.startY) / elapsed;
+    sheetDrag = null;
+    if (sheetDragRafId) {
+      cancelAnimationFrame(sheetDragRafId);
+      sheetDragRafId = null;
+    }
+    if (!wasEngaged) return;
+    els.sheet.classList.remove('dragging');
+    if (translateY > 90 || velocity > 0.35) {
+      closeSheet();
+    } else {
+      els.sheet.style.transform = '';
+    }
+  }
+
+  function cleanupSheetDragListeners() {
+    document.removeEventListener('touchmove', onSheetDragMove);
+    document.removeEventListener('touchend', onSheetDragEnd);
+    document.removeEventListener('touchcancel', onSheetDragEnd);
+  }
+
+  function buildSheetMaterialRow() {
+    if (!els || !els.sheetMaterialRow) return;
+    const options = materialOptions();
+    const rows = options.map((id) => {
+      const profile = MATERIAL_PROFILES[id];
+      if (!profile) return '';
+      const active = state.materialId === id;
+      return `<button type="button" class="tuner-sheet-chip brutal-press${active ? ' active' : ''}" role="radio" aria-checked="${active}" data-sheet-material="${id}">${profile.shortLabel}</button>`;
+    });
+    const offActive = state.materialId === 'off';
+    rows.push(`<button type="button" class="tuner-sheet-chip brutal-press${offActive ? ' active' : ''}" role="radio" aria-checked="${offActive}" data-sheet-material="off">OFF</button>`);
+    els.sheetMaterialRow.innerHTML = rows.join('');
+    els.sheetMaterialRow.querySelectorAll('[data-sheet-material]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        callbacks.onMaterialSelect(btn.getAttribute('data-sheet-material'));
+        buildSheetMaterialRow();
+        renderSheetSettings();
+      });
+    });
+  }
+
+  function buildSheetA4Row() {
+    // A4 UI removed — fixed 440 Hz. Keep legacy container empty for compat.
+    if (!els || !els.sheetA4Row) return;
+    els.sheetA4Row.innerHTML = '';
+  }
+
+  function buildSheetInstrumentRow() {
+    if (!els || !els.sheetInstrumentRow) return;
+    const rows = TUNER_INSTRUMENTS.map((group) => {
+      const active = group.id === state.instrumentId;
+      return `<button type="button" class="tuner-sheet-chip brutal-press${active ? ' active' : ''}" role="radio" aria-checked="${active}" data-sheet-instrument="${group.id}">${group.label}</button>`;
+    }).join('');
+    els.sheetInstrumentRow.innerHTML = rows;
+    els.sheetInstrumentRow.querySelectorAll('[data-sheet-instrument]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        closeMenus(false);
+        callbacks.onInstrumentChange(btn.getAttribute('data-sheet-instrument'));
+      });
+    });
+  }
+
+  function buildSheetModeRow() {
+    if (!els || !els.sheetModeRow) return;
+    const isGuided = state.mode === 'guided';
+    els.sheetModeRow.innerHTML = `
+      <button type="button" class="tuner-sheet-chip brutal-press${isGuided ? ' active' : ''}" role="radio" aria-checked="${isGuided}" data-sheet-mode="guided">GUIDED</button>
+      <button type="button" class="tuner-sheet-chip brutal-press${!isGuided ? ' active' : ''}" role="radio" aria-checked="${!isGuided}" data-sheet-mode="chromatic">FREE</button>
+    `;
+    els.sheetModeRow.querySelectorAll('[data-sheet-mode]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        closeMenus(false);
+        callbacks.onModeSelect(btn.getAttribute('data-sheet-mode'));
+      });
+    });
+  }
+
+  function syncSheetSetupButtons() {
+    if (!els) return;
+    const isGuided = state.mode === 'guided';
+    const drums = state.instrumentId === 'drums';
+    const hasStrings = stringCountOptions().length > 0 && !drums;
+    const hasMaterial = materialOptions().length > 0 && isGuided && !drums;
+    if (els.sheetStringsBtn) {
+      els.sheetStringsBtn.disabled = !hasStrings;
+      els.sheetStringsBtn.setAttribute('aria-disabled', hasStrings ? 'false' : 'true');
+    }
+    if (els.sheetMaterialBtnSheet) {
+      els.sheetMaterialBtnSheet.disabled = !hasMaterial;
+      els.sheetMaterialBtnSheet.setAttribute('aria-disabled', hasMaterial ? 'false' : 'true');
+    }
+    if (els.sheetStringsLabelSheet) {
+      els.sheetStringsLabelSheet.textContent = hasStrings ? currentStringCount() + ' STRINGS' : '—';
+    }
+    const profile = state.materialId === 'off' ? null : MATERIAL_PROFILES[state.materialId];
+    if (els.sheetMaterialLabelSheet) {
+      els.sheetMaterialLabelSheet.textContent = hasMaterial ? (profile ? profile.shortLabel : 'OFF') : '—';
+    }
+    // legacy hidden tops still keep state sync
+    if (els.stringsLabel) els.stringsLabel.textContent = hasStrings ? currentStringCount() + ' STRINGS' : '';
+    if (els.materialLabel) els.materialLabel.textContent = profile ? profile.shortLabel : 'OFF';
+  }
+
+  function renderSheetSettings() {
+    if (!els) return;
+    buildSheetInstrumentRow();
+    buildSheetModeRow();
+    syncSheetSetupButtons();
+    // keep legacy hidden rows in sync for tests that might query them
+    buildSheetMaterialRow();
+    buildSheetA4Row();
+    if (els.sheetAutoAdvance) els.sheetAutoAdvance.checked = !!state.autoAdvance;
+    if (els.sheetAutoId) els.sheetAutoId.checked = !!state.autoIdentify;
+    // disable material button when not guided/drums
+    if (els.sheetMaterialBtnSheet) {
+      const isGuided = state.mode === 'guided' && state.instrumentId !== 'drums';
+      els.sheetMaterialBtnSheet.style.opacity = isGuided ? '1' : '0.45';
+      // disabled attribute already handled in sync
+    }
+    if (els.sheetStringsBtn) {
+      const hasStrings = stringCountOptions().length > 0 && state.instrumentId !== 'drums';
+      els.sheetStringsBtn.style.opacity = hasStrings ? '1' : '0.45';
+    }
+  }
+
+  function copyTunerLink() {
+    const url = window.location.origin + '/tuner';
+    const fallbackCopy = () => {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+    if (els && els.copyBadge) {
+      els.copyBadge.textContent = 'Copied!';
+      els.copyBadge.classList.add('copied');
+      if (copyBadgeTimer) clearTimeout(copyBadgeTimer);
+      copyBadgeTimer = setTimeout(() => {
+        if (els.copyBadge) {
+          els.copyBadge.textContent = 'Copy';
+          els.copyBadge.classList.remove('copied');
+        }
+      }, 1800);
+    }
+    showToast('Tuner link copied to clipboard!', 'success');
   }
 
   function menuPanel(slot, contentHtml) {
@@ -164,15 +531,15 @@ export function createUi(callbacks) {
     const html = `
       <button type="button" class="tuner-menu-row${guidedActive ? ' active' : ''}" role="menuitemradio" aria-checked="${guidedActive}" data-mode="guided">
         <span class="tuner-menu-row-text">
-          <span class="tuner-menu-row-title">Guided instrument mode</span>
-          <span class="tuner-menu-row-sub">String targets, safety colors, auto-step</span>
+          <span class="tuner-menu-row-title">Guided</span>
+          <span class="tuner-menu-row-sub">One string at a time.</span>
         </span>
         <span class="tuner-menu-check" aria-hidden="true">${guidedActive ? '&#10003;' : ''}</span>
       </button>
       <button type="button" class="tuner-menu-row${guidedActive ? '' : ' active'}" role="menuitemradio" aria-checked="${!guidedActive}" data-mode="chromatic">
         <span class="tuner-menu-row-text">
-          <span class="tuner-menu-row-title">Chromatic free mode</span>
-          <span class="tuner-menu-row-sub">Any pitch, no targets</span>
+          <span class="tuner-menu-row-title">Free Tune</span>
+          <span class="tuner-menu-row-sub">Any note, any instrument.</span>
         </span>
         <span class="tuner-menu-check" aria-hidden="true">${guidedActive ? '' : '&#10003;'}</span>
       </button>
@@ -180,7 +547,7 @@ export function createUi(callbacks) {
       <button type="button" class="tuner-menu-row tuner-menu-toggle-row${state.mode === 'chromatic' ? ' disabled' : ''}" role="menuitemcheckbox" aria-checked="${state.autoAdvance}" data-auto-advance aria-disabled="${state.mode === 'chromatic'}">
         <span class="tuner-menu-row-text">
           <span class="tuner-menu-row-title">Auto-advance</span>
-          <span class="tuner-menu-row-sub">Step to next string when tuned</span>
+          <span class="tuner-menu-row-sub">Next string when in tune.</span>
         </span>
         <span class="tuner-toggle${state.autoAdvance ? ' on' : ''}" role="switch" aria-checked="${state.autoAdvance}" aria-label="Auto-advance">
           <span class="tuner-toggle-knob"></span>
@@ -189,7 +556,7 @@ export function createUi(callbacks) {
       <button type="button" class="tuner-menu-row tuner-menu-toggle-row${state.mode === 'chromatic' ? ' disabled' : ''}" role="menuitemcheckbox" aria-checked="${state.autoIdentify}" data-auto-id aria-disabled="${state.mode === 'chromatic'}">
         <span class="tuner-menu-row-text">
           <span class="tuner-menu-row-title">Auto string select</span>
-          <span class="tuner-menu-row-sub">Follow whichever string you pluck</span>
+          <span class="tuner-menu-row-sub">Follows your pluck.</span>
         </span>
         <span class="tuner-toggle${state.autoIdentify ? ' on' : ''}" role="switch" aria-checked="${state.autoIdentify}" aria-label="Auto string select">
           <span class="tuner-toggle-knob"></span>
@@ -225,22 +592,22 @@ export function createUi(callbacks) {
       const active = count === current;
       let subtitle = count + '-string setup';
       if (state.instrumentId === 'electric') {
-        if (count === 6) subtitle = 'The universal standard for most genres.';
-        else if (count === 7) subtitle = 'Adds a lower B string for heavier rock and metal.';
-        else if (count === 8) subtitle = 'Adds a low B and a lower F# string for extreme low-end riffs.';
-        else if (count === 5) subtitle = '5-string configuration';
+        if (count === 6) subtitle = 'Standard tuning.';
+        else if (count === 7) subtitle = 'Adds a low B.';
+        else if (count === 8) subtitle = 'Adds low B + F#.';
+        else if (count === 5) subtitle = 'Rare 5-string.';
       } else if (state.instrumentId === 'acoustic') {
-        if (count === 6) subtitle = 'The standard setup for strumming and fingerpicking.';
-        else if (count === 12) subtitle = 'Uses six pairs of strings tuned in octaves and unisons for a rich, shimmering sound.';
-        else if (count === 5) subtitle = '5-string configuration';
+        if (count === 6) subtitle = 'Standard tuning.';
+        else if (count === 12) subtitle = 'Paired strings.';
+        else if (count === 5) subtitle = 'Rare 5-string.';
       } else if (state.instrumentId === 'bass') {
-        if (count === 4) subtitle = 'The traditional setup found on most classic recordings.';
-        else if (count === 5) subtitle = 'Adds a low B string for modern pop, gospel, and metal.';
-        else if (count === 6) subtitle = 'Adds a low B and a high C string, favored by jazz and solo bassists.';
+        if (count === 4) subtitle = 'Standard bass.';
+        else if (count === 5) subtitle = 'Adds a low B.';
+        else if (count === 6) subtitle = 'Low B + high C.';
       }
       // Fallbacks for legacy counts
-      if (count === 7 && state.instrumentId === 'acoustic') subtitle = 'Rare, but used in classical music or specialized modern acoustic genres.';
-      if (count === 8 && state.instrumentId === 'acoustic') subtitle = 'Rare, but used in classical music or specialized modern acoustic genres.';
+      if (count === 7 && state.instrumentId === 'acoustic') subtitle = 'Rare extended tuning.';
+      if (count === 8 && state.instrumentId === 'acoustic') subtitle = 'Rare extended tuning.';
 
       return `
         <button type="button" class="tuner-menu-row${active ? ' active' : ''}" role="menuitemradio" aria-checked="${active}" data-string-count="${count}">
@@ -252,10 +619,10 @@ export function createUi(callbacks) {
         </button>`;
     }).join('');
 
-    let customSubtitle = 'Custom string count';
-    if (state.instrumentId === 'electric') customSubtitle = 'Rare custom instruments adding even deeper bass strings.';
-    else if (state.instrumentId === 'acoustic') customSubtitle = 'Rare, but used in classical music or specialized modern acoustic genres.';
-    else if (state.instrumentId === 'bass') customSubtitle = 'Custom string setup';
+    let customSubtitle = 'Custom count.';
+    if (state.instrumentId === 'electric') customSubtitle = 'Custom low tuning.';
+    else if (state.instrumentId === 'acoustic') customSubtitle = 'Rare extended setup.';
+    else if (state.instrumentId === 'bass') customSubtitle = 'Custom setup.';
     const customTitle = isCustomActive ? `${current} STRINGS (Custom)` : 'Custom...';
     const customRow = `
         <div class="tuner-menu-divider" role="separator"></div>
@@ -335,12 +702,151 @@ export function createUi(callbacks) {
       <button type="button" class="tuner-menu-row${offActive ? ' active' : ''}" role="menuitemradio" aria-checked="${offActive}" data-material="off">
         <span class="tuner-menu-row-text">
           <span class="tuner-menu-row-title">Off</span>
-          <span class="tuner-menu-row-sub">No safety highlighting</span>
+          <span class="tuner-menu-row-sub">No warnings.</span>
         </span>
         <span class="tuner-menu-check" aria-hidden="true">${offActive ? '&#10003;' : ''}</span>
       </button>
     `;
     const panel = menuPanel(els.materialMenuSlot, html);
+    panel.addEventListener('click', (e) => {
+      const row = e.target.closest('[data-material]');
+      if (row) {
+        callbacks.onMaterialSelect(row.getAttribute('data-material'));
+        closeMenus();
+      }
+    });
+  }
+
+  function renderSheetStringsMenu() {
+    const options = stringCountOptions();
+    if (!els.sheetStringsSlot) return;
+    // For drums, show disabled state — but still allow close
+    if (!options.length) {
+      const panel = menuPanel(els.sheetStringsSlot, '<div class="tuner-menu-row disabled"><span class="tuner-menu-row-text"><span class="tuner-menu-row-title">No string options for drums</span></span></div>');
+      return;
+    }
+    const current = currentStringCount();
+    const isCustomActive = !options.includes(current);
+    const rows = options.map((count) => {
+      const active = count === current;
+      let subtitle = count + '-string setup';
+      if (state.instrumentId === 'electric') {
+        if (count === 6) subtitle = 'Standard tuning.';
+        else if (count === 7) subtitle = 'Adds a low B.';
+        else if (count === 8) subtitle = 'Adds low B + F#.';
+        else if (count === 5) subtitle = 'Rare 5-string.';
+      } else if (state.instrumentId === 'acoustic') {
+        if (count === 6) subtitle = 'Standard tuning.';
+        else if (count === 12) subtitle = 'Paired strings.';
+        else if (count === 5) subtitle = 'Rare 5-string.';
+      } else if (state.instrumentId === 'bass') {
+        if (count === 4) subtitle = 'Standard bass.';
+        else if (count === 5) subtitle = 'Adds a low B.';
+        else if (count === 6) subtitle = 'Low B + high C.';
+      }
+      if (count === 7 && state.instrumentId === 'acoustic') subtitle = 'Rare extended tuning.';
+      if (count === 8 && state.instrumentId === 'acoustic') subtitle = 'Rare extended tuning.';
+      return `
+        <button type="button" class="tuner-menu-row${active ? ' active' : ''}" role="menuitemradio" aria-checked="${active}" data-string-count="${count}">
+          <span class="tuner-menu-row-text">
+            <span class="tuner-menu-row-title">${count} STRINGS</span>
+            <span class="tuner-menu-row-sub">${subtitle}</span>
+          </span>
+          <span class="tuner-menu-check" aria-hidden="true">${active ? '&#10003;' : ''}</span>
+        </button>`;
+    }).join('');
+    let customSubtitle = 'Custom count.';
+    if (state.instrumentId === 'electric') customSubtitle = 'Custom low tuning.';
+    else if (state.instrumentId === 'acoustic') customSubtitle = 'Rare extended setup.';
+    else if (state.instrumentId === 'bass') customSubtitle = 'Custom setup.';
+    const customTitle = isCustomActive ? `${current} STRINGS (Custom)` : 'Custom...';
+    const customRow = `
+        <div class="tuner-menu-divider" role="separator"></div>
+        <button type="button" class="tuner-menu-row${isCustomActive ? ' active' : ''}" role="menuitemradio" aria-checked="${isCustomActive}" data-string-custom>
+          <span class="tuner-menu-row-text">
+            <span class="tuner-menu-row-title">${customTitle}</span>
+            <span class="tuner-menu-row-sub">${customSubtitle}</span>
+          </span>
+          <span class="tuner-menu-check" aria-hidden="true">${isCustomActive ? '&#10003;' : ''}</span>
+        </button>
+        <div class="tuner-custom-field" style="display:${isCustomActive ? 'flex' : 'none'}">
+          <input type="number" min="3" max="12" step="1" aria-label="Custom string count" class="tuner-custom-input" value="${isCustomActive ? current : ''}" placeholder="3-12" />
+          <button type="button" class="tuner-custom-apply brutal-press">Apply</button>
+        </div>`;
+    const panel = menuPanel(els.sheetStringsSlot, rows + customRow);
+    panel.addEventListener('click', (e) => {
+      const row = e.target.closest('[data-string-count]');
+      if (row) {
+        const count = parseInt(row.getAttribute('data-string-count'), 10);
+        callbacks.onStringCountSelect(count);
+        closeMenus();
+        return;
+      }
+      if (e.target.closest('[data-string-custom]')) {
+        const field = panel.querySelector('.tuner-custom-field');
+        if (field) field.style.display = field.style.display === 'none' ? 'flex' : 'none';
+        const input = panel.querySelector('.tuner-custom-input');
+        if (input) input.focus();
+        return;
+      }
+      if (e.target.closest('.tuner-custom-apply')) {
+        const input = panel.querySelector('.tuner-custom-input');
+        const val = parseInt(input ? input.value : '', 10);
+        if (!Number.isInteger(val) || val < 3 || val > 12) {
+          showToast('Enter a string count between 3 and 12', 'warning');
+          return;
+        }
+        if (options.includes(val)) {
+          callbacks.onStringCountSelect(val);
+        } else if (callbacks.onCustomStringCount) {
+          callbacks.onCustomStringCount(val);
+        } else {
+          callbacks.onStringCountSelect(val);
+        }
+        closeMenus();
+      }
+    });
+    panel.querySelector('.tuner-custom-input')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        panel.querySelector('.tuner-custom-apply')?.click();
+      }
+    });
+  }
+
+  function renderSheetMaterialMenu() {
+    const options = materialOptions();
+    if (!els.sheetMaterialSlot) return;
+    if (!options.length) {
+      menuPanel(els.sheetMaterialSlot, '<div class="tuner-menu-row disabled"><span class="tuner-menu-row-text"><span class="tuner-menu-row-title">No material for drums</span></span></div>');
+      return;
+    }
+    const rows = options.map((id) => {
+      const profile = MATERIAL_PROFILES[id];
+      if (!profile) return '';
+      const active = state.materialId === id;
+      return `
+        <button type="button" class="tuner-menu-row${active ? ' active' : ''}" role="menuitemradio" aria-checked="${active}" data-material="${id}">
+          <span class="tuner-menu-row-text">
+            <span class="tuner-menu-row-title">${profile.label}</span>
+            <span class="tuner-menu-row-sub">${profile.hint}</span>
+          </span>
+          <span class="tuner-menu-check" aria-hidden="true">${active ? '&#10003;' : ''}</span>
+        </button>`;
+    }).join('');
+    const offActive = state.materialId === 'off';
+    const html = `
+      ${rows}
+      <div class="tuner-menu-divider" role="separator"></div>
+      <button type="button" class="tuner-menu-row${offActive ? ' active' : ''}" role="menuitemradio" aria-checked="${offActive}" data-material="off">
+        <span class="tuner-menu-row-text">
+          <span class="tuner-menu-row-title">Off</span>
+          <span class="tuner-menu-row-sub">No warnings.</span>
+        </span>
+        <span class="tuner-menu-check" aria-hidden="true">${offActive ? '&#10003;' : ''}</span>
+      </button>
+    `;
+    const panel = menuPanel(els.sheetMaterialSlot, html);
     panel.addEventListener('click', (e) => {
       const row = e.target.closest('[data-material]');
       if (row) {
@@ -370,39 +876,43 @@ export function createUi(callbacks) {
   }
 
   function renderTopbar() {
-    els.presetLabel.textContent = getPreset().name;
+    els.presetLabel.textContent = sanitizeTuningName(getPreset().name);
     const isGuided = state.mode === 'guided';
-    if (els.modeLabel) els.modeLabel.textContent = isGuided ? 'GUIDED' : 'FREE';
+    if (els.modeLabel) els.modeLabel.textContent = isGuided ? 'GUIDED' : 'FREE TUNE';
 
-    // Strings Pill — also hide anchor as fallback for browsers without :has()
-    const stringOpts = stringCountOptions();
-    const stringsVisible = stringOpts.length > 0 && state.instrumentId !== 'drums';
-    if (els.stringsBtn) {
-      els.stringsBtn.hidden = !stringsVisible;
-      const anchor = els.stringsBtn.closest('.tuner-menu-anchor');
-      if (anchor) anchor.hidden = !stringsVisible;
+    // Main controls moved to sheet — keep legacy topbar pills hidden permanently
+    if (els.modeBtn) {
+      els.modeBtn.hidden = true;
+      const anchor = els.modeBtn.closest('.tuner-menu-anchor');
+      if (anchor) anchor.hidden = true;
     }
+    if (els.stringsBtn) {
+      els.stringsBtn.hidden = true;
+      const anchor = els.stringsBtn.closest('.tuner-menu-anchor');
+      if (anchor) anchor.hidden = true;
+    }
+    if (els.materialBtn) {
+      els.materialBtn.hidden = true;
+      const anchor = els.materialBtn.closest('.tuner-menu-anchor');
+      if (anchor) anchor.hidden = true;
+    }
+    // Keep labels in sync for hidden legacy + new sheet buttons
     if (els.stringsLabel) {
       els.stringsLabel.textContent = currentStringCount() + ' STRINGS';
     }
-
-    // Material Pill
     const profile = state.materialId === 'off' ? null : MATERIAL_PROFILES[state.materialId];
-    const materialVisible = materialOptions().length > 0 && isGuided;
-    if (els.materialBtn) {
-      els.materialBtn.hidden = !materialVisible;
-      const anchor = els.materialBtn.closest('.tuner-menu-anchor');
-      if (anchor) anchor.hidden = !materialVisible;
-    }
     if (els.materialLabel) els.materialLabel.textContent = profile ? profile.shortLabel : 'OFF';
-    if (els.materialBtn) {
-      if (state.materialId === 'off') els.materialBtn.classList.add('off');
-      else els.materialBtn.classList.remove('off');
-    }
 
     els.tunerView.classList.toggle('mode-chromatic', state.mode === 'chromatic');
-    if (els.chromRail) els.chromRail.hidden = state.mode !== 'chromatic';
+    if (els.chromRail) {
+      els.chromRail.hidden = state.mode !== 'chromatic';
+      if (state.mode === 'chromatic') {
+        buildRail();
+        centerRailDefault();
+      }
+    }
     layoutZones();
+    renderSheetSettings();
   }
 
   function renderInstrumentRow() {
@@ -503,16 +1013,10 @@ export function createUi(callbacks) {
   }
 
   function renderA4() {
-    els.a4Chips.replaceChildren();
-    A4_CALIBRATION.forEach((hz) => {
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'tuning-a4-chip' + (hz === state.a4 ? ' active' : '');
-      chip.textContent = String(hz);
-      chip.setAttribute('aria-pressed', hz === state.a4 ? 'true' : 'false');
-      chip.addEventListener('click', () => callbacks.onA4Select(hz));
-      els.a4Chips.appendChild(chip);
-    });
+    // A4 UI removed — fixed 440 Hz. Keep legacy containers empty but safe-guard for hidden elements.
+    if (els.a4Chips) els.a4Chips.replaceChildren();
+    // keep sheet A4 in sync (legacy hidden row)
+    buildSheetA4Row();
   }
 
   function presetMatches(preset, query) {
@@ -582,7 +1086,12 @@ export function createUi(callbacks) {
 
         const nameEl = document.createElement('span');
         nameEl.className = 'tuning-card-name';
-        nameEl.textContent = preset.name;
+        nameEl.textContent = sanitizeTuningName(preset.name);
+        // Preserve full unsanitized title for tooltip / accessibility
+        if (preset.name !== nameEl.textContent) {
+          nameEl.title = preset.name;
+          card.setAttribute('aria-label', sanitizeTuningName(preset.name));
+        }
 
         const notesEl = document.createElement('span');
         notesEl.className = 'tuning-card-notes';
@@ -681,49 +1190,79 @@ export function createUi(callbacks) {
     posZoneLeft(els.zoneDead, profile.deadDown * 100, null);
   }
 
-  /* ---------- Chromatic free-mode note rail ---------- */
+  /* ---------- Chromatic free-mode live scrolling note rail ---------- */
+  function centerRailDefault() {
+    if (!els || !els.chromTape || !meterWidth) return;
+    const defaultMidi = 69; // A4
+    const fractionalIdx = defaultMidi - START_MIDI;
+    const tapeX = (meterWidth / 2) - ((fractionalIdx + 0.5) * NOTE_SPACING_PX);
+    els.chromTape.style.transform = 'translate3d(' + tapeX.toFixed(1) + 'px, 0, 0)';
+  }
+
   function buildRail() {
-    if (!els.chromRail || railNotes.length) return;
-    railNotes = NOTE_NAMES.map((n) => {
+    if (!els || !els.chromTape || railNotes.length) return;
+    railNotes = [];
+    for (let m = START_MIDI; m <= 108; m++) {
+      const pitchClass = NOTE_NAMES[((m % 12) + 12) % 12];
+      const octave = Math.floor(m / 12) - 1;
       const sp = document.createElement('span');
       sp.className = 'rail-note';
-      sp.textContent = n;
-      return sp;
-    });
-    els.chromRail.replaceChildren(...railNotes);
+      sp.setAttribute('data-midi', String(m));
+
+      const noteText = document.createTextNode(pitchClass);
+      sp.appendChild(noteText);
+
+      const octSpan = document.createElement('span');
+      octSpan.className = 'rail-note-octave';
+      octSpan.textContent = String(octave);
+      sp.appendChild(octSpan);
+
+      railNotes.push(sp);
+    }
+    els.chromTape.replaceChildren(...railNotes);
+    centerRailDefault();
   }
 
   function clearRail() {
-    railNotes.forEach((el) => {
-      if (el._v) { el._v = 0; el.style.removeProperty('--rg'); }
-      el.classList.remove('active');
-    });
+    if (activeRailNearEl) {
+      activeRailNearEl.classList.remove('is-near', 'active', 'is-exact');
+      activeRailNearEl = null;
+    }
+    activeRailMidi = null;
+    activeRailExact = false;
+    centerRailDefault();
   }
 
-  /* Progressive proximity glow: every note lights up in proportion to how
-     close the played pitch is to it — the nearest semitone brightest,
-     neighbours fading with distance. Rail runs low (left) to high (right). */
-  function updateRail(freq) {
-    if (!railNotes.length || !els.chromRail || els.chromRail.hidden) return;
+  /* Live scrolling chromatic visualizer:
+     Tape continuously translates left/right with subpixel precision tracking pitch.
+     When pitch is exact, the note and reticle highlight. */
+  function updateRail(freq, cents, locked) {
+    if (!els || !els.chromRail || els.chromRail.hidden || !els.chromTape || !meterWidth) return;
+    if (!railNotes.length) buildRail();
     const mf = 69 + 12 * Math.log2(freq / state.a4);
-    const range = DETECT.RAIL_RANGE_CENTS;
-    for (let i = 0; i < railNotes.length; i++) {
-      const cls = i;
-      let d = Math.abs(mf - (Math.round((mf - cls) / 12) * 12 + cls)) * 100;
-      if (d > 600) d = 1200 - d;
-      const v = Math.max(0, 1 - d / range);
-      const q = Math.round(v * 12) / 12; // quantised: fewer style writes
-      const el = railNotes[i];
-      if (q <= 0) {
-        if (el._v) { el._v = 0; el.style.removeProperty('--rg'); }
-        el.classList.remove('active');
-        continue;
+    const fractionalIdx = mf - START_MIDI;
+    const tapeX = (meterWidth / 2) - ((fractionalIdx + 0.5) * NOTE_SPACING_PX);
+    els.chromTape.style.transform = 'translate3d(' + tapeX.toFixed(1) + 'px, 0, 0)';
+
+    const nearestMidi = Math.round(mf);
+    const isExact = Math.abs(cents) <= DETECT.IN_TUNE_CENTS;
+
+    if (activeRailMidi !== nearestMidi || activeRailExact !== isExact) {
+      if (activeRailNearEl) {
+        activeRailNearEl.classList.remove('is-near', 'active', 'is-exact');
       }
-      if (el._v !== q) {
-        el._v = q;
-        el.style.setProperty('--rg', q.toFixed(3));
+      const idx = nearestMidi - START_MIDI;
+      if (idx >= 0 && idx < railNotes.length) {
+        activeRailNearEl = railNotes[idx];
+        activeRailNearEl.classList.add('is-near');
+        if (isExact) {
+          activeRailNearEl.classList.add('active', 'is-exact');
+        }
+      } else {
+        activeRailNearEl = null;
       }
-      el.classList.toggle('active', d <= 60);
+      activeRailMidi = nearestMidi;
+      activeRailExact = isExact;
     }
   }
 
@@ -743,9 +1282,29 @@ export function createUi(callbacks) {
   }
 
   function setPill(text, pillClass) {
-    const cls = 'tuner-status' + (pillClass ? ' ' + pillClass : '');
-    setText(textMemo, els.status, text);
-    if (els.status.className !== cls) els.status.className = cls;
+    // Hidden a11y live region — always sr-only
+    const base = 'tuner-status sr-only';
+    const cls = base + (pillClass ? ' ' + pillClass : '');
+    if (els.status) {
+      setText(textMemo, els.status, text);
+      if (els.status.className !== cls) els.status.className = cls;
+    }
+  }
+
+  function setCents(text, extraClass) {
+    if (!els.cents) return;
+    setText(textMemo, els.cents, text);
+    const base = 'tuner-cents';
+    const cls = extraClass ? base + ' ' + extraClass : base;
+    if (els.cents.className !== cls) els.cents.className = cls;
+  }
+
+  function formatCentsDisplay(cents, locked) {
+    const abs = Math.abs(cents);
+    if (abs <= DETECT.IN_TUNE_CENTS) return '0 ct';
+    const sign = cents < 0 ? '-' : '+';
+    const val = locked && abs < DETECT.FINE_CENTS_RANGE ? abs.toFixed(1) : String(Math.round(abs));
+    return sign + val + ' ct';
   }
 
   /* Sub-cent display: one decimal while the detector is locked and inside
@@ -765,6 +1324,7 @@ export function createUi(callbacks) {
     setText(textMemo, els.noteOctave, '');
     setText(textMemo, els.freq, '');
     setText(textMemo, els.hint, '');
+    setCents('--', '');
     if (state.listening) {
       setPill(TUNER_COPY.listening, 'pill-neutral');
     } else if (state.starting) {
@@ -816,6 +1376,7 @@ export function createUi(callbacks) {
       setNeedle(0);
       setInTuneHighlight(false);
       clearRail();
+      setCents('--', '');
       if (reading.status === 'polyphonic') {
         setPill(TUNER_COPY.playOneString, 'pill-neutral');
       } else if (reading.status === 'clipped') {
@@ -831,7 +1392,11 @@ export function createUi(callbacks) {
     }
 
     const cents = reading.cents;
-    setNeedle(cents);
+    if (!chromatic) {
+      setNeedle(cents);
+    } else {
+      setNeedle(0);
+    }
     setText(textMemo, els.note, noteLetter(reading.detectedNote));
     setText(textMemo, els.noteOctave, chromatic ? String(reading.detectedOctave) : '');
     setText(textMemo, els.freq, reading.freq.toFixed(1) + ' Hz');
@@ -840,17 +1405,20 @@ export function createUi(callbacks) {
       if (reading.zone === 'wrong-octave') {
         setNeedle(0);
         setInTuneHighlight(false);
+        setCents('--', '');
         setPill('CHECK THE PEGS', 'pill-neutral');
         setText(textMemo, els.hint, '');
         return;
       }
       if (Math.abs(cents) <= DETECT.IN_TUNE_CENTS) {
+        setCents('0 ct', 'is-in-tune');
         setPill(TUNER_COPY.inTune, 'pill-tuned');
         setInTuneHighlight(true);
         els.readout.classList.add('in-tune');
         setText(textMemo, els.hint, '');
       } else {
         const dir = cents < 0 ? TUNER_COPY.tooFlat : TUNER_COPY.tooSharp;
+        setCents(formatCentsDisplay(cents, reading.locked), cents < 0 ? 'is-flat' : 'is-sharp');
         setPill(dir + ' \u00B7 ' + formatCents(cents, reading.locked) + '\u00A2', 'pill-off');
         setInTuneHighlight(false);
         els.readout.classList.add('off-pitch');
@@ -859,9 +1427,17 @@ export function createUi(callbacks) {
       applySafetyClasses(reading.color);
     } else {
       setInTuneHighlight(false);
-      updateRail(reading.freq);
+      updateRail(reading.freq, cents, reading.locked);
+      const isExact = Math.abs(cents) <= DETECT.IN_TUNE_CENTS;
+      els.readout.classList.toggle('in-tune', isExact);
       const signed = (cents >= 0 ? '+' : '-') + formatCents(cents, reading.locked);
-      setPill(reading.nearestName + ' \u00B7 ' + signed + '\u00A2', 'pill-neutral');
+      if (isExact) {
+        setCents('0 ct', 'is-in-tune');
+        setPill(reading.nearestName + ' \u00B7 IN TUNE', 'pill-tuned');
+      } else {
+        setCents(formatCentsDisplay(cents, reading.locked), cents < 0 ? 'is-flat' : 'is-sharp');
+        setPill(reading.nearestName + ' \u00B7 ' + signed + '\u00A2', 'pill-neutral');
+      }
       setText(textMemo, els.hint, reading.nearestName + ' \u00B7 ' + signed + '\u00A2');
     }
   }
@@ -879,16 +1455,35 @@ export function createUi(callbacks) {
   }
 
   function bindStaticEvents() {
+    sheetReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     els.readout.addEventListener('click', () => callbacks.onMicToggle());
     if (els.micCta) els.micCta.addEventListener('click', () => callbacks.onMicToggle());
     Array.from(els.instrumentRow.querySelectorAll('[data-instrument]')).forEach((btn) => {
       btn.addEventListener('click', () => callbacks.onInstrumentChange(btn.getAttribute('data-instrument')));
     });
-    els.presetBtn.addEventListener('click', showTuningView);
-    els.modeBtn.addEventListener('click', () => toggleMenu('mode', renderModeMenu, els.modeBtn));
+    if (els.presetBtn) els.presetBtn.addEventListener('click', showTuningView);
+    if (els.settingsBtn) els.settingsBtn.addEventListener('click', () => openSheet(els.panelSettings, els.settingsBtn));
+    if (els.settingsBtnBottom) els.settingsBtnBottom.addEventListener('click', () => openSheet(els.panelSettings, els.settingsBtnBottom));
+    if (els.sheetBackdrop) els.sheetBackdrop.addEventListener('click', () => closeSheet());
+    if (els.sheetHandle) els.sheetHandle.addEventListener('click', () => closeSheet());
+    if (els.sheetAutoAdvance) els.sheetAutoAdvance.addEventListener('change', () => {
+      callbacks.onAutoAdvanceToggle(els.sheetAutoAdvance.checked);
+      renderSheetSettings();
+    });
+    if (els.sheetAutoId) els.sheetAutoId.addEventListener('change', () => {
+      callbacks.onAutoIdToggle(els.sheetAutoId.checked);
+      renderSheetSettings();
+    });
+    if (els.copyLinkBtn) els.copyLinkBtn.addEventListener('click', copyTunerLink);
+    attachSheetDrag();
+    // Legacy topbar pills (now hidden) — keep guarded for compat, not used in new UI
+    if (els.modeBtn) els.modeBtn.addEventListener('click', () => toggleMenu('mode', renderModeMenu, els.modeBtn));
     if (els.stringsBtn) els.stringsBtn.addEventListener('click', () => toggleMenu('strings', renderStringsMenu, els.stringsBtn));
     if (els.materialBtn) els.materialBtn.addEventListener('click', () => toggleMenu('material', renderMaterialMenu, els.materialBtn));
-    els.instrumentBtn.addEventListener('click', () => toggleMenu('instrument', renderInstrumentMenu, els.instrumentBtn));
+    // New sheet controls — strings/material open upward without closing sheet
+    if (els.sheetStringsBtn) els.sheetStringsBtn.addEventListener('click', () => toggleSheetMenu('sheetStrings', renderSheetStringsMenu, els.sheetStringsBtn));
+    if (els.sheetMaterialBtnSheet) els.sheetMaterialBtnSheet.addEventListener('click', () => toggleSheetMenu('sheetMaterial', renderSheetMaterialMenu, els.sheetMaterialBtnSheet));
+    if (els.instrumentBtn) els.instrumentBtn.addEventListener('click', () => toggleMenu('instrument', renderInstrumentMenu, els.instrumentBtn));
     els.backToTunerBtn.addEventListener('click', showTunerView);
 
     if (els.searchClearBtn) {
@@ -919,14 +1514,20 @@ export function createUi(callbacks) {
     document.addEventListener('click', (e) => {
       if (!openMenuName) return;
       if (e.target.closest('.tuner-menu-panel')) return;
-      if (e.target.closest('#tunerModeBtn, #tunerStringsBtn, #tunerMaterialBtn, #tunerInstrumentBtn')) return;
+      if (e.target.closest('#tunerModeBtn, #tunerStringsBtn, #tunerMaterialBtn, #tunerInstrumentBtn, #tunerSheetStringsBtn, #tunerSheetMaterialBtn')) return;
       closeMenus(true);
     });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        const feedbackModal = document.getElementById('feedbackModal');
+        if (feedbackModal && !feedbackModal.classList.contains('hidden')) return;
         if (openMenuName) {
           closeMenus(true);
+          return;
+        }
+        if (sheetOpen) {
+          closeSheet();
         } else if (!els.tuningView.hidden) {
           showTunerView();
         }
@@ -956,6 +1557,7 @@ export function createUi(callbacks) {
     renderTopbar();
     renderInstrumentRow();
     renderFigure();
+    renderSheetSettings();
     setMicState(false, false);
   }
 
@@ -977,6 +1579,13 @@ export function createUi(callbacks) {
     closeMenus,
     resetFilter,
     clearSearch,
+    openSheet,
+    closeSheet,
+    renderSheetSettings,
+    get isSheetOpen() { return sheetOpen; },
+    get panelSettings() { return els ? els.panelSettings : null; },
+    get settingsBtn() { return els ? els.settingsBtn : null; },
+    get settingsBtnBottom() { return els ? els.settingsBtnBottom : null; },
     toast: showToast
   };
 }

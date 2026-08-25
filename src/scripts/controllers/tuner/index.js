@@ -62,6 +62,10 @@ function resetPipeline() {
   autoIdCandidate = null;
   autoIdCandidateSince = 0;
   lastGood = null;
+  lastGoodAt = 0;
+  holdCandidateMidi = null;
+  holdCandidateSince = 0;
+  holdCandidateFrames = 0;
   clipRun = 0;
   polyRun = 0;
 }
@@ -106,6 +110,10 @@ function autoIdTick(freq, trusted, nowMs) {
       safety.reset();
       lockedSince = 0;
       lastGood = null;
+      lastGoodAt = 0;
+      holdCandidateMidi = null;
+      holdCandidateSince = 0;
+      holdCandidateFrames = 0;
       ui.renderFigure();
       ui.pulseActivePeg();
     }
@@ -141,10 +149,18 @@ function autoAdvanceTick(cents, locked, nowMs) {
   }
 }
 
-/* Last confident display state — kept on screen between plucks so the note
-   "remembers where you were" instead of gathering and vanishing every time
-   the gate dips for a frame. */
+/* Latched display state — the last confident reading is kept on screen
+   indefinitely (the "forever" hold requested) instead of blanking between
+   plucks. Silent / transient / low-confidence frames never overwrite it;
+   only a new *locked* pitch that proves itself over HOLD_MIN_MS +
+   HOLD_CONFIRM_FRAMES can replace it. This implements the "stay in the
+   spot ... backed by the next audio" contract and debounces sympathetic
+   resonance tails that otherwise flicker the note label. */
 let lastGood = null;
+let lastGoodAt = 0;
+let holdCandidateMidi = null;
+let holdCandidateSince = 0;
+let holdCandidateFrames = 0;
 let clipRun = 0;
 let polyRun = 0;
 
@@ -161,10 +177,14 @@ function handleReading(r, nowMs) {
 
   // A fresh pluck after a gap: measure this attack clean, don't blend it
   // with cents smoothed from the previous note's decaying resonance.
+  // Also clear the hold-candidate so the new pitch is evaluated from scratch.
   if (r.onset) {
     smoother.reset();
     noteStab.reset();
     autoIdCandidate = null;
+    holdCandidateMidi = null;
+    holdCandidateSince = 0;
+    holdCandidateFrames = 0;
   }
 
   if (r.status !== 'ok') {
@@ -175,14 +195,20 @@ function handleReading(r, nowMs) {
     }
     // clipped / polyphonic are actionable messages but flicker badly when
     // they alternate with good frames — require a short persistent run
-    // before swapping the readout over to them.
+    // before swapping the readout over to them. While un-persisted we hold
+    // the latched note instead of blanking.
     if (r.status === 'clipped') clipRun++; else clipRun = 0;
     if (r.status === 'polyphonic') polyRun++; else polyRun = 0;
     const persisted = Math.max(clipRun, polyRun) >= DETECT.MESSAGE_PERSIST_FRAMES;
     if (!persisted && lastGood) {
       ui.updateReading(Object.assign({}, lastGood, { held: true }));
+    } else if (persisted) {
+      // Persisted actionable message: show it, but do NOT clear lastGood
+      // so that when the message clears the previous note reappears.
+      // We keep lastGood intact for the hold.
+      ui.updateReading({ status: r.status });
     } else {
-      ui.updateReading({ status: persisted ? r.status : 'silent' });
+      holdFrame();
     }
     return;
   }
@@ -190,12 +216,66 @@ function handleReading(r, nowMs) {
   clipRun = 0;
   polyRun = 0;
 
-  // Resonance-tail guard: low-confidence frames (weak ring-out, noise,
-  // sympathetic resonance from other strings) must not overwrite or
-  // re-classify the remembered reading.
+  // Quality gate 1: resonance-tail / noise guard — weak frames never
+  // overwrite the held value, they just keep the display latched.
   if (r.conf < DETECT.UNRELIABLE_CONF) {
     holdFrame();
     return;
+  }
+
+  // Quality gate 2: "skip the start" — only *locked* pitches are trusted
+  // to replace the latched display. Unlocked estimates (attack residue,
+  // octave wobble before the detector stabilises) are discarded and the
+  // previous note stays put. This is the user-requested "proper identification"
+  // guarantee. The exception is the very first note after silence (lastGood
+  // null) where we still require lock to avoid showing the attack itself.
+  if (!r.locked) {
+    holdFrame();
+    return;
+  }
+
+  const midi = Math.round(69 + 12 * Math.log2(r.freq / state.a4));
+
+  // Stabilise the note label so boundary flicker (A <-> A#) doesn't jitter
+  // the readout or the free-mode rail. The stabiliser already enforces
+  // LABEL_HYSTERESIS_MS (160ms) before the label can swap.
+  const stableMidi = noteStab.update(midi, nowMs);
+
+  // Quality gate 3: latched note-change debounce. A newly stabilised MIDI
+  // that differs from the currently displayed note must prove itself over
+  // HOLD_MIN_MS and HOLD_CONFIRM_FRAMES consecutive locked frames before
+  // it overwrites the latched display. This prevents sympathetic resonance
+  // or a single noisy frame from hijacking the readout, and implements the
+  // "stay for a bit ... backed by the next audio" contract.
+  if (lastGood && typeof lastGood.midi === 'number' && stableMidi !== lastGood.midi) {
+    if (holdCandidateMidi !== stableMidi) {
+      holdCandidateMidi = stableMidi;
+      holdCandidateSince = nowMs;
+      holdCandidateFrames = 1;
+      holdFrame();
+      return;
+    }
+    holdCandidateFrames++;
+    const timeOk = nowMs - holdCandidateSince >= DETECT.HOLD_MIN_MS;
+    const framesOk = holdCandidateFrames >= DETECT.HOLD_CONFIRM_FRAMES;
+    if (!(timeOk && framesOk)) {
+      holdFrame();
+      return;
+    }
+    // Candidate confirmed — fall through to accept it and clear candidate.
+    holdCandidateMidi = null;
+    holdCandidateSince = 0;
+    holdCandidateFrames = 0;
+  } else if (lastGood && typeof lastGood.midi === 'number' && stableMidi === lastGood.midi) {
+    // Same note as currently held: clear any pending candidate and allow
+    // continuous cents tracking for tuning.
+    holdCandidateMidi = null;
+    holdCandidateSince = 0;
+    holdCandidateFrames = 0;
+  } else if (!lastGood) {
+    // First note after silence: no extra hold delay, but still required lock
+    // (already ensured above). Clear candidate.
+    holdCandidateMidi = null;
   }
 
   const reading = {
@@ -210,15 +290,11 @@ function handleReading(r, nowMs) {
     nearestName: '',
     target: null,
     locked: r.locked,
-    held: false
+    held: false,
+    midi: stableMidi
   };
 
-  const midi = Math.round(69 + 12 * Math.log2(r.freq / state.a4));
   reading.freq = r.freq;
-
-  // Stabilise the note label in BOTH modes so boundary flicker (A <-> A#)
-  // doesn't jitter the readout or the free-mode note rail.
-  const stableMidi = noteStab.update(midi, nowMs);
   reading.detectedNote = midiToPitchClass(stableMidi);
   reading.detectedOctave = Math.floor(stableMidi / 12) - 1;
 
@@ -239,6 +315,7 @@ function handleReading(r, nowMs) {
   if (chromatic) {
     reading.nearestName = reading.detectedNote + reading.detectedOctave;
     lastGood = Object.assign({}, reading);
+    lastGoodAt = nowMs;
     ui.updateReading(reading);
     return;
   }
@@ -248,6 +325,7 @@ function handleReading(r, nowMs) {
   reading.color = safetyResult.color;
 
   lastGood = Object.assign({}, reading);
+  lastGoodAt = nowMs;
 
   autoAdvanceTick(smoothed.cents, r.locked, nowMs);
   ui.updateReading(reading);

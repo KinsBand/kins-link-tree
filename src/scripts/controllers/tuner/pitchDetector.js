@@ -218,7 +218,25 @@ export function createPitchDetector() {
     // Fresh pluck after a gap: flag once so the caller resets its smoothers
     // and the new attack is measured clean instead of blending with the
     // decaying resonance of the previous note.
-    if (nowMs - lastActiveAt > DETECT.ONSET_GAP_MS) pendingOnset = true;
+    // Quality upgrade: a genuine new pluck must re-establish lock from
+    // scratch — the previous note's lock must NOT carry over into the
+    // attack, otherwise the first noisy frames would be treated as trusted
+    // and would flicker the held display. Clearing locked/jitter/prevConfident
+    // forces CONF_LOCK_FRAMES of stable frames before the new pitch is
+    // considered reliable, which implements the requested "skip the start"
+    // behaviour at the detector level.
+    if (nowMs - lastActiveAt > DETECT.ONSET_GAP_MS) {
+      pendingOnset = true;
+      locked = false;
+      lockFrames = 0;
+      jitterEma = 0;
+      prevConfident = false;
+      // Force a full YIN search window and an immediate harmonic check for
+      // the new note instead of reusing the previous frequency's narrowed
+      // window and stale FFT cache.
+      lastCheckedFreq = 0;
+      fftCounter = 0;
+    }
     lastActiveAt = nowMs;
     if (nowMs - onsetAt < DETECT.ATTACK_FREEZE_MS) {
       result.status = 'transient';

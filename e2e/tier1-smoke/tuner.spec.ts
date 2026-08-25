@@ -29,25 +29,63 @@ test.describe('tier1 smoke — tuner', () => {
     await cta.click();
     await expect(cta).toHaveClass(/listening/);
 
-    await page.locator('#tunerModeBtn').click();
-    await page.locator('[data-mode="chromatic"]').click();
+    // Mode now lives in settings sheet (topbar pills moved to sheet)
+    await page.locator('#tunerSettingsBtn').click();
+    await expect(page.locator('#tunerSheetModeRow')).toBeVisible();
+    await page.locator('[data-sheet-mode="chromatic"]').click();
+    await page.keyboard.press('Escape');
     // Mic must survive the switch — no permission re-prompt, no restart.
     await expect(cta).toHaveClass(/listening/);
     await expect(page.locator('#tunerChromRail')).toBeVisible();
+    await expect(page.locator('#tunerChromTape .rail-note').first()).toBeVisible();
 
-    await page.locator('#tunerModeBtn').click();
-    await page.locator('[data-mode="guided"]').click();
+    await page.locator('#tunerSettingsBtn').click();
+    await page.locator('[data-sheet-mode="guided"]').click();
+    await page.keyboard.press('Escape');
     await expect(cta).toHaveClass(/listening/);
+    await expect(page.locator('#tunerChromRail')).toBeHidden();
   });
 
   test('auto string select defaults on and toggles', async ({ page }) => {
     await page.goto('/tuner');
-    await page.locator('#tunerModeBtn').click();
-    const row = page.locator('[data-auto-id]');
-    await expect(row).toBeVisible();
-    await expect(row).toHaveAttribute('aria-checked', 'true');
-    await row.click();
-    await expect(page.locator('[data-auto-id]')).toHaveAttribute('aria-checked', 'false');
+    await page.locator('#tunerSettingsBtn').click();
+    const autoToggle = page.locator('#tunerSheetAutoId');
+    await expect(autoToggle).toBeVisible();
+    await expect(autoToggle).toBeChecked();
+    await autoToggle.click();
+    await expect(autoToggle).not.toBeChecked();
+    await autoToggle.click();
+    await expect(autoToggle).toBeChecked();
+  });
+
+  test('settings sheet exposes instruments and strings/material', async ({ page }) => {
+    await page.goto('/tuner');
+    await page.locator('#tunerSettingsBtn').click();
+    await expect(page.locator('#tunerSheetInstrumentRow')).toBeVisible();
+    await expect(page.locator('[data-sheet-instrument="electric"]')).toBeVisible();
+    await expect(page.locator('[data-sheet-instrument="drums"]')).toBeVisible();
+    await expect(page.locator('#tunerSheetModeRow')).toBeVisible();
+    await expect(page.locator('#tunerSheetStringsBtn')).toBeVisible();
+    await expect(page.locator('#tunerSheetMaterialBtn')).toBeVisible();
+    // Strings and material menus open upward
+    await page.locator('#tunerSheetStringsBtn').click();
+    await expect(page.locator('#tunerSheetStringsSlot .tuner-menu-panel')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.locator('#tunerSheetMaterialBtn').click();
+    await expect(page.locator('#tunerSheetMaterialSlot .tuner-menu-panel')).toBeVisible();
+    await page.keyboard.press('Escape');
+    // A4 calibration removed
+    await expect(page.locator('#tunerA4Chips')).toBeHidden();
+    await expect(page.locator('#tunerSheetA4Row')).toBeHidden();
+  });
+
+  test('header centers TUNER title and hides legacy pills', async ({ page }) => {
+    await page.goto('/tuner');
+    await expect(page.locator('#tunerPresetBtn .tuner-pill-title')).toHaveText('TUNER');
+    await expect(page.locator('#tunerModeBtn')).toBeHidden();
+    await expect(page.locator('#tunerStringsBtn')).toBeHidden();
+    await expect(page.locator('#tunerMaterialBtn')).toBeHidden();
+    await expect(page.locator('#tunerSettingsBtnBottom')).toBeHidden();
   });
 
   test('tuning library renders, searches and applies presets', async ({ page }) => {

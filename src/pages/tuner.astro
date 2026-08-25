@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
+import FeedbackModal from '../components/modals/FeedbackModal.astro';
 ---
 
 <BaseLayout
@@ -10,27 +11,39 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
   <main class="tuner-page">
     <div class="tuner-view" id="tunerView">
       <div class="tuner-topbar">
-        <button type="button" class="tuner-pill tuner-pill-tuning brutal-press" id="tunerPresetBtn" data-track="tuner:preset_open" aria-haspopup="dialog">
-          <span class="tuner-pill-label" id="tunerPresetLabel">Standard</span>
-          <svg class="tuner-sliders-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="7" cy="5" r="2.2" fill="currentColor"/><circle cx="13" cy="10" r="2.2" fill="currentColor"/><circle cx="8" cy="15" r="2.2" fill="currentColor"/></svg>
-        </button>
-        <div class="tuner-subbar">
+        <nav class="tuner-header-nav" aria-label="Tuner navigation">
+          <a href="/" class="tuner-icon-btn tuner-icon-btn-back brutal-press" aria-label="Back to KINS home">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 3.5L6 10l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <button type="button" class="tuner-pill tuner-pill-tuning brutal-press" id="tunerPresetBtn" data-track="tuner:preset_open" aria-haspopup="dialog">
+            <span class="tuner-pill-title">TUNER</span>
+            <span class="tuner-pill-main">
+              <span class="tuner-pill-label" id="tunerPresetLabel">Standard</span>
+              <svg class="tuner-btn-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+          </button>
+          <button type="button" class="tuner-icon-btn tuner-icon-btn-settings brutal-press" id="tunerSettingsBtn" data-track="tuner:settings_open" aria-label="Open tuner settings" aria-haspopup="dialog" aria-expanded="false">
+            <i class="fa-solid fa-gear" aria-hidden="true"></i>
+          </button>
+        </nav>
+        <!-- Legacy subbar kept hidden — controls now live in settings sheet (see plan) -->
+        <div class="tuner-subbar" hidden aria-hidden="true">
           <div class="tuner-menu-anchor tuner-anchor-left">
-            <button type="button" class="tuner-pill brutal-press" id="tunerModeBtn" data-track="tuner:mode_open" aria-haspopup="true">
+            <button type="button" class="tuner-pill brutal-press" id="tunerModeBtn" data-track="tuner:mode_open" aria-haspopup="true" tabindex="-1">
               <span id="tunerModeLabel">GUIDED</span>
               <svg class="tuner-btn-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
             <div id="tunerModeMenuSlot"></div>
           </div>
           <div class="tuner-menu-anchor tuner-anchor-center">
-            <button type="button" class="tuner-pill brutal-press" id="tunerStringsBtn" data-track="tuner:strings_open" aria-haspopup="true">
+            <button type="button" class="tuner-pill brutal-press" id="tunerStringsBtn" data-track="tuner:strings_open" aria-haspopup="true" tabindex="-1">
               <span id="tunerStringsLabel">6 STRINGS</span>
               <svg class="tuner-btn-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
             <div id="tunerStringsMenuSlot"></div>
           </div>
           <div class="tuner-menu-anchor tuner-anchor-right">
-            <button type="button" class="tuner-pill brutal-press" id="tunerMaterialBtn" data-track="tuner:material_open" aria-haspopup="true">
+            <button type="button" class="tuner-pill brutal-press" id="tunerMaterialBtn" data-track="tuner:material_open" aria-haspopup="true" tabindex="-1">
               <span id="tunerMaterialLabel">STEEL</span>
               <svg class="tuner-btn-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
@@ -39,8 +52,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
         </div>
       </div>
 
-      <div class="tuner-middle-scroll">
-        <section class="tuner-readout" id="tunerReadoutPanel" aria-label="Tuning meter">
+      <section class="tuner-readout" id="tunerReadoutPanel" aria-label="Tuning meter">
         <button type="button" class="tuner-meter-btn brutal-press" id="tunerMicBtn" data-track="tuner:mic_start" aria-label="Start or stop mic tuning">
           <span class="tuner-meter" id="tunerMeter" aria-hidden="true">
             <span class="tuner-meter-ticks"></span>
@@ -49,15 +61,18 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
             <span class="tuner-meter-zone-safety zone-danger" id="tunerZoneDanger" hidden></span>
             <span class="tuner-meter-zone-safety zone-loose" id="tunerZoneLoose" hidden></span>
             <span class="tuner-meter-zone-safety zone-dead" id="tunerZoneDead" hidden></span>
+            <div class="tuner-chromatic-rail" id="tunerChromRail" aria-hidden="true" hidden>
+              <div class="tuner-chromatic-tape" id="tunerChromTape"></div>
+            </div>
             <span class="tuner-needle" id="tunerNeedle"></span>
           </span>
         </button>
         <div class="tuner-badges">
           <span class="tuner-badge-side" id="tunerBadgeLow">TOO LOW</span>
-          <p class="tuner-status pill-cta" id="tunerStatusLine" aria-live="polite">TAP TO START TUNING</p>
+          <span class="tuner-cents" id="tunerCentsReadout" aria-live="polite" aria-atomic="true">--</span>
           <span class="tuner-badge-side" id="tunerBadgeHigh">TOO HIGH</span>
         </div>
-        <div class="tuner-chromatic-rail" id="tunerChromRail" aria-hidden="true" hidden></div>
+        <p class="tuner-status sr-only" id="tunerStatusLine" aria-live="polite">TAP TO START TUNING</p>
         <div class="tuner-note-row">
           <span class="tuner-note" id="tunerDetectedNote">--</span>
           <span class="tuner-note-octave" id="tunerDetectedNoteOctave"></span>
@@ -66,8 +81,9 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
         <p class="tuner-hint" id="tunerDirectionHint" aria-live="polite"></p>
         <p class="tuner-warning" id="tunerMicWarning" hidden></p>
         <p class="tuner-low-mic-hint" id="tunerLowMicHint" hidden></p>
-        </section>
+      </section>
 
+      <div class="tuner-middle-scroll">
         <section class="tuner-figure" id="tunerFigure" aria-label="String and drum targets"></section>
       </div>
 
@@ -95,8 +111,82 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
           </button>
         </div>
 
-        <a href="/" class="tuner-back-pill brutal-press">&larr; Back to KINS</a>
+        <!-- bottom gear removed — single header gear controls sheet (kept hidden for legacy compat) -->
+        <div class="tuner-bottom-settings" hidden aria-hidden="true">
+          <button type="button" class="tuner-icon-btn brutal-press" id="tunerSettingsBtnBottom" aria-haspopup="dialog" aria-expanded="false" aria-label="Open tuner settings" data-track="tuner:settings_open" tabindex="-1">
+            <i class="fa-solid fa-gear" aria-hidden="true"></i>
+          </button>
+        </div>
+
       </div>
+    </div>
+
+    <div class="tuner-sheet-backdrop" id="tunerSheetBackdrop" hidden></div>
+    <div class="tuner-sheet" id="tunerSheet" role="dialog" aria-modal="true" tabindex="-1" hidden>
+      <div class="tuner-sheet-handle" id="tunerSheetHandle" aria-hidden="true"></div>
+
+      <section class="tuner-sheet-panel" id="tunerPanelSettings" hidden aria-label="Settings">
+        <p class="tuner-sheet-title">SETTINGS</p>
+        <button type="button" class="tuner-sheet-feedback-btn brutal-press" data-open-feedback data-feedback-category="Tuner" data-track="tuner:feedback_open" aria-haspopup="dialog" aria-label="Send feedback about the tuner">
+          <i class="fa-solid fa-comment-dots" aria-hidden="true"></i>
+        </button>
+
+        <p class="tuner-settings-label">INSTRUMENT</p>
+        <div class="tuner-sheet-instruments" id="tunerSheetInstrumentRow" role="radiogroup" aria-label="Instrument"></div>
+
+        <p class="tuner-settings-label">MODE</p>
+        <div class="tuner-sheet-mode-row" id="tunerSheetModeRow" role="radiogroup" aria-label="Mode"></div>
+
+        <p class="tuner-settings-label">SETUP</p>
+        <div class="tuner-sheet-setup-row">
+          <div class="tuner-sheet-setup-cell">
+            <button type="button" class="tuner-sheet-setup-btn brutal-press" id="tunerSheetStringsBtn" aria-haspopup="true" aria-expanded="false">
+              <span class="tuner-sheet-setup-label">STRINGS</span>
+              <span class="tuner-sheet-setup-value" id="tunerSheetStringsLabel">6 STRINGS</span>
+              <svg class="tuner-btn-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <div id="tunerSheetStringsSlot" class="tuner-sheet-slot"></div>
+          </div>
+          <div class="tuner-sheet-setup-cell">
+            <button type="button" class="tuner-sheet-setup-btn brutal-press" id="tunerSheetMaterialBtn" aria-haspopup="true" aria-expanded="false">
+              <span class="tuner-sheet-setup-label">MATERIAL</span>
+              <span class="tuner-sheet-setup-value" id="tunerSheetMaterialLabelSheet">STEEL</span>
+              <svg class="tuner-btn-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <div id="tunerSheetMaterialSlot" class="tuner-sheet-slot"></div>
+          </div>
+        </div>
+
+        <!-- legacy containers kept hidden for compat (JS may still query) -->
+        <div hidden aria-hidden="true">
+          <div class="tuner-material-row" id="tunerSheetMaterialRow" role="radiogroup" aria-label="Material profile"></div>
+          <div class="tuner-a4-row" id="tunerSheetA4Row" role="radiogroup" aria-label="A4 calibration"></div>
+        </div>
+
+        <p class="tuner-settings-label">TUNING BEHAVIOR</p>
+        <div class="tuner-toggle-row">
+          <label class="tuner-sheet-toggle">
+            <input type="checkbox" id="tunerSheetAutoAdvance" />
+            <span class="tuner-sheet-toggle-track" aria-hidden="true"><span class="tuner-sheet-toggle-knob"></span></span>
+            <span class="tuner-sheet-toggle-text">AUTO-ADVANCE NEXT STRING</span>
+          </label>
+          <label class="tuner-sheet-toggle">
+            <input type="checkbox" id="tunerSheetAutoId" />
+            <span class="tuner-sheet-toggle-track" aria-hidden="true"><span class="tuner-sheet-toggle-knob"></span></span>
+            <span class="tuner-sheet-toggle-text">AUTO STRING SELECT (FOLLOW PLUCK)</span>
+          </label>
+        </div>
+
+        <div class="tuner-settings-copy-wrap">
+          <button type="button" class="tuner-copy-link-card brutal-press" id="tunerCopyLinkBtn" aria-label="Copy Tuner link" data-track="tuner:copy_link">
+            <div class="tuner-copy-link-left">
+              <i class="fa-solid fa-link" aria-hidden="true"></i>
+              <span class="tuner-copy-link-text">Share Tuner</span>
+            </div>
+            <span class="tuner-copy-badge" id="tunerCopyBadge">Copy</span>
+          </button>
+        </div>
+      </section>
     </div>
 
     <div class="tuning-view" id="tuningView" hidden>
@@ -136,10 +226,8 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
       <div class="tuning-list" id="tunerCategoryList"></div>
 
       <div class="tuning-bottom-fixed">
-        <div class="tuning-a4">
-          <span class="tuning-a4-label">A4</span>
-          <div class="tuning-a4-chips" id="tunerA4Chips"></div>
-        </div>
+        <!-- A4 calibration removed — fixed 440 Hz (see tuner.config.ts) -->
+        <div class="tuning-a4" hidden aria-hidden="true"><span class="tuning-a4-label">A4</span><div class="tuning-a4-chips" id="tunerA4Chips"></div></div>
 
         <div class="tuning-bottombar">
           <button type="button" class="tuning-back-pill brutal-press" id="tunerBackToTunerBtn" aria-label="Back to tuning">
@@ -150,6 +238,8 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
       </div>
     </div>
   </main>
+
+  <FeedbackModal />
 
   <ToastContainer />
 </BaseLayout>
@@ -210,11 +300,71 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     width: 100%;
   }
 
+  .tuner-header-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .tuner-icon-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-card);
+    color: var(--text-white);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    text-decoration: none;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+
+  .tuner-icon-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-brutal-black-lg);
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+  }
+
+  .tuner-icon-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .tuner-icon-btn-back svg {
+    width: 16px;
+    height: 16px;
+  }
+
   .tuner-subbar {
     display: flex;
     align-items: center;
     gap: 10px;
     width: 100%;
+  }
+
+  .tuner-subbar[hidden],
+  .tuner-bottom-settings[hidden],
+  .tuning-a4[hidden] {
+    display: none !important;
+  }
+
+  /* Legacy sheet rows kept hidden — A4 removed from UI (fixed 440 Hz) */
+  .tuner-material-row[hidden],
+  .tuner-a4-row[hidden] {
+    display: none !important;
   }
 
   .tuner-menu-anchor {
@@ -284,24 +434,58 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
   }
 
   .tuner-pill-tuning {
-    width: 100%;
-    justify-content: space-between;
-    padding: 12px 18px;
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 16px 8px;
     box-sizing: border-box;
+    gap: 1px;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, flex-basis 0.22s var(--ease-snappy);
+  }
+
+  /* Smooth inward curve bridges the gap between back and settings icons:
+     pill visually expands into the header's middle space without layout jank.
+     No width/height anim — only flex + transform/opacity per perf rules. */
+  .tuner-pill-tuning:hover {
+    transform: translate(-1px, -1px);
+  }
+
+  .tuner-pill-title {
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    line-height: 1;
+    color: var(--text-muted);
+  }
+
+  .tuner-pill-main {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .tuner-pill-tuning .tuner-pill-label {
     font-family: var(--font-heading);
-    font-size: clamp(1rem, 4.2vw, 1.25rem);
+    font-size: clamp(0.86rem, 3.4vw, 1.14rem);
     font-weight: 800;
     letter-spacing: 0.02em;
     text-transform: none;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-align: left;
-    flex: 1;
+    text-align: center;
     min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .tuner-sliders-icon {
@@ -446,11 +630,11 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     background: var(--btn-green);
   }
 
-  /* ---------- Badges + status ---------- */
+  /* ---------- Badges + cents readout ---------- */
   .tuner-badges {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
     width: 100%;
   }
@@ -465,6 +649,70 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     border: 2px solid rgba(0, 0, 0, 0.85);
     border-radius: var(--radius-pill);
     padding: 5px 10px;
+    justify-self: start;
+    white-space: nowrap;
+  }
+
+  .tuner-badge-side#tunerBadgeHigh {
+    justify-self: end;
+  }
+
+  .tuner-cents {
+    justify-self: center;
+    min-width: 64px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    background: var(--surface-card);
+    border: 2px solid rgba(0, 0, 0, 0.85);
+    border-radius: var(--radius-pill);
+    padding: 5px 12px;
+    font-variant-numeric: tabular-nums;
+    box-sizing: border-box;
+    transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+  }
+
+  .tuner-cents.is-in-tune {
+    color: var(--btn-green);
+    border-color: var(--btn-green);
+  }
+
+  .tuner-cents.is-flat,
+  .tuner-cents.is-sharp {
+    color: var(--text-white);
+  }
+
+  .tuner-readout.safety-red .tuner-cents,
+  .tuner-readout.safety-red-soft .tuner-cents {
+    color: var(--accent-crimson);
+    border-color: var(--accent-crimson);
+  }
+
+  .tuner-readout.safety-green .tuner-cents,
+  .tuner-readout.safety-green-soft .tuner-cents {
+    color: var(--btn-green);
+    border-color: var(--btn-green);
+  }
+
+  .tuner-readout.in-tune .tuner-cents {
+    color: var(--btn-green);
+    border-color: var(--btn-green);
+  }
+
+  /* Hidden status element retained for JS compat + a11y live region */
+  .tuner-status.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .tuner-status {
@@ -519,18 +767,24 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     color: var(--btn-green);
   }
 
-  /* ---------- Chromatic free-mode note rail (pill area) ---------- */
+  /* ---------- Chromatic free-mode note rail (inside meter pill) ---------- */
+  .tuner-view.mode-chromatic .tuner-meter-ticks,
+  .tuner-view.mode-chromatic .tuner-meter-zone,
+  .tuner-view.mode-chromatic .tuner-meter-zone-safety {
+    display: none !important;
+  }
+
   .tuner-chromatic-rail {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     display: none;
     align-items: center;
-    justify-content: center;
-    gap: 3px;
-    width: 100%;
-    background: var(--surface-card);
-    border: var(--border-brutal-sm);
-    box-shadow: var(--shadow-brutal-black);
+    justify-content: flex-start;
+    overflow: hidden;
+    pointer-events: none;
     border-radius: var(--radius-pill);
-    padding: 8px 12px;
     box-sizing: border-box;
   }
 
@@ -538,35 +792,89 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     display: flex;
   }
 
+  .tuner-chromatic-tape {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    will-change: transform;
+    transition: transform 0.08s linear;
+  }
+
   .tuner-chromatic-rail :global(.rail-note) {
-    font-family: var(--font-secondary);
-    font-size: clamp(0.58rem, 2.5vw, 0.72rem);
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 1px;
+    width: 56px;
+    min-width: 56px;
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
     font-weight: 800;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
     color: var(--text-white);
-    padding: 3px 4px;
+    padding: 3px 0;
     border-radius: 999px;
     border: 2px solid transparent;
-    opacity: calc(0.32 + 0.68 * var(--rg, 0));
-    transition: opacity 0.12s linear, background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    opacity: 0.35;
+    transition: opacity 0.12s linear, background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
   }
 
-  .tuner-chromatic-rail :global(.rail-note.active) {
+  .tuner-chromatic-rail :global(.rail-note-octave) {
+    font-size: 0.62rem;
+    font-weight: 700;
+    opacity: 0.75;
+  }
+
+  .tuner-chromatic-rail :global(.rail-note.is-near) {
+    opacity: 0.85;
+  }
+
+  .tuner-chromatic-rail :global(.rail-note.active),
+  .tuner-chromatic-rail :global(.rail-note.is-exact) {
+    opacity: 1;
     background: var(--accent-neon-yellow);
     color: #000000;
-    border-color: #000000;
+    border: 2px solid #000000;
+    box-shadow: var(--shadow-brutal-black-sm);
+    transform: scale(1.06);
   }
 
-  /* ---------- Held reading: dim while remembering between plucks ---------- */
+  .tuner-chromatic-rail :global(.rail-note.active .rail-note-octave),
+  .tuner-chromatic-rail :global(.rail-note.is-exact .rail-note-octave) {
+    color: #000000;
+    opacity: 0.9;
+  }
+
+  .tuner-view.mode-chromatic .tuner-needle {
+    width: 4px;
+    margin-left: -2px;
+    border-radius: 2px;
+    background: var(--accent-neon-yellow);
+    box-shadow: 0 0 4px rgba(242, 253, 67, 0.4);
+    z-index: 2;
+  }
+
+  .tuner-view.mode-chromatic .tuner-readout.in-tune .tuner-needle {
+    background: var(--btn-green);
+    box-shadow: 0 0 8px var(--btn-green);
+  }
+
+  /* ---------- Latched reading: keep the last identified note visibly held
+     between plucks instead of blanking. A subtle dim + steady pulse signals
+     "remembered" without the previous 0.45 washout that read as vanishing. */
   .tuner-note-row,
-  .tuner-hint {
-    transition: opacity 0.3s ease;
+  .tuner-hint,
+  .tuner-needle {
+    transition: opacity 0.28s ease;
   }
 
   .tuner-readout.is-held .tuner-note-row,
-  .tuner-readout.is-held .tuner-hint,
+  .tuner-readout.is-held .tuner-hint {
+    opacity: 0.86;
+  }
+
   .tuner-readout.is-held .tuner-needle {
-    opacity: 0.45;
+    opacity: 0.82;
   }
 
   /* ---------- Note row ---------- */
@@ -639,19 +947,30 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     text-align: center;
   }
 
-  /* ---------- Figure (headstock / drums) ---------- */
+  /* ---------- Figure (headstock / drums) — fills negative space ---------- */
   .tuner-figure {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 160px;
-    max-height: 240px;
+    flex: 1 1 auto;
+    min-height: 220px;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
   }
 
   .tuner-figure :global(svg) {
-    width: min(290px, 84%);
+    width: 100%;
+    max-width: 560px;
     height: auto;
-    max-height: 240px;
+    max-height: min(520px, 56dvh);
+    flex: 1 1 auto;
+  }
+
+  .tuner-middle-scroll {
+    flex: 1 1 auto;
+    min-height: 180px;
   }
 
   /* ---------- Instrument cards ---------- */
@@ -741,30 +1060,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     flex-shrink: 0;
   }
 
-  /* ---------- Back pill ---------- */
-  .tuner-back-pill {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface-card-light);
-    color: var(--text-card-primary);
-    border: var(--border-brutal);
-    box-shadow: var(--shadow-brutal-black-lg);
-    border-radius: var(--radius-pill);
-    padding: 14px 18px;
-    font-family: var(--font-secondary);
-    font-size: 0.95rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-decoration: none;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
-  }
-
-  .tuner-back-pill:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 5px 5px 0px #000000;
-  }
-
+  /* ---------- Footer group ---------- */
   .tuner-footer-group {
     display: flex;
     flex-direction: column;
@@ -773,10 +1069,482 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     width: 100%;
   }
 
+  .tuner-bottom-settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding-top: 2px;
+  }
+
+  .tuner-bottom-settings .tuner-icon-btn {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+    font-size: 1rem;
+  }
+
+  /* Legacy: bottom Back to KINS pill removed — keep selector hidden for any cached HTML */
+  .tuner-back-pill {
+    display: none !important;
+  }
+
   /* ---------- Chromatic mode ---------- */
   .tuner-view.mode-chromatic .tuner-figure,
   .tuner-view.mode-chromatic .tuner-badges {
     display: none;
+  }
+
+  /* ---------- Tuner settings bottom sheet — mirrors metronome sheet ---------- */
+  .tuner-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.62);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .tuner-sheet-backdrop.open {
+    opacity: 1;
+  }
+
+  .tuner-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 61;
+    max-height: 78vh;
+    max-height: 78dvh;
+    display: flex;
+    flex-direction: column;
+    background: #141418;
+    color: #f5f5f7;
+    border: 3px solid #000000;
+    border-bottom: none;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 36px 18px calc(18px + env(safe-area-inset-bottom));
+    transform: translateY(102%);
+    transition: transform 0.24s var(--ease-snappy);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    outline: none;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
+  }
+
+  .tuner-sheet.open {
+    transform: translateY(0);
+  }
+
+  .tuner-sheet.dragging {
+    transition: none;
+  }
+
+  .tuner-sheet-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    flex-shrink: 0;
+    z-index: 2;
+  }
+
+  .tuner-sheet-handle::before {
+    content: "";
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: #2a2a30;
+    position: static;
+  }
+
+  .tuner-sheet-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tuner-sheet-title {
+    position: absolute;
+    top: 12px;
+    left: 18px;
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.24em;
+    text-align: left;
+    color: #a1a1aa;
+    line-height: 1;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .tuner-sheet-feedback-btn {
+    position: absolute;
+    top: 6px;
+    right: 14px;
+    z-index: 3;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .tuner-sheet-feedback-btn:hover {
+    transform: translate(-1px, -1px);
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .tuner-sheet-feedback-btn:focus-visible {
+    outline: 2px solid var(--accent-neon-yellow);
+    outline-offset: 2px;
+  }
+
+  .tuner-settings-label {
+    margin: 4px 0 0;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    color: #a1a1aa;
+  }
+
+  .tuner-sheet-instruments {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .tuner-sheet-mode-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .tuner-sheet-setup-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .tuner-sheet-setup-cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tuner-sheet-setup-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+    box-sizing: border-box;
+  }
+
+  .tuner-sheet-setup-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+  }
+
+  .tuner-sheet-setup-btn[aria-expanded="true"] {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .tuner-sheet-setup-btn[aria-expanded="true"] .tuner-sheet-setup-label {
+    color: rgba(0,0,0,0.62);
+  }
+
+  .tuner-sheet-setup-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .tuner-sheet-setup-label {
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    color: #a1a1aa;
+  }
+
+  .tuner-sheet-setup-value {
+    flex: 1;
+    text-align: center;
+    font-size: 0.8rem;
+  }
+
+  .tuner-sheet-slot {
+    position: relative;
+  }
+
+  /* Sheet dropdowns open downward inside the sheet to avoid clipping at the top;
+     spec "open a menu up" = sheet itself slides up, dropdowns stay in-flow. For the
+     requested upward behaviour, flip to bottom when near sheet top via JS if needed.
+     Using in-flow static panel keeps it scrollable and not clipped by sheet's
+     overflow. */
+  .tuner-sheet-slot :global(.tuner-menu-panel) {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    margin-top: 8px;
+    z-index: 75;
+    max-height: min(340px, 42dvh);
+    box-shadow: 4px 4px 0px #000000;
+    animation: tuner-sheet-menu-in 0.18s var(--ease-snappy);
+  }
+
+  /* Upward variant — toggled via .is-up on the panel when JS detects top collision */
+  .tuner-sheet-slot :global(.tuner-menu-panel.is-up) {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    top: auto;
+    left: 0;
+    right: 0;
+    margin-top: 0;
+  }
+
+  .tuner-sheet-setup-cell:has(> .tuner-sheet-slot:not(:empty)) {
+    z-index: 2;
+  }
+
+  @keyframes tuner-sheet-menu-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tuner-material-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .tuner-a4-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  :global(.tuner-sheet-chip) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 8px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  :global(.tuner-sheet-chip:hover) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+  }
+
+  :global(.tuner-sheet-chip.active) {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+  }
+
+  :global(.tuner-sheet-chip:focus-visible) {
+    outline: 2px solid var(--accent-neon-yellow);
+    outline-offset: 2px;
+  }
+
+  .tuner-toggle-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .tuner-sheet-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .tuner-sheet-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .tuner-sheet-toggle-track {
+    display: inline-flex;
+    align-items: center;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+    padding: 2px;
+    box-sizing: border-box;
+    background: #1e1e24;
+    border: 2px solid #000000;
+    border-radius: var(--radius-pill);
+    transition: background-color 0.16s ease, border-color 0.16s ease;
+  }
+
+  :global(.tuner-sheet-toggle-knob) {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background: #71717a;
+    border-radius: 50%;
+    transform: translateX(0);
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .tuner-sheet-toggle input:checked + .tuner-sheet-toggle-track {
+    background: var(--accent-neon-yellow);
+    border-color: #000000;
+  }
+
+  .tuner-sheet-toggle input:checked + .tuner-sheet-toggle-track :global(.tuner-sheet-toggle-knob) {
+    transform: translateX(20px);
+    background: #000000;
+  }
+
+  .tuner-sheet-toggle input:focus-visible + .tuner-sheet-toggle-track {
+    outline: 2px solid var(--accent-neon-yellow);
+    outline-offset: 2px;
+  }
+
+  .tuner-sheet-toggle-text {
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #f5f5f7;
+  }
+
+  .tuner-settings-copy-wrap {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 2px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tuner-copy-link-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 14px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  .tuner-copy-link-card:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+  }
+
+  .tuner-copy-link-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  .tuner-copy-link-left i {
+    color: var(--accent-neon-yellow);
+    font-size: 1rem;
+  }
+
+  .tuner-copy-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+  }
+
+  .tuner-copy-badge.copied {
+    background: var(--btn-green);
+    color: #000000;
+  }
+
+  .tuner-sheet[hidden],
+  .tuner-sheet-backdrop[hidden],
+  .tuner-sheet-panel[hidden] {
+    display: none !important;
   }
 
   /* ---------- Tuning view — fixed header + filters top, fixed A4 + back bottom ---------- */
@@ -1085,7 +1853,9 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
   /* ---------- Mobile app-shell layout ----------
      Page locks to the dynamic viewport so the whole document never scrolls;
      each view pins its own top bar / bottom controls and scrolls only its
-     middle content (meter+figure / tuning list). */
+     middle content (meter+figure / tuning list).
+     Footer polish: with Back pill removed, instrument row + CTA must stay
+     pinned without extra scroll. Tighten vertical rhythm for sub-700px heights. */
   @media (max-width: 768px) {
     .tuner-page {
       height: 100vh;
@@ -1094,7 +1864,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
       min-height: 100dvh;
       max-height: 100vh;
       max-height: 100dvh;
-      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      padding: 12px 14px calc(10px + env(safe-area-inset-bottom, 0px));
       overflow: hidden;
     }
 
@@ -1107,18 +1877,68 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     }
 
     .tuner-view {
-      gap: 10px;
+      gap: 8px;
       overflow: hidden;
     }
 
-    .tuner-topbar {
+    .tuner-topbar,
+    .tuner-readout {
       flex-shrink: 0;
+    }
+
+    .tuner-header-nav {
+      gap: 8px;
+    }
+
+    .tuner-pill-tuning {
+      padding: 9px 14px;
+    }
+
+    .tuner-pill-tuning .tuner-pill-label {
+      font-size: clamp(0.92rem, 3.8vw, 1.1rem);
+    }
+
+    .tuner-readout {
+      gap: 6px;
+    }
+
+    .tuner-meter-btn {
+      padding: 10px 14px;
+    }
+
+    .tuner-cents {
+      min-width: 56px;
+      font-size: 0.72rem;
+      padding: 4px 10px;
+    }
+
+    .tuner-badge-side {
+      font-size: 0.6rem;
+      padding: 4px 8px;
+    }
+
+    .tuner-note-row {
+      min-height: 38px;
+    }
+
+    .tuner-figure {
+      flex: 1 1 auto;
+      min-height: 180px;
+      max-height: none;
+      height: 100%;
+      min-width: 0;
+    }
+
+    .tuner-figure :global(svg) {
+      width: 100%;
+      max-width: 96vw;
+      max-height: min(480px, 52dvh);
     }
 
     .tuner-middle-scroll {
       flex: 1 1 auto;
-      min-height: 0;
-      gap: 12px;
+      min-height: 180px;
+      gap: 8px;
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
@@ -1459,6 +2279,10 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     justify-content: space-between;
     gap: 14px;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
     background: var(--surface-card);
     border: var(--border-brutal-sm);
     box-shadow: var(--shadow-brutal-black);
@@ -1486,17 +2310,24 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     flex-direction: column;
     gap: 4px;
     min-width: 0;
-    flex: 1;
+    flex: 1 1 0;
+    overflow: hidden;
   }
 
   :global(.tuning-card-name) {
     display: block;
     font-family: var(--font-secondary);
-    font-size: 1rem;
+    font-size: clamp(0.86rem, 3.4vw, 1rem);
     font-weight: 800;
     letter-spacing: 0.01em;
     line-height: 1.25;
     color: var(--text-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   :global(.tuning-card.active .tuning-card-name) {
@@ -1506,11 +2337,17 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
   :global(.tuning-card-notes) {
     display: block;
     font-family: var(--font-secondary);
-    font-size: 0.8rem;
+    font-size: clamp(0.72rem, 2.8vw, 0.8rem);
     font-weight: 700;
     letter-spacing: 0.16em;
     color: var(--text-muted);
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   :global(.tuning-card.active .tuning-card-notes) {
@@ -1521,6 +2358,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     width: 30px;
     height: 30px;
     min-width: 30px;
+    flex-shrink: 0;
     border-radius: 50%;
     border: 3px solid var(--text-muted);
     display: inline-flex;
@@ -1723,6 +2561,8 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     .tuner-toggle-knob,
     .tuning-caret,
     .tuner-pill,
+    .tuner-icon-btn,
+    .tuner-cents,
     .tuner-meter-btn,
     .tuner-inst-card,
     .tuner-mic-cta,
@@ -1741,10 +2581,21 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     :global(.tuner-peg.peg-acquired .tuner-peg-circle),
     :global(.tuner-drum *),
     .tuner-meter-zone-safety,
+    .tuner-chromatic-rail,
+    .tuner-chromatic-tape,
     .tuner-chromatic-rail :global(.rail-note),
     .tuner-note-row,
-    .tuner-hint {
+    .tuner-hint,
+    .tuner-sheet,
+    .tuner-sheet-backdrop,
+    .tuner-sheet-feedback-btn,
+    :global(.tuner-sheet-chip),
+    .tuner-sheet-toggle-track,
+    :global(.tuner-sheet-toggle-knob),
+    .tuner-copy-link-card,
+    .tuner-copy-badge {
       transition: none !important;
+      animation: none !important;
     }
   }
 

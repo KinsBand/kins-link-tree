@@ -809,6 +809,11 @@
   const openTermsModalLink = document.getElementById('openTermsModalLink');
 
   function openTermsModal() {
+    if (typeof (window as any).openTermsModal === 'function') {
+      (window as any).openTermsModal();
+      return;
+    }
+    termsModal?.classList.remove('is-closing');
     termsModal?.classList.remove('hidden');
     document.body.classList.add('modal-open');
   }

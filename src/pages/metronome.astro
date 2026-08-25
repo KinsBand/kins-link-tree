@@ -1,0 +1,4145 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ToastContainer from '../components/ui/ToastContainer.astro';
+import FeedbackModal from '../components/modals/FeedbackModal.astro';
+---
+
+<BaseLayout
+  title="KINS METRONOME — Free Web Audio Metronome with Tap Tempo"
+  description="Free browser metronome by KINS. Web Audio clock precision, tap tempo, accents, subdivisions and time signatures from 2/4 to 12/8, plus a rehearsal setlist of classic tempos. Audio never leaves your device."
+>
+  <main class="metro-page">
+    <div class="metro-view" id="metroView">
+      <div class="metro-topbar">
+        <a href="/" class="metro-back-pill brutal-press"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> KINS!</a>
+        <div class="metro-topbar-center" id="metroTopbarCenter" aria-live="polite" aria-atomic="true">
+          <span class="metro-topbar-title" id="metroTopbarTitle" hidden></span>
+          <button type="button" class="metro-topbar-undo brutal-press" id="metroTopbarUndo" hidden aria-label="Undo BPM change — restore setlist tempo">
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+            UNDO
+          </button>
+        </div>
+        <button type="button" class="metro-icon-btn brutal-press" id="metroSettingsBtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Open settings" data-track="metronome:settings_open">
+          <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <section class="metro-dial" id="metroDial" aria-label="Tempo (drag or scroll to adjust)">
+        <div class="metro-beat-dots" id="metroBeatDots" aria-hidden="true"></div>
+        <svg class="metro-radial-ring" id="metroRadialRing" aria-hidden="true" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="metro-dial-core">
+          <div class="metro-bpm-row">
+            <button type="button" class="metro-bpm-num" id="metroBpmNum" tabindex="0" role="slider" aria-valuemin="20" aria-valuemax="300" aria-valuenow="120" aria-label="Tap to edit tempo BPM">120</button>
+            <input type="number" class="metro-bpm-input" id="metroBpmInput" inputmode="numeric" pattern="[0-9]*" min="20" max="300" step="1" hidden aria-label="Edit tempo BPM" />
+          </div>
+          <p class="metro-bpm-unit">BPM</p>
+          <div class="metro-pill-row">
+            <button type="button" class="metro-pill brutal-press" id="metroTsPill" aria-haspopup="dialog" aria-expanded="false" data-track="metronome:ts_open">
+              <span id="metroTsPillLabel">4/4</span>
+              <i class="fa-solid fa-chevron-down metro-pill-caret" aria-hidden="true"></i>
+            </button>
+            <span class="metro-pill-divider" aria-hidden="true"></span>
+            <button type="button" class="metro-pill brutal-press" id="metroSubPill" aria-haspopup="dialog" aria-expanded="false" data-track="metronome:sub_open">
+              <span id="metroSubPillLabel">1/4</span>
+              <i class="fa-solid fa-chevron-down metro-pill-caret" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- KINS Sheet Strip — per-song horizontal sheet music (PDF/GP/XML) in brutalist chrome -->
+      <section class="metro-sheet-strip" id="metroSheetStrip" aria-label="Sheet music" hidden>
+        <div class="metro-sheet-strip-head">
+          <span class="metro-sheet-strip-title" id="metroSheetStripTitle">NO SHEET LOADED</span>
+          <span class="metro-sheet-strip-bpm" id="metroSheetStripBpm" hidden></span>
+          <button type="button" class="metro-sheet-strip-upload brutal-press" id="metroSheetStripUpload" aria-label="Upload sheet music"><i class="fa-solid fa-upload" aria-hidden="true"></i> UPLOAD</button>
+        </div>
+        <div class="metro-sheet-track" id="metroSheetTrack" role="region" aria-label="Sheet pages" tabindex="0"></div>
+        <input type="file" id="metroSheetFileInput" accept=".pdf,.gp,.gp5,.xml,.musicxml,.mxl" hidden aria-hidden="true" />
+      </section>
+      <div class="metro-sheet-toggles" id="metroSheetToggles" hidden aria-label="Sheet options">
+        <button type="button" class="metro-sheet-toggle brutal-press" id="metroSheetFollowBtn" aria-pressed="false" aria-label="Toggle auto-scroll follow">
+          <i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i> FOLLOW
+        </button>
+        <button type="button" class="metro-sheet-toggle brutal-press" id="metroSheetLoopBtn" aria-pressed="false" aria-label="Toggle loop">
+          <i class="fa-solid fa-repeat" aria-hidden="true"></i> LOOP
+        </button>
+        <button type="button" class="metro-sheet-toggle metro-sheet-toggle--ghost brutal-press" id="metroSheetClearBtn" aria-label="Clear sheet for this song" hidden>
+          <i class="fa-solid fa-trash" aria-hidden="true"></i> CLEAR
+        </button>
+      </div>
+
+      <div class="metro-bottom">
+        <div class="metro-stepper-strip no-instrument" aria-label="BPM steppers">
+          <button type="button" class="metro-stepper-btn brutal-press" id="metroBpmMinus" aria-label="Decrease tempo by 1 BPM" data-track="metronome:bpm_minus">
+            <i class="fa-solid fa-minus" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="metro-stepper-btn metro-instrument-btn brutal-press" id="metroInstrumentBtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Choose instrument version" hidden>
+            <i class="fa-solid fa-guitar" aria-hidden="true" id="metroInstrumentIcon"></i>
+            <span id="metroInstrumentLabel">BASS</span>
+            <i class="fa-solid fa-chevron-down metro-instrument-caret" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="metro-stepper-btn brutal-press" id="metroBpmPlus" aria-label="Increase tempo by 1 BPM" data-track="metronome:bpm_plus">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="metro-controls">
+          <button type="button" class="metro-icon-btn brutal-press" id="metroSetlistBtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Open setlist" data-track="metronome:setlist_open">
+            <i class="fa-solid fa-music" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="metro-tap-btn brutal-press" id="metroTapBtn" data-track="metronome:tap">TAP TEMPO</button>
+          <button type="button" class="metro-play-btn brutal-press" id="metroPlayBtn" aria-label="Start metronome" data-track="metronome:play">
+            <span class="metro-play-icon icon-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
+            <span class="metro-play-icon icon-stop" aria-hidden="true"><i class="fa-solid fa-stop"></i></span>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="metro-coach-btn brutal-press" id="metroCoachBtn" aria-haspopup="dialog" aria-expanded="false" data-track="metronome:coach_open">
+        <i class="fa-solid fa-brain" aria-hidden="true"></i>
+        <span>COACH DECK</span>
+      </button>
+      <div class="metro-coach-live-dock" id="metroCoachLiveDock" hidden aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+    <div class="metro-sheet-backdrop" id="metroSheetBackdrop" hidden></div>
+    <div class="metro-sheet" id="metroSheet" role="dialog" aria-modal="true" tabindex="-1" hidden>
+      <div class="metro-sheet-handle" id="metroSheetHandle" aria-hidden="true"></div>
+
+      <section class="metro-sheet-panel" id="metroPanelTs" hidden aria-label="Time signature">
+        <p class="metro-sheet-title">TIME SIGNATURE</p>
+        <header class="metro-sheet-head">
+          <button type="button" class="metro-info-btn brutal-press" id="metroTsInfoBeats" aria-label="What do beats per bar mean?">
+            <i class="fa-solid fa-info" aria-hidden="true"></i>
+          </button>
+          <div class="metro-sheet-display">
+            <button type="button" class="metro-display-box brutal-press" id="metroTsBoxTop" aria-label="Edit beats per bar (top number)">4</button>
+            <span class="metro-display-slash" aria-hidden="true">/</span>
+            <button type="button" class="metro-display-box brutal-press" id="metroTsBoxBottom" aria-label="Edit note value (bottom number)">4</button>
+          </div>
+          <button type="button" class="metro-info-btn brutal-press" id="metroTsInfoUnit" aria-label="What does the note value mean?">
+            <i class="fa-solid fa-info" aria-hidden="true"></i>
+          </button>
+        </header>
+        <div class="metro-chip-grid" id="metroTsGrid" role="radiogroup" aria-label="Time signature presets"></div>
+      </section>
+
+      <section class="metro-sheet-panel" id="metroPanelSub" hidden aria-label="Subdivision">
+        <p class="metro-sheet-title">SUBDIVISION</p>
+        <header class="metro-sheet-head">
+          <button type="button" class="metro-info-btn brutal-press" id="metroSubInfo" aria-label="What are subdivisions?">
+            <i class="fa-solid fa-info" aria-hidden="true"></i>
+          </button>
+          <div class="metro-sheet-display">
+            <span class="metro-display-box" id="metroSubBoxTop">1</span>
+            <span class="metro-display-slash" aria-hidden="true">/</span>
+            <span class="metro-display-box" id="metroSubBoxBottom">4</span>
+          </div>
+          <span class="metro-info-spacer" aria-hidden="true"></span>
+        </header>
+        <div class="metro-sub-row" id="metroSubRow" aria-label="Subdivision presets"></div>
+      </section>
+
+      <section class="metro-sheet-panel metro-panel--setlist" id="metroPanelSetlist" hidden aria-label="Setlist">
+        <div class="metro-setlist-header" id="metroSetlistHeader">
+          <div class="metro-setlist-header-top">
+            <div class="metro-setlist-header-titles">
+              <p class="metro-sheet-title">SETLIST</p>
+            </div>
+            <div class="metro-setlist-search-layer" id="metroSetlistSearchWrap" aria-hidden="true">
+              <div class="metro-setlist-search-pill">
+                <i class="fa-solid fa-magnifying-glass metro-setlist-search-icon" aria-hidden="true"></i>
+                <input
+                  type="search"
+                  id="metroSetlistSearchInput"
+                  class="metro-setlist-search-input"
+                  placeholder="Search title, artist, BPM…"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-label="Search setlist"
+                  tabindex="-1"
+                />
+                <button type="button" class="metro-setlist-search-clear brutal-press" id="metroSetlistSearchClear" aria-label="Clear search" hidden tabindex="-1">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              </div>
+              <button type="button" class="metro-setlist-create-btn brutal-press" id="metroSetlistCreateBtn" aria-label="Create custom song" title="Create custom song" tabindex="-1">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              </button>
+            </div>
+            <button type="button" class="metro-setlist-search-toggle brutal-press" id="metroSetlistSearchToggle" aria-label="Search setlist" aria-expanded="false" aria-controls="metroSetlistSearchWrap" title="Search setlist">
+              <span class="st-icon st-icon-open" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <span class="st-icon st-icon-close" aria-hidden="true"><i class="fa-solid fa-xmark"></i></span>
+            </button>
+          </div>
+          <div class="metro-setlist-filters" id="metroSetlistFilters" role="tablist" aria-label="Setlist categories">
+            <button type="button" class="metro-setlist-filter brutal-press active" data-filter="inspires" role="tab" aria-selected="true" aria-controls="metroSetlistList">
+              INSPIRES
+              <span class="metro-setlist-filter-count" aria-hidden="true">15</span>
+            </button>
+            <button type="button" class="metro-setlist-filter brutal-press" data-filter="covers" role="tab" aria-selected="false" aria-controls="metroSetlistList">
+              COVERS
+            </button>
+            <button type="button" class="metro-setlist-filter brutal-press" data-filter="originals" role="tab" aria-selected="false" aria-controls="metroSetlistList">
+              ORIGINALS
+            </button>
+            <button type="button" class="metro-setlist-filter brutal-press" data-filter="custom" role="tab" aria-selected="false" aria-controls="metroSetlistList">
+              CUSTOM
+              <span class="metro-setlist-filter-count" aria-hidden="true" id="metroCustomCount" hidden>0</span>
+            </button>
+          </div>
+          <div class="metro-custom-form-wrap" id="metroCustomFormWrap" hidden></div>
+        </div>
+        <div class="metro-setlist-list" id="metroSetlistList"></div>
+        <div class="metro-setlist-external" id="metroSetlistExternal" hidden aria-live="polite"></div>
+      </section>
+
+      <section class="metro-sheet-panel metro-panel--settings" id="metroPanelSettings" hidden aria-label="Settings">
+        <p class="metro-sheet-title">SETTINGS</p>
+        <button type="button" class="metro-sheet-feedback-btn brutal-press" data-open-feedback data-feedback-category="Metronome" data-track="metronome:feedback_open" aria-haspopup="dialog" aria-label="Send feedback about the metronome">
+          <i class="fa-solid fa-comment-dots" aria-hidden="true"></i>
+        </button>
+        <div class="metro-settings-scroll" id="metroSettingsScroll">
+          <p class="metro-settings-label">CLICK SOUND</p>
+          <div class="metro-sound-row" id="metroSoundRow"></div>
+          <label class="metro-settings-label" for="metroVolume">VOLUME</label>
+          <div class="metro-volume-wrap">
+            <input type="range" id="metroVolume" min="0" max="100" step="1" value="80" />
+            <span class="metro-volume-value" id="metroVolumeValue" aria-hidden="true">80%</span>
+          </div>
+          <p class="metro-settings-label" style="margin-top: 6px;">BEAT INDICATOR STYLE</p>
+          <div class="metro-beatstyle-row" id="metroBeatStyleRow" role="radiogroup" aria-label="Beat indicator style">
+            <button type="button" class="metro-beatstyle-chip brutal-press active" data-style="dots" role="radio" aria-checked="true">
+              <i class="fa-solid fa-grip" aria-hidden="true"></i>
+              Dots
+            </button>
+            <button type="button" class="metro-beatstyle-chip brutal-press" data-style="radial" role="radio" aria-checked="false">
+              <i class="fa-regular fa-circle" aria-hidden="true"></i>
+              Radial Bars
+            </button>
+          </div>
+          <div class="metro-toggle-row">
+            <label class="metro-toggle">
+              <input type="checkbox" id="metroAccentToggle" checked />
+              <span class="metro-toggle-track" aria-hidden="true"><span class="metro-toggle-knob"></span></span>
+              <span class="metro-toggle-text">ACCENT FIRST BEAT</span>
+            </label>
+            <label class="metro-toggle">
+              <input type="checkbox" id="metroFlashToggle" />
+              <span class="metro-toggle-track" aria-hidden="true"><span class="metro-toggle-knob"></span></span>
+              <span class="metro-toggle-text">FLASH ON BEAT</span>
+            </label>
+            <label class="metro-toggle">
+              <input type="checkbox" id="metroVibrateToggle" />
+              <span class="metro-toggle-track" aria-hidden="true"><span class="metro-toggle-knob"></span></span>
+              <span class="metro-toggle-text">VIBRATE ON BEAT</span>
+            </label>
+          </div>
+          <div class="metro-midi-section" id="metroMidiSection">
+            <p class="metro-settings-label" style="margin-top: 10px;">MIDI DEVICE</p>
+            <div class="metro-midi-card">
+              <div class="metro-midi-status-row">
+                <span class="metro-midi-dot" id="metroMidiDot" aria-hidden="true"></span>
+                <span class="metro-midi-status-text" id="metroMidiStatusText">Not connected</span>
+                <span class="metro-midi-support-badge" id="metroMidiSupportBadge" hidden>Not supported</span>
+              </div>
+              <p class="metro-midi-device-name" id="metroMidiDeviceName" hidden></p>
+              <div class="metro-midi-actions">
+                <button type="button" class="metro-midi-btn brutal-press" id="metroMidiConnectBtn" aria-label="Connect MIDI device">
+                  <i class="fa-solid fa-plug" aria-hidden="true"></i>
+                  <span id="metroMidiConnectLabel">CONNECT MIDI</span>
+                </button>
+                <select id="metroMidiSelect" class="metro-midi-select" aria-label="Select MIDI input" hidden></select>
+              </div>
+              <p class="metro-midi-hint">Any velocity note 35–81 triggers tap. Works with drum pads &amp; keyboards.</p>
+            </div>
+          </div>
+        </div>
+        <div class="metro-settings-footer">
+          <button type="button" class="metro-copy-link-card brutal-press" id="metroCopyLinkBtn" aria-label="Copy Metronome link" data-track="metronome:copy_link">
+            <div class="metro-copy-link-left">
+              <i class="fa-solid fa-link" aria-hidden="true"></i>
+              <span class="metro-copy-link-text">Share Metronome</span>
+            </div>
+            <span class="metro-copy-badge" id="metroCopyBadge">Copy</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="metro-sheet-panel metro-panel--coach" id="metroPanelCoach" hidden aria-label="Coach deck">
+        <p class="metro-sheet-title">COACH DECK</p>
+        <div class="metro-coach-tablist" id="metroCoachTablist" role="tablist" aria-label="Coach deck modules"></div>
+        <div class="metro-coach-panels" id="metroCoachPanels"></div>
+        <div class="metro-coach-live" id="metroCoachLive" hidden></div>
+      </section>
+
+      <section class="metro-sheet-panel metro-panel--instrument" id="metroPanelInstrument" hidden aria-label="Instrument version">
+        <p class="metro-sheet-title">INSTRUMENT</p>
+        <p class="metro-sheet-subtitle" style="margin-top:4px">Choose the tab version for this song — each instrument keeps its own sheet</p>
+        <div class="metro-instrument-grid" id="metroInstrumentGrid" role="radiogroup" aria-label="Instrument versions"></div>
+        <div class="metro-instrument-actions">
+          <label class="metro-instrument-upload brutal-press" for="metroInstrumentFileInput">
+            <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i> UPLOAD SHEET
+            <span class="metro-instrument-upload-hint">PDF · GP · GP5 · XML · MusicXML</span>
+          </label>
+          <input type="file" id="metroInstrumentFileInput" accept=".pdf,.gp,.gp5,.xml,.musicxml,.mxl" hidden />
+          <button type="button" class="metro-instrument-clear brutal-press" id="metroInstrumentClearBtn" aria-label="Clear current instrument sheet">
+            <i class="fa-solid fa-trash" aria-hidden="true"></i> CLEAR SHEET
+          </button>
+        </div>
+        <p class="metro-midi-hint" style="margin-top:8px">Whole pages scroll horizontally in the strip. Toggle FOLLOW to auto-scroll with the click.</p>
+      </section>
+    </div>
+
+    <FeedbackModal />
+
+    <ToastContainer />
+  </main>
+</BaseLayout>
+
+<style>
+  /* ========== page shell — dark textured, matte black containers ========== */
+  .metro-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: #0a0a0c;
+    background-image:
+      radial-gradient(circle at 50% 16%, #1e1c18 0%, #121210 42%, #08080a 78%, #040405 100%);
+    color: var(--text-white);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* subtle warm gold vignette texture overlay */
+  .metro-page::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("/noise-tile.png");
+    background-repeat: repeat;
+    background-size: 128px 128px;
+    opacity: 0.045;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .metro-page :global([hidden]) {
+    display: none !important;
+  }
+
+  .metro-view {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: calc(14px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom));
+    box-sizing: border-box;
+  }
+
+  /* ---------- top bar ---------- */
+  .metro-topbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+  .metro-back-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1e;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: var(--radius-pill);
+    padding: 10px 16px;
+    font-family: var(--font-secondary);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  .metro-back-pill:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+    background: #222228;
+  }
+
+  .metro-topbar-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    max-width: 44%;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .metro-topbar-center > * {
+    pointer-events: auto;
+  }
+
+  .metro-topbar-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    background: #1a1a1e;
+    color: #D8B244;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    padding: 7px 12px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    animation: metroTopbarIn 0.2s var(--ease-snappy);
+  }
+
+  .metro-topbar-undo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #D8B244;
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    padding: 7px 12px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+    animation: metroTopbarIn 0.2s var(--ease-snappy);
+  }
+
+  .metro-topbar-undo:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #E2C06A;
+  }
+
+  .metro-topbar-undo:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .metro-topbar-undo:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  @keyframes metroTopbarIn {
+    from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @media (max-width: 380px) {
+    .metro-topbar-center { max-width: 38%; }
+    .metro-topbar-title,
+    .metro-topbar-undo { font-size: 0.66rem; padding: 6px 10px; }
+  }
+
+  /* ---------- shared icon button — matte black, gold hover ========== */
+  .metro-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    background: #1a1a1e;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-size: 1.15rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+  }
+
+  .metro-icon-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+    color: #D8B244;
+  }
+
+  .metro-icon-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  /* ---------- dial — matte black card feel, gold BPM ========== */
+  .metro-dial {
+    --metro-dot-radius: calc(min(86vw, 380px) / 2 - 24px);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(86vw, 380px);
+    aspect-ratio: 1;
+    margin: 16px auto;
+    flex-shrink: 0;
+    cursor: ns-resize;
+    touch-action: none;
+    user-select: none;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 38%, #1e1e22 0%, #131316 48%, #0c0c0e 100%);
+    border: 2px solid rgba(216, 178, 68, 0.14);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  .metro-beat-dots {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  :global(.metro-beat-dot) {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    background: #1e1e24;
+    border: 2px solid #2a2a30;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    opacity: 0.55;
+    transition: background-color 0.14s var(--ease-tactile), opacity 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s var(--ease-spring);
+  }
+
+  :global(.metro-beat-dot.active) {
+    background: #D8B244;
+    border-color: #D8B244;
+    opacity: 1;
+    box-shadow: 0 0 12px rgba(216, 178, 68, 0.55), 0 0 22px rgba(216, 178, 68, 0.25);
+    transform: scale(1.25);
+  }
+
+  :global(.metro-beat-dot.active.accent) {
+    background: #D8B244;
+    border-color: #FFD86B;
+    opacity: 1;
+    box-shadow: 0 0 16px rgba(216, 178, 68, 0.75), 0 0 28px rgba(216, 178, 68, 0.35);
+    transform: scale(1.4);
+  }
+
+  /* ---------- radial ring — segmented circle around BPM ========== */
+  .metro-radial-ring {
+    position: absolute;
+    inset: 4%;
+    width: 92%;
+    height: 92%;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 0;
+  }
+
+  .metro-radial-ring :global(.metro-radial-seg) {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 7;
+    stroke-linecap: round;
+    transition: stroke 0.12s ease, filter 0.12s ease, stroke-width 0.12s ease, opacity 0.12s ease;
+    opacity: 0.9;
+  }
+
+  .metro-radial-ring :global(.metro-radial-seg.active) {
+    stroke: #D8B244;
+    stroke-width: 7.5;
+    filter: drop-shadow(0 0 6px rgba(216, 178, 68, 0.55));
+    opacity: 1;
+  }
+
+  .metro-radial-ring :global(.metro-radial-seg.active.accent) {
+    stroke: #FFD86B;
+    stroke-width: 8;
+    filter: drop-shadow(0 0 10px rgba(216, 178, 68, 0.85)) drop-shadow(0 0 18px rgba(255, 216, 107, 0.35));
+  }
+
+  /* hide dots when radial is active, hide ring when dots active */
+  .metro-dial[data-beat-style="dots"] .metro-radial-ring {
+    display: none;
+  }
+
+  .metro-dial[data-beat-style="radial"] .metro-beat-dots {
+    display: none;
+  }
+
+  .metro-dial[data-beat-style="radial"] {
+    --metro-dot-radius: calc(min(86vw, 380px) / 2 - 18px);
+  }
+
+  .metro-dial-core {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    z-index: 1;
+    pointer-events: auto;
+  }
+
+  .metro-bpm-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+  }
+
+  .metro-bpm-num {
+    font-family: var(--font-heading);
+    font-size: clamp(3.8rem, 19vw, 5.8rem);
+    font-weight: 800;
+    line-height: 1;
+    color: #f5f5f7;
+    min-width: 3ch;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    user-select: none;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 2px 10px;
+    transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+  }
+
+  .metro-bpm-num:hover {
+    border-color: rgba(216, 178, 68, 0.35);
+    background: rgba(216, 178, 68, 0.06);
+    color: #FFD86B;
+  }
+
+  .metro-bpm-num:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  .metro-bpm-input {
+    font-family: var(--font-heading);
+    font-size: clamp(3.2rem, 17vw, 5rem);
+    font-weight: 800;
+    line-height: 1;
+    color: #f5f5f7;
+    background: #1e1e24;
+    border: 2px solid #D8B244;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    padding: 6px 12px;
+    width: 4ch;
+    max-width: 5ch;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+
+  .metro-bpm-input::-webkit-outer-spin-button,
+  .metro-bpm-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .metro-bpm-input:focus {
+    border-color: #FFD86B;
+    box-shadow: 0 0 0 2px rgba(216, 178, 68, 0.25), 2px 2px 0px #000000;
+  }
+
+  /* Two identical flash animations — JS alternates class names to restart
+     the effect each beat without a forced reflow */
+  .metro-dial.beat-flash-a .metro-bpm-num,
+  .metro-dial.beat-flash-a .metro-bpm-input {
+    animation: metro-bpm-flash-a 140ms ease;
+  }
+
+  .metro-dial.beat-flash-b .metro-bpm-num,
+  .metro-dial.beat-flash-b .metro-bpm-input {
+    animation: metro-bpm-flash-b 140ms ease;
+  }
+
+  @keyframes metro-bpm-flash-a {
+    0% { opacity: 1; transform: scale(1); }
+    40% { opacity: 0.65; transform: scale(1.03); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes metro-bpm-flash-b {
+    0% { opacity: 1; transform: scale(1); }
+    40% { opacity: 0.65; transform: scale(1.03); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .metro-bpm-unit {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    color: #a1a1aa;
+  }
+
+  /* ---------- KINS Sheet Strip — horizontal brutalist viewer in negative space ========== */
+  .metro-sheet-strip {
+    width: 100%;
+    flex-shrink: 0;
+    background: #141418;
+    color: #f5f5f7;
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: var(--radius-md);
+    padding: 10px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0 2px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .metro-sheet-strip[hidden] { display: none !important; }
+
+  .metro-sheet-strip-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .metro-sheet-strip-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #a1a1aa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .metro-sheet-strip-bpm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 8px;
+    background: #D8B244;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metro-sheet-strip-upload {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #1e1e24;
+    color: #D8B244;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0 #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  .metro-sheet-strip-upload:hover {
+    transform: translate(-1px,-1px);
+    box-shadow: 3px 3px 0 #000;
+    background: #25252e;
+    color: #f5f5f7;
+  }
+
+  .metro-sheet-track {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 6px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(216, 178, 68, 0.35) transparent;
+    touch-action: pan-x;
+    outline: none;
+  }
+
+  .metro-sheet-track::-webkit-scrollbar { height: 6px; }
+  .metro-sheet-track::-webkit-scrollbar-thumb { background: rgba(216,178,68,0.35); border-radius: 999px; }
+  .metro-sheet-track:focus-visible { outline: 2px solid #D8B244; outline-offset: 2px; }
+
+  /* page cards are JS-created at runtime → styled in the is:global block below */
+
+  /* toggles directly above stepper row */
+  .metro-sheet-toggles {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .metro-sheet-toggles[hidden] { display: none !important; }
+
+  .metro-sheet-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+    background: #1e1e24;
+    color: #a1a1aa;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0 #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+  }
+
+  .metro-sheet-toggle:hover {
+    transform: translate(-1px,-1px);
+    box-shadow: 3px 3px 0 #000;
+    background: #25252e;
+    color: #f5f5f7;
+  }
+
+  .metro-sheet-toggle[aria-pressed="true"] {
+    background: #D8B244;
+    color: #000;
+  }
+
+  .metro-sheet-toggle--ghost {
+    margin-left: auto;
+    background: transparent;
+    color: #71717a;
+    border-style: dashed;
+    box-shadow: none;
+  }
+
+  .metro-sheet-toggle--ghost:hover { background: rgba(255,255,255,0.06); color: #ff6b6b; }
+
+  /* ---------- BPM stepper strip — sits above bottom controls ========== */
+  .metro-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: auto;
+    flex-shrink: 0;
+  }
+
+  /* when the sheet strip is revealed it takes over the auto gap (dial → strip),
+     and the controls group sits tight beneath it */
+  .metro-view.has-strip .metro-sheet-strip { margin-top: auto; }
+  .metro-view.has-strip .metro-bottom { margin-top: 10px; }
+
+  .metro-stepper-strip {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr 1fr;
+    gap: 12px;
+    width: 100%;
+    align-items: center;
+  }
+
+  .metro-stepper-strip.no-instrument {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .metro-stepper-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+    background: #1a1a1e;
+    color: #D8B244;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-size: 0.95rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s var(--ease-tactile), box-shadow 0.12s ease, background-color 0.16s ease, color 0.16s ease;
+    user-select: none;
+  }
+
+  .metro-instrument-btn {
+    background: #D8B244;
+    color: #000;
+    border-width: 3px;
+    box-shadow: 4px 4px 0 #000;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    gap: 7px;
+  }
+
+  .metro-instrument-btn:hover { background: #E2C06A; color: #000; }
+
+  .metro-instrument-caret { font-size: 0.62rem; color: rgba(0,0,0,0.55); }
+
+  .metro-instrument-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  /* instrument chips are JS-created → styled in the is:global block below */
+
+  .metro-instrument-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .metro-instrument-upload {
+    flex: 1 1 160px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 14px;
+    background: #D8B244;
+    color: #000;
+    border: 2px solid #000;
+    box-shadow: 3px 3px 0 #000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .metro-instrument-upload-hint {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(0,0,0,0.6);
+  }
+
+  .metro-instrument-clear {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: transparent;
+    color: #ff6b6b;
+    border: 2px dashed rgba(255,107,107,0.4);
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .metro-stepper-btn:hover {
+    background: #222228;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    color: #FFD86B;
+  }
+
+  .metro-stepper-btn:active {
+    transform: translate(1px, 1px) scale(0.97);
+    box-shadow: 1px 1px 0px #000000;
+    background: #D8B244;
+    color: #000000;
+  }
+
+  .metro-stepper-btn:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  .metro-pill-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    background: #1a1a1e;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: var(--radius-pill);
+    padding: 8px 12px;
+  }
+
+  .metro-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    color: #f5f5f7;
+    border: none;
+    padding: 4px 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.16s ease, transform 0.16s var(--ease-tactile);
+  }
+
+  .metro-pill:hover {
+    color: #D8B244;
+  }
+
+  .metro-pill-caret {
+    font-size: 0.62rem;
+    color: #71717a;
+  }
+
+  .metro-pill-divider {
+    width: 2px;
+    align-self: stretch;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  /* ---------- bottom controls ---------- */
+  .metro-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+  .metro-controls .metro-icon-btn {
+    width: 58px;
+    height: 58px;
+    font-size: 1.25rem;
+  }
+
+  .metro-tap-btn {
+    flex: 1 1 auto;
+    max-width: 300px;
+    background: #D8B244;
+    color: #000000;
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: var(--radius-pill);
+    padding: 16px 18px;
+    font-family: var(--font-secondary);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .metro-tap-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0px #000000;
+    background: #E2C06A;
+  }
+
+  .metro-tap-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .metro-play-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    flex-shrink: 0;
+    background: #D8B244;
+    color: #000000;
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-size: 1.15rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .metro-play-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0px #000000;
+    background: #E2C06A;
+  }
+
+  .metro-play-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .metro-play-btn.playing {
+    background: #c0392b;
+    color: #ffffff;
+  }
+
+  .metro-play-btn.playing:hover {
+    background: #d64a3b;
+  }
+
+  .metro-play-icon {
+    display: inline-flex;
+    line-height: 1;
+  }
+
+  .metro-play-btn .icon-stop {
+    display: none;
+  }
+
+  .metro-play-btn.playing .icon-play {
+    display: none;
+  }
+
+  .metro-play-btn.playing .icon-stop {
+    display: inline-flex;
+  }
+
+  /* ---------- coach deck button ---------- */
+  .metro-coach-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 12px;
+    background: #D8B244;
+    color: #000000;
+    border: 3px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: var(--radius-lg);
+    padding: 14px 18px;
+    font-family: var(--font-secondary);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .metro-coach-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0px #000000;
+    background: #E2C06A;
+  }
+
+  .metro-coach-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  /* ---------- sheet — matte black, warm gold accents ========== */
+  .metro-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.62);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .metro-sheet-backdrop.open {
+    opacity: 1;
+  }
+
+  .metro-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 61;
+    max-height: 78vh;
+    max-height: 78dvh;
+    display: flex;
+    flex-direction: column;
+    background: #141418;
+    color: #f5f5f7;
+    border: 3px solid #000000;
+    border-bottom: none;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 36px 18px 0 18px;
+    transform: translateY(102%);
+    transition: transform 0.24s var(--ease-snappy);
+    overflow: hidden;
+    outline: none;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
+  }
+
+  .metro-sheet.open {
+    padding-bottom: 0;
+  }
+
+  .metro-sheet.open {
+    transform: translateY(0);
+  }
+
+  .metro-sheet.dragging {
+    transition: none;
+  }
+
+  .metro-sheet-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    flex-shrink: 0;
+    z-index: 2;
+  }
+
+  .metro-sheet-handle::before {
+    content: "";
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: #2a2a30;
+    position: static;
+  }
+
+  .metro-sheet-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: static;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+
+  .metro-panel--settings {
+    gap: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+
+  .metro-settings-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 2px;
+    padding-bottom: 12px;
+  }
+
+  .metro-settings-footer {
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+    margin: 8px -18px 0 -18px;
+    padding-left: 18px;
+    padding-right: 18px;
+    background: #141418;
+    border-top: 2px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.35);
+  }
+
+  .metro-panel--coach {
+    gap: 10px;
+  }
+
+  .metro-sheet-title {
+    position: absolute;
+    top: 12px;
+    left: 18px;
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.24em;
+    text-align: left;
+    color: #a1a1aa;
+    line-height: 1;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .metro-sheet-subtitle {
+    margin: -6px 0 0;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    text-align: left;
+    color: #71717a;
+  }
+
+  .metro-sheet-feedback-btn {
+    position: absolute;
+    top: 6px;
+    right: 14px;
+    z-index: 3;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .metro-sheet-feedback-btn:hover {
+    transform: translate(-1px, -1px);
+    background: #D8B244;
+    color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .metro-sheet-feedback-btn:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  .metro-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .metro-sheet-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .metro-display-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+    padding: 10px 8px;
+    background: #1e1e24;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-heading);
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #f5f5f7;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+  }
+
+  .metro-display-box:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+    border-color: rgba(216, 178, 68, 0.35);
+  }
+
+  .metro-display-slash {
+    font-family: var(--font-heading);
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #52525b;
+  }
+
+  .metro-info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    background: #1e1e24;
+    color: #a1a1aa;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, color 0.16s ease, background-color 0.16s ease;
+  }
+
+  .metro-info-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    color: #D8B244;
+    background: #25252e;
+  }
+
+  .metro-info-spacer {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+  }
+
+  /* ---------- chips — matte black, gold active (runtime JS chips use :global) ========== */
+  .metro-chip-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  :global(.metro-chip) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 6px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  :global(.metro-chip:hover) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+  }
+
+  :global(.metro-chip:active) {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  :global(.metro-chip.active) {
+    background: #D8B244;
+    color: #000000;
+    border-color: #000000;
+  }
+
+  :global(.metro-chip:focus-visible) {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  .metro-sound-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  /* ---------- subdivision row ---------- */
+  .metro-sub-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 2px 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(216, 178, 68, 0.35) transparent;
+  }
+
+  :global(.metro-sub-chip) {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    min-width: 64px;
+    padding: 12px 10px 10px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  :global(.metro-sub-chip:hover) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+  }
+
+  :global(.metro-sub-chip.active) {
+    background: #D8B244;
+    color: #000000;
+  }
+
+  :global(.metro-sub-dot) {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.85;
+  }
+
+  :global(.metro-sub-label) {
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- setlist ---------- */
+  .metro-setlist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  :global(.metro-setlist-row) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  :global(.metro-setlist-row:hover) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+  }
+
+  :global(.metro-setlist-bpm) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    padding: 8px 6px;
+    background: #0f0f12;
+    color: #D8B244;
+    border: 1px solid rgba(216, 178, 68, 0.25);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :global(.metro-setlist-text) {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  :global(.metro-setlist-title) {
+    font-family: var(--font-secondary);
+    font-size: 0.92rem;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.metro-setlist-artist) {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    color: #a1a1aa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.metro-setlist-load) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+    background: #D8B244;
+    color: #000000;
+    border: 2px solid #000000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+  }
+
+  /* ---------- setlist filters — horizontal row ---------- */
+  .metro-setlist-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 6px;
+    margin-bottom: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(216, 178, 68, 0.35) transparent;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
+  }
+
+  .metro-setlist-filters::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .metro-setlist-filters::-webkit-scrollbar-thumb {
+    background: rgba(216, 178, 68, 0.35);
+    border-radius: 999px;
+  }
+
+  .metro-setlist-filter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    min-width: 84px;
+    padding: 9px 14px;
+    background: #1e1e24;
+    color: #a1a1aa;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+
+  .metro-setlist-filter:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+    color: #f5f5f7;
+  }
+
+  .metro-setlist-filter:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .metro-setlist-filter.active {
+    background: #D8B244;
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .metro-setlist-filter.active:hover {
+    background: #E2C06A;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .metro-setlist-filter:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  .metro-setlist-filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .metro-setlist-filter.active .metro-setlist-filter-count {
+    background: #000000;
+    color: #D8B244;
+    border-color: #000000;
+  }
+
+  :global(.metro-setlist-empty) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 28px 16px;
+    background: #1e1e24;
+    border: 2px dashed rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-md);
+    text-align: center;
+  }
+
+  :global(.metro-setlist-empty-icon) {
+    font-size: 1.4rem;
+    color: #71717a;
+  }
+
+  :global(.metro-setlist-empty-title) {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.86rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #f5f5f7;
+  }
+
+  :global(.metro-setlist-empty-sub) {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #a1a1aa;
+    line-height: 1.35;
+    max-width: 26ch;
+  }
+
+  :global(.metro-setlist-empty-cta) {
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #0f0f12;
+    color: #D8B244;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+  }
+
+  :global(.metro-setlist-empty-cta:hover) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+    color: #f5f5f7;
+  }
+
+  /* ---------- setlist sticky header + inline expanding search ---------- */
+  .metro-panel--setlist {
+    gap: 0 !important;
+    overflow-y: auto !important;
+  }
+
+  .metro-setlist-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: #141418;
+    margin: -8px -18px 8px -18px;
+    padding: 8px 18px 8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* override absolute title inside sticky header */
+  .metro-setlist-header .metro-sheet-title {
+    position: static;
+    top: auto;
+    left: auto;
+    margin: 0;
+    pointer-events: auto;
+    line-height: 1.1;
+  }
+
+  .metro-setlist-header-top {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 46px;
+  }
+
+  .metro-setlist-header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1 1 auto;
+    min-width: 0;
+    transition: opacity 0.2s ease, transform 0.26s var(--ease-snappy);
+  }
+
+  .metro-setlist-header.search-open .metro-setlist-header-titles {
+    opacity: 0;
+    transform: translateX(-10px);
+    pointer-events: none;
+  }
+
+  /* search layer — overlays the title row, slides in from under the toggle */
+  .metro-setlist-search-layer {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 54px;
+    height: 46px;
+    transform: translateY(-50%) translateX(22px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition:
+      transform 0.3s var(--ease-snappy),
+      opacity 0.2s ease,
+      visibility 0s linear 0.3s;
+  }
+
+  .metro-setlist-header.search-open .metro-setlist-search-layer {
+    transform: translateY(-50%) translateX(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      transform 0.32s var(--ease-snappy),
+      opacity 0.22s ease 0.05s,
+      visibility 0s;
+  }
+
+  .metro-setlist-search-pill {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    background: #1e1e24;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    padding: 0 14px 0 14px;
+    height: 42px;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .metro-setlist-search-pill:focus-within {
+    border-color: #D8B244;
+    box-shadow: 0 0 0 2px rgba(216, 178, 68, 0.18), 2px 2px 0px #000000;
+  }
+
+  .metro-setlist-search-icon {
+    font-size: 0.82rem;
+    color: #71717a;
+    flex-shrink: 0;
+    margin-right: 10px;
+  }
+
+  .metro-setlist-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    color: #f5f5f7;
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 0;
+    line-height: 42px;
+  }
+
+  .metro-setlist-search-input::placeholder {
+    color: #71717a;
+    font-weight: 600;
+  }
+
+  .metro-setlist-search-input::-webkit-search-cancel-button,
+  .metro-setlist-search-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+
+  .metro-setlist-search-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    background: #0f0f12;
+    color: #a1a1aa;
+    border: 1px solid #000;
+    border-radius: var(--radius-pill);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s var(--ease-tactile);
+  }
+
+  .metro-setlist-search-clear:hover {
+    background: #25252e;
+    color: #f5f5f7;
+    transform: scale(1.05);
+  }
+
+  .metro-setlist-search-clear[hidden] {
+    display: none !important;
+  }
+
+  /* compact gold "+" — create custom song, lives inside the search row */
+  .metro-setlist-create-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    background: #D8B244;
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-size: 0.95rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .metro-setlist-create-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #E2C06A;
+  }
+
+  .metro-setlist-create-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .metro-setlist-create-btn:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  .metro-setlist-search-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-size: 0.95rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.2s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .metro-setlist-search-toggle:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    color: #D8B244;
+    background: #25252e;
+  }
+
+  .metro-setlist-search-toggle:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .metro-setlist-search-toggle[aria-expanded="true"] {
+    background: #D8B244;
+    color: #000000;
+  }
+
+  .metro-setlist-search-toggle[aria-expanded="true"]:hover {
+    background: #E2C06A;
+    color: #000000;
+  }
+
+  .metro-setlist-search-toggle:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  /* crossfading magnifier ↔ xmark icons (transform/opacity only) */
+  .metro-setlist-search-toggle .st-icon {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.26s var(--ease-snappy), opacity 0.18s ease;
+  }
+
+  .metro-setlist-search-toggle .st-icon-close {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.4);
+  }
+
+  .metro-setlist-header.search-open .metro-setlist-search-toggle .st-icon-open {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.4);
+  }
+
+  .metro-setlist-header.search-open .metro-setlist-search-toggle .st-icon-close {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+
+  /* custom form overlay — anchored to sticky header, floats over songs list */
+  .metro-setlist-header .metro-custom-form-wrap {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: -18px;
+    right: -18px;
+    z-index: 5;
+    margin-top: 0;
+    padding: 0;
+    max-height: calc(78dvh - 120px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 6px 6px 0px #000000, 0 12px 32px rgba(0, 0, 0, 0.5);
+    border-radius: var(--radius-md);
+    background: #141418;
+    border: 3px solid #000000;
+  }
+
+  .metro-setlist-header .metro-custom-form-wrap[hidden] {
+    display: none !important;
+  }
+
+  /* ensure form card fills wrap nicely */
+  .metro-setlist-header :global(.metro-custom-form) {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 16px 14px;
+  }
+
+  .metro-setlist-header :global(.metro-custom-form-head) {
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 4px;
+  }
+
+  /* custom row wrapper (runtime rows) */
+  .metro-panel--setlist :global(.metro-setlist-row-wrap) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .metro-panel--setlist :global(.metro-setlist-row-wrap .metro-setlist-row) {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  @media (max-width: 380px) {
+    .metro-setlist-search-layer { right: 50px; gap: 6px; }
+    .metro-setlist-create-btn,
+    .metro-setlist-search-toggle { width: 40px; height: 40px; }
+    .metro-setlist-search-layer { height: 44px; }
+    .metro-setlist-search-input { font-size: 0.82rem; }
+  }
+
+  /* external results */
+  .metro-setlist-external {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px dashed rgba(255, 255, 255, 0.08);
+  }
+
+  .metro-setlist-external[hidden] {
+    display: none !important;
+  }
+
+  :global(.metro-setlist-external-head) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #a1a1aa;
+  }
+
+  :global(.metro-setlist-external-row) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  :global(.metro-setlist-external-row:hover) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+  }
+
+  :global(.metro-setlist-external-art) {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid #000;
+    flex-shrink: 0;
+    background: #0f0f12;
+  }
+
+  :global(.metro-setlist-external-text) {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  :global(.metro-setlist-external-title) {
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.metro-setlist-external-artist) {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    color: #a1a1aa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.metro-setlist-external-bpm) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    padding: 8px 6px;
+    background: #0f0f12;
+    color: #D8B244;
+    border: 1px solid rgba(216, 178, 68, 0.25);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :global(.metro-setlist-external-add) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 10px;
+    background: #D8B244;
+    color: #000;
+    border: 2px solid #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  :global(.metro-setlist-loading) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #a1a1aa;
+  }
+
+  :global(.metro-setlist-loading i) {
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* custom form — all runtime-created via JS, so :global is required
+     (scoped styles can't reach DOM without data-astro-cid).
+     Positioning lives in the .metro-setlist-header .metro-custom-form-wrap
+     overlay rules above; this is just the flex base. */
+  .metro-custom-form-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .metro-custom-form-wrap[hidden] {
+    display: none !important;
+  }
+
+  :global(.metro-custom-form) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #1e1e24;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    padding: 14px 12px;
+  }
+
+  :global(.metro-custom-form-head) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  :global(.metro-custom-form-title) {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: #D8B244;
+  }
+
+  :global(.metro-custom-form-close) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    background: #0f0f12;
+    color: #a1a1aa;
+    border: 1px solid #000;
+    border-radius: var(--radius-pill);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background-color 0.16s ease, color 0.16s ease;
+  }
+
+  :global(.metro-custom-form-close:hover) {
+    color: #f5f5f7;
+    background: #25252e;
+  }
+
+  :global(.metro-custom-field) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  :global(.metro-custom-label) {
+    font-family: var(--font-secondary);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #a1a1aa;
+  }
+
+  :global(.metro-custom-input) {
+    width: 100%;
+    box-sizing: border-box;
+    background: #0f0f12;
+    color: #f5f5f7;
+    border: 2px solid #000;
+    box-shadow: 1px 1px 0 #000;
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-family: var(--font-secondary);
+    font-size: 0.86rem;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  :global(.metro-custom-input:focus) {
+    border-color: #D8B244;
+    box-shadow: 0 0 0 2px rgba(216,178,68,0.15), 1px 1px 0 #000;
+  }
+
+  :global(.metro-custom-input--error) {
+    border-color: #c0392b !important;
+  }
+
+  :global(.metro-custom-error) {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    color: #ff6b6b;
+    font-weight: 700;
+  }
+
+  :global(.metro-custom-actions) {
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  :global(.metro-custom-submit) {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #D8B244;
+    color: #000;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0 #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background-color 0.16s ease, transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  :global(.metro-custom-submit:hover) {
+    background: #E2C06A;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #000;
+  }
+
+  :global(.metro-custom-submit:active) {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 #000;
+  }
+
+  :global(.metro-custom-submit:disabled) {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  :global(.metro-custom-cancel) {
+    padding: 12px 16px;
+    background: #0f0f12;
+    color: #f5f5f7;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0 #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color 0.16s ease, transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  :global(.metro-custom-cancel:hover) {
+    background: #25252e;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #000;
+  }
+
+  :global(.metro-setlist-custom-badge) {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    background: #D8B244;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: var(--radius-pill);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  :global(.metro-setlist-delete) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    background: #1e1e24;
+    color: #ff6b6b;
+    border: 1px solid #000;
+    border-radius: var(--radius-pill);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background-color 0.16s ease, transform 0.16s var(--ease-tactile);
+  }
+
+  :global(.metro-setlist-delete:hover) {
+    background: #c0392b;
+    color: #fff;
+    transform: scale(1.05);
+  }
+
+  :global(.metro-setlist-search-highlight) {
+    background: rgba(216, 178, 68, 0.22);
+    padding: 0 1px;
+    border-radius: 2px;
+  }
+
+  /* ---------- settings — volume, beat style, toggles ========== */
+  .metro-settings-label {
+    margin: 4px 0 0;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    color: #a1a1aa;
+  }
+
+  .metro-volume-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .metro-volume-wrap input[type="range"] {
+    flex: 1;
+  }
+
+  .metro-volume-value {
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #D8B244;
+    min-width: 3.2ch;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* styled range — gold thumb, dark track */
+  #metroVolume {
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #1e1e24;
+    border-radius: 999px;
+    border: 2px solid #000000;
+    outline: none;
+    margin: 6px 0 4px;
+    accent-color: #D8B244;
+  }
+
+  #metroVolume::-webkit-slider-runnable-track {
+    height: 8px;
+    background: #1e1e24;
+    border-radius: 999px;
+  }
+
+  #metroVolume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    margin-top: -8px;
+    border-radius: 50%;
+    background: #D8B244;
+    border: 2px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    cursor: pointer;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease;
+  }
+
+  #metroVolume::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    background: #E2C06A;
+  }
+
+  #metroVolume::-moz-range-track {
+    height: 8px;
+    background: #1e1e24;
+    border-radius: 999px;
+    border: 2px solid #000000;
+  }
+
+  #metroVolume::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #D8B244;
+    border: 2px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    cursor: pointer;
+  }
+
+  /* beat style segmented control */
+  .metro-beatstyle-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .metro-beatstyle-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 10px;
+    background: #1e1e24;
+    color: #a1a1aa;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+
+  .metro-beatstyle-chip:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    color: #f5f5f7;
+    background: #25252e;
+  }
+
+  .metro-beatstyle-chip.active {
+    background: #D8B244;
+    color: #000000;
+    border-color: #000000;
+  }
+
+  .metro-beatstyle-chip:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  .metro-toggle-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .metro-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .metro-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .metro-toggle-track {
+    display: inline-flex;
+    align-items: center;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+    padding: 2px;
+    box-sizing: border-box;
+    background: #1e1e24;
+    border: 2px solid #000000;
+    border-radius: var(--radius-pill);
+    transition: background-color 0.16s ease, border-color 0.16s ease;
+  }
+
+  :global(.metro-toggle-knob) {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background: #71717a;
+    border-radius: 50%;
+    transform: translateX(0);
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .metro-toggle input:checked + .metro-toggle-track {
+    background: #D8B244;
+    border-color: #000000;
+  }
+
+  .metro-toggle input:checked + .metro-toggle-track :global(.metro-toggle-knob) {
+    transform: translateX(20px);
+    background: #000000;
+  }
+
+  .metro-toggle input:focus-visible + .metro-toggle-track {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
+  .metro-toggle-text {
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #f5f5f7;
+  }
+
+  /* ---------- copy link card in settings ---------- */
+  .metro-settings-copy-wrap {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 2px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .metro-copy-link-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 14px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  .metro-copy-link-card:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+  }
+
+  .metro-copy-link-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  .metro-copy-link-left i {
+    color: #D8B244;
+    font-size: 1rem;
+  }
+
+  .metro-copy-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    background: #D8B244;
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+  }
+
+  .metro-copy-badge.copied {
+    background: #22c55e;
+    color: #000000;
+  }
+
+  /* ---------- midi section inside settings ---------- */
+  .metro-midi-card {
+    background: #1e1e24;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    padding: 12px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .metro-midi-status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .metro-midi-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #71717a;
+    border: 1px solid #000;
+    flex-shrink: 0;
+    transition: background-color 0.16s ease;
+  }
+
+  .metro-midi-dot.connected {
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34,197,94,0.45);
+  }
+
+  .metro-midi-dot.connecting {
+    background: #D8B244;
+    animation: midiPulse 1s infinite alternate;
+  }
+
+  @keyframes midiPulse {
+    from { opacity: 0.55; }
+    to { opacity: 1; }
+  }
+
+  .metro-midi-status-text {
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #f5f5f7;
+  }
+
+  .metro-midi-support-badge {
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: #c0392b;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: var(--radius-pill);
+    border: 1px solid #000;
+  }
+
+  .metro-midi-device-name {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    color: #a1a1aa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .metro-midi-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .metro-midi-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #D8B244;
+    color: #000;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0px #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  .metro-midi-btn:hover {
+    transform: translate(-1px,-1px);
+    box-shadow: 3px 3px 0px #000;
+    background: #E2C06A;
+  }
+
+  .metro-midi-btn.connected {
+    background: #22c55e;
+  }
+
+  .metro-midi-select {
+    flex: 1 1 160px;
+    min-width: 160px;
+    background: #0f0f12;
+    color: #f5f5f7;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0px #000;
+    border-radius: var(--radius-md);
+    padding: 9px 10px;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .metro-midi-hint {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    color: #71717a;
+    line-height: 1.35;
+  }
+
+  /* ---------- coach deck — horizontal row ---------- */
+  .metro-coach-tablist {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(216, 178, 68, 0.35) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .metro-coach-tablist::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .metro-coach-tablist::-webkit-scrollbar-thumb {
+    background: rgba(216, 178, 68, 0.35);
+    border-radius: 999px;
+  }
+
+  :global(.metro-coach-tab) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+    padding: 11px 14px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  :global(.metro-coach-tab:hover) {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #25252e;
+  }
+
+  :global(.metro-coach-tab[aria-selected='true']) {
+    background: #D8B244;
+    color: #000000;
+  }
+
+  .metro-coach-panel {
+    min-height: 150px;
+  }
+
+  :global(.metro-coach-panel) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    padding: 18px 12px;
+    min-height: 150px;
+  }
+
+  :global(.metro-coach-panel i) {
+    font-size: 1.6rem;
+    color: #71717a;
+  }
+
+  :global(.metro-coach-blurb) {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    color: #f5f5f7;
+    max-width: 34ch;
+  }
+
+  :global(.metro-coach-soon) {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #71717a;
+  }
+
+  /* ---------- coach editor cards (brutal) ---------- */
+  .metro-coach-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    background: #1e1e24;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: var(--radius-md);
+    padding: 14px 12px;
+    box-sizing: border-box;
+  }
+
+  .metro-coach-card--dark {
+    background: #141418;
+  }
+
+  .metro-coach-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .metro-coach-card-title {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #f5f5f7;
+  }
+
+  .metro-coach-card-blurb {
+    margin: 0;
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    color: #a1a1aa;
+    line-height: 1.35;
+  }
+
+  .metro-coach-cycle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #0f0f12;
+    border: 2px solid #000;
+    border-radius: var(--radius-pill);
+    padding: 8px 10px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #f5f5f7;
+    flex-wrap: wrap;
+  }
+
+  .metro-coach-cycle strong {
+    color: #D8B244;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+  }
+
+  .metro-cycle-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 6px;
+    background: #2a2a30;
+    color: #f5f5f7;
+    border: 1px solid #000;
+    border-radius: var(--radius-sm);
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .metro-cycle-chip.audible { background: #f5f5f7; color: #000; }
+  .metro-cycle-chip.muted { background: #D8B244; color: #000; }
+
+  .metro-coach-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .metro-coach-field-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a1a1aa;
+  }
+
+  .metro-coach-field-label strong {
+    color: #D8B244;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metro-coach-slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0f0f12;
+    border: 2px solid #000;
+    border-radius: var(--radius-md);
+    padding: 10px 10px;
+  }
+
+  /* ---------- dual-thumb range — unified track with two handles ---------- */
+  .metro-dual-range {
+    position: relative;
+    display: block;
+    height: 42px;
+    background: #0f0f12;
+    border: 2px solid #000;
+    border-radius: var(--radius-md);
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+
+  .metro-dual-track {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 8px;
+    background: #2a2a30;
+    border: 1px solid #000;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+
+  .metro-dual-fill {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 8px;
+    background: #D8B244;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+
+  .metro-dual-range input[type="range"] {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: calc(100% - 24px);
+    height: 8px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    pointer-events: none;
+    outline: none;
+  }
+
+  .metro-dual-range input[type="range"]::-webkit-slider-runnable-track {
+    height: 8px;
+    background: transparent;
+  }
+
+  .metro-dual-range input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #D8B244;
+    border: 2px solid #000;
+    box-shadow: 1px 1px 0 #000;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease;
+  }
+
+  .metro-dual-range input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.08);
+  }
+
+  .metro-dual-range input[type="range"]::-moz-range-track {
+    height: 8px;
+    background: transparent;
+    border: none;
+  }
+
+  .metro-dual-range input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #D8B244;
+    border: 2px solid #000;
+    box-shadow: 1px 1px 0 #000;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  /* inner-clock thumb colours — audible light, muted gold */
+  #coachInnerAudible::-webkit-slider-thumb { background: #f5f5f7; }
+  #coachInnerAudible::-moz-range-thumb { background: #f5f5f7; }
+  #coachInnerMuted::-webkit-slider-thumb { background: #D8B244; }
+  #coachInnerMuted::-moz-range-thumb { background: #D8B244; }
+
+  /* speed trainer thumbs — start darker, target gold */
+  #coachSpeedStart::-webkit-slider-thumb { background: #E2C06A; }
+  #coachSpeedStart::-moz-range-thumb { background: #E2C06A; }
+  #coachSpeedTarget::-webkit-slider-thumb { background: #D8B244; }
+  #coachSpeedTarget::-moz-range-thumb { background: #D8B244; }
+
+  .metro-coach-dual-labels {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #71717a;
+  }
+
+  .metro-coach-dual-labels strong { color: #D8B244; font-variant-numeric: tabular-nums; }
+
+  /* ---------- balanced two-col for Step + Interval ---------- */
+  .metro-coach-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .metro-coach-two-col .metro-coach-field {
+    min-width: 0;
+  }
+
+  .metro-coach-two-col .metro-coach-slider-wrap {
+    padding: 10px 10px;
+  }
+
+  @media (max-width: 380px) {
+    .metro-coach-two-col { gap: 8px; }
+  }
+
+  .metro-coach-slider {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #2a2a30;
+    border-radius: 999px;
+    border: 1px solid #000;
+    outline: none;
+  }
+
+  .metro-coach-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #D8B244;
+    border: 2px solid #000;
+    box-shadow: 1px 1px 0px #000;
+    cursor: pointer;
+  }
+
+  .metro-coach-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #D8B244;
+    border: 2px solid #000;
+    box-shadow: 1px 1px 0px #000;
+    cursor: pointer;
+  }
+
+  .metro-coach-slider-track {
+    position: relative;
+    flex: 1 1 auto;
+    height: 8px;
+    background: #2a2a30;
+    border: 1px solid #000;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .metro-coach-slider-fill {
+    position: absolute;
+    inset: 0;
+    background: #D8B244;
+    transform-origin: left center;
+    will-change: transform;
+  }
+
+  .metro-coach-pill-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .metro-coach-mini-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    background: #0f0f12;
+    color: #f5f5f7;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0px #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .metro-coach-mini-chip.active {
+    background: #D8B244;
+    color: #000;
+  }
+
+  .metro-coach-mini-chip:hover {
+    transform: translate(-1px,-1px);
+    box-shadow: 3px 3px 0px #000;
+  }
+
+  .metro-coach-diff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .metro-coach-diff-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 8px;
+    background: #0f0f12;
+    color: #a1a1aa;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0px #000;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, border-color 0.16s ease;
+  }
+
+  .metro-coach-diff-btn.active {
+    background: #D8B244;
+    color: #000;
+    border-color: #000;
+  }
+
+  .metro-coach-diff-btn-title {
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  .metro-coach-diff-btn-sub {
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    font-weight: 700;
+    opacity: 0.8;
+  }
+
+  .metro-coach-tap-area {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 12px;
+    background: #0f0f12;
+    border: 2px solid #D8B244;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+  }
+
+  .metro-coach-tap-title {
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #f5f5f7;
+  }
+
+  .metro-coach-tap-sub {
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    color: #D8B244;
+  }
+
+  .metro-coach-target-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 12px;
+    background: #0f0f12;
+    border: 2px solid #000;
+    border-radius: var(--radius-md);
+  }
+
+  .metro-coach-target-label {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: #a1a1aa;
+  }
+
+  .metro-coach-target-bpm {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #D8B244;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metro-coach-target-bpm small {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: #a1a1aa;
+    margin-left: 4px;
+  }
+
+  .metro-coach-dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .metro-coach-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2a2a30;
+    border: 1px solid #000;
+    transition: background-color 0.12s ease, transform 0.12s ease;
+  }
+
+  .metro-coach-dots span.filled {
+    background: #D8B244;
+    transform: scale(1.15);
+  }
+
+  .metro-coach-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 16px;
+    background: #D8B244;
+    color: #000;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0px #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.9rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  .metro-coach-cta:hover {
+    transform: translate(-1px,-1px);
+    box-shadow: 5px 5px 0px #000;
+    background: #E2C06A;
+  }
+
+  .metro-coach-cta:active {
+    transform: translate(1px,1px);
+    box-shadow: 1px 1px 0px #000;
+  }
+
+  .metro-coach-live {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .metro-coach-live-card {
+    background: #0f0f12;
+    border: 2px solid #000;
+    border-left: 4px solid #D8B244;
+    box-shadow: 3px 3px 0px #000;
+    border-radius: var(--radius-md);
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .metro-coach-live-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .metro-coach-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    background: #D8B244;
+    color: #000;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    border: 1px solid #000;
+  }
+
+  .metro-coach-live-phase {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #f5f5f7;
+    line-height: 1;
+  }
+
+  .metro-coach-live-phase.muted { color: #D8B244; }
+
+  .metro-coach-live-sub {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    color: #a1a1aa;
+  }
+
+  .metro-coach-progress {
+    height: 8px;
+    background: #1e1e24;
+    border: 1px solid #000;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .metro-coach-progress-fill {
+    height: 100%;
+    background: #D8B244;
+    transform-origin: left center;
+    will-change: transform;
+  }
+
+  .metro-coach-live-split {
+    display: flex;
+    gap: 0;
+    width: 100%;
+    background: #D8B244;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0px #000;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+
+  .metro-coach-live-stop {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    border-right: 2px solid #000;
+    font-family: var(--font-secondary);
+    font-size: 0.9rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background-color 0.16s ease;
+  }
+
+  .metro-coach-live-stop:hover { background: #d64536; }
+
+  .metro-coach-live-expand {
+    flex: 0 0 52px;
+    width: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #D8B244;
+    color: #000;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.16s ease;
+  }
+
+  .metro-coach-live-expand:hover { background: #E2C06A; }
+
+  .metro-coach-score {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: #1e1e24;
+    border: 2px solid #000;
+    border-radius: var(--radius-md);
+    text-align: center;
+  }
+
+  .metro-coach-score-grade {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #D8B244;
+  }
+
+  .metro-coach-score-detail {
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    color: #f5f5f7;
+  }
+
+  .metro-coach-score-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .metro-coach-score-btn {
+    flex: 1 1 0;
+    padding: 10px 12px;
+    background: #0f0f12;
+    color: #f5f5f7;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0px #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .metro-coach-score-btn.primary {
+    background: #D8B244;
+    color: #000;
+  }
+
+  /* ---------- desktop ---------- */
+  @media (min-width: 768px) {
+    .metro-view {
+      padding-top: 28px;
+      padding-bottom: 28px;
+    }
+
+    .metro-dial {
+      --metro-dot-radius: 160px;
+      width: 380px;
+    }
+
+    .metro-controls {
+      max-width: 420px;
+    }
+
+    .metro-stepper-strip {
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .metro-sheet-toggles {
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .metro-stepper-btn {
+      height: 48px;
+      min-height: 48px;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .metro-stepper-btn {
+      height: 40px;
+      min-height: 40px;
+      font-size: 0.85rem;
+    }
+
+    .metro-instrument-btn {
+      font-size: 0.68rem;
+      gap: 5px;
+    }
+
+    .metro-bpm-num {
+      font-size: clamp(3.2rem, 17vw, 5rem);
+    }
+
+    .metro-bpm-input {
+      font-size: clamp(2.8rem, 15vw, 4.2rem);
+      width: 3.8ch;
+    }
+  }
+
+  /* ---------- motion respect ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .metro-back-pill,
+    .metro-icon-btn,
+    .metro-pill,
+    .metro-tap-btn,
+    .metro-play-btn,
+    .metro-coach-btn,
+    .metro-stepper-btn,
+    .metro-sheet,
+    .metro-sheet-backdrop,
+    .metro-sheet-feedback-btn,
+    .metro-chip,
+    .metro-beatstyle-chip,
+    .metro-info-btn,
+    .metro-display-box,
+    .metro-copy-link-card,
+    .metro-copy-badge,
+    .metro-toggle-track,
+    .metro-dial.beat-flash-a .metro-bpm-num,
+    .metro-dial.beat-flash-b .metro-bpm-num,
+    .metro-setlist-header-titles,
+    .metro-setlist-search-layer,
+    .metro-setlist-search-toggle,
+    .metro-setlist-search-toggle .st-icon,
+    .metro-setlist-create-btn {
+      transition: none !important;
+      animation: none !important;
+    }
+
+    .metro-sheet-strip,
+    .metro-sheet-toggle,
+    .metro-instrument-btn,
+    .metro-instrument-chip,
+    .metro-sheet-strip-upload {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  :global(html.low-power-mode) .metro-dial.beat-flash-a .metro-bpm-num,
+  :global(html.low-power-mode) .metro-dial.beat-flash-b .metro-bpm-num {
+    animation: none !important;
+  }
+
+  :global(html.low-power-mode) .metro-radial-ring :global(.metro-radial-seg) {
+    filter: none !important;
+  }
+</style>
+
+<style is:global>
+  /* KINS Metronome — Coach Deck runtime (must be global: created via JS, no data-astro-cid) */
+  .metro-coach-card {
+    display: flex; flex-direction: column; gap: 12px; width: 100%;
+    background: #1e1e24; border: 2px solid #000; box-shadow: 3px 3px 0 #000;
+    border-radius: var(--radius-md); padding: 14px 12px; box-sizing: border-box;
+    text-align: left; align-items: stretch;
+  }
+  .metro-coach-card--dark { background: #141418; }
+  .metro-coach-head { display: flex; flex-direction: column; gap: 4px; }
+  .metro-coach-card-title { margin:0; font-family: var(--font-heading); font-size:1.05rem; font-weight:800; letter-spacing:0.02em; color:#f5f5f7; }
+  .metro-coach-card-blurb { margin:0; font-family: var(--font-secondary); font-size:0.78rem; color:#a1a1aa; line-height:1.35; }
+  .metro-coach-cycle {
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    background:#0f0f12; border:2px solid #000; border-radius:var(--radius-pill);
+    padding:8px 10px; font-family:var(--font-secondary); font-size:0.72rem; font-weight:800;
+    letter-spacing:0.08em; text-transform:uppercase; color:#f5f5f7; flex-wrap:wrap;
+  }
+  .metro-coach-cycle strong { color:#D8B244; font-weight:900; letter-spacing:0.04em; }
+  .metro-cycle-chip {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:26px; height:26px; padding:0 6px;
+    background:#2a2a30; color:#f5f5f7; border:1px solid #000; border-radius:var(--radius-sm);
+    font-size:0.72rem; font-weight:800;
+  }
+  .metro-cycle-chip.audible { background:#f5f5f7; color:#000; }
+  .metro-cycle-chip.muted { background:#D8B244; color:#000; }
+  .metro-coach-field { display:flex; flex-direction:column; gap:6px; }
+  .metro-coach-field-label {
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-family:var(--font-secondary); font-size:0.72rem; font-weight:800;
+    letter-spacing:0.08em; text-transform:uppercase; color:#a1a1aa;
+  }
+  .metro-coach-field-label strong { color:#D8B244; font-variant-numeric:tabular-nums; }
+  .metro-coach-slider-wrap {
+    display:flex; align-items:center; gap:10px;
+    background:#0f0f12; border:2px solid #000; border-radius:var(--radius-md); padding:10px 10px;
+  }
+  .metro-coach-slider {
+    flex:1 1 auto; width:100%; height:8px; -webkit-appearance:none; appearance:none;
+    background:#2a2a30; border-radius:999px; border:1px solid #000; outline:none;
+  }
+  .metro-coach-slider::-webkit-slider-thumb {
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background:#D8B244; border:2px solid #000; box-shadow:1px 1px 0 #000; cursor:pointer;
+  }
+  .metro-coach-slider::-moz-range-thumb {
+    width:18px; height:18px; border-radius:50%;
+    background:#D8B244; border:2px solid #000; box-shadow:1px 1px 0 #000; cursor:pointer;
+  }
+  .metro-coach-pill-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .metro-coach-pill-row.mono { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: rgba(216,178,68,0.35) transparent; padding: 4px 2px 8px; }
+  .metro-coach-pill-row.mono::-webkit-scrollbar { height: 6px; }
+  .metro-coach-pill-row.mono::-webkit-scrollbar-thumb { background: rgba(216,178,68,0.35); border-radius: 999px; }
+  .metro-coach-mini-chip {
+    display:inline-flex; align-items:center; justify-content:center;
+    flex: 0 0 auto;
+    min-width: 64px;
+    min-height: 36px;
+    padding:8px 12px; background:#0f0f12; color:#f5f5f7;
+    border:2px solid #000; box-shadow:2px 2px 0 #000; border-radius:var(--radius-pill);
+    font-family:var(--font-secondary); font-size:0.78rem; font-weight:800; cursor:pointer;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+  .metro-coach-mini-chip.active { background:#D8B244; color:#000; }
+  .metro-coach-mini-chip:hover { transform: translate(-1px,-1px); box-shadow:3px 3px 0 #000; }
+  .metro-coach-diff-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .metro-coach-diff-btn {
+    display:flex; flex-direction:column; gap:2px; padding:10px 8px;
+    background:#0f0f12; color:#a1a1aa; border:2px solid #000; box-shadow:2px 2px 0 #000;
+    border-radius:var(--radius-md); cursor:pointer; text-align:left;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, border-color 0.16s ease;
+  }
+  .metro-coach-diff-btn.active { background:#D8B244; color:#000; border-color:#000; }
+  .metro-coach-diff-btn-title { font-family:var(--font-secondary); font-size:0.82rem; font-weight:800; }
+  .metro-coach-diff-btn-sub { font-family:var(--font-secondary); font-size:0.62rem; font-weight:700; opacity:0.8; }
+  .metro-coach-tap-area {
+    display:flex; flex-direction:column; gap:6px; padding:14px 12px;
+    background:#0f0f12; border:2px solid #D8B244; border-radius:var(--radius-md);
+    cursor:pointer; user-select:none; text-align:center;
+  }
+  .metro-coach-tap-title { font-family:var(--font-secondary); font-size:0.82rem; font-weight:800; letter-spacing:0.08em; color:#f5f5f7; }
+  .metro-coach-tap-sub { font-family:var(--font-secondary); font-size:0.72rem; color:#D8B244; }
+  .metro-coach-target-card {
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:14px 12px; background:#0f0f12; border:2px solid #000; border-radius:var(--radius-md);
+  }
+  .metro-coach-target-label { font-family:var(--font-secondary); font-size:0.68rem; font-weight:800; letter-spacing:0.14em; color:#a1a1aa; }
+  .metro-coach-target-bpm { font-family:var(--font-heading); font-size:2.2rem; font-weight:800; color:#D8B244; line-height:1; font-variant-numeric:tabular-nums; }
+  .metro-coach-target-bpm small { font-size:0.72rem; letter-spacing:0.1em; color:#a1a1aa; margin-left:4px; }
+  .metro-coach-dots { display:flex; gap:8px; align-items:center; justify-content:center; }
+  .metro-coach-dots span { width:10px; height:10px; border-radius:50%; background:#2a2a30; border:1px solid #000; transition: background-color 0.12s ease, transform 0.12s ease; }
+  .metro-coach-dots span.filled { background:#D8B244; transform:scale(1.15); }
+  .metro-coach-cta {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; padding:14px 16px; background:#D8B244; color:#000;
+    border:3px solid #000; box-shadow:4px 4px 0 #000; border-radius:var(--radius-pill);
+    font-family:var(--font-secondary); font-size:0.9rem; font-weight:900; letter-spacing:0.08em;
+    cursor:pointer; transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+  .metro-coach-cta:hover { transform: translate(-1px,-1px); box-shadow:5px 5px 0 #000; background:#E2C06A; }
+  .metro-coach-cta:active { transform: translate(1px,1px); box-shadow:1px 1px 0 #000; }
+  .metro-coach-live { display:flex; flex-direction:column; gap:12px; }
+  .metro-coach-live-card {
+    background:#0f0f12; border:2px solid #000; border-left:4px solid #D8B244;
+    box-shadow:3px 3px 0 #000; border-radius:var(--radius-md);
+    padding:14px 12px; display:flex; flex-direction:column; gap:10px;
+  }
+  .metro-coach-live-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .metro-coach-live-badge {
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-secondary); font-size:0.68rem; font-weight:800; letter-spacing:0.12em;
+    background:#D8B244; color:#000; padding:3px 8px; border-radius:var(--radius-pill); border:1px solid #000;
+  }
+  .metro-coach-live-phase { font-family:var(--font-heading); font-size:1.4rem; font-weight:800; color:#f5f5f7; line-height:1; }
+  .metro-coach-live-phase.muted { color:#D8B244; }
+  .metro-coach-live-sub { font-family:var(--font-secondary); font-size:0.76rem; color:#a1a1aa; }
+  .metro-coach-progress { height:8px; background:#1e1e24; border:1px solid #000; border-radius:999px; overflow:hidden; }
+  .metro-coach-progress-fill { height:100%; background:#D8B244; transform-origin:left center; will-change:transform; }
+  .metro-coach-live-split {
+    display:flex; gap:0; width:100%;
+    background:#D8B244; border:3px solid #000; box-shadow:4px 4px 0 #000; border-radius:var(--radius-pill); overflow:hidden;
+  }
+  .metro-coach-live-stop {
+    flex:1 1 auto; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px 16px; background:#c0392b; color:#fff; border:none; border-right:2px solid #000;
+    font-family:var(--font-secondary); font-size:0.9rem; font-weight:900; letter-spacing:0.08em; cursor:pointer; transition: background-color 0.16s ease;
+  }
+  .metro-coach-live-stop:hover { background:#d64536; }
+  .metro-coach-live-expand {
+    flex:0 0 52px; width:52px; display:inline-flex; align-items:center; justify-content:center;
+    background:#D8B244; color:#000; border:none; font-size:1rem; cursor:pointer; transition: background-color 0.16s ease;
+  }
+  .metro-coach-live-expand:hover { background:#E2C06A; }
+  .metro-coach-score {
+    display:flex; flex-direction:column; gap:8px;
+    padding:12px; background:#1e1e24; border:2px solid #000; border-radius:var(--radius-md); text-align:center;
+  }
+  .metro-coach-score-grade { font-family:var(--font-heading); font-size:1.5rem; font-weight:800; color:#D8B244; }
+  .metro-coach-score-detail { font-family:var(--font-secondary); font-size:0.82rem; color:#f5f5f7; }
+  .metro-coach-score-actions { display:flex; gap:8px; }
+  .metro-coach-score-btn {
+    flex:1 1 0; padding:10px 12px;
+    background:#0f0f12; color:#f5f5f7; border:2px solid #000; box-shadow:2px 2px 0 #000; border-radius:var(--radius-pill);
+    font-family:var(--font-secondary); font-size:0.76rem; font-weight:800; cursor:pointer;
+  }
+  .metro-coach-score-btn.primary { background:#D8B244; color:#000; }
+  .metro-coach-live-dock {
+    width:100%; margin-top:12px; display:flex; flex-direction:column; gap:8px;
+    animation: coachDockIn 0.24s var(--ease-snappy);
+  }
+  .metro-coach-live-dock[hidden] { display:none !important; }
+  @keyframes coachDockIn { from { opacity:0; transform: translateY(8px) scale(0.98); } to { opacity:1; transform: translateY(0) scale(1); } }
+  .metro-coach-btn.is-live-hidden { display:none !important; }
+  .metro-midi-card {
+    background:#1e1e24; border:2px solid #000; box-shadow:2px 2px 0 #000; border-radius:var(--radius-md);
+    padding:12px 12px 10px; display:flex; flex-direction:column; gap:10px;
+  }
+  .metro-midi-status-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .metro-midi-dot { width:10px; height:10px; border-radius:50%; background:#71717a; border:1px solid #000; flex-shrink:0; transition: background-color 0.16s ease; }
+  .metro-midi-dot.connected { background:#22c55e; box-shadow:0 0 8px rgba(34,197,94,0.45); }
+  .metro-midi-dot.connecting { background:#D8B244; animation: midiPulse 1s infinite alternate; }
+  @keyframes midiPulse { from { opacity:0.55; } to { opacity:1; } }
+  .metro-midi-status-text { font-family:var(--font-secondary); font-size:0.82rem; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:#f5f5f7; }
+  .metro-midi-support-badge { font-family:var(--font-secondary); font-size:0.62rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; background:#c0392b; color:#fff; padding:2px 6px; border-radius:var(--radius-pill); border:1px solid #000; }
+  .metro-midi-device-name { margin:0; font-family:var(--font-secondary); font-size:0.78rem; color:#a1a1aa; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .metro-midi-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .metro-midi-btn {
+    display:inline-flex; align-items:center; gap:8px; padding:10px 14px;
+    background:#D8B244; color:#000; border:2px solid #000; box-shadow:2px 2px 0 #000; border-radius:var(--radius-pill);
+    font-family:var(--font-secondary); font-size:0.78rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
+    cursor:pointer; transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+  .metro-midi-btn:hover { transform: translate(-1px,-1px); box-shadow:3px 3px 0 #000; background:#E2C06A; }
+  .metro-midi-btn.connected { background:#22c55e; }
+  .metro-midi-select {
+    flex:1 1 160px; min-width:160px;
+    background:#0f0f12; color:#f5f5f7; border:2px solid #000; box-shadow:2px 2px 0 #000; border-radius:var(--radius-md);
+    padding:9px 10px; font-family:var(--font-secondary); font-size:0.82rem; font-weight:700;
+  }
+  .metro-midi-hint { margin:0; font-family:var(--font-secondary); font-size:0.72rem; color:#71717a; line-height:1.35; }
+  .metro-panel--coach .metro-coach-panel {
+    align-items: stretch !important; justify-content:flex-start !important; text-align:left !important;
+    padding:6px 0 12px !important; min-height:auto !important;
+  }
+  /* toggle — must be global: runtime coach cards create it via JS (no data-astro-cid) */
+  .metro-toggle { display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .metro-toggle input { position:absolute; opacity:0; width:1px; height:1px; }
+  .metro-toggle-track {
+    display:inline-flex; align-items:center; width:46px; height:26px; flex-shrink:0;
+    padding:2px; box-sizing:border-box; background:#1e1e24; border:2px solid #000;
+    border-radius:999px; transition: background-color 0.16s ease, border-color 0.16s ease;
+  }
+  .metro-toggle-knob {
+    display:inline-block; width:18px; height:18px; background:#71717a; border-radius:50%;
+    transform: translateX(0); transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+  .metro-toggle input:checked + .metro-toggle-track { background:#D8B244; border-color:#000; }
+  .metro-toggle input:checked + .metro-toggle-track .metro-toggle-knob { transform: translateX(20px); background:#000; }
+  .metro-toggle input:focus-visible + .metro-toggle-track { outline:2px solid #D8B244; outline-offset:2px; }
+  .metro-toggle-text { font-family:var(--font-secondary); font-size:0.8rem; font-weight:800; letter-spacing:0.14em; color:#f5f5f7; }
+
+  /* dual-range — global (runtime) */
+  .metro-dual-range {
+    position: relative;
+    display: block;
+    height: 42px;
+    background: #0f0f12;
+    border: 2px solid #000;
+    border-radius: var(--radius-md);
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+  .metro-dual-track {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 8px;
+    background: #2a2a30;
+    border: 1px solid #000;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+  .metro-dual-fill {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 8px;
+    background: #D8B244;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+  .metro-dual-range input[type="range"] {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: calc(100% - 24px);
+    height: 8px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    pointer-events: none;
+    outline: none;
+  }
+  .metro-dual-range input[type="range"]::-webkit-slider-runnable-track { height:8px; background:transparent; }
+  .metro-dual-range input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+    background:#D8B244; border:2px solid #000; box-shadow:1px 1px 0 #000; cursor:pointer; pointer-events:auto;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease;
+  }
+  .metro-dual-range input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.08); }
+  .metro-dual-range input[type="range"]::-moz-range-track { height:8px; background:transparent; border:none; }
+  .metro-dual-range input[type="range"]::-moz-range-thumb {
+    width:20px; height:20px; border-radius:50%; background:#D8B244; border:2px solid #000; box-shadow:1px 1px 0 #000; cursor:pointer; pointer-events:auto;
+  }
+  #coachInnerAudible::-webkit-slider-thumb { background: #f5f5f7; }
+  #coachInnerAudible::-moz-range-thumb { background: #f5f5f7; }
+  #coachInnerMuted::-webkit-slider-thumb { background: #D8B244; }
+  #coachInnerMuted::-moz-range-thumb { background: #D8B244; }
+  #coachSpeedStart::-webkit-slider-thumb { background: #E2C06A; }
+  #coachSpeedStart::-moz-range-thumb { background: #E2C06A; }
+  #coachSpeedTarget::-webkit-slider-thumb { background: #D8B244; }
+  #coachSpeedTarget::-moz-range-thumb { background: #D8B244; }
+  .metro-coach-dual-labels {
+    display: flex; align-items:center; justify-content: space-between; gap:8px; margin-top:4px;
+    font-family: var(--font-secondary); font-size:0.62rem; font-weight:800; letter-spacing:0.08em; color:#71717a;
+  }
+  .metro-coach-dual-labels strong { color:#D8B244; font-variant-numeric: tabular-nums; }
+  .metro-coach-two-col {
+    display: grid; grid-template-columns: 1fr 1fr; gap:10px; width:100%; box-sizing:border-box;
+  }
+  .metro-coach-two-col .metro-coach-field { min-width:0; }
+  @media (max-width: 380px) { .metro-coach-two-col { gap:8px; } }
+
+  /* ---------- KINS Sheet Strip — runtime DOM (no astro scoping) ---------- */
+  .metro-sheet-track { --kins-sheet-canvas-h: 108px; }
+  @media (max-width: 380px) { .metro-sheet-track { --kins-sheet-canvas-h: 92px; } }
+  .kins-sheet-page {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    background: #ffffff;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0 #000;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 96px;
+    max-width: 220px;
+  }
+  .kins-sheet-page-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 5px 8px; background: #1e1e24; border-bottom: 2px solid #000;
+    font-family: var(--font-secondary); font-size: 0.58rem; font-weight: 800;
+    letter-spacing: 0.08em; color: #D8B244; white-space: nowrap;
+  }
+  .kins-sheet-page-num { color: #71717a; font-variant-numeric: tabular-nums; }
+  .kins-sheet-page canvas {
+    display: block; width: auto; max-width: 100%;
+    height: var(--kins-sheet-canvas-h);
+    object-fit: contain; background: #fff;
+  }
+  .kins-sheet-empty {
+    flex: 0 0 auto;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; min-width: 220px; padding: 18px 12px;
+    background: #1e1e24; border: 2px dashed rgba(255,255,255,0.12); border-radius: var(--radius-sm);
+    font-family: var(--font-secondary); font-size: 0.72rem; font-weight: 700; color: #a1a1aa; text-align: center;
+  }
+  .kins-sheet-empty strong { color: #f5f5f7; font-size: 0.78rem; letter-spacing: 0.06em; }
+  .kins-sheet-error {
+    flex: 0 0 auto;
+    background: #2a1212; border: 2px solid #c0392b; color: #ff8a8a;
+    padding: 10px 12px; border-radius: var(--radius-sm);
+    font-family: var(--font-secondary); font-size: 0.72rem; font-weight: 700;
+  }
+
+  /* instrument chips (JS-created, runtime) */
+  .metro-instrument-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 10px;
+    background: #1e1e24;
+    color: #f5f5f7;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0 #000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+  .metro-instrument-chip:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #000; background: #25252e; }
+  .metro-instrument-chip.active { background: #D8B244; color: #000; }
+  .metro-instrument-chip:focus-visible { outline: 2px solid #D8B244; outline-offset: 2px; }
+</style>
+
+<script>
+  let controllerPromise: Promise<any> | null = null;
+  let initialized = false;
+
+  async function loadController() {
+    if (!controllerPromise) controllerPromise = import('../scripts/controllers/metronome/index.js');
+    return controllerPromise;
+  }
+
+  function start() {
+    if (initialized) return;
+    initialized = true;
+    loadController()
+      .then((mod) => mod.initMetronome())
+      .catch((err) => console.error('KINS Metronome failed to load:', err));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
+
+  document.addEventListener(
+    'click',
+    (e) => {
+      if (initialized) return;
+      const target = e.target as HTMLElement | null;
+      const btn = target?.closest('button');
+      if (!btn || !btn.dataset.track?.startsWith('metronome:')) return;
+      start();
+    },
+    { passive: true }
+  );
+</script>

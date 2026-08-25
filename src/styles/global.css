@@ -1845,6 +1845,31 @@ html.low-power-mode .sheet-container {
   color: #000000 !important;
 }
 
+[data-theme="dark"] .category-chip.active {
+  background: var(--accent-neon-yellow) !important;
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .category-chip.active span,
+[data-theme="dark"] .type-pill-btn.active span {
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .type-pill-btn.active {
+  background: var(--accent-neon-yellow) !important;
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .type-pill-btn[data-type="Bug / Broken Item"].active {
+  background: #fca5a5 !important;
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .type-pill-btn[data-type="Content Fix / Typo"].active {
+  background: #93c5fd !important;
+  color: #000000 !important;
+}
+
 /* ==========================================================================
    6. EPK Global Branding & Logo Rules (Zero-Unstyled Protection)
    ========================================================================== */

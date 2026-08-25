@@ -84,14 +84,20 @@ import { generalEmail } from '../../settings/contact.config';
     align-items: center;
     justify-content: center;
     padding: 16px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.22s var(--ease-snappy);
-  }
-
-  .modal-backdrop:not(.hidden) {
     opacity: 1;
     pointer-events: auto;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+  }
+
+  .modal-backdrop.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .modal-backdrop.is-closing {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .legal-modal-content {
@@ -105,12 +111,33 @@ import { generalEmail } from '../../settings/contact.config';
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transform: scale(0.96);
-    transition: transform 0.22s var(--ease-snappy);
+    animation: legalModalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .modal-backdrop:not(.hidden) .legal-modal-content {
-    transform: scale(1);
+  .legal-modal-content.is-closing {
+    animation: legalModalPopOut 0.18s ease forwards;
+  }
+
+  @keyframes legalModalPopIn {
+    from {
+      transform: scale(0.96) translateY(6px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes legalModalPopOut {
+    from {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: scale(0.96) translateY(6px);
+      opacity: 0;
+    }
   }
 
   .modal-header {
@@ -353,10 +380,58 @@ import { generalEmail } from '../../settings/contact.config';
   const closePrivacyModal = document.getElementById('closePrivacyModal');
   const closePrivacyFooterBtn = document.getElementById('closePrivacyFooterBtn');
 
-  function hideModal() {
-    privacyModal?.classList.add('hidden');
-    document.body.classList.remove('modal-open');
+  const CLOSE_ANIM_MS = 190;
+  let closeTimer: ReturnType<typeof setTimeout> | null = null;
+  const prefersReducedMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function isOtherModalOpen(): boolean {
+    const ids = ['feedbackModal', 'termsModal', 'communitySubmissionModal'];
+    return ids.some((id) => {
+      const el = document.getElementById(id);
+      return !!el && !el.classList.contains('hidden');
+    });
   }
+
+  function finishClose() {
+    closeTimer = null;
+    if (!privacyModal) return;
+    privacyModal.classList.remove('is-closing');
+    privacyModal.classList.add('hidden');
+
+    // Only unlock page scrolling if no other modal took over while we were closing
+    if (!isOtherModalOpen()) {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
+  }
+
+  function hideModal() {
+    if (!privacyModal) return;
+    if (privacyModal.classList.contains('hidden') || privacyModal.classList.contains('is-closing')) return;
+
+    if (prefersReducedMotion) {
+      finishClose();
+      return;
+    }
+
+    privacyModal.classList.add('is-closing');
+    closeTimer = setTimeout(finishClose, CLOSE_ANIM_MS);
+  }
+
+  function openPrivacyModal() {
+    if (!privacyModal) return;
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+    privacyModal.classList.remove('is-closing');
+    privacyModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
+
+  (window as any).openPrivacyModal = openPrivacyModal;
 
   closePrivacyModal?.addEventListener('click', hideModal);
   closePrivacyFooterBtn?.addEventListener('click', hideModal);

@@ -80,6 +80,12 @@
               <button type="button" class="category-chip" data-category="Audio Player">
                 <i class="fa-solid fa-play"></i> Audio Player
               </button>
+              <button type="button" class="category-chip" data-category="Tuner">
+                <i class="fa-solid fa-guitar"></i> Tuner
+              </button>
+              <button type="button" class="category-chip" data-category="Metronome">
+                <i class="fa-solid fa-drum"></i> Metronome
+              </button>
             </div>
             <div class="scroll-fade-edge-right"></div>
           </div>
@@ -296,6 +302,26 @@
     }
   }
 
+  .modal-backdrop.is-closing {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .feedback-modal-enhanced.is-closing {
+    animation: feedbackModalPopOut 0.18s ease forwards;
+  }
+
+  @keyframes feedbackModalPopOut {
+    from {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: scale(0.96) translateY(6px);
+      opacity: 0;
+    }
+  }
+
   /* Adaptable Header & Title */
   .modal-header {
     display: flex;
@@ -348,9 +374,9 @@
     font-weight: 900;
     color: var(--text-card-primary);
     letter-spacing: -0.01em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
     line-height: 1.2;
     text-transform: uppercase;
   }
@@ -361,10 +387,9 @@
     font-size: clamp(0.68rem, 2.6vw, 0.74rem);
     font-weight: 600;
     color: var(--text-card-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.2;
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.25;
   }
 
   .close-modal-btn {
@@ -619,7 +644,7 @@
   }
 
   .category-chip.active {
-    background: var(--accent-neon-yellow);
+    background: #ffffff;
     color: #000000;
     border-color: #000000;
     font-weight: 900;
@@ -954,6 +979,18 @@
   }
 
   @media (max-width: 380px) {
+    .modal-header {
+      padding: 12px 12px;
+      gap: 8px;
+    }
+    .modal-title-group {
+      gap: 8px;
+    }
+    .feedback-header-icon-circle {
+      width: 30px;
+      height: 30px;
+      font-size: 0.85rem;
+    }
     .browse-btn-pill {
       display: none;
     }
@@ -1350,9 +1387,43 @@
   });
 
   // Close handlers
+  const CLOSE_ANIM_MS = 190;
+  let closeTimer: ReturnType<typeof setTimeout> | null = null;
+  const prefersReducedMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function isOtherModalOpen(): boolean {
+    const ids = ['termsModal', 'communitySubmissionModal', 'privacyModal'];
+    return ids.some((id) => {
+      const el = document.getElementById(id);
+      return !!el && !el.classList.contains('hidden');
+    });
+  }
+
+  function finishCloseFeedback() {
+    closeTimer = null;
+    if (!modal) return;
+    modal.classList.remove('is-closing');
+    modal.classList.add('hidden');
+
+    // Only unlock page scrolling if no other modal took over while we were closing
+    if (!isOtherModalOpen()) {
+      document.body.classList.remove('modal-open');
+    }
+  }
+
   function closeModal() {
-    modal?.classList.add('hidden');
-    document.body.classList.remove('modal-open');
+    if (!modal) return;
+    if (modal.classList.contains('hidden') || modal.classList.contains('is-closing')) return;
+
+    if (prefersReducedMotion) {
+      finishCloseFeedback();
+      return;
+    }
+
+    modal.classList.add('is-closing');
+    closeTimer = setTimeout(finishCloseFeedback, CLOSE_ANIM_MS);
   }
 
   closeBtn?.addEventListener('click', closeModal);
@@ -1371,8 +1442,15 @@
   });
 
   // Global Open Helper & Triggers
-  (window as any).openFeedbackModal = function() {
+  (window as any).openFeedbackModal = function(presetCategory?: string) {
     if (!modal) return;
+
+    // Cancel any in-flight close animation before re-opening
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+    modal.classList.remove('is-closing');
 
     // Reset view if previously showing success screen
     if (successView && !successView.classList.contains('hidden')) {
@@ -1382,6 +1460,8 @@
       successView.classList.add('hidden');
       form?.classList.remove('hidden');
     }
+
+    if (presetCategory) applyCategory(presetCategory);
 
     modal.classList.remove('hidden');
     document.body.classList.add('modal-open');
@@ -1396,7 +1476,8 @@
     const trigger = (e.target as HTMLElement)?.closest?.('#openSuggestImprovementFooterBtn, .open-feedback-trigger, [data-open-feedback]');
     if (trigger) {
       e.preventDefault();
-      (window as any).openFeedbackModal?.();
+      const preset = trigger.getAttribute('data-feedback-category') || undefined;
+      (window as any).openFeedbackModal?.(preset);
     }
   });
 
@@ -1446,13 +1527,19 @@
 
   // Category Selection
   const categoryChips = document.querySelectorAll('.category-chip');
+  function applyCategory(cat) {
+    if (!cat) return false;
+    const match = Array.from(categoryChips).find((c) => c.getAttribute('data-category') === cat);
+    if (!match) return false;
+    categoryChips.forEach((c) => c.classList.toggle('active', c === match));
+    if (selectedCategoryInput) selectedCategoryInput.value = cat;
+    if (categoryDisplayLabel) categoryDisplayLabel.textContent = cat;
+    return true;
+  }
+
   categoryChips.forEach((chip) => {
     chip.addEventListener('click', () => {
-      categoryChips.forEach((c) => c.classList.remove('active'));
-      chip.classList.add('active');
-      const cat = chip.getAttribute('data-category') || 'General Site';
-      if (selectedCategoryInput) selectedCategoryInput.value = cat;
-      if (categoryDisplayLabel) categoryDisplayLabel.textContent = cat;
+      applyCategory(chip.getAttribute('data-category') || 'General Site');
     });
   });
 

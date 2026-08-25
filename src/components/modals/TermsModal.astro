@@ -64,14 +64,20 @@
     align-items: center;
     justify-content: center;
     padding: 16px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.22s var(--ease-snappy);
-  }
-
-  .modal-backdrop:not(.hidden) {
     opacity: 1;
     pointer-events: auto;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+  }
+
+  .modal-backdrop.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .modal-backdrop.is-closing {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .legal-modal-content {
@@ -85,12 +91,33 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transform: scale(0.96);
-    transition: transform 0.22s var(--ease-snappy);
+    animation: legalModalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .modal-backdrop:not(.hidden) .legal-modal-content {
-    transform: scale(1);
+  .legal-modal-content.is-closing {
+    animation: legalModalPopOut 0.18s ease forwards;
+  }
+
+  @keyframes legalModalPopIn {
+    from {
+      transform: scale(0.96) translateY(6px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes legalModalPopOut {
+    from {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: scale(0.96) translateY(6px);
+      opacity: 0;
+    }
   }
 
   .modal-header {
@@ -309,22 +336,59 @@
   const closeTermsModal = document.getElementById('closeTermsModal');
   const closeTermsFooterBtn = document.getElementById('closeTermsFooterBtn');
 
-  function hideTermsModal() {
-    termsModal?.classList.add('hidden');
-    
-    // Check if underlying community submission modal or feedback modal is still open
-    const communityModal = document.getElementById('communitySubmissionModal');
-    const isCommunityModalOpen = communityModal && !communityModal.classList.contains('hidden');
+  const CLOSE_ANIM_MS = 190;
+  let closeTimer: ReturnType<typeof setTimeout> | null = null;
+  const prefersReducedMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const feedbackModal = document.getElementById('feedbackModal');
-    const isFeedbackModalOpen = feedbackModal && !feedbackModal.classList.contains('hidden');
+  // Check if underlying community submission modal or feedback modal is still open
+  function isOtherModalOpen(): boolean {
+    const ids = ['feedbackModal', 'communitySubmissionModal', 'privacyModal'];
+    return ids.some((id) => {
+      const el = document.getElementById(id);
+      return !!el && !el.classList.contains('hidden');
+    });
+  }
+
+  function finishTermsClose() {
+    closeTimer = null;
+    if (!termsModal) return;
+    termsModal.classList.remove('is-closing');
+    termsModal.classList.add('hidden');
 
     // Only unlock page scrolling if no other modal is active
-    if (!isCommunityModalOpen && !isFeedbackModalOpen) {
+    if (!isOtherModalOpen()) {
       document.body.classList.remove('modal-open');
       document.documentElement.classList.remove('modal-open');
     }
   }
+
+  function hideTermsModal() {
+    if (!termsModal) return;
+    if (termsModal.classList.contains('hidden') || termsModal.classList.contains('is-closing')) return;
+
+    if (prefersReducedMotion) {
+      finishTermsClose();
+      return;
+    }
+
+    termsModal.classList.add('is-closing');
+    closeTimer = setTimeout(finishTermsClose, CLOSE_ANIM_MS);
+  }
+
+  function openTermsModal() {
+    if (!termsModal) return;
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+    termsModal.classList.remove('is-closing');
+    termsModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
+
+  (window as any).openTermsModal = openTermsModal;
 
   closeTermsModal?.addEventListener('click', hideTermsModal);
   closeTermsFooterBtn?.addEventListener('click', hideTermsModal);
