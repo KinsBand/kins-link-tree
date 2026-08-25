@@ -71,13 +71,16 @@ export function createPitchDetector() {
   let prevFreq = 0;
   let prevConfident = false;
   let jitterEma = 0;
+  let lastActiveAt = -1e9;
+  let pendingOnset = false;
 
-  const result = { status: 'silent', freq: 0, clarity: 0, conf: 0, locked: false };
+  const result = { status: 'silent', freq: 0, clarity: 0, conf: 0, locked: false, onset: false };
 
   function reset() {
     dcPrevX = 0; dcPrevY = 0;
     gateActive = false; silentFrames = 0; onsetAt = 0;
     lockFrames = 0; locked = false; prevFreq = 0; prevConfident = false; jitterEma = 0;
+    lastActiveAt = -1e9; pendingOnset = false;
   }
 
   function yin(buf, W, minLag, maxLag) {
@@ -187,6 +190,7 @@ export function createPitchDetector() {
     result.clarity = 0;
     result.conf = 0;
     result.locked = locked;
+    result.onset = false;
 
     if (!gateActive) {
       silentFrames++;
@@ -197,12 +201,21 @@ export function createPitchDetector() {
       }
       return result;
     }
+    // Fresh pluck after a gap: flag once so the caller resets its smoothers
+    // and the new attack is measured clean instead of blending with the
+    // decaying resonance of the previous note.
+    if (nowMs - lastActiveAt > DETECT.ONSET_GAP_MS) pendingOnset = true;
+    lastActiveAt = nowMs;
     if (nowMs - onsetAt < DETECT.ATTACK_FREEZE_MS) {
       result.status = 'transient';
+      result.onset = pendingOnset;
+      pendingOnset = false;
       return result;
     }
     if (clipCount / size > DETECT.CLIP_RATIO) {
       result.status = 'clipped';
+      result.onset = pendingOnset;
+      pendingOnset = false;
       return result;
     }
 
@@ -282,6 +295,8 @@ export function createPitchDetector() {
     result.clarity = clarity;
     result.conf = conf;
     result.locked = locked;
+    result.onset = pendingOnset;
+    pendingOnset = false;
     return result;
   }
 

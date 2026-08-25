@@ -45,6 +45,10 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
           <span class="tuner-meter" id="tunerMeter" aria-hidden="true">
             <span class="tuner-meter-ticks"></span>
             <span class="tuner-meter-zone"></span>
+            <span class="tuner-meter-zone-safety zone-warn-up" id="tunerZoneWarnUp" hidden></span>
+            <span class="tuner-meter-zone-safety zone-danger" id="tunerZoneDanger" hidden></span>
+            <span class="tuner-meter-zone-safety zone-loose" id="tunerZoneLoose" hidden></span>
+            <span class="tuner-meter-zone-safety zone-dead" id="tunerZoneDead" hidden></span>
             <span class="tuner-needle" id="tunerNeedle"></span>
           </span>
         </button>
@@ -53,6 +57,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
           <p class="tuner-status pill-cta" id="tunerStatusLine" aria-live="polite">TAP TO START TUNING</p>
           <span class="tuner-badge-side" id="tunerBadgeHigh">TOO HIGH</span>
         </div>
+        <div class="tuner-chromatic-rail" id="tunerChromRail" aria-hidden="true" hidden></div>
         <div class="tuner-note-row">
           <span class="tuner-note" id="tunerDetectedNote">--</span>
           <span class="tuner-note-octave" id="tunerDetectedNoteOctave"></span>
@@ -382,6 +387,37 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     border-right: 2px solid rgba(242, 253, 67, 0.5);
   }
 
+  /* Breakage (sharp side) and looseness (flat side) highlight sections.
+     Positioned by the controller from the active material profile; they sit
+     on the log-compressed ends of the meter scale. */
+  .tuner-meter-zone-safety {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    transition: background-color 0.16s ease;
+  }
+
+  .tuner-meter-zone-safety.zone-warn-up {
+    background: rgba(220, 42, 60, 0.14);
+    border-left: 2px solid rgba(220, 42, 60, 0.55);
+  }
+
+  .tuner-meter-zone-safety.zone-danger {
+    background: rgba(220, 42, 60, 0.32);
+    border-left: 2px solid var(--accent-crimson);
+  }
+
+  .tuner-meter-zone-safety.zone-loose {
+    background: rgba(83, 252, 24, 0.1);
+    border-right: 2px solid rgba(83, 252, 24, 0.45);
+  }
+
+  .tuner-meter-zone-safety.zone-dead {
+    background: rgba(83, 252, 24, 0.22);
+    border-right: 2px solid var(--btn-green);
+  }
+
   .tuner-needle {
     position: absolute;
     left: 50%;
@@ -392,7 +428,7 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     border-radius: 3px;
     background: var(--surface-card-light);
     transform: translateX(0px);
-    transition: transform 0.09s linear, background-color 0.16s ease;
+    transition: transform 0.09s linear, background-color 0.16s ease, opacity 0.3s ease;
     will-change: transform;
   }
 
@@ -481,6 +517,56 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
   .tuner-readout.safety-green-soft .tuner-status {
     border-color: var(--btn-green);
     color: var(--btn-green);
+  }
+
+  /* ---------- Chromatic free-mode note rail (pill area) ---------- */
+  .tuner-chromatic-rail {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 100%;
+    background: var(--surface-card);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-pill);
+    padding: 8px 12px;
+    box-sizing: border-box;
+  }
+
+  .tuner-view.mode-chromatic .tuner-chromatic-rail:not([hidden]) {
+    display: flex;
+  }
+
+  .tuner-chromatic-rail :global(.rail-note) {
+    font-family: var(--font-secondary);
+    font-size: clamp(0.58rem, 2.5vw, 0.72rem);
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: var(--text-white);
+    padding: 3px 4px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    opacity: calc(0.32 + 0.68 * var(--rg, 0));
+    transition: opacity 0.12s linear, background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  }
+
+  .tuner-chromatic-rail :global(.rail-note.active) {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+  }
+
+  /* ---------- Held reading: dim while remembering between plucks ---------- */
+  .tuner-note-row,
+  .tuner-hint {
+    transition: opacity 0.3s ease;
+  }
+
+  .tuner-readout.is-held .tuner-note-row,
+  .tuner-readout.is-held .tuner-hint,
+  .tuner-readout.is-held .tuner-needle {
+    opacity: 0.45;
   }
 
   /* ---------- Note row ---------- */
@@ -1601,7 +1687,11 @@ import ToastContainer from '../components/ui/ToastContainer.astro';
     :global(.tuner-drum-shape),
     :global(.tuner-peg),
     :global(.tuner-peg *),
-    :global(.tuner-drum *) {
+    :global(.tuner-drum *),
+    .tuner-meter-zone-safety,
+    .tuner-chromatic-rail :global(.rail-note),
+    .tuner-note-row,
+    .tuner-hint {
       transition: none !important;
     }
   }

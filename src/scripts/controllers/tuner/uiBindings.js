@@ -12,6 +12,7 @@ import {
   state,
   getGroup,
   getPreset,
+  getProfile,
   materialOptions,
   stringCountOptions,
   currentStringCount
@@ -33,6 +34,7 @@ export function createUi(callbacks) {
   let figureListenerBound = false;
   let activeTargetEl = null;
   let activeFilter = 'all';
+  let railNotes = [];
 
   function cache() {
     els = {
@@ -54,6 +56,11 @@ export function createUi(callbacks) {
       micCta: document.getElementById('tunerMicToggleBtn'),
       meter: document.getElementById('tunerMeter'),
       needle: document.getElementById('tunerNeedle'),
+      zoneWarnUp: document.getElementById('tunerZoneWarnUp'),
+      zoneDanger: document.getElementById('tunerZoneDanger'),
+      zoneDead: document.getElementById('tunerZoneDead'),
+      zoneLoose: document.getElementById('tunerZoneLoose'),
+      chromRail: document.getElementById('tunerChromRail'),
       badgeLow: document.getElementById('tunerBadgeLow'),
       badgeHigh: document.getElementById('tunerBadgeHigh'),
       status: document.getElementById('tunerStatusLine'),
@@ -353,6 +360,8 @@ export function createUi(callbacks) {
     }
 
     els.tunerView.classList.toggle('mode-chromatic', state.mode === 'chromatic');
+    if (els.chromRail) els.chromRail.hidden = state.mode !== 'chromatic';
+    layoutZones();
   }
 
   function renderInstrumentRow() {
@@ -570,11 +579,111 @@ export function createUi(callbacks) {
     return els.searchInput ? els.searchInput.value : '';
   }
 
+  /* Meter scale: linear ±50¢ core, then log-compressed out to ±650¢ so the
+     material-profile warn/danger (breakage) and loose/dead thresholds are
+     visible as highlighted sections on the meter itself. */
+  function centsToPct(cents) {
+    const fine = DETECT.METER_FINE_CENTS;
+    const ext = DETECT.METER_MAX_CENTS;
+    const core = DETECT.METER_CORE_SPLIT;
+    const a = Math.abs(cents);
+    const sg = cents < 0 ? -1 : 1;
+    if (a <= fine) return sg * (a / fine) * core * 50;
+    const t = Math.min(1, Math.log(a / fine) / Math.log(ext / fine));
+    return sg * (core + t * (1 - core)) * 50;
+  }
+
   function setNeedle(cents) {
     if (!els.needle || !meterWidth) return;
     const max = meterWidth / 2 - 18;
-    const clamped = Math.max(-max, Math.min(max, (cents / 50) * max));
-    els.needle.style.transform = 'translateX(' + clamped.toFixed(1) + 'px)';
+    const pct = Math.max(-100, Math.min(100, centsToPct(cents)));
+    els.needle.style.transform = 'translateX(' + ((pct / 100) * max).toFixed(1) + 'px)';
+  }
+
+  /* ---------- Breakage / looseness zone sections ---------- */
+  function halfPct(cents) {
+    return Math.abs(centsToPct(cents)) / 2; // % of full meter width from centre
+  }
+
+  function posZoneRight(el, fromC, toC) {
+    if (!el) return;
+    const o = halfPct(fromC);
+    const w = toC == null ? 50 - o : Math.max(0, halfPct(toC) - o);
+    if (w <= 0.4) { el.hidden = true; return; }
+    el.hidden = false;
+    el.style.left = (50 + o).toFixed(2) + '%';
+    el.style.width = w.toFixed(2) + '%';
+  }
+
+  function posZoneLeft(el, fromC, toC) {
+    if (!el) return;
+    const o = halfPct(fromC);
+    const w = toC == null ? 50 - o : Math.max(0, halfPct(toC) - o);
+    if (w <= 0.4) { el.hidden = true; return; }
+    el.hidden = false;
+    el.style.right = (50 + o).toFixed(2) + '%';
+    el.style.width = w.toFixed(2) + '%';
+  }
+
+  function layoutZones() {
+    const profile = state.mode === 'guided' && state.instrumentId !== 'drums' ? getProfile() : null;
+    const active = !!profile;
+    [els.zoneWarnUp, els.zoneDanger, els.zoneDead, els.zoneLoose].forEach((el) => {
+      if (el) el.hidden = !active;
+    });
+    if (!active) return;
+    // Sharp side: stretching -> snap risk (breakage)
+    posZoneRight(els.zoneWarnUp, profile.warnUp * 100, profile.dangerUp * 100);
+    posZoneRight(els.zoneDanger, profile.dangerUp * 100, null);
+    // Flat side: very loose -> dead slack
+    posZoneLeft(els.zoneLoose, profile.warnDown * 100, profile.deadDown * 100);
+    posZoneLeft(els.zoneDead, profile.deadDown * 100, null);
+  }
+
+  /* ---------- Chromatic free-mode note rail ---------- */
+  function buildRail() {
+    if (!els.chromRail || railNotes.length) return;
+    railNotes = NOTE_NAMES.map((n) => {
+      const sp = document.createElement('span');
+      sp.className = 'rail-note';
+      sp.textContent = n;
+      return sp;
+    });
+    els.chromRail.replaceChildren(...railNotes);
+  }
+
+  function clearRail() {
+    railNotes.forEach((el) => {
+      if (el._v) { el._v = 0; el.style.removeProperty('--rg'); }
+      el.classList.remove('active');
+    });
+  }
+
+  /* Progressive proximity glow: every note lights up in proportion to how
+     close the played pitch is to it — the nearest semitone brightest,
+     neighbours fading with distance. Rail runs low (left) to high (right). */
+  function updateRail(freq) {
+    if (!railNotes.length || !els.chromRail || els.chromRail.hidden) return;
+    const mf = 69 + 12 * Math.log2(freq / state.a4);
+    const range = DETECT.RAIL_RANGE_CENTS;
+    for (let i = 0; i < railNotes.length; i++) {
+      const cls = i;
+      let d = Math.abs(mf - (Math.round((mf - cls) / 12) * 12 + cls)) * 100;
+      if (d > 600) d = 1200 - d;
+      const v = Math.max(0, 1 - d / range);
+      const q = Math.round(v * 12) / 12; // quantised: fewer style writes
+      const el = railNotes[i];
+      if (q <= 0) {
+        if (el._v) { el._v = 0; el.style.removeProperty('--rg'); }
+        el.classList.remove('active');
+        continue;
+      }
+      if (el._v !== q) {
+        el._v = q;
+        el.style.setProperty('--rg', q.toFixed(3));
+      }
+      el.classList.toggle('active', d <= 60);
+    }
   }
 
   function clearSafetyClasses() {
@@ -601,6 +710,8 @@ export function createUi(callbacks) {
     clearSafetyClasses();
     setInTuneHighlight(false);
     setNeedle(0);
+    els.readout.classList.remove('is-held');
+    clearRail();
     els.note.textContent = '--';
     els.noteOctave.textContent = '';
     els.freq.textContent = '';
@@ -641,11 +752,21 @@ export function createUi(callbacks) {
 
   function updateReading(reading) {
     const chromatic = state.mode === 'chromatic';
+
+    // Held frame: repeat of the last confident reading between plucks.
+    // Touch nothing except the held styling — this is what makes the note
+    // stay put instead of gathering and vanishing every gate dip.
+    if (reading.held) {
+      els.readout.classList.add('is-held');
+      return;
+    }
+    els.readout.classList.remove('is-held');
     clearSafetyClasses();
 
     if (reading.status !== 'ok') {
       setNeedle(0);
       setInTuneHighlight(false);
+      clearRail();
       if (reading.status === 'polyphonic') {
         setPill(TUNER_COPY.playOneString, 'pill-neutral');
       } else if (reading.status === 'clipped') {
@@ -690,8 +811,9 @@ export function createUi(callbacks) {
       applySafetyClasses(reading.color);
     } else {
       setInTuneHighlight(false);
+      updateRail(reading.freq);
       setPill(reading.nearestName + ' \u00B7 ' + (cents >= 0 ? '+' : '') + Math.round(cents) + '\u00A2', 'pill-neutral');
-      els.hint.textContent = '';
+      els.hint.textContent = reading.nearestName + ' \u00B7 ' + (cents >= 0 ? '+' : '') + Math.round(cents) + '\u00A2';
     }
   }
 
@@ -769,6 +891,7 @@ export function createUi(callbacks) {
     cache();
     bindStaticEvents();
     invalidateMeterRect();
+    buildRail();
     renderTopbar();
     renderInstrumentRow();
     renderFigure();

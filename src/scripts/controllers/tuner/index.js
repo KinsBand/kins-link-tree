@@ -53,6 +53,9 @@ function resetPipeline() {
   noteStab.reset();
   safety.reset();
   lockedSince = 0;
+  lastGood = null;
+  clipRun = 0;
+  polyRun = 0;
 }
 
 function getPresetInternal() {
@@ -81,11 +84,65 @@ function autoAdvanceTick(cents, locked, nowMs) {
   }
 }
 
+/* Last confident display state — kept on screen between plucks so the note
+   "remembers where you were" instead of gathering and vanishing every time
+   the gate dips for a frame. */
+let lastGood = null;
+let clipRun = 0;
+let polyRun = 0;
+
+function holdFrame() {
+  if (!lastGood) {
+    ui.updateReading({ status: 'silent' });
+    return;
+  }
+  ui.updateReading(Object.assign({}, lastGood, { held: true }));
+}
+
 function handleReading(r, nowMs) {
   const chromatic = state.mode === 'chromatic';
   const target = getString();
+
+  // A fresh pluck after a gap: measure this attack clean, don't blend it
+  // with cents smoothed from the previous note's decaying resonance.
+  if (r.onset) {
+    smoother.reset();
+    noteStab.reset();
+  }
+
+  if (r.status !== 'ok') {
+    // Transient/quiet frames: never blank — just keep showing where we were.
+    if (r.status === 'transient' || r.status === 'silent') {
+      holdFrame();
+      return;
+    }
+    // clipped / polyphonic are actionable messages but flicker badly when
+    // they alternate with good frames — require a short persistent run
+    // before swapping the readout over to them.
+    if (r.status === 'clipped') clipRun++; else clipRun = 0;
+    if (r.status === 'polyphonic') polyRun++; else polyRun = 0;
+    const persisted = Math.max(clipRun, polyRun) >= DETECT.MESSAGE_PERSIST_FRAMES;
+    if (!persisted && lastGood) {
+      ui.updateReading(Object.assign({}, lastGood, { held: true }));
+    } else {
+      ui.updateReading({ status: persisted ? r.status : 'silent' });
+    }
+    return;
+  }
+
+  clipRun = 0;
+  polyRun = 0;
+
+  // Resonance-tail guard: low-confidence frames (weak ring-out, noise,
+  // sympathetic resonance from other strings) must not overwrite or
+  // re-classify the remembered reading.
+  if (r.conf < DETECT.UNRELIABLE_CONF) {
+    holdFrame();
+    return;
+  }
+
   const reading = {
-    status: r.status,
+    status: 'ok',
     freq: 0,
     cents: 0,
     rawCents: 0,
@@ -95,23 +152,21 @@ function handleReading(r, nowMs) {
     detectedOctave: 0,
     nearestName: '',
     target,
-    locked: r.locked
+    locked: r.locked,
+    held: false
   };
-
-  if (r.status !== 'ok') {
-    smoother.reset();
-    lockedSince = 0;
-    ui.updateReading(reading);
-    return;
-  }
 
   const midi = Math.round(69 + 12 * Math.log2(r.freq / state.a4));
   reading.freq = r.freq;
-  reading.detectedNote = NOTE_NAMES[((midi % 12) + 12) % 12];
-  reading.detectedOctave = Math.floor(midi / 12) - 1;
+
+  // Stabilise the note label in BOTH modes so boundary flicker (A <-> A#)
+  // doesn't jitter the readout or the free-mode note rail.
+  const stableMidi = noteStab.update(midi, nowMs);
+  reading.detectedNote = NOTE_NAMES[((stableMidi % 12) + 12) % 12];
+  reading.detectedOctave = Math.floor(stableMidi / 12) - 1;
 
   const rawCents = chromatic
-    ? Math.round(1200 * Math.log2(r.freq / noteToFreq(midi, state.a4)))
+    ? Math.round(1200 * Math.log2(r.freq / noteToFreq(stableMidi, state.a4)))
     : Math.round(1200 * Math.log2(r.freq / targetFreq(target)));
   reading.rawCents = rawCents;
 
@@ -120,17 +175,16 @@ function handleReading(r, nowMs) {
 
   if (chromatic) {
     reading.nearestName = reading.detectedNote + reading.detectedOctave;
+    lastGood = Object.assign({}, reading);
     ui.updateReading(reading);
     return;
   }
 
-  const safetyResult = safety.update(smoothed.cents, rawCents, getProfile(), nowMs);
+  const safetyResult = safety.update(smoothed.cents, rawCents, getProfile(), nowMs, r.locked);
   reading.zone = safetyResult.zone;
   reading.color = safetyResult.color;
 
-  const stableMidi = noteStab.update(midi, nowMs);
-  reading.detectedNote = NOTE_NAMES[((stableMidi % 12) + 12) % 12];
-  reading.detectedOctave = Math.floor(stableMidi / 12) - 1;
+  lastGood = Object.assign({}, reading);
 
   autoAdvanceTick(smoothed.cents, r.locked, nowMs);
   ui.updateReading(reading);

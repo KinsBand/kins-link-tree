@@ -54,6 +54,7 @@ export function noteToFreq(midi: number, a4: number = A4_REFERENCE): number {
 }
 
 const TUNER_STRINGS = {
+  'G#0': { label: 'Low G#', note: 'G#0', midi: 20 },
   A0: { label: 'Low A', note: 'A0', midi: 21 },
   Bb0: { label: 'Low Bb', note: 'Bb0', midi: 22 },
   B0: { label: '5th/6th (B)', note: 'B0', midi: 23 },
@@ -116,7 +117,15 @@ const TUNER_STRINGS = {
   Eb4: { label: '1st (Eb)', note: 'Eb4', midi: 63 },
   E4: { label: '1st (E)', note: 'E4', midi: 64 },
   F4: { label: '1st (F)', note: 'F4', midi: 65 },
-  G4: { label: '1st (G)', note: 'G4', midi: 67 }
+  Gb4: { label: '1st (Gb)', note: 'Gb4', midi: 66 },
+  'F#4': { label: '1st (F#)', note: 'F#4', midi: 66 },
+  G4: { label: '1st (G)', note: 'G4', midi: 67 },
+  'G#4': { label: '1st (G#)', note: 'G#4', midi: 68 },
+  Ab4: { label: '1st (Ab)', note: 'Ab4', midi: 68 },
+  A4: { label: '1st (A)', note: 'A4', midi: 69 },
+  'A#4': { label: '1st (A#)', note: 'A#4', midi: 70 },
+  Bb4: { label: '1st (Bb)', note: 'Bb4', midi: 70 },
+  B4: { label: '1st (B)', note: 'B4', midi: 71 }
 } as const;
 
 type StdName = keyof typeof TUNER_STRINGS;
@@ -138,7 +147,17 @@ const GUITAR_6_STANDARD: TunerPreset[] = [
   guitarPreset('csharp-standard', 'C# Standard (Db)', 'standard', ['C#2', 'F#2', 'B2', 'E3', 'G#3', 'C#4']),
   guitarPreset('c-standard', 'C Standard', 'standard', ['C2', 'F2', 'Bb2', 'Eb3', 'G3', 'C4']),
   guitarPreset('b-standard', 'B Standard (Baritone)', 'standard', ['B1', 'E2', 'A2', 'D3', 'F#3', 'B3']),
-  guitarPreset('a-standard', 'A Standard', 'standard', ['A1', 'D2', 'G2', 'C3', 'E3', 'A3'])
+  guitarPreset('a-standard', 'A Standard', 'standard', ['A1', 'D2', 'G2', 'C3', 'E3', 'A3']),
+  guitarPreset('ab-standard', 'Ab Standard (G#)', 'standard', ['Ab1', 'Db2', 'Gb2', 'B2', 'Db3', 'Gb3']),
+  guitarPreset('g-standard', 'G Standard', 'standard', ['G1', 'C2', 'F2', 'Bb2', 'D3', 'G3']),
+  guitarPreset('fsharp-standard', 'F# Standard (Gb)', 'standard', ['F#1', 'B1', 'E2', 'A2', 'C#3', 'F#3']),
+  guitarPreset('f-standard', 'F Standard', 'standard', ['F1', 'Bb1', 'Eb2', 'Ab2', 'C3', 'F3']),
+  guitarPreset('f-up', 'F Standard (Half-Step Up)', 'standard', ['F2', 'Bb2', 'Eb3', 'Ab3', 'C4', 'F4']),
+  guitarPreset('fsharp-up', 'F# Standard (Up)', 'standard', ['F#2', 'B2', 'E3', 'A3', 'C#4', 'F#4']),
+  guitarPreset('terz', 'Terz (G Standard Up)', 'standard', ['G2', 'C3', 'F3', 'Bb3', 'D4', 'G4']),
+  guitarPreset('ab-up', 'Ab Standard (Up)', 'standard', ['G#2', 'C#3', 'F#3', 'B3', 'D#4', 'G#4']),
+  guitarPreset('a-up', 'A Standard (Requinto)', 'standard', ['A2', 'D3', 'G3', 'C4', 'E4', 'A4']),
+  guitarPreset('bb-up', 'Bb Standard (Up)', 'standard', ['A#2', 'D#3', 'G#3', 'C#4', 'F4', 'A#4'])
 ];
 
 const GUITAR_6_DROP: TunerPreset[] = [
@@ -153,7 +172,29 @@ const GUITAR_6_DROP: TunerPreset[] = [
   guitarPreset('drop-fsharp', 'Drop F#', 'standard', ['F#1', 'C#2', 'F#2', 'B2', 'D#3', 'G#3']),
   guitarPreset('drop-f', 'Drop F', 'standard', ['F1', 'C2', 'F2', 'Bb2', 'D3', 'G3']),
   guitarPreset('drop-e', 'Drop E', 'standard', ['E1', 'B1', 'E2', 'A2', 'C#3', 'F#3']),
-  guitarPreset('double-drop-d', 'Double Drop D', 'standard', ['D2', 'A2', 'D3', 'G3', 'B3', 'D4'])
+  guitarPreset('drop-eb', 'Drop Eb (D#)', 'standard', ['Eb1', 'Bb1', 'Eb2', 'Ab2', 'C3', 'F3']),
+  guitarPreset('drop-d1', 'Drop D1 (Octave)', 'standard', ['D1', 'A1', 'D2', 'G2', 'B2', 'E3']),
+  guitarPreset('drop-db1', 'Drop C#1 / Db1', 'standard', ['C#1', 'G#1', 'C#2', 'F#2', 'A#2', 'D#3']),
+  guitarPreset('drop-c1', 'Drop C1 (Octave)', 'standard', ['C1', 'G1', 'C2', 'F2', 'A2', 'D3']),
+  guitarPreset('drop-csharp-stdvar', 'Drop C# in Standard Var', 'standard', ['C#2', 'A2', 'D3', 'G3', 'B3', 'E4']),
+  guitarPreset('drop-c-stdvar', 'Drop C in Standard Var', 'standard', ['C2', 'A2', 'D3', 'G3', 'B3', 'E4']),
+  guitarPreset('drop-b-stdvar', 'Drop B in Standard Var', 'standard', ['B1', 'A2', 'D3', 'G3', 'B3', 'E4']),
+  guitarPreset('drop-b-e', 'Drop B-E (Tool)', 'standard', ['B1', 'E2', 'D3', 'G3', 'B3', 'E4']),
+  guitarPreset('drop-a-stdvar', 'Drop A in Standard Var', 'standard', ['A1', 'A2', 'D3', 'G3', 'B3', 'E4']),
+  guitarPreset('drop-a-dstd', 'Drop A in D Standard', 'standard', ['A1', 'G1', 'C2', 'F2', 'A2', 'D3']),
+  guitarPreset('drop-g-cstd', 'Drop G in C Standard', 'standard', ['G1', 'F1', 'A#1', 'D#2', 'G2', 'C3']),
+  guitarPreset('double-drop-csharp', 'Double Drop C#', 'standard', ['C#2', 'G#2', 'C#3', 'F#3', 'A#3', 'C#4']),
+  guitarPreset('double-drop-c', 'Double Drop C', 'standard', ['C2', 'G2', 'C3', 'F3', 'A3', 'C4']),
+  guitarPreset('double-drop-b', 'Double Drop B', 'standard', ['B1', 'F#2', 'B2', 'E3', 'G#3', 'B3']),
+  guitarPreset('double-drop-bb', 'Double Drop Bb', 'standard', ['A#1', 'F2', 'A#2', 'D#3', 'G3', 'A#3']),
+  guitarPreset('double-drop-a', 'Double Drop A', 'standard', ['A1', 'E2', 'A2', 'D3', 'F#3', 'A3']),
+  guitarPreset('double-drop-ab', 'Double Drop Ab', 'standard', ['Ab1', 'Eb2', 'Ab2', 'Db3', 'F3', 'Ab3']),
+  guitarPreset('double-drop-g', 'Double Drop G', 'standard', ['G1', 'D2', 'G2', 'C3', 'E3', 'G3']),
+  guitarPreset('double-drop-fsharp', 'Double Drop F#', 'standard', ['F#1', 'C#2', 'F#2', 'B2', 'D#3', 'F#3']),
+  guitarPreset('double-drop-f', 'Double Drop F', 'standard', ['F1', 'C2', 'F2', 'Bb2', 'D3', 'F3']),
+  guitarPreset('double-drop-e', 'Double Drop E', 'standard', ['E1', 'B1', 'E2', 'A2', 'C#3', 'E3']),
+  guitarPreset('double-drop-eb', 'Double Drop Eb', 'standard', ['Eb1', 'Bb1', 'Eb2', 'Ab2', 'C3', 'Eb3']),
+  guitarPreset('double-drop-d1', 'Double Drop D1 (Octave)', 'standard', ['D1', 'A1', 'D2', 'G2', 'B2', 'D3'])
 ];
 
 const GUITAR_6_OPEN: TunerPreset[] = [
@@ -164,7 +205,30 @@ const GUITAR_6_OPEN: TunerPreset[] = [
   guitarPreset('open-a', 'Open A', 'open', ['E2', 'A2', 'E3', 'A3', 'C#4', 'E4']),
   guitarPreset('open-dm', 'Open Dm', 'open', ['D2', 'A2', 'D3', 'F3', 'A3', 'D4']),
   guitarPreset('open-em', 'Open Em', 'open', ['E2', 'B2', 'E3', 'G3', 'B3', 'E4']),
-  guitarPreset('open-gm', 'Open Gm', 'open', ['D2', 'G2', 'D3', 'G3', 'Bb3', 'D4'])
+  guitarPreset('open-gm', 'Open Gm', 'open', ['D2', 'G2', 'D3', 'G3', 'Bb3', 'D4']),
+  guitarPreset('open-b', 'Open B', 'open', ['B1', 'F#2', 'B2', 'F#3', 'B3', 'D#4']),
+  guitarPreset('open-b-alt', 'Open B (Alt)', 'open', ['F#2', 'B2', 'D#3', 'F#3', 'B3', 'D#4']),
+  guitarPreset('open-c-overtones', 'Open C Overtones (CCGCEG)', 'open', ['C2', 'C2', 'G2', 'C3', 'E3', 'G3']),
+  guitarPreset('open-c-english', 'Open C (English Guitar)', 'open', ['C2', 'E2', 'G2', 'C3', 'E3', 'G3']),
+  guitarPreset('open-d-richards', 'Open D (Richards / Jumpin Jack Flash)', 'open', ['D2', 'A2', 'D3', 'A3', 'D4', 'D4']),
+  guitarPreset('open-csharp', 'Open C# / Db Major', 'open', ['C#2', 'G#2', 'C#3', 'F3', 'G#3', 'C#4']),
+  guitarPreset('open-e-dropped', 'Open E Dropped Variant (EG#BEBE)', 'open', ['E2', 'G#2', 'B2', 'E3', 'B3', 'E4']),
+  guitarPreset('open-f', 'Open F (Cotten / Levee Breaks)', 'open', ['F2', 'A2', 'C3', 'F3', 'C4', 'F4']),
+  guitarPreset('open-f-alt', 'Open F Alt (CFCFAC)', 'open', ['C2', 'F2', 'C3', 'F3', 'A3', 'C4']),
+  guitarPreset('open-f-mason', 'Open F (Dave Mason FF CFAC)', 'open', ['F2', 'F2', 'C3', 'F3', 'A3', 'C4']),
+  guitarPreset('open-fsharp', 'Open F#', 'open', ['F#2', 'A#2', 'C#3', 'F#3', 'C#4', 'F#4']),
+  guitarPreset('facgce-mathrock', 'FACGCE (Math Rock)', 'open', ['F2', 'A2', 'C3', 'G3', 'C4', 'E4']),
+  guitarPreset('wax-wings', 'FACGCE down 1.5 (Wax Wings)', 'open', ['D2', 'F#2', 'A2', 'E3', 'A3', 'C#4']),
+  guitarPreset('open-g-overtones', 'Open G Overtones (GGDBGD)', 'open', ['G2', 'G2', 'D3', 'G3', 'B3', 'D4']),
+  guitarPreset('open-g-slack', 'Open G Slack-Key / Dobro (GBDGBD)', 'open', ['G2', 'B2', 'D3', 'G3', 'B3', 'D4']),
+  guitarPreset('cross-a', 'Cross-Note A (Open Am)', 'open', ['E2', 'A2', 'E3', 'A3', 'C3', 'E4']),
+  guitarPreset('cross-a-alt', 'Cross-Note A Alt (EACEAE)', 'open', ['E2', 'A2', 'C3', 'E3', 'A3', 'E4']),
+  guitarPreset('cross-c', 'Cross-Note C (Open Cm)', 'open', ['C2', 'G2', 'C3', 'G3', 'C4', 'Eb4']),
+  guitarPreset('cross-c-overtones', 'Cross-Note C Overtones', 'open', ['C2', 'C2', 'G2', 'C3', 'Eb3', 'G3']),
+  guitarPreset('cross-c-seventh', 'Cross-Note C Overtones 7th', 'open', ['C2', 'C2', 'G2', 'C3', 'Eb3', 'Ab3']),
+  guitarPreset('cross-f', 'Cross-Note F (Rare)', 'open', ['F2', 'Ab2', 'C3', 'F3', 'C4', 'F4']),
+  guitarPreset('cross-f-alt', 'Cross-Note F Alt (Collins)', 'open', ['F2', 'C3', 'F3', 'Ab3', 'C4', 'F4']),
+  guitarPreset('sitar-a', 'Sitar A', 'open', ['E2', 'A2', 'E3', 'A3', 'E3', 'A3'])
 ];
 
 const GUITAR_6_ARTIST: TunerPreset[] = [
@@ -432,6 +496,19 @@ export const DETECT = {
   AUTO_ADVANCE_LOCK_MS: 1500,
   LABEL_HYSTERESIS_CENTS: 50,
   LABEL_HYSTERESIS_MS: 80,
+  /* Hold behaviour: keep the last confident reading on screen instead of
+     blanking between plucks. Weak frames (resonance tails, noise) never
+     overwrite the held value. */
+  ONSET_GAP_MS: 350,
+  UNRELIABLE_CONF: 0.32,
+  MESSAGE_PERSIST_FRAMES: 3,
+  /* Chromatic rail: cents falloff used to light neighbouring note pills */
+  RAIL_RANGE_CENTS: 150,
+  /* Meter scale: central ±FINE_CENTS linear core, then log-compressed out to
+     MAX_CENTS so breakage/looseness thresholds fit visibly on the meter */
+  METER_FINE_CENTS: 50,
+  METER_MAX_CENTS: 650,
+  METER_CORE_SPLIT: 0.68,
   RING_SAMPLES: 8192,
   WORK_WINDOW: 6144,
   WORKLET_CHUNK: 1024
