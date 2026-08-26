@@ -239,20 +239,10 @@ const categories = [
     flex-direction: column;
     gap: 16px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     width: 100%;
     max-width: 100%;
     padding-right: 4px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-neon-yellow) transparent;
-  }
-
-  .search-overlay-body::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  .search-overlay-body::-webkit-scrollbar-thumb {
-    background: var(--accent-neon-yellow);
-    border-radius: 4px;
   }
 
   .zero-state-suggestions {

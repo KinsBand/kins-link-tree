@@ -43,13 +43,14 @@ export function createMetroEngine() {
      module state mid-run */
   let runPerBeat = 1;
   let runBeatsPerBar = 4;
-  let runAccentFirst = true;
+  let runAccentFirst = false;
   let runVibrate = false;
+  let runBeatTiers = ['mid', 'mid', 'mid', 'mid'];
 
   /* Shared mutable ref owned by this module, updated by index.js */
   const runRef = { bpm: 120, playing: false };
 
-  /* Visual events awaiting their audible moment: { time, beatInBar, isAccent } */
+  /* Visual events awaiting their audible moment: { time, beatInBar, isAccent, tier } */
   const visualQueue = [];
   let onVisualBeat = null;
   let onInterruption = null;
@@ -82,7 +83,20 @@ export function createMetroEngine() {
     ctx = new AudioCtx({ latencyHint: 'interactive' });
     masterGain = ctx.createGain();
     masterGain.gain.value = 1;
-    masterGain.connect(ctx.destination);
+
+    /* Brickwall limiter: prevents digital clipping/distortion under heavy subdivisions & polyphonic overlap */
+    try {
+      const limiter = ctx.createDynamicsCompressor();
+      limiter.threshold.setValueAtTime(-0.5, ctx.currentTime);
+      limiter.knee.setValueAtTime(3, ctx.currentTime);
+      limiter.ratio.setValueAtTime(20, ctx.currentTime);
+      limiter.attack.setValueAtTime(0.001, ctx.currentTime);
+      limiter.release.setValueAtTime(0.04, ctx.currentTime);
+      masterGain.connect(limiter);
+      limiter.connect(ctx.destination);
+    } catch (e) {
+      masterGain.connect(ctx.destination);
+    }
     attachStateHandler();
 
     /* Prefer the AudioWorklet path; fall back silently to the hardened
@@ -122,7 +136,10 @@ export function createMetroEngine() {
   function onWorkletMessage(e) {
     const d = e.data;
     if (d && d.type === 'beat') {
-      visualQueue.push({ time: d.time, beatInBar: d.beatInBar, isAccent: !!d.isAccent });
+      /* Hard cap while rAF is paused (backgrounded): drop oldest so the
+         queue can never grow for the whole background duration. */
+      if (visualQueue.length >= METRO_TIMING.maxVisualQueueLen) visualQueue.shift();
+      visualQueue.push({ time: d.time, beatInBar: d.beatInBar, isAccent: !!d.isAccent, tier: d.tier || 'mid' });
       scheduledTotal = d.n || scheduledTotal + 1;
     }
   }
@@ -147,15 +164,23 @@ export function createMetroEngine() {
 
   /* ---------- legacy path internals ---------- */
 
-  function scheduleClick(time, isAccent, startsABeat) {
+  function scheduleClick(time, isAccent, startsABeat, tier) {
     const sound = getSound();
-    const freq = isAccent ? sound.accentFreq : sound.freq;
+    const t = tier || 'mid';
+    const ratio = t === 'low' ? 0.75 : (t === 'high' ? 1.5 : 1);
+    const baseFreq = isAccent ? sound.accentFreq : sound.freq;
+    const freq = baseFreq * ratio;
+    const peakGain = Math.max(0.0001, sound.gain) * (isAccent ? 1.15 : 1.0);
+
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = sound.type;
     osc.frequency.setValueAtTime(freq, time);
-    gain.gain.setValueAtTime(sound.gain, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + sound.decay);
+
+    /* Anti-pop micro attack (0.75ms) + smooth exponential decay */
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.exponentialRampToValueAtTime(peakGain, time + 0.0008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + sound.decay);
     osc.connect(gain);
     gain.connect(masterGain);
     osc.start(time);
@@ -173,8 +198,14 @@ export function createMetroEngine() {
   }
 
   function cancelSource(entry, now) {
-    try { entry.osc.stop(now); } catch (e) {}
-    try { entry.osc.disconnect(); entry.gain.disconnect(); } catch (e) {}
+    try {
+      /* Fast micro-fade (1.5ms) before stop prevents abrupt voltage drop crackle */
+      entry.gain.gain.setTargetAtTime(0, now, 0.0015);
+      entry.osc.stop(now + 0.005);
+      setTimeout(() => {
+        try { entry.osc.disconnect(); entry.gain.disconnect(); } catch (e) {}
+      }, 10);
+    } catch (e) {}
   }
 
   /* Cancel every scheduled click further than guardSec in the future and
@@ -212,6 +243,17 @@ export function createMetroEngine() {
     nextClickTime = Math.max(resumeAt, now + guardSec);
   }
 
+  /* Advance the cursor past one click that can no longer be scheduled in
+     time (timer throttling / main-thread stall pushed it into the past).
+     Counter bookkeeping mirrors the schedule loop so bar position and
+     accent pattern stay aligned — we just don't render a click. */
+  function skipMissedClick(clickDur) {
+    const startsABeat = Math.abs(clickCounter % runPerBeat) < 1e-9;
+    if (startsABeat) beatCounter++;
+    clickCounter++;
+    nextClickTime += clickDur;
+  }
+
   function schedulerTick() {
     if (!ctx || !runRef.playing || usingWorklet) return;
     if (ctx.state !== 'running') return; /* never schedule against a frozen clock */
@@ -222,8 +264,22 @@ export function createMetroEngine() {
     tickCount++;
 
     prunePending();
+    /* Hidden tabs throttle setInterval to ≥1s — the visible-mode window
+       would starve, so widen it while hidden. flushFrom() re-tightens on
+       the next tempo/option change. */
+    const aheadSec = (typeof document !== 'undefined' && document.hidden)
+      ? METRO_TIMING.hiddenScheduleAheadSec
+      : METRO_TIMING.scheduleAheadSec;
     const clickDur = 60 / runRef.bpm / runPerBeat;
-    while (nextClickTime < ctx.currentTime + METRO_TIMING.scheduleAheadSec) {
+    while (nextClickTime < ctx.currentTime + aheadSec) {
+      /* Resync guard: the cursor fell behind the audio clock. Scheduling
+         in the past makes every missed click fire at once as a distorted
+         burst followed by a catch-up delay — skip those beats instead
+         (past resyncGraceSec they are unplayable anyway). */
+      if (nextClickTime < ctx.currentTime - METRO_TIMING.resyncGraceSec) {
+        skipMissedClick(clickDur);
+        continue;
+      }
       /* perBeat ∈ {1, 1.5, 2, 3, 4, 6, 8} — modulo checks are FP-exact */
       const startsABeat = Math.abs(clickCounter % runPerBeat) < 1e-9;
       /* The beat this click belongs to: the one it opens, or the one
@@ -233,8 +289,9 @@ export function createMetroEngine() {
       const soundingBeat = startsABeat ? beatCounter : beatCounter - 1;
       const beatInBar = ((Math.max(0, soundingBeat) % runBeatsPerBar) + runBeatsPerBar) % runBeatsPerBar;
       const isAccent = runAccentFirst && startsABeat && beatInBar === 0;
-      scheduleClick(nextClickTime, isAccent, startsABeat);
-      visualQueue.push({ time: nextClickTime, beatInBar, isAccent });
+      const tier = (runBeatTiers && runBeatTiers[beatInBar]) || 'mid';
+      scheduleClick(nextClickTime, isAccent, startsABeat, tier);
+      visualQueue.push({ time: nextClickTime, beatInBar, isAccent, tier });
       nextClickTime += clickDur;
       clickCounter++;
       if (startsABeat) beatCounter++;
@@ -266,8 +323,17 @@ export function createMetroEngine() {
   function drainVisualQueue() {
     if (!ctx) return;
     const now = ctx.currentTime;
+    let fired = 0;
     while (visualQueue.length && visualQueue[0].time <= now + METRO_TIMING.visualDrainLeadSec) {
+      /* Burst cap: keep the remainder queued for subsequent frames so a
+         backlog spreads out instead of slamming the UI in one frame. */
+      if (fired >= METRO_TIMING.maxVisualPerFrame) break;
       const evt = visualQueue.shift();
+      /* Stale guard: events this far behind the clock belong to a
+         timeline that already played (suspension/throttle gap) — firing
+         them late is exactly the "delayed click" bug. Drop silently. */
+      if (evt.time < now - METRO_TIMING.staleVisualSec) continue;
+      fired++;
       firedBeats++;
       safeCall(onVisualBeat, evt);
       if (evt.isAccent && runVibrate && typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -291,6 +357,7 @@ export function createMetroEngine() {
     runBeatsPerBar = opts.beatsPerBar;
     runAccentFirst = opts.accentFirst;
     runVibrate = opts.vibrate;
+    if (Array.isArray(opts.tiers)) runBeatTiers = [...opts.tiers];
     onVisualBeat = opts.onVisualBeat || null;
     onInterruption = opts.onInterruption || null;
 
@@ -323,7 +390,8 @@ export function createMetroEngine() {
         bpm: runRef.bpm,
         perBeat: runPerBeat,
         beatsPerBar: runBeatsPerBar,
-        accentFirst: runAccentFirst
+        accentFirst: runAccentFirst,
+        tiers: runBeatTiers
       });
     } else {
       nextClickTime = ctx.currentTime + METRO_TIMING.startOffsetSec;
@@ -385,6 +453,45 @@ export function createMetroEngine() {
     }
   }
 
+  function updateTiers(tiers) {
+    if (Array.isArray(tiers)) runBeatTiers = [...tiers];
+    if (usingWorklet) {
+      postToWorklet({ type: 'tiers', tiers: runBeatTiers });
+      return;
+    }
+    if (runRef.playing && ctx) {
+      flushFrom(METRO_TIMING.changeGuardSec);
+      schedulerTick();
+    }
+  }
+
+  /* Auditions a single click immediately on user gesture even when stopped */
+  async function previewClick(tierId, soundId) {
+    const ok = await ensureContext();
+    if (!ok || !ctx) return;
+    if (ctx.state !== 'running') {
+      try { await ctx.resume(); } catch (e) {}
+    }
+    if (ctx.state !== 'running') return;
+    const sound = (soundId ? METRO_SOUNDS.find((s) => s.id === soundId) : null) || getSound();
+    const t = tierId || 'mid';
+    const ratio = t === 'low' ? 0.75 : (t === 'high' ? 1.5 : 1);
+    const freq = sound.freq * ratio;
+    const peakGain = Math.max(0.0001, sound.gain);
+    const time = ctx.currentTime + 0.01;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = sound.type;
+    osc.frequency.setValueAtTime(freq, time);
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.exponentialRampToValueAtTime(peakGain, time + 0.0008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + sound.decay);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(time);
+    osc.stop(time + sound.decay + 0.02);
+  }
+
   /* Sound can be swapped live in both paths; the worklet needs a message,
      the legacy path reads it per-click at schedule time. */
   function updateSound(id) {
@@ -393,7 +500,8 @@ export function createMetroEngine() {
 
   function setVolume(value) {
     if (!masterGain || !ctx) return;
-    masterGain.gain.setTargetAtTime(Math.max(0.0001, value), ctx.currentTime, 0.02);
+    const target = Math.max(0.00001, Math.min(1, value));
+    masterGain.gain.setTargetAtTime(target, ctx.currentTime, 0.015);
   }
 
   function suspend() {
@@ -403,6 +511,22 @@ export function createMetroEngine() {
   function resume() {
     if (ctx && (ctx.state === 'suspended' || ctx.state === 'interrupted')) {
       try { const p = ctx.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    }
+  }
+
+  /* Re-seat the schedule cursor after a timeline disruption (return from
+     background, OS interruption). The worklet's clock may need an explicit
+     nudge; the legacy path self-heals via the schedulerTick resync guard
+     but we also drop now-stale visual events so nothing bursts. */
+  function sync() {
+    if (!ctx || !runRef.playing) return;
+    if (usingWorklet) {
+      postToWorklet({ type: 'sync', offsetSec: METRO_TIMING.startOffsetSec });
+    } else if (nextClickTime < ctx.currentTime - METRO_TIMING.resyncGraceSec) {
+      nextClickTime = ctx.currentTime + METRO_TIMING.startOffsetSec;
+    }
+    while (visualQueue.length && visualQueue[0].time < ctx.currentTime - METRO_TIMING.staleVisualSec) {
+      visualQueue.shift();
     }
   }
 
@@ -430,10 +554,13 @@ export function createMetroEngine() {
     stop,
     updateBpm,
     updateOptions,
+    updateTiers,
+    previewClick,
     updateSound,
     setVolume,
     suspend,
     resume,
+    sync,
     getDebugState,
     get playing() { return runRef.playing; },
     get mode() { return usingWorklet ? 'worklet' : 'legacy'; }

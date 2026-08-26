@@ -38,7 +38,7 @@ export const rehearsalConfig: RehearsalConfig = {
   tools: [
     {
       id: 'tuner',
-      icon: 'fa-solid fa-guitar',
+      icon: 'tuner',
       title: 'TUNER',
       shortTitle: 'TUNER',
       desktopBullets: [
@@ -53,7 +53,7 @@ export const rehearsalConfig: RehearsalConfig = {
     },
     {
       id: 'metronome',
-      icon: 'fa-solid fa-drum',
+      icon: 'metronome',
       title: 'METRONOME',
       shortTitle: 'METRONOME',
       desktopBullets: [

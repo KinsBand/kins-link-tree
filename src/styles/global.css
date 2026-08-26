@@ -60,6 +60,68 @@ body.modal-open {
   display: none !important;
 }
 
+/* ==========================================================================
+   Brutal Scrollbars (Option A — Brutal Block)
+   ========================================================================== */
+/* Firefox root-level & global scrollbar color (solid slab) */
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Webkit custom scrollbars */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size-v);
+  height: var(--scrollbar-size-h);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border: 2px solid #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 2px solid #000000;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
+/* Horizontal Scrollbar Utility: Slimmer pill-radius variant for horizontal scrollers */
+.brutal-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.brutal-scroll-x::-webkit-scrollbar {
+  height: 6px;
+}
+
+.brutal-scroll-x::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border: 1.5px solid #000000;
+  border-radius: var(--radius-pill);
+}
+
+.brutal-scroll-x::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 1.5px solid #000000;
+  border-radius: var(--radius-pill);
+}
+
+.brutal-scroll-x::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
 /* Pure CSS Tape Realism */
 .tape-tag {
   background: var(--surface-tape);
@@ -1493,11 +1555,6 @@ html.low-power-mode .sheet-container {
 
 [data-theme="dark"] .scroll-fade-edge-right {
   background: linear-gradient(90deg, transparent, var(--surface-card-light)) !important;
-}
-
-/* Scrollbars in Dark Mode */
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: var(--accent-neon-yellow) !important;
 }
 
 /* ==========================================================================

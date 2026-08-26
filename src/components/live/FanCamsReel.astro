@@ -21,7 +21,7 @@ const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith(
     </div>
   </div>
 
-  <div class="fan-cams-reel-container" id="fanCamsReel">
+  <div class="fan-cams-reel-container brutal-scroll-x" id="fanCamsReel">
     <div class="fan-cams-track">
       <!-- Dynamic Streamer Cards -->
       {liveConfig.fanCams.map((stream) => (
@@ -161,17 +161,6 @@ const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith(
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 8px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-neon-yellow) transparent;
-  }
-
-  .fan-cams-reel-container::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  .fan-cams-reel-container::-webkit-scrollbar-thumb {
-    background: var(--accent-neon-yellow);
-    border-radius: 4px;
   }
 
   .fan-cams-track {

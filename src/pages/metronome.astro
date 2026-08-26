@@ -2,6 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
 import FeedbackModal from '../components/modals/FeedbackModal.astro';
+import PrivacyModal from '../components/modals/PrivacyModal.astro';
+import TermsModal from '../components/modals/TermsModal.astro';
 ---
 
 <BaseLayout
@@ -47,19 +49,23 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
         </div>
       </section>
 
-      <!-- KINS Sheet Strip — per-song horizontal sheet music (PDF/GP/XML) in brutalist chrome -->
+      <!-- KINS Sheet Strip — per-song horizontal bar-by-bar sheet music in brutalist chrome -->
       <section class="metro-sheet-strip" id="metroSheetStrip" aria-label="Sheet music" hidden>
         <div class="metro-sheet-strip-head">
           <span class="metro-sheet-strip-title" id="metroSheetStripTitle">NO SHEET LOADED</span>
+          <span class="metro-sheet-strip-bar" id="metroSheetBarChip" hidden></span>
           <span class="metro-sheet-strip-bpm" id="metroSheetStripBpm" hidden></span>
           <button type="button" class="metro-sheet-strip-upload brutal-press" id="metroSheetStripUpload" aria-label="Upload sheet music"><i class="fa-solid fa-upload" aria-hidden="true"></i> UPLOAD</button>
         </div>
-        <div class="metro-sheet-track" id="metroSheetTrack" role="region" aria-label="Sheet pages" tabindex="0"></div>
+        <div class="metro-sheet-track" id="metroSheetTrack" role="region" aria-label="Sheet bars" tabindex="0"></div>
         <input type="file" id="metroSheetFileInput" accept=".pdf,.gp,.gp5,.xml,.musicxml,.mxl" hidden aria-hidden="true" />
       </section>
       <div class="metro-sheet-toggles" id="metroSheetToggles" hidden aria-label="Sheet options">
         <button type="button" class="metro-sheet-toggle brutal-press" id="metroSheetFollowBtn" aria-pressed="false" aria-label="Toggle auto-scroll follow">
           <i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i> FOLLOW
+        </button>
+        <button type="button" class="metro-sheet-toggle brutal-press" id="metroSheetSyncBtn" aria-pressed="false" aria-label="Toggle score sync — time signature follows the sheet">
+          <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> SYNC
         </button>
         <button type="button" class="metro-sheet-toggle brutal-press" id="metroSheetLoopBtn" aria-pressed="false" aria-label="Toggle loop">
           <i class="fa-solid fa-repeat" aria-hidden="true"></i> LOOP
@@ -218,25 +224,49 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
               Radial Bars
             </button>
           </div>
-          <div class="metro-toggle-row">
-            <label class="metro-toggle">
-              <input type="checkbox" id="metroAccentToggle" checked />
-              <span class="metro-toggle-track" aria-hidden="true"><span class="metro-toggle-knob"></span></span>
-              <span class="metro-toggle-text">ACCENT FIRST BEAT</span>
-            </label>
-            <label class="metro-toggle">
-              <input type="checkbox" id="metroFlashToggle" />
-              <span class="metro-toggle-track" aria-hidden="true"><span class="metro-toggle-knob"></span></span>
-              <span class="metro-toggle-text">FLASH ON BEAT</span>
-            </label>
-            <label class="metro-toggle">
-              <input type="checkbox" id="metroVibrateToggle" />
-              <span class="metro-toggle-track" aria-hidden="true"><span class="metro-toggle-knob"></span></span>
-              <span class="metro-toggle-text">VIBRATE ON BEAT</span>
-            </label>
+          <div class="metro-settings-header-row">
+            <p class="metro-settings-label">OPTIONS</p>
+            <button type="button" class="metro-settings-info-btn brutal-press" id="metroOptionsInfo" aria-label="Playback options help">
+              <i class="fa-solid fa-info" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="metro-settoggle-grid" role="group" aria-label="Metronome options">
+            <button type="button" class="metro-settoggle brutal-press" id="metroFlashToggle" aria-pressed="false">
+              <i class="fa-regular fa-lightbulb" aria-hidden="true"></i>
+              <span>FLASH</span>
+            </button>
+            <button type="button" class="metro-settoggle brutal-press" id="metroVibrateToggle" aria-pressed="false">
+              <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
+              <span>VIBRATE</span>
+            </button>
+            <button type="button" class="metro-settoggle brutal-press" id="metroKeepAwakeToggle" aria-pressed="false">
+              <i class="fa-solid fa-display" aria-hidden="true"></i>
+              <span>SCREEN ON</span>
+            </button>
+            <button type="button" class="metro-settoggle brutal-press" id="metroBackgroundToggle" aria-pressed="false">
+              <i class="fa-solid fa-window-restore" aria-hidden="true"></i>
+              <span>BACKGROUND</span>
+            </button>
+          </div>
+          <div class="metro-pitch-section" id="metroPitchSection">
+            <div class="metro-settings-header-row">
+              <p class="metro-settings-label">PITCH MAP</p>
+              <button type="button" class="metro-settings-info-btn brutal-press" id="metroPitchInfo" aria-label="Pitch map help">
+                <i class="fa-solid fa-info" aria-hidden="true"></i>
+              </button>
+            </div>
+            <button type="button" class="metro-reset-pitch-btn brutal-press" id="metroResetPitchBtn" aria-label="Reset pitch map to default" data-track="metronome:tiers_reset">
+              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+              <span>RESET PITCH MAP</span>
+            </button>
           </div>
           <div class="metro-midi-section" id="metroMidiSection">
-            <p class="metro-settings-label" style="margin-top: 10px;">MIDI DEVICE</p>
+            <div class="metro-settings-header-row">
+              <p class="metro-settings-label">MIDI DEVICE</p>
+              <button type="button" class="metro-settings-info-btn brutal-press" id="metroMidiInfo" aria-label="MIDI device help">
+                <i class="fa-solid fa-info" aria-hidden="true"></i>
+              </button>
+            </div>
             <div class="metro-midi-card">
               <div class="metro-midi-status-row">
                 <span class="metro-midi-dot" id="metroMidiDot" aria-hidden="true"></span>
@@ -251,18 +281,49 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
                 </button>
                 <select id="metroMidiSelect" class="metro-midi-select" aria-label="Select MIDI input" hidden></select>
               </div>
-              <p class="metro-midi-hint">Any velocity note 35–81 triggers tap. Works with drum pads &amp; keyboards.</p>
             </div>
           </div>
-        </div>
-        <div class="metro-settings-footer">
-          <button type="button" class="metro-copy-link-card brutal-press" id="metroCopyLinkBtn" aria-label="Copy Metronome link" data-track="metronome:copy_link">
-            <div class="metro-copy-link-left">
-              <i class="fa-solid fa-link" aria-hidden="true"></i>
-              <span class="metro-copy-link-text">Share Metronome</span>
+          <div class="metro-settings-copy-wrap">
+            <button type="button" class="metro-copy-link-card brutal-press" id="metroCopyLinkBtn" aria-label="Copy Metronome link" data-track="metronome:copy_link">
+              <div class="metro-copy-link-left">
+                <i class="fa-solid fa-link" aria-hidden="true"></i>
+                <span class="metro-copy-link-text">Share Metronome</span>
+              </div>
+              <span class="metro-copy-badge" id="metroCopyBadge">Copy</span>
+            </button>
+          </div>
+
+          <div class="metro-sheet-footer-card">
+            <div class="footer-theme-toggle-wrap">
+              <div class="footer-theme-toggle-btn" id="metroThemeToggleBtn" role="group" aria-label="Toggle Display Theme" data-track="metronome:theme_toggle">
+                <span class="theme-current-title" id="metroThemeCurrentTitle">Light</span>
+                <div class="theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
+                  <button type="button" class="theme-pill-btn active theme-pill-light" id="metroThemePillLightBtn" data-theme-target="standard" aria-label="Light Mode" title="Switch to Light Mode">
+                    <i class="fa-solid fa-sun" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="theme-pill-btn theme-pill-dark" id="metroThemePillDarkBtn" data-theme-target="dark" aria-label="Dark Mode" title="Switch to Dark Mode">
+                    <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <span class="theme-mode-label">Mode</span>
+              </div>
             </div>
-            <span class="metro-copy-badge" id="metroCopyBadge">Copy</span>
-          </button>
+
+            <div class="footer-badge-row">
+              <span class="footer-brand-badge">
+                <i class="fa-solid fa-compact-disc footer-brand-icon"></i>
+                <span class="footer-copyright-text">@<span id="metroCopyrightYear">2026</span> KINS.</span>
+              </span>
+            </div>
+
+            <nav class="footer-legal-links" aria-label="Legal & Feedback Links">
+              <button type="button" id="metroOpenPrivacyFooterBtn" class="footer-legal-btn open-privacy-trigger">Privacy Policy</button>
+              <span class="legal-bullet" aria-hidden="true">•</span>
+              <button type="button" id="metroOpenSuggestImprovementFooterBtn" class="footer-legal-btn open-feedback-trigger" data-open-feedback data-feedback-category="Metronome">Suggest Improvement</button>
+              <span class="legal-bullet" aria-hidden="true">•</span>
+              <button type="button" id="metroOpenTermsFooterBtn" class="footer-legal-btn open-terms-trigger">Fan Submission Terms</button>
+            </nav>
+          </div>
         </div>
       </section>
 
@@ -287,10 +348,12 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
             <i class="fa-solid fa-trash" aria-hidden="true"></i> CLEAR SHEET
           </button>
         </div>
-        <p class="metro-midi-hint" style="margin-top:8px">Whole pages scroll horizontally in the strip. Toggle FOLLOW to auto-scroll with the click.</p>
+        <p class="metro-midi-hint" style="margin-top:8px">Sheets are stored on this device only (never uploaded). Pages scroll horizontally in the strip — toggle FOLLOW to auto-scroll with the click.</p>
       </section>
     </div>
 
+    <PrivacyModal />
+    <TermsModal />
     <FeedbackModal />
 
     <ToastContainer />
@@ -527,6 +590,7 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     position: absolute;
     inset: 0;
     pointer-events: none;
+    z-index: 2;
   }
 
   :global(.metro-beat-dot) {
@@ -540,10 +604,46 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     background: #1e1e24;
     border: 2px solid #2a2a30;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-    opacity: 0.55;
+    opacity: 0.7;
+    pointer-events: auto;
+    cursor: pointer;
     transition: background-color 0.14s var(--ease-tactile), opacity 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s var(--ease-spring);
   }
 
+  :global(.metro-beat-dot:focus-visible) {
+    outline: 2px solid #F2FD43;
+    outline-offset: 3px;
+  }
+
+  /* Idle dots — subtle tint per pitch tier */
+  :global(.metro-beat-dot.tier-low) {
+    background: #121c12;
+    border-color: rgba(83, 252, 24, 0.45);
+    box-shadow: 0 0 6px rgba(83, 252, 24, 0.15);
+  }
+
+  :global(.metro-beat-dot.tier-mid) {
+    background: #1e1e24;
+    border-color: rgba(216, 178, 68, 0.4);
+    box-shadow: 0 0 6px rgba(216, 178, 68, 0.12);
+  }
+
+  :global(.metro-beat-dot.tier-high) {
+    background: #221212;
+    border-color: rgba(255, 77, 61, 0.45);
+    box-shadow: 0 0 6px rgba(255, 77, 61, 0.15);
+  }
+
+  /* Active dots */
+  :global(.metro-beat-dot.active.tier-low) {
+    background: #53FC18;
+    border-color: #53FC18;
+    opacity: 1;
+    box-shadow: 0 0 12px rgba(83, 252, 24, 0.6), 0 0 22px rgba(83, 252, 24, 0.3);
+    transform: scale(1.25);
+  }
+
+  :global(.metro-beat-dot.active.tier-mid),
   :global(.metro-beat-dot.active) {
     background: #D8B244;
     border-color: #D8B244;
@@ -552,11 +652,37 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     transform: scale(1.25);
   }
 
+  :global(.metro-beat-dot.active.tier-high) {
+    background: #FF4D3D;
+    border-color: #FF4D3D;
+    opacity: 1;
+    box-shadow: 0 0 12px rgba(255, 77, 61, 0.6), 0 0 22px rgba(255, 77, 61, 0.3);
+    transform: scale(1.25);
+  }
+
+  /* Active Accent dots */
+  :global(.metro-beat-dot.active.accent.tier-low) {
+    background: #53FC18;
+    border-color: #85FF55;
+    opacity: 1;
+    box-shadow: 0 0 16px rgba(83, 252, 24, 0.8), 0 0 28px rgba(83, 252, 24, 0.4);
+    transform: scale(1.4);
+  }
+
+  :global(.metro-beat-dot.active.accent.tier-mid),
   :global(.metro-beat-dot.active.accent) {
     background: #D8B244;
     border-color: #FFD86B;
     opacity: 1;
     box-shadow: 0 0 16px rgba(216, 178, 68, 0.75), 0 0 28px rgba(216, 178, 68, 0.35);
+    transform: scale(1.4);
+  }
+
+  :global(.metro-beat-dot.active.accent.tier-high) {
+    background: #FF4D3D;
+    border-color: #FF8577;
+    opacity: 1;
+    box-shadow: 0 0 16px rgba(255, 77, 61, 0.8), 0 0 28px rgba(255, 77, 61, 0.4);
     transform: scale(1.4);
   }
 
@@ -568,7 +694,7 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     height: 92%;
     pointer-events: none;
     overflow: visible;
-    z-index: 0;
+    z-index: 2;
   }
 
   .metro-radial-ring :global(.metro-radial-seg) {
@@ -576,10 +702,39 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     stroke: rgba(255, 255, 255, 0.08);
     stroke-width: 7;
     stroke-linecap: round;
+    pointer-events: stroke;
+    cursor: pointer;
     transition: stroke 0.12s ease, filter 0.12s ease, stroke-width 0.12s ease, opacity 0.12s ease;
     opacity: 0.9;
   }
 
+  .metro-radial-ring :global(.metro-radial-seg:focus-visible) {
+    outline: 2px solid #F2FD43;
+    outline-offset: 3px;
+  }
+
+  /* Idle radial segments */
+  .metro-radial-ring :global(.metro-radial-seg.tier-low) {
+    stroke: rgba(83, 252, 24, 0.25);
+  }
+
+  .metro-radial-ring :global(.metro-radial-seg.tier-mid) {
+    stroke: rgba(216, 178, 68, 0.2);
+  }
+
+  .metro-radial-ring :global(.metro-radial-seg.tier-high) {
+    stroke: rgba(255, 77, 61, 0.25);
+  }
+
+  /* Active radial segments */
+  .metro-radial-ring :global(.metro-radial-seg.active.tier-low) {
+    stroke: #53FC18;
+    stroke-width: 7.5;
+    filter: drop-shadow(0 0 6px rgba(83, 252, 24, 0.6));
+    opacity: 1;
+  }
+
+  .metro-radial-ring :global(.metro-radial-seg.active.tier-mid),
   .metro-radial-ring :global(.metro-radial-seg.active) {
     stroke: #D8B244;
     stroke-width: 7.5;
@@ -587,10 +742,31 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     opacity: 1;
   }
 
+  .metro-radial-ring :global(.metro-radial-seg.active.tier-high) {
+    stroke: #FF4D3D;
+    stroke-width: 7.5;
+    filter: drop-shadow(0 0 6px rgba(255, 77, 61, 0.6));
+    opacity: 1;
+  }
+
+  /* Active Accent radial segments */
+  .metro-radial-ring :global(.metro-radial-seg.active.accent.tier-low) {
+    stroke: #85FF55;
+    stroke-width: 8;
+    filter: drop-shadow(0 0 10px rgba(83, 252, 24, 0.85)) drop-shadow(0 0 18px rgba(133, 255, 85, 0.35));
+  }
+
+  .metro-radial-ring :global(.metro-radial-seg.active.accent.tier-mid),
   .metro-radial-ring :global(.metro-radial-seg.active.accent) {
     stroke: #FFD86B;
     stroke-width: 8;
     filter: drop-shadow(0 0 10px rgba(216, 178, 68, 0.85)) drop-shadow(0 0 18px rgba(255, 216, 107, 0.35));
+  }
+
+  .metro-radial-ring :global(.metro-radial-seg.active.accent.tier-high) {
+    stroke: #FF8577;
+    stroke-width: 8;
+    filter: drop-shadow(0 0 10px rgba(255, 77, 61, 0.85)) drop-shadow(0 0 18px rgba(255, 133, 119, 0.35));
   }
 
   /* hide dots when radial is active, hide ring when dots active */
@@ -774,6 +950,23 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     font-variant-numeric: tabular-nums;
   }
 
+  .metro-sheet-strip-bar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 8px;
+    background: #0f0f12;
+    color: #D8B244;
+    border: 1px solid rgba(216, 178, 68, 0.4);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
   .metro-sheet-strip-upload {
     display: inline-flex;
     align-items: center;
@@ -809,14 +1002,10 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     padding: 2px 2px 6px;
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(216, 178, 68, 0.35) transparent;
     touch-action: pan-x;
     outline: none;
   }
 
-  .metro-sheet-track::-webkit-scrollbar { height: 6px; }
-  .metro-sheet-track::-webkit-scrollbar-thumb { background: rgba(216,178,68,0.35); border-radius: 999px; }
   .metro-sheet-track:focus-visible { outline: 2px solid #D8B244; outline-offset: 2px; }
 
   /* page cards are JS-created at runtime → styled in the is:global block below */
@@ -889,14 +1078,26 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
 
   .metro-stepper-strip {
     display: grid;
-    grid-template-columns: 1fr 1.25fr 1fr;
+    grid-template-columns: 30% 1fr 30%;
     gap: 12px;
     width: 100%;
     align-items: center;
   }
 
   .metro-stepper-strip.no-instrument {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 30% 1fr 30%;
+  }
+
+  #metroBpmMinus {
+    grid-column: 1;
+  }
+
+  #metroInstrumentBtn {
+    grid-column: 2;
+  }
+
+  #metroBpmPlus {
+    grid-column: 3;
   }
 
   .metro-stepper-btn {
@@ -1510,8 +1711,8 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
 
   .metro-sound-row {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+    gap: 8px;
   }
 
   /* ---------- subdivision row ---------- */
@@ -1521,8 +1722,6 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     overflow-x: auto;
     padding: 4px 2px 8px;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(216, 178, 68, 0.35) transparent;
   }
 
   :global(.metro-sub-chip) {
@@ -1667,19 +1866,8 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     overflow-y: hidden;
     padding: 2px 2px 6px;
     margin-bottom: 2px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(216, 178, 68, 0.35) transparent;
     -webkit-overflow-scrolling: touch;
     flex-shrink: 0;
-  }
-
-  .metro-setlist-filters::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  .metro-setlist-filters::-webkit-scrollbar-thumb {
-    background: rgba(216, 178, 68, 0.35);
-    border-radius: 999px;
   }
 
   .metro-setlist-filter {
@@ -2096,11 +2284,12 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
   .metro-setlist-header .metro-custom-form-wrap {
     position: absolute;
     top: calc(100% + 6px);
-    left: -18px;
-    right: -18px;
+    left: 0;
+    right: 0;
     z-index: 5;
     margin-top: 0;
     padding: 0;
+    max-height: calc(78vh - 120px);
     max-height: calc(78dvh - 120px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -2384,6 +2573,17 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     box-shadow: 0 0 0 2px rgba(216,178,68,0.15), 1px 1px 0 #000;
   }
 
+  :global(.metro-custom-input::-webkit-outer-spin-button),
+  :global(.metro-custom-input::-webkit-inner-spin-button) {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  :global(.metro-custom-input[type="number"]) {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
   :global(.metro-custom-input--error) {
     border-color: #c0392b !important;
   }
@@ -2501,6 +2701,44 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
   }
 
   /* ---------- settings — volume, beat style, toggles ========== */
+  .metro-settings-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .metro-settings-header-row .metro-settings-label {
+    margin: 0;
+  }
+
+  .metro-settings-info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    background: #1e1e24;
+    color: #a1a1aa;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    font-size: 0.65rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, color 0.16s ease, background-color 0.16s ease;
+  }
+
+  .metro-settings-info-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    color: #D8B244;
+    background: #25252e;
+  }
+
   .metro-settings-label {
     margin: 4px 0 0;
     font-family: var(--font-secondary);
@@ -2632,6 +2870,60 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     outline-offset: 2px;
   }
 
+  /* settings toggle buttons — 4+ per row, icon over label */
+  .metro-settoggle-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .metro-settoggle {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 4px;
+    background: #1e1e24;
+    color: #a1a1aa;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+
+  .metro-settoggle i {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+
+  .metro-settoggle:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    color: #f5f5f7;
+    background: #25252e;
+  }
+
+  .metro-settoggle.active {
+    background: #D8B244;
+    color: #000000;
+    border-color: #000000;
+  }
+
+  .metro-settoggle:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+
   .metro-toggle-row {
     display: flex;
     flex-direction: column;
@@ -2640,6 +2932,7 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
   }
 
   .metro-toggle {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2649,8 +2942,12 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
   .metro-toggle input {
     position: absolute;
     opacity: 0;
-    width: 1px;
-    height: 1px;
+    width: 100%;
+    height: 100%;
+    inset: 0;
+    cursor: pointer;
+    z-index: 1;
+    margin: 0;
   }
 
   .metro-toggle-track {
@@ -2698,6 +2995,14 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     font-weight: 800;
     letter-spacing: 0.14em;
     color: #f5f5f7;
+  }
+
+  .metro-settings-hint {
+    margin: 8px 0 0;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    color: #71717a;
+    line-height: 1.35;
   }
 
   /* ---------- copy link card in settings ---------- */
@@ -2765,6 +3070,246 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
   .metro-copy-badge.copied {
     background: #22c55e;
     color: #000000;
+  }
+
+  /* ---------- Sheet Footer Card: Theme Toggle & Legal Links ---------- */
+  .metro-sheet-footer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 2px solid rgba(255, 255, 255, 0.08);
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .footer-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .footer-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: #18181b;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 5px 14px;
+    border-radius: 6px;
+    user-select: none;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .footer-brand-badge:hover {
+    background: #27272a;
+    transform: translateY(-1px);
+  }
+
+  .footer-brand-icon {
+    font-size: 0.8rem;
+    color: var(--accent-neon-yellow);
+  }
+
+  .footer-legal-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .footer-legal-btn {
+    background: transparent;
+    border: none;
+    color: #a1a1aa;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: color 0.16s ease, background-color 0.16s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .footer-legal-btn:hover,
+  .footer-legal-btn:focus-visible {
+    color: var(--accent-neon-yellow);
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+  }
+
+  .legal-bullet {
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  @media (max-width: 480px) {
+    .footer-legal-links {
+      gap: 4px 8px;
+    }
+    .footer-legal-btn {
+      font-size: 0.68rem;
+      padding: 3px 6px;
+    }
+  }
+
+  .footer-theme-toggle-wrap {
+    width: 100%;
+  }
+
+  .footer-theme-toggle-btn {
+    width: 100%;
+    min-height: 48px;
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    padding: 6px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    user-select: none;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
+  .footer-theme-toggle-btn:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .footer-theme-toggle-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .theme-current-title {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.92rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-card-primary);
+    flex: 1 1 0;
+    text-align: left;
+  }
+
+  .theme-pill-segmented {
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    border-radius: 20px;
+    padding: 3px;
+    gap: 3px;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    flex: 0 0 auto;
+  }
+
+  .theme-pill-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    background: transparent;
+    color: var(--text-card-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    font-size: 0.82rem;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.18s ease, color 0.18s ease, box-shadow 0.16s ease;
+  }
+
+  .theme-pill-btn:hover {
+    color: var(--text-card-primary);
+    transform: scale(1.1);
+  }
+
+  .theme-pill-btn.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 1px 1px 0px #000000;
+    transform: scale(1.06);
+  }
+
+  .theme-mode-label {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-card-secondary);
+    flex: 1 1 0;
+    text-align: right;
+  }
+
+  /* ---------- pitch map section inside settings ---------- */
+  .metro-pitch-section {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .metro-reset-pitch-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: #1a1a20;
+    color: #f5f5f7;
+    border: 2px solid #000;
+    box-shadow: 2px 2px 0px #000;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+  }
+
+  .metro-reset-pitch-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000;
+    background: #24242c;
   }
 
   /* ---------- midi section inside settings ---------- */
@@ -2908,18 +3453,7 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     overflow-x: auto;
     gap: 8px;
     padding-bottom: 4px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(216, 178, 68, 0.35) transparent;
     -webkit-overflow-scrolling: touch;
-  }
-
-  .metro-coach-tablist::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  .metro-coach-tablist::-webkit-scrollbar-thumb {
-    background: rgba(216, 178, 68, 0.35);
-    border-radius: 999px;
   }
 
   :global(.metro-coach-tab) {
@@ -2994,467 +3528,7 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     color: #71717a;
   }
 
-  /* ---------- coach editor cards (brutal) ---------- */
-  .metro-coach-card {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-    background: #1e1e24;
-    border: 2px solid #000000;
-    box-shadow: 3px 3px 0px #000000;
-    border-radius: var(--radius-md);
-    padding: 14px 12px;
-    box-sizing: border-box;
-  }
 
-  .metro-coach-card--dark {
-    background: #141418;
-  }
-
-  .metro-coach-head {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .metro-coach-card-title {
-    margin: 0;
-    font-family: var(--font-heading);
-    font-size: 1.05rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    color: #f5f5f7;
-  }
-
-  .metro-coach-card-blurb {
-    margin: 0;
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    color: #a1a1aa;
-    line-height: 1.35;
-  }
-
-  .metro-coach-cycle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background: #0f0f12;
-    border: 2px solid #000;
-    border-radius: var(--radius-pill);
-    padding: 8px 10px;
-    font-family: var(--font-secondary);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #f5f5f7;
-    flex-wrap: wrap;
-  }
-
-  .metro-coach-cycle strong {
-    color: #D8B244;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-  }
-
-  .metro-cycle-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 26px;
-    height: 26px;
-    padding: 0 6px;
-    background: #2a2a30;
-    color: #f5f5f7;
-    border: 1px solid #000;
-    border-radius: var(--radius-sm);
-    font-size: 0.72rem;
-    font-weight: 800;
-  }
-
-  .metro-cycle-chip.audible { background: #f5f5f7; color: #000; }
-  .metro-cycle-chip.muted { background: #D8B244; color: #000; }
-
-  .metro-coach-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .metro-coach-field-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    font-family: var(--font-secondary);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #a1a1aa;
-  }
-
-  .metro-coach-field-label strong {
-    color: #D8B244;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .metro-coach-slider-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #0f0f12;
-    border: 2px solid #000;
-    border-radius: var(--radius-md);
-    padding: 10px 10px;
-  }
-
-  /* ---------- dual-thumb range — unified track with two handles ---------- */
-  .metro-dual-range {
-    position: relative;
-    display: block;
-    height: 42px;
-    background: #0f0f12;
-    border: 2px solid #000;
-    border-radius: var(--radius-md);
-    padding: 0 12px;
-    box-sizing: border-box;
-  }
-
-  .metro-dual-track {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 8px;
-    background: #2a2a30;
-    border: 1px solid #000;
-    border-radius: 999px;
-    pointer-events: none;
-  }
-
-  .metro-dual-fill {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 8px;
-    background: #D8B244;
-    border-radius: 999px;
-    pointer-events: none;
-  }
-
-  .metro-dual-range input[type="range"] {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: calc(100% - 24px);
-    height: 8px;
-    margin: 0;
-    -webkit-appearance: none;
-    appearance: none;
-    background: transparent;
-    pointer-events: none;
-    outline: none;
-  }
-
-  .metro-dual-range input[type="range"]::-webkit-slider-runnable-track {
-    height: 8px;
-    background: transparent;
-  }
-
-  .metro-dual-range input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #D8B244;
-    border: 2px solid #000;
-    box-shadow: 1px 1px 0 #000;
-    cursor: pointer;
-    pointer-events: auto;
-    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease;
-  }
-
-  .metro-dual-range input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.08);
-  }
-
-  .metro-dual-range input[type="range"]::-moz-range-track {
-    height: 8px;
-    background: transparent;
-    border: none;
-  }
-
-  .metro-dual-range input[type="range"]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #D8B244;
-    border: 2px solid #000;
-    box-shadow: 1px 1px 0 #000;
-    cursor: pointer;
-    pointer-events: auto;
-  }
-
-  /* inner-clock thumb colours — audible light, muted gold */
-  #coachInnerAudible::-webkit-slider-thumb { background: #f5f5f7; }
-  #coachInnerAudible::-moz-range-thumb { background: #f5f5f7; }
-  #coachInnerMuted::-webkit-slider-thumb { background: #D8B244; }
-  #coachInnerMuted::-moz-range-thumb { background: #D8B244; }
-
-  /* speed trainer thumbs — start darker, target gold */
-  #coachSpeedStart::-webkit-slider-thumb { background: #E2C06A; }
-  #coachSpeedStart::-moz-range-thumb { background: #E2C06A; }
-  #coachSpeedTarget::-webkit-slider-thumb { background: #D8B244; }
-  #coachSpeedTarget::-moz-range-thumb { background: #D8B244; }
-
-  .metro-coach-dual-labels {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-top: 4px;
-    font-family: var(--font-secondary);
-    font-size: 0.62rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    color: #71717a;
-  }
-
-  .metro-coach-dual-labels strong { color: #D8B244; font-variant-numeric: tabular-nums; }
-
-  /* ---------- balanced two-col for Step + Interval ---------- */
-  .metro-coach-two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .metro-coach-two-col .metro-coach-field {
-    min-width: 0;
-  }
-
-  .metro-coach-two-col .metro-coach-slider-wrap {
-    padding: 10px 10px;
-  }
-
-  @media (max-width: 380px) {
-    .metro-coach-two-col { gap: 8px; }
-  }
-
-  .metro-coach-slider {
-    flex: 1 1 auto;
-    width: 100%;
-    height: 8px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: #2a2a30;
-    border-radius: 999px;
-    border: 1px solid #000;
-    outline: none;
-  }
-
-  .metro-coach-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #D8B244;
-    border: 2px solid #000;
-    box-shadow: 1px 1px 0px #000;
-    cursor: pointer;
-  }
-
-  .metro-coach-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #D8B244;
-    border: 2px solid #000;
-    box-shadow: 1px 1px 0px #000;
-    cursor: pointer;
-  }
-
-  .metro-coach-slider-track {
-    position: relative;
-    flex: 1 1 auto;
-    height: 8px;
-    background: #2a2a30;
-    border: 1px solid #000;
-    border-radius: 999px;
-    overflow: hidden;
-  }
-
-  .metro-coach-slider-fill {
-    position: absolute;
-    inset: 0;
-    background: #D8B244;
-    transform-origin: left center;
-    will-change: transform;
-  }
-
-  .metro-coach-pill-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .metro-coach-mini-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 12px;
-    background: #0f0f12;
-    color: #f5f5f7;
-    border: 2px solid #000;
-    box-shadow: 2px 2px 0px #000;
-    border-radius: var(--radius-pill);
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
-  }
-
-  .metro-coach-mini-chip.active {
-    background: #D8B244;
-    color: #000;
-  }
-
-  .metro-coach-mini-chip:hover {
-    transform: translate(-1px,-1px);
-    box-shadow: 3px 3px 0px #000;
-  }
-
-  .metro-coach-diff-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .metro-coach-diff-btn {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px 8px;
-    background: #0f0f12;
-    color: #a1a1aa;
-    border: 2px solid #000;
-    box-shadow: 2px 2px 0px #000;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    text-align: left;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, border-color 0.16s ease;
-  }
-
-  .metro-coach-diff-btn.active {
-    background: #D8B244;
-    color: #000;
-    border-color: #000;
-  }
-
-  .metro-coach-diff-btn-title {
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
-    font-weight: 800;
-  }
-
-  .metro-coach-diff-btn-sub {
-    font-family: var(--font-secondary);
-    font-size: 0.62rem;
-    font-weight: 700;
-    opacity: 0.8;
-  }
-
-  .metro-coach-tap-area {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 14px 12px;
-    background: #0f0f12;
-    border: 2px solid #D8B244;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    text-align: center;
-  }
-
-  .metro-coach-tap-title {
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    color: #f5f5f7;
-  }
-
-  .metro-coach-tap-sub {
-    font-family: var(--font-secondary);
-    font-size: 0.72rem;
-    color: #D8B244;
-  }
-
-  .metro-coach-target-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 14px 12px;
-    background: #0f0f12;
-    border: 2px solid #000;
-    border-radius: var(--radius-md);
-  }
-
-  .metro-coach-target-label {
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    color: #a1a1aa;
-  }
-
-  .metro-coach-target-bpm {
-    font-family: var(--font-heading);
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: #D8B244;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .metro-coach-target-bpm small {
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    color: #a1a1aa;
-    margin-left: 4px;
-  }
-
-  .metro-coach-dots {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .metro-coach-dots span {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #2a2a30;
-    border: 1px solid #000;
-    transition: background-color 0.12s ease, transform 0.12s ease;
-  }
-
-  .metro-coach-dots span.filled {
-    background: #D8B244;
-    transform: scale(1.15);
-  }
 
   .metro-coach-cta {
     display: inline-flex;
@@ -3725,6 +3799,7 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     .metro-chip,
     .metro-beatstyle-chip,
     .metro-info-btn,
+    .metro-settings-info-btn,
     .metro-display-box,
     .metro-copy-link-card,
     .metro-copy-badge,
@@ -3795,25 +3870,271 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
   }
   .metro-coach-field-label strong { color:#D8B244; font-variant-numeric:tabular-nums; }
   .metro-coach-slider-wrap {
-    display:flex; align-items:center; gap:10px;
-    background:#0f0f12; border:2px solid #000; border-radius:var(--radius-md); padding:10px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #0f0f12;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    padding: 6px 8px;
+    box-sizing: border-box;
+    width: 100%;
   }
-  .metro-coach-slider {
-    flex:1 1 auto; width:100%; height:8px; -webkit-appearance:none; appearance:none;
-    background:#2a2a30; border-radius:999px; border:1px solid #000; outline:none;
+  .metro-coach-track-box {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    position: relative;
+    padding: 4px 2px;
   }
-  .metro-coach-slider::-webkit-slider-thumb {
-    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
-    background:#D8B244; border:2px solid #000; box-shadow:1px 1px 0 #000; cursor:pointer;
+  .metro-coach-step-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background: #1e1e24;
+    color: #D8B244;
+    border: 2px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    border-radius: var(--radius-sm);
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s var(--ease-tactile), box-shadow 0.12s ease, background-color 0.12s ease, color 0.12s ease;
   }
-  .metro-coach-slider::-moz-range-thumb {
-    width:18px; height:18px; border-radius:50%;
-    background:#D8B244; border:2px solid #000; box-shadow:1px 1px 0 #000; cursor:pointer;
+  .metro-coach-step-btn:hover {
+    background: #282832;
+    color: #FFD86B;
+    transform: translate(-1px, -1px);
+    box-shadow: 2px 2px 0px #000000;
+  }
+  .metro-coach-step-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 0px 0px 0px #000000;
+    background: #D8B244;
+    color: #000000;
+  }
+  .metro-coach-step-btn:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
+  .metro-coach-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(to right, #D8B244 0%, #D8B244 var(--pct, 50%), #2a2a30 var(--pct, 50%), #2a2a30 100%);
+    border: 1px solid #000000;
+    outline: none;
+    cursor: pointer;
+    touch-action: pan-y;
+    margin: 0;
+  }
+  .metro-coach-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #D8B244;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    cursor: grab;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease;
+  }
+  .metro-coach-range::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    background: #FFE082;
+  }
+  .metro-coach-range::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.22);
+    background: #FFFFFF;
+  }
+  .metro-coach-range::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #D8B244;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    cursor: grab;
+  }
+  .metro-coach-range::-moz-range-progress {
+    background: #D8B244;
+    border-radius: 999px;
+    height: 8px;
+  }
+  .metro-coach-range::-moz-range-track {
+    background: #2a2a30;
+    border-radius: 999px;
+    height: 8px;
+  }
+  .metro-coach-slider-wrap--clean {
+    padding: 8px 10px;
+  }
+  #coachInnerAudible::-webkit-slider-thumb { background: #f5f5f7; }
+  #coachInnerAudible::-moz-range-thumb { background: #f5f5f7; }
+  #coachInnerAudible {
+    background: linear-gradient(to right, #f5f5f7 0%, #f5f5f7 var(--pct, 25%), #2a2a30 var(--pct, 25%), #2a2a30 100%);
+  }
+  #coachInnerMuted::-webkit-slider-thumb { background: #D8B244; }
+  #coachInnerMuted::-moz-range-thumb { background: #D8B244; }
+  #coachInnerMuted {
+    background: linear-gradient(to right, #D8B244 0%, #D8B244 var(--pct, 25%), #2a2a30 var(--pct, 25%), #2a2a30 100%);
+  }
+  #coachSpeedStart::-webkit-slider-thumb { background: #E2C06A; }
+  #coachSpeedStart::-moz-range-thumb { background: #E2C06A; }
+  #coachSpeedStart {
+    background: linear-gradient(to right, #E2C06A 0%, #E2C06A var(--pct, 33%), #2a2a30 var(--pct, 33%), #2a2a30 100%);
+  }
+  #coachSpeedTarget::-webkit-slider-thumb { background: #D8B244; }
+  #coachSpeedTarget::-moz-range-thumb { background: #D8B244; }
+  #coachSpeedTarget {
+    background: linear-gradient(to right, #D8B244 0%, #D8B244 var(--pct, 55%), #2a2a30 var(--pct, 55%), #2a2a30 100%);
+  }
+  #coachSpeedStep::-webkit-slider-thumb { background: #D8B244; }
+  #coachSpeedStep::-moz-range-thumb { background: #D8B244; }
+  #coachSpeedStep {
+    background: linear-gradient(to right, #D8B244 0%, #D8B244 var(--pct, 20%), #2a2a30 var(--pct, 20%), #2a2a30 100%);
+  }
+  #coachSpeedEvery::-webkit-slider-thumb { background: #f5f5f7; }
+  #coachSpeedEvery::-moz-range-thumb { background: #f5f5f7; }
+  #coachSpeedEvery {
+    background: linear-gradient(to right, #f5f5f7 0%, #f5f5f7 var(--pct, 12%), #2a2a30 var(--pct, 12%), #2a2a30 100%);
+  }
+  .metro-coach-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .metro-coach-two-col .metro-coach-field {
+    min-width: 0;
+  }
+  .metro-coach-row-split {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 2px;
+  }
+  .metro-unit-toggle {
+    display: inline-flex;
+    align-items: center;
+    background: #0f0f12;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    padding: 2px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .metro-unit-btn {
+    padding: 6px 12px;
+    background: transparent;
+    color: #a1a1aa;
+    border: none;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background-color 0.14s ease, color 0.14s ease, transform 0.14s var(--ease-tactile);
+  }
+  .metro-unit-btn:hover {
+    color: #f5f5f7;
+  }
+  .metro-unit-btn.active {
+    background: #D8B244;
+    color: #000000;
+    font-weight: 900;
+  }
+  @media (max-width: 380px) {
+    .metro-coach-two-col { gap: 6px; }
+    .metro-coach-step-btn { width: 28px; height: 28px; font-size: 0.7rem; }
+    .metro-coach-slider-wrap { padding: 4px 6px; gap: 6px; }
+    .metro-unit-btn { padding: 4px 8px; font-size: 0.65rem; }
   }
   .metro-coach-pill-row { display:flex; gap:8px; flex-wrap:wrap; }
-  .metro-coach-pill-row.mono { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: rgba(216,178,68,0.35) transparent; padding: 4px 2px 8px; }
-  .metro-coach-pill-row.mono::-webkit-scrollbar { height: 6px; }
-  .metro-coach-pill-row.mono::-webkit-scrollbar-thumb { background: rgba(216,178,68,0.35); border-radius: 999px; }
+  .metro-coach-pill-row.mono { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 4px 2px 8px; }
+  .metro-coach-preset-row {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+    padding: 4px 2px 8px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .metro-coach-preset-row::-webkit-scrollbar {
+    display: none;
+  }
+  .metro-coach-preset-row .metro-coach-mini-chip {
+    flex: 0 0 auto;
+    min-width: auto;
+    min-height: auto;
+    white-space: nowrap;
+    padding: 7px 14px;
+    font-size: 0.76rem;
+  }
+  .metro-coach-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: #1e1e24;
+    color: #a1a1aa;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+  .metro-coach-toggle-btn i {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .metro-coach-toggle-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    color: #f5f5f7;
+    background: #25252e;
+  }
+  .metro-coach-toggle-btn.active {
+    background: #D8B244;
+    color: #000000;
+    border-color: #000000;
+  }
+  .metro-coach-toggle-btn:focus-visible {
+    outline: 2px solid #D8B244;
+    outline-offset: 2px;
+  }
   .metro-coach-mini-chip {
     display:inline-flex; align-items:center; justify-content:center;
     flex: 0 0 auto;
@@ -3946,8 +4267,8 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     padding:6px 0 12px !important; min-height:auto !important;
   }
   /* toggle — must be global: runtime coach cards create it via JS (no data-astro-cid) */
-  .metro-toggle { display:flex; align-items:center; gap:12px; cursor:pointer; }
-  .metro-toggle input { position:absolute; opacity:0; width:1px; height:1px; }
+  .metro-toggle { position: relative; display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .metro-toggle input { position:absolute; opacity:0; width:100%; height:100%; inset:0; cursor:pointer; z-index:1; margin:0; }
   .metro-toggle-track {
     display:inline-flex; align-items:center; width:46px; height:26px; flex-shrink:0;
     padding:2px; box-sizing:border-box; background:#1e1e24; border:2px solid #000;
@@ -4106,9 +4427,53 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
   .metro-instrument-chip:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #000; background: #25252e; }
   .metro-instrument-chip.active { background: #D8B244; color: #000; }
   .metro-instrument-chip:focus-visible { outline: 2px solid #D8B244; outline-offset: 2px; }
+
+  /* bar card signature badge + popover (runtime DOM) */
+  .kins-sig-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 1px 6px; background: #0f0f12; color: #D8B244;
+    border: 1px solid rgba(216,178,68,0.4); border-radius: var(--radius-pill);
+    font-family: var(--font-secondary); font-size: 0.56rem; font-weight: 900;
+    letter-spacing: 0.06em; font-variant-numeric: tabular-nums; cursor: pointer;
+  }
+  button.kins-sig-badge:hover { background: #D8B244; color: #000; }
+  .kins-sig-badge--static { cursor: default; }
+
+  .kins-sheet-bar { cursor: pointer; }
+  .kins-sheet-bar:hover { box-shadow: 3px 3px 0 #000; transform: translate(-1px,-1px); }
+  .kins-sheet-bar canvas { pointer-events: none; }
+
+  .kins-sig-popover {
+    position: fixed; z-index: 90;
+    background: #1e1e24; border: 3px solid #000; box-shadow: 4px 4px 0 #000;
+    border-radius: var(--radius-md); padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    animation: kinsSigPop 0.16s var(--ease-snappy);
+  }
+  @keyframes kinsSigPop { from { opacity: 0; transform: translateY(6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .kins-sig-popover-title {
+    margin: 0; font-family: var(--font-secondary); font-size: 0.64rem;
+    font-weight: 900; letter-spacing: 0.16em; color: #a1a1aa; text-transform: uppercase;
+  }
+  .kins-sig-popover-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .kins-sig-popover-row .metro-chip { padding: 10px 8px; font-size: 0.78rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kins-sig-popover,
+    .footer-brand-badge,
+    .footer-legal-btn,
+    .footer-theme-toggle-btn,
+    .theme-pill-btn {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
 </style>
 
 <script>
+  import { initTheme } from '../scripts/controllers/themeController.js';
+  initTheme();
+
   let controllerPromise: Promise<any> | null = null;
   let initialized = false;
 
@@ -4142,4 +4507,66 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     },
     { passive: true }
   );
+</script>
+
+<script is:inline>
+  (function initMetroFooterModalTriggers() {
+    function handleFooterTriggerClick(e) {
+      var target = e.target;
+      if (!target || !target.closest) return;
+
+      var suggestBtn = target.closest('#metroOpenSuggestImprovementFooterBtn, #openSuggestImprovementFooterBtn, .open-feedback-trigger, [data-open-feedback]');
+      if (suggestBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var feedbackModal = document.getElementById('feedbackModal');
+        if (typeof window.openFeedbackModal === 'function') {
+          var category = suggestBtn.getAttribute('data-feedback-category') || 'Metronome';
+          window.openFeedbackModal(category);
+        } else if (feedbackModal) {
+          feedbackModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
+
+      var privacyBtn = target.closest('#metroOpenPrivacyFooterBtn, #openPrivacyFooterBtn, .open-privacy-trigger');
+      if (privacyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var privacyModal = document.getElementById('privacyModal');
+        if (typeof window.openPrivacyModal === 'function') {
+          window.openPrivacyModal();
+        } else if (privacyModal) {
+          privacyModal.classList.remove('is-closing');
+          privacyModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
+
+      var termsBtn = target.closest('#metroOpenTermsFooterBtn, #openTermsFooterBtn, .open-terms-trigger');
+      if (termsBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var termsModal = document.getElementById('termsModal');
+        if (typeof window.openTermsModal === 'function') {
+          window.openTermsModal();
+        } else if (termsModal) {
+          termsModal.classList.remove('is-closing');
+          termsModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
+    }
+
+    document.addEventListener('click', handleFooterTriggerClick, true);
+
+    var yearEls = document.querySelectorAll('#copyrightYear, #metroCopyrightYear, .footer-copyright-year');
+    var curYear = new Date().getFullYear().toString();
+    yearEls.forEach(function(el) {
+      el.textContent = curYear;
+    });
+  })();
 </script>

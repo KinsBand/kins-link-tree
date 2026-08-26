@@ -17,7 +17,7 @@ const members = bandMembers;
     </div>
   </div>
 
-  <div class="members-scroll-container" id="membersScrollContainer">
+  <div class="members-scroll-container brutal-scroll-x" id="membersScrollContainer">
     {members.map((member) => (
       <div class="member-card">
         <div class={`member-img-wrapper member-avatar-box avatar-${member.id}`}>
@@ -119,23 +119,6 @@ const members = bandMembers;
     scroll-snap-type: x mandatory;
     padding: 4px 4px 14px 4px;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-neon-yellow) transparent;
-  }
-
-  .members-scroll-container::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  .members-scroll-container::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
-  }
-
-  .members-scroll-container::-webkit-scrollbar-thumb {
-    background: var(--accent-neon-yellow);
-    border: 1px solid #000000;
-    border-radius: 3px;
   }
 
   /* Neo-Brutalist Member Card */

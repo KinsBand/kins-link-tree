@@ -1,7 +1,8 @@
 import {
   METRO_BPM,
   METRO_COPY,
-  METRO_SETLIST
+  METRO_SETLIST,
+  METRO_SUBDIVISIONS
 } from '../../../settings/metronome.config';
 import { showToast } from '../toast.js';
 import {
@@ -19,7 +20,12 @@ import {
   setAccentFirst,
   setFlash,
   setVibrate,
+  setKeepAwake,
+  setBackgroundPlay,
   setBeatStyle,
+  cycleBeatTier,
+  resetBeatTiers,
+  syncBeatTiersLength,
   setCoachTab,
   setCoachInner,
   setCoachSpeed,
@@ -31,14 +37,15 @@ import { createMetroEngine } from './audioEngine.js';
 import { createUi } from './uiBindings.js';
 import { createCoachEngine } from './coachEngine.js';
 import { createSheetController } from './sheetController.js';
+import { createMediaSessionManager } from './mediaSessionManager.js';
 import { connectMidi, selectMidiInput, disconnectMidi, isMidiSupported } from './midiManager.js';
-import { METRO_SUBDIVISIONS } from '../../../settings/metronome.config';
 
 let initialized = false;
 let engine = null;
 let ui = null;
 let coachEngine = null;
 let sheetController = null;
+let media = null;
 /* Bumped by every start attempt and every stop — captured by in-flight
    async starts so a rapid toggle/stop while the audio context is still
    resuming can never resurrect a stale run */
@@ -50,8 +57,8 @@ const TAP_MAX_SAMPLES = 5;
 const tapTimes = [];
 
 function onVisualBeat(evt) {
-  ui.renderBeat(evt.beatInBar);
-  if (sheetController) sheetController.onBeat();
+  ui.renderBeat(evt.beatInBar, evt.tier);
+  if (sheetController) sheetController.onBeat(evt.beatInBar);
   if (coachEngine && coachEngine.isRunning()) {
     coachEngine.handleBeat(evt.beatInBar, evt.isAccent);
   }
@@ -60,8 +67,72 @@ function onVisualBeat(evt) {
 function onAudioInterruption(state) {
   /* OS-level pause (iOS call / screen lock). The engine auto-resumes when
      the OS allows; report honestly either way instead of faking playback. */
-  if (state === 'interrupted') showToast(METRO_COPY.audioInterrupted, 'warning');
-  else if (state === 'resumed') showToast(METRO_COPY.audioResumed, 'success');
+  if (state === 'interrupted') {
+    showToast(METRO_COPY.audioInterrupted, 'warning');
+    if (media) media.markPaused();
+    releaseWakeLock();
+  } else if (state === 'resumed') {
+    showToast(METRO_COPY.audioResumed, 'success');
+    /* The clock jumped across the interruption — re-seat the schedule
+       cursor and drop now-stale visual events so nothing bursts late. */
+    engine.sync();
+    if (media) media.activate(mediaSessionSnapshot());
+    void reacquireWakeLock();
+  }
+}
+
+/* ---------- OS media session (notification / lock-screen controls) ---------- */
+
+function mediaSessionSnapshot() {
+  return {
+    bpm: metroState.bpm,
+    timeSigLabel: getTimeSignature().label,
+    onPlay: () => { void startMetronome(); },
+    onPause: () => stopMetronome(),
+    onStop: () => stopMetronome()
+  };
+}
+
+/* ---------- Screen Wake Lock ("KEEP SCREEN ON") ----------
+
+   Held only while playing AND the user opted in. The OS releases the lock
+   on tab hide / screen lock — the sentinel's 'release' listener clears it
+   so visibilitychange can re-acquire cleanly when we come back. */
+let wakeLockSentinel = null;
+
+function wakeLockSupported() {
+  return typeof navigator !== 'undefined' && 'wakeLock' in navigator;
+}
+
+async function acquireWakeLockWithFeedback() {
+  if (!wakeLockSupported()) return false;
+  if (wakeLockSentinel) return true;
+  try {
+    wakeLockSentinel = await navigator.wakeLock.request('screen');
+    wakeLockSentinel.addEventListener('release', () => { wakeLockSentinel = null; });
+    return true;
+  } catch (err) {
+    wakeLockSentinel = null;
+    if (err && err.name === 'NotSupportedError') {
+      setKeepAwake(false);
+      showToast(METRO_COPY.keepAwakeUnsupported, 'warning');
+      ui.renderSettingsControls();
+    }
+    /* NotAllowedError = document not visible etc. — retried on visible */
+    return false;
+  }
+}
+
+async function reacquireWakeLock() {
+  if (metroState.keepAwake && metroState.playing) await acquireWakeLockWithFeedback();
+}
+
+function releaseWakeLock() {
+  if (wakeLockSentinel) {
+    const sentinel = wakeLockSentinel;
+    wakeLockSentinel = null;
+    try { sentinel.release(); } catch (e) {}
+  }
 }
 
 async function startMetronome() {
@@ -75,6 +146,7 @@ async function startMetronome() {
       beatsPerBar: getTimeSignature().beatsPerBar,
       accentFirst: metroState.accentFirst,
       vibrate: metroState.vibrate,
+      tiers: metroState.beatTiers,
       onVisualBeat,
       onInterruption: onAudioInterruption
     });
@@ -86,6 +158,8 @@ async function startMetronome() {
     }
     engine.setVolume(metroState.volume);
     metroState.playing = true;
+    if (media) media.activate(mediaSessionSnapshot());
+    void reacquireWakeLock();
   } catch (err) {
     if (gen !== startGeneration) return false;
     metroState.playing = false;
@@ -119,6 +193,8 @@ function stopMetronome() {
   metroState.playing = false;
   ui.renderPlayState(false);
   ui.resetBeatIndicator();
+  if (media) media.deactivate();
+  releaseWakeLock();
   if (sheetController) sheetController.onPlaybackStopped();
 }
 
@@ -135,6 +211,7 @@ function applyBpm(next, source = 'user') {
   if (didChange) {
     engine.updateBpm(metroState.bpm);
     ui.renderBpm();
+    if (media) media.update(metroState.bpm, getTimeSignature().label);
     if (source !== 'setlist' && source !== 'undo' && source !== 'coach' && source !== 'init') {
       ui.notifyBpmChangedFromUser(metroState.bpm);
     }
@@ -167,7 +244,10 @@ function onTapTempo() {
 
 function onTsSelect(index) {
   if (!setTimeSignature(index)) return;
+  syncBeatTiersLength(getTimeSignature().beatsPerBar);
   engine.updateOptions({ beatsPerBar: getTimeSignature().beatsPerBar });
+  engine.updateTiers(metroState.beatTiers);
+  if (media) media.update(metroState.bpm, getTimeSignature().label);
   ui.rebuildBeatDots();
   ui.renderPills();
   ui.renderSheetDisplays();
@@ -177,7 +257,10 @@ function onTsSelect(index) {
 
 function onCustomTsSelect(beats, unit) {
   if (!setCustomTimeSig(beats, unit)) return;
+  syncBeatTiersLength(getTimeSignature().beatsPerBar);
   engine.updateOptions({ beatsPerBar: getTimeSignature().beatsPerBar });
+  engine.updateTiers(metroState.beatTiers);
+  if (media) media.update(metroState.bpm, getTimeSignature().label);
   ui.rebuildBeatDots();
   ui.renderPills();
   ui.renderSheetDisplays();
@@ -198,6 +281,9 @@ function onSoundSelect(id) {
   if (setSound(id)) {
     engine.updateSound(id); /* worklet path needs the new sound pushed */
     ui.renderChipStates();
+    if (!metroState.playing && !engine.playing) {
+      void engine.previewClick('mid', id);
+    }
   }
 }
 
@@ -220,6 +306,28 @@ function onVibrateToggle(enabled) {
   engine.updateOptions({ vibrate: !!enabled });
 }
 
+function onKeepAwakeToggle(enabled) {
+  setKeepAwake(enabled);
+  if (!enabled) {
+    releaseWakeLock();
+    return;
+  }
+  if (!wakeLockSupported()) {
+    setKeepAwake(false);
+    showToast(METRO_COPY.keepAwakeUnsupported, 'warning');
+    ui.renderSettingsControls();
+    return;
+  }
+  /* Wake Lock requires a visible document — while playing and visible we
+     can acquire right away; otherwise startMetronome / visibilitychange
+     will pick it up on the next play or return-to-visible. */
+  if (metroState.playing && !document.hidden) void acquireWakeLockWithFeedback();
+}
+
+function onBackgroundToggle(enabled) {
+  setBackgroundPlay(enabled);
+}
+
 function onBeatStyleChange(style) {
   setBeatStyle(style);
   ui.renderBeatStyle();
@@ -237,6 +345,7 @@ function onSetlistSelect(arg) {
   if (!entry) return;
   applyBpm(entry.bpm, 'setlist');
   ui.showTopbarTitle(entry);
+  ui.setInstrumentBtnVisible(true);
   if (sheetController) sheetController.setCurrentSong(entry);
   closeAnySheet();
   showToast(METRO_COPY.setlistLoaded(entry.bpm, entry.title), 'success');
@@ -254,6 +363,32 @@ function onInstrumentSelect(id) {
 
 function onSheetClear() {
   if (sheetController) sheetController.clearCurrentSheet();
+}
+
+function onScoreTimeSignature(beats, unit) {
+  setCustomTimeSig(beats, unit, false);
+  syncBeatTiersLength(getTimeSignature().beatsPerBar, false);
+  engine.updateOptions({ beatsPerBar: getTimeSignature().beatsPerBar });
+  engine.updateTiers(metroState.beatTiers);
+  ui.rebuildBeatDots();
+  ui.renderPills();
+  ui.renderSheetDisplays();
+  ui.renderChipStates();
+  ui.resetBeatIndicator();
+}
+
+function onTierCycle(beatIndex) {
+  const nextTier = cycleBeatTier(beatIndex);
+  engine.updateTiers(metroState.beatTiers);
+  void engine.previewClick(nextTier);
+  ui.updateBeatDotTier(beatIndex, nextTier);
+}
+
+function onResetPitchMap() {
+  resetBeatTiers();
+  engine.updateTiers(metroState.beatTiers);
+  ui.rebuildBeatDots();
+  showToast(METRO_COPY.pitchMapResetToast || 'Pitch map reset to default', 'info');
 }
 
 function onTopbarUndo(entry) {
@@ -355,6 +490,7 @@ function applyCoachBpm(bpm) {
   if (setBpm(bpm, true)) {
     engine.updateBpm(metroState.bpm);
     ui.renderBpm();
+    if (media) media.update(metroState.bpm, getTimeSignature().label);
   } else {
     engine.updateBpm(metroState.bpm);
   }
@@ -451,6 +587,7 @@ export function initMetronome() {
 
   restore();
   engine = createMetroEngine();
+  media = createMediaSessionManager();
   try {
     if (new URLSearchParams(window.location.search).has('metrodebug')) {
       window.__metroDebug = () => engine.getDebugState();
@@ -466,6 +603,7 @@ export function initMetronome() {
   sheetController = createSheetController({
     onSheetToast: (msg, kind) => showToast(msg, kind || 'info'),
     onSheetClear,
+    onScoreTimeSignature,
     onSheetUploadedLocal: null
   });
   ui = createUi({
@@ -486,6 +624,8 @@ export function initMetronome() {
     onAccentToggle,
     onFlashToggle,
     onVibrateToggle,
+    onKeepAwakeToggle,
+    onBackgroundToggle,
     onBeatStyleChange,
     onSetlistSelect,
     onInfoHelp,
@@ -506,7 +646,9 @@ export function initMetronome() {
     onTopbarUndo,
     onInstrumentOpen,
     onInstrumentSelect,
-    onSheetClear
+    onSheetClear,
+    onTierCycle,
+    onResetPitchMap
   });
   ui.init();
 
@@ -521,6 +663,8 @@ export function initMetronome() {
     toggles: document.getElementById('metroSheetToggles'),
     followBtn: document.getElementById('metroSheetFollowBtn'),
     loopBtn: document.getElementById('metroSheetLoopBtn'),
+    syncBtn: document.getElementById('metroSheetSyncBtn'),
+    barChip: document.getElementById('metroSheetBarChip'),
     clearBtn: document.getElementById('metroSheetClearBtn'),
     instrumentLabel: document.getElementById('metroInstrumentLabel'),
     instrumentIcon: document.getElementById('metroInstrumentIcon'),
@@ -528,22 +672,36 @@ export function initMetronome() {
     instrumentFileInput: document.getElementById('metroInstrumentFileInput'),
     instrumentClearBtn: document.getElementById('metroInstrumentClearBtn')
   });
-  try {
-    const sb = (import.meta && import.meta.env && import.meta.env.PUBLIC_SUPABASE_URL) || '';
-    if (sb) sheetController.supabaseUrl = sb;
-  } catch (e) {}
   sheetController.renderInstrumentButton();
+  ui.setInstrumentBtnVisible(false);
 
   window.addEventListener('pagehide', stopEverything);
   window.addEventListener('pagehide', () => {
     if (sheetController) sheetController.teardown();
   });
   document.addEventListener('visibilitychange', () => {
-    /* Background tabs throttle timers to ~1s which destroys the lookahead
-       schedule — stop honestly instead of letting the click break up.
-       stopEverything also restores user volume, so an inner-clock MUTED
-       phase can never leak into the next run (mute-leak fix). */
-    if (document.hidden) stopEverything();
+    if (document.hidden) {
+      /* PLAY IN BACKGROUND off (default): background tabs throttle timers
+         to ~1s which destroys the legacy lookahead schedule — stop
+         honestly instead of letting the click break up. stopEverything
+         also restores user volume, so an inner-clock MUTED phase can
+         never leak into the next run (mute-leak fix).
+         ON: keep running — the worklet path is immune to main-thread
+         stalls and the legacy path widens its lookahead while hidden. */
+      if (!metroState.backgroundPlay) stopEverything();
+    } else if (metroState.playing || engine.playing) {
+      /* Back in view: the context may have been suspended/interrupted by
+         the OS, and the schedule cursor may predate the gap. Resume,
+         re-seat the cursor, drop stale visual events, refresh media +
+         wake lock state. */
+      engine.resume();
+      engine.sync();
+      if (media) {
+        if (metroState.playing) media.activate(mediaSessionSnapshot());
+        else media.deactivate();
+      }
+      void reacquireWakeLock();
+    }
   });
   window.addEventListener('kins:midi-tap', (e) => {
     const t = e.detail && e.detail.time ? e.detail.time : performance.now();

@@ -225,6 +225,7 @@ import { generalEmail } from '../../settings/contact.config';
   .legal-modal-body {
     padding: 16px 18px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -232,8 +233,6 @@ import { generalEmail } from '../../settings/contact.config';
     font-family: var(--font-secondary);
     font-size: 0.82rem;
     line-height: 1.5;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-neon-yellow) transparent;
   }
 
   .legal-highlight-card {
@@ -441,6 +440,7 @@ import { generalEmail } from '../../settings/contact.config';
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && privacyModal && !privacyModal.classList.contains('hidden')) {
+      e.stopPropagation();
       hideModal();
     }
   });

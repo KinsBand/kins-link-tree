@@ -54,9 +54,9 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
   <div class="hero-feature-card" id="heroFeatureCard" data-active-state={activeState} data-active-var={activeSubvar} data-anim-gated>
 
     <!-- ==================== STATE 0: UPCOMING ==================== -->
-    <div class="hero-card-state state-upcoming hidden" id="stateUpcoming">
+    <div class:list={['hero-card-state', 'state-upcoming', { hidden: activeState !== 'upcoming' }]} id="stateUpcoming">
       <!-- Sub-Var 0A: Minimal Teaser -->
-      <div class="sub-var-panel var-upcoming-minimal_teaser" id="varUpcomingMinimalTeaser">
+      <div class:list={['sub-var-panel', 'var-upcoming-minimal_teaser', { hidden: activeState !== 'upcoming' || activeSubvar !== 'minimal_teaser' }]} id="varUpcomingMinimalTeaser">
         <div class="upcoming-teaser-card">
           <div class="upcoming-icon-box">
             <i class="fa-solid fa-compact-disc vinyl-icon-disc"></i>
@@ -71,7 +71,7 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
 
 
       <!-- Sub-Var 0B: Mystery Countdown -->
-      <div class="sub-var-panel var-upcoming-mystery_countdown hidden" id="varUpcomingMysteryCountdown">
+      <div class:list={['sub-var-panel', 'var-upcoming-mystery_countdown', { hidden: activeState !== 'upcoming' || activeSubvar !== 'mystery_countdown' }]} id="varUpcomingMysteryCountdown">
         <div class="mystery-countdown-card">
           <span class="upcoming-teaser-badge">{upcoming.mystery_countdown.badge}</span>
           <h4 class="upcoming-teaser-title">{upcoming.mystery_countdown.title}</h4>
@@ -86,9 +86,9 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
     </div>
 
     <!-- ==================== STATE 1: RELEASES ==================== -->
-    <div class="hero-card-state state-release" id="stateRelease">
+    <div class:list={['hero-card-state', 'state-release', { hidden: activeState !== 'release' }]} id="stateRelease">
       <!-- Sub-Var 1A: Cover Video Release -->
-      <div class="sub-var-panel var-release-cover_video" id="varReleaseCoverVideo">
+      <div class:list={['sub-var-panel', 'var-release-cover_video', { hidden: activeState !== 'release' || activeSubvar !== 'cover_video' }]} id="varReleaseCoverVideo">
         <div class="hero-card-media-bg">
           <div class="hero-media-overlay"></div>
           <div class="hero-card-header">
@@ -126,7 +126,7 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
       </div>
 
       <!-- Sub-Var 1B: Original Single Release -->
-      <div class="sub-var-panel var-release-original_single hidden" id="varReleaseOriginalSingle">
+      <div class:list={['sub-var-panel', 'var-release-original_single', { hidden: activeState !== 'release' || activeSubvar !== 'original_single' }]} id="varReleaseOriginalSingle">
         <div class="hero-card-media-bg single-bg">
           <div class="hero-media-overlay"></div>
           <div class="hero-card-header">
@@ -164,7 +164,7 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
       </div>
 
       <!-- Sub-Var 1C: EP Pre-Order -->
-      <div class="sub-var-panel var-release-ep_preorder hidden" id="varReleaseEpPreorder">
+      <div class:list={['sub-var-panel', 'var-release-ep_preorder', { hidden: activeState !== 'release' || activeSubvar !== 'ep_preorder' }]} id="varReleaseEpPreorder">
         <div class="hero-card-media-bg ep-bg">
           <div class="hero-media-overlay"></div>
           <div class="hero-card-header">
@@ -196,9 +196,9 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
     </div>
 
     <!-- ==================== STATE 2: POLLS ==================== -->
-    <div class="hero-card-state state-poll hidden" id="statePoll">
+    <div class:list={['hero-card-state', 'state-poll', { hidden: activeState !== 'poll' }]} id="statePoll">
       <!-- Sub-Var 2A: Recording Cover Poll -->
-      <div class="sub-var-panel var-poll-recording_cover" id="varPollRecordingCover">
+      <div class:list={['sub-var-panel', 'var-poll-recording_cover', { hidden: activeState !== 'poll' || activeSubvar !== 'recording_cover' }]} id="varPollRecordingCover">
         <div class="poll-card-header">
           <div class="poll-header-top-row">
             <span class="poll-status-tag poll-status-recording"><i class="fa-solid fa-vote-yea"></i> Voting Open</span>

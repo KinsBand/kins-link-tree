@@ -104,19 +104,86 @@ test.describe('tier1 smoke — metronome', () => {
     await expect(page.locator('.metro-setlist-row')).toHaveCount(15);
   });
 
-  test('coach deck tabs switch', async ({ page }) => {
+  test('coach deck tabs switch and inner clock controls operate correctly', async ({ page }) => {
     await openMetro(page);
     await page.locator('#metroCoachBtn').click();
     await expect(page.locator('#metroPanelCoach')).toBeVisible();
 
+    // Verify Inner Clock initial state
+    const innerPanel = page.locator('#metroCoachPanel-inner-clock');
+    await expect(innerPanel).toBeVisible();
+
+    // Verify no stepper buttons in inner clock controls
+    const steppersInInner = innerPanel.locator('.metro-coach-step-btn');
+    await expect(steppersInInner).toHaveCount(0);
+
+    // Verify independent Audible and Muted sliders exist
+    const audSlider = innerPanel.locator('#coachInnerAudible');
+    const mutSlider = innerPanel.locator('#coachInnerMuted');
+    await expect(audSlider).toBeVisible();
+    await expect(mutSlider).toBeVisible();
+
+    // Verify Random Dropouts button toggle
+    const randBtn = innerPanel.locator('#coachInnerRandomBtn');
+    await expect(randBtn).toBeVisible();
+    await expect(randBtn).toHaveAttribute('aria-pressed', 'false');
+    await randBtn.click();
+    await expect(randBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(randBtn).toHaveClass(/active/);
+    await randBtn.click();
+    await expect(randBtn).toHaveAttribute('aria-pressed', 'false');
+
+    // Verify Cycle Balance Presets (single-row horizontal scroll)
+    const presetRow = innerPanel.locator('#coachInnerPresetRow');
+    await expect(presetRow).toBeVisible();
+    const preset44 = presetRow.locator('.metro-coach-mini-chip[data-audible="4"][data-muted="4"]');
+    await expect(preset44).toBeVisible();
+    await preset44.click();
+    await expect(innerPanel.locator('#coachInnerAudibleLabel')).toHaveText('4 Bars');
+    await expect(innerPanel.locator('#coachInnerMutedLabel')).toHaveText('4 Bars');
+    await expect(preset44).toHaveClass(/active/);
+
+    // Test tab switching
     const speedTab = page.locator('#metroCoachTab-speed-trainer');
     await speedTab.click();
     await expect(speedTab).toHaveAttribute('aria-selected', 'true');
-    await expect(page.locator('#metroCoachPanel-speed-trainer')).toBeVisible();
-    await expect(page.locator('#metroCoachPanel-inner-clock')).toBeHidden();
+    const speedPanel = page.locator('#metroCoachPanel-speed-trainer');
+    await expect(speedPanel).toBeVisible();
+    await expect(innerPanel).toBeHidden();
+
+    // Verify Speed Trainer controls: two separate sliders for Start and Target BPM
+    const speedStart = speedPanel.locator('#coachSpeedStart');
+    const speedTarget = speedPanel.locator('#coachSpeedTarget');
+    await expect(speedStart).toBeVisible();
+    await expect(speedTarget).toBeVisible();
+
+    // Verify NO steppers in Speed Trainer
+    await expect(speedPanel.locator('.metro-coach-step-btn')).toHaveCount(0);
+
+    // Verify NO span presets in Speed Trainer
+    await expect(speedPanel.locator('.metro-coach-mini-chip')).toHaveCount(0);
+
+    // Verify Step and Change Every sliders
+    const speedStep = speedPanel.locator('#coachSpeedStep');
+    const speedEvery = speedPanel.locator('#coachSpeedEvery');
+    await expect(speedStep).toBeVisible();
+    await expect(speedEvery).toBeVisible();
+
+    // Verify Repeat button toggle
+    const repeatBtn = speedPanel.locator('#coachSpeedRepeatBtn');
+    await expect(repeatBtn).toBeVisible();
+    await expect(repeatBtn).toHaveAttribute('aria-pressed', 'false');
+    await repeatBtn.click();
+    await expect(repeatBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(repeatBtn).toHaveClass(/active/);
+
+    // Verify Unit toggle
+    const beatsBtn = speedPanel.locator('#coachSpeedUnitToggle .metro-unit-btn[data-unit="beats"]');
+    await beatsBtn.click();
+    await expect(beatsBtn).toHaveClass(/active/);
   });
 
-  test('settings sheet exposes sound, volume and toggles', async ({ page }) => {
+  test('settings sheet exposes sound, volume and toggle buttons', async ({ page }) => {
     await openMetro(page);
     await page.locator('#metroSettingsBtn').click();
     await expect(page.locator('#metroPanelSettings')).toBeVisible();
@@ -124,8 +191,148 @@ test.describe('tier1 smoke — metronome', () => {
     await page.locator('#metroSoundRow .metro-chip[data-sound="woodblock"]').click();
     await expect(page.locator('#metroSoundRow .metro-chip[data-sound="woodblock"]')).toHaveAttribute('aria-pressed', 'true');
 
-    await page.locator('#metroFlashToggle').check({ force: true });
-    await expect(page.locator('#metroFlashToggle')).toBeChecked();
+    const flash = page.locator('#metroFlashToggle');
+    await flash.click();
+    await expect(flash).toHaveClass(/active/);
+    await expect(flash).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('settings toggle buttons render as a grid and persist across reloads', async ({ page }) => {
+    await openMetro(page);
+    const grid = page.locator('.metro-settoggle-grid');
+    await page.locator('#metroSettingsBtn').click();
+    await expect(grid).toBeVisible();
+    // at least four buttons per row
+    const columns = await grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+    expect(columns).toBeGreaterThanOrEqual(4);
+
+    // defaults: options off
+    await expect(page.locator('#metroFlashToggle')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#metroKeepAwakeToggle')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#metroBackgroundToggle')).toHaveAttribute('aria-pressed', 'false');
+
+    // opt into background play + keep-screen-on
+    await page.locator('#metroBackgroundToggle').click();
+    await expect(page.locator('#metroBackgroundToggle')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#metroKeepAwakeToggle').click();
+    await expect(page.locator('#metroKeepAwakeToggle')).toHaveAttribute('aria-pressed', 'true');
+
+    await page.reload();
+    await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+    await page.locator('#metroSettingsBtn').click();
+    await expect(page.locator('#metroBackgroundToggle')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#metroKeepAwakeToggle')).toHaveAttribute('aria-pressed', 'true');
+
+    // restore defaults so other tests are unaffected by persisted state
+    await page.locator('#metroBackgroundToggle').click();
+    await page.locator('#metroKeepAwakeToggle').click();
+    await expect(page.locator('#metroBackgroundToggle')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#metroKeepAwakeToggle')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('per-beat pitch tiers: default renders all MID, tap cycles low/mid/high, reset restores defaults', async ({ page }) => {
+    await openMetro(page);
+    const dots = page.locator('#metroBeatDots .metro-beat-dot');
+    await expect(dots).toHaveCount(4);
+
+    // Default: all 4 are 'mid' with correct aria-labels
+    for (let i = 0; i < 4; i++) {
+      await expect(dots.nth(i)).toHaveAttribute('data-tier', 'mid');
+      await expect(dots.nth(i)).toHaveAttribute('aria-label', `Beat ${i + 1} — pitch mid`);
+      await expect(dots.nth(i)).toHaveClass(/tier-mid/);
+    }
+
+    // Tap first dot: mid -> high
+    await dots.nth(0).click();
+    await expect(dots.nth(0)).toHaveAttribute('data-tier', 'high');
+    await expect(dots.nth(0)).toHaveAttribute('aria-label', 'Beat 1 — pitch high');
+    await expect(dots.nth(0)).toHaveClass(/tier-high/);
+
+    // Tap first dot: high -> low
+    await dots.nth(0).click();
+    await expect(dots.nth(0)).toHaveAttribute('data-tier', 'low');
+    await expect(dots.nth(0)).toHaveAttribute('aria-label', 'Beat 1 — pitch low');
+    await expect(dots.nth(0)).toHaveClass(/tier-low/);
+
+    // Tap first dot: low -> mid
+    await dots.nth(0).click();
+    await expect(dots.nth(0)).toHaveAttribute('data-tier', 'mid');
+    await expect(dots.nth(0)).toHaveAttribute('aria-label', 'Beat 1 — pitch mid');
+
+    // Cycle to high, then open settings and reset
+    await dots.nth(0).click(); // mid -> high
+    await expect(dots.nth(0)).toHaveAttribute('data-tier', 'high');
+
+    await page.locator('#metroSettingsBtn').click();
+    await expect(page.locator('#metroPanelSettings')).toBeVisible();
+    await page.locator('#metroResetPitchBtn').click();
+    await page.keyboard.press('Escape');
+
+    await expect(dots.nth(0)).toHaveAttribute('data-tier', 'mid');
+    await expect(dots.nth(0)).toHaveClass(/tier-mid/);
+
+    // Switch to radial mode and verify radial segments carry tier and cycle
+    await page.locator('#metroSettingsBtn').click();
+    await page.locator('.metro-beatstyle-chip[data-style="radial"]').click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#metroSheet')).toBeHidden();
+
+    const segs = page.locator('#metroRadialRing .metro-radial-seg');
+    await expect(segs).toHaveCount(4);
+    await expect(segs.nth(0)).toHaveAttribute('data-tier', 'mid');
+    await segs.nth(0).dispatchEvent('click');
+    await expect(segs.nth(0)).toHaveAttribute('data-tier', 'high');
+
+    // Test keyboard accessibility on radial seg
+    await segs.nth(0).focus();
+    await page.keyboard.press('Enter');
+    await expect(segs.nth(0)).toHaveAttribute('data-tier', 'low');
+
+    // Reset back to dots style and default tiers
+    await page.locator('#metroSettingsBtn').click();
+    await page.locator('.metro-beatstyle-chip[data-style="dots"]').click();
+    await page.locator('#metroResetPitchBtn').click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#metroSheet')).toBeHidden();
+  });
+
+  test('background play keeps the engine running across visibility changes', async ({ page }) => {
+    await openMetro(page);
+    // opt into background play before the controller boots
+    await page.evaluate(() => localStorage.setItem('kins-metro-backgroundPlay', '1'));
+    await page.reload();
+    await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+
+    const play = page.locator('#metroPlayBtn');
+    await play.click();
+    await expect(play).toHaveClass(/playing/);
+
+    // Simulate tab hide WITHOUT user interaction — with BACKGROUND on, the
+    // metronome must keep running and stay running when we come back.
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(play).toHaveClass(/playing/);
+
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(play).toHaveClass(/playing/);
+
+    // And with the toggle off it stops honestly again
+    await page.evaluate(() => localStorage.setItem('kins-metro-backgroundPlay', '0'));
+    await page.reload();
+    await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+    const play2 = page.locator('#metroPlayBtn');
+    await play2.click();
+    await expect(play2).toHaveClass(/playing/);
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(play2).not.toHaveClass(/playing/);
   });
 
   /* ---------- scheduler robustness (?metrodebug=1 hooks) ---------- */
@@ -256,5 +463,41 @@ test.describe('tier1 smoke — metronome', () => {
     if (after!.mode === 'legacy') {
       expect(after!.maxTickDeltaMs).toBeGreaterThanOrEqual(180);
     }
+  });
+
+  test('settings sheet footer renders theme toggle and opens modals', async ({ page }) => {
+    await openMetro(page);
+    await page.locator('#metroSettingsBtn').click();
+    await expect(page.locator('#metroPanelSettings')).toBeVisible();
+
+    // Check footer elements inside scroll
+    const footerCard = page.locator('.metro-sheet-footer-card');
+    await expect(footerCard).toBeVisible();
+
+    // Test Theme Switcher
+    const darkBtn = footerCard.locator('#metroThemePillDarkBtn');
+    const lightBtn = footerCard.locator('#metroThemePillLightBtn');
+    await darkBtn.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await lightBtn.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'standard');
+
+    // Test Privacy Policy modal trigger
+    await page.locator('#metroOpenPrivacyFooterBtn').click();
+    await expect(page.locator('#privacyModal')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#privacyModal')).toBeHidden();
+
+    // Test Terms modal trigger
+    await page.locator('#metroOpenTermsFooterBtn').click();
+    await expect(page.locator('#termsModal')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#termsModal')).toBeHidden();
+
+    // Test Feedback / Suggest Improvement modal trigger
+    await page.locator('#metroOpenSuggestImprovementFooterBtn').click();
+    await expect(page.locator('#feedbackModal')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#feedbackModal')).toBeHidden();
   });
 });

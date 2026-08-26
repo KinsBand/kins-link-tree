@@ -1,10 +1,13 @@
 ---
 import { liveConfig } from '../../settings/live.config';
+import { functionalityConfig } from '../../settings/functionality.config';
+import { epkConfig } from '../../settings/epk.config';
 import { Image } from 'astro:assets';
 import kinsLogoNew from '../../assets/new.png';
 
 const baseUrl = import.meta.env.BASE_URL;
 const isLive = liveConfig.status === 'live';
+const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.enabled ?? true);
 ---
 
 <header class="top-nav" id="topNavHeader" data-track-container="nav:top_bar">
@@ -45,10 +48,12 @@ const isLive = liveConfig.status === 'live';
 
   <!-- Desktop View: Top-Right Symmetrical Action -->
   <div class="top-nav-right-col">
-    <a href={`${baseUrl}epk`} class="top-nav-epk-btn" title="Electronic Press Kit" data-track="nav:epk_link">
-      <span>EPK</span>
-      <i class="fa-solid fa-arrow-up-right-from-square nav-epk-icon"></i>
-    </a>
+    {isEpkEnabled && (
+      <a href={`${baseUrl}epk`} class="top-nav-epk-btn" title="Electronic Press Kit" data-track="nav:epk_link">
+        <span>EPK</span>
+        <i class="fa-solid fa-arrow-up-right-from-square nav-epk-icon"></i>
+      </a>
+    )}
   </div>
 </header>
 

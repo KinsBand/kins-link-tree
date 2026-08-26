@@ -8,20 +8,57 @@ import {
   getSheetForSong,
   setSheetFollow,
   setSheetLoop,
-  setSheetInstrument
+  setSheetSync,
+  setSheetInstrument,
+  getTimeSignature
 } from './metroState.js';
+import {
+  putSheetFile,
+  getSheetFile,
+  deleteSheetFile,
+  isSheetStoreAvailable
+} from './sheetStore.js';
+import { scanScoreCanvas, cropRegion, countBars } from './pdfBarScanner.js';
 
 const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.mjs';
 const PDFJS_WORKER_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.mjs';
 const ALPHATAB_URL = 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.3.4/dist/alphaTab.js';
+const OSMD_URL = 'https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.8.9/build/opensheetmusicdisplay.min.js';
+
+const SIG_PRESETS = [
+  [4, 4], [3, 4], [2, 4], [6, 8], [7, 8], [5, 4], [9, 8], [12, 8]
+];
 
 const COPY = {
   noSong: 'SELECT A SETLIST SONG',
   emptyTitle: (inst) => `NO ${inst} SHEET YET`,
-  emptySub: 'Upload your own tab or sheet — PDF, Guitar Pro or MusicXML.',
-  awaitingReview: 'UPLOADED — AWAITING REVIEW',
+  emptySub: 'Upload your own tab or sheet — PDF, Guitar Pro or MusicXML. Stored on this device only.',
   rendering: 'RENDERING…',
-  failed: 'COULD NOT RENDER THIS FILE'
+  scanning: 'SCANNING BARS…',
+  failed: 'COULD NOT RENDER THIS FILE',
+  savedDevice: 'Sheet saved on this device',
+  sessionOnly: 'Storage unavailable — sheet kept for this session only',
+  unsupported: 'Unsupported file — use PDF, GP, GP5, XML or MusicXML',
+  tooLarge: 'File too large — 15 MB max',
+  needSong: 'Load a setlist song first — then upload its sheet',
+  renderFail: 'Could not render that file — is it a valid sheet?',
+  omrRunning: 'OMR RECOGNIZING…',
+  omrHint: 'Full PDF note recognition: run the OMR bridge (tools/omr-server) — using barline scan for now',
+  omrDone: (n) => `OMR complete — ${n} bars recognized`,
+  nothingToClear: 'No song loaded — nothing to clear',
+  nothingCleared: (inst) => `No ${inst} sheet for this song`,
+  cleared: 'Sheet cleared for this song + instrument',
+  syncOn: 'Score sync on — time signature follows the sheet',
+  syncOff: 'Score sync off',
+  syncNoBars: 'No barlines detected in this sheet — sync unavailable',
+  followOn: 'Follow on — sheet scrolls with the click',
+  followOff: 'Follow off',
+  loopOn: 'Loop on',
+  loopOff: 'Loop off',
+  sigSetTo: (bar, n, d) => `Bar ${bar}+ set to ${n}/${d}`,
+  sigPromptBeats: 'Beats per bar (1-32):',
+  sigPromptUnit: 'Note value (2, 4, 8, 16, 32):',
+  sigInvalid: 'Invalid time signature'
 };
 
 let els = null;
@@ -37,6 +74,17 @@ let scrollPxPerBeat = 26;
 let stripRevealed = false;
 let pdfLibPromise = null;
 let alphaTabLoaded = false;
+let osmdLoaded = false;
+
+let timeline = [];
+let barCursor = -1;
+let autoSigs = [];
+let sigSections = [];
+let sigPopover = null;
+let omrBridgeOk = null;
+let omrHintShown = false;
+
+const OMR_BASE = String(METRO_SHEET_CONFIG.omrBridgeUrl || 'http://localhost:8787').replace(/\/+$/, '');
 
 function extOf(name) {
   const lower = String(name || '').toLowerCase();
@@ -70,6 +118,14 @@ function trackObjectUrl(url) {
   }
 }
 
+function sigForBar(i) {
+  let sig = autoSigs[i] && autoSigs[i].n ? { n: autoSigs[i].n, d: autoSigs[i].d } : { n: 4, d: 4 };
+  for (const s of sigSections) {
+    if (s.fromBar <= i) sig = { n: s.n, d: s.d };
+  }
+  return sig;
+}
+
 export function createSheetController(options) {
   callbacks = options || {};
 
@@ -78,7 +134,7 @@ export function createSheetController(options) {
     els = refs;
     bindUi();
     applyPersistedToggles();
-    if (!currentEntry && !hasAnyLocalSheets()) {
+    if (!currentEntry) {
       hideStrip();
     } else {
       revealStrip();
@@ -86,24 +142,20 @@ export function createSheetController(options) {
     }
   }
 
-  function hasAnyLocalSheets() {
-    try {
-      return Object.keys(metroState.sheetMap || {}).length > 0;
-    } catch (e) {
-      return false;
-    }
-  }
-
   function revealStrip() {
     stripRevealed = true;
     if (els.strip) els.strip.hidden = false;
     if (els.toggles) els.toggles.hidden = false;
+    const view = document.getElementById('metroView');
+    if (view) view.classList.add('has-strip');
   }
 
   function hideStrip() {
     stripRevealed = false;
     if (els.strip) els.strip.hidden = true;
     if (els.toggles) els.toggles.hidden = true;
+    const view = document.getElementById('metroView');
+    if (view) view.classList.remove('has-strip');
   }
 
   function bindUi() {
@@ -138,6 +190,10 @@ export function createSheetController(options) {
       els.loopBtn.dataset.bound = '1';
       els.loopBtn.addEventListener('click', () => toggleLoop());
     }
+    if (els.syncBtn && !els.syncBtn.dataset.bound) {
+      els.syncBtn.dataset.bound = '1';
+      els.syncBtn.addEventListener('click', () => toggleSync());
+    }
     if (els.clearBtn && !els.clearBtn.dataset.bound) {
       els.clearBtn.dataset.bound = '1';
       els.clearBtn.addEventListener('click', () => {
@@ -171,6 +227,9 @@ export function createSheetController(options) {
     if (els.loopBtn) {
       els.loopBtn.setAttribute('aria-pressed', metroState.sheetLoop ? 'true' : 'false');
     }
+    if (els.syncBtn) {
+      els.syncBtn.setAttribute('aria-pressed', metroState.sheetSync ? 'true' : 'false');
+    }
   }
 
   function toggleFollow() {
@@ -178,13 +237,28 @@ export function createSheetController(options) {
     renderToggleStates();
     if (!next) stopFollowScroll();
     else if (metroState.playing) startFollowScroll();
-    if (callbacks.onSheetToast) callbacks.onSheetToast(next ? 'Follow on — sheet scrolls with the click' : 'Follow off');
+    if (callbacks.onSheetToast) callbacks.onSheetToast(next ? COPY.followOn : COPY.followOff);
   }
 
   function toggleLoop() {
     const next = setSheetLoop(!metroState.sheetLoop);
     renderToggleStates();
-    if (callbacks.onSheetToast) callbacks.onSheetToast(next ? 'Loop on' : 'Loop off');
+    if (callbacks.onSheetToast) callbacks.onSheetToast(next ? COPY.loopOn : COPY.loopOff);
+  }
+
+  function toggleSync() {
+    const next = setSheetSync(!metroState.sheetSync);
+    renderToggleStates();
+    if (next) {
+      if (!timeline.length) {
+        if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.syncNoBars, 'warning');
+      } else {
+        barCursor = -1;
+        if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.syncOn, 'success');
+      }
+    } else {
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.syncOff, 'info');
+    }
   }
 
   function songKeyFor(entry) {
@@ -197,9 +271,13 @@ export function createSheetController(options) {
   function setCurrentSong(entry) {
     currentEntry = entry || null;
     currentSongKey = songKeyFor(entry);
-    updateHeader();
-    if (!stripRevealed && (entry || hasAnyLocalSheets())) revealStrip();
-    renderForCurrentSong();
+    if (!currentEntry) {
+      hideStrip();
+    } else {
+      updateHeader();
+      revealStrip();
+      renderForCurrentSong();
+    }
     if (ui && typeof ui.renderInstrumentPicker === 'function') ui.renderInstrumentPicker();
   }
 
@@ -231,12 +309,22 @@ export function createSheetController(options) {
     return getSheetForSong(currentSongKey, metroState.sheetInstrument);
   }
 
+  function resetTimelineState() {
+    timeline = [];
+    barCursor = -1;
+    autoSigs = [];
+    sigSections = [];
+    closeSigPopover();
+    if (els.barChip) els.barChip.hidden = true;
+  }
+
   function renderForCurrentSong() {
     updateHeader();
     const myGen = gen();
     const track = trackEl();
     if (!track) return;
     stopFollowScroll();
+    resetTimelineState();
     track.textContent = '';
     const entry = activeEntry();
 
@@ -247,18 +335,30 @@ export function createSheetController(options) {
       return;
     }
 
-    if (entry.source === 'local' && entry.objectUrl) {
+    if (entry.sigSections && Array.isArray(entry.sigSections)) {
+      sigSections = entry.sigSections.slice();
+    }
+
+    if (entry.objectUrl) {
       lastObjectUrl = entry.objectUrl;
       renderFile(entry.objectUrl, entry, myGen);
       return;
     }
 
-    if (entry.storagePath) {
-      renderCloud(entry, myGen);
-      return;
-    }
-
-    renderEmpty(track, COPY.awaitingReview);
+    getSheetFile(currentSongKey, metroState.sheetInstrument)
+      .then((rec) => {
+        if (isStale(myGen)) return;
+        if (!rec) {
+          renderEmpty(track);
+          return;
+        }
+        const url = URL.createObjectURL(rec.blob);
+        trackObjectUrl(url);
+        renderFile(url, { name: rec.name, mime: rec.mime, size: rec.size }, myGen);
+      })
+      .catch(() => {
+        if (!isStale(myGen)) renderEmpty(track);
+      });
   }
 
   function renderEmpty(track, overrideTitle) {
@@ -286,90 +386,55 @@ export function createSheetController(options) {
     track.appendChild(empty);
   }
 
-  async function renderCloud(entry, myGen) {
-    renderEmpty(trackEl(), COPY.awaitingReview);
-    try {
-      const url = cloudPublicUrl(entry.storagePath);
-      const res = await fetch(url, { method: 'HEAD' });
-      if (isStale(myGen)) return;
-      if (res.ok) {
-        renderFile(url, entry, myGen);
-      }
-    } catch (e) {}
-  }
-
-  function cloudPublicUrl(storagePath) {
-    const base = (metroState.__supabaseUrl || '').replace(/\/$/, '');
-    if (!base) return storagePath.replace(/^pending\//, 'approved/');
-    return `${base}/storage/v1/object/public/${METRO_SHEET_CONFIG.bucket}/${storagePath.replace(/^pending\//, 'approved/')}`;
-  }
-
   async function handleFileSelected(file) {
     const ext = extOf(file.name);
     if (METRO_SHEET_CONFIG.allowedExt.indexOf(ext) === -1) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast('Unsupported file — use PDF, GP, GP5, XML or MusicXML', 'error');
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.unsupported, 'error');
       return;
     }
     if (file.size > METRO_SHEET_CONFIG.maxBytes) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast('File too large — 15 MB max', 'error');
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.tooLarge, 'error');
       return;
     }
     if (!currentSongKey) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast('Load a setlist song first — then upload its sheet', 'warning');
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.needSong, 'warning');
       return;
     }
 
+    const songKey = currentSongKey;
+    const instrument = metroState.sheetInstrument;
+
     const url = URL.createObjectURL(file);
     trackObjectUrl(url);
-    const record = {
+    lastObjectUrl = url;
+
+    setSheetForSong(songKey, instrument, {
       name: file.name,
       mime: file.type || '',
       size: file.size,
-      instrument: metroState.sheetInstrument,
-      source: 'local',
-      objectUrl: url,
+      instrument,
+      source: isSheetStoreAvailable() ? 'device' : 'session',
       uploadedAt: Date.now()
-    };
-    setSheetForSong(currentSongKey, metroState.sheetInstrument, {
-      name: record.name,
-      mime: record.mime,
-      size: record.size,
-      instrument: record.instrument,
-      source: 'local-session',
-      uploadedAt: record.uploadedAt
     });
-    revealStrip();
-    renderForCurrentSong();
-    if (callbacks.onSheetUploadedLocal) callbacks.onSheetUploadedLocal(record);
 
-    const songKeyAtSend = currentSongKey;
-    const instrumentAtSend = metroState.sheetInstrument;
+    revealStrip();
+
+    const myGen = gen();
+    renderFile(url, { name: file.name, mime: file.type || '', size: file.size }, myGen);
+
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('instrument', instrumentAtSend);
-      fd.append('songKey', songKeyAtSend);
-      fd.append('title', currentEntry && currentEntry.title ? currentEntry.title : '');
-      const res = await fetch('/api/sheet-upload', { method: 'POST', body: fd });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.status === 'success') {
-        if (data.sheet && data.sheet.storagePath) {
-          setSheetForSong(songKeyAtSend, instrumentAtSend, {
-            name: record.name,
-            mime: record.mime,
-            size: record.size,
-            instrument: instrumentAtSend,
-            source: 'cloud',
-            storagePath: data.sheet.storagePath,
-            uploadedAt: Date.now()
-          });
-        }
-        if (callbacks.onSheetToast) callbacks.onSheetToast(data.message || 'Sheet received', 'success');
-      } else {
-        if (callbacks.onSheetToast) callbacks.onSheetToast((data && data.message) || 'Upload failed — kept locally for this session', 'warning');
-      }
+      await putSheetFile(songKey, instrument, file);
+      setSheetForSong(songKey, instrument, {
+        name: file.name,
+        mime: file.type || '',
+        size: file.size,
+        instrument,
+        source: 'device',
+        uploadedAt: Date.now()
+      });
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.savedDevice, 'success');
     } catch (err) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast('Upload failed — kept locally for this session', 'warning');
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.sessionOnly, 'warning');
     }
   }
 
@@ -383,23 +448,101 @@ export function createSheetController(options) {
     return pdfLibPromise;
   }
 
-  function loadAlphaTab() {
-    if (alphaTabLoaded && window.alphaTab) return Promise.resolve(window.alphaTab);
+  function loadScriptOnce(src, marker) {
+    if (marker === 'alphatab' && alphaTabLoaded && window.alphaTab) return Promise.resolve(window.alphaTab);
+    if (marker === 'osmd' && osmdLoaded && window.OpenSheetMusicDisplay) return Promise.resolve(window.OpenSheetMusicDisplay);
     return new Promise((resolve, reject) => {
-      const existing = document.querySelector('script[data-alphatab]');
+      const existing = document.querySelector(`script[data-${marker}]`);
       if (existing) {
-        existing.addEventListener('load', () => resolve(window.alphaTab));
+        existing.addEventListener('load', () => resolve(marker === 'alphatab' ? window.alphaTab : window.OpenSheetMusicDisplay));
         existing.addEventListener('error', reject);
         return;
       }
       const s = document.createElement('script');
-      s.src = ALPHATAB_URL;
+      s.src = src;
       s.async = true;
-      s.dataset.alphatab = '1';
-      s.onload = () => { alphaTabLoaded = true; resolve(window.alphaTab); };
-      s.onerror = () => reject(new Error('alphaTab failed to load'));
+      s.dataset[marker] = '1';
+      s.onload = () => {
+        if (marker === 'alphatab') alphaTabLoaded = true;
+        else osmdLoaded = true;
+        resolve(marker === 'alphatab' ? window.alphaTab : window.OpenSheetMusicDisplay);
+      };
+      s.onerror = () => reject(new Error(marker + ' failed to load'));
       document.head.appendChild(s);
     });
+  }
+
+  function offscreenHolder(width) {
+    const holder = document.createElement('div');
+    holder.style.position = 'fixed';
+    holder.style.left = '-10000px';
+    holder.style.top = '0';
+    holder.style.width = width + 'px';
+    holder.style.background = '#ffffff';
+    holder.style.visibility = 'hidden';
+    holder.style.pointerEvents = 'none';
+    document.body.appendChild(holder);
+    return holder;
+  }
+
+  function settle(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  function buildBarCard(cropCanvas, label, sig, barIdx, sigEditable) {
+    const card = document.createElement('div');
+    card.className = 'kins-sheet-page kins-sheet-bar';
+    card.dataset.bar = String(barIdx);
+    const head = document.createElement('div');
+    head.className = 'kins-sheet-page-head';
+    const labelEl = document.createElement('span');
+    labelEl.textContent = label;
+    head.appendChild(labelEl);
+    let sigEl;
+    if (sigEditable) {
+      sigEl = document.createElement('button');
+      sigEl.type = 'button';
+      sigEl.className = 'kins-sig-badge';
+      sigEl.title = 'Set time signature from this bar';
+      sigEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSigPopover(barIdx, sigEl);
+      });
+    } else {
+      sigEl = document.createElement('span');
+      sigEl.className = 'kins-sig-badge kins-sig-badge--static';
+    }
+    sigEl.textContent = `${sig.n}/${sig.d}`;
+    sigEl.dataset.bar = String(barIdx);
+    head.appendChild(sigEl);
+    card.appendChild(head);
+    card.appendChild(cropCanvas);
+    card.addEventListener('click', () => seekToBar(barIdx));
+    return card;
+  }
+
+  function mountBars(bars, myGen) {
+    const track = trackEl();
+    if (!track || isStale(myGen)) return;
+    track.textContent = '';
+    timeline = [];
+    bars.forEach((b, i) => {
+      const sig = sigForBar(i);
+      const card = buildBarCard(b.canvas, b.label, sig, i, b.sigEditable);
+      track.appendChild(card);
+      timeline.push({
+        beatsPerBar: sig.n,
+        beatUnit: sig.d,
+        el: card
+      });
+    });
+    if (els.barChip) els.barChip.hidden = timeline.length < 2;
+    if (timeline.length >= 2) updateBarChip();
+    cacheTrackMetrics();
+    if (metroState.sheetSync && metroState.playing && timeline.length) {
+      barCursor = -1;
+    }
+    if (metroState.sheetFollow && metroState.playing) startFollowScroll();
   }
 
   async function renderFile(url, entry, myGen) {
@@ -408,19 +551,55 @@ export function createSheetController(options) {
     track.textContent = '';
     const loading = document.createElement('div');
     loading.className = 'kins-sheet-empty';
-    loading.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><strong>${COPY.rendering}</strong>`;
+    loading.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><strong>${COPY.rendering}</strong><span>${COPY.scanning}</span>`;
     track.appendChild(loading);
 
     try {
+      const ext = extOf(entry.name);
+      let bars = [];
+      let sigEditable = false;
+
       if (isPdf(entry)) {
-        await renderPdf(url, track, myGen);
+        let omrBars = null;
+        try {
+          const blob = await fetch(url).then((r) => r.blob());
+          if (!isStale(myGen)) {
+            const pages = await tryOmerBridge(blob, loading, myGen);
+            if (isStale(myGen)) return;
+            if (pages) {
+              const res = await buildOmerPageBars(pages, myGen);
+              if (isStale(myGen)) return;
+              if (res.bars.length >= 2) omrBars = res.bars;
+            }
+          }
+        } catch (e) {}
+        if (omrBars) {
+          bars = omrBars;
+          if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.omrDone(bars.length), 'success');
+        } else {
+          const res = await buildPdfBars(url, myGen);
+          if (isStale(myGen)) return;
+          if (res.bars.length >= 2) {
+            bars = res.bars;
+            sigEditable = true;
+          } else if (res.pageCanvases && res.pageCanvases.length) {
+            mountPageFallback(res.pageCanvases, myGen);
+            return;
+          } else {
+            throw new Error('no pages');
+          }
+        }
+      } else if (ext === '.gp' || ext === '.gp5') {
+        const res = await buildAlphaTabBars(url, myGen);
+        if (isStale(myGen)) return;
+        bars = res.bars;
       } else {
-        await renderNotation(url, track, myGen);
+        const res = await buildOsmdBars(url, myGen);
+        if (isStale(myGen)) return;
+        bars = res.bars;
       }
-      if (!isStale(myGen)) {
-        cacheTrackMetrics();
-        if (metroState.sheetFollow && metroState.playing) startFollowScroll();
-      }
+
+      mountBars(bars, myGen);
     } catch (err) {
       if (isStale(myGen)) return;
       track.textContent = '';
@@ -428,97 +607,388 @@ export function createSheetController(options) {
       errBox.className = 'kins-sheet-error';
       errBox.textContent = COPY.failed;
       track.appendChild(errBox);
-      if (callbacks.onSheetToast) callbacks.onSheetToast('Could not render that file — is it a valid sheet?', 'error');
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.renderFail, 'error');
     }
   }
 
-  async function renderPdf(url, track, myGen) {
-    const pdfjs = await ensurePdfJs();
-    if (isStale(myGen)) return;
-    const buf = await fetch(url).then((r) => r.arrayBuffer());
-    if (isStale(myGen)) return;
-    const doc = await pdfjs.getDocument({ data: buf }).promise;
-    if (isStale(myGen)) return;
+  async function omerBridgeHealthy() {
+    if (omrBridgeOk !== null) return omrBridgeOk;
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 1500);
+      const res = await fetch(`${OMR_BASE}/health`, { signal: ctrl.signal });
+      clearTimeout(t);
+      omrBridgeOk = res.ok;
+    } catch (e) {
+      omrBridgeOk = false;
+    }
+    return omrBridgeOk;
+  }
+
+  async function tryOmerBridge(fileBlob, loadingEl, myGen) {
+    const healthy = await omerBridgeHealthy();
+    if (!healthy) {
+      if (!omrHintShown) {
+        omrHintShown = true;
+        if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.omrHint, 'info');
+      }
+      return null;
+    }
+    if (loadingEl) {
+      const strong = loadingEl.querySelector('strong');
+      if (strong) strong.textContent = COPY.omrRunning;
+    }
+    const fd = new FormData();
+    fd.append('file', fileBlob, 'sheet.pdf');
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5 * 60 * 1000);
+    try {
+      const res = await fetch(`${OMR_BASE}/omr`, { method: 'POST', body: fd, signal: ctrl.signal });
+      if (!res.ok) return null;
+      const data = await res.json().catch(() => null);
+      if (!data || data.status !== 'success' || !Array.isArray(data.pages) || !data.pages.length) return null;
+      return data.pages;
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  async function buildOmerPageBars(xmlPages, myGen) {
+    const all = [];
+    const mergedSigs = [];
+    for (const xml of xmlPages) {
+      if (isStale(myGen)) return { bars: [] };
+      let doc = null;
+      try {
+        doc = new DOMParser().parseFromString(xml, 'application/xml');
+      } catch (e) {
+        doc = null;
+      }
+      if (!doc || doc.querySelector('parsererror')) continue;
+      const res = await buildOsmdBars(doc, myGen);
+      if (isStale(myGen)) return { bars: [] };
+      for (const b of res.bars) all.push(b);
+      for (const s of autoSigs) mergedSigs.push(s);
+    }
+    if (!all.length) return { bars: [] };
+    autoSigs = mergedSigs;
+    all.forEach((b, i) => {
+      b.label = `B${i + 1}`;
+    });
+    return { bars: all };
+  }
+
+  function mountPageFallback(pageCanvases, myGen) {
+    const track = trackEl();
+    if (!track || isStale(myGen)) return;
     track.textContent = '';
-    const pages = Math.min(doc.numPages, 12);
-    for (let i = 1; i <= pages; i++) {
-      if (isStale(myGen)) return;
-      const page = await doc.getPage(i);
-      if (isStale(myGen)) return;
-      const baseViewport = page.getViewport({ scale: 1 });
-      const targetH = window.matchMedia('(max-width: 380px)').matches ? 92 : 108;
-      const scale = targetH / baseViewport.height;
-      const viewport = page.getViewport({ scale: scale * 2 });
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
-      canvas.style.height = `${targetH}px`;
-      const ctx = canvas.getContext('2d');
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      if (isStale(myGen)) return;
+    timeline = [];
+    pageCanvases.forEach((canvas, i) => {
       const card = document.createElement('div');
       card.className = 'kins-sheet-page';
       const head = document.createElement('div');
       head.className = 'kins-sheet-page-head';
       const label = document.createElement('span');
-      label.textContent = `P${String(i).padStart(2, '0')}`;
-      const num = document.createElement('span');
-      num.className = 'kins-sheet-page-num';
-      num.textContent = `${i}/${doc.numPages}`;
+      label.textContent = `P${String(i + 1).padStart(2, '0')}`;
       head.appendChild(label);
-      head.appendChild(num);
       card.appendChild(head);
       card.appendChild(canvas);
       track.appendChild(card);
+    });
+    if (els.barChip) els.barChip.hidden = true;
+    if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.syncNoBars, 'info');
+    cacheTrackMetrics();
+  }
+
+  async function buildPdfBars(url, myGen) {
+    const pdfjs = await ensurePdfJs();
+    if (isStale(myGen)) return { bars: [], pageCanvases: [] };
+    const buf = await fetch(url).then((r) => r.arrayBuffer());
+    if (isStale(myGen)) return { bars: [], pageCanvases: [] };
+    const doc = await pdfjs.getDocument({ data: buf }).promise;
+    if (isStale(myGen)) return { bars: [], pageCanvases: [] };
+    const pages = Math.min(doc.numPages, 8);
+    const bars = [];
+    const pageCanvases = [];
+    for (let p = 1; p <= pages; p++) {
+      if (isStale(myGen)) return { bars: [], pageCanvases: [] };
+      const page = await doc.getPage(p);
+      if (isStale(myGen)) return { bars: [], pageCanvases: [] };
+      const base = page.getViewport({ scale: 1 });
+      const scale = Math.min(2, 2400 / Math.max(base.width, base.height));
+      const viewport = page.getViewport({ scale: scale * 1.6 });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      if (isStale(myGen)) return { bars: [], pageCanvases: [] };
+      pageCanvases.push(canvas);
+      const scan = scanScoreCanvas(canvas);
+      let barInPage = 0;
+      for (const sys of scan.systems) {
+        for (const span of sys.bars) {
+          barInPage++;
+          const crop = cropRegion(canvas, span.x0, sys.y0, span.x1, sys.y1);
+          bars.push({ canvas: crop, label: `P${p}·B${barInPage}` });
+          if (bars.length >= 120) break;
+        }
+        if (bars.length >= 120) break;
+      }
     }
-    if (doc.numPages > pages) {
-      const more = document.createElement('div');
-      more.className = 'kins-sheet-empty';
-      more.textContent = `+${doc.numPages - pages} more pages`;
-      track.appendChild(more);
+    return { bars, pageCanvases };
+  }
+
+  async function buildOsmdBars(source, myGen) {
+    const OSMD = await loadScriptOnce(OSMD_URL, 'osmd');
+    if (isStale(myGen)) return { bars: [] };
+    const holder = offscreenHolder(2400);
+    try {
+      const osmd = new OSMD(holder, { autoResize: false, backend: 'canvas' });
+      await osmd.load(source);
+      if (isStale(myGen)) return { bars: [] };
+      osmd.zoom = 0.6;
+      osmd.render();
+      await settle(80);
+      if (isStale(myGen)) return { bars: [] };
+      autoSigs = extractOsmdSignatures(osmd);
+      const canvas = holder.querySelector('canvas');
+      if (!canvas) throw new Error('osmd no canvas');
+      return barsFromScan(canvas, myGen);
+    } finally {
+      holder.remove();
     }
   }
 
-  async function renderNotation(url, track, myGen) {
-    const alphaTab = await loadAlphaTab();
-    if (isStale(myGen) || !alphaTab) throw new Error('no alphatab');
-    track.textContent = '';
-    const card = document.createElement('div');
-    card.className = 'kins-sheet-page';
-    card.style.maxWidth = 'none';
-    card.style.width = '1600px';
-    const head = document.createElement('div');
-    head.className = 'kins-sheet-page-head';
-    const label = document.createElement('span');
-    const instDef = SHEET_INSTRUMENTS.find((s) => s.id === metroState.sheetInstrument) || SHEET_INSTRUMENTS[0];
-    label.textContent = instDef.label;
-    const num = document.createElement('span');
-    num.className = 'kins-sheet-page-num';
-    num.textContent = entry && entry.name ? extOf(entry.name).replace('.', '').toUpperCase() : '';
-    head.appendChild(label);
-    head.appendChild(num);
-    const holder = document.createElement('div');
-    holder.style.width = '1596px';
-    holder.style.height = '300px';
-    holder.style.overflow = 'hidden';
-    holder.style.background = '#fff';
-    card.appendChild(head);
-    card.appendChild(holder);
-    track.appendChild(card);
+  function extractOsmdSignatures(osmd) {
+    try {
+      const sheet = osmd.sheet || osmd.Sheet;
+      const sms = (sheet && (sheet.sourceMeasures || sheet.SourceMeasures)) || [];
+      return sms.map((sm) => {
+        const ts = sm && (sm.timeSignature || sm.TimeSignature || sm.sourceTimeSignature);
+        if (ts && typeof ts.numerator === 'number' && typeof ts.denominator === 'number' && ts.numerator > 0 && ts.denominator > 0) {
+          return { n: ts.numerator, d: ts.denominator };
+        }
+        return null;
+      });
+    } catch (e) {
+      return [];
+    }
+  }
 
-    const settings = {
-      file: url,
-      player: null,
-      notation: {
-        mode: 0
-      },
-      display: {
-        scale: 0.8,
-        layoutMode: 0
+  async function buildAlphaTabBars(url, myGen) {
+    const alphaTab = await loadScriptOnce(ALPHATAB_URL, 'alphatab');
+    if (isStale(myGen)) return { bars: [] };
+    const holder = offscreenHolder(1600);
+    try {
+      const api = new alphaTab.AlphaTabApi(holder, {
+        file: url,
+        player: null,
+        display: { scale: 0.8 }
+      });
+      await waitForAlphaTabRender(api);
+      if (isStale(myGen)) return { bars: [] };
+      await settle(120);
+      if (isStale(myGen)) return { bars: [] };
+      const canvas = holder.querySelector('canvas');
+      if (!canvas) throw new Error('alphatab no canvas');
+      autoSigs = extractAlphaTabSignatures(api);
+      return barsFromScan(canvas, myGen);
+    } finally {
+      holder.remove();
+    }
+  }
+
+  function waitForAlphaTabRender(api) {
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        resolve();
+      };
+      try {
+        if (api.renderFinished && typeof api.renderFinished.on === 'function') {
+          api.renderFinished.on(finish);
+        }
+      } catch (e) {}
+      setTimeout(finish, 3000);
+    });
+  }
+
+  function extractAlphaTabSignatures(api) {
+    try {
+      const score = api.score;
+      if (!score || !score.tracks || !score.tracks.length) return [];
+      const staves = score.tracks[0].staves || [];
+      const staff = staves[0];
+      if (!staff || !staff.bars) return [];
+      return staff.bars.map((bar) => {
+        const ts = bar && bar.timeSignature;
+        if (ts && typeof ts.numerator === 'number' && ts.numerator > 0) {
+          return { n: ts.numerator, d: typeof ts.denominator === 'number' && ts.denominator > 0 ? ts.denominator : 4 };
+        }
+        return null;
+      });
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function barsFromScan(canvas, myGen) {
+    const scan = scanScoreCanvas(canvas);
+    if (isStale(myGen)) return { bars: [] };
+    const bars = [];
+    let idx = 0;
+    for (const sys of scan.systems) {
+      for (const span of sys.bars) {
+        const crop = cropRegion(canvas, span.x0, sys.y0, span.x1, sys.y1);
+        bars.push({ canvas: crop, label: `B${idx + 1}` });
+        idx++;
+        if (bars.length >= 120) break;
       }
-    };
-    /* eslint-disable-next-line no-new */
-    new alphaTab.AlphaTabApi(holder, settings);
+      if (bars.length >= 120) break;
+    }
+    return { bars };
+  }
+
+  function seekToBar(i) {
+    if (!timeline.length || i < 0 || i >= timeline.length) return;
+    barCursor = i;
+    applyBarCursor(true);
+  }
+
+  function applyBarCursor(force) {
+    const bar = timeline[barCursor];
+    if (!bar) return;
+    const sig = sigForBar(barCursor);
+    bar.beatsPerBar = sig.n;
+    bar.beatUnit = sig.d;
+    const cur = getTimeSignature();
+    if (metroState.sheetSync && callbacks.onScoreTimeSignature) {
+      if (force || cur.beatsPerBar !== sig.n || cur.beatUnit !== sig.d) {
+        callbacks.onScoreTimeSignature(sig.n, sig.d);
+      }
+    }
+    updateBarChip();
+    if (metroState.sheetFollow && bar.el && els.track) {
+      const track = els.track;
+      const left = bar.el.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft - 12;
+      track.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    }
+  }
+
+  function updateBarChip() {
+    if (!els.barChip) return;
+    if (!timeline.length || barCursor < 0) {
+      els.barChip.hidden = true;
+      return;
+    }
+    const sig = sigForBar(barCursor);
+    els.barChip.textContent = `BAR ${barCursor + 1}/${timeline.length} • ${sig.n}/${sig.d}`;
+    els.barChip.hidden = false;
+  }
+
+  function rebuildSigLabels() {
+    timeline.forEach((bar, i) => {
+      const sig = sigForBar(i);
+      bar.beatsPerBar = sig.n;
+      bar.beatUnit = sig.d;
+      const card = bar.el;
+      if (card) {
+        const badge = card.querySelector('.kins-sig-badge');
+        if (badge) badge.textContent = `${sig.n}/${sig.d}`;
+      }
+    });
+    updateBarChip();
+  }
+
+  function openSigPopover(barIdx, anchor) {
+    closeSigPopover();
+    const pop = document.createElement('div');
+    pop.className = 'kins-sig-popover';
+    const title = document.createElement('p');
+    title.className = 'kins-sig-popover-title';
+    title.textContent = `TIME SIG FROM BAR ${barIdx + 1}`;
+    pop.appendChild(title);
+    const row = document.createElement('div');
+    row.className = 'kins-sig-popover-row';
+    SIG_PRESETS.forEach(([n, d]) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'metro-chip brutal-press';
+      chip.textContent = `${n}/${d}`;
+      chip.addEventListener('click', () => {
+        applySigFromBar(barIdx, n, d);
+      });
+      row.appendChild(chip);
+    });
+    const custom = document.createElement('button');
+    custom.type = 'button';
+    custom.className = 'metro-chip brutal-press';
+    custom.textContent = 'CUSTOM';
+    custom.addEventListener('click', () => {
+      const n = parseInt(window.prompt(COPY.sigPromptBeats, '4'), 10);
+      if (Number.isNaN(n) || n < 1 || n > 32) {
+        if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.sigInvalid, 'error');
+        return;
+      }
+      const d = parseInt(window.prompt(COPY.sigPromptUnit, '4'), 10);
+      if (Number.isNaN(d) || d < 1 || d > 32) {
+        if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.sigInvalid, 'error');
+        return;
+      }
+      applySigFromBar(barIdx, n, d);
+    });
+    row.appendChild(custom);
+    pop.appendChild(row);
+    document.body.appendChild(pop);
+    const rect = anchor.getBoundingClientRect();
+    const pw = Math.min(320, window.innerWidth - 16);
+    pop.style.width = pw + 'px';
+    const left = Math.min(Math.max(8, rect.left - pw / 2), window.innerWidth - pw - 8);
+    const top = Math.max(8, rect.top - pop.offsetHeight - 10);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    sigPopover = pop;
+    setTimeout(() => {
+      document.addEventListener('pointerdown', onSigPopoverOutside, { capture: true });
+      document.addEventListener('keydown', onSigPopoverKey, { capture: true });
+    }, 0);
+  }
+
+  function onSigPopoverOutside(e) {
+    if (sigPopover && !sigPopover.contains(e.target)) closeSigPopover();
+  }
+
+  function onSigPopoverKey(e) {
+    if (e.key === 'Escape') closeSigPopover();
+  }
+
+  function closeSigPopover() {
+    if (!sigPopover) return;
+    const pop = sigPopover;
+    sigPopover = null;
+    document.removeEventListener('pointerdown', onSigPopoverOutside, { capture: true });
+    document.removeEventListener('keydown', onSigPopoverKey, { capture: true });
+    pop.remove();
+  }
+
+  function applySigFromBar(barIdx, n, d) {
+    sigSections = sigSections.filter((s) => s.fromBar !== barIdx);
+    sigSections.push({ fromBar: barIdx, n, d });
+    sigSections.sort((a, b) => a.fromBar - b.fromBar);
+    const entry = activeEntry();
+    if (entry) {
+      setSheetForSong(currentSongKey, metroState.sheetInstrument, {
+        ...entry,
+        sigSections: sigSections.slice()
+      });
+    }
+    rebuildSigLabels();
+    if (metroState.sheetSync && barCursor >= 0) applyBarCursor(true);
+    closeSigPopover();
+    if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.sigSetTo(barIdx + 1, n, d), 'success');
   }
 
   let metrics = { scrollWidth: 0, clientWidth: 0 };
@@ -537,6 +1007,7 @@ export function createSheetController(options) {
   function startFollowScroll() {
     if (followRaf) return;
     if (!followEnabled()) return;
+    if (metroState.sheetSync && timeline.length > 1) return;
     cacheTrackMetrics();
     let lastTs = 0;
     const step = (ts) => {
@@ -572,6 +1043,10 @@ export function createSheetController(options) {
   }
 
   function onPlaybackStarted() {
+    if (metroState.sheetSync && timeline.length > 1) {
+      barCursor = -1;
+      return;
+    }
     if (followEnabled()) startFollowScroll();
   }
 
@@ -579,23 +1054,36 @@ export function createSheetController(options) {
     stopFollowScroll();
   }
 
-  function onBeat() {
+  function onBeat(beatInBar) {
+    if (metroState.sheetSync && timeline.length > 1 && metroState.playing && beatInBar === 0) {
+      if (barCursor < 0) {
+        barCursor = 0;
+      } else if (barCursor < timeline.length - 1) {
+        barCursor++;
+      } else if (metroState.sheetLoop) {
+        barCursor = 0;
+      }
+      applyBarCursor();
+    }
     if (!followRaf && followEnabled() && metroState.playing) startFollowScroll();
   }
 
   function clearCurrentSheet() {
     if (!currentSongKey) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast('No song loaded — nothing to clear', 'info');
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.nothingToClear, 'info');
       return;
     }
     const entry = activeEntry();
     if (!entry) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast(`No ${metroState.sheetInstrument.toUpperCase()} sheet for this song`, 'info');
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.nothingCleared(metroState.sheetInstrument.toUpperCase()), 'info');
       return;
     }
-    setSheetForSong(currentSongKey, metroState.sheetInstrument, null);
+    const songKey = currentSongKey;
+    const instrument = metroState.sheetInstrument;
+    setSheetForSong(songKey, instrument, null);
+    deleteSheetFile(songKey, instrument).catch(() => {});
     renderForCurrentSong();
-    if (callbacks.onSheetToast) callbacks.onSheetToast('Sheet cleared for this song + instrument', 'success');
+    if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.cleared, 'success');
   }
 
   function selectInstrument(id) {
@@ -616,6 +1104,7 @@ export function createSheetController(options) {
 
   function teardown() {
     stopFollowScroll();
+    closeSigPopover();
     objectUrls.forEach((u) => {
       try { URL.revokeObjectURL(u); } catch (e) {}
     });
@@ -630,6 +1119,7 @@ export function createSheetController(options) {
     handleFileSelected,
     toggleFollow,
     toggleLoop,
+    toggleSync,
     selectInstrument,
     renderInstrumentButton,
     renderToggleStates,
@@ -638,6 +1128,6 @@ export function createSheetController(options) {
     onPlaybackStarted,
     onPlaybackStopped,
     teardown,
-    set supabaseUrl(v) { metroState.__supabaseUrl = v; }
+    get timelineLength() { return timeline.length; }
   };
 }

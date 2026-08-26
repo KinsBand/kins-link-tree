@@ -80,6 +80,13 @@
   --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
   --ease-tactile: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Brutalist Custom Scrollbars */
+  --scrollbar-size-v: 14px;
+  --scrollbar-size-h: 10px;
+  --scrollbar-thumb: #f2fd43;
+  --scrollbar-thumb-hover: #faff60;
+  --scrollbar-track: #101013;
 }
 
 /* ==========================================================================
@@ -142,5 +149,10 @@ body[data-theme="dark"],
   --text-card-muted: #71717a;
   --text-white: #f5f5f7;
   --text-muted: #a1a1aa;
+
+  /* Brutalist Custom Scrollbars (Dark Mode / Muted Gold) */
+  --scrollbar-thumb: #d4af37;
+  --scrollbar-thumb-hover: #e5c07b;
+  --scrollbar-track: #101013;
 }
 

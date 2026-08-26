@@ -205,6 +205,7 @@
   .legal-modal-body {
     padding: 16px 18px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -212,8 +213,6 @@
     font-family: var(--font-secondary);
     font-size: 0.82rem;
     line-height: 1.5;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-neon-yellow) transparent;
   }
 
   .agreement-highlight-box {

@@ -1,4 +1,5 @@
 ---
+import ToolIcon from '../ui/ToolIcon.astro';
 ---
 
 <div class="modal-backdrop hidden" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle" data-track-container="modal:feedback">
@@ -49,7 +50,7 @@
             <span class="category-selected-label" id="categoryDisplayLabel">General Site</span>
           </div>
           <div class="category-scroll-wrapper">
-            <div class="category-chips-grid" id="feedbackCategoryGrid">
+            <div class="category-chips-grid brutal-scroll-x" id="feedbackCategoryGrid">
               <button type="button" class="category-chip active" data-category="General Site">
                 <i class="fa-solid fa-globe"></i> General Site
               </button>
@@ -81,10 +82,10 @@
                 <i class="fa-solid fa-play"></i> Audio Player
               </button>
               <button type="button" class="category-chip" data-category="Tuner">
-                <i class="fa-solid fa-guitar"></i> Tuner
+                <ToolIcon name="tuner" size={13} /> Tuner
               </button>
               <button type="button" class="category-chip" data-category="Metronome">
-                <i class="fa-solid fa-drum"></i> Metronome
+                <ToolIcon name="metronome" size={13} /> Metronome
               </button>
             </div>
             <div class="scroll-fade-edge-right"></div>
@@ -266,6 +267,7 @@
     max-width: 490px;
     max-height: 92vh;
     overflow-y: auto;
+    overscroll-behavior: contain;
     background: var(--surface-card-light);
     border: 3px solid #000000;
     border-radius: 10px;
@@ -273,22 +275,7 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-neon-yellow) transparent;
     animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .feedback-modal-enhanced::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  .feedback-modal-enhanced::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .feedback-modal-enhanced::-webkit-scrollbar-thumb {
-    background: var(--accent-neon-yellow);
-    border-radius: 4px;
   }
 
   @keyframes modalPopIn {
@@ -580,20 +567,9 @@
     grid-auto-columns: max-content;
     gap: 7px 7px;
     overflow-x: auto;
-    padding: 2px 20px 4px 2px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-neon-yellow) transparent;
+    padding: 2px 20px 8px 2px;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
-  }
-
-  .category-chips-grid::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  .category-chips-grid::-webkit-scrollbar-thumb {
-    background: var(--accent-neon-yellow);
-    border-radius: 4px;
   }
 
   .scroll-fade-edge-right {
@@ -628,8 +604,11 @@
     scroll-snap-align: start;
   }
 
-  .category-chip i {
+  .category-chip i,
+  .category-chip :global(svg) {
     font-size: 0.74rem;
+    width: 13px;
+    height: 13px;
     color: var(--text-card-primary);
   }
 
@@ -639,7 +618,8 @@
     transform: translateY(-1px);
   }
 
-  .category-chip:hover i {
+  .category-chip:hover i,
+  .category-chip:hover :global(svg) {
     color: #000000;
   }
 
@@ -650,7 +630,8 @@
     font-weight: 900;
   }
 
-  .category-chip.active i {
+  .category-chip.active i,
+  .category-chip.active :global(svg) {
     color: #000000;
   }
 

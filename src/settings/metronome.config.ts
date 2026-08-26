@@ -19,6 +19,19 @@ export interface MetronomeSubdivision {
   perBeat: number;
 }
 
+export type MetroBeatTierId = 'low' | 'mid' | 'high';
+
+export interface MetroBeatTier {
+  id: MetroBeatTierId;
+  ratio: number;
+}
+
+export const METRO_BEAT_TIERS: readonly MetroBeatTier[] = [
+  { id: 'low', ratio: 0.75 },
+  { id: 'mid', ratio: 1 },
+  { id: 'high', ratio: 1.5 }
+] as const;
+
 export interface MetronomeSound {
   id: string;
   label: string;
@@ -78,9 +91,11 @@ export const METRO_SUBDIVISIONS: readonly MetronomeSubdivision[] = [
 ];
 
 export const METRO_SOUNDS: readonly MetronomeSound[] = [
-  { id: 'click', label: 'CLICK', type: 'square', freq: 1050, accentFreq: 1700, decay: 0.045, gain: 0.5 },
-  { id: 'woodblock', label: 'BLOCK', type: 'triangle', freq: 850, accentFreq: 1250, decay: 0.07, gain: 0.7 },
-  { id: 'beep', label: 'BEEP', type: 'sine', freq: 880, accentFreq: 1320, decay: 0.12, gain: 0.6 }
+  { id: 'click', label: 'CLICK', type: 'square', freq: 1100, accentFreq: 1750, decay: 0.04, gain: 0.5 },
+  { id: 'woodblock', label: 'BLOCK', type: 'triangle', freq: 820, accentFreq: 1240, decay: 0.065, gain: 0.55 },
+  { id: 'beep', label: 'BEEP', type: 'sine', freq: 880, accentFreq: 1320, decay: 0.08, gain: 0.5 },
+  { id: 'rimshot', label: 'STICK', type: 'triangle', freq: 1600, accentFreq: 2200, decay: 0.035, gain: 0.48 },
+  { id: 'cowbell', label: 'BELL', type: 'sine', freq: 580, accentFreq: 840, decay: 0.075, gain: 0.45 }
 ];
 
 /* ── Setlist by category ───────────────────────────────────────────────
@@ -173,6 +188,25 @@ export const COACH_STORAGE_KEYS = {
 export const METRO_TIMING = {
   schedulerIntervalMs: 25,
   scheduleAheadSec: 0.3,
+  /* Lookahead used while document.hidden: background tabs throttle timers
+     to ≥1s, so the visible-mode 0.3s window starves and the cursor falls
+     behind (machine-gun catch-up bursts). Wide enough to ride out a full
+     intensive-throttle tick without growing latency when visible again —
+     flushFrom() re-tightens on every tempo/option change. */
+  hiddenScheduleAheadSec: 4,
+  /* Legacy schedulerTick resync: if the cursor falls further behind now
+     than this, missed clicks are SKIPPED (cursor jumps forward, counters
+     advance to keep bar position) instead of being scheduled in the past
+     where they'd all fire at once as a distorted burst. */
+  resyncGraceSec: 0.1,
+  /* Visual-drain staleness + burst caps: events staler than this are
+     dropped silently, and at most this many fire per frame, so returning
+     from a stall/background period never bursts UI + haptics. */
+  staleVisualSec: 0.25,
+  maxVisualPerFrame: 4,
+  /* Hard cap for the worklet beat-event queue while rAF is paused
+     (backgrounded): oldest events dropped beyond this. */
+  maxVisualQueueLen: 64,
   /* First click lands this long after start() so it never fires before
      the audio thread has picked up the graph */
   startOffsetSec: 0.08,
@@ -198,8 +232,14 @@ export const METRO_COPY = {
   soundLabel: 'CLICK SOUND',
   volumeLabel: 'VOLUME',
   accentLabel: 'ACCENT FIRST BEAT',
-  flashLabel: 'FLASH ON BEAT',
-  vibrateLabel: 'VIBRATE ON BEAT',
+   flashLabel: 'FLASH ON BEAT',
+   vibrateLabel: 'VIBRATE ON BEAT',
+   keepAwakeLabel: 'KEEP SCREEN ON',
+   keepAwakeUnsupported: 'Keep-screen-on isn\'t supported on this browser.',
+   backgroundLabel: 'PLAY IN BACKGROUND',
+   backgroundHint: 'Keeps the click running when you switch apps or lock the screen (where the browser allows).',
+   mediaTitle: 'KINS Metronome',
+   mediaAlbum: 'KINS',
   beatIndicatorLabel: 'BEAT INDICATOR STYLE',
   beatIndicatorDots: 'Dots',
   beatIndicatorRadial: 'Radial Bars',
@@ -210,6 +250,12 @@ export const METRO_COPY = {
   infoTsBeats: 'Beats per bar — how many clicks before the pattern repeats.',
   infoTsUnit: 'Note value of each click — 4 = quarter notes, 8 = eighth notes.',
   infoSub: 'Subdivisions split every beat into smaller, even clicks.',
+  infoOptions: `• FLASH — Pulses screen on every click
+• VIBRATE — Haptic pulse on beats
+• SCREEN ON — Stops phone from sleeping
+• BACKGROUND — Keeps click playing in background or locked`,
+  infoPitchMap: 'Tap any beat dot or radial segment to cycle pitch (low / mid / high).',
+  infoMidi: 'Any velocity note 35–81 triggers tap. Connect drum pads or keyboards to tap tempo via MIDI.',
    webAudioUnsupported: 'Web Audio is not supported on this browser.',
    audioBlocked: 'Audio was blocked — press play again to start.',
    audioInterrupted: 'Audio interrupted — will resume automatically.',
@@ -246,7 +292,11 @@ export const METRO_COPY = {
   midiConnected: 'MIDI CONNECTED',
   midiNoSupport: 'Web MIDI not supported on this browser',
   midiTapHint: 'Tap 4 quarter notes at your recalled speed',
-  midiHint: 'Any velocity note 35–81 triggers tap. Works with drum pads & keyboards.'
+  midiHint: 'Any velocity note 35–81 triggers tap. Works with drum pads & keyboards.',
+  resetPitchMap: 'RESET PITCH MAP',
+  pitchMapHint: 'Tap any beat dot or radial segment to cycle pitch (low / mid / high).',
+  pitchMapResetToast: 'Pitch map reset to default',
+  beatTierAria: (beatNum: number, tier: string) => `Beat ${beatNum} — pitch ${tier}`
 } as const;
 
 export type MetroBeatIndicatorStyle = 'dots' | 'radial';
@@ -268,21 +318,13 @@ export const SHEET_INSTRUMENTS: readonly SheetInstrumentDef[] = [
 ] as const;
 
 export const METRO_SHEET_CONFIG = {
-  bucket: 'kins-sheets',
+  /* Sheets are 100% device-local (IndexedDB blob store + localStorage metadata).
+     No server upload, no cloud bucket — nothing leaves the user's browser.
+     OMR bridge is opt-in: localhost by default (still device-local). If you
+     self-host the bridge on a container host, set PUBLIC_OMR_BRIDGE_URL. */
+  omrBridgeUrl: (import.meta.env.PUBLIC_OMR_BRIDGE_URL as string | undefined) || 'http://localhost:8787',
   maxBytes: 15 * 1024 * 1024, // 15 MB per file
   allowedExt: ['.pdf', '.gp', '.gp5', '.xml', '.musicxml', '.mxl'] as const,
-  allowedMime: [
-    'application/pdf',
-    'application/x-pdf',
-    'audio/x-guitar-pro',
-    'application/x-guitar-pro',
-    'application/octet-stream',
-    'text/xml',
-    'application/xml',
-    'application/vnd.recordare.musicxml+xml',
-    'application/vnd.recordare.musicxml',
-    'application/x-musicxml'
-  ] as const,
   stripHeight: 128 as const,
   stripHeightMobile: 96 as const
 } as const;
@@ -291,6 +333,7 @@ export const SHEET_STORAGE_KEYS = {
   instrument: 'kins-metro-sheet-instrument',
   follow: 'kins-metro-sheet-follow',
   loop: 'kins-metro-sheet-loop',
+  sync: 'kins-metro-sheet-sync',
   perSong: 'kins-metro-sheet-map'
 } as const;
 
@@ -303,6 +346,9 @@ export const METRO_STORAGE_KEYS = {
   accent: 'kins-metro-accent',
   flash: 'kins-metro-flash',
   vibrate: 'kins-metro-vibrate',
+  keepAwake: 'kins-metro-keepAwake',
+  backgroundPlay: 'kins-metro-backgroundPlay',
   beatStyle: 'kins-metro-beatStyle',
+  beatTiers: 'kins-metro-beatTiers',
   customSetlist: 'kins-metro-custom-setlist'
 } as const;

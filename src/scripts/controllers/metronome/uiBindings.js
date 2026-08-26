@@ -12,7 +12,7 @@ import {
   SHEET_INSTRUMENTS
 } from '../../../settings/metronome.config';
 import { showToast } from '../toast.js';
-import { metroState, getTimeSignature, getSubdivision } from './metroState.js';
+import { metroState, getTimeSignature, getSubdivision, getBeatTier } from './metroState.js';
 
 export function createUi(callbacks) {
   const els = {};
@@ -179,11 +179,16 @@ export function createUi(callbacks) {
     els.volume = q('metroVolume');
     els.volumeValue = q('metroVolumeValue');
     els.beatStyleRow = q('metroBeatStyleRow');
-    els.accentToggle = q('metroAccentToggle');
     els.flashToggle = q('metroFlashToggle');
     els.vibrateToggle = q('metroVibrateToggle');
+    els.keepAwakeToggle = q('metroKeepAwakeToggle');
+    els.backgroundToggle = q('metroBackgroundToggle');
+    els.optionsInfo = q('metroOptionsInfo');
+    els.pitchInfo = q('metroPitchInfo');
+    els.midiInfo = q('metroMidiInfo');
     els.copyLinkBtn = q('metroCopyLinkBtn');
     els.copyBadge = q('metroCopyBadge');
+    els.resetPitchBtn = q('metroResetPitchBtn');
 
     els.coachTablist = q('metroCoachTablist');
     els.coachPanelsWrap = q('metroCoachPanels');
@@ -239,9 +244,27 @@ export function createUi(callbacks) {
     const beats = getTimeSignature().beatsPerBar;
     for (let i = 0; i < beats; i++) {
       const dot = document.createElement('span');
-      dot.className = 'metro-beat-dot';
+      const tier = getBeatTier(i);
+      dot.className = `metro-beat-dot brutal-press tier-${tier}`;
+      dot.setAttribute('role', 'button');
+      dot.setAttribute('tabindex', '0');
+      dot.dataset.index = String(i);
+      dot.dataset.tier = tier;
+      dot.setAttribute('data-track', 'metronome:tier_cycle');
+      dot.setAttribute('aria-label', METRO_COPY.beatTierAria ? METRO_COPY.beatTierAria(i + 1, tier) : `Beat ${i + 1} — pitch ${tier}`);
       const angle = (360 / beats) * i - 90;
       dot.style.transform = `rotate(${angle}deg) translateY(calc(var(--metro-dot-radius) * -1))`;
+      dot.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (callbacks.onTierCycle) callbacks.onTierCycle(i);
+      });
+      dot.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          if (callbacks.onTierCycle) callbacks.onTierCycle(i);
+        }
+      });
       els.beatDotsWrap.appendChild(dot);
       beatDots.push(dot);
     }
@@ -259,17 +282,37 @@ export function createUi(callbacks) {
     const r = 92;
     const gapDeg = beats === 1 ? 0 : 6;
     const segSpan = 360 / beats - gapDeg;
+
+    const createSegPath = (i, start, end) => {
+      const path = document.createElementNS(NS, 'path');
+      const tier = getBeatTier(i);
+      path.setAttribute('d', describeArc(cx, cy, r, start, end));
+      path.setAttribute('class', `metro-radial-seg tier-${tier}`);
+      path.setAttribute('role', 'button');
+      path.setAttribute('tabindex', '0');
+      path.dataset.index = String(i);
+      path.dataset.tier = tier;
+      path.setAttribute('data-track', 'metronome:tier_cycle');
+      path.setAttribute('aria-label', METRO_COPY.beatTierAria ? METRO_COPY.beatTierAria(i + 1, tier) : `Beat ${i + 1} — pitch ${tier}`);
+      path.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (callbacks.onTierCycle) callbacks.onTierCycle(i);
+      });
+      path.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          if (callbacks.onTierCycle) callbacks.onTierCycle(i);
+        }
+      });
+      return path;
+    };
+
     if (beats === 1) {
-      const p1 = document.createElementNS(NS, 'path');
-      p1.setAttribute('d', describeArc(cx, cy, r, 0, 179.999));
-      p1.setAttribute('class', 'metro-radial-seg');
-      p1.dataset.index = '0';
+      const p1 = createSegPath(0, 0, 179.999);
       els.radialRing.appendChild(p1);
       radialSegs.push(p1);
-      const p2 = document.createElementNS(NS, 'path');
-      p2.setAttribute('d', describeArc(cx, cy, r, 180, 359.999));
-      p2.setAttribute('class', 'metro-radial-seg');
-      p2.dataset.index = '0';
+      const p2 = createSegPath(0, 180, 359.999);
       els.radialRing.appendChild(p2);
       radialSegs.push(p2);
       return;
@@ -278,13 +321,30 @@ export function createUi(callbacks) {
       const step = 360 / beats;
       const start = i * step + gapDeg / 2;
       const end = start + segSpan;
-      const path = document.createElementNS(NS, 'path');
-      path.setAttribute('d', describeArc(cx, cy, r, start, end));
-      path.setAttribute('class', 'metro-radial-seg');
-      path.dataset.index = String(i);
+      const path = createSegPath(i, start, end);
       els.radialRing.appendChild(path);
       radialSegs.push(path);
     }
+  }
+
+  function updateBeatDotTier(beatIndex, tier) {
+    const t = tier || 'mid';
+    const label = METRO_COPY.beatTierAria ? METRO_COPY.beatTierAria(beatIndex + 1, t) : `Beat ${beatIndex + 1} — pitch ${t}`;
+    if (beatDots[beatIndex]) {
+      const dot = beatDots[beatIndex];
+      dot.dataset.tier = t;
+      dot.classList.remove('tier-low', 'tier-mid', 'tier-high');
+      dot.classList.add(`tier-${t}`);
+      dot.setAttribute('aria-label', label);
+    }
+    radialSegs.forEach((seg) => {
+      if (seg.dataset.index === String(beatIndex)) {
+        seg.dataset.tier = t;
+        seg.classList.remove('tier-low', 'tier-mid', 'tier-high');
+        seg.classList.add(`tier-${t}`);
+        seg.setAttribute('aria-label', label);
+      }
+    });
   }
 
   function buildTsGrid() {
@@ -1128,13 +1188,25 @@ export function createUi(callbacks) {
     if (els.coachBtn) els.coachBtn.hidden = false;
   }
 
+  const INNER_RATIO_PRESETS = [
+    { a: 1, m: 1, label: '1+1' },
+    { a: 2, m: 1, label: '2+1' },
+    { a: 3, m: 1, label: '3+1' },
+    { a: 2, m: 2, label: '2+2' },
+    { a: 4, m: 2, label: '4+2' },
+    { a: 4, m: 4, label: '4+4' },
+    { a: 6, m: 2, label: '6+2' },
+    { a: 7, m: 1, label: '7+1' },
+    { a: 8, m: 4, label: '8+4' },
+    { a: 8, m: 8, label: '8+8' },
+    { a: 12, m: 4, label: '12+4' },
+    { a: 15, m: 1, label: '15+1' }
+  ];
+
   function buildInnerClockEditor() {
     const wrap = document.createElement('div');
     wrap.className = 'metro-coach-card';
     wrap.style.width = '100%';
-    wrap.style.alignItems = 'stretch';
-    wrap.style.textAlign = 'left';
-
     const head = document.createElement('div');
     head.className = 'metro-coach-head';
     const t = document.createElement('p');
@@ -1152,254 +1224,461 @@ export function createUi(callbacks) {
     cycle.style.justifyContent = 'flex-start';
     cycle.style.overflowX = 'auto';
     cycle.style.whiteSpace = 'nowrap';
-    // filled in render — horizontal row
 
-    const toggleRow = document.createElement('label');
-    toggleRow.className = 'metro-toggle';
-    toggleRow.style.marginTop = '2px';
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.id = 'coachInnerRandom';
-    cb.checked = !!metroState.coachInner.random;
-    const track = document.createElement('span');
-    track.className = 'metro-toggle-track';
-    track.setAttribute('aria-hidden','true');
-    const knob = document.createElement('span');
-    knob.className = 'metro-toggle-knob';
-    track.appendChild(knob);
-    const txt = document.createElement('span');
-    txt.className = 'metro-toggle-text';
-    txt.textContent = METRO_COPY.coachRandomDropouts;
-    toggleRow.appendChild(cb); toggleRow.appendChild(track); toggleRow.appendChild(txt);
-    cb.addEventListener('change', () => {
-      if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ random: cb.checked });
-      renderCoachInner();
+    // 2-Col independent sliders for Audible Bars & Muted Bars
+    const gridBars = document.createElement('div');
+    gridBars.className = 'metro-coach-two-col';
+
+    // Audible Bars Field
+    const colAudible = document.createElement('div');
+    colAudible.className = 'metro-coach-field';
+    const labAudible = document.createElement('div');
+    labAudible.className = 'metro-coach-field-label';
+    const aVal = metroState.coachInner.audibleBars;
+    labAudible.innerHTML = `<span>AUDIBLE BARS</span><strong id="coachInnerAudibleLabel">${aVal} ${aVal === 1 ? 'Bar' : 'Bars'}</strong>`;
+
+    const audibleSliderWrap = createCoachSliderWrap({
+      id: 'coachInnerAudible',
+      min: 1,
+      max: 16,
+      step: 1,
+      value: aVal,
+      ariaLabel: 'Audible bars count',
+      steppers: false,
+      onInput: (v) => {
+        const val = Math.round(v);
+        if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ audibleBars: val });
+        const lab = document.getElementById('coachInnerAudibleLabel');
+        if (lab) lab.textContent = `${val} ${val === 1 ? 'Bar' : 'Bars'}`;
+        renderCoachInnerCycleOnly();
+      },
+      onChange: () => {
+        renderCoachInner();
+      }
+    });
+    colAudible.appendChild(labAudible);
+    colAudible.appendChild(audibleSliderWrap);
+
+    // Muted Bars Field
+    const colMuted = document.createElement('div');
+    colMuted.className = 'metro-coach-field';
+    const labMuted = document.createElement('div');
+    labMuted.className = 'metro-coach-field-label';
+    const mVal = metroState.coachInner.mutedBars;
+    labMuted.innerHTML = `<span>MUTED BARS</span><strong id="coachInnerMutedLabel">${mVal} ${mVal === 1 ? 'Bar' : 'Bars'}</strong>`;
+
+    const mutedSliderWrap = createCoachSliderWrap({
+      id: 'coachInnerMuted',
+      min: 1,
+      max: 16,
+      step: 1,
+      value: mVal,
+      ariaLabel: 'Muted bars count',
+      steppers: false,
+      onInput: (v) => {
+        const val = Math.round(v);
+        if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ mutedBars: val });
+        const lab = document.getElementById('coachInnerMutedLabel');
+        if (lab) lab.textContent = `${val} ${val === 1 ? 'Bar' : 'Bars'}`;
+        renderCoachInnerCycleOnly();
+      },
+      onChange: () => {
+        renderCoachInner();
+      }
+    });
+    colMuted.appendChild(labMuted);
+    colMuted.appendChild(mutedSliderWrap);
+
+    gridBars.appendChild(colAudible);
+    gridBars.appendChild(colMuted);
+
+    // Cycle Balance Presets (Single horizontal scrolling row)
+    const fieldPresets = document.createElement('div');
+    fieldPresets.className = 'metro-coach-field';
+    const labPresets = document.createElement('div');
+    labPresets.className = 'metro-coach-field-label';
+    labPresets.innerHTML = `<span>CYCLE BALANCE PRESETS</span>`;
+
+    const presetRow = document.createElement('div');
+    presetRow.className = 'metro-coach-preset-row';
+    presetRow.id = 'coachInnerPresetRow';
+
+    INNER_RATIO_PRESETS.forEach((p) => {
+      const qBtn = document.createElement('button');
+      qBtn.type = 'button';
+      qBtn.className = 'metro-coach-mini-chip brutal-press';
+      qBtn.textContent = p.label;
+      qBtn.dataset.audible = String(p.a);
+      qBtn.dataset.muted = String(p.m);
+      qBtn.style.padding = '5px 12px';
+      qBtn.style.fontSize = '0.72rem';
+      if (p.a === metroState.coachInner.audibleBars && p.m === metroState.coachInner.mutedBars) {
+        qBtn.classList.add('active');
+      }
+      qBtn.addEventListener('click', () => {
+        if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ audibleBars: p.a, mutedBars: p.m });
+        renderCoachInner();
+      });
+      presetRow.appendChild(qBtn);
     });
 
-    // Unified dual-handle range slider — independent 1-bar steps for audible & muted
-    const field = document.createElement('div');
-    field.className = 'metro-coach-field';
-    const lab = document.createElement('div');
-    lab.className = 'metro-coach-field-label';
-    lab.innerHTML = `<span>${escHtml(METRO_COPY.coachBarsAudibleMuted)}</span><strong id="coachInnerBarsLabel">${metroState.coachInner.audibleBars} Bars Audible | ${metroState.coachInner.mutedBars} Bars Muted</strong>`;
-    const dualWrap = document.createElement('div');
-    dualWrap.className = 'metro-dual-range';
-    dualWrap.id = 'coachInnerDualWrap';
-    const dTrack = document.createElement('div');
-    dTrack.className = 'metro-dual-track';
-    const dFill = document.createElement('div');
-    dFill.className = 'metro-dual-fill';
-    dFill.id = 'coachInnerFill';
-    dFill.style.left = '12px';
-    dFill.style.right = '12px';
-    dFill.style.opacity = '0.0';
-    const sliderAud = document.createElement('input');
-    sliderAud.type = 'range'; sliderAud.min = '1'; sliderAud.max = '16'; sliderAud.step = '1';
-    sliderAud.value = String(metroState.coachInner.audibleBars);
-    sliderAud.className = 'metro-dual-input';
-    sliderAud.id = 'coachInnerAudible';
-    sliderAud.setAttribute('aria-label', 'Audible bars');
-    const sliderMut = document.createElement('input');
-    sliderMut.type = 'range'; sliderMut.min = '1'; sliderMut.max = '16'; sliderMut.step = '1';
-    sliderMut.value = String(metroState.coachInner.mutedBars);
-    sliderMut.className = 'metro-dual-input';
-    sliderMut.id = 'coachInnerMuted';
-    sliderMut.setAttribute('aria-label', 'Muted bars');
-    dualWrap.appendChild(dTrack);
-    dualWrap.appendChild(dFill);
-    dualWrap.appendChild(sliderAud);
-    dualWrap.appendChild(sliderMut);
-    const dualLabels = document.createElement('div');
-    dualLabels.className = 'metro-coach-dual-labels';
-    dualLabels.innerHTML = `<span><i class="fa-solid fa-volume-high" style="color:#f5f5f7"></i> <strong id="coachInnerAudibleVal">${metroState.coachInner.audibleBars} AUDIBLE</strong></span><span><i class="fa-solid fa-volume-xmark" style="color:#D8B244"></i> <strong id="coachInnerMutedVal">${metroState.coachInner.mutedBars} MUTED</strong></span>`;
-    field.appendChild(lab);
-    field.appendChild(dualWrap);
-    field.appendChild(dualLabels);
+    fieldPresets.appendChild(labPresets);
+    fieldPresets.appendChild(presetRow);
 
-    function refreshInnerVisuals(a, m) {
-      const labEl = document.getElementById('coachInnerBarsLabel');
-      if (labEl) labEl.textContent = `${a} Bars Audible | ${m} Bars Muted`;
-      const aVal = document.getElementById('coachInnerAudibleVal');
-      if (aVal) aVal.textContent = `${a} AUDIBLE`;
-      const mVal = document.getElementById('coachInnerMutedVal');
-      if (mVal) mVal.textContent = `${m} MUTED`;
-    }
-
-    sliderAud.addEventListener('input', () => {
-      const v = Math.min(16, Math.max(1, parseInt(sliderAud.value, 10) || 1));
-      sliderAud.value = String(v);
-      if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ audibleBars: v });
-      const curM = parseInt(sliderMut.value, 10) || metroState.coachInner.mutedBars;
-      refreshInnerVisuals(v, curM);
-      // update cycle badges real-time
-      const cyc = document.getElementById('coachInnerCycle');
-      if (cyc) renderCoachInner(); else refreshInnerVisuals(v, curM);
-    });
-    sliderMut.addEventListener('input', () => {
-      const v = Math.min(16, Math.max(1, parseInt(sliderMut.value, 10) || 1));
-      sliderMut.value = String(v);
-      if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ mutedBars: v });
-      const curA = parseInt(sliderAud.value, 10) || metroState.coachInner.audibleBars;
-      refreshInnerVisuals(curA, v);
-      const cyc = document.getElementById('coachInnerCycle');
-      if (cyc) renderCoachInner(); else refreshInnerVisuals(curA, v);
-    });
-    sliderAud.addEventListener('change', () => {
-      const v = Math.min(16, Math.max(1, parseInt(sliderAud.value, 10) || 1));
-      if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ audibleBars: v });
-      renderCoachInner();
-    });
-    sliderMut.addEventListener('change', () => {
-      const v = Math.min(16, Math.max(1, parseInt(sliderMut.value, 10) || 1));
-      if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ mutedBars: v });
+    // Random Dropouts active-state button toggle
+    const isRandom = !!metroState.coachInner.random;
+    const randomBtn = document.createElement('button');
+    randomBtn.type = 'button';
+    randomBtn.id = 'coachInnerRandomBtn';
+    randomBtn.className = 'metro-coach-toggle-btn brutal-press' + (isRandom ? ' active' : '');
+    randomBtn.setAttribute('aria-pressed', isRandom ? 'true' : 'false');
+    randomBtn.innerHTML = `<i class="fa-solid fa-shuffle" aria-hidden="true"></i> <span>${escHtml(METRO_COPY.coachRandomDropouts)}</span>`;
+    randomBtn.addEventListener('click', () => {
+      const nextRandom = !metroState.coachInner.random;
+      if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ random: nextRandom });
       renderCoachInner();
     });
 
     const cta = document.createElement('button');
-    cta.type='button';
-    cta.className='metro-coach-cta brutal-press';
-    cta.dataset.coachStart='inner-clock';
+    cta.type = 'button';
+    cta.className = 'metro-coach-cta brutal-press';
+    cta.dataset.coachStart = 'inner-clock';
     cta.innerHTML = '<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
     cta.addEventListener('click', () => { if (callbacks.onCoachStart) callbacks.onCoachStart('inner-clock'); });
 
-    wrap.appendChild(head); wrap.appendChild(cycle); wrap.appendChild(toggleRow); wrap.appendChild(field); wrap.appendChild(cta);
+    wrap.appendChild(head);
+    wrap.appendChild(cycle);
+    wrap.appendChild(gridBars);
+    wrap.appendChild(fieldPresets);
+    wrap.appendChild(randomBtn);
+    wrap.appendChild(cta);
+    return wrap;
+  }
+
+  function updateRangeTrackFill(rangeEl, min, max, val) {
+    if (!rangeEl) return;
+    const num = typeof val === 'number' ? val : (parseFloat(rangeEl.value) || min);
+    const pct = Math.min(100, Math.max(0, ((num - min) / (max - min)) * 100));
+    rangeEl.style.setProperty('--pct', `${pct}%`);
+  }
+
+  function createCoachSliderWrap({
+    id,
+    min,
+    max,
+    step = 1,
+    value,
+    ariaLabel = '',
+    steppers = true,
+    onInput,
+    onChange
+  }) {
+    const wrap = document.createElement('div');
+    wrap.className = 'metro-coach-slider-wrap' + (steppers ? '' : ' metro-coach-slider-wrap--clean');
+
+    const trackBox = document.createElement('div');
+    trackBox.className = 'metro-coach-track-box';
+
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.id = id;
+    input.min = String(min);
+    input.max = String(max);
+    input.step = String(step);
+    input.value = String(value);
+    input.className = 'metro-coach-range';
+    input.setAttribute('aria-label', ariaLabel || id);
+    updateRangeTrackFill(input, min, max, value);
+
+    input.addEventListener('input', () => {
+      const v = parseFloat(input.value) || min;
+      updateRangeTrackFill(input, min, max, v);
+      if (onInput) onInput(v);
+    });
+
+    input.addEventListener('change', () => {
+      const v = parseFloat(input.value) || min;
+      updateRangeTrackFill(input, min, max, v);
+      if (onChange) onChange(v);
+    });
+
+    trackBox.appendChild(input);
+
+    if (steppers) {
+      const btnMinus = document.createElement('button');
+      btnMinus.type = 'button';
+      btnMinus.className = 'metro-coach-step-btn brutal-press';
+      btnMinus.setAttribute('aria-label', `Decrease ${ariaLabel || id}`);
+      btnMinus.innerHTML = '<i class="fa-solid fa-minus" aria-hidden="true"></i>';
+
+      const btnPlus = document.createElement('button');
+      btnPlus.type = 'button';
+      btnPlus.className = 'metro-coach-step-btn brutal-press';
+      btnPlus.setAttribute('aria-label', `Increase ${ariaLabel || id}`);
+      btnPlus.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i>';
+
+      const stepDelta = (delta) => {
+        const cur = parseFloat(input.value) || min;
+        const next = Math.min(max, Math.max(min, cur + delta * step));
+        if (next !== cur) {
+          input.value = String(next);
+          updateRangeTrackFill(input, min, max, next);
+          if (onInput) onInput(next);
+          if (onChange) onChange(next);
+        }
+      };
+
+      btnMinus.addEventListener('click', (e) => {
+        e.preventDefault();
+        stepDelta(-1);
+      });
+
+      btnPlus.addEventListener('click', (e) => {
+        e.preventDefault();
+        stepDelta(1);
+      });
+
+      wrap.appendChild(btnMinus);
+      wrap.appendChild(trackBox);
+      wrap.appendChild(btnPlus);
+    } else {
+      wrap.appendChild(trackBox);
+    }
+
     return wrap;
   }
 
   function buildSpeedTrainerEditor() {
     const wrap = document.createElement('div');
     wrap.className = 'metro-coach-card';
-    wrap.style.width='100%'; wrap.style.alignItems='stretch'; wrap.style.textAlign='left';
+    wrap.style.width = '100%';
+    wrap.style.alignItems = 'stretch';
+    wrap.style.textAlign = 'left';
 
     const head = document.createElement('div');
-    head.className='metro-coach-head';
-    const t=document.createElement('p'); t.className='metro-coach-card-title'; t.textContent=METRO_COPY.coachSpeedTitle;
-    const b=document.createElement('p'); b.className='metro-coach-card-blurb'; b.textContent=METRO_COPY.coachSpeedBlurb;
-    head.appendChild(t); head.appendChild(b);
+    head.className = 'metro-coach-head';
+    const t = document.createElement('p');
+    t.className = 'metro-coach-card-title';
+    t.textContent = METRO_COPY.coachSpeedTitle;
+    const b = document.createElement('p');
+    b.className = 'metro-coach-card-blurb';
+    b.textContent = METRO_COPY.coachSpeedBlurb;
+    head.appendChild(t);
+    head.appendChild(b);
 
-    const cycle=document.createElement('div'); cycle.className='metro-coach-cycle'; cycle.id='coachSpeedCycle';
+    const cycle = document.createElement('div');
+    cycle.className = 'metro-coach-cycle';
+    cycle.id = 'coachSpeedCycle';
 
-    // Unified BPM Range Slider — single dual-thumb spanning 30–300, start cannot exceed target
-    const fieldRange=document.createElement('div'); fieldRange.className='metro-coach-field';
-    const labRange=document.createElement('div'); labRange.className='metro-coach-field-label';
-    labRange.innerHTML = `<span>${escHtml(METRO_COPY.coachBpmRange)}</span><strong id="coachSpeedRangeLabel">${metroState.coachSpeed.start} → ${metroState.coachSpeed.target} BPM</strong>`;
-    const dualWrap=document.createElement('div'); dualWrap.className='metro-dual-range'; dualWrap.id='coachSpeedDualWrap';
-    const dTrack=document.createElement('div'); dTrack.className='metro-dual-track';
-    const dFill=document.createElement('div'); dFill.className='metro-dual-fill'; dFill.id='coachSpeedFill';
-    const startSlider=document.createElement('input'); startSlider.type='range'; startSlider.min='30'; startSlider.max='300'; startSlider.step='1'; startSlider.value=String(metroState.coachSpeed.start); startSlider.className='metro-dual-input'; startSlider.id='coachSpeedStart'; startSlider.setAttribute('aria-label','Start BPM');
-    const targetSlider=document.createElement('input'); targetSlider.type='range'; targetSlider.min='30'; targetSlider.max='300'; targetSlider.step='1'; targetSlider.value=String(metroState.coachSpeed.target); targetSlider.className='metro-dual-input'; targetSlider.id='coachSpeedTarget'; targetSlider.setAttribute('aria-label','Target BPM');
-    dualWrap.appendChild(dTrack); dualWrap.appendChild(dFill); dualWrap.appendChild(startSlider); dualWrap.appendChild(targetSlider);
-    const dualLabels=document.createElement('div'); dualLabels.className='metro-coach-dual-labels';
-    dualLabels.innerHTML = `<span>START <strong id="coachSpeedStartVal">${metroState.coachSpeed.start} BPM</strong></span><span>TARGET <strong id="coachSpeedTargetVal">${metroState.coachSpeed.target} BPM</strong></span>`;
-    fieldRange.appendChild(labRange); fieldRange.appendChild(dualWrap); fieldRange.appendChild(dualLabels);
+    // 2-Col independent sliders for Start Tempo & Target Tempo (presets removed)
+    const gridRange = document.createElement('div');
+    gridRange.className = 'metro-coach-two-col';
 
-    function refreshSpeedFillSimple() {
-      const min=30, max=300;
-      const s = parseInt(startSlider.value,10);
-      const tv = parseInt(targetSlider.value,10);
-      const lo = Math.min(s, tv), hi = Math.max(s, tv);
-      const wrapW = dualWrap.getBoundingClientRect().width;
-      if (!wrapW) {
-        const loPct = ((lo - min)/(max-min))*100;
-        const hiPct = ((hi - min)/(max-min))*100;
-        dFill.style.left = loPct + '%';
-        dFill.style.right = (100 - hiPct) + '%';
-        dFill.style.width = 'auto';
-        return;
-      }
-      const trackW = wrapW - 24;
-      const loPx = 12 + ((lo - min)/(max-min))*trackW;
-      const hiPx = 12 + ((hi - min)/(max-min))*trackW;
-      const widthPx = Math.max(4, hiPx - loPx);
-      dFill.style.left = loPx + 'px';
-      dFill.style.width = widthPx + 'px';
-      dFill.style.right = 'auto';
-    }
+    const colStart = document.createElement('div');
+    colStart.className = 'metro-coach-field';
+    const labStart = document.createElement('div');
+    labStart.className = 'metro-coach-field-label';
+    labStart.innerHTML = `<span>START TEMPO</span><strong id="coachSpeedStartVal">${metroState.coachSpeed.start} BPM</strong>`;
 
-    // Step + Interval — balanced equal-width two-column layout
-    const grid=document.createElement('div'); grid.className='metro-coach-two-col'; grid.id='coachSpeedTwoCol';
-    const colStep=document.createElement('div'); colStep.className='metro-coach-field';
-    const labStep=document.createElement('div'); labStep.className='metro-coach-field-label'; labStep.innerHTML=`<span>${escHtml(METRO_COPY.coachStepIncrement)}</span><strong id="coachSpeedStepLabel">+${metroState.coachSpeed.step} BPM</strong>`;
-    const stepWrap=document.createElement('div'); stepWrap.className='metro-coach-slider-wrap';
-    stepWrap.style.padding='10px 10px';
-    const stepSlider=document.createElement('input'); stepSlider.type='range'; stepSlider.min='1'; stepSlider.max='20'; stepSlider.step='1'; stepSlider.value=String(metroState.coachSpeed.step); stepSlider.className='metro-coach-slider'; stepSlider.id='coachSpeedStep';
-    stepSlider.setAttribute('aria-label','Step increment');
-    stepWrap.appendChild(stepSlider);
-    colStep.appendChild(labStep); colStep.appendChild(stepWrap);
-    const colInt=document.createElement('div'); colInt.className='metro-coach-field';
-    const labInt=document.createElement('div'); labInt.className='metro-coach-field-label'; labInt.innerHTML = `<span>${escHtml(METRO_COPY.coachInterval)}</span><span class="metro-cycle-chip" id="coachSpeedUnitPill" style="padding:2px 8px;font-size:0.62rem;cursor:pointer;">${metroState.coachSpeed.unit.toUpperCase()} ▾</span>`;
-    const pillEvery=document.createElement('div'); pillEvery.style.display='flex'; pillEvery.style.alignItems='center'; pillEvery.style.justifyContent='space-between'; pillEvery.style.gap='8px';
-    pillEvery.style.marginTop='2px';
-    const everyLabel=document.createElement('strong'); everyLabel.id='coachSpeedEveryLabel'; everyLabel.textContent=`Every ${metroState.coachSpeed.everyBars} ${metroState.coachSpeed.unit === 'bars' ? 'Bars' : 'Beats'}`; everyLabel.style.color='#D8B244'; everyLabel.style.fontFamily='var(--font-secondary)'; everyLabel.style.fontSize='0.82rem';
-    pillEvery.appendChild(everyLabel);
-    const intWrap=document.createElement('div'); intWrap.className='metro-coach-slider-wrap';
-    intWrap.style.padding='10px 10px';
-    const intSlider=document.createElement('input'); intSlider.type='range'; intSlider.min='1'; intSlider.max='16'; intSlider.step='1'; intSlider.value=String(metroState.coachSpeed.everyBars); intSlider.className='metro-coach-slider'; intSlider.id='coachSpeedEvery';
-    intSlider.setAttribute('aria-label','Interval bars');
-    intWrap.appendChild(intSlider);
-    colInt.appendChild(labInt); colInt.appendChild(pillEvery); colInt.appendChild(intWrap);
-    grid.appendChild(colStep); grid.appendChild(colInt);
-
-    const unitPill = labInt.querySelector('#coachSpeedUnitPill');
-    if (unitPill) {
-      unitPill.addEventListener('click', () => {
-        const next = metroState.coachSpeed.unit === 'bars' ? 'beats' : 'bars';
-        if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ unit: next });
+    const startSliderWrap = createCoachSliderWrap({
+      id: 'coachSpeedStart',
+      min: 30,
+      max: 300,
+      step: 1,
+      value: metroState.coachSpeed.start,
+      ariaLabel: 'Workout start BPM',
+      steppers: false,
+      onInput: (v) => {
+        const startBpm = Math.round(v);
+        let targetBpm = metroState.coachSpeed.target;
+        if (startBpm > targetBpm) targetBpm = startBpm;
+        if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ start: startBpm, target: targetBpm });
+        const lab = document.getElementById('coachSpeedStartVal');
+        if (lab) lab.textContent = `${startBpm} BPM`;
+        const tLab = document.getElementById('coachSpeedTargetVal');
+        if (tLab) tLab.textContent = `${targetBpm} BPM`;
+        const tSlider = document.getElementById('coachSpeedTarget');
+        if (tSlider) {
+          tSlider.value = String(targetBpm);
+          updateRangeTrackFill(tSlider, 30, 300, targetBpm);
+        }
+        renderCoachSpeedSummaryOnly();
+      },
+      onChange: () => {
         renderCoachSpeed();
-      });
-    }
+      }
+    });
+    colStart.appendChild(labStart);
+    colStart.appendChild(startSliderWrap);
 
-    // Repeat
-    const toggleRow=document.createElement('label'); toggleRow.className='metro-toggle';
-    const cb=document.createElement('input'); cb.type='checkbox'; cb.id='coachSpeedRepeat'; cb.checked=!!metroState.coachSpeed.repeat;
-    const track=document.createElement('span'); track.className='metro-toggle-track'; track.setAttribute('aria-hidden','true'); const knob=document.createElement('span'); knob.className='metro-toggle-knob'; track.appendChild(knob);
-    const txt=document.createElement('span'); txt.className='metro-toggle-text'; txt.textContent=METRO_COPY.coachRepeat;
-    toggleRow.appendChild(cb); toggleRow.appendChild(track); toggleRow.appendChild(txt);
-    cb.addEventListener('change', () => { if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ repeat: cb.checked }); });
+    const colTarget = document.createElement('div');
+    colTarget.className = 'metro-coach-field';
+    const labTarget = document.createElement('div');
+    labTarget.className = 'metro-coach-field-label';
+    labTarget.innerHTML = `<span>TARGET TEMPO</span><strong id="coachSpeedTargetVal">${metroState.coachSpeed.target} BPM</strong>`;
 
-    const cta=document.createElement('button'); cta.type='button'; cta.className='metro-coach-cta brutal-press'; cta.dataset.coachStart='speed-trainer'; cta.innerHTML='<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
+    const targetSliderWrap = createCoachSliderWrap({
+      id: 'coachSpeedTarget',
+      min: 30,
+      max: 300,
+      step: 1,
+      value: metroState.coachSpeed.target,
+      ariaLabel: 'Workout target BPM',
+      steppers: false,
+      onInput: (v) => {
+        const targetBpm = Math.round(v);
+        let startBpm = metroState.coachSpeed.start;
+        if (targetBpm < startBpm) startBpm = targetBpm;
+        if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ start: startBpm, target: targetBpm });
+        const lab = document.getElementById('coachSpeedTargetVal');
+        if (lab) lab.textContent = `${targetBpm} BPM`;
+        const sLab = document.getElementById('coachSpeedStartVal');
+        if (sLab) sLab.textContent = `${startBpm} BPM`;
+        const sSlider = document.getElementById('coachSpeedStart');
+        if (sSlider) {
+          sSlider.value = String(startBpm);
+          updateRangeTrackFill(sSlider, 30, 300, startBpm);
+        }
+        renderCoachSpeedSummaryOnly();
+      },
+      onChange: () => {
+        renderCoachSpeed();
+      }
+    });
+    colTarget.appendChild(labTarget);
+    colTarget.appendChild(targetSliderWrap);
+
+    gridRange.appendChild(colStart);
+    gridRange.appendChild(colTarget);
+
+    // Step Increment & Change Every X (2-Col clean sliders)
+    const gridStep = document.createElement('div');
+    gridStep.className = 'metro-coach-two-col';
+
+    const colStep = document.createElement('div');
+    colStep.className = 'metro-coach-field';
+    const labStep = document.createElement('div');
+    labStep.className = 'metro-coach-field-label';
+    labStep.innerHTML = `<span>STEP INCREMENT</span><strong id="coachSpeedStepVal">+${metroState.coachSpeed.step} BPM</strong>`;
+    const stepWrap = createCoachSliderWrap({
+      id: 'coachSpeedStep',
+      min: 1,
+      max: 50,
+      step: 1,
+      value: metroState.coachSpeed.step,
+      ariaLabel: 'Step increment BPM',
+      steppers: false,
+      onInput: (v) => {
+        const val = Math.round(v);
+        if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ step: val });
+        const stVal = document.getElementById('coachSpeedStepVal');
+        if (stVal) stVal.textContent = `+${val} BPM`;
+        renderCoachSpeedSummaryOnly();
+      },
+      onChange: () => {
+        renderCoachSpeed();
+      }
+    });
+    colStep.appendChild(labStep);
+    colStep.appendChild(stepWrap);
+
+    const colInt = document.createElement('div');
+    colInt.className = 'metro-coach-field';
+    const labInt = document.createElement('div');
+    labInt.className = 'metro-coach-field-label';
+    labInt.innerHTML = `<span>CHANGE EVERY</span><strong id="coachSpeedEveryVal">${metroState.coachSpeed.everyBars} ${metroState.coachSpeed.unit === 'bars' ? 'Bars' : 'Beats'}</strong>`;
+
+    const intWrap = createCoachSliderWrap({
+      id: 'coachSpeedEvery',
+      min: 1,
+      max: 32,
+      step: 1,
+      value: metroState.coachSpeed.everyBars,
+      ariaLabel: 'Interval amount',
+      steppers: false,
+      onInput: (v) => {
+        const val = Math.round(v);
+        if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ everyBars: val });
+        const evLab = document.getElementById('coachSpeedEveryVal');
+        if (evLab) evLab.textContent = `${val} ${metroState.coachSpeed.unit === 'bars' ? (val === 1 ? 'Bar' : 'Bars') : (val === 1 ? 'Beat' : 'Beats')}`;
+        renderCoachSpeedSummaryOnly();
+      },
+      onChange: () => {
+        renderCoachSpeed();
+      }
+    });
+    colInt.appendChild(labInt);
+    colInt.appendChild(intWrap);
+
+    gridStep.appendChild(colStep);
+    gridStep.appendChild(colInt);
+
+    // Row split: Repeat toggle on left, Unit toggle (BARS / BEATS) on right
+    const rowSplit = document.createElement('div');
+    rowSplit.className = 'metro-coach-row-split';
+
+    const isRepeat = !!metroState.coachSpeed.repeat;
+    const repeatBtn = document.createElement('button');
+    repeatBtn.type = 'button';
+    repeatBtn.id = 'coachSpeedRepeatBtn';
+    repeatBtn.className = 'metro-coach-toggle-btn brutal-press' + (isRepeat ? ' active' : '');
+    repeatBtn.setAttribute('aria-pressed', isRepeat ? 'true' : 'false');
+    repeatBtn.innerHTML = `<i class="fa-solid fa-rotate-right" aria-hidden="true"></i> <span>${escHtml(METRO_COPY.coachRepeat)}</span>`;
+    repeatBtn.style.flex = '1 1 auto';
+    repeatBtn.style.maxWidth = '220px';
+    repeatBtn.addEventListener('click', () => {
+      const nextRepeat = !metroState.coachSpeed.repeat;
+      if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ repeat: nextRepeat });
+      renderCoachSpeed();
+    });
+
+    const unitToggle = document.createElement('div');
+    unitToggle.className = 'metro-unit-toggle';
+    unitToggle.id = 'coachSpeedUnitToggle';
+    unitToggle.setAttribute('role', 'radiogroup');
+    unitToggle.setAttribute('aria-label', 'Interval unit');
+
+    const btnBars = document.createElement('button');
+    btnBars.type = 'button';
+    btnBars.className = `metro-unit-btn ${metroState.coachSpeed.unit === 'bars' ? 'active' : ''}`;
+    btnBars.textContent = 'BARS';
+    btnBars.dataset.unit = 'bars';
+
+    const btnBeats = document.createElement('button');
+    btnBeats.type = 'button';
+    btnBeats.className = `metro-unit-btn ${metroState.coachSpeed.unit === 'beats' ? 'active' : ''}`;
+    btnBeats.textContent = 'BEATS';
+    btnBeats.dataset.unit = 'beats';
+
+    const handleUnitSelect = (unit) => {
+      if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ unit });
+      btnBars.classList.toggle('active', unit === 'bars');
+      btnBeats.classList.toggle('active', unit === 'beats');
+      renderCoachSpeed();
+    };
+
+    btnBars.addEventListener('click', () => handleUnitSelect('bars'));
+    btnBeats.addEventListener('click', () => handleUnitSelect('beats'));
+
+    unitToggle.appendChild(btnBars);
+    unitToggle.appendChild(btnBeats);
+
+    rowSplit.appendChild(repeatBtn);
+    rowSplit.appendChild(unitToggle);
+
+    const cta = document.createElement('button');
+    cta.type = 'button';
+    cta.className = 'metro-coach-cta brutal-press';
+    cta.dataset.coachStart = 'speed-trainer';
+    cta.innerHTML = '<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
     cta.addEventListener('click', () => { if (callbacks.onCoachStart) callbacks.onCoachStart('speed-trainer'); });
 
-    // listeners — enforce start <= target and keep fill + labels in sync
-    function syncSpeedRangeLabels(s, t) {
-      const rangeLab = document.getElementById('coachSpeedRangeLabel');
-      if (rangeLab) rangeLab.textContent = `${s} → ${t} BPM`;
-      const sVal = document.getElementById('coachSpeedStartVal');
-      if (sVal) sVal.textContent = `${s} BPM`;
-      const tValEl = document.getElementById('coachSpeedTargetVal');
-      if (tValEl) tValEl.textContent = `${t} BPM`;
-    }
-    startSlider.addEventListener('input', () => {
-      let s = parseInt(startSlider.value,10);
-      let t = parseInt(targetSlider.value,10);
-      if (s > t) { t = s; targetSlider.value = String(t); if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ target: t }); }
-      if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ start: s });
-      syncSpeedRangeLabels(s, parseInt(targetSlider.value,10));
-      refreshSpeedFillSimple();
-      renderCoachSpeed();
-    });
-    targetSlider.addEventListener('input', () => {
-      let s = parseInt(startSlider.value,10);
-      let t = parseInt(targetSlider.value,10);
-      if (t < s) { s = t; startSlider.value = String(s); if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ start: s }); }
-      if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ target: t });
-      syncSpeedRangeLabels(parseInt(startSlider.value,10), t);
-      refreshSpeedFillSimple();
-      renderCoachSpeed();
-    });
-    stepSlider.addEventListener('input', () => {
-      if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ step: parseInt(stepSlider.value,10) });
-      renderCoachSpeed();
-    });
-    intSlider.addEventListener('input', () => {
-      if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ everyBars: parseInt(intSlider.value,10) });
-      renderCoachSpeed();
-    });
-
-    wrap.appendChild(head); wrap.appendChild(cycle); wrap.appendChild(fieldRange); wrap.appendChild(grid); wrap.appendChild(toggleRow); wrap.appendChild(cta);
-    // initial fill
-    requestAnimationFrame(() => refreshSpeedFillSimple());
-    setTimeout(() => refreshSpeedFillSimple(), 30);
+    wrap.appendChild(head);
+    wrap.appendChild(cycle);
+    wrap.appendChild(gridRange);
+    wrap.appendChild(gridStep);
+    wrap.appendChild(rowSplit);
+    wrap.appendChild(cta);
     return wrap;
   }
 
@@ -1452,15 +1731,50 @@ export function createUi(callbacks) {
     patField.appendChild(patLabel); patField.appendChild(patRow);
 
     const everyField=document.createElement('div'); everyField.className='metro-coach-field';
-    const everyLabelRow=document.createElement('div'); everyLabelRow.className='metro-coach-field-label'; everyLabelRow.innerHTML=`<span>${escHtml(METRO_COPY.coachChangeEvery)}</span><strong id="coachRhythmEveryLabel">4 Bars</strong>`;
-    const everyWrap=document.createElement('div'); everyWrap.className='metro-coach-slider-wrap';
-    const everySlider=document.createElement('input'); everySlider.type='range'; everySlider.min='1'; everySlider.max='32'; everySlider.step='1'; everySlider.value=String(metroState.coachRhythm.everyBars); everySlider.className='metro-coach-slider'; everySlider.id='coachRhythmEvery';
-    everyWrap.appendChild(everySlider);
-    everyField.appendChild(everyLabelRow); everyField.appendChild(everyWrap);
-    everySlider.addEventListener('input', () => {
-      if (callbacks.onCoachRhythmChange) callbacks.onCoachRhythmChange({ everyBars: parseInt(everySlider.value,10) });
-      renderCoachRhythm();
+    const everyLabelRow=document.createElement('div'); everyLabelRow.className='metro-coach-field-label'; everyLabelRow.innerHTML=`<span>${escHtml(METRO_COPY.coachChangeEvery)}</span><strong id="coachRhythmEveryLabel">${metroState.coachRhythm.everyBars} Bars</strong>`;
+    const everySliderWrap = createCoachSliderWrap({
+      id: 'coachRhythmEvery',
+      min: 1,
+      max: 32,
+      step: 1,
+      value: metroState.coachRhythm.everyBars,
+      ariaLabel: 'Change every bars',
+      onInput: (v) => {
+        const val = Math.round(v);
+        if (callbacks.onCoachRhythmChange) callbacks.onCoachRhythmChange({ everyBars: val });
+        const evLab = document.getElementById('coachRhythmEveryLabel');
+        if (evLab) evLab.textContent = `${val} Bars`;
+        const cyc = document.getElementById('coachRhythmCycle');
+        if (cyc) {
+          const pat = metroState.coachRhythm.pattern.map((id) => labels[id] || id).join(' → ');
+          cyc.innerHTML = `<span>${escHtml(METRO_COPY.coachCycle)}:</span> <strong>${escHtml(pat)} (${val} BARS)</strong>`;
+        }
+      },
+      onChange: () => {
+        renderCoachRhythm();
+      }
     });
+
+    const quickBarRow = document.createElement('div');
+    quickBarRow.className = 'metro-coach-pill-row';
+    quickBarRow.style.marginTop = '4px';
+    [2, 4, 8, 16].forEach((bars) => {
+      const qBtn = document.createElement('button');
+      qBtn.type = 'button';
+      qBtn.className = 'metro-coach-mini-chip brutal-press';
+      qBtn.textContent = `${bars} BARS`;
+      qBtn.style.padding = '4px 10px';
+      qBtn.style.fontSize = '0.7rem';
+      qBtn.addEventListener('click', () => {
+        if (callbacks.onCoachRhythmChange) callbacks.onCoachRhythmChange({ everyBars: bars });
+        renderCoachRhythm();
+      });
+      quickBarRow.appendChild(qBtn);
+    });
+
+    everyField.appendChild(everyLabelRow);
+    everyField.appendChild(everySliderWrap);
+    everyField.appendChild(quickBarRow);
 
     const polyRow=document.createElement('label'); polyRow.className='metro-toggle';
     const cb=document.createElement('input'); cb.type='checkbox'; cb.id='coachRhythmPoly'; cb.checked=!!metroState.coachRhythm.poly;
@@ -1508,29 +1822,6 @@ export function createUi(callbacks) {
     const diffBlurb=document.createElement('p'); diffBlurb.id='coachPrimerDiffBlurb'; diffBlurb.style.margin='0'; diffBlurb.style.fontFamily='var(--font-secondary)'; diffBlurb.style.fontSize='0.72rem'; diffBlurb.style.fontWeight='700'; diffBlurb.style.color='#D8B244'; diffBlurb.style.textAlign='center';
     diffBlurb.textContent='Builds foundational internal tempo memory';
 
-    const targetCard=document.createElement('div'); targetCard.className='metro-coach-target-card';
-    const tLab=document.createElement('span'); tLab.className='metro-coach-target-label'; tLab.textContent='TARGET TEMPO RECALL';
-    const tBpm=document.createElement('div'); tBpm.className='metro-coach-target-bpm'; tBpm.id='coachPrimerTargetBpm';
-    tBpm.innerHTML = `${metroState.coachPrimer.target} <small>BPM</small>`;
-    const dots=document.createElement('div'); dots.className='metro-coach-dots'; dots.id='coachPrimerDots';
-    for(let i=0;i<4;i++){ const s=document.createElement('span'); dots.appendChild(s); }
-    targetCard.appendChild(tLab); targetCard.appendChild(tBpm); targetCard.appendChild(dots);
-
-    // inline target slider
-    const targetSliderWrap=document.createElement('div'); targetSliderWrap.className='metro-coach-slider-wrap';
-    const targetSlider=document.createElement('input'); targetSlider.type='range'; targetSlider.min='40'; targetSlider.max='208'; targetSlider.step='1'; targetSlider.value=String(metroState.coachPrimer.target); targetSlider.className='metro-coach-slider'; targetSlider.id='coachPrimerTarget';
-    targetSlider.setAttribute('aria-label','Primer target BPM');
-    targetSliderWrap.appendChild(targetSlider);
-    targetSlider.addEventListener('input', ()=>{
-      const v=parseInt(targetSlider.value,10);
-      if (callbacks.onCoachPrimerChange) callbacks.onCoachPrimerChange({ target: v });
-      renderCoachPrimer();
-    });
-    targetSlider.addEventListener('change', ()=>{
-      const v=parseInt(targetSlider.value,10);
-      if (callbacks.onCoachPrimerChange) callbacks.onCoachPrimerChange({ target: v });
-    });
-
     const tapArea=document.createElement('button'); tapArea.type='button'; tapArea.className='metro-coach-tap-area brutal-press'; tapArea.id='coachPrimerTapArea';
     const tapTitle=document.createElement('span'); tapTitle.className='metro-coach-tap-title'; tapTitle.textContent='TAP HERE OR HIT MIDI DRUM PAD';
     const tapSub=document.createElement('span'); tapSub.className='metro-coach-tap-sub'; tapSub.id='coachPrimerTapSub'; tapSub.textContent=METRO_COPY.midiTapHint;
@@ -1544,7 +1835,7 @@ export function createUi(callbacks) {
     const cta=document.createElement('button'); cta.type='button'; cta.className='metro-coach-cta brutal-press'; cta.dataset.coachStart='tempo-primer'; cta.innerHTML='<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
     cta.addEventListener('click', () => { if (callbacks.onCoachStart) callbacks.onCoachStart('tempo-primer'); });
 
-    wrap.appendChild(head); wrap.appendChild(cycle); wrap.appendChild(diffGrid); wrap.appendChild(diffBlurb); wrap.appendChild(targetCard); wrap.appendChild(targetSliderWrap); wrap.appendChild(tapArea); wrap.appendChild(cta);
+    wrap.appendChild(head); wrap.appendChild(cycle); wrap.appendChild(diffGrid); wrap.appendChild(diffBlurb); wrap.appendChild(tapArea); wrap.appendChild(cta);
     return wrap;
   }
 
@@ -1613,99 +1904,123 @@ export function createUi(callbacks) {
     else if (tabId === 'tempo-primer') renderCoachPrimer();
   }
 
-  function renderCoachInner() {
+  function renderCoachInnerCycleOnly() {
     const cyc = document.getElementById('coachInnerCycle');
-    const lab = document.getElementById('coachInnerBarsLabel');
+    if (!cyc) return;
     const a = metroState.coachInner.audibleBars;
     const m = metroState.coachInner.mutedBars;
     const rand = metroState.coachInner.random;
-    if (cyc) {
-      cyc.textContent = '';
-      // horizontal row: CYCLE: [A chips] + [M chips] in one line, no wrap
-      const pre = document.createElement('span'); pre.textContent = METRO_COPY.coachCycle + ': '; pre.style.flexShrink='0';
-      cyc.appendChild(pre);
-      const row = document.createElement('span');
-      row.style.display='inline-flex'; row.style.alignItems='center'; row.style.gap='3px'; row.style.flexWrap='nowrap';
-      const mk = (count, cls) => {
-        for(let i=0;i<count;i++){
-          const chip=document.createElement('span'); chip.className='metro-cycle-chip ' + cls; chip.textContent = cls==='audible' ? 'A' : 'M';
-          row.appendChild(chip);
-        }
-      };
-      mk(a,'audible');
-      const plus=document.createElement('span'); plus.textContent=' + '; plus.style.fontWeight='800'; plus.style.margin='0 2px';
-      row.appendChild(plus);
-      mk(m,'muted');
-      if (rand) {
-        const rnd=document.createElement('span'); rnd.textContent=' • RANDOM'; rnd.style.color='#D8B244'; rnd.style.fontSize='0.66rem'; rnd.style.marginLeft='4px';
-        row.appendChild(rnd);
+    cyc.textContent = '';
+    const pre = document.createElement('span'); pre.textContent = METRO_COPY.coachCycle + ': '; pre.style.flexShrink='0';
+    cyc.appendChild(pre);
+    const row = document.createElement('span');
+    row.style.display='inline-flex'; row.style.alignItems='center'; row.style.gap='3px'; row.style.flexWrap='nowrap';
+    const mk = (count, cls) => {
+      for(let i=0;i<count;i++){
+        const chip=document.createElement('span'); chip.className='metro-cycle-chip ' + cls; chip.textContent = cls==='audible' ? 'A' : 'M';
+        row.appendChild(chip);
       }
-      cyc.appendChild(row);
+    };
+    mk(a,'audible');
+    const plus=document.createElement('span'); plus.textContent=' + '; plus.style.fontWeight='800'; plus.style.margin='0 2px';
+    row.appendChild(plus);
+    mk(m,'muted');
+    if (rand) {
+      const rnd=document.createElement('span'); rnd.textContent=' • RANDOM'; rnd.style.color='#D8B244'; rnd.style.fontSize='0.66rem'; rnd.style.marginLeft='4px';
+      row.appendChild(rnd);
     }
-    if (lab) lab.textContent = `${a} Bars Audible | ${m} Bars Muted`;
-    const aEl = document.getElementById('coachInnerAudible');
-    const mEl = document.getElementById('coachInnerMuted');
-    if (aEl) aEl.value = String(a);
-    if (mEl) mEl.value = String(m);
-    const aVal = document.getElementById('coachInnerAudibleVal');
-    if (aVal) aVal.textContent = `${a} AUDIBLE`;
-    const mVal = document.getElementById('coachInnerMutedVal');
-    if (mVal) mVal.textContent = `${m} MUTED`;
-    // keep legacy combined slider in sync if present (backward compat)
-    const combined = document.getElementById('coachInnerCombined');
-    const avg = Math.round((a + m)/2);
-    if (combined) combined.value = String(avg);
-    const tog = document.getElementById('coachInnerRandom');
-    if (tog) tog.checked = !!rand;
+    cyc.appendChild(row);
+  }
+
+  function renderCoachInner() {
+    renderCoachInnerCycleOnly();
+    const a = metroState.coachInner.audibleBars;
+    const m = metroState.coachInner.mutedBars;
+    const rand = metroState.coachInner.random;
+
+    const audLab = document.getElementById('coachInnerAudibleLabel');
+    if (audLab) audLab.textContent = `${a} ${a === 1 ? 'Bar' : 'Bars'}`;
+    const mutLab = document.getElementById('coachInnerMutedLabel');
+    if (mutLab) mutLab.textContent = `${m} ${m === 1 ? 'Bar' : 'Bars'}`;
+
+    const audSlider = document.getElementById('coachInnerAudible');
+    if (audSlider) {
+      if (document.activeElement !== audSlider) audSlider.value = String(a);
+      updateRangeTrackFill(audSlider, 1, 16, a);
+    }
+    const mutSlider = document.getElementById('coachInnerMuted');
+    if (mutSlider) {
+      if (document.activeElement !== mutSlider) mutSlider.value = String(m);
+      updateRangeTrackFill(mutSlider, 1, 16, m);
+    }
+
+    const randBtn = document.getElementById('coachInnerRandomBtn');
+    if (randBtn) {
+      randBtn.classList.toggle('active', !!rand);
+      randBtn.setAttribute('aria-pressed', rand ? 'true' : 'false');
+    }
+
+    const presetRow = document.getElementById('coachInnerPresetRow');
+    if (presetRow) {
+      presetRow.querySelectorAll('.metro-coach-mini-chip').forEach((chip) => {
+        const chipA = parseInt(chip.dataset.audible, 10);
+        const chipM = parseInt(chip.dataset.muted, 10);
+        chip.classList.toggle('active', chipA === a && chipM === m);
+      });
+    }
+  }
+
+  function renderCoachSpeedSummaryOnly() {
+    const s = metroState.coachSpeed;
+    const cyc = document.getElementById('coachSpeedCycle');
+    if (cyc) {
+      const repTxt = s.repeat ? ' • REPEAT ON' : '';
+      cyc.innerHTML = `<span>${escHtml(METRO_COPY.coachCycle)}:</span> <strong>${s.start} → ${s.target} BPM (+${s.step} / ${s.everyBars} ${s.unit.toUpperCase()}${repTxt})</strong>`;
+    }
   }
 
   function renderCoachSpeed() {
+    renderCoachSpeedSummaryOnly();
     const s = metroState.coachSpeed;
-    const cyc = document.getElementById('coachSpeedCycle');
-    const rangeLab = document.getElementById('coachSpeedRangeLabel');
-    const stepLab = document.getElementById('coachSpeedStepLabel');
-    const everyLab = document.getElementById('coachSpeedEveryLabel');
-    const unitPill = document.getElementById('coachSpeedUnitPill');
-    if (cyc) cyc.innerHTML = `<span>${escHtml(METRO_COPY.coachCycle)}:</span> <strong>${s.start} → ${s.target} BPM (+${s.step} / ${s.everyBars} ${s.unit.toUpperCase()})</strong>`;
-    if (rangeLab) rangeLab.textContent = `${s.start} → ${s.target} BPM`;
-    if (stepLab) stepLab.textContent = `+${s.step} BPM`;
-    if (everyLab) everyLab.textContent = `Every ${s.everyBars} ${s.unit === 'bars' ? 'Bars' : 'Beats'}`;
-    if (unitPill) unitPill.textContent = s.unit.toUpperCase() + ' ▾';
     const sEl = document.getElementById('coachSpeedStart');
     const tEl = document.getElementById('coachSpeedTarget');
     const stEl = document.getElementById('coachSpeedStep');
     const evEl = document.getElementById('coachSpeedEvery');
-    const rep = document.getElementById('coachSpeedRepeat');
-    if (sEl) sEl.value = String(s.start);
-    if (tEl) tEl.value = String(s.target);
-    if (stEl) stEl.value = String(s.step);
-    if (evEl) evEl.value = String(s.everyBars);
-    if (rep) rep.checked = !!s.repeat;
+    const repBtn = document.getElementById('coachSpeedRepeatBtn');
+
+    if (sEl) {
+      if (document.activeElement !== sEl) sEl.value = String(s.start);
+      updateRangeTrackFill(sEl, 30, 300, s.start);
+    }
+    if (tEl) {
+      if (document.activeElement !== tEl) tEl.value = String(s.target);
+      updateRangeTrackFill(tEl, 30, 300, s.target);
+    }
+    if (stEl) {
+      if (document.activeElement !== stEl) stEl.value = String(s.step);
+      updateRangeTrackFill(stEl, 1, 50, s.step);
+    }
+    if (evEl) {
+      if (document.activeElement !== evEl) evEl.value = String(s.everyBars);
+      updateRangeTrackFill(evEl, 1, 32, s.everyBars);
+    }
+    if (repBtn) {
+      repBtn.classList.toggle('active', !!s.repeat);
+      repBtn.setAttribute('aria-pressed', s.repeat ? 'true' : 'false');
+    }
     const sVal = document.getElementById('coachSpeedStartVal');
     if (sVal) sVal.textContent = `${s.start} BPM`;
-    const tValEl = document.getElementById('coachSpeedTargetVal');
-    if (tValEl) tValEl.textContent = `${s.target} BPM`;
-    const fill = document.getElementById('coachSpeedFill');
-    if (fill && sEl && tEl) {
-      const min=30, max=300;
-      const lo = Math.min(s.start, s.target), hi = Math.max(s.start, s.target);
-      const wrap = document.getElementById('coachSpeedDualWrap');
-      const wrapW = wrap ? wrap.getBoundingClientRect().width : 0;
-      if (wrapW) {
-        const trackW = wrapW - 24;
-        const loPx = 12 + ((lo - min)/(max-min))*trackW;
-        const hiPx = 12 + ((hi - min)/(max-min))*trackW;
-        const widthPx = Math.max(4, hiPx - loPx);
-        fill.style.left = loPx + 'px';
-        fill.style.width = widthPx + 'px';
-        fill.style.right = 'auto';
-      } else {
-        const loPct = ((lo - min)/(max-min))*100;
-        const hiPct = ((hi - min)/(max-min))*100;
-        fill.style.left = loPct + '%';
-        fill.style.right = (100 - hiPct) + '%';
-        fill.style.width = 'auto';
-      }
+    const tVal = document.getElementById('coachSpeedTargetVal');
+    if (tVal) tVal.textContent = `${s.target} BPM`;
+    const stVal = document.getElementById('coachSpeedStepVal');
+    if (stVal) stVal.textContent = `+${s.step} BPM`;
+    const evVal = document.getElementById('coachSpeedEveryVal');
+    if (evVal) evVal.textContent = `${s.everyBars} ${s.unit === 'bars' ? (s.everyBars === 1 ? 'Bar' : 'Bars') : (s.everyBars === 1 ? 'Beat' : 'Beats')}`;
+    const unitToggle = document.getElementById('coachSpeedUnitToggle');
+    if (unitToggle) {
+      unitToggle.querySelectorAll('.metro-unit-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.unit === s.unit);
+      });
     }
   }
 
@@ -1720,15 +2035,16 @@ export function createUi(callbacks) {
     }
     if (everyLab) everyLab.textContent = `${cfg.everyBars} Bars`;
     const slider = document.getElementById('coachRhythmEvery');
-    if (slider) slider.value = String(cfg.everyBars);
+    if (slider) {
+      if (document.activeElement !== slider) slider.value = String(cfg.everyBars);
+      updateRangeTrackFill(slider, 1, 32, cfg.everyBars);
+    }
     const poly = document.getElementById('coachRhythmPoly');
     if (poly) poly.checked = !!cfg.poly;
   }
 
   function renderCoachPrimer() {
     const p = metroState.coachPrimer;
-    const bpmEl = document.getElementById('coachPrimerTargetBpm');
-    const slider = document.getElementById('coachPrimerTarget');
     const blurb = document.getElementById('coachPrimerDiffBlurb');
     const diffMap = {
       easy: 'Builds foundational internal tempo memory',
@@ -1736,10 +2052,13 @@ export function createUi(callbacks) {
       hard: 'Maelzel markings — classical tempo memory',
       expert: 'Exact 1-BPM recall — professional grade'
     };
-    if (bpmEl) bpmEl.innerHTML = `${p.target} <small>BPM</small>`;
-    if (slider) slider.value = String(p.target);
     if (blurb) blurb.textContent = diffMap[p.difficulty] || diffMap.easy;
-    // midi badge
+    const grid = document.getElementById('coachPrimerDiffGrid');
+    if (grid) {
+      grid.querySelectorAll('.metro-coach-diff-btn').forEach((x) => {
+        x.classList.toggle('active', x.dataset.diff === p.difficulty);
+      });
+    }
     const badge = document.getElementById('coachPrimerMidiBadge');
     if (badge) {
       const isConnected = metroState.midiStatus === 'connected';
@@ -2028,6 +2347,9 @@ export function createUi(callbacks) {
     if (els.tsInfoBeats) els.tsInfoBeats.addEventListener('click', () => callbacks.onInfoHelp('infoTsBeats'));
     if (els.tsInfoUnit) els.tsInfoUnit.addEventListener('click', () => callbacks.onInfoHelp('infoTsUnit'));
     if (els.subInfo) els.subInfo.addEventListener('click', () => callbacks.onInfoHelp('infoSub'));
+    if (els.optionsInfo) els.optionsInfo.addEventListener('click', () => callbacks.onInfoHelp('infoOptions'));
+    if (els.pitchInfo) els.pitchInfo.addEventListener('click', () => callbacks.onInfoHelp('infoPitchMap'));
+    if (els.midiInfo) els.midiInfo.addEventListener('click', () => callbacks.onInfoHelp('infoMidi'));
 
     if (els.tsBoxTop) els.tsBoxTop.addEventListener('click', handleTsEditTop);
     if (els.tsBoxBottom) els.tsBoxBottom.addEventListener('click', handleTsEditBottom);
@@ -2042,9 +2364,21 @@ export function createUi(callbacks) {
         callbacks.onVolumeChange(parseInt(els.volume.value, 10) / 100, true);
       });
     }
-    if (els.accentToggle) els.accentToggle.addEventListener('change', () => callbacks.onAccentToggle(els.accentToggle.checked));
-    if (els.flashToggle) els.flashToggle.addEventListener('change', () => callbacks.onFlashToggle(els.flashToggle.checked));
-    if (els.vibrateToggle) els.vibrateToggle.addEventListener('change', () => callbacks.onVibrateToggle(els.vibrateToggle.checked));
+    /* Buttons carry no intrinsic checked state — handlers mutate
+       metroState, then we re-render every pressed state from truth so a
+       rejected toggle (e.g. Wake Lock unsupported) can never stick */
+    const bindSetToggle = (btn, key, cb) => {
+      if (!btn || !cb) return;
+      btn.addEventListener('click', () => {
+        cb(!metroState[key]);
+        renderSettingsControls();
+      });
+    };
+    bindSetToggle(els.flashToggle, 'flash', (next) => callbacks.onFlashToggle(next));
+    bindSetToggle(els.vibrateToggle, 'vibrate', (next) => callbacks.onVibrateToggle(next));
+    bindSetToggle(els.keepAwakeToggle, 'keepAwake', (next) => { if (callbacks.onKeepAwakeToggle) callbacks.onKeepAwakeToggle(next); });
+    bindSetToggle(els.backgroundToggle, 'backgroundPlay', (next) => { if (callbacks.onBackgroundToggle) callbacks.onBackgroundToggle(next); });
+    if (els.resetPitchBtn) els.resetPitchBtn.addEventListener('click', () => { if (callbacks.onResetPitchMap) callbacks.onResetPitchMap(); });
     if (els.copyLinkBtn) els.copyLinkBtn.addEventListener('click', copyMetronomeLink);
     if (els.beatStyleRow) {
       els.beatStyleRow.querySelectorAll('.metro-beatstyle-chip').forEach((chip) => {
@@ -2304,10 +2638,15 @@ export function createUi(callbacks) {
 
   function onKeydown(e) {
     if (e.key === 'Escape') {
-      const feedbackModal = document.getElementById('feedbackModal');
-      if (feedbackModal && !feedbackModal.classList.contains('hidden')) return;
+      const modalOpen = document.querySelector('.modal-backdrop:not(.hidden)');
+      if (modalOpen) return;
       if (coachLiveRunning) {
         if (callbacks.onCoachStop) callbacks.onCoachStop();
+        return;
+      }
+      if (sheetOpen && els.customFormWrap && !els.customFormWrap.hidden) {
+        closeCustomForm();
+        e.stopPropagation();
         return;
       }
       if (sheetOpen) {
@@ -2536,10 +2875,18 @@ export function createUi(callbacks) {
   function renderSettingsControls() {
     if (els.volume) els.volume.value = String(Math.round(metroState.volume * 100));
     if (els.volumeValue) els.volumeValue.textContent = `${Math.round(metroState.volume * 100)}%`;
-    if (els.accentToggle) els.accentToggle.checked = metroState.accentFirst;
-    if (els.flashToggle) els.flashToggle.checked = metroState.flash;
-    if (els.vibrateToggle) els.vibrateToggle.checked = metroState.vibrate;
+    renderSetToggle(els.flashToggle, metroState.flash);
+    renderSetToggle(els.vibrateToggle, metroState.vibrate);
+    renderSetToggle(els.keepAwakeToggle, metroState.keepAwake);
+    renderSetToggle(els.backgroundToggle, metroState.backgroundPlay);
     renderBeatStyle();
+  }
+
+  /* Settings toggle buttons: pressed state lives in aria-pressed + .active */
+  function renderSetToggle(btn, enabled) {
+    if (!btn) return;
+    btn.classList.toggle('active', !!enabled);
+    btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
   }
 
   function renderPlayState(playing) {
@@ -2612,6 +2959,7 @@ export function createUi(callbacks) {
     renderPlayState,
     renderBeat,
     resetBeatIndicator,
+    updateBeatDotTier,
     selectCoachTab,
     renderCoachInner,
     renderCoachSpeed,

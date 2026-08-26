@@ -23,7 +23,7 @@ export const primarySocials: PlatformLink[] = [
   { name: "TikTok", icon: "fa-brands fa-tiktok", url: "https://www.tiktok.com/@kinsbandofficial?_r=1&_t=ZS-995ASSdnVsQ", platform: "tiktok" },
   { name: "YouTube", icon: "fa-brands fa-youtube", url: "https://youtube.com/@kinsbandofficial?si=NYyLEYxEDcoH21XZ", platform: "youtube" },
   { name: "Facebook", icon: "fa-brands fa-facebook", url: "https://www.facebook.com/share/1LU7GTyCBW/", platform: "facebook" },
-  { name: "Twitter / X", icon: "fa-brands fa-x-twitter", url: "https://x.com/KinsBandOfficia", platform: "twitter" },
+  { name: "Twitter / X", icon: "fa-brands fa-x-twitter", url: "https://x.com/KinsBandOfficial", platform: "twitter" },
   { name: "Discord", icon: "fa-brands fa-discord", url: "https://discord.gg/Yu2npHUrH", platform: "discord" }
 ];
 

@@ -593,7 +593,7 @@ export const TUNER_INSTRUMENTS: InstrumentTuningGroup[] = [
   {
     id: 'electric',
     label: 'ELECTRIC',
-    dropdownLabel: 'Electric Guitar',
+    dropdownLabel: 'Electric',
     icon: 'electric',
     blurb: 'Solid-body electric. Light fretting-hand pressure — gripping the neck sharpens the reading.',
     presets: ELECTRIC_PRESETS
@@ -601,7 +601,7 @@ export const TUNER_INSTRUMENTS: InstrumentTuningGroup[] = [
   {
     id: 'acoustic',
     label: 'ACOUSTIC',
-    dropdownLabel: 'Acoustic Guitar',
+    dropdownLabel: 'Acoustic',
     icon: 'acoustic',
     blurb: 'Steel-string acoustic. Tap a peg to pick a string, pluck it loud and let it ring.',
     presets: ACOUSTIC_PRESETS
@@ -609,7 +609,7 @@ export const TUNER_INSTRUMENTS: InstrumentTuningGroup[] = [
   {
     id: 'bass',
     label: 'BASS',
-    dropdownLabel: 'Bass Guitar',
+    dropdownLabel: 'Bass',
     icon: 'bass',
     blurb: 'Low strings need patience — let each note ring fully so the detector locks on the fundamental.',
     presets: BASS_PRESETS

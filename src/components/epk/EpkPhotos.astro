@@ -13,7 +13,7 @@ const { pressPhotos } = epkConfig;
     <p class="epk-section-subtitle">High-resolution 300 DPI promotional portraits, live stage shots, and vector branding.</p>
   </div>
 
-  <div class="epk-photos-wrapper">
+  <div class="epk-photos-wrapper brutal-scroll-x">
     <div class="epk-photos-grid">
       {pressPhotos.map((photo) => (
         <div class="epk-photo-card">
@@ -112,7 +112,6 @@ const { pressPhotos } = epkConfig;
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
     padding-bottom: 10px;
     box-sizing: border-box;
   }

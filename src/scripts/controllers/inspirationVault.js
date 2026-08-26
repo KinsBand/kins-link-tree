@@ -360,6 +360,58 @@ export const INSPIRATION_TRACKS = [
     previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview116/v4/ce/26/51/ce26514f-d76e-f246-5771-ff96db2896bd/mzaf_16676201079264603046.plus.aac.p.m4a',
     artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/a4/00/2b/a4002b01-6c8d-2d34-fae8-0b9b7861361e/810075110593.jpg/600x600bb.jpg',
     coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/a4/00/2b/a4002b01-6c8d-2d34-fae8-0b9b7861361e/810075110593.jpg/600x600bb.jpg'
+  },
+  {
+    id: 'disorder',
+    title: 'Disorder',
+    artist: 'Joy Division',
+    genre: 'Post-Punk',
+    duration: '3:32',
+    quote: 'Driving melodic bassline & anxious post-punk pulse',
+    icon: 'fa-sliders',
+    curatedBy: ['Oscar'],
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/80/7e/61/807e61ef-5ba8-b13c-6232-a5f22e84ec15/mzaf_16238659616091000720.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/37/1a/07/371a0701-d9a9-fa53-dfdf-1e82713f0190/0825646183906.jpg/600x600bb.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/37/1a/07/371a0701-d9a9-fa53-dfdf-1e82713f0190/0825646183906.jpg/600x600bb.jpg'
+  },
+  {
+    id: 'age-of-consent',
+    title: 'Age of Consent',
+    artist: 'New Order',
+    genre: 'Post-Punk',
+    duration: '5:16',
+    quote: 'Pioneering hybrid of high-register bass & dance synth hooks',
+    icon: 'fa-bolt',
+    curatedBy: ['Oscar'],
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/44/92/75/449275cb-bce6-3843-f61b-90f6eb96ff85/mzaf_10332857508734267499.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/eb/b1/ee/ebb1ee98-d218-472e-c5ae-4933a3ea5f6e/0825646183869.jpg/600x600bb.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/eb/b1/ee/ebb1ee98-d218-472e-c5ae-4933a3ea5f6e/0825646183869.jpg/600x600bb.jpg'
+  },
+  {
+    id: 'fascination-street',
+    title: 'Fascination Street',
+    artist: 'The Cure',
+    genre: 'Post-Punk',
+    duration: '5:16',
+    quote: 'Massive chorused bass riff with lush atmospheric textures',
+    icon: 'fa-moon',
+    curatedBy: ['Oscar'],
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/1c/64/0a/1c640a45-e62f-ae2a-9e8c-851f087265a7/mzaf_12411985956795415783.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/80/f4/bc/80f4bcc9-03b9-115f-d232-15f1fbe2445b/0825646067756.jpg/600x600bb.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/80/f4/bc/80f4bcc9-03b9-115f-d232-15f1fbe2445b/0825646067756.jpg/600x600bb.jpg'
+  },
+  {
+    id: 'colossus',
+    title: 'Colossus',
+    artist: 'IDLES',
+    genre: 'Post-Punk',
+    duration: '5:39',
+    quote: 'Heavy rhythmic build and raw dynamic tension',
+    icon: 'fa-fire',
+    curatedBy: ['Oscar'],
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/37/bc/7b/37bc7b80-f655-6677-44df-9e2c41c7bce1/mzaf_13506161427503882772.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/7d/5a/0c/7d5a0c32-261f-9988-82df-cf571ef99ea5/720841215714.jpg/600x600bb.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/7d/5a/0c/7d5a0c32-261f-9988-82df-cf571ef99ea5/720841215714.jpg/600x600bb.jpg'
   }
 ];
 
@@ -409,7 +461,7 @@ export const INSPIRED_ARTISTS_DATA = {
   'oscar': {
     name: 'Oscar Curation',
     genre: 'Bass / Synths',
-    bio: 'Tracks coming soon from Oscar.',
+    bio: 'Driving basslines, vintage chorus pedals, and synth atmosphere chosen by Oscar.',
     iconClass: 'fa-sliders',
     pages: chunkTracks(INSPIRATION_TRACKS.filter(t => t.curatedBy.includes('Oscar')), 4)
   },

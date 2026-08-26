@@ -1,0 +1,59 @@
+---
+interface Props {
+  name: 'tuner' | 'metronome' | string;
+  class?: string;
+  size?: number | string;
+}
+
+const { name, class: className = '', size = 16 } = Astro.props;
+---
+
+{name === 'tuner' ? (
+  <svg
+    class={`tool-svg-icon tool-tuner-icon ${className}`}
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <!-- Tuning Fork -->
+    <path d="M9 3v8a3 3 0 0 0 6 0V3" />
+    <path d="M12 14v6.5" />
+    <circle cx="12" cy="21" r="1" fill="currentColor" stroke="none" />
+    <!-- Acoustic Tuning Resonance Waves -->
+    <path d="M5.5 7a4.5 4.5 0 0 0 0 6" />
+    <path d="M18.5 7a4.5 4.5 0 0 1 0 6" />
+    <path d="M3 5.5a7.5 7.5 0 0 0 0 9" />
+    <path d="M21 5.5a7.5 7.5 0 0 1 0 9" />
+  </svg>
+) : name === 'metronome' ? (
+  <svg
+    class={`tool-svg-icon tool-metronome-icon ${className}`}
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <!-- Metronome Pyramid Body -->
+    <path d="M9 3.5h6l4.5 16H4.5L9 3.5z" />
+    <!-- Pendulum Rod Swinging -->
+    <path d="M12 17.5L16 4" />
+    <!-- Sliding Tempo Weight / Bob -->
+    <path d="M13.5 7.5l3-0.8l0.7 2.4l-3 0.8z" fill="currentColor" stroke="none" />
+    <!-- Base Platform & Feet -->
+    <path d="M3.5 20.5h17" />
+    <path d="M5.5 20.5v1.5M18.5 20.5v1.5" />
+  </svg>
+) : (
+  <i class={`${name} ${className}`} aria-hidden="true"></i>
+)}

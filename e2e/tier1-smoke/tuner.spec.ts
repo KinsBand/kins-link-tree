@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /* Tuner smoke flows with Chromium's fake microphone: no real audio device or
    permission prompt needed. Pitch-value assertions are deliberately avoided
@@ -11,9 +11,15 @@ test.use({
   }
 });
 
+/* Dev-only toolbar overlays the bottom of the viewport in `astro dev` */
+async function openTuner(page: Page) {
+  await page.goto('/tuner');
+  await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+}
+
 test.describe('tier1 smoke — tuner', () => {
   test('mic starts and stops from the CTA', async ({ page }) => {
-    await page.goto('/tuner');
+    await openTuner(page);
     const cta = page.locator('#tunerMicToggleBtn');
     await expect(cta).toBeVisible();
     await cta.click();
@@ -94,6 +100,13 @@ test.describe('tier1 smoke — tuner', () => {
     await expect(page.locator('#tuningView')).toBeVisible();
     await page.locator('.tuning-category.open .tuning-card').first().waitFor();
 
+    // Verify top header has back button with 'Back' text, centered TUNING title, and reduced instrument label
+    const backBtn = page.locator('.tuning-header #tunerBackToTunerBtn');
+    await expect(backBtn).toBeVisible();
+    await expect(backBtn).toHaveText(/Back/);
+    await expect(page.locator('.tuning-header .tuning-title')).toHaveText('TUNING');
+    await expect(page.locator('#tunerInstrumentLabel')).toHaveText('Electric');
+
     const search = page.locator('#tunerSearchInput');
     await search.fill('drop d');
     await expect(page.locator('.tuning-card', { hasText: 'Drop D' }).first()).toBeVisible();
@@ -102,5 +115,47 @@ test.describe('tier1 smoke — tuner', () => {
     await page.locator('.tuning-card', { hasText: 'Drop D' }).first().click();
     await expect(page.locator('#tunerView')).toBeVisible();
     await expect(page.locator('#tunerPresetLabel')).toHaveText(/Drop D/i);
+
+    // Re-open tuning library and verify icon-only back button returns to tuner view
+    await page.locator('#tunerPresetBtn').click();
+    await expect(page.locator('#tuningView')).toBeVisible();
+    await backBtn.click();
+    await expect(page.locator('#tunerView')).toBeVisible();
+  });
+
+  test('settings sheet footer renders theme toggle and opens modals', async ({ page }) => {
+    await openTuner(page);
+    await page.locator('#tunerSettingsBtn').click();
+    await expect(page.locator('#tunerPanelSettings')).toBeVisible();
+
+    // Check footer elements
+    const footerCard = page.locator('.tuner-sheet-footer-card');
+    await expect(footerCard).toBeVisible();
+
+    // Test Theme Switcher
+    const darkBtn = footerCard.locator('#tunerThemePillDarkBtn');
+    const lightBtn = footerCard.locator('#tunerThemePillLightBtn');
+    await darkBtn.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await lightBtn.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'standard');
+
+    // Test Privacy Policy modal trigger
+    await page.locator('#tunerOpenPrivacyFooterBtn').click();
+    await expect(page.locator('#privacyModal')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#privacyModal')).toBeHidden();
+
+    // Test Terms modal trigger
+    await page.locator('#tunerOpenTermsFooterBtn').click();
+    await expect(page.locator('#termsModal')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#termsModal')).toBeHidden();
+
+    // Test Feedback / Suggest Improvement modal trigger
+    await page.locator('#tunerOpenSuggestImprovementFooterBtn').click();
+    await expect(page.locator('#feedbackModal')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#feedbackModal')).toBeHidden();
   });
 });

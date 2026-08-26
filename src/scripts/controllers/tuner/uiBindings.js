@@ -1520,8 +1520,8 @@ export function createUi(callbacks) {
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        const feedbackModal = document.getElementById('feedbackModal');
-        if (feedbackModal && !feedbackModal.classList.contains('hidden')) return;
+        const modalOpen = document.querySelector('.modal-backdrop:not(.hidden)');
+        if (modalOpen) return;
         if (openMenuName) {
           closeMenus(true);
           return;

@@ -2,6 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
 import FeedbackModal from '../components/modals/FeedbackModal.astro';
+import PrivacyModal from '../components/modals/PrivacyModal.astro';
+import TermsModal from '../components/modals/TermsModal.astro';
 ---
 
 <BaseLayout
@@ -186,16 +188,52 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
             <span class="tuner-copy-badge" id="tunerCopyBadge">Copy</span>
           </button>
         </div>
+
+        <div class="tuner-sheet-footer-card">
+          <div class="footer-theme-toggle-wrap">
+            <div class="footer-theme-toggle-btn" id="tunerThemeToggleBtn" role="group" aria-label="Toggle Display Theme" data-track="tuner:theme_toggle">
+              <span class="theme-current-title" id="tunerThemeCurrentTitle">Light</span>
+              <div class="theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
+                <button type="button" class="theme-pill-btn active theme-pill-light" id="tunerThemePillLightBtn" data-theme-target="standard" aria-label="Light Mode" title="Switch to Light Mode">
+                  <i class="fa-solid fa-sun" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="theme-pill-btn theme-pill-dark" id="tunerThemePillDarkBtn" data-theme-target="dark" aria-label="Dark Mode" title="Switch to Dark Mode">
+                  <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                </button>
+              </div>
+              <span class="theme-mode-label">Mode</span>
+            </div>
+          </div>
+
+          <div class="footer-badge-row">
+            <span class="footer-brand-badge">
+              <i class="fa-solid fa-compact-disc footer-brand-icon"></i>
+              <span class="footer-copyright-text">@<span id="tunerCopyrightYear">2026</span> KINS.</span>
+            </span>
+          </div>
+
+          <nav class="footer-legal-links" aria-label="Legal & Feedback Links">
+            <button type="button" id="tunerOpenPrivacyFooterBtn" class="footer-legal-btn open-privacy-trigger">Privacy Policy</button>
+            <span class="legal-bullet" aria-hidden="true">•</span>
+            <button type="button" id="tunerOpenSuggestImprovementFooterBtn" class="footer-legal-btn open-feedback-trigger" data-open-feedback data-feedback-category="Tuner">Suggest Improvement</button>
+            <span class="legal-bullet" aria-hidden="true">•</span>
+            <button type="button" id="tunerOpenTermsFooterBtn" class="footer-legal-btn open-terms-trigger">Fan Submission Terms</button>
+          </nav>
+        </div>
       </section>
     </div>
 
     <div class="tuning-view" id="tuningView" hidden>
       <div class="tuning-top-fixed">
         <header class="tuning-header">
-          <h1 class="tuning-title">Tuning</h1>
+          <button type="button" class="tuning-back-btn brutal-press" id="tunerBackToTunerBtn" aria-label="Back to Tuner">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 3.5L6 10l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Back</span>
+          </button>
+          <h1 class="tuning-title">TUNING</h1>
           <div class="tuning-header-anchor">
             <button type="button" class="tuning-instrument-btn brutal-press" id="tunerInstrumentBtn" aria-haspopup="true">
-              <span id="tunerInstrumentLabel">Acoustic Guitar</span>
+              <span id="tunerInstrumentLabel">Electric</span>
               <svg class="tuning-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <div id="tunerInstrumentMenuSlot"></div>
@@ -225,20 +263,15 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
 
       <div class="tuning-list" id="tunerCategoryList"></div>
 
-      <div class="tuning-bottom-fixed">
+      <div class="tuning-bottom-fixed" hidden aria-hidden="true">
         <!-- A4 calibration removed — fixed 440 Hz (see tuner.config.ts) -->
         <div class="tuning-a4" hidden aria-hidden="true"><span class="tuning-a4-label">A4</span><div class="tuning-a4-chips" id="tunerA4Chips"></div></div>
-
-        <div class="tuning-bottombar">
-          <button type="button" class="tuning-back-pill brutal-press" id="tunerBackToTunerBtn" aria-label="Back to tuning">
-            <svg class="tuning-back-icon" viewBox="0 0 22 22" aria-hidden="true"><path d="M14 4.5 L7.5 11l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="tuning-back-text">Back to Tuner</span>
-          </button>
-        </div>
       </div>
     </div>
   </main>
 
+  <PrivacyModal />
+  <TermsModal />
   <FeedbackModal />
 
   <ToastContainer />
@@ -1541,13 +1574,218 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     color: #000000;
   }
 
+  /* ---------- Sheet Footer Card: Theme Toggle & Legal Links ---------- */
+  .tuner-sheet-footer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 2px solid rgba(255, 255, 255, 0.08);
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .footer-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .footer-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: #18181b;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 5px 14px;
+    border-radius: 6px;
+    user-select: none;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .footer-brand-badge:hover {
+    background: #27272a;
+    transform: translateY(-1px);
+  }
+
+  .footer-brand-icon {
+    font-size: 0.8rem;
+    color: var(--accent-neon-yellow);
+  }
+
+  .footer-legal-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .footer-legal-btn {
+    background: transparent;
+    border: none;
+    color: #a1a1aa;
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: color 0.16s ease, background-color 0.16s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .footer-legal-btn:hover,
+  .footer-legal-btn:focus-visible {
+    color: var(--accent-neon-yellow);
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+  }
+
+  .legal-bullet {
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  @media (max-width: 480px) {
+    .footer-legal-links {
+      gap: 4px 8px;
+    }
+    .footer-legal-btn {
+      font-size: 0.68rem;
+      padding: 3px 6px;
+    }
+  }
+
+  .footer-theme-toggle-wrap {
+    width: 100%;
+  }
+
+  .footer-theme-toggle-btn {
+    width: 100%;
+    min-height: 48px;
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    padding: 6px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    user-select: none;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
+  .footer-theme-toggle-btn:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .footer-theme-toggle-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .theme-current-title {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.92rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-card-primary);
+    flex: 1 1 0;
+    text-align: left;
+  }
+
+  .theme-pill-segmented {
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    border-radius: 20px;
+    padding: 3px;
+    gap: 3px;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    flex: 0 0 auto;
+  }
+
+  .theme-pill-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    background: transparent;
+    color: var(--text-card-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    font-size: 0.82rem;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.18s ease, color 0.18s ease, box-shadow 0.16s ease;
+  }
+
+  .theme-pill-btn:hover {
+    color: var(--text-card-primary);
+    transform: scale(1.1);
+  }
+
+  .theme-pill-btn.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 1px 1px 0px #000000;
+    transform: scale(1.06);
+  }
+
+  .theme-mode-label {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-card-secondary);
+    flex: 1 1 0;
+    text-align: right;
+  }
+
   .tuner-sheet[hidden],
   .tuner-sheet-backdrop[hidden],
   .tuner-sheet-panel[hidden] {
     display: none !important;
   }
 
-  /* ---------- Tuning view — fixed header + filters top, fixed A4 + back bottom ---------- */
+  /* ---------- Tuning view — fixed header + filters top ---------- */
   .tuning-top-fixed {
     flex-shrink: 0;
     display: flex;
@@ -1556,38 +1794,73 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     width: 100%;
     padding: 6px 0 12px;
     background-color: var(--bg-dark);
-    background-image: var(--bg-dark-gradient);
     position: sticky;
     top: 0;
     z-index: 20;
   }
 
   .tuning-header {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     padding: 2px 0;
     width: 100%;
   }
 
+  .tuning-back-btn {
+    background: var(--surface-card);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-pill);
+    color: var(--text-white);
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    white-space: nowrap;
+    justify-self: start;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+
+  .tuning-back-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-brutal-black-lg);
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+  }
+
+  .tuning-back-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
   .tuning-title {
     font-family: var(--font-heading);
-    font-size: clamp(1.65rem, 6vw, 2.2rem);
+    font-size: clamp(1.2rem, 4.5vw, 1.6rem);
     font-weight: 800;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     margin: 0;
     color: var(--text-white);
     line-height: 1.1;
-    flex: 1 1 auto;
-    min-width: 0;
-    text-align: left;
+    text-align: center;
+    justify-self: center;
+    white-space: nowrap;
   }
 
   .tuning-header-anchor {
     position: relative;
     display: inline-flex;
+    justify-self: end;
     justify-content: flex-end;
     flex-shrink: 0;
   }
@@ -1605,14 +1878,14 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     border-radius: var(--radius-pill);
     color: var(--accent-neon-yellow);
     font-family: var(--font-secondary);
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: 0.06em;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 18px;
+    gap: 6px;
+    padding: 8px 14px;
     white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
     transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
@@ -1748,106 +2021,15 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
-    padding: 4px 2px 12px 0;
+    padding: 4px 2px calc(16px + env(safe-area-inset-bottom, 0px)) 0;
     display: flex;
     flex-direction: column;
     gap: 0;
   }
 
-  .tuning-list::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .tuning-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.18);
-    border-radius: 9999px;
-  }
-
-  /* ---------- Tuning bottom — fixed A4 + Back ---------- */
-  .tuning-bottom-fixed {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-    padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px));
-    background-color: var(--bg-dark);
-    background-image: var(--bg-dark-gradient);
-    position: sticky;
-    bottom: 0;
-    z-index: 20;
-  }
-
-  .tuning-a4 {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .tuning-a4-label {
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    color: var(--text-muted);
-  }
-
-  .tuning-a4-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .tuning-bottombar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 0;
-    padding-top: 0;
-  }
-
-  .tuning-back-pill {
-    width: 100%;
-    height: 52px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: var(--surface-card-light);
-    color: var(--text-card-primary);
-    border: var(--border-brutal);
-    box-shadow: var(--shadow-brutal-black-lg);
-    border-radius: var(--radius-pill);
-    padding: 0 20px;
-    font-family: var(--font-secondary);
-    font-size: 0.95rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    box-sizing: border-box;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
-  }
-
-  .tuning-back-pill:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 5px 5px 0px #000000;
-  }
-
-  .tuning-back-icon {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-  }
-
-  .tuning-back-text {
-    white-space: nowrap;
+  /* ---------- Tuning bottom (legacy A4 container) ---------- */
+  .tuning-bottom-fixed[hidden] {
+    display: none !important;
   }
 
   /* ---------- Mobile app-shell layout ----------
@@ -1943,17 +2125,6 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
-    }
-
-    .tuner-middle-scroll::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .tuner-middle-scroll::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.18);
-      border-radius: 9999px;
     }
 
     .tuner-footer-group {
@@ -1972,8 +2143,6 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     max-height: min(420px, 70dvh);
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
     background: var(--surface-card);
     border: var(--border-brutal-sm);
     box-shadow: var(--shadow-brutal-black-lg);
@@ -1982,15 +2151,6 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     display: flex;
     flex-direction: column;
     gap: 2px;
-  }
-
-  :global(.tuner-menu-panel::-webkit-scrollbar) {
-    width: 6px;
-  }
-
-  :global(.tuner-menu-panel::-webkit-scrollbar-thumb) {
-    background: rgba(255, 255, 255, 0.18);
-    border-radius: 9999px;
   }
 
   :global(.tuner-menu-row) {
@@ -2593,7 +2753,11 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     .tuner-sheet-toggle-track,
     :global(.tuner-sheet-toggle-knob),
     .tuner-copy-link-card,
-    .tuner-copy-badge {
+    .tuner-copy-badge,
+    .footer-brand-badge,
+    .footer-legal-btn,
+    .footer-theme-toggle-btn,
+    .theme-pill-btn {
       transition: none !important;
       animation: none !important;
     }
@@ -2605,6 +2769,9 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
 </style>
 
 <script>
+  import { initTheme } from '../scripts/controllers/themeController.js';
+  initTheme();
+
   let controllerPromise: Promise<any> | null = null;
   let initialized = false;
 
@@ -2638,4 +2805,66 @@ import FeedbackModal from '../components/modals/FeedbackModal.astro';
     },
     { passive: true }
   );
+</script>
+
+<script is:inline>
+  (function initTunerFooterModalTriggers() {
+    function handleFooterTriggerClick(e) {
+      var target = e.target;
+      if (!target || !target.closest) return;
+
+      var suggestBtn = target.closest('#tunerOpenSuggestImprovementFooterBtn, #openSuggestImprovementFooterBtn, .open-feedback-trigger, [data-open-feedback]');
+      if (suggestBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var feedbackModal = document.getElementById('feedbackModal');
+        if (typeof window.openFeedbackModal === 'function') {
+          var category = suggestBtn.getAttribute('data-feedback-category') || 'Tuner';
+          window.openFeedbackModal(category);
+        } else if (feedbackModal) {
+          feedbackModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
+
+      var privacyBtn = target.closest('#tunerOpenPrivacyFooterBtn, #openPrivacyFooterBtn, .open-privacy-trigger');
+      if (privacyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var privacyModal = document.getElementById('privacyModal');
+        if (typeof window.openPrivacyModal === 'function') {
+          window.openPrivacyModal();
+        } else if (privacyModal) {
+          privacyModal.classList.remove('is-closing');
+          privacyModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
+
+      var termsBtn = target.closest('#tunerOpenTermsFooterBtn, #openTermsFooterBtn, .open-terms-trigger');
+      if (termsBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var termsModal = document.getElementById('termsModal');
+        if (typeof window.openTermsModal === 'function') {
+          window.openTermsModal();
+        } else if (termsModal) {
+          termsModal.classList.remove('is-closing');
+          termsModal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+        return;
+      }
+    }
+
+    document.addEventListener('click', handleFooterTriggerClick, true);
+
+    var yearEls = document.querySelectorAll('#copyrightYear, #tunerCopyrightYear, .footer-copyright-year');
+    var curYear = new Date().getFullYear().toString();
+    yearEls.forEach(function(el) {
+      el.textContent = curYear;
+    });
+  })();
 </script>

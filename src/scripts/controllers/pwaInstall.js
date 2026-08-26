@@ -4,7 +4,7 @@
  */
 import { showToast } from './toast.js';
 
-const CACHE_NAME = 'kins-link-bio-v30';
+const CACHE_NAME = 'kins-link-bio-v32';
 
 let deferredInstallPrompt = (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt) || null;
 

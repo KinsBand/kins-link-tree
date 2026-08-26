@@ -1,5 +1,6 @@
 ---
 import { rehearsalConfig } from '../../settings/rehearsal.config';
+import ToolIcon from '../ui/ToolIcon.astro';
 
 const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = rehearsalConfig;
 ---
@@ -28,7 +29,7 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
             <!-- Tool Header -->
             <div class="tool-card-header">
               <div class="tool-icon-badge">
-                <i class={tool.icon} aria-hidden="true"></i>
+                <ToolIcon name={tool.icon || tool.id} size={16} />
               </div>
               <div class="tool-title-wrap">
                 <h4 class="tool-card-name">{tool.title}</h4>
@@ -384,6 +385,14 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     color: #000000;
   }
 
+  .tool-icon-badge svg,
+  .tool-icon-badge :global(svg) {
+    width: 16px;
+    height: 16px;
+    display: block;
+    color: #000000;
+  }
+
   .tool-title-wrap {
     flex: 1;
     min-width: 0;
@@ -391,15 +400,16 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
 
   .tool-card-name {
     font-family: var(--font-heading);
-    font-size: 0.92rem;
+    font-size: clamp(0.84rem, 1.2vw, 0.95rem);
     font-weight: 900;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: #000000;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.15;
   }
 
   .tool-roadmap-badge {
@@ -681,7 +691,9 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     border-color: rgba(255, 255, 255, 0.12);
   }
 
-  :global([data-theme="dark"]) .tool-icon-badge i {
+  :global([data-theme="dark"]) .tool-icon-badge i,
+  :global([data-theme="dark"]) .tool-icon-badge svg,
+  :global([data-theme="dark"]) .tool-icon-badge :global(svg) {
     color: var(--accent-neon-yellow, #f2fd43);
   }
 
@@ -851,12 +863,19 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
       font-size: 0.75rem;
     }
 
+    .tool-icon-badge svg,
+    .tool-icon-badge :global(svg) {
+      width: 14px;
+      height: 14px;
+    }
+
     .tool-card-name {
-      font-size: 0.8rem;
-      letter-spacing: 0.03em;
+      font-size: clamp(0.72rem, 3.2vw, 0.82rem);
+      letter-spacing: 0.02em;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.15;
     }
 
     .tool-mobile-blurb {
@@ -926,6 +945,44 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
   }
 
   @media (max-width: 380px) {
+    .rehearsal-card {
+      padding: 12px 8px;
+    }
+
+    .tools-grid {
+      gap: 6px;
+    }
+
+    .tool-card-inner {
+      padding: 8px 6px;
+      gap: 5px;
+    }
+
+    .tool-card-header {
+      gap: 4px;
+    }
+
+    .tool-icon-badge {
+      width: 22px;
+      height: 22px;
+    }
+
+    .tool-icon-badge svg,
+    .tool-icon-badge :global(svg) {
+      width: 12px;
+      height: 12px;
+    }
+
+    .tool-card-name {
+      font-size: 0.70rem;
+      letter-spacing: 0.01em;
+    }
+
+    .tool-action-btn {
+      padding: 6px 3px;
+      font-size: 0.68rem;
+    }
+
     .rehearsal-offline-banner {
       flex-direction: column;
       align-items: stretch;
@@ -938,6 +995,13 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
 
     .kins-tools-pwa-btn {
       width: 100%;
+    }
+  }
+
+  @media (max-width: 325px) {
+    .tool-card-name {
+      font-size: 0.64rem;
+      letter-spacing: 0;
     }
   }
 </style>

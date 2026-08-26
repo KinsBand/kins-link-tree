@@ -318,10 +318,11 @@
       overlay?.classList.remove('dismissed');
       overlay?.classList.add('entering');
 
-      // Brief curtain beat, then navigate (kept short — this delays every internal tap)
+      // Brief curtain beat, then navigate (0ms on mobile touch to avoid perceived lag)
+      const isTouch = window.matchMedia('(pointer: coarse)').matches;
       setTimeout(() => {
         window.location.href = targetUrl;
-      }, 80);
+      }, isTouch ? 0 : 80);
     }
 
     // Dismiss as soon as DOM is interactive (zero artificial delay)

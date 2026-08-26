@@ -1,0 +1,9 @@
+# KINS OMR bridge — oemer (MIT) + FastAPI
+# Python 3.9-3.11 recommended. First inference downloads ~350MB of model
+# weights to ~/.oemer (or hit GET /warmup once after starting).
+oemer @ git+https://github.com/BreezeWhite/oemer.git
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+pypdfium2>=4.30
+pillow>=10.0

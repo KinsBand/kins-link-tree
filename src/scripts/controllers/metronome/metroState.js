@@ -17,10 +17,13 @@ export const metroState = {
   subdivisionIndex: 0,
   soundId: METRO_SOUNDS[0].id,
   volume: 0.8,
-  accentFirst: true,
+  accentFirst: false,
   flash: false,
   vibrate: false,
+  keepAwake: false,
+  backgroundPlay: false,
   beatStyle: 'dots',
+  beatTiers: ['mid', 'mid', 'mid', 'mid'],
   playing: false,
   starting: false,
   coachTab: 'inner-clock',
@@ -33,6 +36,7 @@ export const metroState = {
   sheetInstrument: 'bass',
   sheetFollow: false,
   sheetLoop: false,
+  sheetSync: false,
   sheetMap: {}
 };
 
@@ -132,11 +136,66 @@ export function setVibrate(enabled, persist = true) {
   if (persist) storageSet(METRO_STORAGE_KEYS.vibrate, metroState.vibrate ? '1' : '0');
 }
 
+export function setKeepAwake(enabled, persist = true) {
+  metroState.keepAwake = !!enabled;
+  if (persist) storageSet(METRO_STORAGE_KEYS.keepAwake, metroState.keepAwake ? '1' : '0');
+}
+
+export function setBackgroundPlay(enabled, persist = true) {
+  metroState.backgroundPlay = !!enabled;
+  if (persist) storageSet(METRO_STORAGE_KEYS.backgroundPlay, metroState.backgroundPlay ? '1' : '0');
+}
+
 export function setBeatStyle(style, persist = true) {
   const next = style === 'radial' ? 'radial' : 'dots';
   metroState.beatStyle = next;
   if (persist) storageSet(METRO_STORAGE_KEYS.beatStyle, next);
   return next;
+}
+
+const VALID_BEAT_TIERS = ['low', 'mid', 'high'];
+
+export function getBeatTier(index) {
+  if (!Array.isArray(metroState.beatTiers)) return 'mid';
+  const tier = metroState.beatTiers[index];
+  return VALID_BEAT_TIERS.includes(tier) ? tier : 'mid';
+}
+
+export function setBeatTier(index, tierId, persist = true) {
+  if (!Array.isArray(metroState.beatTiers)) metroState.beatTiers = [];
+  syncBeatTiersLength(getTimeSignature().beatsPerBar, false);
+  if (index < 0 || index >= metroState.beatTiers.length) return 'mid';
+  const valid = VALID_BEAT_TIERS.includes(tierId) ? tierId : 'mid';
+  metroState.beatTiers[index] = valid;
+  if (persist) storageSet(METRO_STORAGE_KEYS.beatTiers, JSON.stringify(metroState.beatTiers));
+  return valid;
+}
+
+export function cycleBeatTier(index, persist = true) {
+  const cur = getBeatTier(index);
+  const cycleMap = { low: 'mid', mid: 'high', high: 'low' };
+  const next = cycleMap[cur] || 'mid';
+  return setBeatTier(index, next, persist);
+}
+
+export function resetBeatTiers(persist = true) {
+  const beats = getTimeSignature().beatsPerBar;
+  metroState.beatTiers = new Array(beats).fill('mid');
+  if (persist) storageSet(METRO_STORAGE_KEYS.beatTiers, JSON.stringify(metroState.beatTiers));
+  return metroState.beatTiers;
+}
+
+export function syncBeatTiersLength(beatsPerBar, persist = true) {
+  const targetLen = Math.max(1, beatsPerBar || 4);
+  if (!Array.isArray(metroState.beatTiers)) metroState.beatTiers = [];
+  while (metroState.beatTiers.length < targetLen) {
+    metroState.beatTiers.push('mid');
+  }
+  if (metroState.beatTiers.length > targetLen) {
+    metroState.beatTiers = metroState.beatTiers.slice(0, targetLen);
+  }
+  if (persist) storageSet(METRO_STORAGE_KEYS.beatTiers, JSON.stringify(metroState.beatTiers));
+  return metroState.beatTiers;
 }
 
 export function setCoachTab(tabId, persist = true) {
@@ -242,6 +301,12 @@ export function setSheetLoop(enabled, persist = true) {
   return metroState.sheetLoop;
 }
 
+export function setSheetSync(enabled, persist = true) {
+  metroState.sheetSync = !!enabled;
+  if (persist) storageSet(SHEET_STORAGE_KEYS.sync, metroState.sheetSync ? '1' : '0');
+  return metroState.sheetSync;
+}
+
 export function setSheetForSong(songKey, instrument, entry) {
   if (!songKey || typeof songKey !== 'string') return false;
   const allowed = SHEET_INSTRUMENTS.map((s) => s.id);
@@ -306,8 +371,20 @@ export function restore() {
   metroState.accentFirst = storageGet(METRO_STORAGE_KEYS.accent) !== '0';
   metroState.flash = storageGet(METRO_STORAGE_KEYS.flash) === '1';
   metroState.vibrate = storageGet(METRO_STORAGE_KEYS.vibrate) === '1';
+  metroState.keepAwake = storageGet(METRO_STORAGE_KEYS.keepAwake) === '1';
+  metroState.backgroundPlay = storageGet(METRO_STORAGE_KEYS.backgroundPlay) === '1';
   const bs = storageGet(METRO_STORAGE_KEYS.beatStyle);
   metroState.beatStyle = bs === 'radial' ? 'radial' : 'dots';
+  try {
+    const rawTiers = storageGet(METRO_STORAGE_KEYS.beatTiers);
+    if (rawTiers) {
+      const parsed = JSON.parse(rawTiers);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        metroState.beatTiers = parsed.map((t) => VALID_BEAT_TIERS.includes(t) ? t : 'mid');
+      }
+    }
+  } catch (e) {}
+  syncBeatTiersLength(getTimeSignature().beatsPerBar, false);
   try {
     const tab = storageGet(COACH_STORAGE_KEYS.activeTab);
     if (tab && ['inner-clock','speed-trainer','rhythm-step','tempo-primer'].includes(tab)) metroState.coachTab = tab;
@@ -345,6 +422,7 @@ export function restore() {
     if (sheetInst && ['bass','electric','acoustic','drums'].includes(sheetInst)) metroState.sheetInstrument = sheetInst;
     metroState.sheetFollow = storageGet(SHEET_STORAGE_KEYS.follow) === '1';
     metroState.sheetLoop = storageGet(SHEET_STORAGE_KEYS.loop) === '1';
+    metroState.sheetSync = storageGet(SHEET_STORAGE_KEYS.sync) === '1';
     try {
       const sheetMap = JSON.parse(storageGet(SHEET_STORAGE_KEYS.perSong) || 'null');
       if (sheetMap && typeof sheetMap === 'object') metroState.sheetMap = sheetMap;

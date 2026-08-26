@@ -11,6 +11,7 @@ html {
   max-width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   position: relative;
 }
 

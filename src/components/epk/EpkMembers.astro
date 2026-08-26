@@ -72,7 +72,7 @@ const members = [
   </div>
 
   <!-- Horizontal Scroll Container -->
-  <div class="epk-members-scroll-container" id="epkMembersScrollContainer">
+  <div class="epk-members-scroll-container brutal-scroll-x" id="epkMembersScrollContainer">
     {members.map((member) => (
       <div class="epk-member-card" data-member-id={member.id}>
         <!-- Top: Square Avatar Photo Box with Badge & Initials -->
@@ -213,25 +213,8 @@ const members = [
     scroll-snap-type: x mandatory;
     padding: 4px 4px 16px 4px;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-neon-yellow) transparent;
     width: 100%;
     box-sizing: border-box;
-  }
-
-  .epk-members-scroll-container::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  .epk-members-scroll-container::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
-  }
-
-  .epk-members-scroll-container::-webkit-scrollbar-thumb {
-    background: var(--accent-neon-yellow);
-    border: 1px solid #000000;
-    border-radius: 3px;
   }
 
   /* Neo-Brutalist Member Card */
