@@ -301,36 +301,15 @@ export const METRO_COPY = {
 
 export type MetroBeatIndicatorStyle = 'dots' | 'radial';
 
-export type SheetInstrument = 'bass' | 'electric' | 'acoustic' | 'drums';
-
-export interface SheetInstrumentDef {
-  id: SheetInstrument;
-  label: string;
-  shortLabel: string;
-  icon: string;
-}
-
-export const SHEET_INSTRUMENTS: readonly SheetInstrumentDef[] = [
-  { id: 'bass', label: 'BASS', shortLabel: 'BASS', icon: 'fa-solid fa-guitar' },
-  { id: 'electric', label: 'ELECTRIC', shortLabel: 'ELEC', icon: 'fa-solid fa-guitar' },
-  { id: 'acoustic', label: 'ACOUSTIC', shortLabel: 'ACOU', icon: 'fa-solid fa-guitar' },
-  { id: 'drums', label: 'DRUMS', shortLabel: 'DRUMS', icon: 'fa-solid fa-drum' }
-] as const;
-
 export const METRO_SHEET_CONFIG = {
   /* Sheets are 100% device-local (IndexedDB blob store + localStorage metadata).
      No server upload, no cloud bucket — nothing leaves the user's browser.
      OMR bridge is opt-in: localhost by default (still device-local). If you
      self-host the bridge on a container host, set PUBLIC_OMR_BRIDGE_URL. */
-  omrBridgeUrl: (import.meta.env.PUBLIC_OMR_BRIDGE_URL as string | undefined) || 'http://localhost:8787',
-  maxBytes: 15 * 1024 * 1024, // 15 MB per file
-  allowedExt: ['.pdf', '.gp', '.gp5', '.xml', '.musicxml', '.mxl'] as const,
-  stripHeight: 128 as const,
-  stripHeightMobile: 96 as const
+  omrBridgeUrl: (import.meta.env.PUBLIC_OMR_BRIDGE_URL as string | undefined) || 'http://localhost:8787'
 } as const;
 
 export const SHEET_STORAGE_KEYS = {
-  instrument: 'kins-metro-sheet-instrument',
   follow: 'kins-metro-sheet-follow',
   loop: 'kins-metro-sheet-loop',
   sync: 'kins-metro-sheet-sync',

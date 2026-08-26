@@ -36,7 +36,6 @@ import {
 import { createMetroEngine } from './audioEngine.js';
 import { createUi } from './uiBindings.js';
 import { createCoachEngine } from './coachEngine.js';
-import { createSheetController } from './sheetController.js';
 import { createMediaSessionManager } from './mediaSessionManager.js';
 import { connectMidi, selectMidiInput, disconnectMidi, isMidiSupported } from './midiManager.js';
 
@@ -44,7 +43,6 @@ let initialized = false;
 let engine = null;
 let ui = null;
 let coachEngine = null;
-let sheetController = null;
 let media = null;
 /* Bumped by every start attempt and every stop — captured by in-flight
    async starts so a rapid toggle/stop while the audio context is still
@@ -58,7 +56,6 @@ const tapTimes = [];
 
 function onVisualBeat(evt) {
   ui.renderBeat(evt.beatInBar, evt.tier);
-  if (sheetController) sheetController.onBeat(evt.beatInBar);
   if (coachEngine && coachEngine.isRunning()) {
     coachEngine.handleBeat(evt.beatInBar, evt.isAccent);
   }
@@ -174,7 +171,6 @@ async function startMetronome() {
     metroState.starting = false;
   }
   ui.renderPlayState(metroState.playing);
-  if (sheetController && metroState.playing) sheetController.onPlaybackStarted();
   return metroState.playing;
 }
 
@@ -186,7 +182,6 @@ function stopMetronome() {
     metroState.playing = false;
     ui.renderPlayState(false);
     ui.resetBeatIndicator();
-    if (sheetController) sheetController.onPlaybackStopped();
     return;
   }
   engine.stop();
@@ -195,7 +190,6 @@ function stopMetronome() {
   ui.resetBeatIndicator();
   if (media) media.deactivate();
   releaseWakeLock();
-  if (sheetController) sheetController.onPlaybackStopped();
 }
 
 function onPlayToggle() {
@@ -345,36 +339,8 @@ function onSetlistSelect(arg) {
   if (!entry) return;
   applyBpm(entry.bpm, 'setlist');
   ui.showTopbarTitle(entry);
-  ui.setInstrumentBtnVisible(true);
-  if (sheetController) sheetController.setCurrentSong(entry);
   closeAnySheet();
   showToast(METRO_COPY.setlistLoaded(entry.bpm, entry.title), 'success');
-}
-
-function onInstrumentOpen() {
-  ui.openSheet(ui.panelInstrument, ui.instrumentBtn);
-}
-
-function onInstrumentSelect(id) {
-  if (!sheetController) return;
-  sheetController.selectInstrument(id);
-  setTimeout(() => closeAnySheet(), 350);
-}
-
-function onSheetClear() {
-  if (sheetController) sheetController.clearCurrentSheet();
-}
-
-function onScoreTimeSignature(beats, unit) {
-  setCustomTimeSig(beats, unit, false);
-  syncBeatTiersLength(getTimeSignature().beatsPerBar, false);
-  engine.updateOptions({ beatsPerBar: getTimeSignature().beatsPerBar });
-  engine.updateTiers(metroState.beatTiers);
-  ui.rebuildBeatDots();
-  ui.renderPills();
-  ui.renderSheetDisplays();
-  ui.renderChipStates();
-  ui.resetBeatIndicator();
 }
 
 function onTierCycle(beatIndex) {
@@ -600,12 +566,6 @@ export function initMetronome() {
     applySubdivision: applyCoachSubdivision,
     setMuted: setCoachMuted
   });
-  sheetController = createSheetController({
-    onSheetToast: (msg, kind) => showToast(msg, kind || 'info'),
-    onSheetClear,
-    onScoreTimeSignature,
-    onSheetUploadedLocal: null
-  });
   ui = createUi({
     onPlayToggle,
     onTapTempo,
@@ -644,41 +604,12 @@ export function initMetronome() {
     onMidiDisconnect,
     onMidiSelect,
     onTopbarUndo,
-    onInstrumentOpen,
-    onInstrumentSelect,
-    onSheetClear,
     onTierCycle,
     onResetPitchMap
   });
   ui.init();
 
-  sheetController.init({
-    ui,
-    strip: document.getElementById('metroSheetStrip'),
-    track: document.getElementById('metroSheetTrack'),
-    title: document.getElementById('metroSheetStripTitle'),
-    bpmBadge: document.getElementById('metroSheetStripBpm'),
-    uploadBtn: document.getElementById('metroSheetStripUpload'),
-    fileInput: document.getElementById('metroSheetFileInput'),
-    toggles: document.getElementById('metroSheetToggles'),
-    followBtn: document.getElementById('metroSheetFollowBtn'),
-    loopBtn: document.getElementById('metroSheetLoopBtn'),
-    syncBtn: document.getElementById('metroSheetSyncBtn'),
-    barChip: document.getElementById('metroSheetBarChip'),
-    clearBtn: document.getElementById('metroSheetClearBtn'),
-    instrumentLabel: document.getElementById('metroInstrumentLabel'),
-    instrumentIcon: document.getElementById('metroInstrumentIcon'),
-    instrumentUploadLabel: document.querySelector('.metro-instrument-upload'),
-    instrumentFileInput: document.getElementById('metroInstrumentFileInput'),
-    instrumentClearBtn: document.getElementById('metroInstrumentClearBtn')
-  });
-  sheetController.renderInstrumentButton();
-  ui.setInstrumentBtnVisible(false);
-
   window.addEventListener('pagehide', stopEverything);
-  window.addEventListener('pagehide', () => {
-    if (sheetController) sheetController.teardown();
-  });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       /* PLAY IN BACKGROUND off (default): background tabs throttle timers

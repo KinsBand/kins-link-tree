@@ -49,41 +49,10 @@ import TermsModal from '../components/modals/TermsModal.astro';
         </div>
       </section>
 
-      <!-- KINS Sheet Strip — per-song horizontal bar-by-bar sheet music in brutalist chrome -->
-      <section class="metro-sheet-strip" id="metroSheetStrip" aria-label="Sheet music" hidden>
-        <div class="metro-sheet-strip-head">
-          <span class="metro-sheet-strip-title" id="metroSheetStripTitle">NO SHEET LOADED</span>
-          <span class="metro-sheet-strip-bar" id="metroSheetBarChip" hidden></span>
-          <span class="metro-sheet-strip-bpm" id="metroSheetStripBpm" hidden></span>
-          <button type="button" class="metro-sheet-strip-upload brutal-press" id="metroSheetStripUpload" aria-label="Upload sheet music"><i class="fa-solid fa-upload" aria-hidden="true"></i> UPLOAD</button>
-        </div>
-        <div class="metro-sheet-track" id="metroSheetTrack" role="region" aria-label="Sheet bars" tabindex="0"></div>
-        <input type="file" id="metroSheetFileInput" accept=".pdf,.gp,.gp5,.xml,.musicxml,.mxl" hidden aria-hidden="true" />
-      </section>
-      <div class="metro-sheet-toggles" id="metroSheetToggles" hidden aria-label="Sheet options">
-        <button type="button" class="metro-sheet-toggle brutal-press" id="metroSheetFollowBtn" aria-pressed="false" aria-label="Toggle auto-scroll follow">
-          <i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i> FOLLOW
-        </button>
-        <button type="button" class="metro-sheet-toggle brutal-press" id="metroSheetSyncBtn" aria-pressed="false" aria-label="Toggle score sync — time signature follows the sheet">
-          <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> SYNC
-        </button>
-        <button type="button" class="metro-sheet-toggle brutal-press" id="metroSheetLoopBtn" aria-pressed="false" aria-label="Toggle loop">
-          <i class="fa-solid fa-repeat" aria-hidden="true"></i> LOOP
-        </button>
-        <button type="button" class="metro-sheet-toggle metro-sheet-toggle--ghost brutal-press" id="metroSheetClearBtn" aria-label="Clear sheet for this song" hidden>
-          <i class="fa-solid fa-trash" aria-hidden="true"></i> CLEAR
-        </button>
-      </div>
-
       <div class="metro-bottom">
-        <div class="metro-stepper-strip no-instrument" aria-label="BPM steppers">
+        <div class="metro-stepper-strip" aria-label="BPM steppers">
           <button type="button" class="metro-stepper-btn brutal-press" id="metroBpmMinus" aria-label="Decrease tempo by 1 BPM" data-track="metronome:bpm_minus">
             <i class="fa-solid fa-minus" aria-hidden="true"></i>
-          </button>
-          <button type="button" class="metro-stepper-btn metro-instrument-btn brutal-press" id="metroInstrumentBtn" aria-haspopup="dialog" aria-expanded="false" aria-label="Choose instrument version" hidden>
-            <i class="fa-solid fa-guitar" aria-hidden="true" id="metroInstrumentIcon"></i>
-            <span id="metroInstrumentLabel">BASS</span>
-            <i class="fa-solid fa-chevron-down metro-instrument-caret" aria-hidden="true"></i>
           </button>
           <button type="button" class="metro-stepper-btn brutal-press" id="metroBpmPlus" aria-label="Increase tempo by 1 BPM" data-track="metronome:bpm_plus">
             <i class="fa-solid fa-plus" aria-hidden="true"></i>
@@ -332,23 +301,6 @@ import TermsModal from '../components/modals/TermsModal.astro';
         <div class="metro-coach-tablist" id="metroCoachTablist" role="tablist" aria-label="Coach deck modules"></div>
         <div class="metro-coach-panels" id="metroCoachPanels"></div>
         <div class="metro-coach-live" id="metroCoachLive" hidden></div>
-      </section>
-
-      <section class="metro-sheet-panel metro-panel--instrument" id="metroPanelInstrument" hidden aria-label="Instrument version">
-        <p class="metro-sheet-title">INSTRUMENT</p>
-        <p class="metro-sheet-subtitle" style="margin-top:4px">Choose the tab version for this song — each instrument keeps its own sheet</p>
-        <div class="metro-instrument-grid" id="metroInstrumentGrid" role="radiogroup" aria-label="Instrument versions"></div>
-        <div class="metro-instrument-actions">
-          <label class="metro-instrument-upload brutal-press" for="metroInstrumentFileInput">
-            <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i> UPLOAD SHEET
-            <span class="metro-instrument-upload-hint">PDF · GP · GP5 · XML · MusicXML</span>
-          </label>
-          <input type="file" id="metroInstrumentFileInput" accept=".pdf,.gp,.gp5,.xml,.musicxml,.mxl" hidden />
-          <button type="button" class="metro-instrument-clear brutal-press" id="metroInstrumentClearBtn" aria-label="Clear current instrument sheet">
-            <i class="fa-solid fa-trash" aria-hidden="true"></i> CLEAR SHEET
-          </button>
-        </div>
-        <p class="metro-midi-hint" style="margin-top:8px">Sheets are stored on this device only (never uploaded). Pages scroll horizontally in the strip — toggle FOLLOW to auto-scroll with the click.</p>
       </section>
     </div>
 
@@ -967,32 +919,6 @@ import TermsModal from '../components/modals/TermsModal.astro';
     white-space: nowrap;
   }
 
-  .metro-sheet-strip-upload {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: #1e1e24;
-    color: #D8B244;
-    border: 2px solid #000;
-    box-shadow: 2px 2px 0 #000;
-    border-radius: var(--radius-pill);
-    font-family: var(--font-secondary);
-    font-size: 0.66rem;
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
-  }
-
-  .metro-sheet-strip-upload:hover {
-    transform: translate(-1px,-1px);
-    box-shadow: 3px 3px 0 #000;
-    background: #25252e;
-    color: #f5f5f7;
-  }
-
   .metro-sheet-track {
     display: flex;
     align-items: stretch;
@@ -1084,16 +1010,8 @@ import TermsModal from '../components/modals/TermsModal.astro';
     align-items: center;
   }
 
-  .metro-stepper-strip.no-instrument {
-    grid-template-columns: 30% 1fr 30%;
-  }
-
   #metroBpmMinus {
     grid-column: 1;
-  }
-
-  #metroInstrumentBtn {
-    grid-column: 2;
   }
 
   #metroBpmPlus {
@@ -1119,82 +1037,6 @@ import TermsModal from '../components/modals/TermsModal.astro';
     -webkit-tap-highlight-color: transparent;
     transition: transform 0.12s var(--ease-tactile), box-shadow 0.12s ease, background-color 0.16s ease, color 0.16s ease;
     user-select: none;
-  }
-
-  .metro-instrument-btn {
-    background: #D8B244;
-    color: #000;
-    border-width: 3px;
-    box-shadow: 4px 4px 0 #000;
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    gap: 7px;
-  }
-
-  .metro-instrument-btn:hover { background: #E2C06A; color: #000; }
-
-  .metro-instrument-caret { font-size: 0.62rem; color: rgba(0,0,0,0.55); }
-
-  .metro-instrument-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 8px;
-  }
-
-  /* instrument chips are JS-created → styled in the is:global block below */
-
-  .metro-instrument-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-  }
-
-  .metro-instrument-upload {
-    flex: 1 1 160px;
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 12px 14px;
-    background: #D8B244;
-    color: #000;
-    border: 2px solid #000;
-    box-shadow: 3px 3px 0 #000;
-    border-radius: var(--radius-md);
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    text-align: center;
-  }
-
-  .metro-instrument-upload-hint {
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: rgba(0,0,0,0.6);
-  }
-
-  .metro-instrument-clear {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 14px;
-    background: transparent;
-    color: #ff6b6b;
-    border: 2px dashed rgba(255,107,107,0.4);
-    border-radius: var(--radius-md);
-    font-family: var(--font-secondary);
-    font-size: 0.76rem;
-    font-weight: 800;
-    cursor: pointer;
   }
 
   .metro-stepper-btn:hover {
@@ -3769,11 +3611,6 @@ import TermsModal from '../components/modals/TermsModal.astro';
       font-size: 0.85rem;
     }
 
-    .metro-instrument-btn {
-      font-size: 0.68rem;
-      gap: 5px;
-    }
-
     .metro-bpm-num {
       font-size: clamp(3.2rem, 17vw, 5rem);
     }
@@ -3816,10 +3653,7 @@ import TermsModal from '../components/modals/TermsModal.astro';
     }
 
     .metro-sheet-strip,
-    .metro-sheet-toggle,
-    .metro-instrument-btn,
-    .metro-instrument-chip,
-    .metro-sheet-strip-upload {
+    .metro-sheet-toggle {
       transition: none !important;
       animation: none !important;
     }
@@ -4402,31 +4236,6 @@ import TermsModal from '../components/modals/TermsModal.astro';
     padding: 10px 12px; border-radius: var(--radius-sm);
     font-family: var(--font-secondary); font-size: 0.72rem; font-weight: 700;
   }
-
-  /* instrument chips (JS-created, runtime) */
-  .metro-instrument-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 14px 10px;
-    background: #1e1e24;
-    color: #f5f5f7;
-    border: 2px solid #000;
-    box-shadow: 2px 2px 0 #000;
-    border-radius: var(--radius-md);
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
-  }
-  .metro-instrument-chip:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #000; background: #25252e; }
-  .metro-instrument-chip.active { background: #D8B244; color: #000; }
-  .metro-instrument-chip:focus-visible { outline: 2px solid #D8B244; outline-offset: 2px; }
 
   /* bar card signature badge + popover (runtime DOM) */
   .kins-sig-badge {

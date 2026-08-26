@@ -1,7 +1,4 @@
-import {
-  SHEET_INSTRUMENTS,
-  METRO_SHEET_CONFIG
-} from '../../../settings/metronome.config';
+import { METRO_SHEET_CONFIG } from '../../../settings/metronome.config';
 import {
   metroState,
   setSheetForSong,
@@ -9,14 +6,11 @@ import {
   setSheetFollow,
   setSheetLoop,
   setSheetSync,
-  setSheetInstrument,
   getTimeSignature
 } from './metroState.js';
 import {
-  putSheetFile,
   getSheetFile,
-  deleteSheetFile,
-  isSheetStoreAvailable
+  deleteSheetFile
 } from './sheetStore.js';
 import { scanScoreCanvas, cropRegion, countBars } from './pdfBarScanner.js';
 
@@ -31,23 +25,18 @@ const SIG_PRESETS = [
 
 const COPY = {
   noSong: 'SELECT A SETLIST SONG',
-  emptyTitle: (inst) => `NO ${inst} SHEET YET`,
-  emptySub: 'Upload your own tab or sheet — PDF, Guitar Pro or MusicXML. Stored on this device only.',
+  emptyTitle: 'NO SHEET FOR THIS SONG',
+  emptySub: 'Sheets live on this device only — none saved for this song yet.',
   rendering: 'RENDERING…',
   scanning: 'SCANNING BARS…',
   failed: 'COULD NOT RENDER THIS FILE',
-  savedDevice: 'Sheet saved on this device',
-  sessionOnly: 'Storage unavailable — sheet kept for this session only',
-  unsupported: 'Unsupported file — use PDF, GP, GP5, XML or MusicXML',
-  tooLarge: 'File too large — 15 MB max',
-  needSong: 'Load a setlist song first — then upload its sheet',
   renderFail: 'Could not render that file — is it a valid sheet?',
   omrRunning: 'OMR RECOGNIZING…',
   omrHint: 'Full PDF note recognition: run the OMR bridge (tools/omr-server) — using barline scan for now',
   omrDone: (n) => `OMR complete — ${n} bars recognized`,
   nothingToClear: 'No song loaded — nothing to clear',
-  nothingCleared: (inst) => `No ${inst} sheet for this song`,
-  cleared: 'Sheet cleared for this song + instrument',
+  nothingCleared: 'No sheet for this song',
+  cleared: 'Sheet cleared for this song',
   syncOn: 'Score sync on — time signature follows the sheet',
   syncOff: 'Score sync off',
   syncNoBars: 'No barlines detected in this sheet — sync unavailable',
@@ -159,29 +148,6 @@ export function createSheetController(options) {
   }
 
   function bindUi() {
-    if (els.uploadBtn && !els.uploadBtn.dataset.bound) {
-      els.uploadBtn.dataset.bound = '1';
-      els.uploadBtn.addEventListener('click', () => {
-        if (els.fileInput) els.fileInput.click();
-      });
-    }
-    if (els.instrumentUploadLabel && !els.instrumentUploadLabel.dataset.bound) {
-      els.instrumentUploadLabel.dataset.bound = '1';
-      els.instrumentUploadLabel.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (els.instrumentFileInput) els.instrumentFileInput.click();
-      });
-    }
-    [els.fileInput, els.instrumentFileInput].forEach((input) => {
-      if (input && !input.dataset.bound) {
-        input.dataset.bound = '1';
-        input.addEventListener('change', () => {
-          const file = input.files && input.files[0];
-          if (file) handleFileSelected(file);
-          input.value = '';
-        });
-      }
-    });
     if (els.followBtn && !els.followBtn.dataset.bound) {
       els.followBtn.dataset.bound = '1';
       els.followBtn.addEventListener('click', () => toggleFollow());
@@ -197,12 +163,6 @@ export function createSheetController(options) {
     if (els.clearBtn && !els.clearBtn.dataset.bound) {
       els.clearBtn.dataset.bound = '1';
       els.clearBtn.addEventListener('click', () => {
-        if (callbacks.onSheetClear) callbacks.onSheetClear();
-      });
-    }
-    if (els.instrumentClearBtn && !els.instrumentClearBtn.dataset.bound) {
-      els.instrumentClearBtn.dataset.bound = '1';
-      els.instrumentClearBtn.addEventListener('click', () => {
         if (callbacks.onSheetClear) callbacks.onSheetClear();
       });
     }
@@ -278,7 +238,6 @@ export function createSheetController(options) {
       revealStrip();
       renderForCurrentSong();
     }
-    if (ui && typeof ui.renderInstrumentPicker === 'function') ui.renderInstrumentPicker();
   }
 
   function getCurrentSongKey() {
@@ -286,13 +245,8 @@ export function createSheetController(options) {
   }
 
   function updateHeader() {
-    const instDef = SHEET_INSTRUMENTS.find((s) => s.id === metroState.sheetInstrument) || SHEET_INSTRUMENTS[0];
     if (els.title) {
-      if (currentEntry && currentEntry.title) {
-        els.title.textContent = `${currentEntry.title} — ${instDef.label}`;
-      } else {
-        els.title.textContent = `${COPY.noSong} — ${instDef.label}`;
-      }
+      els.title.textContent = currentEntry && currentEntry.title ? currentEntry.title : COPY.noSong;
     }
     if (els.bpmBadge) {
       if (currentEntry && typeof currentEntry.bpm === 'number') {
@@ -362,80 +316,15 @@ export function createSheetController(options) {
   }
 
   function renderEmpty(track, overrideTitle) {
-    const instDef = SHEET_INSTRUMENTS.find((s) => s.id === metroState.sheetInstrument) || SHEET_INSTRUMENTS[0];
     const empty = document.createElement('div');
     empty.className = 'kins-sheet-empty';
-    const icon = document.createElement('i');
-    icon.className = instDef.icon;
-    icon.setAttribute('aria-hidden', 'true');
     const title = document.createElement('strong');
-    title.textContent = overrideTitle || COPY.emptyTitle(instDef.label);
+    title.textContent = overrideTitle || COPY.emptyTitle;
     const sub = document.createElement('span');
     sub.textContent = COPY.emptySub;
-    const cta = document.createElement('button');
-    cta.type = 'button';
-    cta.className = 'metro-setlist-empty-cta brutal-press';
-    cta.innerHTML = '<i class="fa-solid fa-file-arrow-up"></i> UPLOAD SHEET';
-    cta.addEventListener('click', () => {
-      if (els.fileInput) els.fileInput.click();
-    });
-    empty.appendChild(icon);
     empty.appendChild(title);
     empty.appendChild(sub);
-    empty.appendChild(cta);
     track.appendChild(empty);
-  }
-
-  async function handleFileSelected(file) {
-    const ext = extOf(file.name);
-    if (METRO_SHEET_CONFIG.allowedExt.indexOf(ext) === -1) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.unsupported, 'error');
-      return;
-    }
-    if (file.size > METRO_SHEET_CONFIG.maxBytes) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.tooLarge, 'error');
-      return;
-    }
-    if (!currentSongKey) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.needSong, 'warning');
-      return;
-    }
-
-    const songKey = currentSongKey;
-    const instrument = metroState.sheetInstrument;
-
-    const url = URL.createObjectURL(file);
-    trackObjectUrl(url);
-    lastObjectUrl = url;
-
-    setSheetForSong(songKey, instrument, {
-      name: file.name,
-      mime: file.type || '',
-      size: file.size,
-      instrument,
-      source: isSheetStoreAvailable() ? 'device' : 'session',
-      uploadedAt: Date.now()
-    });
-
-    revealStrip();
-
-    const myGen = gen();
-    renderFile(url, { name: file.name, mime: file.type || '', size: file.size }, myGen);
-
-    try {
-      await putSheetFile(songKey, instrument, file);
-      setSheetForSong(songKey, instrument, {
-        name: file.name,
-        mime: file.type || '',
-        size: file.size,
-        instrument,
-        source: 'device',
-        uploadedAt: Date.now()
-      });
-      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.savedDevice, 'success');
-    } catch (err) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.sessionOnly, 'warning');
-    }
   }
 
   async function ensurePdfJs() {
@@ -1075,7 +964,7 @@ export function createSheetController(options) {
     }
     const entry = activeEntry();
     if (!entry) {
-      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.nothingCleared(metroState.sheetInstrument.toUpperCase()), 'info');
+      if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.nothingCleared, 'info');
       return;
     }
     const songKey = currentSongKey;
@@ -1084,22 +973,6 @@ export function createSheetController(options) {
     deleteSheetFile(songKey, instrument).catch(() => {});
     renderForCurrentSong();
     if (callbacks.onSheetToast) callbacks.onSheetToast(COPY.cleared, 'success');
-  }
-
-  function selectInstrument(id) {
-    const next = setSheetInstrument(id);
-    const def = SHEET_INSTRUMENTS.find((s) => s.id === next) || SHEET_INSTRUMENTS[0];
-    renderInstrumentButton();
-    renderForCurrentSong();
-    if (ui && typeof ui.renderInstrumentPicker === 'function') ui.renderInstrumentPicker();
-    if (callbacks.onSheetToast) callbacks.onSheetToast(`${def.label} version selected`, 'success');
-    return next;
-  }
-
-  function renderInstrumentButton() {
-    const def = SHEET_INSTRUMENTS.find((s) => s.id === metroState.sheetInstrument) || SHEET_INSTRUMENTS[0];
-    if (els.instrumentLabel) els.instrumentLabel.textContent = def.shortLabel;
-    if (els.instrumentIcon) els.instrumentIcon.className = def.icon;
   }
 
   function teardown() {
@@ -1116,12 +989,9 @@ export function createSheetController(options) {
     setCurrentSong,
     getCurrentSongKey,
     renderForCurrentSong,
-    handleFileSelected,
     toggleFollow,
     toggleLoop,
     toggleSync,
-    selectInstrument,
-    renderInstrumentButton,
     renderToggleStates,
     clearCurrentSheet,
     onBeat,

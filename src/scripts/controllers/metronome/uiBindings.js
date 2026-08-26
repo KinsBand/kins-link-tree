@@ -8,8 +8,7 @@ import {
   METRO_SETLIST_INSPIRES,
   METRO_COACH_TABS,
   METRO_COPY,
-  COACH_DEFAULTS,
-  SHEET_INSTRUMENTS
+  COACH_DEFAULTS
 } from '../../../settings/metronome.config';
 import { showToast } from '../toast.js';
 import { metroState, getTimeSignature, getSubdivision, getBeatTier } from './metroState.js';
@@ -125,28 +124,6 @@ export function createUi(callbacks) {
     els.panelSetlist = q('metroPanelSetlist');
     els.panelSettings = q('metroPanelSettings');
     els.panelCoach = q('metroPanelCoach');
-    els.panelInstrument = q('metroPanelInstrument');
-
-    // sheet strip
-    els.strip = q('metroSheetStrip');
-    els.track = q('metroSheetTrack');
-    els.stripTitle = q('metroSheetStripTitle');
-    els.stripBpm = q('metroSheetStripBpm');
-    els.uploadBtn = q('metroSheetStripUpload');
-    els.fileInput = q('metroSheetFileInput');
-    els.toggles = q('metroSheetToggles');
-    els.followBtn = q('metroSheetFollowBtn');
-    els.loopBtn = q('metroSheetLoopBtn');
-    els.clearBtn = q('metroSheetClearBtn');
-
-    // instrument selector
-    els.instrumentBtn = q('metroInstrumentBtn');
-    els.instrumentLabel = q('metroInstrumentLabel');
-    els.instrumentIcon = q('metroInstrumentIcon');
-    els.instrumentGrid = q('metroInstrumentGrid');
-    els.instrumentUploadLabel = q('metroInstrumentUploadLabel') || (els.panelInstrument ? els.panelInstrument.querySelector('.metro-instrument-upload') : null);
-    els.instrumentFileInput = q('metroInstrumentFileInput');
-    els.instrumentClearBtn = q('metroInstrumentClearBtn');
 
     els.tsBoxTop = q('metroTsBoxTop');
     els.tsBoxBottom = q('metroTsBoxBottom');
@@ -213,7 +190,6 @@ export function createUi(callbacks) {
     buildSetlist();
     buildSoundRow();
     buildCoachTabs();
-    buildInstrumentPicker();
     attachListeners();
     renderAll();
     // apply saved tab
@@ -1839,52 +1815,6 @@ export function createUi(callbacks) {
     return wrap;
   }
 
-  function buildInstrumentPicker() {
-    if (!els.instrumentGrid) return;
-    els.instrumentGrid.textContent = '';
-    SHEET_INSTRUMENTS.forEach((inst) => {
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'metro-instrument-chip brutal-press';
-      chip.dataset.instrument = inst.id;
-      chip.setAttribute('role', 'radio');
-      chip.setAttribute('aria-checked', metroState.sheetInstrument === inst.id ? 'true' : 'false');
-      const icon = document.createElement('i');
-      icon.className = inst.icon;
-      icon.setAttribute('aria-hidden', 'true');
-      const label = document.createElement('span');
-      label.textContent = inst.label;
-      chip.appendChild(icon);
-      chip.appendChild(label);
-      chip.addEventListener('click', () => {
-        if (callbacks.onInstrumentSelect) callbacks.onInstrumentSelect(inst.id);
-      });
-      els.instrumentGrid.appendChild(chip);
-    });
-    renderInstrumentPicker();
-  }
-
-  function renderInstrumentPicker() {
-    if (els.instrumentGrid) {
-      els.instrumentGrid.querySelectorAll('.metro-instrument-chip').forEach((chip) => {
-        const active = chip.dataset.instrument === metroState.sheetInstrument;
-        chip.classList.toggle('active', active);
-        chip.setAttribute('aria-checked', active ? 'true' : 'false');
-      });
-    }
-    const def = SHEET_INSTRUMENTS.find((s) => s.id === metroState.sheetInstrument) || SHEET_INSTRUMENTS[0];
-    if (els.instrumentLabel) els.instrumentLabel.textContent = def.shortLabel;
-    if (els.instrumentIcon && !els.instrumentIcon.className.includes(def.icon)) {
-      els.instrumentIcon.className = def.icon;
-    }
-  }
-
-  function setInstrumentBtnVisible(visible) {
-    if (els.instrumentBtn) els.instrumentBtn.hidden = !visible;
-    const strip = els.instrumentBtn ? els.instrumentBtn.parentElement : null;
-    if (strip) strip.classList.toggle('no-instrument', !visible);
-  }
-
   function selectCoachTab(tabId) {
     coachTab = tabId;
     if (metroState) metroState.coachTab = tabId;
@@ -2326,15 +2256,6 @@ export function createUi(callbacks) {
     if (els.setlistBtn) els.setlistBtn.addEventListener('click', () => callbacks.onSetlistOpen());
     if (els.coachBtn) els.coachBtn.addEventListener('click', () => callbacks.onCoachOpen());
     if (els.settingsBtn) els.settingsBtn.addEventListener('click', () => callbacks.onSettingsOpen());
-    if (els.instrumentBtn) {
-      els.instrumentBtn.addEventListener('click', () => {
-        if (sheetOpen && activePanel === els.panelInstrument) {
-          closeSheet();
-          return;
-        }
-        if (callbacks.onInstrumentOpen) callbacks.onInstrumentOpen();
-      });
-    }
 
     attachDialGestures();
     attachStepperHold();
@@ -2672,7 +2593,7 @@ export function createUi(callbacks) {
 
   function openSheet(panel, trigger) {
     if (sheetOpen && activePanel === panel) return;
-    [els.panelTs, els.panelSub, els.panelSetlist, els.panelSettings, els.panelCoach, els.panelInstrument].forEach((p) => {
+    [els.panelTs, els.panelSub, els.panelSetlist, els.panelSettings, els.panelCoach].forEach((p) => {
       if (!p) return;
       p.hidden = p !== panel;
     });
@@ -2982,18 +2903,14 @@ export function createUi(callbacks) {
     get panelSetlist() { return els.panelSetlist; },
     get panelSettings() { return els.panelSettings; },
     get panelCoach() { return els.panelCoach; },
-    get panelInstrument() { return els.panelInstrument; },
     get tsPill() { return els.tsPill; },
     get subPill() { return els.subPill; },
     get setlistBtn() { return els.setlistBtn; },
     get settingsBtn() { return els.settingsBtn; },
     get coachBtn() { return els.coachBtn; },
-    get instrumentBtn() { return els.instrumentBtn; },
     get topbarTitle() { return els.topbarTitle; },
     get topbarUndo() { return els.topbarUndo; },
     get topbarCenter() { return els.topbarCenter; },
-    renderInstrumentPicker,
-    setInstrumentBtnVisible,
     get isSheetOpen() { return sheetOpen; },
     get coachLiveRunning() { return coachLiveRunning; }
   };

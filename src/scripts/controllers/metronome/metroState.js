@@ -5,9 +5,7 @@ import {
   METRO_SOUNDS,
   METRO_STORAGE_KEYS,
   COACH_DEFAULTS,
-  COACH_STORAGE_KEYS,
-  SHEET_INSTRUMENTS,
-  SHEET_STORAGE_KEYS
+  COACH_STORAGE_KEYS
 } from '../../../settings/metronome.config';
 
 export const metroState = {
@@ -281,14 +279,6 @@ export function setMidiStatus(status) {
   metroState.midiStatus = status;
 }
 
-export function setSheetInstrument(instrument, persist = true) {
-  const allowed = SHEET_INSTRUMENTS.map((s) => s.id);
-  const next = allowed.includes(instrument) ? instrument : 'bass';
-  metroState.sheetInstrument = next;
-  if (persist) storageSet(SHEET_STORAGE_KEYS.instrument, next);
-  return next;
-}
-
 export function setSheetFollow(enabled, persist = true) {
   metroState.sheetFollow = !!enabled;
   if (persist) storageSet(SHEET_STORAGE_KEYS.follow, metroState.sheetFollow ? '1' : '0');
@@ -309,8 +299,7 @@ export function setSheetSync(enabled, persist = true) {
 
 export function setSheetForSong(songKey, instrument, entry) {
   if (!songKey || typeof songKey !== 'string') return false;
-  const allowed = SHEET_INSTRUMENTS.map((s) => s.id);
-  const inst = allowed.includes(instrument) ? instrument : metroState.sheetInstrument;
+  const inst = instrument || metroState.sheetInstrument;
   if (!metroState.sheetMap) metroState.sheetMap = {};
   if (!metroState.sheetMap[songKey]) metroState.sheetMap[songKey] = {};
   if (entry === null) {
@@ -418,8 +407,6 @@ export function restore() {
     }
     const midiId = storageGet(COACH_STORAGE_KEYS.midiDevice);
     if (midiId) metroState.midiDeviceId = midiId;
-    const sheetInst = storageGet(SHEET_STORAGE_KEYS.instrument);
-    if (sheetInst && ['bass','electric','acoustic','drums'].includes(sheetInst)) metroState.sheetInstrument = sheetInst;
     metroState.sheetFollow = storageGet(SHEET_STORAGE_KEYS.follow) === '1';
     metroState.sheetLoop = storageGet(SHEET_STORAGE_KEYS.loop) === '1';
     metroState.sheetSync = storageGet(SHEET_STORAGE_KEYS.sync) === '1';
