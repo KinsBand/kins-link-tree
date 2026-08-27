@@ -11,5 +11,5 @@ export const functionalityConfig = {
   enableFollowerCounter: true,
   audioAutoPlay: false,
   enableLivePage: true,
-  enableEpkPage: false,
+  enableEpkPage: true,
 };

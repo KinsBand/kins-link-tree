@@ -122,6 +122,24 @@ const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith(
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-2px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+
+  .section-scroll-controls.is-scrolling {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  @media (min-width: 768px) {
+    .section-scroll-controls {
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+    }
   }
 
   .scroll-arrow-btn {
@@ -138,19 +156,27 @@ const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith(
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 800;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease, opacity 0.16s ease;
   }
 
-  .scroll-arrow-btn:hover {
+  .scroll-arrow-btn:hover:not(:disabled):not(.is-disabled) {
     background: var(--accent-neon-yellow);
     color: #000000;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
 
-  .scroll-arrow-btn:active {
+  .scroll-arrow-btn:active:not(:disabled):not(.is-disabled) {
     transform: translate(1px, 1px);
     box-shadow: 1px 1px 0px #000000;
+  }
+
+  .scroll-arrow-btn:disabled,
+  .scroll-arrow-btn.is-disabled {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
   /* Horizontal Scroll Reel */
@@ -186,7 +212,8 @@ const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith(
     transition: transform 0.16s var(--ease-tactile);
   }
 
-  .fan-cam-card:hover {
+  .fan-cam-card:hover,
+  .fan-cam-card.is-scroll-active {
     transform: translateY(-2px);
   }
 
@@ -346,15 +373,100 @@ const resolveUrl = (url: string) => !url ? `${baseUrl}new.png` : url.startsWith(
 
 <script>
   const reel = document.getElementById('fanCamsReel');
-  const prevBtn = document.getElementById('fanCamsScrollPrev');
-  const nextBtn = document.getElementById('fanCamsScrollNext');
+  const prevBtn = document.getElementById('fanCamsScrollPrev') as HTMLButtonElement | null;
+  const nextBtn = document.getElementById('fanCamsScrollNext') as HTMLButtonElement | null;
+  const fanCards = reel?.querySelectorAll('.fan-cam-card') || [];
 
-  if (reel && prevBtn && nextBtn) {
-    prevBtn.addEventListener('click', () => {
+  let fanCamsRafId: number | null = null;
+  let fanCamsScrollSettleTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  function updateFanCamsNav() {
+    if (!reel) return;
+    if (fanCamsRafId) cancelAnimationFrame(fanCamsRafId);
+    fanCamsRafId = requestAnimationFrame(() => {
+      const isOverflowing = reel.scrollWidth > reel.clientWidth + 4;
+      const controlsGroup = prevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.style.display = isOverflowing ? 'flex' : 'none';
+      }
+      const maxScroll = reel.scrollWidth - reel.clientWidth;
+      const atStart = reel.scrollLeft <= 5;
+      const atEnd = reel.scrollLeft >= maxScroll - 5;
+      if (prevBtn) {
+        prevBtn.disabled = atStart;
+        prevBtn.classList.toggle('is-disabled', atStart);
+        prevBtn.setAttribute('aria-disabled', String(atStart));
+      }
+      if (nextBtn) {
+        nextBtn.disabled = atEnd;
+        nextBtn.classList.toggle('is-disabled', atEnd);
+        nextBtn.setAttribute('aria-disabled', String(atEnd));
+      }
+    });
+  }
+
+  function updateActiveFanCamHighlight() {
+    if (!reel || !fanCards.length) return;
+    const containerCenter = reel.getBoundingClientRect().left + reel.clientWidth / 2;
+    let closestCard: Element | null = null;
+    let closestDist = Infinity;
+
+    fanCards.forEach((card) => {
+      const rect = card.getBoundingClientRect();
+      const cardCenter = rect.left + rect.width / 2;
+      const dist = Math.abs(containerCenter - cardCenter);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestCard = card;
+      }
+    });
+
+    fanCards.forEach((card) => {
+      if (card === closestCard) {
+        card.classList.add('is-scroll-active');
+      } else {
+        card.classList.remove('is-scroll-active');
+      }
+    });
+
+    if (fanCamsScrollSettleTimeout) clearTimeout(fanCamsScrollSettleTimeout);
+    fanCamsScrollSettleTimeout = setTimeout(() => {
+      fanCards.forEach((card) => card.classList.remove('is-scroll-active'));
+      const controlsGroup = prevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.classList.remove('is-scrolling');
+      }
+    }, 800);
+  }
+
+  if (reel) {
+    updateFanCamsNav();
+    window.addEventListener('resize', updateFanCamsNav, { passive: true });
+
+    reel.addEventListener('scroll', () => {
+      const controlsGroup = prevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.classList.add('is-scrolling');
+      }
+      updateFanCamsNav();
+      updateActiveFanCamHighlight();
+    }, { passive: true });
+
+    reel.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        reel.scrollLeft += e.deltaX;
+      }
+    }, { passive: true });
+
+    prevBtn?.addEventListener('click', () => {
+      const controlsGroup = prevBtn?.parentElement;
+      if (controlsGroup) controlsGroup.classList.add('is-scrolling');
       reel.scrollBy({ left: -220, behavior: 'smooth' });
     });
 
-    nextBtn.addEventListener('click', () => {
+    nextBtn?.addEventListener('click', () => {
+      const controlsGroup = nextBtn?.parentElement;
+      if (controlsGroup) controlsGroup.classList.add('is-scrolling');
       reel.scrollBy({ left: 220, behavior: 'smooth' });
     });
   }

@@ -8,10 +8,28 @@ import {
   METRO_SETLIST_INSPIRES,
   METRO_COACH_TABS,
   METRO_COPY,
-  COACH_DEFAULTS
+  METRO_STORAGE_KEYS,
+  COACH_DEFAULTS,
+  DEFAULT_BEAT_COLORS,
+  getTempoMarking
 } from '../../../settings/metronome.config';
 import { showToast } from '../toast.js';
-import { metroState, getTimeSignature, getSubdivision, getBeatTier } from './metroState.js';
+import {
+  metroState,
+  getTimeSignature,
+  getSubdivision,
+  getBeatTier,
+  getLevelColor,
+  setLevelColor,
+  resetLevelColors,
+  applyLevelColors,
+  loadSetlists,
+  saveSetlists,
+  getSetlists,
+  getSetlistById,
+  upsertSetlist,
+  deleteSetlist
+} from './metroState.js';
 
 export function createUi(callbacks) {
   const els = {};
@@ -32,21 +50,37 @@ export function createUi(callbacks) {
   let coachLiveTab = null;
   let midiElsBound = false;
   let activeSetlistFilter = 'inspires';
+  let activeSetlistSort = 'default';
   let lastSetlistEntry = null;
   let topbarTitleVisible = false;
   let topbarUndoVisible = false;
   let isRestoringFromUndo = false;
   let flashAlt = false;
+  let tempoMarkingTimer = null;
+  let tempoMarkingHideTimer = null;
+  let tempoSwapAlt = false;
+  let currentMarkingText = '';
+
+  // Hierarchical Setlist & Song Navigation State
+  let activeMenuTab = 'setlists'; // 'setlists' | 'songs'
+  let currentSetlistDetailId = null;
+  let currentEditingSong = null;
+  let songEditParentContext = { from: 'songs-browse' }; // { from: 'setlist-detail', setlistId } | { from: 'songs-browse' }
+  let songEditActiveTab = 'details'; // 'details' | 'structure'
+  let editingSetlistNameId = null; // null for create, string for rename
+  let songPickerSelectedIds = new Set();
+  let songPickerSearchQuery = '';
 
   // custom + search state
   let customEntries = [];
   let setlistSearchQuery = '';
-  let setlistSearchActive = false;
-  let externalResults = [];
-  let externalLoading = false;
-  let externalSearchGen = 0;
   let searchDebounceTimer = null;
-  let externalDebounceTimer = null;
+  let webSearchDebounceTimer = null;
+  let songFormTapTimes = [];
+
+  // setlist song drag reorder state
+  let songDragState = null;
+  let songDragSuppressClickUntil = 0;
 
   const NS = 'http://www.w3.org/2000/svg';
 
@@ -69,12 +103,17 @@ export function createUi(callbacks) {
         customEntries = [];
         return;
       }
-      customEntries = parsed.filter((e) => e && typeof e.title === 'string' && typeof e.artist === 'string' && typeof e.bpm === 'number')
-        .map((e) => ({
+      customEntries = parsed.filter((e) => e && typeof e.title === 'string' && typeof e.artist === 'string')
+        .map((e, idx) => ({
+          id: e.id || `custom-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 6)}`,
           title: String(e.title).trim().slice(0, 120),
           artist: String(e.artist).trim().slice(0, 120) || 'Unknown Artist',
-          bpm: Math.min(300, Math.max(20, Math.round(Number(e.bpm) || 120))),
-          category: 'custom',
+          bpm: clampBpmLocal(e.bpm),
+          category: (e.category === 'covers' || e.category === 'originals') ? e.category : 'custom',
+          timeSig: e.timeSig ? String(e.timeSig).trim() : '',
+          countIn: !!e.countIn,
+          structure: Array.isArray(e.structure) ? e.structure : [],
+          notes: e.notes ? String(e.notes).trim().slice(0, 80) : '',
           isCustom: true
         }));
     } catch (e) {
@@ -100,6 +139,7 @@ export function createUi(callbacks) {
     reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     els.dial = q('metroDial');
+    els.tempoMarking = q('metroTempoMarking');
     els.bpmNum = q('metroBpmNum');
     els.bpmInput = q('metroBpmInput');
     els.beatDotsWrap = q('metroBeatDots');
@@ -113,6 +153,12 @@ export function createUi(callbacks) {
     els.setlistBtn = q('metroSetlistBtn');
     els.tapBtn = q('metroTapBtn');
     els.playBtn = q('metroPlayBtn');
+    els.nowPlaying = q('metroNowPlaying');
+    els.nowPlayingTitle = q('metroNowPlayingTitle');
+    els.nowPlayingSection = q('metroNowPlayingSection');
+    els.nowPlayingBars = q('metroNowPlayingBars');
+    els.nowPlayingSep = q('metroNowPlayingSep');
+    els.nowPlayingExit = q('metroNowPlayingExit');
     els.coachBtn = q('metroCoachBtn');
     els.settingsBtn = q('metroSettingsBtn');
 
@@ -136,17 +182,122 @@ export function createUi(callbacks) {
     els.subRow = q('metroSubRow');
     els.subInfo = q('metroSubInfo');
 
-    els.setlistList = q('metroSetlistList');
+    // Top 50/50 Navigation
+    els.navSetlists = q('metroNavSetlists');
+    els.navSongs = q('metroNavSongs');
+
+    // Level 1 Setlists List View
+    els.setlistsListView = q('metroSetlistsListView');
+    els.setlistsList = q('metroSetlistsList');
+
+    // Level 2 Setlist Detail View
+    els.setlistDetailView = q('metroSetlistDetailView');
+    els.setlistDetailBackBtn = q('metroSetlistDetailBackBtn');
+    els.setlistDetailTitle = q('metroSetlistDetailTitle');
+    els.setlistDetailPlayBtn = q('metroSetlistDetailPlayBtn');
+    els.setlistDetailCount = q('metroSetlistDetailCount');
+    els.setlistDetailEditNameBtn = q('metroSetlistDetailEditNameBtn');
+    els.setlistDetailAddSongBtn = q('metroSetlistDetailAddSongBtn');
+    els.setlistDetailSongs = q('metroSetlistDetailSongs');
+
+    // Level 1 Songs Browse View
+    els.songsBrowseView = q('metroSongsBrowseView');
     els.setlistFilters = q('metroSetlistFilters');
-    els.setlistHeader = q('metroSetlistHeader');
-    els.setlistSearchToggle = q('metroSetlistSearchToggle');
-    els.setlistSearchWrap = q('metroSetlistSearchWrap');
-    els.setlistSearchInput = q('metroSetlistSearchInput');
-    els.setlistSearchClear = q('metroSetlistSearchClear');
-    els.setlistCreateBtn = q('metroSetlistCreateBtn');
-    els.setlistExternal = q('metroSetlistExternal');
-    els.customFormWrap = q('metroCustomFormWrap');
-    els.customCount = q('metroCustomCount');
+    els.setlistSortBar = q('metroSetlistSortBar');
+    els.setlistList = q('metroSetlistList');
+
+    // Level 3 / Direct Song Edit View
+    els.songEditView = q('metroSongEditView');
+    els.songEditBackBtn = q('metroSongEditBackBtn');
+    els.songEditTitle = q('metroSongEditTitle');
+    els.songEditPlayBtn = q('metroSongEditPlayBtn');
+    els.songEditTabs = q('metroSongEditTabs');
+    els.songEditTabDetails = q('metroSongEditTabDetails') || q('metroSongEditTabCustom');
+    els.songEditTabStructure = q('metroSongEditTabStructure') || q('metroSongEditTabSearch');
+    els.songEditPaneDetails = q('metroSongEditPaneDetails') || q('metroSongEditCustomPane');
+    els.songEditPaneStructure = q('metroSongEditPaneStructure') || q('metroSongEditSearchPane');
+
+    // Song Form Fields
+    els.songFormTitle = q('metroSongFormTitle') || q('metroCustomTitle');
+    els.songFormArtist = q('metroSongFormArtist') || q('metroCustomArtist');
+    els.songFormBpm = q('metroSongFormBpm') || q('metroCustomBpm');
+    els.songFormBpmTap = q('metroSongFormBpmTap') || q('metroCustomTapBpmBtn');
+    els.songFormUseCurrentBpm = q('metroCustomUseCurrentBpmBtn');
+    els.songFormTimeSig = q('metroSongFormTimeSig') || q('metroCustomTimeSig');
+    els.songFormCategory = q('metroSongFormCategory') || q('metroCustomCategory');
+    els.songFormCountIn = q('metroSongFormCountIn') || q('metroCustomCountIn');
+    els.songFormNotes = q('metroSongFormNotes') || q('metroCustomNotes');
+    els.songEditCancelBtn = q('metroSongEditCancelBtn') || q('metroCustomCancelBtn');
+    els.songEditSaveBtn = q('metroSongEditSaveBtn') || q('metroCustomSubmitBtn');
+
+    // Web Lookup Fields
+    els.webSearchInput = q('metroSetlistWebSearchInput');
+    els.webSearchClear = q('metroSetlistWebSearchClear');
+    els.webResults = q('metroSetlistWebResults');
+
+    // Song Structure Builder
+    els.structureSummary = q('metroStructureSummary');
+    els.structureDeck = q('metroStructureDeck');
+    els.structureFlow = q('metroStructureFlow');
+    els.presetIntro = q('metroPresetIntro') || document.querySelector('[data-preset="Intro"]');
+    els.presetVerse = q('metroPresetVerse') || document.querySelector('[data-preset="Verse"]');
+    els.presetChorus = q('metroPresetChorus') || document.querySelector('[data-preset="Chorus"]');
+    els.presetBridge = q('metroPresetBridge') || document.querySelector('[data-preset="Bridge"]');
+    els.presetSolo = q('metroPresetSolo') || document.querySelector('[data-preset="Solo"]');
+    els.presetOutro = q('metroPresetOutro') || document.querySelector('[data-preset="Outro"]');
+    els.presetCustom = q('metroPresetCustom') || q('metroAddCustomSectionBtn');
+
+    // Setlist Name View
+    els.setlistNameView = q('metroSetlistNameView');
+    els.setlistNameBackBtn = q('metroSetlistNameBackBtn');
+    els.setlistNameTitle = q('metroSetlistNameTitle') || q('metroSetlistNameModalTitle');
+    els.setlistNameInput = q('metroSetlistNameInput');
+    els.setlistNameCancelBtn = q('metroSetlistNameCancelBtn');
+    els.setlistNameSaveBtn = q('metroSetlistNameSaveBtn') || q('metroSetlistNameSubmitBtn');
+
+    // Setlist Main Floating Title
+    els.setlistSheetMainTitle = q('metroSetlistSheetMainTitle');
+
+    // Fixed Bottom Dock (Add left, Search icon-only right — expands full width on demand)
+    els.bottomFixedDock = q('metroBottomFixedDock');
+    els.bottomAddCol = q('metroBottomAddCol');
+    els.bottomSearchCol = q('metroBottomSearchCol');
+    els.bottomSearchPill = q('metroBottomSearchPill');
+    els.bottomSearchToggleBtn = q('metroBottomSearchToggleBtn');
+    els.bottomSearchInput = q('metroBottomSearchInput');
+    els.bottomSearchClear = q('metroBottomSearchClear');
+    els.bottomSearchCloseBtn = q('metroBottomSearchCloseBtn');
+    els.bottomAddBtn = q('metroBottomAddBtn');
+    els.bottomAddBtnText = q('metroBottomAddBtnText') || q('metroBottomAddBtnLabel');
+
+    // Song Picker Modal
+    els.songPickerModal = q('metroSongPickerModal');
+    els.pickerCloseBtn = q('metroPickerCloseBtn') || q('metroSongPickerCloseBtn');
+    els.pickerSearchInput = q('metroPickerSearchInput');
+    els.pickerList = q('metroPickerList') || q('metroSongPickerList');
+    els.pickerCount = q('metroPickerCount') || q('metroPickerSelectedCount');
+    els.pickerConfirmBtn = q('metroPickerConfirmBtn') || q('metroSongPickerConfirmBtn');
+
+    // Topbar Center Playback
+    els.topbarCenter = q('metroTopbarCenter');
+    els.topbarTitle = q('metroTopbarTitle');
+    els.topbarUndo = q('metroTopbarUndo');
+    els.topbarPlayback = q('metroTopbarPlayback');
+    els.topbarSetlistTitle = q('metroTopbarSetlistTitle');
+    els.topbarSongLine = q('metroTopbarSongLine');
+    els.topbarSongTitle = q('metroTopbarSongTitle');
+    els.topbarSep = q('metroTopbarSep');
+    els.topbarSection = q('metroTopbarSection');
+    els.topbarCounter = q('metroTopbarCounter');
+    if (els.topbarCenter) els.topbarCenter.hidden = true;
+
+    // Setlist Navigation Deck
+    els.setlistDeck = q('metroSetlistDeck');
+    els.deckPrevSong = q('metroDeckPrevSong');
+    els.deckPrevSection = q('metroDeckPrevSection');
+    els.deckNextSection = q('metroDeckNextSection');
+    els.deckNextSong = q('metroDeckNextSong');
+
     els.topbarCenter = q('metroTopbarCenter');
     els.topbarTitle = q('metroTopbarTitle');
     els.topbarUndo = q('metroTopbarUndo');
@@ -161,11 +312,23 @@ export function createUi(callbacks) {
     els.keepAwakeToggle = q('metroKeepAwakeToggle');
     els.backgroundToggle = q('metroBackgroundToggle');
     els.optionsInfo = q('metroOptionsInfo');
-    els.pitchInfo = q('metroPitchInfo');
+    els.pitchInfo = q('metroPitchInfo') || q('metroPitchColorInfo');
     els.midiInfo = q('metroMidiInfo');
     els.copyLinkBtn = q('metroCopyLinkBtn');
     els.copyBadge = q('metroCopyBadge');
     els.resetPitchBtn = q('metroResetPitchBtn');
+    // beat color customization
+    els.colorLow = q('metroColorLow');
+    els.colorMid = q('metroColorMid');
+    els.colorHigh = q('metroColorHigh');
+    els.colorHexLow = q('metroColorHexLow');
+    els.colorHexMid = q('metroColorHexMid');
+    els.colorHexHigh = q('metroColorHexHigh');
+    els.colorDotLow = q('metroColorDotLow');
+    els.colorDotMid = q('metroColorDotMid');
+    els.colorDotHigh = q('metroColorDotHigh');
+    els.resetColorsBtn = q('metroResetColorsBtn');
+    els.colorInfo = q('metroColorInfo') || q('metroPitchColorInfo');
 
     els.coachTablist = q('metroCoachTablist');
     els.coachPanelsWrap = q('metroCoachPanels');
@@ -190,6 +353,10 @@ export function createUi(callbacks) {
     buildSetlist();
     buildSoundRow();
     buildCoachTabs();
+    // apply persisted beat colors before first render
+    try { applyLevelColors(); } catch (e) {}
+    renderBeatColors();
+    bindBeatColorEvents();
     attachListeners();
     renderAll();
     // apply saved tab
@@ -221,7 +388,8 @@ export function createUi(callbacks) {
     for (let i = 0; i < beats; i++) {
       const dot = document.createElement('span');
       const tier = getBeatTier(i);
-      dot.className = `metro-beat-dot brutal-press tier-${tier}`;
+      // Unified classes: metro-beat-dot + tier-* legacy + is-* spec + beat-* + beat-pip + muted gold — no layout thrash, single class string
+      dot.className = `metro-beat-dot beat-pip tier-${tier} is-${tier} beat-${tier}${tier === 'mute' ? ' beat-muted-gold beat-muted is-muted' : ''}`;
       dot.setAttribute('role', 'button');
       dot.setAttribute('tabindex', '0');
       dot.dataset.index = String(i);
@@ -263,7 +431,7 @@ export function createUi(callbacks) {
       const path = document.createElementNS(NS, 'path');
       const tier = getBeatTier(i);
       path.setAttribute('d', describeArc(cx, cy, r, start, end));
-      path.setAttribute('class', `metro-radial-seg tier-${tier}`);
+      path.setAttribute('class', `metro-radial-seg beat-pip tier-${tier} is-${tier} beat-${tier}${tier === 'mute' ? ' beat-muted-gold beat-muted is-muted' : ''}`);
       path.setAttribute('role', 'button');
       path.setAttribute('tabindex', '0');
       path.dataset.index = String(i);
@@ -309,15 +477,29 @@ export function createUi(callbacks) {
     if (beatDots[beatIndex]) {
       const dot = beatDots[beatIndex];
       dot.dataset.tier = t;
-      dot.classList.remove('tier-low', 'tier-mid', 'tier-high');
-      dot.classList.add(`tier-${t}`);
+      // Maintain legacy tier-* for existing CSS + spec beat-pip is-* + unified beat-* + muted gold
+      dot.classList.remove('tier-low', 'tier-mid', 'tier-high', 'tier-mute', 'beat-muted-gold', 'is-low', 'is-mid', 'is-high', 'is-muted', 'is-mute', 'beat-low', 'beat-mid', 'beat-high', 'beat-muted', 'beat-pip');
+      dot.classList.add(`tier-${t}`, `is-${t}`, `beat-${t}`);
+      dot.classList.add('beat-pip');
+      if (t === 'mute') {
+        dot.classList.add('beat-muted-gold', 'is-muted', 'beat-muted');
+      } else {
+        dot.classList.remove('beat-muted-gold', 'is-muted', 'is-mute', 'beat-muted');
+      }
+      // Strictly for muted: ensure inner pip opacity handling via CSS, no DOM thrash — only class toggles, no style reads
       dot.setAttribute('aria-label', label);
     }
     radialSegs.forEach((seg) => {
       if (seg.dataset.index === String(beatIndex)) {
         seg.dataset.tier = t;
-        seg.classList.remove('tier-low', 'tier-mid', 'tier-high');
-        seg.classList.add(`tier-${t}`);
+        seg.classList.remove('tier-low', 'tier-mid', 'tier-high', 'tier-mute', 'beat-muted-gold', 'is-low', 'is-mid', 'is-high', 'is-muted', 'is-mute', 'beat-low', 'beat-mid', 'beat-high', 'beat-muted', 'beat-pip');
+        seg.classList.add(`tier-${t}`, `is-${t}`, `beat-${t}`);
+        seg.classList.add('beat-pip');
+        if (t === 'mute') {
+          seg.classList.add('beat-muted-gold', 'is-muted', 'beat-muted');
+        } else {
+          seg.classList.remove('beat-muted-gold', 'is-muted', 'is-mute', 'beat-muted');
+        }
         seg.setAttribute('aria-label', label);
       }
     });
@@ -359,33 +541,52 @@ export function createUi(callbacks) {
     });
   }
 
+  // ==========================================
+  // HIERARCHICAL SETLIST & SONG SYSTEM
+  // ==========================================
+
   function getAllEntriesForSearch() {
     const base = [
       ...METRO_SETLIST_INSPIRES,
       ...((METRO_SETLIST_BY_CATEGORY.covers) || []),
-      ...((METRO_SETLIST_BY_CATEGORY.originals) || []),
+      ...((METRO_SETLIST_BY_CATEGORY.originals) || [])
     ];
     return [...base, ...customEntries];
   }
 
   function getFilteredSetlist() {
-    // Search mode — search whole catalogue regardless of pill
-    if (setlistSearchActive && setlistSearchQuery && setlistSearchQuery.length >= 1) {
+    let list = [];
+    if (setlistSearchQuery && setlistSearchQuery.length >= 1) {
       const q = setlistSearchQuery.toLowerCase();
       const all = getAllEntriesForSearch();
-      return all.filter((e) => {
-        const hay = `${e.title} ${e.artist} ${e.bpm}`.toLowerCase();
+      list = all.filter((e) => {
+        const hay = `${e.title} ${e.artist} ${e.bpm} ${e.category || ''} ${e.notes || ''}`.toLowerCase();
         return hay.includes(q);
       });
+    } else if (activeSetlistFilter === 'custom') {
+      list = customEntries.filter((e) => e.category === 'custom' || !e.category || e.isCustom);
+    } else if (activeSetlistFilter === 'covers') {
+      const staticCovers = METRO_SETLIST_BY_CATEGORY.covers || [];
+      const userCovers = customEntries.filter((e) => e.category === 'covers');
+      list = [...staticCovers, ...userCovers];
+    } else if (activeSetlistFilter === 'originals') {
+      const staticOriginals = METRO_SETLIST_BY_CATEGORY.originals || [];
+      const userOriginals = customEntries.filter((e) => e.category === 'originals');
+      list = [...staticOriginals, ...userOriginals];
+    } else {
+      list = [...METRO_SETLIST_INSPIRES];
     }
-    if (activeSetlistFilter === 'custom') {
-      return customEntries;
+
+    if (activeSetlistSort === 'bpm-asc') {
+      return [...list].sort((a, b) => a.bpm - b.bpm);
     }
-    const cat = activeSetlistFilter;
-    if (cat && METRO_SETLIST_BY_CATEGORY[cat]) return METRO_SETLIST_BY_CATEGORY[cat];
-    // custom handled above, fallback to inspires
-    if (customEntries.length && cat === 'custom') return customEntries;
-    return METRO_SETLIST_INSPIRES;
+    if (activeSetlistSort === 'bpm-desc') {
+      return [...list].sort((a, b) => b.bpm - a.bpm);
+    }
+    if (activeSetlistSort === 'alpha') {
+      return [...list].sort((a, b) => a.title.localeCompare(b.title));
+    }
+    return list;
   }
 
   function highlightSearch(text, query) {
@@ -400,154 +601,297 @@ export function createUi(callbacks) {
     return `${before}<span class="metro-setlist-search-highlight">${match}</span>${after}`;
   }
 
-  function renderSetlistList() {
-    if (!els.setlistList) return;
-    const entries = getFilteredSetlist();
-    els.setlistList.textContent = '';
+  function hideAllSetlistSubviews() {
+    if (els.setlistsListView) els.setlistsListView.hidden = true;
+    if (els.setlistDetailView) els.setlistDetailView.hidden = true;
+    if (els.songsBrowseView) els.songsBrowseView.hidden = true;
+    if (els.songEditView) els.songEditView.hidden = true;
+    if (els.setlistNameView) els.setlistNameView.hidden = true;
+  }
 
-    const isSearching = setlistSearchActive && setlistSearchQuery.length > 0;
+  function switchMenuTab(tab) {
+    activeMenuTab = tab === 'songs' ? 'songs' : 'setlists';
+    if (els.navSetlists) {
+      els.navSetlists.classList.toggle('active', activeMenuTab === 'setlists');
+      els.navSetlists.setAttribute('aria-selected', activeMenuTab === 'setlists' ? 'true' : 'false');
+    }
+    if (els.navSongs) {
+      els.navSongs.classList.toggle('active', activeMenuTab === 'songs');
+      els.navSongs.setAttribute('aria-selected', activeMenuTab === 'songs' ? 'true' : 'false');
+    }
 
-    if (!entries || entries.length === 0) {
+    if (activeMenuTab === 'setlists') {
+      showSetlistsListView();
+    } else {
+      showSongsBrowseView();
+    }
+  }
+
+  function updateSetlistMainTitle(title) {
+    if (els.setlistSheetMainTitle) {
+      els.setlistSheetMainTitle.textContent = title;
+    }
+  }
+
+  // --- LEVEL 1: SETLISTS LIST VIEW ---
+  function showSetlistsListView() {
+    hideAllSetlistSubviews();
+    if (els.setlistsListView) els.setlistsListView.hidden = false;
+    updateSetlistMainTitle('SETLISTS');
+    if (els.bottomAddBtnText) els.bottomAddBtnText.textContent = 'SETLIST';
+    renderSetlistsList();
+  }
+
+  function renderSetlistsList() {
+    if (!els.setlistsList) return;
+    const allSetlists = getSetlists();
+    let filtered = allSetlists;
+    if (setlistSearchQuery) {
+      const q = setlistSearchQuery.toLowerCase();
+      filtered = allSetlists.filter((s) => s.name.toLowerCase().includes(q));
+    }
+
+    els.setlistsList.textContent = '';
+
+    if (!filtered || filtered.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'metro-setlist-empty';
-      const isCovers = activeSetlistFilter === 'covers';
-      const isOriginals = activeSetlistFilter === 'originals';
-      const isCustom = activeSetlistFilter === 'custom';
-      const icon = document.createElement('i');
-      if (isSearching) icon.className = 'fa-solid fa-magnifying-glass metro-setlist-empty-icon';
-      else if (isCustom) icon.className = 'fa-solid fa-star metro-setlist-empty-icon';
-      else icon.className = isCovers
-        ? 'fa-solid fa-compact-disc metro-setlist-empty-icon'
-        : isOriginals
-          ? 'fa-solid fa-music metro-setlist-empty-icon'
-          : 'fa-solid fa-record-vinyl metro-setlist-empty-icon';
-      icon.setAttribute('aria-hidden', 'true');
-      const title = document.createElement('p');
-      title.className = 'metro-setlist-empty-title';
-      if (isSearching) title.textContent = `No matches for “${setlistSearchQuery}”`;
-      else title.textContent = isCovers
-        ? 'No covers yet'
-        : isOriginals
-          ? 'Originals coming soon'
-          : isCustom
-            ? 'No custom songs yet'
-            : 'No tracks in this setlist';
-      const sub = document.createElement('p');
-      sub.className = 'metro-setlist-empty-sub';
-      if (isSearching) sub.textContent = 'Try another title, artist or BPM. Scroll down for web results or create a custom song.';
-      else sub.textContent = isCovers
-        ? 'KINS covers will appear here once the catalogue lands. Tap Inspires to rehearse in the meantime.'
-        : isOriginals
-          ? 'KINS originals are in the oven — rehearse with Inspires tempos while you wait.'
-          : isCustom
-            ? 'Tap CREATE CUSTOM SONG above or add songs from search results. Your customs live here.'
-            : 'Switch to another filter to find tempos.';
+      empty.innerHTML = `
+        <i class="fa-solid fa-list-check metro-setlist-empty-icon" aria-hidden="true"></i>
+        <p class="metro-setlist-empty-title">${setlistSearchQuery ? 'NO MATCHING SETLISTS' : 'NO SETLISTS YET'}</p>
+        <p class="metro-setlist-empty-sub">${setlistSearchQuery ? `No setlists matching “${escHtmlShort(setlistSearchQuery)}”.` : 'Create your first setlist to organize songs for rehearsals or gigs.'}</p>
+      `;
       const cta = document.createElement('button');
       cta.type = 'button';
       cta.className = 'metro-setlist-empty-cta brutal-press';
-      if (isSearching) {
-        cta.innerHTML = '<i class="fa-solid fa-plus"></i> Create custom song';
-        cta.addEventListener('click', () => openCustomForm(setlistSearchQuery));
-      } else if (isCustom) {
-        cta.innerHTML = '<i class="fa-solid fa-plus"></i> Create custom song';
-        cta.addEventListener('click', () => openCustomForm(''));
-      } else {
-        cta.innerHTML = '<i class="fa-solid fa-arrow-right"></i> Browse Inspires';
-        cta.addEventListener('click', () => {
-          if (activeSetlistFilter !== 'inspires') setActiveSetlistFilter('inspires');
-        });
-      }
-      empty.appendChild(icon);
-      empty.appendChild(title);
-      empty.appendChild(sub);
-      if (!isSearching && activeSetlistFilter !== 'inspires') empty.appendChild(cta);
-      else if (isSearching || isCustom) empty.appendChild(cta);
-      els.setlistList.appendChild(empty);
-      // still show external section when searching even if local matches 0
-      updateExternalVisibility();
+      cta.innerHTML = '<i class="fa-solid fa-plus"></i> Create Setlist';
+      cta.addEventListener('click', () => showSetlistNameModal(null));
+      empty.appendChild(cta);
+      els.setlistsList.appendChild(empty);
       return;
     }
 
-    entries.forEach((entry) => {
-      const rowWrapper = document.createElement('div');
-      rowWrapper.className = 'metro-setlist-row-wrap';
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.className = 'metro-setlist-row brutal-press';
-      row.dataset.title = entry.title;
-      row.dataset.artist = entry.artist;
-      row.dataset.bpm = String(entry.bpm);
-      if (entry.inspirationId) row.dataset.inspirationId = entry.inspirationId;
-      row.setAttribute('aria-label', `Load ${entry.bpm} BPM — ${entry.title} by ${entry.artist}`);
-      const num = document.createElement('span');
-      num.className = 'metro-setlist-bpm';
-      num.textContent = `${entry.bpm}`;
-      const text = document.createElement('span');
-      text.className = 'metro-setlist-text';
-      const title = document.createElement('span');
-      title.className = 'metro-setlist-title';
-      if (isSearching) title.innerHTML = highlightSearch(entry.title, setlistSearchQuery);
-      else title.textContent = entry.title;
-      // append custom badge if needed
-      if (entry.category === 'custom' || entry.isCustom) {
-        const badge = document.createElement('span');
-        badge.className = 'metro-setlist-custom-badge';
-        badge.textContent = 'CUSTOM';
-        title.appendChild(badge);
+    filtered.forEach((setlist) => {
+      const card = document.createElement('div');
+      card.className = 'metro-setlist-card brutal-press';
+      if (metroState.activeSetlist && metroState.activeSetlist.id === setlist.id) {
+        card.classList.add('active-setlist');
       }
-      const artist = document.createElement('span');
-      artist.className = 'metro-setlist-artist';
-      if (isSearching) artist.innerHTML = highlightSearch(entry.artist, setlistSearchQuery);
-      else artist.textContent = entry.artist;
-      text.appendChild(title);
-      text.appendChild(artist);
-      const load = document.createElement('span');
-      load.className = 'metro-setlist-load';
-      load.setAttribute('aria-hidden', 'true');
-      load.textContent = 'SET';
-      row.appendChild(num);
-      row.appendChild(text);
-      row.appendChild(load);
-      row.addEventListener('click', () => {
-        if (callbacks.onSetlistSelect) {
-          callbacks.onSetlistSelect(entry);
+
+      const info = document.createElement('div');
+      info.className = 'metro-setlist-card-info';
+
+      const title = document.createElement('span');
+      title.className = 'metro-setlist-card-title';
+      title.textContent = setlist.name;
+
+      const meta = document.createElement('div');
+      meta.className = 'metro-setlist-card-meta';
+
+      const badge = document.createElement('span');
+      badge.className = 'metro-setlist-card-badge';
+      const count = (setlist.songs || []).length;
+      badge.textContent = `${count} ${count === 1 ? 'SONG' : 'SONGS'}`;
+      meta.appendChild(badge);
+
+      if (metroState.activeSetlist && metroState.activeSetlist.id === setlist.id) {
+        const liveTag = document.createElement('span');
+        liveTag.className = 'metro-setlist-tag';
+        liveTag.style.borderColor = 'var(--accent-neon-yellow)';
+        liveTag.style.color = 'var(--accent-neon-yellow)';
+        liveTag.textContent = 'ACTIVE';
+        meta.appendChild(liveTag);
+      }
+
+      info.appendChild(title);
+      info.appendChild(meta);
+
+      const actions = document.createElement('div');
+      actions.className = 'metro-setlist-card-actions';
+
+      const playBtn = document.createElement('button');
+      playBtn.type = 'button';
+      playBtn.className = 'metro-setlist-card-play-btn brutal-press';
+      playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+      playBtn.setAttribute('aria-label', `Play setlist ${setlist.name}`);
+      playBtn.title = `Play setlist ${setlist.name}`;
+      playBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (callbacks.onPlaySetlist) callbacks.onPlaySetlist(setlist.id);
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'metro-setlist-card-del-btn brutal-press';
+      delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+      delBtn.title = `Delete setlist ${setlist.name}`;
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm(`Delete setlist “${setlist.name}”?`)) {
+          deleteSetlist(setlist.id);
+          renderSetlistsList();
+          showToast(`Deleted “${setlist.name}”`, 'info');
         }
       });
-      rowWrapper.appendChild(row);
-      if (entry.category === 'custom' || entry.isCustom) {
-        const del = document.createElement('button');
-        del.type = 'button';
-        del.className = 'metro-setlist-delete';
-        del.setAttribute('aria-label', `Delete custom song ${entry.title}`);
-        del.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i>';
-        del.addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteCustomEntry(entry);
-        });
-        rowWrapper.appendChild(del);
-      }
-      els.setlistList.appendChild(rowWrapper);
+
+      actions.appendChild(playBtn);
+      actions.appendChild(delBtn);
+
+      card.appendChild(info);
+      card.appendChild(actions);
+
+      card.addEventListener('click', () => {
+        showSetlistDetailView(setlist.id);
+      });
+
+      els.setlistsList.appendChild(card);
     });
-    updateExternalVisibility();
   }
 
-  function buildSetlist() {
-    if (!els.setlistList) return;
-    loadCustomEntries();
+  // --- LEVEL 2: SETLIST DETAIL VIEW ---
+  function showSetlistDetailView(setlistId) {
+    currentSetlistDetailId = setlistId;
+    const setlist = getSetlistById(setlistId);
+    if (!setlist) {
+      showSetlistsListView();
+      return;
+    }
+
+    hideAllSetlistSubviews();
+    if (els.setlistDetailView) els.setlistDetailView.hidden = false;
+
+    updateSetlistMainTitle('SETLIST');
+    if (els.setlistDetailTitle) els.setlistDetailTitle.textContent = setlist.name;
+    if (els.bottomAddBtnText) els.bottomAddBtnText.textContent = 'SONGS';
+
+    renderSetlistDetailSongs(setlist);
+  }
+
+  function renderSetlistDetailSongs(setlist) {
+    if (!els.setlistDetailSongs) return;
+    els.setlistDetailSongs.textContent = '';
+
+    const songs = setlist.songs || [];
+    if (els.setlistDetailCount) {
+      els.setlistDetailCount.textContent = `${songs.length} ${songs.length === 1 ? 'SONG' : 'SONGS'}`;
+    }
+
+    if (songs.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'metro-setlist-empty';
+      empty.innerHTML = `
+        <i class="fa-solid fa-music metro-setlist-empty-icon" aria-hidden="true"></i>
+        <p class="metro-setlist-empty-title">NO SONGS IN THIS SETLIST</p>
+        <p class="metro-setlist-empty-sub">Add songs from the KINS catalogue or custom songs to build your setlist order.</p>
+      `;
+      const cta = document.createElement('button');
+      cta.type = 'button';
+      cta.className = 'metro-setlist-empty-cta brutal-press';
+      cta.innerHTML = '<i class="fa-solid fa-plus"></i> Add Songs';
+      cta.addEventListener('click', () => showSongPickerModal(setlist.id));
+      empty.appendChild(cta);
+      els.setlistDetailSongs.appendChild(empty);
+      return;
+    }
+
+    songs.forEach((song, idx) => {
+      const row = document.createElement('div');
+      row.className = 'metro-setlist-song-row brutal-press';
+      if (metroState.activeSetlist && metroState.activeSetlist.id === setlist.id && metroState.activeSetlistSongIdx === idx) {
+        row.classList.add('active-loaded');
+      }
+      row.dataset.index = String(idx);
+      row.dataset.songId = song.id || `${song.title}::${song.artist}`;
+
+      const num = document.createElement('span');
+      num.className = 'metro-setlist-song-num';
+      num.textContent = `${idx + 1}.`;
+
+      const info = document.createElement('div');
+      info.className = 'metro-setlist-song-info';
+
+      const title = document.createElement('span');
+      title.className = 'metro-setlist-song-title';
+      title.textContent = song.title;
+
+      const sub = document.createElement('div');
+      sub.className = 'metro-setlist-song-sub';
+      sub.textContent = `${song.bpm} BPM • ${song.artist || 'Unknown'}`;
+
+      if (song.timeSig) {
+        const ts = document.createElement('span');
+        ts.className = 'metro-setlist-tag';
+        ts.textContent = song.timeSig;
+        sub.appendChild(ts);
+      }
+
+      if (song.structure && song.structure.length > 0) {
+        const totalBars = song.structure.reduce((sum, s) => sum + (Number(s.bars) || 0), 0);
+        const structTag = document.createElement('span');
+        structTag.className = 'metro-setlist-tag';
+        structTag.textContent = `${song.structure.length} sec • ${totalBars} bars`;
+        sub.appendChild(structTag);
+      }
+
+      info.appendChild(title);
+      info.appendChild(sub);
+
+      const ctrls = document.createElement('div');
+      ctrls.className = 'metro-setlist-song-ctrls';
+
+      const dragHandle = document.createElement('button');
+      dragHandle.type = 'button';
+      dragHandle.className = 'metro-setlist-song-drag-handle';
+      dragHandle.innerHTML = '<i class="fa-solid fa-grip-lines" aria-hidden="true"></i>';
+      dragHandle.setAttribute('aria-label', `Drag to reorder ${song.title}`);
+      dragHandle.title = 'Hold and drag to reorder';
+      dragHandle.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'metro-setlist-song-remove-btn';
+      removeBtn.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+      removeBtn.setAttribute('aria-label', `Remove ${song.title} from setlist`);
+      removeBtn.title = 'Remove song from setlist';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setlist.songs.splice(idx, 1);
+        saveSetlists();
+        renderSetlistDetailSongs(setlist);
+        showToast(`Removed “${song.title}” from setlist`, 'info');
+      });
+
+      ctrls.appendChild(dragHandle);
+      ctrls.appendChild(removeBtn);
+
+      row.appendChild(num);
+      row.appendChild(info);
+      row.appendChild(ctrls);
+
+      // Click to open song editor (suppressed if recent drag)
+      row.addEventListener('click', () => {
+        if (Date.now() < songDragSuppressClickUntil) return;
+        if (songDragState && songDragState.isDragging) return;
+        showSongEditView(song, { from: 'setlist-detail', setlistId: setlist.id, songIdx: idx });
+      });
+
+      // Hold card or handle and drag to reorder — pointer events cover mouse + touch
+      attachSongRowDragHandlers(row, dragHandle, setlist, idx);
+
+      els.setlistDetailSongs.appendChild(row);
+    });
+  }
+
+  // --- LEVEL 1: SONGS BROWSE VIEW ---
+  function showSongsBrowseView() {
+    hideAllSetlistSubviews();
+    if (els.songsBrowseView) els.songsBrowseView.hidden = false;
+    updateSetlistMainTitle('SONGS');
+    if (els.bottomAddBtnText) els.bottomAddBtnText.textContent = 'SONG';
     renderSetlistFilters();
     renderSetlistList();
-    bindSetlistSearch();
-    updateCustomCountBadge();
-    // close custom form initially
-    if (els.customFormWrap) els.customFormWrap.hidden = true;
-    if (els.setlistExternal) els.setlistExternal.hidden = true;
-  }
-
-  function updateCustomCountBadge() {
-    if (!els.customCount) return;
-    const n = customEntries.length;
-    els.customCount.textContent = String(n);
-    els.customCount.hidden = n === 0;
   }
 
   function renderSetlistFilters() {
@@ -559,502 +903,1480 @@ export function createUi(callbacks) {
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
       btn.setAttribute('tabindex', isActive ? '0' : '-1');
-      // update count badge where present
-      const badge = btn.querySelector('.metro-setlist-filter-count');
-      if (badge) {
-        let count = 0;
-        if (f === 'custom') count = customEntries.length;
-        else {
-          const entries = METRO_SETLIST_BY_CATEGORY[f] || [];
-          count = entries.length;
-        }
-        badge.textContent = String(count);
-        // for custom show only if >0, for others keep existing behavior
-        if (f === 'custom') badge.hidden = count === 0;
-        else badge.hidden = count === 0 && f !== 'inspires';
-        // inspires always shows? keep 15 visible
-        if (f === 'inspires') badge.hidden = false;
-      } else if (f === 'covers' || f === 'originals') {
-        // no badge element yet — fine, CSS handles empty
-      }
-      // attach once
+
       if (!btn.dataset.bound) {
         btn.dataset.bound = '1';
         btn.addEventListener('click', () => setActiveSetlistFilter(f));
-        btn.addEventListener('keydown', (e) => {
-          if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-            e.preventDefault();
-            const order = ['inspires', 'covers', 'originals', 'custom'];
-            const idx = order.indexOf(activeSetlistFilter);
-            let nextIdx = idx;
-            if (e.key === 'ArrowRight') nextIdx = (idx + 1) % order.length;
-            else nextIdx = (idx - 1 + order.length) % order.length;
-            const nextBtn = els.setlistFilters.querySelector(`[data-filter="${order[nextIdx]}"]`);
-            if (nextBtn) {
-              setActiveSetlistFilter(order[nextIdx]);
-              nextBtn.focus();
-            }
-          }
-        });
       }
     });
+  }
+
+  function attachSongRowDragHandlers(row, handle, setlist, startIdx) {
+    let pointerId = null;
+    let startY = 0;
+    let startX = 0;
+    let didStartDrag = false;
+    let placeholder = null;
+    let rafId = null;
+    let lastY = 0;
+
+    const threshold = 6;
+    const onPointerDown = (e) => {
+      // Ignore right-click / non-primary
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      // Don't hijack clicks on the remove button
+      if (e.target.closest('.metro-setlist-song-remove-btn')) return;
+
+      startX = e.clientX;
+      startY = e.clientY;
+      lastY = e.clientY;
+      didStartDrag = false;
+      pointerId = e.pointerId;
+
+      const onMove = (ev) => {
+        if (pointerId !== null && ev.pointerId !== pointerId) return;
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        lastY = ev.clientY;
+        if (!didStartDrag) {
+          if (Math.abs(dy) < threshold && Math.abs(dx) < threshold) return;
+          if (Math.abs(dx) > Math.abs(dy) * 1.2) {
+            cleanup();
+            return;
+          }
+          // Begin dragging
+          didStartDrag = true;
+          songDragState = { isDragging: true, row, setlist, startIdx };
+          row.classList.add('is-dragging');
+          try { row.setPointerCapture(pointerId); } catch (err) {}
+
+          const rect = row.getBoundingClientRect();
+          row.style.width = `${rect.width}px`;
+          row.style.boxSizing = 'border-box';
+
+          // Create placeholder in place of row
+          placeholder = document.createElement('div');
+          placeholder.className = 'metro-setlist-song-row drag-placeholder drop-placeholder-slot';
+          placeholder.style.height = `${rect.height}px`;
+          placeholder.style.width = '100%';
+          placeholder.setAttribute('aria-hidden', 'true');
+          row.parentNode.insertBefore(placeholder, row);
+
+          // Position row as smooth floating overlay
+          row.style.position = 'relative';
+          row.style.zIndex = '100';
+          row.style.transition = 'none';
+          row.style.pointerEvents = 'none';
+          row.style.transform = 'translate3d(0, 0, 0) scale(1.02) rotate(0.6deg)';
+          if (els.setlistDetailSongs) els.setlistDetailSongs.style.touchAction = 'none';
+        }
+
+        if (!didStartDrag) return;
+        if (ev.cancelable) ev.preventDefault();
+
+        // Translate the floating overlay row directly with pointer
+        row.style.transform = `translate3d(0, ${dy}px, 0) scale(1.02) rotate(0.6deg)`;
+
+        // Move placeholder based on pointer Y
+        if (!rafId) {
+          rafId = requestAnimationFrame(() => {
+            rafId = null;
+            if (!placeholder || !placeholder.parentNode) return;
+            const container = els.setlistDetailSongs;
+            if (!container) return;
+            const pointerY = lastY;
+            const children = Array.from(container.children).filter((c) => c !== row && c !== placeholder && c.classList.contains('metro-setlist-song-row'));
+            let inserted = false;
+            for (let i = 0; i < children.length; i++) {
+              const child = children[i];
+              const r = child.getBoundingClientRect();
+              const mid = r.top + r.height / 2;
+              if (pointerY < mid) {
+                if (placeholder.nextElementSibling !== child) {
+                  container.insertBefore(placeholder, child);
+                }
+                inserted = true;
+                break;
+              }
+            }
+            if (!inserted && children.length > 0) {
+              const last = children[children.length - 1];
+              if (placeholder.previousElementSibling !== last) {
+                container.appendChild(placeholder);
+              }
+            }
+            // Auto-scroll container when near edges
+            const cRect = container.getBoundingClientRect();
+            const edge = 64;
+            if (pointerY < cRect.top + edge) {
+              container.scrollTop -= 10;
+            } else if (pointerY > cRect.bottom - edge) {
+              container.scrollTop += 10;
+            }
+          });
+        }
+      };
+
+      const onUp = (ev) => {
+        if (pointerId !== null && ev.pointerId !== pointerId && ev.type !== 'pointercancel') return;
+        cleanup();
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+
+        if (!didStartDrag) {
+          return;
+        }
+        const container = els.setlistDetailSongs;
+        if (container && placeholder && placeholder.parentNode) {
+          const allChildren = Array.from(container.children);
+          const phIdx = allChildren.indexOf(placeholder);
+          let newIdx = 0;
+          for (let i = 0; i < phIdx; i++) {
+            const c = allChildren[i];
+            if (c.classList.contains('metro-setlist-song-row') && c !== row && !c.classList.contains('drag-placeholder') && !c.classList.contains('drop-placeholder-slot')) newIdx++;
+          }
+          // Cleanup visuals
+          row.classList.remove('is-dragging');
+          row.style.width = '';
+          row.style.position = '';
+          row.style.zIndex = '';
+          row.style.boxSizing = '';
+          row.style.transform = '';
+          row.style.transition = '';
+          row.style.pointerEvents = '';
+          try { row.releasePointerCapture(pointerId); } catch (err) {}
+          if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+          if (container) container.style.touchAction = '';
+          if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+          placeholder = null;
+          songDragState = null;
+          songDragSuppressClickUntil = Date.now() + 400;
+
+          if (newIdx !== startIdx) {
+            const songs = setlist.songs;
+            const [moved] = songs.splice(startIdx, 1);
+            const clamped = Math.max(0, Math.min(songs.length, newIdx));
+            songs.splice(clamped, 0, moved);
+            saveSetlists();
+            renderSetlistDetailSongs(setlist);
+            showToast(`Moved “${moved.title}” to #${clamped + 1}`, 'info');
+          } else {
+            if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+            renderSetlistDetailSongs(setlist);
+          }
+        } else {
+          row.classList.remove('is-dragging');
+          row.style.width = '';
+          row.style.position = '';
+          row.style.zIndex = '';
+          row.style.transform = '';
+          row.style.transition = '';
+          row.style.pointerEvents = '';
+          if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+          if (els.setlistDetailSongs) els.setlistDetailSongs.style.touchAction = '';
+          songDragState = null;
+          songDragSuppressClickUntil = Date.now() + 400;
+        }
+      };
+
+      const cleanup = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+      };
+
+      window.addEventListener('pointermove', onMove, { passive: false });
+      window.addEventListener('pointerup', onUp, { passive: true });
+      window.addEventListener('pointercancel', onUp, { passive: true });
+    };
+
+    row.addEventListener('pointerdown', onPointerDown, { passive: true });
+    handle.addEventListener('pointerdown', onPointerDown, { passive: true });
   }
 
   function setActiveSetlistFilter(filter) {
     if (!['inspires', 'covers', 'originals', 'custom'].includes(filter)) return;
-    if (filter === activeSetlistFilter && els.setlistList && els.setlistList.children.length && !setlistSearchActive) {
-      // already active — still ensure visual sync
-      renderSetlistFilters();
-      return;
-    }
-    // if searching, clear search first? keep search query but switch pill visually; local list already filtered by search irrespective
-    // To keep UX clear, when user taps a pill while searching we clear search
-    if (setlistSearchActive && setlistSearchQuery) {
-      clearSetlistSearch();
-    }
     activeSetlistFilter = filter;
     renderSetlistFilters();
     renderSetlistList();
-    closeCustomForm();
   }
 
-  // ---------- Setlist search + external + custom ----------
+  function bindSetlistSortBar() {
+    if (!els.setlistSortBar) return;
+    const chips = els.setlistSortBar.querySelectorAll('.metro-setlist-sort-chip');
+    chips.forEach((chip) => {
+      if (chip.dataset.bound) return;
+      chip.dataset.bound = '1';
+      chip.addEventListener('click', () => {
+        const s = chip.getAttribute('data-sort') || 'default';
+        activeSetlistSort = s;
+        chips.forEach((c) => c.classList.toggle('active', c.getAttribute('data-sort') === s));
+        renderSetlistList();
+      });
+    });
+  }
 
-  function bindSetlistSearch() {
-    if (!els.setlistSearchToggle) return;
-    if (els.setlistSearchToggle.dataset.bound) return;
-    els.setlistSearchToggle.dataset.bound = '1';
-    els.setlistSearchToggle.addEventListener('click', toggleSetlistSearch);
-    if (els.setlistSearchInput) {
-      els.setlistSearchInput.addEventListener('input', onSetlistSearchInput);
-      els.setlistSearchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          if (setlistSearchQuery) {
-            clearSetlistSearch();
-            e.stopPropagation();
-          } else {
-            toggleSetlistSearch(false);
+  function renderSetlistList() {
+    if (!els.setlistList) return;
+    const entries = getFilteredSetlist();
+    els.setlistList.textContent = '';
+
+    if (!entries || entries.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'metro-setlist-empty';
+      empty.innerHTML = `
+        <i class="fa-solid fa-music metro-setlist-empty-icon" aria-hidden="true"></i>
+        <p class="metro-setlist-empty-title">NO SONGS FOUND</p>
+        <p class="metro-setlist-empty-sub">No songs found in this category.</p>
+      `;
+      const cta = document.createElement('button');
+      cta.type = 'button';
+      cta.className = 'metro-setlist-empty-cta brutal-press';
+      cta.innerHTML = '<i class="fa-solid fa-plus"></i> Create Song';
+      cta.addEventListener('click', () => showSongEditView(null, { from: 'songs-browse' }));
+      empty.appendChild(cta);
+      els.setlistList.appendChild(empty);
+      return;
+    }
+
+    entries.forEach((entry) => {
+      const rowWrapper = document.createElement('div');
+      rowWrapper.className = 'metro-setlist-row-wrap';
+
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'metro-setlist-row brutal-press';
+      if (lastSetlistEntry && lastSetlistEntry.title === entry.title && lastSetlistEntry.artist === entry.artist && lastSetlistEntry.bpm === entry.bpm) {
+        row.classList.add('active-loaded');
+      }
+
+      const num = document.createElement('span');
+      num.className = 'metro-setlist-bpm';
+      num.textContent = `${entry.bpm}`;
+
+      const text = document.createElement('span');
+      text.className = 'metro-setlist-text';
+
+      const titleWrap = document.createElement('span');
+      titleWrap.className = 'metro-setlist-title-wrap';
+
+      const title = document.createElement('span');
+      title.className = 'metro-setlist-title';
+      title.innerHTML = highlightSearch(entry.title, setlistSearchQuery);
+      titleWrap.appendChild(title);
+
+      if (entry.isCustom || entry.category === 'custom') {
+        const badge = document.createElement('span');
+        badge.className = 'metro-setlist-tag';
+        badge.textContent = 'CUSTOM';
+        titleWrap.appendChild(badge);
+      }
+
+      const metaRow = document.createElement('span');
+      metaRow.className = 'metro-setlist-meta-row';
+
+      const artist = document.createElement('span');
+      artist.className = 'metro-setlist-artist';
+      artist.innerHTML = highlightSearch(entry.artist, setlistSearchQuery);
+      metaRow.appendChild(artist);
+
+      if (entry.timeSig) {
+        const tsTag = document.createElement('span');
+        tsTag.className = 'metro-setlist-tag';
+        tsTag.textContent = entry.timeSig;
+        metaRow.appendChild(tsTag);
+      }
+
+      text.appendChild(titleWrap);
+      text.appendChild(metaRow);
+
+      const load = document.createElement('span');
+      load.className = 'metro-setlist-load';
+      load.innerHTML = '<i class="fa-solid fa-play" aria-hidden="true"></i>';
+      load.setAttribute('aria-hidden', 'true');
+      load.title = `Load ${entry.title}`;
+
+      row.appendChild(num);
+      row.appendChild(text);
+      row.appendChild(load);
+
+      row.addEventListener('click', () => {
+        if (callbacks.onSetlistSelect) {
+          callbacks.onSetlistSelect(entry);
+        }
+      });
+
+      rowWrapper.appendChild(row);
+
+      // Edit song button
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'metro-setlist-edit-btn brutal-press';
+      editBtn.title = `Edit ${entry.title}`;
+      editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+      editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showSongEditView(entry, { from: 'songs-browse' });
+      });
+      rowWrapper.appendChild(editBtn);
+
+      els.setlistList.appendChild(rowWrapper);
+    });
+  }
+
+  // --- LEVEL 3 / DIRECT: SONG DETAIL & STRUCTURE VIEW ---
+  function showSongEditView(song, parentContext) {
+    songEditParentContext = parentContext || { from: 'songs-browse' };
+    currentEditingSong = song
+      ? JSON.parse(JSON.stringify(song))
+      : {
+          id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          title: '',
+          artist: '',
+          bpm: metroState.bpm,
+          timeSig: getTimeSignature().id || '4-4',
+          category: 'custom',
+          countIn: false,
+          notes: '',
+          structure: []
+        };
+
+    if (!Array.isArray(currentEditingSong.structure)) {
+      currentEditingSong.structure = [];
+    }
+
+    hideAllSetlistSubviews();
+    if (els.songEditView) els.songEditView.hidden = false;
+    updateSetlistMainTitle(song ? 'SONG DETAILS' : 'NEW SONG');
+
+    // Back Button — icon only
+    if (els.songEditBackBtn) {
+      els.songEditBackBtn.innerHTML = '<i class="fa-solid fa-arrow-left" aria-hidden="true"></i>';
+    }
+
+    if (els.songEditTitle) {
+      els.songEditTitle.textContent = song && song.title ? song.title : 'NEW SONG';
+    }
+
+    // Populate Fields
+    if (els.songFormTitle) els.songFormTitle.value = currentEditingSong.title || '';
+    if (els.songFormArtist) els.songFormArtist.value = currentEditingSong.artist || '';
+    if (els.songFormBpm) els.songFormBpm.value = String(currentEditingSong.bpm || metroState.bpm);
+    if (els.songFormTimeSig) els.songFormTimeSig.value = currentEditingSong.timeSig || '4-4';
+    if (els.songFormCategory) els.songFormCategory.value = currentEditingSong.category || 'custom';
+    if (els.songFormCountIn) els.songFormCountIn.checked = !!currentEditingSong.countIn;
+    if (els.songFormNotes) els.songFormNotes.value = currentEditingSong.notes || '';
+
+    // Switch to details tab initially
+    switchSongEditTab('details');
+    renderStructureDeck();
+  }
+
+  function switchSongEditTab(tab) {
+    songEditActiveTab = tab === 'structure' ? 'structure' : 'details';
+    if (els.songEditTabDetails) {
+      els.songEditTabDetails.classList.toggle('active', songEditActiveTab === 'details');
+    }
+    if (els.songEditTabStructure) {
+      els.songEditTabStructure.classList.toggle('active', songEditActiveTab === 'structure');
+    }
+    if (els.songEditPaneDetails) els.songEditPaneDetails.hidden = songEditActiveTab !== 'details';
+    if (els.songEditPaneStructure) els.songEditPaneStructure.hidden = songEditActiveTab !== 'structure';
+  }
+
+  function getFormDataSong() {
+    if (!currentEditingSong) return null;
+    const title = (els.songFormTitle ? els.songFormTitle.value : '').trim() || 'Untitled Song';
+    const artist = (els.songFormArtist ? els.songFormArtist.value : '').trim() || 'Unknown Artist';
+    const bpm = clampBpmLocal(parseInt(els.songFormBpm ? els.songFormBpm.value : '120', 10) || 120);
+    const timeSig = (els.songFormTimeSig ? els.songFormTimeSig.value : '4-4').trim();
+    const category = (els.songFormCategory ? els.songFormCategory.value : 'custom');
+    const countIn = !!(els.songFormCountIn && els.songFormCountIn.checked);
+    const notes = (els.songFormNotes ? els.songFormNotes.value : '').trim();
+
+    return {
+      ...currentEditingSong,
+      title,
+      artist,
+      bpm,
+      timeSig,
+      category,
+      countIn,
+      notes,
+      structure: Array.isArray(currentEditingSong.structure) ? currentEditingSong.structure : []
+    };
+  }
+
+  function saveSongEditor() {
+    const updated = getFormDataSong();
+    if (!updated || !updated.title) {
+      showToast('Please provide a song title', 'error');
+      return;
+    }
+
+    if (songEditParentContext.from === 'setlist-detail' && songEditParentContext.setlistId) {
+      const setlist = getSetlistById(songEditParentContext.setlistId);
+      if (setlist && Array.isArray(setlist.songs)) {
+        if (typeof songEditParentContext.songIdx === 'number' && setlist.songs[songEditParentContext.songIdx]) {
+          setlist.songs[songEditParentContext.songIdx] = updated;
+        } else {
+          setlist.songs.push(updated);
+        }
+        saveSetlists();
+        showToast(`Saved “${updated.title}” to ${setlist.name}`, 'success');
+        showSetlistDetailView(setlist.id);
+        return;
+      }
+    }
+
+    // Otherwise save to customEntries library
+    const idx = customEntries.findIndex((e) => e.id === updated.id || (e.title === updated.title && e.artist === updated.artist));
+    if (idx !== -1) {
+      customEntries[idx] = updated;
+    } else {
+      customEntries.unshift(updated);
+    }
+    saveCustomEntries();
+    showToast(`Saved “${updated.title}”`, 'success');
+    showSongsBrowseView();
+  }
+
+  function renderStructureDeck() {
+    if (!els.structureDeck || !currentEditingSong) return;
+    els.structureDeck.textContent = '';
+
+    const sections = currentEditingSong.structure || [];
+    const totalBars = sections.reduce((sum, s) => sum + (Number(s.bars) || 0), 0);
+
+    if (els.structureSummary) {
+      els.structureSummary.textContent = `${sections.length} SECTIONS • ${totalBars} BARS TOTAL`;
+    }
+
+    if (els.structureFlow) {
+      if (sections.length === 0) {
+        els.structureFlow.textContent = 'No sections added yet';
+      } else {
+        els.structureFlow.textContent = sections.map((s) => `${s.name} (${s.bars})`).join(' → ') + ` | ${totalBars} bars`;
+      }
+    }
+
+    if (sections.length === 0) {
+      const empty = document.createElement('p');
+      empty.style.fontFamily = 'var(--font-secondary)';
+      empty.style.fontSize = '0.74rem';
+      empty.style.color = '#71717a';
+      empty.style.margin = '4px 0';
+      empty.textContent = 'Add sections below (+ Intro, + Verse, etc.) to set custom tempos, time signatures and bar lengths.';
+      els.structureDeck.appendChild(empty);
+      return;
+    }
+
+    const activeSong = metroState.activeSong;
+    const isSongActive = !!(activeSong && currentEditingSong && (activeSong.id === currentEditingSong.id || activeSong.title === currentEditingSong.title));
+    const activeSecIdx = isSongActive ? (metroState.currentSectionIdx || 0) : -1;
+
+    sections.forEach((sec, idx) => {
+      const card = document.createElement('div');
+      const isCardActive = isSongActive && idx === activeSecIdx;
+      card.className = `metro-structure-card${isCardActive ? ' is-active' : ''}`;
+      card.dataset.sectionIndex = String(idx);
+
+      // Header: Name input + Delete button
+      const head = document.createElement('div');
+      head.className = 'metro-structure-card-header';
+
+      const nameIn = document.createElement('input');
+      nameIn.type = 'text';
+      nameIn.className = 'metro-structure-card-name-input';
+      nameIn.value = sec.name || `Section ${idx + 1}`;
+      nameIn.placeholder = 'Section name';
+      nameIn.addEventListener('input', (e) => {
+        sec.name = String(e.target.value).trim() || `Section ${idx + 1}`;
+        if (els.structureFlow) {
+          els.structureFlow.textContent = sections.map((s) => `${s.name} (${s.bars})`).join(' → ') + ` | ${totalBars} bars`;
+        }
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'metro-structure-card-del-btn';
+      delBtn.innerHTML = '<i class="fa-solid fa-times"></i>';
+      delBtn.title = 'Delete section';
+      delBtn.addEventListener('click', () => {
+        sections.splice(idx, 1);
+        renderStructureDeck();
+      });
+
+      head.appendChild(nameIn);
+      head.appendChild(delBtn);
+
+      // Horizontal fields row: Bars, Time Signature & Custom BPM
+      const row1 = document.createElement('div');
+      row1.className = 'metro-structure-card-row';
+
+      const barsField = document.createElement('div');
+      barsField.className = 'metro-structure-card-field';
+      barsField.innerHTML = '<span class="metro-structure-card-field-label">BARS</span>';
+      const barsIn = document.createElement('input');
+      barsIn.type = 'number';
+      barsIn.min = '1';
+      barsIn.max = '999';
+      barsIn.className = 'metro-structure-card-num-input';
+      barsIn.value = String(sec.bars || 8);
+      barsIn.addEventListener('change', (e) => {
+        sec.bars = Math.max(1, Math.min(999, parseInt(e.target.value, 10) || 8));
+        renderStructureDeck();
+      });
+      barsField.appendChild(barsIn);
+
+      const tsField = document.createElement('div');
+      tsField.className = 'metro-structure-card-field';
+      tsField.innerHTML = '<span class="metro-structure-card-field-label">TIME SIG</span>';
+      const tsSelect = document.createElement('select');
+      tsSelect.className = 'metro-structure-card-select';
+      METRO_TIME_SIGNATURES.forEach((ts) => {
+        const opt = document.createElement('option');
+        opt.value = ts.id;
+        opt.textContent = ts.label;
+        if (sec.timeSig === ts.id || (!sec.timeSig && currentEditingSong.timeSig === ts.id)) {
+          opt.selected = true;
+        }
+        tsSelect.appendChild(opt);
+      });
+      tsSelect.addEventListener('change', (e) => {
+        sec.timeSig = e.target.value;
+      });
+      tsField.appendChild(tsSelect);
+
+      const bpmField = document.createElement('div');
+      bpmField.className = 'metro-structure-card-field';
+      bpmField.innerHTML = '<span class="metro-structure-card-field-label">BPM</span>';
+      const bpmIn = document.createElement('input');
+      bpmIn.type = 'number';
+      bpmIn.min = '20';
+      bpmIn.max = '300';
+      bpmIn.placeholder = String(currentEditingSong.bpm || 120);
+      bpmIn.className = 'metro-structure-card-num-input';
+      bpmIn.value = sec.bpm ? String(sec.bpm) : '';
+      bpmIn.addEventListener('change', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (!val || Number.isNaN(val)) {
+          delete sec.bpm;
+        } else {
+          sec.bpm = clampBpmLocal(val);
+        }
+      });
+      bpmField.appendChild(bpmIn);
+
+      row1.appendChild(barsField);
+      row1.appendChild(tsField);
+      row1.appendChild(bpmField);
+
+      // Footer: Position & Nav buttons
+      const foot = document.createElement('div');
+      foot.className = 'metro-structure-card-footer';
+
+      const pos = document.createElement('span');
+      pos.className = 'metro-structure-card-pos';
+      pos.textContent = `#${idx + 1} / ${sections.length}`;
+
+      const navBtns = document.createElement('div');
+      navBtns.className = 'metro-structure-card-nav-btns';
+
+      const leftBtn = document.createElement('button');
+      leftBtn.type = 'button';
+      leftBtn.className = 'metro-structure-reorder-btn brutal-press';
+      leftBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i>';
+      leftBtn.title = 'Move section left';
+      leftBtn.disabled = idx === 0;
+      leftBtn.addEventListener('click', () => {
+        if (idx > 0) {
+          const tmp = sections[idx];
+          sections[idx] = sections[idx - 1];
+          sections[idx - 1] = tmp;
+          renderStructureDeck();
+        }
+      });
+
+      const rightBtn = document.createElement('button');
+      rightBtn.type = 'button';
+      rightBtn.className = 'metro-structure-reorder-btn brutal-press';
+      rightBtn.innerHTML = '<i class="fa-solid fa-arrow-right"></i>';
+      rightBtn.title = 'Move section right';
+      rightBtn.disabled = idx === sections.length - 1;
+      rightBtn.addEventListener('click', () => {
+        if (idx < sections.length - 1) {
+          const tmp = sections[idx];
+          sections[idx] = sections[idx + 1];
+          sections[idx + 1] = tmp;
+          renderStructureDeck();
+        }
+      });
+
+      navBtns.appendChild(leftBtn);
+      navBtns.appendChild(rightBtn);
+
+      foot.appendChild(pos);
+      foot.appendChild(navBtns);
+
+      card.appendChild(head);
+      card.appendChild(row1);
+      card.appendChild(foot);
+
+      els.structureDeck.appendChild(card);
+
+      if (isCardActive) {
+        setTimeout(() => {
+          try {
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          } catch (err) {}
+        }, 30);
+      }
+    });
+  }
+
+  function addStructurePreset(name, defaultBars) {
+    if (!currentEditingSong) return;
+    if (!Array.isArray(currentEditingSong.structure)) currentEditingSong.structure = [];
+    currentEditingSong.structure.push({
+      id: `sec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name,
+      bars: defaultBars || 8
+    });
+    renderStructureDeck();
+  }
+
+  // --- SETLIST NAME MODAL ---
+  function showSetlistNameModal(setlistId) {
+    editingSetlistNameId = setlistId;
+    hideAllSetlistSubviews();
+    if (els.setlistNameView) els.setlistNameView.hidden = false;
+    updateSetlistMainTitle(setlistId ? 'EDIT SETLIST' : 'NEW SETLIST');
+
+    const existing = setlistId ? getSetlistById(setlistId) : null;
+    if (els.setlistNameTitle) els.setlistNameTitle.textContent = existing ? 'RENAME SETLIST' : 'NEW SETLIST';
+    if (els.setlistNameInput) {
+      els.setlistNameInput.value = existing ? existing.name : '';
+      setTimeout(() => {
+        try { els.setlistNameInput.focus(); } catch (e) {}
+      }, 100);
+    }
+  }
+
+  function saveSetlistNameModal() {
+    const name = (els.setlistNameInput ? els.setlistNameInput.value : '').trim();
+    if (!name) {
+      showToast('Please enter a setlist name', 'error');
+      return;
+    }
+
+    if (editingSetlistNameId) {
+      const existing = getSetlistById(editingSetlistNameId);
+      if (existing) {
+        existing.name = name;
+        saveSetlists();
+        showToast(`Renamed to “${name}”`, 'success');
+        showSetlistDetailView(existing.id);
+        return;
+      }
+    }
+
+    const created = upsertSetlist({ name, songs: [] });
+    if (created) {
+      showToast(`Created setlist “${name}”`, 'success');
+      showSetlistDetailView(created.id);
+    }
+  }
+
+  // --- SONG PICKER MODAL ---
+  function showSongPickerModal(setlistId) {
+    currentSetlistDetailId = setlistId;
+    songPickerSelectedIds.clear();
+    songPickerSearchQuery = '';
+    if (els.pickerSearchInput) els.pickerSearchInput.value = '';
+    if (els.songPickerModal) els.songPickerModal.hidden = false;
+    renderSongPickerList();
+  }
+
+  function closeSongPickerModal() {
+    if (els.songPickerModal) els.songPickerModal.hidden = true;
+    songPickerSelectedIds.clear();
+  }
+
+  function renderSongPickerList() {
+    if (!els.pickerList) return;
+    els.pickerList.textContent = '';
+
+    const allSongs = getAllEntriesForSearch();
+    let filtered = allSongs;
+    if (songPickerSearchQuery) {
+      const q = songPickerSearchQuery.toLowerCase();
+      filtered = allSongs.filter((s) => `${s.title} ${s.artist}`.toLowerCase().includes(q));
+    }
+
+    if (filtered.length === 0) {
+      const empty = document.createElement('p');
+      empty.style.color = '#a1a1aa';
+      empty.style.fontSize = '0.76rem';
+      empty.style.textAlign = 'center';
+      empty.textContent = 'No matching songs found.';
+      els.pickerList.appendChild(empty);
+      return;
+    }
+
+    filtered.forEach((song) => {
+      const key = song.id || `${song.title}::${song.artist}`;
+      const item = document.createElement('label');
+      item.className = 'metro-picker-item brutal-press';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'metro-picker-item-checkbox';
+      cb.checked = songPickerSelectedIds.has(key);
+      cb.addEventListener('change', () => {
+        if (cb.checked) songPickerSelectedIds.add(key);
+        else songPickerSelectedIds.delete(key);
+        if (els.pickerCount) {
+          els.pickerCount.textContent = `${songPickerSelectedIds.size} selected`;
+        }
+      });
+
+      const info = document.createElement('div');
+      info.className = 'metro-picker-item-info';
+
+      const title = document.createElement('span');
+      title.className = 'metro-picker-item-title';
+      title.textContent = song.title;
+
+      const sub = document.createElement('span');
+      sub.className = 'metro-picker-item-sub';
+      sub.textContent = `${song.bpm} BPM • ${song.artist}`;
+
+      info.appendChild(title);
+      info.appendChild(sub);
+
+      item.appendChild(cb);
+      item.appendChild(info);
+
+      els.pickerList.appendChild(item);
+    });
+
+    if (els.pickerCount) {
+      els.pickerCount.textContent = `${songPickerSelectedIds.size} selected`;
+    }
+  }
+
+  function confirmSongPickerModal() {
+    if (!currentSetlistDetailId) return;
+    const setlist = getSetlistById(currentSetlistDetailId);
+    if (!setlist) return;
+    if (!Array.isArray(setlist.songs)) setlist.songs = [];
+
+    const allSongs = getAllEntriesForSearch();
+    let addedCount = 0;
+    songPickerSelectedIds.forEach((key) => {
+      const found = allSongs.find((s) => (s.id && s.id === key) || `${s.title}::${s.artist}` === key);
+      if (found) {
+        setlist.songs.push({
+          id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          songId: found.id || found.inspirationId || `song-${Date.now()}`,
+          title: found.title,
+          artist: found.artist,
+          bpm: found.bpm,
+          timeSig: found.timeSig || '4-4',
+          countIn: !!found.countIn,
+          structure: Array.isArray(found.structure) ? JSON.parse(JSON.stringify(found.structure)) : []
+        });
+        addedCount++;
+      }
+    });
+
+    saveSetlists();
+    closeSongPickerModal();
+    showSetlistDetailView(setlist.id);
+    showToast(`Added ${addedCount} song${addedCount === 1 ? '' : 's'} to ${setlist.name}`, 'success');
+  }
+
+  // --- BIND ALL SETLIST & SONG EVENTS ---
+  function buildSetlist() {
+    loadCustomEntries();
+    loadSetlists();
+
+    // 50/50 Navigation
+    if (els.navSetlists) {
+      els.navSetlists.addEventListener('click', () => switchMenuTab('setlists'));
+    }
+    if (els.navSongs) {
+      els.navSongs.addEventListener('click', () => switchMenuTab('songs'));
+    }
+
+    // Setlist Detail Subview Events
+    if (els.setlistDetailBackBtn) {
+      els.setlistDetailBackBtn.addEventListener('click', showSetlistsListView);
+    }
+    if (els.setlistDetailPlayBtn) {
+      els.setlistDetailPlayBtn.addEventListener('click', () => {
+        if (currentSetlistDetailId && callbacks.onPlaySetlist) {
+          callbacks.onPlaySetlist(currentSetlistDetailId);
+        }
+      });
+    }
+    if (els.setlistDetailEditNameBtn) {
+      els.setlistDetailEditNameBtn.addEventListener('click', () => {
+        if (currentSetlistDetailId) showSetlistNameModal(currentSetlistDetailId);
+      });
+    }
+    if (els.setlistDetailAddSongBtn) {
+      els.setlistDetailAddSongBtn.addEventListener('click', () => {
+        if (currentSetlistDetailId) showSongPickerModal(currentSetlistDetailId);
+      });
+    }
+
+    // Song Edit Subview Events
+    if (els.songEditBackBtn) {
+      els.songEditBackBtn.addEventListener('click', () => {
+        if (songEditParentContext.from === 'setlist-detail' && songEditParentContext.setlistId) {
+          showSetlistDetailView(songEditParentContext.setlistId);
+        } else {
+          showSongsBrowseView();
+        }
+      });
+    }
+    if (els.songEditPlayBtn) {
+      els.songEditPlayBtn.addEventListener('click', () => {
+        const song = getFormDataSong();
+        if (song && callbacks.onPlaySong) {
+          callbacks.onPlaySong(song);
+        }
+      });
+    }
+    if (els.songEditTabDetails) {
+      els.songEditTabDetails.addEventListener('click', () => switchSongEditTab('details'));
+    }
+    if (els.songEditTabStructure) {
+      els.songEditTabStructure.addEventListener('click', () => switchSongEditTab('structure'));
+    }
+    if (els.songEditCancelBtn) {
+      els.songEditCancelBtn.addEventListener('click', () => {
+        if (songEditParentContext.from === 'setlist-detail' && songEditParentContext.setlistId) {
+          showSetlistDetailView(songEditParentContext.setlistId);
+        } else {
+          showSongsBrowseView();
+        }
+      });
+    }
+    if (els.songEditSaveBtn) {
+      els.songEditSaveBtn.addEventListener('click', saveSongEditor);
+    }
+    if (els.songFormUseCurrentBpm) {
+      els.songFormUseCurrentBpm.addEventListener('click', () => {
+        if (els.songFormBpm) {
+          els.songFormBpm.value = String(metroState.bpm || 120);
+          showToast(`Set tempo to current BPM (${metroState.bpm})`, 'info');
+        }
+      });
+    }
+    if (els.songFormBpmTap) {
+      els.songFormBpmTap.addEventListener('click', () => {
+        const now = performance.now();
+        songFormTapTimes.push(now);
+        if (songFormTapTimes.length > 5) songFormTapTimes.shift();
+        if (songFormTapTimes.length >= 2) {
+          const intervals = [];
+          for (let i = 1; i < songFormTapTimes.length; i++) intervals.push(songFormTapTimes[i] - songFormTapTimes[i - 1]);
+          const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+          if (avg > 0 && els.songFormBpm) {
+            els.songFormBpm.value = String(clampBpmLocal(Math.round(60000 / avg)));
           }
         }
       });
     }
-    if (els.setlistSearchClear) {
-      els.setlistSearchClear.addEventListener('click', clearSetlistSearch);
-    }
-    if (els.setlistCreateBtn) {
-      els.setlistCreateBtn.addEventListener('click', () => openCustomForm(setlistSearchQuery));
-    }
-  }
 
-  function isSetlistSearchOpen() {
-    return !!(els.setlistHeader && els.setlistHeader.classList.contains('search-open'));
-  }
-
-  function toggleSetlistSearch(force) {
-    if (!els.setlistHeader || !els.setlistSearchToggle) return;
-    const isOpen = isSetlistSearchOpen();
-    const willOpen = typeof force === 'boolean' ? force : !isOpen;
-    if (willOpen === isOpen) {
-      els.setlistSearchToggle.setAttribute('aria-expanded', String(willOpen));
-      return;
-    }
-    els.setlistHeader.classList.toggle('search-open', willOpen);
-    els.setlistSearchToggle.setAttribute('aria-expanded', String(willOpen));
-    // keep hidden inputs out of tab order while closed
-    [els.setlistSearchInput, els.setlistSearchClear, els.setlistCreateBtn].forEach((el) => {
-      if (el) el.tabIndex = willOpen ? 0 : -1;
-    });
-    if (willOpen) {
-      if (els.setlistSearchWrap) els.setlistSearchWrap.setAttribute('aria-hidden', 'false');
-      // focus input once the slide-in settles
-      setTimeout(() => {
-        if (!isSetlistSearchOpen()) return;
-        if (els.setlistSearchInput) {
-          els.setlistSearchInput.focus({ preventScroll: true });
-          try { els.setlistSearchInput.select(); } catch (e) {}
+    // Web Lookup Search
+    if (els.webSearchInput) {
+      els.webSearchInput.addEventListener('input', (e) => {
+        const query = (e.target.value || '').trim();
+        if (els.webSearchClear) els.webSearchClear.hidden = !query;
+        if (webSearchDebounceTimer) clearTimeout(webSearchDebounceTimer);
+        if (!query) {
+          if (els.webResults) els.webResults.textContent = '';
+          return;
         }
-      }, 160);
-    } else {
-      if (els.setlistSearchWrap) els.setlistSearchWrap.setAttribute('aria-hidden', 'true');
-      clearSetlistSearch();
-      closeCustomForm();
-      // return focus to the toggle so keyboard users aren't dropped
-      try { els.setlistSearchToggle.focus({ preventScroll: true }); } catch (e) {}
+        webSearchDebounceTimer = setTimeout(() => {
+          performSongWebSearch(query);
+        }, 250);
+      });
     }
-  }
 
-  function clearSetlistSearch() {
-    setlistSearchQuery = '';
-    setlistSearchActive = false;
-    if (els.setlistSearchInput) els.setlistSearchInput.value = '';
-    if (els.setlistSearchClear) els.setlistSearchClear.hidden = true;
-    externalResults = [];
-    externalLoading = false;
-    if (externalDebounceTimer) { clearTimeout(externalDebounceTimer); externalDebounceTimer = null; }
-    if (searchDebounceTimer) { clearTimeout(searchDebounceTimer); searchDebounceTimer = null; }
-    renderSetlistList();
-    renderExternalResults();
-    updateExternalVisibility();
-  }
-
-  function onSetlistSearchInput(e) {
-    const val = (e.target && e.target.value) ? String(e.target.value) : '';
-    setlistSearchQuery = val.trim();
-    setlistSearchActive = setlistSearchQuery.length > 0;
-    if (els.setlistSearchClear) els.setlistSearchClear.hidden = !setlistSearchQuery;
-    // local filtering debounce
-    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-    searchDebounceTimer = setTimeout(() => {
-      renderSetlistList();
-    }, 120);
-    // external search debounce
-    if (externalDebounceTimer) clearTimeout(externalDebounceTimer);
-    if (setlistSearchQuery.length >= 2) {
-      externalDebounceTimer = setTimeout(() => {
-        performExternalSearch(setlistSearchQuery);
-      }, 350);
-    } else {
-      externalResults = [];
-      externalLoading = false;
-      renderExternalResults();
-      updateExternalVisibility();
+    if (els.webSearchClear) {
+      els.webSearchClear.addEventListener('click', () => {
+        if (els.webSearchInput) els.webSearchInput.value = '';
+        els.webSearchClear.hidden = true;
+        if (els.webResults) els.webResults.textContent = '';
+      });
     }
-  }
 
-  function updateExternalVisibility() {
-    if (!els.setlistExternal) return;
-    const hasQuery = setlistSearchActive && setlistSearchQuery.length >= 2;
-    const hasExternal = externalResults.length > 0 || externalLoading;
-    // show external section only when searching with query >=2, even if local results exist — per spec we always offer web fallback
-    if (hasQuery) {
-      els.setlistExternal.hidden = false;
-      // if not yet loaded, trigger loading placeholder via render
-      if (!hasExternal && !externalLoading) {
-        // keep visible but empty; render will show hint
+    // Structure Presets
+    if (els.presetIntro) els.presetIntro.addEventListener('click', () => addStructurePreset('Intro', 4));
+    if (els.presetVerse) els.presetVerse.addEventListener('click', () => addStructurePreset('Verse', 8));
+    if (els.presetChorus) els.presetChorus.addEventListener('click', () => addStructurePreset('Chorus', 8));
+    if (els.presetBridge) els.presetBridge.addEventListener('click', () => addStructurePreset('Bridge', 8));
+    if (els.presetSolo) els.presetSolo.addEventListener('click', () => addStructurePreset('Solo', 8));
+    if (els.presetOutro) els.presetOutro.addEventListener('click', () => addStructurePreset('Outro', 4));
+    if (els.presetCustom) els.presetCustom.addEventListener('click', () => addStructurePreset('Custom', 4));
+
+    // Setlist Name Modal Events
+    if (els.setlistNameBackBtn) {
+      els.setlistNameBackBtn.addEventListener('click', () => {
+        if (editingSetlistNameId) showSetlistDetailView(editingSetlistNameId);
+        else showSetlistsListView();
+      });
+    }
+    if (els.setlistNameCancelBtn) {
+      els.setlistNameCancelBtn.addEventListener('click', () => {
+        if (editingSetlistNameId) showSetlistDetailView(editingSetlistNameId);
+        else showSetlistsListView();
+      });
+    }
+    if (els.setlistNameSaveBtn) {
+      els.setlistNameSaveBtn.addEventListener('click', saveSetlistNameModal);
+    }
+    if (els.setlistNameInput) {
+      els.setlistNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') saveSetlistNameModal();
+      });
+    }
+
+    // Song Picker Modal Events
+    if (els.pickerCloseBtn) {
+      els.pickerCloseBtn.addEventListener('click', closeSongPickerModal);
+    }
+    if (els.pickerConfirmBtn) {
+      els.pickerConfirmBtn.addEventListener('click', confirmSongPickerModal);
+    }
+    if (els.pickerSearchInput) {
+      els.pickerSearchInput.addEventListener('input', (e) => {
+        songPickerSearchQuery = (e.target.value || '').trim();
+        renderSongPickerList();
+      });
+    }
+
+    // Fixed Bottom Controls
+    if (els.bottomSearchInput) {
+      els.bottomSearchInput.addEventListener('input', (e) => {
+        const val = (e.target.value || '').trim();
+        setlistSearchQuery = val;
+        if (els.bottomSearchClear) els.bottomSearchClear.hidden = !val;
+
+        if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+          if (activeMenuTab === 'setlists') {
+            if (els.setlistDetailView && !els.setlistDetailView.hidden && currentSetlistDetailId) {
+              const setlist = getSetlistById(currentSetlistDetailId);
+              if (setlist) renderSetlistDetailSongs(setlist);
+            } else {
+              renderSetlistsList();
+            }
+          } else {
+            renderSetlistList();
+          }
+        }, 120);
+      });
+    }
+
+    if (els.bottomSearchClear) {
+      els.bottomSearchClear.addEventListener('click', () => {
+        setlistSearchQuery = '';
+        if (els.bottomSearchInput) els.bottomSearchInput.value = '';
+        els.bottomSearchClear.hidden = true;
+        if (activeMenuTab === 'setlists') {
+          if (els.setlistDetailView && !els.setlistDetailView.hidden && currentSetlistDetailId) {
+            const setlist = getSetlistById(currentSetlistDetailId);
+            if (setlist) renderSetlistDetailSongs(setlist);
+          } else {
+            renderSetlistsList();
+          }
+        } else {
+          renderSetlistList();
+        }
+      });
+    }
+
+    if (els.bottomAddBtn) {
+      els.bottomAddBtn.addEventListener('click', () => {
+        if (activeMenuTab === 'setlists') {
+          if (els.setlistDetailView && !els.setlistDetailView.hidden && currentSetlistDetailId) {
+            showSongPickerModal(currentSetlistDetailId);
+          } else {
+            showSetlistNameModal(null);
+          }
+        } else {
+          showSongEditView(null, { from: 'songs-browse' });
+        }
+      });
+    }
+
+    // Search pill expand/collapse — icon-only right corner, expands to full dock width
+    if (els.bottomSearchPill && els.bottomSearchInput) {
+      const pill = els.bottomSearchPill;
+      const input = els.bottomSearchInput;
+      const dock = els.bottomFixedDock;
+      const closeBtn = els.bottomSearchCloseBtn;
+      const clearBtn = els.bottomSearchClear;
+
+      const expandSearch = () => {
+        if (dock) dock.classList.add('is-search-expanded');
+        pill.classList.add('expanded');
+        if (closeBtn) closeBtn.hidden = false;
+        requestAnimationFrame(() => {
+          try { input.focus(); } catch (e) {}
+        });
+      };
+
+      const collapseSearch = () => {
+        input.value = '';
+        setlistSearchQuery = '';
+        if (clearBtn) clearBtn.hidden = true;
+        if (closeBtn) closeBtn.hidden = true;
+        pill.classList.remove('expanded');
+        if (dock) dock.classList.remove('is-search-expanded');
+        if (activeMenuTab === 'setlists') {
+          if (els.setlistDetailView && !els.setlistDetailView.hidden && currentSetlistDetailId) {
+            const setlist = getSetlistById(currentSetlistDetailId);
+            if (setlist) renderSetlistDetailSongs(setlist);
+          } else {
+            renderSetlistsList();
+          }
+        } else {
+          renderSetlistList();
+        }
+      };
+
+      if (els.bottomSearchToggleBtn) {
+        els.bottomSearchToggleBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          expandSearch();
+        });
       }
-    } else {
-      els.setlistExternal.hidden = true;
-    }
-  }
 
-  async function performExternalSearch(query) {
-    const gen = ++externalSearchGen;
-    externalLoading = true;
-    renderExternalResults();
-    updateExternalVisibility();
-    try {
-      // iTunes Search API — completely free, unlimited, no key, CORS allowed
-      // search by song title + optional artist (user typed full query; API does fuzzy)
-      const term = encodeURIComponent(query);
-      // entity=song&limit 8, media=music
-      const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=8&media=music`;
-      const res = await fetch(url);
-      if (gen !== externalSearchGen) return;
-      if (!res.ok) throw new Error('itunes failed');
-      const data = await res.json();
-      const results = (data.results || []).map((item) => ({
-        title: item.trackName || item.collectionName || 'Unknown Title',
-        artist: item.artistName || 'Unknown Artist',
-        artwork: item.artworkUrl100 ? item.artworkUrl100.replace('100x100', '200x200') : '',
-        previewUrl: item.previewUrl || '',
-        trackId: item.trackId || null,
-        collectionName: item.collectionName || ''
-      }));
-      externalResults = results;
-    } catch (err) {
-      console.warn('[metronome] iTunes search failed', err);
-      externalResults = [];
-    } finally {
-      if (gen !== externalSearchGen) return;
-      externalLoading = false;
-      renderExternalResults();
-      updateExternalVisibility();
-    }
-  }
+      pill.addEventListener('click', (e) => {
+        if (dock && dock.classList.contains('is-search-expanded')) {
+          if (e.target === pill || e.target.closest('.metro-bottom-search-icon')) input.focus();
+          return;
+        }
+        e.preventDefault();
+        expandSearch();
+      });
 
-  function renderExternalResults() {
-    if (!els.setlistExternal) return;
-    els.setlistExternal.textContent = '';
-    if (!setlistSearchActive || setlistSearchQuery.length < 2) {
-      els.setlistExternal.hidden = true;
-      return;
-    }
-    const head = document.createElement('div');
-    head.className = 'metro-setlist-external-head';
-    if (externalLoading) {
-      head.innerHTML = '<span><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> SEARCHING WEB…</span>';
-      els.setlistExternal.appendChild(head);
-      const loading = document.createElement('div');
-      loading.className = 'metro-setlist-loading';
-      loading.innerHTML = '<i class="fa-solid fa-spinner" aria-hidden="true"></i> Finding songs via iTunes…';
-      els.setlistExternal.appendChild(loading);
-      els.setlistExternal.hidden = false;
-      return;
-    }
-    if (externalResults.length === 0) {
-      head.innerHTML = '<span>WEB RESULTS — no external matches</span><span style="font-size:0.62rem;color:#71717a">Try artist + title</span>';
-      els.setlistExternal.appendChild(head);
-      const hint = document.createElement('p');
-      hint.className = 'metro-setlist-empty-sub';
-      hint.style.textAlign = 'center';
-      hint.style.margin = '6px auto';
-      hint.style.maxWidth = '28ch';
-      hint.textContent = 'No web results for this query. Try a broader title or tap CREATE CUSTOM SONG to add it manually.';
-      els.setlistExternal.appendChild(hint);
-      els.setlistExternal.hidden = false;
-      return;
-    }
-    head.innerHTML = `<span>WEB RESULTS — iTunes (BPM on add)</span><span style="font-size:0.62rem;color:#a1a1aa">${externalResults.length} songs</span>`;
-    els.setlistExternal.appendChild(head);
-    externalResults.forEach((item) => {
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.className = 'metro-setlist-external-row brutal-press';
-      row.setAttribute('aria-label', `Add ${item.title} by ${item.artist} to custom setlist`);
-      const img = document.createElement('img');
-      img.className = 'metro-setlist-external-art';
-      img.alt = '';
-      img.loading = 'lazy';
-      img.decoding = 'async';
-      if (item.artwork) {
-        img.src = item.artwork;
-      } else {
-        img.style.display = 'none';
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          collapseSearch();
+        });
       }
-      img.onerror = () => { img.style.display = 'none'; };
-      const text = document.createElement('span');
-      text.className = 'metro-setlist-external-text';
-      const title = document.createElement('span');
-      title.className = 'metro-setlist-external-title';
-      title.textContent = item.title;
-      const artist = document.createElement('span');
-      artist.className = 'metro-setlist-external-artist';
-      artist.textContent = item.artist;
-      text.appendChild(title);
-      text.appendChild(artist);
-      const add = document.createElement('span');
-      add.className = 'metro-setlist-external-add';
-      add.setAttribute('aria-hidden', 'true');
-      add.innerHTML = '<i class="fa-solid fa-plus"></i> ADD';
-      row.appendChild(img);
-      row.appendChild(text);
-      row.appendChild(add);
-      row.addEventListener('click', () => fetchBpmAndAddCustom(item));
-      els.setlistExternal.appendChild(row);
-    });
-    els.setlistExternal.hidden = false;
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          collapseSearch();
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!dock || !dock.classList.contains('is-search-expanded')) return;
+        if (pill.contains(e.target)) return;
+        if (!input.value.trim()) {
+          collapseSearch();
+        }
+      });
+    }
+
+    // Setlist Deck 4 Buttons (⏮ ◀ ▶ ⏭)
+    if (els.deckPrevSong) {
+      els.deckPrevSong.addEventListener('click', () => {
+        if (callbacks.onPrevSong) callbacks.onPrevSong();
+      });
+    }
+    if (els.deckPrevSection) {
+      els.deckPrevSection.addEventListener('click', () => {
+        if (callbacks.onPrevSection) callbacks.onPrevSection();
+      });
+    }
+    if (els.deckNextSection) {
+      els.deckNextSection.addEventListener('click', () => {
+        if (callbacks.onNextSection) callbacks.onNextSection();
+      });
+    }
+    if (els.deckNextSong) {
+      els.deckNextSong.addEventListener('click', () => {
+        if (callbacks.onNextSong) callbacks.onNextSong();
+      });
+    }
+
+    // Exit playback from now-playing display between bottom buttons
+    if (els.nowPlayingExit) {
+      els.nowPlayingExit.addEventListener('click', () => {
+        if (callbacks.onExitPlayback) callbacks.onExitPlayback();
+      });
+    }
+
+    bindSetlistSortBar();
+    switchMenuTab('setlists');
   }
 
-  async function fetchBpmAndAddCustom(item) {
-    const title = sanitizeForCustom(item.title);
-    const artist = sanitizeForCustom(item.artist);
-    if (!title) {
-      showToast('Could not read song title', 'error');
-      return;
-    }
-    // optimistic toast
-    showToast(`Fetching BPM for “${title}”…`, 'info');
-    try {
-      // free unlimited BPM endpoint — no key required
-      const u = `/api/song-bpm?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}`;
-      const res = await fetch(u);
-      const data = await res.json().catch(() => ({}));
-      let bpm = data && typeof data.bpm === 'number' ? data.bpm : null;
-      if (!bpm || bpm < 20 || bpm > 300) {
-        // deterministic hash fallback already provided by endpoint, but if endpoint fails we also hash
-        bpm = hashBpm(title, artist);
-      }
-      const entry = { title, artist: artist || 'Unknown Artist', bpm: clampBpmLocal(bpm), category: 'custom', isCustom: true };
-      addCustomEntry(entry, true);
-      if (data && data.source === 'estimated') {
-        showToast(`Added “${title}” at ${entry.bpm} BPM (estimated — tweak if needed)`, 'success');
-      } else {
-        showToast(`Added “${title}” at ${entry.bpm} BPM • ${data.source || 'BPM'}`, 'success');
-      }
-    } catch (err) {
-      console.warn('[metronome] bpm fetch failed', err);
-      const bpm = hashBpm(title, artist);
-      const entry = { title, artist: artist || 'Unknown Artist', bpm, category: 'custom', isCustom: true };
-      addCustomEntry(entry, true);
-      showToast(`Added “${title}” at ${bpm} BPM (estimated)`, 'warning');
-    }
-  }
-
-  function sanitizeForCustom(s) {
-    return String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, 120);
-  }
   function clampBpmLocal(n) {
     return Math.min(300, Math.max(20, Math.round(Number(n) || 120)));
   }
-  function hashBpm(title, artist) {
-    const str = `${title.toLowerCase().trim()}::${artist.toLowerCase().trim()}`;
-    let h = 0;
-    for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
-    h = Math.abs(h);
-    return 70 + (h % 110);
-  }
-
-  function addCustomEntry(entry, switchToCustom) {
-    // dedupe by title+artist case-insensitive
-    const key = `${entry.title.toLowerCase()}::${entry.artist.toLowerCase()}`;
-    const exists = customEntries.some((e) => `${e.title.toLowerCase()}::${e.artist.toLowerCase()}` === key);
-    if (exists) {
-      showToast(`“${entry.title}” is already in CUSTOM`, 'info');
-      if (switchToCustom) setActiveSetlistFilter('custom');
-      return;
-    }
-    customEntries.push(entry);
-    saveCustomEntries();
-    updateCustomCountBadge();
-    renderSetlistFilters();
-    if (switchToCustom) {
-      activeSetlistFilter = 'custom';
-      // clear search but keep pill active so user sees item
-      clearSetlistSearch();
-      // ensure search toggle stays closed? keep as is but ensure list shows
-      renderSetlistFilters();
-      renderSetlistList();
-    } else {
-      renderSetlistList();
-    }
-    // also clear external results highlighting?
-    // inject directly into list if current filter is custom
-  }
 
   function deleteCustomEntry(entry) {
-    const before = customEntries.length;
-    customEntries = customEntries.filter((e) => !(e.title === entry.title && e.artist === entry.artist && e.bpm === entry.bpm));
-    // fallback fuzzy if exact bpm mismatch (user edited)
-    if (customEntries.length === before) {
-      customEntries = customEntries.filter((e) => !(e.title === entry.title && e.artist === entry.artist));
-    }
+    customEntries = customEntries.filter((e) => !(entry.id && e.id === entry.id) && !(e.title === entry.title && e.artist === entry.artist));
     saveCustomEntries();
-    updateCustomCountBadge();
-    renderSetlistFilters();
     renderSetlistList();
-    showToast(`Removed “${entry.title}” from CUSTOM`, 'info');
-    if (customEntries.length === 0 && activeSetlistFilter === 'custom') {
-      // keep on custom but show empty state
-    }
+    showToast(`Removed “${entry.title}”`, 'info');
   }
 
-  function openCustomForm(prefillTitle) {
-    if (!els.customFormWrap) return;
-    // Build form fresh each open to avoid stale listeners
-    els.customFormWrap.textContent = '';
-    const form = document.createElement('form');
-    form.className = 'metro-custom-form';
-    form.setAttribute('novalidate', '');
-    form.innerHTML = `
-      <div class="metro-custom-form-head">
-        <p class="metro-custom-form-title">CREATE CUSTOM SONG</p>
-        <button type="button" class="metro-custom-form-close" aria-label="Close form"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-      </div>
-      <div class="metro-custom-field">
-        <label class="metro-custom-label" for="metroCustomTitle">TITLE *</label>
-        <input class="metro-custom-input" id="metroCustomTitle" type="text" maxlength="120" placeholder="e.g. Everlong" required autocomplete="off" />
-        <span class="metro-custom-error" id="metroCustomTitleErr" hidden></span>
-      </div>
-      <div class="metro-custom-field">
-        <label class="metro-custom-label" for="metroCustomArtist">ARTIST *</label>
-        <input class="metro-custom-input" id="metroCustomArtist" type="text" maxlength="120" placeholder="e.g. Foo Fighters" required autocomplete="off" />
-        <span class="metro-custom-error" id="metroCustomArtistErr" hidden></span>
-      </div>
-      <div class="metro-custom-field">
-        <label class="metro-custom-label" for="metroCustomBpm">BPM (20–300) *</label>
-        <input class="metro-custom-input" id="metroCustomBpm" type="number" inputmode="numeric" min="20" max="300" step="1" placeholder="e.g. 158" required />
-        <span class="metro-custom-error" id="metroCustomBpmErr" hidden></span>
-      </div>
-      <div class="metro-custom-actions">
-        <button type="button" class="metro-custom-cancel brutal-press" id="metroCustomCancel">CANCEL</button>
-        <button type="submit" class="metro-custom-submit brutal-press" id="metroCustomSubmit"><i class="fa-solid fa-plus"></i> ADD TO CUSTOM</button>
+  async function performSongWebSearch(query) {
+    if (!els.webResults) return;
+    els.webResults.innerHTML = `
+      <div class="metro-setlist-loading">
+        <i class="fa-solid fa-spinner" aria-hidden="true"></i>
+        <span>Searching track catalogue…</span>
       </div>
     `;
-    els.customFormWrap.appendChild(form);
-    els.customFormWrap.hidden = false;
+    try {
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=10`);
+      if (!res.ok) throw new Error('Search failed');
+      const data = await res.json();
+      const results = data.results || [];
+      els.webResults.textContent = '';
+      if (results.length === 0) {
+        els.webResults.innerHTML = `<p class="metro-setlist-empty-sub" style="text-align: center; margin: 16px auto;">No online tracks found for “${escHtmlShort(query)}”.</p>`;
+        return;
+      }
+      results.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'metro-web-result-card brutal-press';
 
-    const titleInput = form.querySelector('#metroCustomTitle');
-    const artistInput = form.querySelector('#metroCustomArtist');
-    const bpmInput = form.querySelector('#metroCustomBpm');
-    const titleErr = form.querySelector('#metroCustomTitleErr');
-    const artistErr = form.querySelector('#metroCustomArtistErr');
-    const bpmErr = form.querySelector('#metroCustomBpmErr');
+        const info = document.createElement('div');
+        info.className = 'metro-web-result-info';
 
-    // prefill
-    if (prefillTitle) {
-      // if prefill contains " - " or " by ", try split; else treat as title
-      const q = String(prefillTitle).trim();
-      if (q) {
-        // naive: if user searched "artist title" we can't split reliably, just fill title
-        titleInput.value = q.slice(0, 120);
+        const title = document.createElement('span');
+        title.className = 'metro-web-result-title';
+        title.textContent = item.trackName || 'Untitled Track';
+
+        const meta = document.createElement('span');
+        meta.className = 'metro-web-result-meta';
+        const year = item.releaseDate ? item.releaseDate.slice(0, 4) : '';
+        meta.textContent = `${item.artistName || 'Unknown'}${item.primaryGenreName ? ' • ' + item.primaryGenreName : ''}${year ? ' • ' + year : ''}`;
+
+        info.appendChild(title);
+        info.appendChild(meta);
+
+        const importBtn = document.createElement('button');
+        importBtn.type = 'button';
+        importBtn.className = 'metro-web-result-import-btn brutal-press';
+        importBtn.innerHTML = '<i class="fa-solid fa-arrow-down-to-bracket" aria-hidden="true"></i> USE';
+        importBtn.title = `Import ${item.trackName}`;
+        importBtn.addEventListener('click', () => {
+          if (els.songFormTitle) els.songFormTitle.value = item.trackName || '';
+          if (els.songFormArtist) els.songFormArtist.value = item.artistName || '';
+          switchSongEditTab('details');
+          showToast(`Imported “${item.trackName}”`, 'success');
+        });
+
+        card.appendChild(info);
+        card.appendChild(importBtn);
+        els.webResults.appendChild(card);
+      });
+    } catch (err) {
+      if (els.webResults) {
+        els.webResults.innerHTML = `<p class="metro-setlist-empty-sub" style="text-align: center; color: #ff6b6b; margin: 16px auto;">Search error. Check your connection or enter manually.</p>`;
+      }
+    }
+  }
+
+  // ---------- Live Topbar Setlist Playback & Undo ----------
+  function renderTopbarPlayback() {
+    if (!els.topbarCenter || !els.topbarPlayback) return;
+
+    if (metroState.activeSetlist && metroState.activeSetlist.songs && metroState.activeSetlist.songs.length > 0) {
+      const setlist = metroState.activeSetlist;
+      const songIdx = metroState.activeSetlistSongIdx || 0;
+      const song = setlist.songs[songIdx] || setlist.songs[0];
+
+      if (els.topbarTitle) els.topbarTitle.hidden = true;
+      if (els.topbarUndo) els.topbarUndo.hidden = true;
+      els.topbarPlayback.hidden = false;
+      setTopbarCenterVisible(true);
+
+      if (els.topbarSetlistTitle) {
+        els.topbarSetlistTitle.textContent = setlist.name;
+        els.topbarSetlistTitle.hidden = false;
+      }
+      if (els.topbarSongTitle) els.topbarSongTitle.textContent = song.title;
+
+      if (els.topbarSection && els.topbarSep) {
+        if (metroState.isCountIn) {
+          els.topbarSection.textContent = 'COUNT-IN';
+          els.topbarSection.hidden = false;
+          els.topbarSep.hidden = false;
+        } else if (song.structure && song.structure.length > 0) {
+          const sec = song.structure[metroState.currentSectionIdx || 0] || song.structure[0];
+          els.topbarSection.textContent = `${sec.name} (Bar ${metroState.currentSectionBar || 1}/${sec.bars})`;
+          els.topbarSection.hidden = false;
+          els.topbarSep.hidden = false;
+        } else {
+          els.topbarSection.hidden = true;
+          els.topbarSep.hidden = true;
+        }
+      }
+
+      if (els.topbarCounter) {
+        els.topbarCounter.textContent = `${songIdx + 1} / ${setlist.songs.length} TRACKS`;
+        els.topbarCounter.hidden = false;
+      }
+
+      renderSetlistDeck();
+      renderNowPlaying();
+      syncActiveStructureCardHighlight();
+      return;
+    }
+
+    if (metroState.activeSong) {
+      const song = metroState.activeSong;
+      if (els.topbarTitle) els.topbarTitle.hidden = true;
+      if (els.topbarUndo) els.topbarUndo.hidden = true;
+      els.topbarPlayback.hidden = false;
+      setTopbarCenterVisible(true);
+
+      if (els.topbarSetlistTitle) els.topbarSetlistTitle.hidden = true;
+      if (els.topbarSongTitle) els.topbarSongTitle.textContent = song.title;
+
+      if (els.topbarSection && els.topbarSep) {
+        if (metroState.isCountIn) {
+          els.topbarSection.textContent = 'COUNT-IN';
+          els.topbarSection.hidden = false;
+          els.topbarSep.hidden = false;
+        } else if (song.structure && song.structure.length > 0) {
+          const sec = song.structure[metroState.currentSectionIdx || 0] || song.structure[0];
+          els.topbarSection.textContent = `${sec.name} (Bar ${metroState.currentSectionBar || 1}/${sec.bars})`;
+          els.topbarSection.hidden = false;
+          els.topbarSep.hidden = false;
+        } else {
+          els.topbarSection.hidden = true;
+          els.topbarSep.hidden = true;
+        }
+      }
+
+      if (els.topbarCounter) els.topbarCounter.hidden = true;
+
+      renderSetlistDeck();
+      renderNowPlaying();
+      syncActiveStructureCardHighlight();
+      return;
+    }
+
+    // No active playback
+    els.topbarPlayback.hidden = true;
+    renderSetlistDeck();
+    renderNowPlaying();
+    syncActiveStructureCardHighlight();
+    if (!topbarTitleVisible && !topbarUndoVisible) {
+      setTopbarCenterVisible(false);
+    }
+  }
+
+  function syncActiveStructureCardHighlight() {
+    if (!els.structureDeck) return;
+    const cards = els.structureDeck.querySelectorAll('.metro-structure-card');
+    if (!cards || cards.length === 0) return;
+    const currentActiveSong = metroState.activeSong;
+    const isSongActive = !!(currentActiveSong && currentEditingSong && (currentActiveSong.id === currentEditingSong.id || currentActiveSong.title === currentEditingSong.title));
+    const activeSecIdx = isSongActive ? (metroState.currentSectionIdx || 0) : -1;
+
+    cards.forEach((card, idx) => {
+      const isActive = isSongActive && idx === activeSecIdx;
+      card.classList.toggle('is-active', isActive);
+      if (isActive) {
+        try {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } catch (err) {}
+      }
+    });
+  }
+
+  function renderSetlistDeck() {
+    if (!els.setlistDeck) return;
+    const isSetlistPlaying = !!(metroState.activeSetlist && metroState.activeSetlist.songs && metroState.activeSetlist.songs.length > 0);
+    // Deck replaces COACH DECK only during setlist playback; single-song playback shows neither deck nor replacement
+    const shouldShowDeck = isSetlistPlaying && !coachLiveRunning;
+    els.setlistDeck.hidden = !shouldShowDeck;
+
+    // Swap COACH DECK ↔ setlist deck
+    if (els.coachBtn) {
+      if (shouldShowDeck) {
+        els.coachBtn.hidden = true;
+        els.coachBtn.classList.add('is-live-hidden');
+        els.coachBtn.setAttribute('aria-hidden', 'true');
+      } else if (!coachLiveRunning) {
+        // Only restore coach button when coach live is not active (coach live controls its own visibility)
+        els.coachBtn.hidden = false;
+        els.coachBtn.classList.remove('is-live-hidden');
+        els.coachBtn.removeAttribute('aria-hidden');
       }
     }
 
-    const closeBtn = form.querySelector('.metro-custom-form-close');
-    const cancelBtn = form.querySelector('#metroCustomCancel');
-    const onClose = () => closeCustomForm();
-    if (closeBtn) closeBtn.addEventListener('click', onClose);
-    if (cancelBtn) cancelBtn.addEventListener('click', (e) => { e.preventDefault(); onClose(); });
+    if (!shouldShowDeck) return;
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      let ok = true;
-      const t = sanitizeForCustom(titleInput.value);
-      const a = sanitizeForCustom(artistInput.value);
-      const b = clampBpmLocal(parseInt(bpmInput.value, 10));
-      const rawB = bpmInput.value.trim();
-
-      // validate
-      if (!t) {
-        titleErr.textContent = 'Title is required';
-        titleErr.hidden = false;
-        titleInput.classList.add('metro-custom-input--error');
-        ok = false;
-      } else {
-        titleErr.hidden = true;
-        titleInput.classList.remove('metro-custom-input--error');
-      }
-      if (!a) {
-        artistErr.textContent = 'Artist is required';
-        artistErr.hidden = false;
-        artistInput.classList.add('metro-custom-input--error');
-        ok = false;
-      } else {
-        artistErr.hidden = true;
-        artistInput.classList.remove('metro-custom-input--error');
-      }
-      const parsed = parseInt(rawB, 10);
-      if (!rawB || Number.isNaN(parsed) || parsed < 20 || parsed > 300) {
-        bpmErr.textContent = 'Enter BPM between 20 and 300';
-        bpmErr.hidden = false;
-        bpmInput.classList.add('metro-custom-input--error');
-        ok = false;
-      } else {
-        bpmErr.hidden = true;
-        bpmInput.classList.remove('metro-custom-input--error');
-      }
-      if (!ok) return;
-
-      const entry = { title: t, artist: a, bpm: b, category: 'custom', isCustom: true };
-      addCustomEntry(entry, true);
-      closeCustomForm();
-      showToast(`Created “${t}” at ${b} BPM — in CUSTOM`, 'success');
-    });
-
-    // focus title
-    setTimeout(() => { try { titleInput.focus({ preventScroll: true }); } catch (e) {} }, 30);
+    if (els.deckPrevSong) {
+      els.deckPrevSong.disabled = !metroState.activeSetlist || metroState.activeSetlistSongIdx <= 0;
+    }
+    if (els.deckPrevSection) {
+      els.deckPrevSection.disabled = (metroState.currentSectionIdx || 0) <= 0;
+    }
+    if (els.deckNextSection) {
+      const activeSong = metroState.activeSetlist
+        ? metroState.activeSetlist.songs[metroState.activeSetlistSongIdx || 0]
+        : metroState.activeSong;
+      const structLen = (activeSong && activeSong.structure) ? activeSong.structure.length : 0;
+      els.deckNextSection.disabled = structLen === 0 || (metroState.currentSectionIdx || 0) >= structLen - 1;
+    }
+    if (els.deckNextSong) {
+      const songsLen = metroState.activeSetlist ? metroState.activeSetlist.songs.length : 0;
+      els.deckNextSong.disabled = !metroState.activeSetlist || (metroState.activeSetlistSongIdx || 0) >= songsLen - 1;
+    }
   }
 
-  function closeCustomForm() {
-    if (!els.customFormWrap) return;
-    els.customFormWrap.hidden = true;
-    els.customFormWrap.textContent = '';
+  // ---------- Now Playing (between bottom buttons) + bar progress ----------
+  function getSongTotalBars(song) {
+    if (!song || !Array.isArray(song.structure) || song.structure.length === 0) return 0;
+    return song.structure.reduce((sum, s) => sum + (Number(s.bars) || 0), 0);
+  }
+
+  function getSetlistTotalBars(setlist) {
+    if (!setlist || !Array.isArray(setlist.songs) || setlist.songs.length === 0) return 0;
+    return setlist.songs.reduce((sum, s) => sum + getSongTotalBars(s), 0);
+  }
+
+  function getCurrentAbsoluteBar() {
+    if (metroState.activeSetlist && Array.isArray(metroState.activeSetlist.songs)) {
+      const setlist = metroState.activeSetlist;
+      const songIdx = metroState.activeSetlistSongIdx || 0;
+      let total = 0;
+      for (let i = 0; i < songIdx; i++) {
+        total += getSongTotalBars(setlist.songs[i]);
+      }
+      const song = setlist.songs[songIdx];
+      if (song && Array.isArray(song.structure) && song.structure.length > 0) {
+        const secIdx = metroState.currentSectionIdx || 0;
+        for (let i = 0; i < secIdx; i++) {
+          total += Number(song.structure[i].bars) || 0;
+        }
+        total += metroState.currentSectionBar || 1;
+      } else {
+        total += 1;
+      }
+      return total;
+    }
+    if (metroState.activeSong) {
+      const song = metroState.activeSong;
+      if (Array.isArray(song.structure) && song.structure.length > 0) {
+        const secIdx = metroState.currentSectionIdx || 0;
+        let total = 0;
+        for (let i = 0; i < secIdx; i++) total += Number(song.structure[i].bars) || 0;
+        total += metroState.currentSectionBar || 1;
+        return total;
+      }
+      return metroState.currentSectionBar || 1;
+    }
+    return 0;
+  }
+
+  function renderNowPlaying() {
+    const hasSong = !!(metroState.activeSetlist || metroState.activeSong);
+    if (!els.nowPlaying || !els.tapBtn) return;
+    if (!hasSong) {
+      els.nowPlaying.hidden = true;
+      els.tapBtn.hidden = false;
+      if (els.nowPlayingTitle) els.nowPlayingTitle.textContent = '';
+      if (els.nowPlayingSection) els.nowPlayingSection.textContent = '';
+      if (els.nowPlayingBars) els.nowPlayingBars.textContent = '';
+      if (els.nowPlayingSep) els.nowPlayingSep.hidden = true;
+      return;
+    }
+    let song = null;
+    if (metroState.activeSetlist && Array.isArray(metroState.activeSetlist.songs)) {
+      const idx = metroState.activeSetlistSongIdx || 0;
+      song = metroState.activeSetlist.songs[idx] || metroState.activeSetlist.songs[0];
+    } else {
+      song = metroState.activeSong;
+    }
+    if (!song) {
+      els.nowPlaying.hidden = true;
+      els.tapBtn.hidden = false;
+      return;
+    }
+    els.nowPlaying.hidden = false;
+    els.tapBtn.hidden = true;
+    if (els.nowPlayingTitle) {
+      els.nowPlayingTitle.textContent = song.title || 'Untitled';
+      try { els.nowPlayingTitle.title = song.title || ''; } catch (e) {}
+    }
+    let sectionName = '';
+    let barText = '';
+    if (metroState.isCountIn) {
+      sectionName = 'COUNT-IN';
+      barText = '1/1';
+    } else if (song.structure && Array.isArray(song.structure) && song.structure.length > 0) {
+      const secIdx = metroState.currentSectionIdx || 0;
+      const sec = song.structure[secIdx] || song.structure[0];
+      sectionName = sec ? (sec.name || `Section ${secIdx + 1}`) : '';
+      const totalBars = metroState.activeSetlist ? getSetlistTotalBars(metroState.activeSetlist) : getSongTotalBars(song);
+      const currentBar = getCurrentAbsoluteBar();
+      if (totalBars > 0) barText = `${currentBar}/${totalBars}`;
+      else barText = `${metroState.currentSectionBar || 1}/${sec.bars || ''}`.replace(/\/$/, '');
+    } else {
+      sectionName = '';
+      barText = '';
+    }
+    if (els.nowPlayingSection) els.nowPlayingSection.textContent = sectionName;
+    if (els.nowPlayingBars) els.nowPlayingBars.textContent = barText;
+    if (els.nowPlayingSep) els.nowPlayingSep.hidden = !sectionName || !barText;
   }
 
   // ---------- Topbar setlist title / undo ----------
   function setTopbarCenterVisible(visible) {
     if (!els.topbarCenter) return;
     els.topbarCenter.hidden = !visible;
+  }
+
+  const COACH_MODE_TITLES = {
+    'inner-clock': 'INNER CLOCK',
+    'speed-trainer': 'SPEED TRAINER',
+    'rhythm-step': 'RHYTHM STEP',
+    'tempo-primer': 'TEMPO PRIMER'
+  };
+
+  function showTopbarModeTitle(tabId) {
+    if (!els.topbarTitle || !els.topbarUndo) return;
+    const title = COACH_MODE_TITLES[tabId] || (typeof tabId === 'string' ? tabId.replace('-', ' ').toUpperCase() : 'COACH DECK');
+    els.topbarTitle.textContent = title;
+    try { els.topbarTitle.title = `Coach Mode: ${title}`; } catch (e) {}
+    els.topbarTitle.hidden = false;
+    els.topbarUndo.hidden = true;
+    topbarTitleVisible = false;
+    topbarUndoVisible = false;
+    setTopbarCenterVisible(true);
+  }
+
+  function clearTopbarModeTitle() {
+    if (!els.topbarTitle || !els.topbarUndo) return;
+    if (!topbarTitleVisible && !topbarUndoVisible) {
+      els.topbarTitle.textContent = '';
+      els.topbarTitle.hidden = true;
+      setTopbarCenterVisible(false);
+    }
   }
 
   function showTopbarTitle(entry) {
@@ -1104,13 +2426,25 @@ export function createUi(callbacks) {
 
   function buildSoundRow() {
     if (!els.soundRow) return;
+    const METRO_SOUND_ICONS = {
+      click: 'fa-solid fa-bullseye',
+      woodblock: 'fa-solid fa-cube',
+      cowbell: 'fa-solid fa-bell',
+      rimshot: 'fa-solid fa-drum'
+    };
     METRO_SOUNDS.forEach((sound) => {
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'metro-chip brutal-press';
       chip.dataset.sound = sound.id;
       chip.setAttribute('aria-pressed', 'false');
-      chip.textContent = sound.label;
+      chip.setAttribute('aria-label', `${sound.label} click sound`);
+      const icon = document.createElement('i');
+      icon.className = METRO_SOUND_ICONS[sound.id] || 'fa-solid fa-music';
+      icon.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span');
+      label.textContent = sound.label;
+      chip.append(icon, label);
       chip.addEventListener('click', () => callbacks.onSoundSelect(sound.id));
       els.soundRow.appendChild(chip);
     });
@@ -1162,6 +2496,7 @@ export function createUi(callbacks) {
       els.coachLiveDock.hidden = true;
     }
     if (els.coachBtn) els.coachBtn.hidden = false;
+    updateCoachSheetCtas();
   }
 
   const INNER_RATIO_PRESETS = [
@@ -1212,6 +2547,18 @@ export function createUi(callbacks) {
     labAudible.className = 'metro-coach-field-label';
     const aVal = metroState.coachInner.audibleBars;
     labAudible.innerHTML = `<span>AUDIBLE BARS</span><strong id="coachInnerAudibleLabel">${aVal} ${aVal === 1 ? 'Bar' : 'Bars'}</strong>`;
+    const labAudVal = labAudible.querySelector('strong');
+    attachClickToEditNumber(labAudVal, {
+      getValue: () => metroState.coachInner.audibleBars,
+      setValue: (val) => {
+        if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ audibleBars: val });
+        renderCoachInner();
+      },
+      min: 1,
+      max: 64,
+      format: (v) => `${v} ${v === 1 ? 'Bar' : 'Bars'}`,
+      title: 'Click to enter custom audible bars'
+    });
 
     const audibleSliderWrap = createCoachSliderWrap({
       id: 'coachInnerAudible',
@@ -1225,7 +2572,7 @@ export function createUi(callbacks) {
         const val = Math.round(v);
         if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ audibleBars: val });
         const lab = document.getElementById('coachInnerAudibleLabel');
-        if (lab) lab.textContent = `${val} ${val === 1 ? 'Bar' : 'Bars'}`;
+        if (lab && !lab.querySelector('input')) lab.textContent = `${val} ${val === 1 ? 'Bar' : 'Bars'}`;
         renderCoachInnerCycleOnly();
       },
       onChange: () => {
@@ -1242,6 +2589,18 @@ export function createUi(callbacks) {
     labMuted.className = 'metro-coach-field-label';
     const mVal = metroState.coachInner.mutedBars;
     labMuted.innerHTML = `<span>MUTED BARS</span><strong id="coachInnerMutedLabel">${mVal} ${mVal === 1 ? 'Bar' : 'Bars'}</strong>`;
+    const labMutVal = labMuted.querySelector('strong');
+    attachClickToEditNumber(labMutVal, {
+      getValue: () => metroState.coachInner.mutedBars,
+      setValue: (val) => {
+        if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ mutedBars: val });
+        renderCoachInner();
+      },
+      min: 1,
+      max: 64,
+      format: (v) => `${v} ${v === 1 ? 'Bar' : 'Bars'}`,
+      title: 'Click to enter custom muted bars'
+    });
 
     const mutedSliderWrap = createCoachSliderWrap({
       id: 'coachInnerMuted',
@@ -1255,7 +2614,7 @@ export function createUi(callbacks) {
         const val = Math.round(v);
         if (callbacks.onCoachInnerChange) callbacks.onCoachInnerChange({ mutedBars: val });
         const lab = document.getElementById('coachInnerMutedLabel');
-        if (lab) lab.textContent = `${val} ${val === 1 ? 'Bar' : 'Bars'}`;
+        if (lab && !lab.querySelector('input')) lab.textContent = `${val} ${val === 1 ? 'Bar' : 'Bars'}`;
         renderCoachInnerCycleOnly();
       },
       onChange: () => {
@@ -1320,7 +2679,13 @@ export function createUi(callbacks) {
     cta.className = 'metro-coach-cta brutal-press';
     cta.dataset.coachStart = 'inner-clock';
     cta.innerHTML = '<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
-    cta.addEventListener('click', () => { if (callbacks.onCoachStart) callbacks.onCoachStart('inner-clock'); });
+    cta.addEventListener('click', () => {
+      if (coachLiveRunning && coachLiveTab === 'inner-clock') {
+        if (callbacks.onCoachStop) callbacks.onCoachStop();
+      } else {
+        if (callbacks.onCoachStart) callbacks.onCoachStart('inner-clock');
+      }
+    });
 
     wrap.appendChild(head);
     wrap.appendChild(cycle);
@@ -1329,6 +2694,80 @@ export function createUi(callbacks) {
     wrap.appendChild(randomBtn);
     wrap.appendChild(cta);
     return wrap;
+  }
+
+  function attachClickToEditNumber(el, { getValue, setValue, min = 1, max = 999, format = (v) => String(v), title = 'Click to edit number' }) {
+    if (!el) return;
+    el.classList.add('metro-coach-clickable-val');
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', title);
+    el.title = title;
+
+    const startEdit = () => {
+      if (el.querySelector('input')) return;
+      const currentVal = getValue();
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'metro-coach-inline-num';
+      input.inputMode = 'numeric';
+      input.pattern = '[0-9]*';
+      input.min = String(min);
+      input.max = String(max);
+      input.value = String(currentVal);
+      el.textContent = '';
+      el.appendChild(input);
+
+      let finished = false;
+      const commit = () => {
+        if (finished) return;
+        finished = true;
+        const raw = input.value.trim();
+        const parsed = parseInt(raw, 10);
+        let finalVal = currentVal;
+        if (!Number.isNaN(parsed)) {
+          finalVal = Math.min(max, Math.max(min, parsed));
+        }
+        if (input.parentNode === el) {
+          el.removeChild(input);
+        }
+        el.textContent = format(finalVal);
+        setValue(finalVal);
+      };
+
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          commit();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          finished = true;
+          if (input.parentNode === el) {
+            el.removeChild(input);
+          }
+          el.textContent = format(currentVal);
+        }
+      });
+
+      requestAnimationFrame(() => {
+        input.focus();
+        input.select();
+      });
+    };
+
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startEdit();
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        startEdit();
+      }
+    });
   }
 
   function updateRangeTrackFill(rangeEl, min, max, val) {
@@ -1455,6 +2894,20 @@ export function createUi(callbacks) {
     const labStart = document.createElement('div');
     labStart.className = 'metro-coach-field-label';
     labStart.innerHTML = `<span>START TEMPO</span><strong id="coachSpeedStartVal">${metroState.coachSpeed.start} BPM</strong>`;
+    const labStartVal = labStart.querySelector('strong');
+    attachClickToEditNumber(labStartVal, {
+      getValue: () => metroState.coachSpeed.start,
+      setValue: (val) => {
+        let targetBpm = metroState.coachSpeed.target;
+        if (val > targetBpm) targetBpm = val;
+        if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ start: val, target: targetBpm });
+        renderCoachSpeed();
+      },
+      min: 30,
+      max: 300,
+      format: (v) => `${v} BPM`,
+      title: 'Click to enter custom start BPM'
+    });
 
     const startSliderWrap = createCoachSliderWrap({
       id: 'coachSpeedStart',
@@ -1470,9 +2923,9 @@ export function createUi(callbacks) {
         if (startBpm > targetBpm) targetBpm = startBpm;
         if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ start: startBpm, target: targetBpm });
         const lab = document.getElementById('coachSpeedStartVal');
-        if (lab) lab.textContent = `${startBpm} BPM`;
+        if (lab && !lab.querySelector('input')) lab.textContent = `${startBpm} BPM`;
         const tLab = document.getElementById('coachSpeedTargetVal');
-        if (tLab) tLab.textContent = `${targetBpm} BPM`;
+        if (tLab && !tLab.querySelector('input')) tLab.textContent = `${targetBpm} BPM`;
         const tSlider = document.getElementById('coachSpeedTarget');
         if (tSlider) {
           tSlider.value = String(targetBpm);
@@ -1492,6 +2945,20 @@ export function createUi(callbacks) {
     const labTarget = document.createElement('div');
     labTarget.className = 'metro-coach-field-label';
     labTarget.innerHTML = `<span>TARGET TEMPO</span><strong id="coachSpeedTargetVal">${metroState.coachSpeed.target} BPM</strong>`;
+    const labTargetVal = labTarget.querySelector('strong');
+    attachClickToEditNumber(labTargetVal, {
+      getValue: () => metroState.coachSpeed.target,
+      setValue: (val) => {
+        let startBpm = metroState.coachSpeed.start;
+        if (val < startBpm) startBpm = val;
+        if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ start: startBpm, target: val });
+        renderCoachSpeed();
+      },
+      min: 30,
+      max: 300,
+      format: (v) => `${v} BPM`,
+      title: 'Click to enter custom target BPM'
+    });
 
     const targetSliderWrap = createCoachSliderWrap({
       id: 'coachSpeedTarget',
@@ -1507,9 +2974,9 @@ export function createUi(callbacks) {
         if (targetBpm < startBpm) startBpm = targetBpm;
         if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ start: startBpm, target: targetBpm });
         const lab = document.getElementById('coachSpeedTargetVal');
-        if (lab) lab.textContent = `${targetBpm} BPM`;
+        if (lab && !lab.querySelector('input')) lab.textContent = `${targetBpm} BPM`;
         const sLab = document.getElementById('coachSpeedStartVal');
-        if (sLab) sLab.textContent = `${startBpm} BPM`;
+        if (sLab && !sLab.querySelector('input')) sLab.textContent = `${startBpm} BPM`;
         const sSlider = document.getElementById('coachSpeedStart');
         if (sSlider) {
           sSlider.value = String(startBpm);
@@ -1536,10 +3003,23 @@ export function createUi(callbacks) {
     const labStep = document.createElement('div');
     labStep.className = 'metro-coach-field-label';
     labStep.innerHTML = `<span>STEP INCREMENT</span><strong id="coachSpeedStepVal">+${metroState.coachSpeed.step} BPM</strong>`;
+    const labStepVal = labStep.querySelector('strong');
+    attachClickToEditNumber(labStepVal, {
+      getValue: () => metroState.coachSpeed.step,
+      setValue: (val) => {
+        if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ step: val });
+        renderCoachSpeed();
+      },
+      min: 1,
+      max: 100,
+      format: (v) => `+${v} BPM`,
+      title: 'Click to enter custom step BPM'
+    });
+
     const stepWrap = createCoachSliderWrap({
       id: 'coachSpeedStep',
       min: 1,
-      max: 50,
+      max: Math.max(50, metroState.coachSpeed.step),
       step: 1,
       value: metroState.coachSpeed.step,
       ariaLabel: 'Step increment BPM',
@@ -1548,7 +3028,7 @@ export function createUi(callbacks) {
         const val = Math.round(v);
         if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ step: val });
         const stVal = document.getElementById('coachSpeedStepVal');
-        if (stVal) stVal.textContent = `+${val} BPM`;
+        if (stVal && !stVal.querySelector('input')) stVal.textContent = `+${val} BPM`;
         renderCoachSpeedSummaryOnly();
       },
       onChange: () => {
@@ -1562,12 +3042,27 @@ export function createUi(callbacks) {
     colInt.className = 'metro-coach-field';
     const labInt = document.createElement('div');
     labInt.className = 'metro-coach-field-label';
-    labInt.innerHTML = `<span>CHANGE EVERY</span><strong id="coachSpeedEveryVal">${metroState.coachSpeed.everyBars} ${metroState.coachSpeed.unit === 'bars' ? 'Bars' : 'Beats'}</strong>`;
+    const curUnit = metroState.coachSpeed.unit;
+    const curUnitLabel = curUnit === 'bars' ? (metroState.coachSpeed.everyBars === 1 ? 'Bar' : 'Bars') : (curUnit === 'seconds' ? (metroState.coachSpeed.everyBars === 1 ? 'Second' : 'Seconds') : (metroState.coachSpeed.everyBars === 1 ? 'Beat' : 'Beats'));
+    labInt.innerHTML = `<span>CHANGE EVERY</span><strong id="coachSpeedEveryVal">${metroState.coachSpeed.everyBars} ${curUnitLabel}</strong>`;
+    const labIntVal = labInt.querySelector('strong');
+    attachClickToEditNumber(labIntVal, {
+      getValue: () => metroState.coachSpeed.everyBars,
+      setValue: (val) => {
+        if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ everyBars: val });
+        renderCoachSpeed();
+      },
+      min: 1,
+      max: 999,
+      format: (v) => `${v} ${metroState.coachSpeed.unit === 'bars' ? (v === 1 ? 'Bar' : 'Bars') : (metroState.coachSpeed.unit === 'seconds' ? (v === 1 ? 'Second' : 'Seconds') : (v === 1 ? 'Beat' : 'Beats'))}`,
+      title: 'Click to enter custom interval amount'
+    });
 
+    const defaultMax = curUnit === 'seconds' ? 60 : (curUnit === 'beats' ? 64 : 32);
     const intWrap = createCoachSliderWrap({
       id: 'coachSpeedEvery',
       min: 1,
-      max: 32,
+      max: Math.max(defaultMax, metroState.coachSpeed.everyBars),
       step: 1,
       value: metroState.coachSpeed.everyBars,
       ariaLabel: 'Interval amount',
@@ -1576,7 +3071,11 @@ export function createUi(callbacks) {
         const val = Math.round(v);
         if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ everyBars: val });
         const evLab = document.getElementById('coachSpeedEveryVal');
-        if (evLab) evLab.textContent = `${val} ${metroState.coachSpeed.unit === 'bars' ? (val === 1 ? 'Bar' : 'Bars') : (val === 1 ? 'Beat' : 'Beats')}`;
+        if (evLab && !evLab.querySelector('input')) {
+          const u = metroState.coachSpeed.unit;
+          const uLab = u === 'bars' ? (val === 1 ? 'Bar' : 'Bars') : (u === 'seconds' ? (val === 1 ? 'Second' : 'Seconds') : (val === 1 ? 'Beat' : 'Beats'));
+          evLab.textContent = `${val} ${uLab}`;
+        }
         renderCoachSpeedSummaryOnly();
       },
       onChange: () => {
@@ -1589,9 +3088,68 @@ export function createUi(callbacks) {
     gridStep.appendChild(colStep);
     gridStep.appendChild(colInt);
 
-    // Row split: Repeat toggle on left, Unit toggle (BARS / BEATS) on right
-    const rowSplit = document.createElement('div');
-    rowSplit.className = 'metro-coach-row-split';
+    // Unit toggle full width row (BARS / BEATS / SECONDS expanded to whole width)
+    const unitRow = document.createElement('div');
+    unitRow.className = 'metro-coach-unit-row';
+    unitRow.style.width = '100%';
+    unitRow.style.display = 'flex';
+    unitRow.style.boxSizing = 'border-box';
+
+    const unitToggle = document.createElement('div');
+    unitToggle.className = 'metro-unit-toggle metro-unit-toggle--full';
+    unitToggle.id = 'coachSpeedUnitToggle';
+    unitToggle.setAttribute('role', 'radiogroup');
+    unitToggle.setAttribute('aria-label', 'Interval unit');
+    unitToggle.style.width = '100%';
+    unitToggle.style.flex = '1 1 auto';
+    unitToggle.style.display = 'flex';
+
+    const btnBars = document.createElement('button');
+    btnBars.type = 'button';
+    btnBars.className = `metro-unit-btn ${metroState.coachSpeed.unit === 'bars' ? 'active' : ''}`;
+    btnBars.textContent = 'BARS';
+    btnBars.dataset.unit = 'bars';
+    btnBars.style.flex = '1 1 0';
+
+    const btnBeats = document.createElement('button');
+    btnBeats.type = 'button';
+    btnBeats.className = `metro-unit-btn ${metroState.coachSpeed.unit === 'beats' ? 'active' : ''}`;
+    btnBeats.textContent = 'BEATS';
+    btnBeats.dataset.unit = 'beats';
+    btnBeats.style.flex = '1 1 0';
+
+    const btnSeconds = document.createElement('button');
+    btnSeconds.type = 'button';
+    btnSeconds.className = `metro-unit-btn ${metroState.coachSpeed.unit === 'seconds' ? 'active' : ''}`;
+    btnSeconds.textContent = 'SECONDS';
+    btnSeconds.dataset.unit = 'seconds';
+    btnSeconds.style.flex = '1 1 0';
+
+    const handleUnitSelect = (unit) => {
+      if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ unit });
+      btnBars.classList.toggle('active', unit === 'bars');
+      btnBeats.classList.toggle('active', unit === 'beats');
+      btnSeconds.classList.toggle('active', unit === 'seconds');
+      renderCoachSpeed();
+    };
+
+    btnBars.addEventListener('click', () => handleUnitSelect('bars'));
+    btnBeats.addEventListener('click', () => handleUnitSelect('beats'));
+    btnSeconds.addEventListener('click', () => handleUnitSelect('seconds'));
+
+    unitToggle.appendChild(btnBars);
+    unitToggle.appendChild(btnBeats);
+    unitToggle.appendChild(btnSeconds);
+    unitRow.appendChild(unitToggle);
+
+    // Actions row: Repeat 50% left + Direction 50% right (fills negative space)
+    const actionsRow = document.createElement('div');
+    actionsRow.className = 'metro-coach-actions-row';
+    actionsRow.style.display = 'grid';
+    actionsRow.style.gridTemplateColumns = '1fr 1fr';
+    actionsRow.style.gap = '10px';
+    actionsRow.style.width = '100%';
+    actionsRow.style.boxSizing = 'border-box';
 
     const isRepeat = !!metroState.coachSpeed.repeat;
     const repeatBtn = document.createElement('button');
@@ -1600,60 +3158,58 @@ export function createUi(callbacks) {
     repeatBtn.className = 'metro-coach-toggle-btn brutal-press' + (isRepeat ? ' active' : '');
     repeatBtn.setAttribute('aria-pressed', isRepeat ? 'true' : 'false');
     repeatBtn.innerHTML = `<i class="fa-solid fa-rotate-right" aria-hidden="true"></i> <span>${escHtml(METRO_COPY.coachRepeat)}</span>`;
-    repeatBtn.style.flex = '1 1 auto';
-    repeatBtn.style.maxWidth = '220px';
+    repeatBtn.style.width = '100%';
+    repeatBtn.style.flex = '1 1 50%';
+    repeatBtn.style.maxWidth = 'none';
     repeatBtn.addEventListener('click', () => {
       const nextRepeat = !metroState.coachSpeed.repeat;
       if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ repeat: nextRepeat });
       renderCoachSpeed();
     });
 
-    const unitToggle = document.createElement('div');
-    unitToggle.className = 'metro-unit-toggle';
-    unitToggle.id = 'coachSpeedUnitToggle';
-    unitToggle.setAttribute('role', 'radiogroup');
-    unitToggle.setAttribute('aria-label', 'Interval unit');
-
-    const btnBars = document.createElement('button');
-    btnBars.type = 'button';
-    btnBars.className = `metro-unit-btn ${metroState.coachSpeed.unit === 'bars' ? 'active' : ''}`;
-    btnBars.textContent = 'BARS';
-    btnBars.dataset.unit = 'bars';
-
-    const btnBeats = document.createElement('button');
-    btnBeats.type = 'button';
-    btnBeats.className = `metro-unit-btn ${metroState.coachSpeed.unit === 'beats' ? 'active' : ''}`;
-    btnBeats.textContent = 'BEATS';
-    btnBeats.dataset.unit = 'beats';
-
-    const handleUnitSelect = (unit) => {
-      if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ unit });
-      btnBars.classList.toggle('active', unit === 'bars');
-      btnBeats.classList.toggle('active', unit === 'beats');
+    const currentDir = metroState.coachSpeed.direction === 'desc' ? 'desc' : 'asc';
+    const isAsc = currentDir === 'asc';
+    const directionBtn = document.createElement('button');
+    directionBtn.type = 'button';
+    directionBtn.id = 'coachSpeedDirectionBtn';
+    directionBtn.className = 'metro-coach-toggle-btn brutal-press is-' + (isAsc ? 'asc active' : 'desc active');
+    directionBtn.setAttribute('aria-pressed', isAsc ? 'false' : 'true');
+    directionBtn.setAttribute('aria-label', isAsc ? 'Ascending (low to high)' : 'Descending (high to low)');
+    directionBtn.title = isAsc ? 'Ascending — BPM goes up' : 'Descending — BPM goes down';
+    directionBtn.innerHTML = isAsc
+      ? `<i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> <span>ASCENDING</span>`
+      : `<i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> <span>DESCENDING</span>`;
+    directionBtn.style.width = '100%';
+    directionBtn.style.flex = '1 1 50%';
+    directionBtn.addEventListener('click', () => {
+      const cur = metroState.coachSpeed.direction === 'desc' ? 'desc' : 'asc';
+      const nextDir = cur === 'asc' ? 'desc' : 'asc';
+      if (callbacks.onCoachSpeedChange) callbacks.onCoachSpeedChange({ direction: nextDir });
       renderCoachSpeed();
-    };
+    });
 
-    btnBars.addEventListener('click', () => handleUnitSelect('bars'));
-    btnBeats.addEventListener('click', () => handleUnitSelect('beats'));
-
-    unitToggle.appendChild(btnBars);
-    unitToggle.appendChild(btnBeats);
-
-    rowSplit.appendChild(repeatBtn);
-    rowSplit.appendChild(unitToggle);
+    actionsRow.appendChild(repeatBtn);
+    actionsRow.appendChild(directionBtn);
 
     const cta = document.createElement('button');
     cta.type = 'button';
     cta.className = 'metro-coach-cta brutal-press';
     cta.dataset.coachStart = 'speed-trainer';
     cta.innerHTML = '<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
-    cta.addEventListener('click', () => { if (callbacks.onCoachStart) callbacks.onCoachStart('speed-trainer'); });
+    cta.addEventListener('click', () => {
+      if (coachLiveRunning && coachLiveTab === 'speed-trainer') {
+        if (callbacks.onCoachStop) callbacks.onCoachStop();
+      } else {
+        if (callbacks.onCoachStart) callbacks.onCoachStart('speed-trainer');
+      }
+    });
 
     wrap.appendChild(head);
     wrap.appendChild(cycle);
     wrap.appendChild(gridRange);
     wrap.appendChild(gridStep);
-    wrap.appendChild(rowSplit);
+    wrap.appendChild(unitRow);
+    wrap.appendChild(actionsRow);
     wrap.appendChild(cta);
     return wrap;
   }
@@ -1760,7 +3316,13 @@ export function createUi(callbacks) {
     cb.addEventListener('change', () => { if (callbacks.onCoachRhythmChange) callbacks.onCoachRhythmChange({ poly: cb.checked }); });
 
     const cta=document.createElement('button'); cta.type='button'; cta.className='metro-coach-cta brutal-press'; cta.dataset.coachStart='rhythm-step'; cta.innerHTML='<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
-    cta.addEventListener('click', () => { if (callbacks.onCoachStart) callbacks.onCoachStart('rhythm-step'); });
+    cta.addEventListener('click', () => {
+      if (coachLiveRunning && coachLiveTab === 'rhythm-step') {
+        if (callbacks.onCoachStop) callbacks.onCoachStop();
+      } else {
+        if (callbacks.onCoachStart) callbacks.onCoachStart('rhythm-step');
+      }
+    });
 
     wrap.appendChild(head); wrap.appendChild(cycle); wrap.appendChild(patField); wrap.appendChild(everyField); wrap.appendChild(polyRow); wrap.appendChild(cta);
     return wrap;
@@ -1795,7 +3357,7 @@ export function createUi(callbacks) {
       });
       diffGrid.appendChild(btn);
     });
-    const diffBlurb=document.createElement('p'); diffBlurb.id='coachPrimerDiffBlurb'; diffBlurb.style.margin='0'; diffBlurb.style.fontFamily='var(--font-secondary)'; diffBlurb.style.fontSize='0.72rem'; diffBlurb.style.fontWeight='700'; diffBlurb.style.color='#D8B244'; diffBlurb.style.textAlign='center';
+    const diffBlurb=document.createElement('p'); diffBlurb.id='coachPrimerDiffBlurb'; diffBlurb.style.margin='0'; diffBlurb.style.fontFamily='var(--font-secondary)'; diffBlurb.style.fontSize='0.72rem'; diffBlurb.style.fontWeight='700'; diffBlurb.style.color='var(--accent-neon-yellow)'; diffBlurb.style.textAlign='center';
     diffBlurb.textContent='Builds foundational internal tempo memory';
 
     const tapArea=document.createElement('button'); tapArea.type='button'; tapArea.className='metro-coach-tap-area brutal-press'; tapArea.id='coachPrimerTapArea';
@@ -1809,7 +3371,13 @@ export function createUi(callbacks) {
     tapArea.addEventListener('pointerdown', (e)=>{ e.preventDefault(); });
 
     const cta=document.createElement('button'); cta.type='button'; cta.className='metro-coach-cta brutal-press'; cta.dataset.coachStart='tempo-primer'; cta.innerHTML='<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
-    cta.addEventListener('click', () => { if (callbacks.onCoachStart) callbacks.onCoachStart('tempo-primer'); });
+    cta.addEventListener('click', () => {
+      if (coachLiveRunning && coachLiveTab === 'tempo-primer') {
+        if (callbacks.onCoachStop) callbacks.onCoachStop();
+      } else {
+        if (callbacks.onCoachStart) callbacks.onCoachStart('tempo-primer');
+      }
+    });
 
     wrap.appendChild(head); wrap.appendChild(cycle); wrap.appendChild(diffGrid); wrap.appendChild(diffBlurb); wrap.appendChild(tapArea); wrap.appendChild(cta);
     return wrap;
@@ -1832,6 +3400,7 @@ export function createUi(callbacks) {
     else if (tabId === 'speed-trainer') renderCoachSpeed();
     else if (tabId === 'rhythm-step') renderCoachRhythm();
     else if (tabId === 'tempo-primer') renderCoachPrimer();
+    updateCoachSheetCtas();
   }
 
   function renderCoachInnerCycleOnly() {
@@ -1856,7 +3425,7 @@ export function createUi(callbacks) {
     row.appendChild(plus);
     mk(m,'muted');
     if (rand) {
-      const rnd=document.createElement('span'); rnd.textContent=' • RANDOM'; rnd.style.color='#D8B244'; rnd.style.fontSize='0.66rem'; rnd.style.marginLeft='4px';
+      const rnd=document.createElement('span'); rnd.textContent=' • RANDOM'; rnd.style.color='var(--accent-neon-yellow)'; rnd.style.fontSize='0.66rem'; rnd.style.marginLeft='4px';
       row.appendChild(rnd);
     }
     cyc.appendChild(row);
@@ -1904,8 +3473,10 @@ export function createUi(callbacks) {
     const s = metroState.coachSpeed;
     const cyc = document.getElementById('coachSpeedCycle');
     if (cyc) {
-      const repTxt = s.repeat ? ' • REPEAT ON' : '';
-      cyc.innerHTML = `<span>${escHtml(METRO_COPY.coachCycle)}:</span> <strong>${s.start} → ${s.target} BPM (+${s.step} / ${s.everyBars} ${s.unit.toUpperCase()}${repTxt})</strong>`;
+      const dirTxt = s.direction === 'desc' ? ' DESC' : ' ASC';
+      const repTxt = s.repeat ? ' • REPEAT ON • PING-PONG' : '';
+      const arrow = s.direction === 'desc' ? '↓' : '↑';
+      cyc.innerHTML = `<span>${escHtml(METRO_COPY.coachCycle)}:</span> <strong>${s.start} → ${s.target} BPM ${arrow} (+${s.step} / ${s.everyBars} ${s.unit.toUpperCase()}${dirTxt}${repTxt})</strong>`;
     }
   }
 
@@ -1927,25 +3498,49 @@ export function createUi(callbacks) {
       updateRangeTrackFill(tEl, 30, 300, s.target);
     }
     if (stEl) {
+      const maxVal = Math.max(50, s.step);
+      stEl.max = String(maxVal);
       if (document.activeElement !== stEl) stEl.value = String(s.step);
-      updateRangeTrackFill(stEl, 1, 50, s.step);
+      updateRangeTrackFill(stEl, 1, maxVal, s.step);
     }
     if (evEl) {
+      const defaultMax = s.unit === 'seconds' ? 60 : (s.unit === 'beats' ? 64 : 32);
+      const maxVal = Math.max(defaultMax, s.everyBars);
+      evEl.max = String(maxVal);
       if (document.activeElement !== evEl) evEl.value = String(s.everyBars);
-      updateRangeTrackFill(evEl, 1, 32, s.everyBars);
+      updateRangeTrackFill(evEl, 1, maxVal, s.everyBars);
     }
     if (repBtn) {
       repBtn.classList.toggle('active', !!s.repeat);
       repBtn.setAttribute('aria-pressed', s.repeat ? 'true' : 'false');
     }
+    const dirBtn = document.getElementById('coachSpeedDirectionBtn');
+    if (dirBtn) {
+      const isAsc = s.direction !== 'desc';
+      dirBtn.classList.add('active');
+      dirBtn.classList.toggle('is-asc', isAsc);
+      dirBtn.classList.toggle('is-desc', !isAsc);
+      dirBtn.setAttribute('aria-pressed', isAsc ? 'false' : 'true');
+      dirBtn.setAttribute('aria-label', isAsc ? 'Ascending (low to high)' : 'Descending (high to low)');
+      dirBtn.title = isAsc ? 'Ascending — BPM goes up' : 'Descending — BPM goes down';
+      dirBtn.innerHTML = isAsc
+        ? `<i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> <span>ASCENDING</span>`
+        : `<i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> <span>DESCENDING</span>`;
+    }
     const sVal = document.getElementById('coachSpeedStartVal');
-    if (sVal) sVal.textContent = `${s.start} BPM`;
+    if (sVal && !sVal.querySelector('input')) sVal.textContent = `${s.start} BPM`;
     const tVal = document.getElementById('coachSpeedTargetVal');
-    if (tVal) tVal.textContent = `${s.target} BPM`;
+    if (tVal && !tVal.querySelector('input')) tVal.textContent = `${s.target} BPM`;
     const stVal = document.getElementById('coachSpeedStepVal');
-    if (stVal) stVal.textContent = `+${s.step} BPM`;
+    if (stVal && !stVal.querySelector('input')) stVal.textContent = `+${s.step} BPM`;
     const evVal = document.getElementById('coachSpeedEveryVal');
-    if (evVal) evVal.textContent = `${s.everyBars} ${s.unit === 'bars' ? (s.everyBars === 1 ? 'Bar' : 'Bars') : (s.everyBars === 1 ? 'Beat' : 'Beats')}`;
+    if (evVal && !evVal.querySelector('input')) {
+      let unitLabel = 'Bars';
+      if (s.unit === 'beats') unitLabel = s.everyBars === 1 ? 'Beat' : 'Beats';
+      else if (s.unit === 'seconds') unitLabel = s.everyBars === 1 ? 'Second' : 'Seconds';
+      else unitLabel = s.everyBars === 1 ? 'Bar' : 'Bars';
+      evVal.textContent = `${s.everyBars} ${unitLabel}`;
+    }
     const unitToggle = document.getElementById('coachSpeedUnitToggle');
     if (unitToggle) {
       unitToggle.querySelectorAll('.metro-unit-btn').forEach((btn) => {
@@ -1999,6 +3594,21 @@ export function createUi(callbacks) {
 
   // ---------- Coach Live (dock takes over COACH DECK button, outside sheet) ----------
 
+  function updateCoachSheetCtas() {
+    if (!els.coachPanelsWrap) return;
+    const ctas = els.coachPanelsWrap.querySelectorAll('.metro-coach-cta');
+    ctas.forEach((btn) => {
+      const tabId = btn.dataset.coachStart;
+      if (coachLiveRunning && coachLiveTab === tabId) {
+        btn.innerHTML = '<i class="fa-solid fa-stop"></i> STOP SESSION';
+        btn.classList.add('is-running');
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
+        btn.classList.remove('is-running');
+      }
+    });
+  }
+
   function enterCoachLive(tabId) {
     coachLiveRunning = true;
     coachLiveTab = tabId;
@@ -2008,6 +3618,7 @@ export function createUi(callbacks) {
       els.coachBtn.classList.add('is-live-hidden');
       els.coachBtn.setAttribute('aria-hidden', 'true');
     }
+    if (els.setlistDeck) els.setlistDeck.hidden = true;
     if (els.coachLiveDock) els.coachLiveDock.hidden = false;
     if (sheetOpen) closeSheet();
     // keep sheet tabs enabled for when user reopens
@@ -2017,18 +3628,36 @@ export function createUi(callbacks) {
         t.style.opacity = '1';
       });
     }
+    showTopbarModeTitle(tabId);
+    updateCoachSheetCtas();
+    setupCoachLiveDom();
     renderCoachLive(null);
   }
 
   function exitCoachLive() {
     coachLiveRunning = false;
     coachLiveTab = null;
+    clearTopbarModeTitle();
     if (els.coachLiveDock) { els.coachLiveDock.hidden = true; els.coachLiveDock.textContent = ''; }
     if (els.coachLive) { els.coachLive.hidden = true; els.coachLive.textContent = ''; }
+    // Defer coachBtn visibility to renderSetlistDeck so setlist deck can reclaim the spot if needed
     if (els.coachBtn) {
-      els.coachBtn.hidden = false;
-      els.coachBtn.classList.remove('is-live-hidden');
-      els.coachBtn.removeAttribute('aria-hidden');
+      els.coachBtn.classList.remove('is-reviving');
+      void els.coachBtn.offsetWidth; // force reflow for smooth animation
+      // Don't unhide yet — renderSetlistDeck will handle it
+    }
+    renderSetlistDeck();
+    renderTopbarPlayback();
+    if (!els.setlistDeck || els.setlistDeck.hidden) {
+      if (els.coachBtn) {
+        els.coachBtn.hidden = false;
+        els.coachBtn.classList.remove('is-live-hidden');
+        els.coachBtn.removeAttribute('aria-hidden');
+        els.coachBtn.classList.add('is-reviving');
+        els.coachBtn.addEventListener('animationend', () => {
+          els.coachBtn.classList.remove('is-reviving');
+        }, { once: true });
+      }
     }
     if (els.coachTablist) {
       els.coachTablist.querySelectorAll('.metro-coach-tab').forEach(t=>{
@@ -2036,138 +3665,169 @@ export function createUi(callbacks) {
         t.style.opacity = '1';
       });
     }
+    updateCoachSheetCtas();
     selectCoachTab(coachTab);
+  }
+
+  function setupCoachLiveDom() {
+    const dock = els.coachLiveDock || els.coachLive;
+    if (!dock) return;
+    dock.textContent = '';
+
+    const pill = document.createElement('div');
+    pill.className = 'metro-coach-pill-bar';
+    pill.id = 'metroCoachPillBar';
+
+    // Bottom progress line
+    const prog = document.createElement('div');
+    prog.className = 'metro-coach-pill-prog';
+    const progFill = document.createElement('div');
+    progFill.className = 'metro-coach-pill-prog-fill';
+    progFill.id = 'metroCoachPillProgFill';
+    prog.appendChild(progFill);
+    pill.appendChild(prog);
+
+    // Left info block (pulsing red dot + rich live mode metrics)
+    const info = document.createElement('div');
+    info.className = 'metro-coach-pill-info';
+
+    const dot = document.createElement('span');
+    dot.className = 'metro-coach-pill-dot';
+    dot.setAttribute('aria-hidden', 'true');
+
+    const tag = document.createElement('div');
+    tag.className = 'metro-coach-pill-tag';
+    tag.id = 'metroCoachPillTag';
+
+    info.appendChild(dot);
+    info.appendChild(tag);
+    pill.appendChild(info);
+
+    // Right actions: STOP SESSION and Expand settings button
+    const actions = document.createElement('div');
+    actions.className = 'metro-coach-pill-actions';
+
+    const retryBtn = document.createElement('button');
+    retryBtn.type = 'button';
+    retryBtn.id = 'metroCoachPillRetry';
+    retryBtn.className = 'metro-coach-pill-retry brutal-press';
+    retryBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> <span>RETRY</span>';
+    retryBtn.setAttribute('aria-label', 'Retry tempo primer test');
+    retryBtn.style.display = 'none';
+    retryBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (callbacks.onPrimerRetry) callbacks.onPrimerRetry();
+    });
+    actions.appendChild(retryBtn);
+
+    const stopBtn = document.createElement('button');
+    stopBtn.type = 'button';
+    stopBtn.id = 'metroCoachPillStop';
+    stopBtn.className = 'metro-coach-pill-stop metro-coach-live-stop brutal-press';
+    stopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> <span>STOP SESSION</span>';
+    stopBtn.setAttribute('aria-label', 'Stop training session');
+    stopBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (callbacks.onCoachStop) callbacks.onCoachStop();
+    });
+    actions.appendChild(stopBtn);
+
+    const expandBtn = document.createElement('button');
+    expandBtn.type = 'button';
+    expandBtn.id = 'metroCoachPillExpand';
+    expandBtn.className = 'metro-coach-pill-expand metro-coach-live-expand brutal-press';
+    expandBtn.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+    expandBtn.setAttribute('aria-label', METRO_COPY.coachOpenSettings);
+    expandBtn.title = METRO_COPY.coachOpenSettings;
+    expandBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (callbacks.onCoachExpand) callbacks.onCoachExpand();
+    });
+    actions.appendChild(expandBtn);
+
+    pill.appendChild(actions);
+    dock.appendChild(pill);
   }
 
   function renderCoachLive(snapshot) {
     if (!coachLiveRunning) return;
     const dock = els.coachLiveDock || els.coachLive;
     if (!dock) return;
+    let pill = dock.querySelector('#metroCoachPillBar');
+    if (!pill) {
+      setupCoachLiveDom();
+      pill = dock.querySelector('#metroCoachPillBar');
+    }
+    if (!pill) return;
+
+    const progFill = pill.querySelector('#metroCoachPillProgFill');
+    const tag = pill.querySelector('#metroCoachPillTag');
+    const retryBtn = pill.querySelector('#metroCoachPillRetry');
+    if (!tag) return;
+
     const tabId = coachLiveTab || coachTab;
-    dock.textContent = '';
-    const card = document.createElement('div');
-    card.className='metro-coach-live-card';
+    let pct = 0;
 
-    const head=document.createElement('div'); head.className='metro-coach-live-head';
-    const badge=document.createElement('span'); badge.className='metro-coach-live-badge';
-    badge.innerHTML = `<i class="fa-solid fa-circle" style="font-size:0.5rem;color:#c0392b;animation:midiPulse 1s infinite alternate"></i> ${METRO_COPY.coachLive}`;
-    const title=document.createElement('span'); title.style.fontFamily='var(--font-secondary)'; title.style.fontSize='0.72rem'; title.style.fontWeight='800'; title.style.letterSpacing='0.08em'; title.style.color='#a1a1aa'; title.textContent = tabId.replace('-',' ').toUpperCase();
-    head.appendChild(badge); head.appendChild(title);
-
-    let phaseEl, subEl, progFill;
-
-    if (tabId==='inner-clock') {
-      const snap = snapshot || { phase: metroState.coachInner.random ? 'AUDIBLE' : 'AUDIBLE', phaseBar:0, barCount:0 };
+    if (tabId === 'inner-clock') {
+      if (retryBtn) retryBtn.style.display = 'none';
       const isMuted = snapshot ? snapshot.phase === 'muted' : false;
-      phaseEl=document.createElement('div'); phaseEl.className='metro-coach-live-phase' + (isMuted?' muted':'');
-      phaseEl.textContent = isMuted ? '○ MUTED' : '● AUDIBLE';
-      subEl=document.createElement('div'); subEl.className='metro-coach-live-sub';
-      const a=metroState.coachInner.audibleBars; const m=metroState.coachInner.mutedBars;
+      const a = metroState.coachInner.audibleBars;
+      const m = metroState.coachInner.mutedBars;
       const phaseBar = snapshot ? snapshot.phaseBar : 0;
       const phaseTotal = isMuted ? m : a;
-      subEl.textContent = `Bar ${phaseBar+1}/${phaseTotal} • Next: ${isMuted ? 'AUDIBLE' : 'MUTED'} in ${Math.max(0, phaseTotal - phaseBar - 1)} bars • Total bars ${snapshot ? snapshot.barCount : 0}`;
-      const prog=document.createElement('div'); prog.className='metro-coach-progress';
-      progFill=document.createElement('div'); progFill.className='metro-coach-progress-fill';
-      const pct = phaseTotal ? (phaseBar+1)/phaseTotal : 0;
-      progFill.style.transform = `scaleX(${Math.min(1, pct)})`;
-      prog.appendChild(progFill);
-      card.appendChild(head); card.appendChild(phaseEl); card.appendChild(subEl); card.appendChild(prog);
-    } else if (tabId==='speed-trainer') {
-      const s=metroState.coachSpeed;
+      pct = phaseTotal ? (phaseBar + 1) / phaseTotal : 0;
+      const nextPhase = isMuted ? 'Audible' : 'Mute';
+      const remainingBars = Math.max(0, phaseTotal - phaseBar - 1);
+      if (isMuted) {
+        tag.classList.add('is-muted');
+        tag.innerHTML = `<span class="metro-coach-phase-badge muted">MUTED</span> <span class="metro-coach-pill-bold">Bar ${phaseBar + 1}/${m}</span> <span class="metro-coach-pill-sub">• Next: ${nextPhase} in ${remainingBars}b</span>`;
+      } else {
+        tag.classList.remove('is-muted');
+        tag.innerHTML = `<span class="metro-coach-phase-badge audible">AUDIBLE</span> <span class="metro-coach-pill-bold">Bar ${phaseBar + 1}/${a}</span> <span class="metro-coach-pill-sub">• Next: ${nextPhase} in ${remainingBars}b</span>`;
+      }
+    } else if (tabId === 'speed-trainer') {
+      if (retryBtn) retryBtn.style.display = 'none';
+      const s = metroState.coachSpeed;
       const cur = snapshot ? snapshot.currentBpm : s.start;
       const stepIdx = snapshot ? snapshot.speedStepIdx : 0;
-      const steps = snapshot ? snapshot.speedSteps : Math.ceil(Math.abs(s.target - s.start)/s.step);
-      phaseEl=document.createElement('div'); phaseEl.className='metro-coach-live-phase';
-      phaseEl.textContent = `${cur} BPM → ${s.target} BPM`;
-      subEl=document.createElement('div'); subEl.className='metro-coach-live-sub';
-      subEl.textContent = `Step ${stepIdx}/${steps} • +${s.step} every ${s.everyBars} ${s.unit} • Bar ${snapshot ? snapshot.barCount : 0}`;
-      const prog=document.createElement('div'); prog.className='metro-coach-progress';
-      progFill=document.createElement('div'); progFill.className='metro-coach-progress-fill';
-      const pct = steps ? stepIdx/steps : 0;
-      progFill.style.transform = `scaleX(${Math.min(1,pct)})`;
-      prog.appendChild(progFill);
-      card.appendChild(head); card.appendChild(phaseEl); card.appendChild(subEl); card.appendChild(prog);
-      if (s.repeat) {
-        const repBadge=document.createElement('span'); repBadge.textContent='↻ REPEAT ON'; repBadge.style.fontSize='0.66rem'; repBadge.style.color='#D8B244'; repBadge.style.fontWeight='800'; card.appendChild(repBadge);
-      }
-    } else if (tabId==='rhythm-step') {
-      const pat=metroState.coachRhythm.pattern;
+      const steps = snapshot ? snapshot.speedSteps : Math.ceil(Math.abs(s.target - s.start) / s.step);
+      pct = steps ? stepIdx / steps : 0;
+      let unitSuffix = 'b';
+      if (s.unit === 'beats') unitSuffix = 'bt';
+      else if (s.unit === 'seconds') unitSuffix = 's';
+      tag.innerHTML = `<span class="metro-coach-pill-bold">${cur} → ${s.target} BPM</span> <span class="metro-coach-pill-sub">• Step ${stepIdx}/${steps} (+${s.step}/${s.everyBars}${unitSuffix})</span>`;
+    } else if (tabId === 'rhythm-step') {
+      if (retryBtn) retryBtn.style.display = 'none';
+      const pat = metroState.coachRhythm.pattern;
       const idx = snapshot ? snapshot.rhythmIdx : 0;
       const curId = pat[idx] || pat[0];
-      const labels={'1-4':'1/4','1-4t':'1/4T','1-8':'1/8','1-8t':'1/8T','1-16':'1/16','1-16t':'1/16T','1-32':'1/32'};
-      phaseEl=document.createElement('div'); phaseEl.className='metro-coach-live-phase'; phaseEl.textContent = labels[curId] || curId;
-      subEl=document.createElement('div'); subEl.className='metro-coach-live-sub';
-      const nextIdx = (idx+1)%pat.length;
-      subEl.textContent = `Pattern ${idx+1}/${pat.length} • Next: ${labels[pat[nextIdx]]} in ${Math.max(0, metroState.coachRhythm.everyBars - (snapshot ? snapshot.barCount % metroState.coachRhythm.everyBars : 0))} bars`;
-      const dotsRow=document.createElement('div'); dotsRow.style.display='flex'; dotsRow.style.gap='6px'; dotsRow.style.flexWrap='wrap';
-      pat.forEach((id,i)=>{
-        const chip=document.createElement('span'); chip.className='metro-cycle-chip'; chip.textContent=labels[id];
-        chip.style.opacity = i===idx ? '1' : '0.45';
-        if(i===idx) chip.style.background='#D8B244';
-        dotsRow.appendChild(chip);
-      });
-      const prog=document.createElement('div'); prog.className='metro-coach-progress';
-      progFill=document.createElement('div'); progFill.className='metro-coach-progress-fill';
-      const every=metroState.coachRhythm.everyBars;
+      const labels = { '1-4': '1/4', '1-4t': '1/4T', '1-8': '1/8', '1-8t': '1/8T', '1-16': '1/16', '1-16t': '1/16T', '1-32': '1/32' };
+      const every = metroState.coachRhythm.everyBars;
       const barMod = snapshot ? snapshot.barCount % every : 0;
-      progFill.style.transform = `scaleX(${barMod / Math.max(1,every)})`;
-      prog.appendChild(progFill);
-      card.appendChild(head); card.appendChild(phaseEl); card.appendChild(subEl); card.appendChild(dotsRow); card.appendChild(prog);
-      if (metroState.coachRhythm.poly) {
-        const poly=document.createElement('div'); poly.style.fontSize='0.68rem'; poly.style.color='#D8B244'; poly.textContent='Polyrhythmic grid active • ' + metroState.coachRhythm.polyRatio;
-        card.appendChild(poly);
-      }
-    } else if (tabId==='tempo-primer') {
-      const target = snapshot ? snapshot.primerTarget : metroState.coachPrimer.target;
-      phaseEl=document.createElement('div'); phaseEl.className='metro-coach-live-phase'; phaseEl.textContent = `TARGET ${target} BPM`;
-      phaseEl.style.fontSize='1.1rem'; phaseEl.style.letterSpacing='0.06em';
-      const tapCount = snapshot ? snapshot.primerTaps.length : 0;
-      subEl=document.createElement('div'); subEl.className='metro-coach-live-sub';
-      subEl.textContent = tapCount < 4 ? `Tap ${tapCount}/4 • ${METRO_COPY.midiTapHint}` : 'Scoring...';
-      const dots=document.createElement('div'); dots.className='metro-coach-dots';
-      for(let i=0;i<4;i++){ const s=document.createElement('span'); if(i<tapCount) s.classList.add('filled'); dots.appendChild(s); }
-      card.appendChild(head); card.appendChild(phaseEl); card.appendChild(subEl); card.appendChild(dots);
+      pct = barMod / Math.max(1, every);
+      const nextIdx = (idx + 1) % pat.length;
+      const nextSub = labels[pat[nextIdx]] || pat[nextIdx];
+      const barsToNext = Math.max(0, every - barMod);
+      tag.innerHTML = `<span class="metro-coach-pill-bold">${labels[curId] || curId}</span> <span class="metro-coach-pill-sub">• Next: ${nextSub} in ${barsToNext}b</span>`;
+    } else if (tabId === 'tempo-primer') {
       if (snapshot && snapshot.primerResult) {
-        const res=snapshot.primerResult;
-        const score=document.createElement('div'); score.className='metro-coach-score';
-        const grade=document.createElement('div'); grade.className='metro-coach-score-grade'; grade.textContent=res.grade;
-        const detail=document.createElement('div'); detail.className='metro-coach-score-detail';
-        const sign = res.delta>0?'+':''; detail.textContent = `Recalled ${res.recalled} BPM • Δ ${sign}${res.delta} (${(res.pct*100).toFixed(1)}%)`;
-        const actions=document.createElement('div'); actions.className='metro-coach-score-actions';
-        const retry=document.createElement('button'); retry.type='button'; retry.className='metro-coach-score-btn'; retry.textContent='RETRY';
-        retry.addEventListener('click', ()=>{ if(callbacks.onPrimerRetry) callbacks.onPrimerRetry(); });
-        const next=document.createElement('button'); next.type='button'; next.className='metro-coach-score-btn primary'; next.textContent='NEW TARGET';
-        next.addEventListener('click', ()=>{ if(callbacks.onPrimerNewTarget) callbacks.onPrimerNewTarget(); });
-        actions.appendChild(retry); actions.appendChild(next);
-        score.appendChild(grade); score.appendChild(detail); score.appendChild(actions);
-        card.appendChild(score);
+        if (retryBtn) retryBtn.style.display = 'inline-flex';
+        const res = snapshot.primerResult;
+        const sign = res.delta > 0 ? '+' : '';
+        tag.innerHTML = `<span class="metro-coach-pill-bold">${res.recalled} BPM</span> <span class="metro-coach-grade-badge">${res.grade}</span> <span class="metro-coach-pill-sub">Δ ${sign}${res.delta}</span>`;
+        pct = 1;
       } else {
-        const tapBtn=document.createElement('button'); tapBtn.type='button'; tapBtn.className='metro-coach-tap-area brutal-press'; tapBtn.style.marginTop='4px';
-        tapBtn.innerHTML = `<span class="metro-coach-tap-title">TAP HERE</span><span class="metro-coach-tap-sub">${escHtml(METRO_COPY.midiTapHint)}</span>`;
-        tapBtn.addEventListener('click', ()=>{ if(callbacks.onPrimerTap) callbacks.onPrimerTap(performance.now()); });
-        // midi badge inside
-        if (metroState.midiStatus==='connected'){
-          const badge=document.createElement('span'); badge.textContent='● MIDI ready'; badge.style.fontSize='0.66rem'; badge.style.color='#22c55e'; tapBtn.appendChild(badge);
-        }
-        card.appendChild(tapBtn);
+        if (retryBtn) retryBtn.style.display = 'none';
+        const target = snapshot ? snapshot.primerTarget : metroState.coachPrimer.target;
+        const tapCount = snapshot ? snapshot.primerTaps.length : 0;
+        pct = tapCount / 4;
+        tag.innerHTML = `<span class="metro-coach-pill-bold">TARGET ${target} BPM</span> <span class="metro-coach-pill-sub">• ${tapCount < 4 ? `Tap ${tapCount}/4` : 'Scoring…'}</span>`;
       }
     }
 
-    dock.appendChild(card);
-
-    // split button — STOP takes most width, far-right opens menu back up
-    const split=document.createElement('div'); split.className='metro-coach-live-split';
-    const stopBtn=document.createElement('button'); stopBtn.type='button'; stopBtn.className='metro-coach-live-stop brutal-press';
-    stopBtn.innerHTML='<i class="fa-solid fa-stop"></i> STOP SESSION';
-    stopBtn.setAttribute('aria-label','Stop training session');
-    stopBtn.addEventListener('click', ()=>{ if(callbacks.onCoachStop) callbacks.onCoachStop(); });
-    const expandBtn=document.createElement('button'); expandBtn.type='button'; expandBtn.className='metro-coach-live-expand brutal-press';
-    expandBtn.innerHTML='<i class="fa-solid fa-chevron-up"></i>';
-    expandBtn.setAttribute('aria-label', METRO_COPY.coachOpenSettings);
-    expandBtn.title = METRO_COPY.coachOpenSettings;
-    expandBtn.addEventListener('click', ()=>{ if(callbacks.onCoachExpand) callbacks.onCoachExpand(); });
-    split.appendChild(stopBtn); split.appendChild(expandBtn);
-    dock.appendChild(split);
+    if (progFill) {
+      progFill.style.transform = `scaleX(${Math.min(1, Math.max(0, pct))})`;
+    }
   }
 
   function bindMidiEvents() {
@@ -2515,11 +4175,16 @@ export function createUi(callbacks) {
     const PX_PER_BPM = 6;
     els.dial.addEventListener('wheel', (e) => {
       e.preventDefault();
-      const delta = e.deltaY > 0 ? 1 : -1;
+      const delta = e.deltaY > 0 ? -1 : 1;
       callbacks.onBpmStep(delta);
     }, { passive: false });
     const onPointerDown = (e) => {
-      if (e.target.closest('.metro-pill') || e.target.closest('.metro-stepper-btn')) return;
+      if (
+        e.target.closest('.metro-pill') ||
+        e.target.closest('.metro-stepper-btn') ||
+        e.target.closest('.metro-beat-dot') ||
+        e.target.closest('.metro-radial-seg')
+      ) return;
       gesture = {
         startY: e.clientY,
         startBpm: metroState.bpm
@@ -2565,8 +4230,31 @@ export function createUi(callbacks) {
         if (callbacks.onCoachStop) callbacks.onCoachStop();
         return;
       }
-      if (sheetOpen && els.customFormWrap && !els.customFormWrap.hidden) {
-        closeCustomForm();
+      if (sheetOpen && els.songPickerModal && !els.songPickerModal.hidden) {
+        closeSongPickerModal();
+        e.stopPropagation();
+        return;
+      }
+      if (sheetOpen && els.songEditView && !els.songEditView.hidden) {
+        if (songEditParentContext.from === 'setlist-detail' && songEditParentContext.setlistId) {
+          showSetlistDetailView(songEditParentContext.setlistId);
+        } else {
+          showSongsBrowseView();
+        }
+        e.stopPropagation();
+        return;
+      }
+      if (sheetOpen && els.setlistNameView && !els.setlistNameView.hidden) {
+        if (editingSetlistNameId) {
+          showSetlistDetailView(editingSetlistNameId);
+        } else {
+          showSetlistsListView();
+        }
+        e.stopPropagation();
+        return;
+      }
+      if (sheetOpen && els.setlistDetailView && !els.setlistDetailView.hidden) {
+        showSetlistsListView();
         e.stopPropagation();
         return;
       }
@@ -2597,6 +4285,9 @@ export function createUi(callbacks) {
       if (!p) return;
       p.hidden = p !== panel;
     });
+    if (panel === els.panelSetlist) {
+      switchMenuTab(activeMenuTab);
+    }
     if (sheetTrigger && sheetTrigger !== trigger) {
       sheetTrigger.setAttribute('aria-expanded', 'false');
     }
@@ -2620,6 +4311,7 @@ export function createUi(callbacks) {
     els.sheet.classList.remove('open');
     els.backdrop.classList.remove('open');
     els.sheet.style.transform = '';
+    closeSongPickerModal();
     if (sheetTrigger) {
       sheetTrigger.setAttribute('aria-expanded', 'false');
       sheetTrigger.focus({ preventScroll: true });
@@ -2640,6 +4332,11 @@ export function createUi(callbacks) {
   function attachSheetDrag() {
     els.sheet.addEventListener('touchstart', (e) => {
       if (!sheetOpen || e.touches.length !== 1) return;
+      // Don't start sheet drag when interacting with a reorderable song row
+      if (songDragState && songDragState.isDragging) return;
+      if (e.target && e.target.closest && e.target.closest('.metro-setlist-song-row, .metro-setlist-song-drag-handle')) {
+        return;
+      }
       drag = {
         startY: e.touches[0].clientY,
         lastY: e.touches[0].clientY,
@@ -2655,6 +4352,13 @@ export function createUi(callbacks) {
 
   function onDragMove(e) {
     if (!drag) return;
+    // If a song is being reordered, abort sheet drag entirely
+    if (songDragState && songDragState.isDragging) {
+      cleanupDragListeners();
+      drag = null;
+      if (els.sheet) els.sheet.classList.remove('dragging');
+      return;
+    }
     const touch = e.touches[0];
     const dy = touch.clientY - drag.startY;
     drag.lastY = touch.clientY;
@@ -2732,6 +4436,46 @@ export function createUi(callbacks) {
     renderCoachPrimer();
   }
 
+  function updateTempoMarking(bpm) {
+    if (!els.tempoMarking) return;
+    const marking = getTempoMarking(bpm);
+
+    if (tempoMarkingTimer !== null) {
+      clearTimeout(tempoMarkingTimer);
+      tempoMarkingTimer = null;
+    }
+    if (tempoMarkingHideTimer !== null) {
+      clearTimeout(tempoMarkingHideTimer);
+      tempoMarkingHideTimer = null;
+    }
+
+    els.tempoMarking.classList.remove('is-hiding');
+
+    if (currentMarkingText !== marking) {
+      currentMarkingText = marking;
+      els.tempoMarking.textContent = marking;
+      tempoSwapAlt = !tempoSwapAlt;
+      els.tempoMarking.classList.remove('swap-anim-a', 'swap-anim-b');
+      els.tempoMarking.classList.add(tempoSwapAlt ? 'swap-anim-a' : 'swap-anim-b');
+    }
+
+    els.tempoMarking.classList.add('is-visible');
+
+    tempoMarkingTimer = setTimeout(() => {
+      if (els.tempoMarking) {
+        els.tempoMarking.classList.remove('is-visible', 'swap-anim-a', 'swap-anim-b');
+        els.tempoMarking.classList.add('is-hiding');
+        tempoMarkingHideTimer = setTimeout(() => {
+          if (els.tempoMarking) {
+            els.tempoMarking.classList.remove('is-hiding');
+          }
+          tempoMarkingHideTimer = null;
+        }, 400);
+      }
+      tempoMarkingTimer = null;
+    }, 1800);
+  }
+
   function renderBpm() {
     if (els.bpmNum) {
       els.bpmNum.textContent = String(metroState.bpm);
@@ -2741,6 +4485,7 @@ export function createUi(callbacks) {
     if (els.bpmInput && !bpmEditing) {
       els.bpmInput.value = String(metroState.bpm);
     }
+    updateTempoMarking(metroState.bpm);
   }
 
   function renderBeatStyle() {
@@ -2801,6 +4546,64 @@ export function createUi(callbacks) {
     renderSetToggle(els.keepAwakeToggle, metroState.keepAwake);
     renderSetToggle(els.backgroundToggle, metroState.backgroundPlay);
     renderBeatStyle();
+    renderBeatColors();
+  }
+
+  function renderBeatColors() {
+    const map = [
+      { tier: 'low', input: els.colorLow, hexEl: els.colorHexLow, dot: els.colorDotLow },
+      { tier: 'mid', input: els.colorMid, hexEl: els.colorHexMid, dot: els.colorDotMid },
+      { tier: 'high', input: els.colorHigh, hexEl: els.colorHexHigh, dot: els.colorDotHigh },
+    ];
+    map.forEach(({ tier, input, hexEl, dot }) => {
+      const hex = getLevelColor(tier);
+      if (input) input.value = hex;
+      if (hexEl) hexEl.textContent = hex;
+      if (dot) dot.style.background = hex;
+    });
+  }
+
+  function bindBeatColorEvents() {
+    const handleColorChange = (tier) => (e) => {
+      const hex = e.target.value;
+      const result = setLevelColor(tier, hex, true);
+      if (result) {
+        const hexEl = tier === 'low' ? els.colorHexLow : tier === 'mid' ? els.colorHexMid : els.colorHexHigh;
+        const dot = tier === 'low' ? els.colorDotLow : tier === 'mid' ? els.colorDotMid : els.colorDotHigh;
+        if (hexEl) hexEl.textContent = result;
+        if (dot) dot.style.background = result;
+        showToast(`${tier.toUpperCase()} color ${result}`, 'info');
+      }
+    };
+    if (els.colorLow && !els.colorLow.dataset.bound) {
+      els.colorLow.dataset.bound = '1';
+      els.colorLow.addEventListener('input', handleColorChange('low'));
+      els.colorLow.addEventListener('change', handleColorChange('low'));
+    }
+    if (els.colorMid && !els.colorMid.dataset.bound) {
+      els.colorMid.dataset.bound = '1';
+      els.colorMid.addEventListener('input', handleColorChange('mid'));
+      els.colorMid.addEventListener('change', handleColorChange('mid'));
+    }
+    if (els.colorHigh && !els.colorHigh.dataset.bound) {
+      els.colorHigh.dataset.bound = '1';
+      els.colorHigh.addEventListener('input', handleColorChange('high'));
+      els.colorHigh.addEventListener('change', handleColorChange('high'));
+    }
+    if (els.resetColorsBtn && !els.resetColorsBtn.dataset.bound) {
+      els.resetColorsBtn.dataset.bound = '1';
+      els.resetColorsBtn.addEventListener('click', () => {
+        resetLevelColors(true);
+        renderBeatColors();
+        showToast('Beat colors reset to default', 'info');
+      });
+    }
+    if (els.colorInfo && !els.colorInfo.dataset.bound) {
+      els.colorInfo.dataset.bound = '1';
+      els.colorInfo.addEventListener('click', () => {
+        showToast('Tap beat dots or radial segments on the dial to cycle pitch tiers (Low / Mid / High / Mute). Customize colors for Low, Mid, and High beats below.', 'info');
+      });
+    }
   }
 
   /* Settings toggle buttons: pressed state lives in aria-pressed + .active */
@@ -2873,6 +4676,7 @@ export function createUi(callbacks) {
     rebuildBeatDots: () => { buildBeatDots(); buildRadialRing(); renderBeatStyle(); },
     renderBpm,
     renderBeatStyle,
+    renderBeatColors,
     renderPills,
     renderSheetDisplays,
     renderChipStates,
@@ -2891,6 +4695,8 @@ export function createUi(callbacks) {
     renderCoachLive,
     renderMidiState,
     clearRepeat,
+    renderTopbarPlayback,
+    renderSetlistDeck,
     showTopbarTitle,
     hideTopbarTitleShowUndo,
     notifyBpmChangedFromUser,
@@ -2910,6 +4716,8 @@ export function createUi(callbacks) {
     get coachBtn() { return els.coachBtn; },
     get topbarTitle() { return els.topbarTitle; },
     get topbarUndo() { return els.topbarUndo; },
+    get topbarPlayback() { return els.topbarPlayback; },
+    get setlistDeck() { return els.setlistDeck; },
     get topbarCenter() { return els.topbarCenter; },
     get isSheetOpen() { return sheetOpen; },
     get coachLiveRunning() { return coachLiveRunning; }

@@ -14,7 +14,7 @@
         </div>
       </div>
       <div class="modal-header-actions">
-        <button type="button" class="disclaimer-info-btn" id="openTermsInfoBtn" title="View Fan Submission Agreement" aria-label="View Fan Submission Agreement" data-track="community:open_terms">
+        <button type="button" class="disclaimer-info-btn" id="openTermsInfoBtn" title="View Legal Terms" aria-label="View Legal Terms" data-track="community:open_legal">
           <i class="fa-solid fa-circle-info"></i>
         </button>
         <button class="close-modal-btn" id="closeCommunityModal" aria-label="Close modal" data-track="community:close">
@@ -111,7 +111,7 @@
         <!-- Submission Micro Disclaimer -->
         <p class="submission-disclaimer-text">
           By submitting, you agree to our 
-          <button type="button" class="disclaimer-terms-link" id="openTermsModalLink">Fan Content Terms</button>.
+          <button type="button" class="disclaimer-terms-link" id="openTermsModalLink">Legal Terms</button>.
         </p>
 
         <!-- Submit Button -->
@@ -784,13 +784,20 @@
   const openTermsModalLink = document.getElementById('openTermsModalLink');
 
   function openTermsModal() {
+    if (typeof (window as any).openLegalModal === 'function') {
+      (window as any).openLegalModal('submissions');
+      return;
+    }
     if (typeof (window as any).openTermsModal === 'function') {
       (window as any).openTermsModal();
       return;
     }
-    termsModal?.classList.remove('is-closing');
-    termsModal?.classList.remove('hidden');
-    document.body.classList.add('modal-open');
+    const legalModal = document.getElementById('legalModal');
+    if (legalModal) {
+      legalModal.classList.remove('is-closing');
+      legalModal.classList.remove('hidden');
+      document.body.classList.add('modal-open');
+    }
   }
 
   openTermsInfoBtn?.addEventListener('click', openTermsModal);

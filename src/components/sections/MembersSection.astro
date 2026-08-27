@@ -81,6 +81,24 @@ const members = bandMembers;
     display: flex;
     align-items: center;
     gap: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-2px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+
+  .section-scroll-controls.is-scrolling {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  @media (min-width: 768px) {
+    .section-scroll-controls {
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+    }
   }
 
   .scroll-arrow-btn {
@@ -97,19 +115,27 @@ const members = bandMembers;
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 800;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease, opacity 0.16s ease;
   }
 
-  .scroll-arrow-btn:hover {
+  .scroll-arrow-btn:hover:not(:disabled):not(.is-disabled) {
     background: var(--accent-neon-yellow);
     color: #000000;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
 
-  .scroll-arrow-btn:active {
+  .scroll-arrow-btn:active:not(:disabled):not(.is-disabled) {
     transform: translate(1px, 1px);
     box-shadow: 1px 1px 0px #000000;
+  }
+
+  .scroll-arrow-btn:disabled,
+  .scroll-arrow-btn.is-disabled {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
   .members-scroll-container {
@@ -137,7 +163,8 @@ const members = bandMembers;
     box-sizing: border-box;
   }
 
-  .member-card:hover {
+  .member-card:hover,
+  .member-card.is-scroll-active {
     transform: translate(-2px, -2px);
     box-shadow: 5px 5px 0px var(--accent-neon-yellow), 5px 5px 0px 1px #000000;
   }
@@ -223,10 +250,12 @@ const members = bandMembers;
 
 <script>
   const container = document.getElementById('membersScrollContainer');
-  const prevBtn = document.getElementById('membersScrollPrev');
-  const nextBtn = document.getElementById('membersScrollNext');
+  const prevBtn = document.getElementById('membersScrollPrev') as HTMLButtonElement | null;
+  const nextBtn = document.getElementById('membersScrollNext') as HTMLButtonElement | null;
+  const cards = container?.querySelectorAll('.member-card') || [];
 
   let rafId: number | null = null;
+  let scrollSettleTimeout: ReturnType<typeof setTimeout> | null = null;
 
   function updateMembersNav() {
     if (!container) return;
@@ -237,12 +266,68 @@ const members = bandMembers;
       if (controlsGroup) {
         controlsGroup.style.display = isOverflowing ? 'flex' : 'none';
       }
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      const atStart = container.scrollLeft <= 5;
+      const atEnd = container.scrollLeft >= maxScroll - 5;
+      if (prevBtn) {
+        prevBtn.disabled = atStart;
+        prevBtn.classList.toggle('is-disabled', atStart);
+        prevBtn.setAttribute('aria-disabled', String(atStart));
+      }
+      if (nextBtn) {
+        nextBtn.disabled = atEnd;
+        nextBtn.classList.toggle('is-disabled', atEnd);
+        nextBtn.setAttribute('aria-disabled', String(atEnd));
+      }
     });
+  }
+
+  function updateActiveCardHighlight() {
+    if (!container || !cards.length) return;
+    const containerCenter = container.getBoundingClientRect().left + container.clientWidth / 2;
+    let closestCard: Element | null = null;
+    let closestDist = Infinity;
+
+    cards.forEach((card) => {
+      const rect = card.getBoundingClientRect();
+      const cardCenter = rect.left + rect.width / 2;
+      const dist = Math.abs(containerCenter - cardCenter);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestCard = card;
+      }
+    });
+
+    cards.forEach((card) => {
+      if (card === closestCard) {
+        card.classList.add('is-scroll-active');
+      } else {
+        card.classList.remove('is-scroll-active');
+      }
+    });
+
+    if (scrollSettleTimeout) clearTimeout(scrollSettleTimeout);
+    scrollSettleTimeout = setTimeout(() => {
+      cards.forEach((card) => card.classList.remove('is-scroll-active'));
+      const controlsGroup = prevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.classList.remove('is-scrolling');
+      }
+    }, 800);
   }
 
   if (container) {
     updateMembersNav();
     window.addEventListener('resize', updateMembersNav, { passive: true });
+
+    container.addEventListener('scroll', () => {
+      const controlsGroup = prevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.classList.add('is-scrolling');
+      }
+      updateMembersNav();
+      updateActiveCardHighlight();
+    }, { passive: true });
 
     container.addEventListener('wheel', (e) => {
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
@@ -251,10 +336,14 @@ const members = bandMembers;
     }, { passive: true });
 
     prevBtn?.addEventListener('click', () => {
+      const controlsGroup = prevBtn?.parentElement;
+      if (controlsGroup) controlsGroup.classList.add('is-scrolling');
       container.scrollBy({ left: -260, behavior: 'smooth' });
     });
 
     nextBtn?.addEventListener('click', () => {
+      const controlsGroup = nextBtn?.parentElement;
+      if (controlsGroup) controlsGroup.classList.add('is-scrolling');
       container.scrollBy({ left: 260, behavior: 'smooth' });
     });
   }

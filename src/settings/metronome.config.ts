@@ -19,7 +19,7 @@ export interface MetronomeSubdivision {
   perBeat: number;
 }
 
-export type MetroBeatTierId = 'low' | 'mid' | 'high';
+export type MetroBeatTierId = 'mute' | 'low' | 'mid' | 'high';
 
 export interface MetroBeatTier {
   id: MetroBeatTierId;
@@ -27,6 +27,7 @@ export interface MetroBeatTier {
 }
 
 export const METRO_BEAT_TIERS: readonly MetroBeatTier[] = [
+  { id: 'mute', ratio: 0 },
   { id: 'low', ratio: 0.75 },
   { id: 'mid', ratio: 1 },
   { id: 'high', ratio: 1.5 }
@@ -44,12 +45,51 @@ export interface MetronomeSound {
 
 export type SetlistCategory = 'inspires' | 'covers' | 'originals' | 'custom';
 
+export interface SongSection {
+  id: string;
+  name: string;
+  bpm?: number;
+  timeSig?: string;
+  bars: number;
+}
+
 export interface MetronomeSetlistEntry {
   title: string;
   artist: string;
   bpm: number;
   category: SetlistCategory;
   inspirationId?: string;
+  id?: string;
+  timeSig?: string;
+  subdivision?: string;
+  notes?: string;
+  countIn?: boolean;
+  structure?: SongSection[];
+  createdAt?: number;
+  updatedAt?: number;
+  isCustom?: boolean;
+}
+
+export interface MetronomeSetlistItem {
+  id?: string;
+  songId?: string;
+  title: string;
+  artist: string;
+  bpm: number;
+  timeSig?: string;
+  countIn?: boolean;
+  structure?: SongSection[];
+  category?: SetlistCategory;
+  inspirationId?: string;
+  notes?: string;
+}
+
+export interface MetronomeSetlist {
+  id: string;
+  name: string;
+  songs: MetronomeSetlistItem[];
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface CoachDeckTab {
@@ -91,11 +131,10 @@ export const METRO_SUBDIVISIONS: readonly MetronomeSubdivision[] = [
 ];
 
 export const METRO_SOUNDS: readonly MetronomeSound[] = [
-  { id: 'click', label: 'CLICK', type: 'square', freq: 1100, accentFreq: 1750, decay: 0.04, gain: 0.5 },
-  { id: 'woodblock', label: 'BLOCK', type: 'triangle', freq: 820, accentFreq: 1240, decay: 0.065, gain: 0.55 },
-  { id: 'beep', label: 'BEEP', type: 'sine', freq: 880, accentFreq: 1320, decay: 0.08, gain: 0.5 },
-  { id: 'rimshot', label: 'STICK', type: 'triangle', freq: 1600, accentFreq: 2200, decay: 0.035, gain: 0.48 },
-  { id: 'cowbell', label: 'BELL', type: 'sine', freq: 580, accentFreq: 840, decay: 0.075, gain: 0.45 }
+  { id: 'click', label: 'CLASSICCLICK', type: 'square', freq: 1100, accentFreq: 1750, decay: 0.04, gain: 0.5 },
+  { id: 'woodblock', label: 'WOODBLOCK', type: 'triangle', freq: 820, accentFreq: 1240, decay: 0.065, gain: 0.55 },
+  { id: 'cowbell', label: 'COWBELL', type: 'sine', freq: 580, accentFreq: 840, decay: 0.075, gain: 0.45 },
+  { id: 'rimshot', label: 'RIMCLICK', type: 'triangle', freq: 1600, accentFreq: 2200, decay: 0.035, gain: 0.48 }
 ];
 
 /* ── Setlist by category ───────────────────────────────────────────────
@@ -155,14 +194,16 @@ export const METRO_COACH_TABS: readonly CoachDeckTab[] = [
   { id: 'tempo-primer', label: 'TEMPO PRIMER', icon: 'fa-solid fa-stopwatch', blurb: 'Target tempo recall & micro-timing consistency trainer.' }
 ];
 
-export type CoachDifficulty = 'easy' | 'medium' | 'hard' | 'expert';
+export type CoachSpeedUnit = 'bars' | 'beats' | 'seconds';
 
 export const COACH_DEFAULTS = {
   innerClock: { audibleBars: 2, mutedBars: 2, random: false },
-  speedTrainer: { start: 120, target: 180, step: 10, everyBars: 4, unit: 'bars' as const, repeat: false },
+  speedTrainer: { start: 120, target: 180, step: 10, everyBars: 4, unit: 'bars' as CoachSpeedUnit, repeat: false, direction: 'asc' as const },
   rhythmStep: { pattern: ['1-4', '1-8', '1-16'] as string[], everyBars: 4, poly: false, polyRatio: '3:2' as const },
   tempoPrimer: { difficulty: 'easy' as CoachDifficulty, target: 120 }
 } as const;
+
+export type CoachSpeedDirection = 'asc' | 'desc';
 
 export const COACH_PRIMER_MAELZEL = [40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 63, 66, 69, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 126, 132, 138, 144, 152, 160, 168, 176, 184, 192, 200, 208] as const;
 
@@ -254,7 +295,7 @@ export const METRO_COPY = {
 • VIBRATE — Haptic pulse on beats
 • SCREEN ON — Stops phone from sleeping
 • BACKGROUND — Keeps click playing in background or locked`,
-  infoPitchMap: 'Tap any beat dot or radial segment to cycle pitch (low / mid / high).',
+  infoPitchMap: 'Tap any beat dot or radial segment to cycle pitch and mute (normal / high / low / mute).',
   infoMidi: 'Any velocity note 35–81 triggers tap. Connect drum pads or keyboards to tap tempo via MIDI.',
    webAudioUnsupported: 'Web Audio is not supported on this browser.',
    audioBlocked: 'Audio was blocked — press play again to start.',
@@ -293,11 +334,30 @@ export const METRO_COPY = {
   midiNoSupport: 'Web MIDI not supported on this browser',
   midiTapHint: 'Tap 4 quarter notes at your recalled speed',
   midiHint: 'Any velocity note 35–81 triggers tap. Works with drum pads & keyboards.',
-  resetPitchMap: 'RESET PITCH MAP',
-  pitchMapHint: 'Tap any beat dot or radial segment to cycle pitch (low / mid / high).',
-  pitchMapResetToast: 'Pitch map reset to default',
-  beatTierAria: (beatNum: number, tier: string) => `Beat ${beatNum} — pitch ${tier}`
+  resetPitchMap: 'RESET PITCH & BEAT COLORS',
+  resetPitchColors: 'RESET PITCH & BEAT COLORS',
+  pitchMapHint: 'Tap any beat dot or radial segment to cycle pitch and mute (normal / high / low / mute).',
+  pitchMapResetToast: 'Pitch map and beat colors reset to default',
+  pitchColorsResetToast: 'Pitch map and beat colors reset to default',
+  infoPitchAndColors: 'Tap any beat dot or radial segment on the dial to cycle pitch tiers (Low / Mid / High / Mute). Customize beat colors below.',
+  beatTierAria: (beatNum: number, tier: string) => tier === 'mute' ? `Beat ${beatNum} — muted` : `Beat ${beatNum} — pitch ${tier}`
 } as const;
+
+export function getTempoMarking(bpm: number): string {
+  if (bpm <= 20) return 'Larghissimo';
+  if (bpm <= 40) return 'Grave';
+  if (bpm < 60) return 'Lento / Largo';
+  if (bpm <= 65) return 'Larghetto';
+  if (bpm < 76) return 'Adagio';
+  if (bpm < 108) return 'Andante';
+  if (bpm < 120) return 'Moderato';
+  if (bpm < 156) return 'Allegro';
+  if (bpm < 168) return 'Vivace';
+  if (bpm < 195) return 'Presto';
+  if (bpm <= 210) return 'Prestissimo • Frenchcore';
+  if (bpm < 245) return 'Prestissimo • Speedcore';
+  return 'Splittercore';
+}
 
 export type MetroBeatIndicatorStyle = 'dots' | 'radial';
 
@@ -316,6 +376,74 @@ export const SHEET_STORAGE_KEYS = {
   perSong: 'kins-metro-sheet-map'
 } as const;
 
+export const METRO_DEFAULT_SETLISTS: readonly MetronomeSetlist[] = [
+  {
+    id: 'kins-rehearsal-set',
+    name: 'KINS Rehearsal Standards',
+    songs: [
+      {
+        id: 'turnip-farm',
+        songId: 'turnip-farm',
+        title: 'Turnip Farm',
+        artist: 'Dinosaur Jr.',
+        bpm: 147,
+        timeSig: '4-4',
+        category: 'inspires',
+        inspirationId: 'turnip-farm',
+        countIn: true,
+        structure: [
+          { id: 'sec-1', name: 'Intro', bpm: 147, timeSig: '4-4', bars: 4 },
+          { id: 'sec-2', name: 'Verse 1', bpm: 147, timeSig: '4-4', bars: 8 },
+          { id: 'sec-3', name: 'Chorus', bpm: 147, timeSig: '4-4', bars: 8 },
+          { id: 'sec-4', name: 'Outro', bpm: 147, timeSig: '4-4', bars: 4 }
+        ]
+      },
+      {
+        id: 'underwear',
+        songId: 'underwear',
+        title: 'Underwear',
+        artist: 'Pulp',
+        bpm: 95,
+        timeSig: '4-4',
+        category: 'inspires',
+        inspirationId: 'underwear',
+        countIn: false,
+        structure: [
+          { id: 'sec-1', name: 'Verse', bpm: 95, timeSig: '4-4', bars: 8 },
+          { id: 'sec-2', name: 'Chorus', bpm: 95, timeSig: '4-4', bars: 8 },
+          { id: 'sec-3', name: 'Outro', bpm: 95, timeSig: '4-4', bars: 4 }
+        ]
+      },
+      {
+        id: 'heroes',
+        songId: 'heroes',
+        title: 'Heroes',
+        artist: 'David Bowie',
+        bpm: 112,
+        timeSig: '4-4',
+        category: 'inspires',
+        inspirationId: 'heroes',
+        countIn: true,
+        structure: [
+          { id: 'sec-1', name: 'Intro', bpm: 112, timeSig: '4-4', bars: 4 },
+          { id: 'sec-2', name: 'Verse', bpm: 112, timeSig: '4-4', bars: 8 },
+          { id: 'sec-3', name: 'Chorus', bpm: 112, timeSig: '4-4', bars: 8 },
+          { id: 'sec-4', name: 'Guitar Solo', bpm: 112, timeSig: '4-4', bars: 8 },
+          { id: 'sec-5', name: 'Outro', bpm: 112, timeSig: '4-4', bars: 6 }
+        ]
+      }
+    ]
+  }
+];
+
+export const DEFAULT_BEAT_COLORS = {
+  low: '#FF9F1C',
+  mid: '#2EC4B6',
+  high: '#53FC18'
+} as const;
+
+export type BeatColorTier = 'low' | 'mid' | 'high';
+
 export const METRO_STORAGE_KEYS = {
   bpm: 'kins-metro-bpm',
   timeSig: 'kins-metro-timesig',
@@ -329,5 +457,7 @@ export const METRO_STORAGE_KEYS = {
   backgroundPlay: 'kins-metro-backgroundPlay',
   beatStyle: 'kins-metro-beatStyle',
   beatTiers: 'kins-metro-beatTiers',
-  customSetlist: 'kins-metro-custom-setlist'
+  levelColors: 'kins-metro-level-colors',
+  customSetlist: 'kins-metro-custom-setlist',
+  setlists: 'kins-metro-setlists'
 } as const;

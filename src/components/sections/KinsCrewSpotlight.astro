@@ -163,6 +163,24 @@ const featureCards = [
     display: flex;
     align-items: center;
     gap: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-2px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+
+  .section-scroll-controls.is-scrolling {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  @media (min-width: 768px) {
+    .section-scroll-controls {
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+    }
   }
 
   .scroll-arrow-btn {
@@ -179,19 +197,27 @@ const featureCards = [
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 800;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease, opacity 0.16s ease;
   }
 
-  .scroll-arrow-btn:hover {
+  .scroll-arrow-btn:hover:not(:disabled):not(.is-disabled) {
     background: var(--accent-neon-yellow);
     color: #000000;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
 
-  .scroll-arrow-btn:active {
+  .scroll-arrow-btn:active:not(:disabled):not(.is-disabled) {
     transform: translate(1px, 1px);
     box-shadow: 1px 1px 0px #000000;
+  }
+
+  .scroll-arrow-btn:disabled,
+  .scroll-arrow-btn.is-disabled {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
   /* Snap-Scroll Container */
@@ -219,7 +245,8 @@ const featureCards = [
     box-sizing: border-box;
   }
 
-  .spotlight-card:hover {
+  .spotlight-card:hover,
+  .spotlight-card.is-scroll-active {
     transform: translate(-2px, -2px);
     box-shadow: 5px 5px 0px var(--accent-neon-yellow), 5px 5px 0px 1px #000000;
   }
@@ -525,10 +552,12 @@ const featureCards = [
   import { showToast } from '../../scripts/controllers/toast.js';
 
   const spotlightContainer = document.getElementById('spotlightScrollContainer');
-  const spotlightPrevBtn = document.getElementById('spotlightScrollPrev');
-  const spotlightNextBtn = document.getElementById('spotlightScrollNext');
+  const spotlightPrevBtn = document.getElementById('spotlightScrollPrev') as HTMLButtonElement | null;
+  const spotlightNextBtn = document.getElementById('spotlightScrollNext') as HTMLButtonElement | null;
+  const spotlightCards = spotlightContainer?.querySelectorAll('.spotlight-card') || [];
 
   let spotlightRafId: number | null = null;
+  let spotlightScrollSettleTimeout: ReturnType<typeof setTimeout> | null = null;
 
   function updateSpotlightNav() {
     if (!spotlightContainer) return;
@@ -539,12 +568,68 @@ const featureCards = [
       if (controlsGroup) {
         controlsGroup.style.display = isOverflowing ? 'flex' : 'none';
       }
+      const maxScroll = spotlightContainer.scrollWidth - spotlightContainer.clientWidth;
+      const atStart = spotlightContainer.scrollLeft <= 5;
+      const atEnd = spotlightContainer.scrollLeft >= maxScroll - 5;
+      if (spotlightPrevBtn) {
+        spotlightPrevBtn.disabled = atStart;
+        spotlightPrevBtn.classList.toggle('is-disabled', atStart);
+        spotlightPrevBtn.setAttribute('aria-disabled', String(atStart));
+      }
+      if (spotlightNextBtn) {
+        spotlightNextBtn.disabled = atEnd;
+        spotlightNextBtn.classList.toggle('is-disabled', atEnd);
+        spotlightNextBtn.setAttribute('aria-disabled', String(atEnd));
+      }
     });
+  }
+
+  function updateActiveSpotlightHighlight() {
+    if (!spotlightContainer || !spotlightCards.length) return;
+    const containerCenter = spotlightContainer.getBoundingClientRect().left + spotlightContainer.clientWidth / 2;
+    let closestCard: Element | null = null;
+    let closestDist = Infinity;
+
+    spotlightCards.forEach((card) => {
+      const rect = card.getBoundingClientRect();
+      const cardCenter = rect.left + rect.width / 2;
+      const dist = Math.abs(containerCenter - cardCenter);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestCard = card;
+      }
+    });
+
+    spotlightCards.forEach((card) => {
+      if (card === closestCard) {
+        card.classList.add('is-scroll-active');
+      } else {
+        card.classList.remove('is-scroll-active');
+      }
+    });
+
+    if (spotlightScrollSettleTimeout) clearTimeout(spotlightScrollSettleTimeout);
+    spotlightScrollSettleTimeout = setTimeout(() => {
+      spotlightCards.forEach((card) => card.classList.remove('is-scroll-active'));
+      const controlsGroup = spotlightPrevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.classList.remove('is-scrolling');
+      }
+    }, 800);
   }
 
   if (spotlightContainer) {
     updateSpotlightNav();
     window.addEventListener('resize', updateSpotlightNav, { passive: true });
+
+    spotlightContainer.addEventListener('scroll', () => {
+      const controlsGroup = spotlightPrevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.classList.add('is-scrolling');
+      }
+      updateSpotlightNav();
+      updateActiveSpotlightHighlight();
+    }, { passive: true });
 
     spotlightContainer.addEventListener('wheel', (e) => {
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
@@ -553,10 +638,14 @@ const featureCards = [
     }, { passive: true });
 
     spotlightPrevBtn?.addEventListener('click', () => {
+      const controlsGroup = spotlightPrevBtn?.parentElement;
+      if (controlsGroup) controlsGroup.classList.add('is-scrolling');
       spotlightContainer.scrollBy({ left: -260, behavior: 'smooth' });
     });
 
     spotlightNextBtn?.addEventListener('click', () => {
+      const controlsGroup = spotlightNextBtn?.parentElement;
+      if (controlsGroup) controlsGroup.classList.add('is-scrolling');
       spotlightContainer.scrollBy({ left: 260, behavior: 'smooth' });
     });
   }

@@ -74,6 +74,28 @@ export function createMetroEngine() {
     try { fn(arg); } catch (e) {}
   }
 
+  /* Voice-count helper: speaks beat number 1..beatsPerBar with tier-adjusted pitch */
+  function speakVoiceCount(beatInBar, tier, isAccent) {
+    if (tier === 'mute') return;
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    try {
+      const count = ((beatInBar % runBeatsPerBar) + runBeatsPerBar) % runBeatsPerBar + 1;
+      const text = String(count);
+      const utt = new SpeechSynthesisUtterance(text);
+      const pitchMap = { low: 0.75, mid: 1.0, high: 1.45 };
+      utt.pitch = pitchMap[tier] != null ? pitchMap[tier] : 1.0;
+      // accent lifts slightly
+      if (isAccent) utt.pitch = Math.min(2, utt.pitch * 1.08);
+      utt.volume = isAccent ? 1.0 : 0.95;
+      const baseRate = Math.min(2.0, Math.max(0.9, runRef.bpm / 110));
+      utt.rate = Math.min(2.2, baseRate * (runPerBeat > 1 ? 1.15 : 1));
+      utt.lang = 'en-US';
+      // interrupt any queued utterance so fast tempos don't queue up
+      try { window.speechSynthesis.cancel(); } catch (e2) {}
+      window.speechSynthesis.speak(utt);
+    } catch (e) {}
+  }
+
   /* ---------- context bootstrap ---------- */
 
   async function ensureContext() {
@@ -139,7 +161,7 @@ export function createMetroEngine() {
       /* Hard cap while rAF is paused (backgrounded): drop oldest so the
          queue can never grow for the whole background duration. */
       if (visualQueue.length >= METRO_TIMING.maxVisualQueueLen) visualQueue.shift();
-      visualQueue.push({ time: d.time, beatInBar: d.beatInBar, isAccent: !!d.isAccent, tier: d.tier || 'mid' });
+      visualQueue.push({ time: d.time, beatInBar: d.beatInBar, isAccent: !!d.isAccent, tier: d.tier || 'mid', isBeatStart: d.isBeatStart !== false });
       scheduledTotal = d.n || scheduledTotal + 1;
     }
   }
@@ -165,7 +187,13 @@ export function createMetroEngine() {
   /* ---------- legacy path internals ---------- */
 
   function scheduleClick(time, isAccent, startsABeat, tier) {
+    if (tier === 'mute') return;
     const sound = getSound();
+    // Voice-count is rendered via Web Speech API in drainVisualQueue, not via oscillator
+    if (sound.id === 'voice-count') {
+      scheduledTotal++;
+      return;
+    }
     const t = tier || 'mid';
     const ratio = t === 'low' ? 0.75 : (t === 'high' ? 1.5 : 1);
     const baseFreq = isAccent ? sound.accentFreq : sound.freq;
@@ -212,35 +240,47 @@ export function createMetroEngine() {
      roll the counters back so the cursor restarts there at the CURRENT
      run settings. Used by tempo/subdivision/time-signature changes (so
      they land immediately instead of one lookahead late) and by stop()
-     (so no ghost beat rings out). */
-  function flushFrom(guardSec) {
+     (so no ghost beat rings out).
+     killUnstarted: also cancel clicks inside the guard window that have
+     NOT started yet (now < time <= now+guardSec). Tempo/option changes
+     leave these alone — cancelling near-future clicks mid-transition
+     hiccups the pulse — but an explicit stop must never let them fire,
+     or up to one click per stop lands as a ghost beat. */
+  function flushFrom(guardSec, killUnstarted) {
     if (!ctx) return;
     const now = ctx.currentTime;
     const cutoff = now + guardSec;
-    let idx = -1;
+    const kept = [];
+    let resumeAt = -1;
     for (let i = 0; i < pendingSources.length; i++) {
-      if (pendingSources[i].time > cutoff) { idx = i; break; }
+      const p = pendingSources[i];
+      if (p.time > cutoff) {
+        if (resumeAt === -1) resumeAt = p.time;
+        cancelSource(p, now);
+        clickCounter--;
+        if (p.startsABeat) beatCounter--;
+      } else if (killUnstarted && p.time > now) {
+        /* scheduled but silent so far — silence it for good */
+        cancelSource(p, now);
+      } else {
+        kept.push(p);
+      }
     }
-    if (idx === -1) {
+    pendingSources.length = 0;
+    for (let i = 0; i < kept.length; i++) pendingSources.push(kept[i]);
+    if (resumeAt !== -1) {
+      /* visual queue is time-ordered; drop the suffix matching the cancels */
+      while (visualQueue.length && visualQueue[visualQueue.length - 1].time > cutoff) {
+        visualQueue.pop();
+      }
+      if (clickCounter < 0) clickCounter = 0;
+      if (beatCounter < 0) beatCounter = 0;
+      nextClickTime = Math.max(resumeAt, now + guardSec);
+    } else {
       /* Nothing beyond the guard — just make sure the cursor isn't sitting
          inside the guard window where a rescheduled click would fire late */
       if (nextClickTime < now + guardSec) nextClickTime = now + guardSec;
-      return;
     }
-    const doomed = pendingSources.splice(idx);
-    const resumeAt = doomed[0].time;
-    for (let i = 0; i < doomed.length; i++) {
-      cancelSource(doomed[i], now);
-      clickCounter--;
-      if (doomed[i].startsABeat) beatCounter--;
-    }
-    /* visual queue is time-ordered; drop the suffix matching the cancels */
-    while (visualQueue.length && visualQueue[visualQueue.length - 1].time > cutoff) {
-      visualQueue.pop();
-    }
-    if (clickCounter < 0) clickCounter = 0;
-    if (beatCounter < 0) beatCounter = 0;
-    nextClickTime = Math.max(resumeAt, now + guardSec);
   }
 
   /* Advance the cursor past one click that can no longer be scheduled in
@@ -291,7 +331,7 @@ export function createMetroEngine() {
       const isAccent = runAccentFirst && startsABeat && beatInBar === 0;
       const tier = (runBeatTiers && runBeatTiers[beatInBar]) || 'mid';
       scheduleClick(nextClickTime, isAccent, startsABeat, tier);
-      visualQueue.push({ time: nextClickTime, beatInBar, isAccent, tier });
+      visualQueue.push({ time: nextClickTime, beatInBar, isAccent, tier, isBeatStart: startsABeat });
       nextClickTime += clickDur;
       clickCounter++;
       if (startsABeat) beatCounter++;
@@ -339,6 +379,13 @@ export function createMetroEngine() {
       if (evt.isAccent && runVibrate && typeof navigator !== 'undefined' && navigator.vibrate) {
         try { navigator.vibrate(12); } catch (e) {}
       }
+      // Voice-count: speak the beat number on each beat start (tier mute = silence, low/mid/high = pitch)
+      try {
+        const curSound = getSound();
+        if (curSound && curSound.id === 'voice-count' && evt.tier !== 'mute' && evt.isBeatStart !== false) {
+          speakVoiceCount(evt.beatInBar, evt.tier, !!evt.isAccent);
+        }
+      } catch (e2) {}
     }
   }
 
@@ -407,7 +454,7 @@ export function createMetroEngine() {
     if (usingWorklet) {
       postToWorklet({ type: 'stop' });
     } else if (ctx) {
-      flushFrom(METRO_TIMING.stopFlushGuardSec);
+      flushFrom(METRO_TIMING.stopFlushGuardSec, true);
       pendingSources.length = 0;
     }
     if (schedulerTimer !== null) {
@@ -419,6 +466,8 @@ export function createMetroEngine() {
       uiRafId = null;
     }
     visualQueue.length = 0;
+    // stop any queued voice-count speech
+    try { if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
   }
 
   function updateBpm(bpm) {
@@ -467,13 +516,26 @@ export function createMetroEngine() {
 
   /* Auditions a single click immediately on user gesture even when stopped */
   async function previewClick(tierId, soundId) {
+    if (tierId === 'mute') return;
+    const sound = (soundId ? METRO_SOUNDS.find((s) => s.id === soundId) : null) || getSound();
+    // Voice-count preview: speak the count with tier-adjusted pitch (use beat 1)
+    if (sound.id === 'voice-count') {
+      // ensure context for timing but speech doesn't need audio context
+      const ok = await ensureContext();
+      if (!ok || !ctx) return;
+      if (ctx.state !== 'running') {
+        try { await ctx.resume(); } catch (e) {}
+      }
+      // speak "1" with tier pitch
+      speakVoiceCount(0, tierId || 'mid', false);
+      return;
+    }
     const ok = await ensureContext();
     if (!ok || !ctx) return;
     if (ctx.state !== 'running') {
       try { await ctx.resume(); } catch (e) {}
     }
     if (ctx.state !== 'running') return;
-    const sound = (soundId ? METRO_SOUNDS.find((s) => s.id === soundId) : null) || getSound();
     const t = tierId || 'mid';
     const ratio = t === 'low' ? 0.75 : (t === 'high' ? 1.5 : 1);
     const freq = sound.freq * ratio;
@@ -496,6 +558,10 @@ export function createMetroEngine() {
      the legacy path reads it per-click at schedule time. */
   function updateSound(id) {
     if (usingWorklet) postToWorklet({ type: 'sound', id });
+    // switching away from voice-count should stop any queued speech
+    if (id !== 'voice-count') {
+      try { if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
+    }
   }
 
   function setVolume(value) {

@@ -106,9 +106,10 @@ const memberTabs = [
   .member-filter-tab-btn {
     flex: 1 1 0px;
     min-width: 58px;
-    background: rgba(24, 24, 27, 0.9);
-    border: 1.5px solid #27272a;
-    color: #a1a1aa;
+    background: var(--surface-card-light);
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    color: var(--text-card-muted);
     font-family: var(--font-secondary);
     font-size: 0.74rem;
     font-weight: 700;
@@ -122,25 +123,26 @@ const memberTabs = [
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.16s var(--ease-tactile);
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
     user-select: none;
     box-sizing: border-box;
   }
 
   .member-filter-tab-btn:hover:not(.active) {
-    background: #27272a;
-    border-color: #3f3f46;
-    color: #ffffff;
-    transform: translateY(-1px);
+    background: var(--surface-card-light-hover);
+    border-color: #000000;
+    color: var(--text-card-primary);
+    transform: translate(-1px, -1px);
+    box-shadow: 2px 2px 0px #000000;
   }
 
   .member-filter-tab-btn.active {
-    background: #fbbf24;
+    background: var(--accent-neon-yellow);
     color: #000000;
     border-color: #000000;
     box-shadow: 2px 2px 0px #000000;
     font-weight: 900;
-    transform: translateY(0);
+    transform: translate(-1px, -1px);
   }
 
   .inspired-tracks-container {
@@ -330,8 +332,9 @@ const memberTabs = [
     min-width: 18px;
     padding: 0 6px;
     border-radius: 4px;
-    background-color: #fbbf24;
+    background-color: var(--accent-neon-yellow);
     color: #000000;
+    border: 1px solid #000000;
     font-family: var(--font-secondary);
     font-size: 11px;
     font-weight: 900;
@@ -340,8 +343,9 @@ const memberTabs = [
     justify-content: center;
     line-height: 1;
     user-select: none;
-    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+    box-shadow: 1px 1px 0px #000000;
     box-sizing: border-box;
+    transition: background-color 0.16s ease;
   }
 
   .inspired-tracks-container :global(.play-btn) {
@@ -386,7 +390,7 @@ const memberTabs = [
 
   .inspired-tracks-container :global(.empty-icon) {
     font-size: 1.6rem;
-    color: #fbbf24;
+    color: var(--accent-neon-yellow);
     text-shadow: 1px 1px 0px #000000;
   }
 
@@ -457,19 +461,22 @@ const memberTabs = [
     width: 8px;
     height: 8px;
     border-radius: 2px;
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--text-card-muted);
+    opacity: 0.32;
     border: 1px solid #000000;
     cursor: pointer;
     padding: 0;
-    transition: all 0.2s var(--ease-snappy);
+    transition: background-color 0.2s var(--ease-snappy), opacity 0.2s ease, width 0.2s var(--ease-snappy);
   }
 
   .dots-pagination-container :global(.inspired-dot:hover) {
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--text-card-primary);
+    opacity: 0.55;
   }
 
   .dots-pagination-container :global(.inspired-dot.active) {
-    background: #fbbf24;
+    background: var(--accent-neon-yellow);
+    opacity: 1;
     width: 18px;
   }
 
@@ -696,7 +703,7 @@ const memberTabs = [
       tracks.forEach((track: any) => {
         const badgesHtml = (track.curatedBy || []).map((m: string) => {
           const initial = MEMBER_INITIALS[m] || m.charAt(0).toUpperCase();
-          return `<span class="member-curator-badge rounded-md bg-amber-400 text-black font-black text-[10px] px-1.5 h-4 inline-flex items-center justify-center" title="Curated by ${m}">${initial}</span>`;
+          return `<span class="member-curator-badge" title="Curated by ${m}">${initial}</span>`;
         }).join('');
 
         const card = document.createElement('div');

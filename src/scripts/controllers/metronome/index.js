@@ -2,6 +2,7 @@ import {
   METRO_BPM,
   METRO_COPY,
   METRO_SETLIST,
+  METRO_TIME_SIGNATURES,
   METRO_SUBDIVISIONS
 } from '../../../settings/metronome.config';
 import { showToast } from '../toast.js';
@@ -25,13 +26,15 @@ import {
   setBeatStyle,
   cycleBeatTier,
   resetBeatTiers,
+  resetLevelColors,
   syncBeatTiersLength,
   setCoachTab,
   setCoachInner,
   setCoachSpeed,
   setCoachRhythm,
   setCoachPrimer,
-  setMidiDeviceId
+  setMidiDeviceId,
+  getSetlistById
 } from './metroState.js';
 import { createMetroEngine } from './audioEngine.js';
 import { createUi } from './uiBindings.js';
@@ -57,7 +60,81 @@ const tapTimes = [];
 function onVisualBeat(evt) {
   ui.renderBeat(evt.beatInBar, evt.tier);
   if (coachEngine && coachEngine.isRunning()) {
-    coachEngine.handleBeat(evt.beatInBar, evt.isAccent);
+    coachEngine.handleBeat(evt.beatInBar, evt.isAccent, evt.isBeatStart);
+  }
+
+  // Handle bar progression and transitions on downbeat (beatInBar === 0).
+  // Guard with isBeatStart so subdivisions (multiple clicks per beat)
+  // don't advance the bar counter multiple times per physical beat.
+  if (evt.isBeatStart !== false && evt.beatInBar === 0 && (metroState.activeSetlist || metroState.activeSong)) {
+    handlePlaybackBarProgress();
+  }
+}
+
+function handlePlaybackBarProgress() {
+  const song = metroState.activeSong;
+  if (!song) return;
+
+  // 1. If currently in count-in (1-bar count-in)
+  if (metroState.isCountIn) {
+    metroState.isCountIn = false;
+    metroState.currentSectionIdx = 0;
+    metroState.currentSectionBar = 1;
+    if (song.structure && song.structure.length > 0) {
+      applySectionParameters(song.structure[0], song);
+    }
+    ui.renderTopbarPlayback();
+    ui.renderSetlistDeck();
+    return;
+  }
+
+  // 2. If song has structure
+  if (song.structure && song.structure.length > 0) {
+    const secIdx = metroState.currentSectionIdx || 0;
+    const sec = song.structure[secIdx];
+    if (!sec) return;
+
+    if (metroState.currentSectionBar >= (Number(sec.bars) || 8)) {
+      // Section completed! Advance section
+      if (secIdx < song.structure.length - 1) {
+        metroState.currentSectionIdx = secIdx + 1;
+        metroState.currentSectionBar = 1;
+        applySectionParameters(song.structure[metroState.currentSectionIdx], song);
+      } else {
+        // Last section of the song completed!
+        handleSongCompletion();
+      }
+    } else {
+      metroState.currentSectionBar++;
+      ui.renderTopbarPlayback();
+    }
+  }
+}
+
+function handleSongCompletion() {
+  if (metroState.activeSetlist && Array.isArray(metroState.activeSetlist.songs)) {
+    const nextSongIdx = (metroState.activeSetlistSongIdx || 0) + 1;
+    if (nextSongIdx < metroState.activeSetlist.songs.length) {
+      // Advance to next song in setlist
+      metroState.activeSetlistSongIdx = nextSongIdx;
+      metroState.activeSong = metroState.activeSetlist.songs[nextSongIdx];
+      startActiveSongPlayback();
+    } else {
+      // Setlist complete!
+      stopMetronome();
+      metroState.activeSetlist = null;
+      metroState.activeSong = null;
+      ui.renderTopbarPlayback();
+      ui.renderSetlistDeck();
+      showToast('Setlist complete!', 'success');
+    }
+  } else {
+    // Single song complete!
+    stopMetronome();
+    metroState.activeSong = null;
+    ui.renderTopbarPlayback();
+    ui.renderSetlistDeck();
+    showToast('Song complete!', 'success');
   }
 }
 
@@ -178,6 +255,11 @@ function stopMetronome() {
   /* Invalidate any in-flight async start BEFORE anything else so a stop
      racing a resuming context can never resurrect the run */
   startGeneration++;
+  if (coachEngine && coachEngine.isRunning()) {
+    coachEngine.stop();
+    ui.exitCoachLive();
+    engine.setVolume(metroState.volume);
+  }
   if (!metroState.playing && !engine.playing) {
     metroState.playing = false;
     ui.renderPlayState(false);
@@ -329,6 +411,145 @@ function onBeatStyleChange(style) {
   ui.resetBeatIndicator();
 }
 
+async function onPlaySetlist(setlistId) {
+  const setlist = getSetlistById(setlistId);
+  if (!setlist || !setlist.songs || setlist.songs.length === 0) {
+    showToast('This setlist has no songs', 'warning');
+    return;
+  }
+  // Mutual exclusion: cannot start setlist while a single song is active — require exit
+  if (metroState.activeSong && !metroState.activeSetlist) {
+    showToast('Exit current song playback first', 'warning');
+    return;
+  }
+  stopEverything();
+  metroState.activeSetlist = setlist;
+  metroState.activeSetlistSongIdx = 0;
+  metroState.activeSong = setlist.songs[0];
+
+  await startActiveSongPlayback();
+}
+
+async function onPlaySong(song) {
+  if (!song) return;
+  // Mutual exclusion: cannot start single song while setlist is active — require exit
+  if (metroState.activeSetlist) {
+    showToast('Exit current setlist playback first', 'warning');
+    return;
+  }
+  stopEverything();
+  metroState.activeSetlist = null;
+  metroState.activeSetlistSongIdx = 0;
+  metroState.activeSong = song;
+
+  await startActiveSongPlayback();
+}
+
+function onExitPlayback() {
+  const wasSetlist = !!metroState.activeSetlist;
+  const wasSong = !!metroState.activeSong;
+  if (!wasSetlist && !wasSong) {
+    showToast('Nothing to exit', 'info');
+    return;
+  }
+  stopEverything();
+  metroState.activeSetlist = null;
+  metroState.activeSetlistSongIdx = 0;
+  metroState.activeSong = null;
+  metroState.currentSectionIdx = 0;
+  metroState.currentSectionBar = 1;
+  metroState.isCountIn = false;
+  ui.renderTopbarPlayback();
+  ui.renderSetlistDeck();
+  showToast(wasSetlist ? 'Exited setlist playback' : 'Exited song playback', 'info');
+}
+
+async function startActiveSongPlayback() {
+  const song = metroState.activeSong;
+  if (!song) return;
+
+  // Handle 1-bar count-in
+  if (song.countIn) {
+    metroState.isCountIn = true;
+    metroState.currentSectionIdx = 0;
+    metroState.currentSectionBar = 1;
+  } else {
+    metroState.isCountIn = false;
+    metroState.currentSectionIdx = 0;
+    metroState.currentSectionBar = 1;
+  }
+
+  // Set BPM and Time Sig for initial song / section
+  const initialBpm = (song.structure && song.structure.length > 0 && song.structure[0].bpm) ? song.structure[0].bpm : song.bpm;
+  const initialTs = (song.structure && song.structure.length > 0 && song.structure[0].timeSig) ? song.structure[0].timeSig : (song.timeSig || '4-4');
+
+  applyBpm(initialBpm, 'setlist');
+  if (initialTs) {
+    const tsIdx = METRO_TIME_SIGNATURES.findIndex((ts) => ts.id === initialTs || ts.label === initialTs);
+    if (tsIdx !== -1) {
+      onTsSelect(tsIdx);
+    }
+  }
+
+  ui.renderTopbarPlayback();
+  ui.renderSetlistDeck();
+  closeAnySheet();
+
+  if (!metroState.playing) {
+    await startMetronome();
+  }
+  showToast(`Playing “${song.title}” (${initialBpm} BPM)`, 'success');
+}
+
+function applySectionParameters(sec, song) {
+  const targetBpm = sec.bpm || song.bpm;
+  const targetTs = sec.timeSig || song.timeSig || '4-4';
+  applyBpm(targetBpm, 'section');
+  if (targetTs) {
+    const tsIdx = METRO_TIME_SIGNATURES.findIndex((ts) => ts.id === targetTs || ts.label === targetTs);
+    if (tsIdx !== -1) {
+      onTsSelect(tsIdx);
+    }
+  }
+  ui.renderTopbarPlayback();
+  ui.renderSetlistDeck();
+  showToast(`Section: ${sec.name} (${targetBpm} BPM)`, 'info');
+}
+
+function onPrevSong() {
+  if (!metroState.activeSetlist || metroState.activeSetlistSongIdx <= 0) return;
+  metroState.activeSetlistSongIdx--;
+  metroState.activeSong = metroState.activeSetlist.songs[metroState.activeSetlistSongIdx];
+  void startActiveSongPlayback();
+}
+
+function onNextSong() {
+  if (!metroState.activeSetlist || metroState.activeSetlistSongIdx >= metroState.activeSetlist.songs.length - 1) return;
+  metroState.activeSetlistSongIdx++;
+  metroState.activeSong = metroState.activeSetlist.songs[metroState.activeSetlistSongIdx];
+  void startActiveSongPlayback();
+}
+
+function onPrevSection() {
+  const song = metroState.activeSong;
+  if (!song || !song.structure || song.structure.length === 0) return;
+  if ((metroState.currentSectionIdx || 0) <= 0) return;
+  metroState.currentSectionIdx--;
+  metroState.currentSectionBar = 1;
+  metroState.isCountIn = false;
+  applySectionParameters(song.structure[metroState.currentSectionIdx], song);
+}
+
+function onNextSection() {
+  const song = metroState.activeSong;
+  if (!song || !song.structure || song.structure.length === 0) return;
+  if ((metroState.currentSectionIdx || 0) >= song.structure.length - 1) return;
+  metroState.currentSectionIdx++;
+  metroState.currentSectionBar = 1;
+  metroState.isCountIn = false;
+  applySectionParameters(song.structure[metroState.currentSectionIdx], song);
+}
+
 function onSetlistSelect(arg) {
   let entry = null;
   if (arg && typeof arg === 'object' && typeof arg.bpm === 'number' && typeof arg.title === 'string') {
@@ -337,7 +558,21 @@ function onSetlistSelect(arg) {
     entry = METRO_SETLIST[arg] || null;
   }
   if (!entry) return;
+  if (coachEngine && coachEngine.isRunning()) {
+    coachEngine.stop();
+    ui.exitCoachLive();
+    engine.setVolume(metroState.volume);
+  }
   applyBpm(entry.bpm, 'setlist');
+
+  // If entry specifies time signature, apply it
+  if (entry.timeSig) {
+    const tsIdx = METRO_TIME_SIGNATURES.findIndex((ts) => ts.id === entry.timeSig || ts.label === entry.timeSig);
+    if (tsIdx !== -1) {
+      onTsSelect(tsIdx);
+    }
+  }
+
   ui.showTopbarTitle(entry);
   closeAnySheet();
   showToast(METRO_COPY.setlistLoaded(entry.bpm, entry.title), 'success');
@@ -359,6 +594,11 @@ function onResetPitchMap() {
 
 function onTopbarUndo(entry) {
   if (!entry) return;
+  if (coachEngine && coachEngine.isRunning()) {
+    coachEngine.stop();
+    ui.exitCoachLive();
+    engine.setVolume(metroState.volume);
+  }
   ui.setRestoringFlag(true);
   applyBpm(entry.bpm, 'undo');
   ui.showTopbarTitle(entry);
@@ -567,6 +807,7 @@ export function initMetronome() {
     setMuted: setCoachMuted
   });
   ui = createUi({
+    getCurrentBpm: () => metroState.bpm,
     onPlayToggle,
     onTapTempo,
     onBpmStep,
@@ -588,6 +829,13 @@ export function initMetronome() {
     onBackgroundToggle,
     onBeatStyleChange,
     onSetlistSelect,
+    onPlaySetlist,
+    onPlaySong,
+    onPrevSong,
+    onPrevSection,
+    onNextSection,
+    onNextSong,
+    onExitPlayback,
     onInfoHelp,
     onCoachTabChange,
     onCoachInnerChange,

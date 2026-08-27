@@ -26,7 +26,7 @@ export async function ensureQrCodeLoaded() {
   return true;
 }
 
-async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
+export async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
   await ensureQrCodeLoaded();
   if (typeof window.QRCode === 'undefined') {
     if (callback) callback(null);
@@ -39,8 +39,7 @@ async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
   tempDiv.style.top = '-9999px';
   document.body.appendChild(tempDiv);
 
-  // 76% of total size for QR matrix → 12% quiet-zone white margin on every side
-  // Wider quiet zone = faster finder-pattern detection by camera scanners
+  // 76% of total size for QR matrix -> 12% quiet-zone white margin on every side
   const qrSize = Math.round(totalSize * 0.76);
   const padding = Math.round((totalSize - qrSize) / 2);
 
@@ -48,7 +47,7 @@ async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
     text: textUrl,
     width: qrSize,
     height: qrSize,
-    colorDark: "#000000",   // Pure black for maximum scanner contrast
+    colorDark: "#000000",
     colorLight: "#ffffff",
     correctLevel: window.QRCode.CorrectLevel.H
   });
@@ -69,7 +68,7 @@ async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, totalSize, totalSize);
 
-    // Draw QR matrix centered with crisp nearest-neighbor rendering (no anti-alias blur)
+    // Draw QR matrix centered
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(rawCanvas, padding, padding, qrSize, qrSize);
     ctx.imageSmoothingEnabled = true;
@@ -78,25 +77,20 @@ async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
 
     const finishCanvas = (logoImg) => {
       const center = totalSize / 2;
-      // Reduced badge: ~13% diameter (6.5% radius) — safely within Level H 30% tolerance
-      // Smaller badge = less data modules obscured = faster & more reliable scans
       const radius = Math.round(totalSize * 0.065);
       const logoSize = Math.round(radius * 1.4);
 
       ctx.save();
-      // White quiet ring around badge to separate it from QR data modules
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       ctx.arc(center, center, radius + Math.round(totalSize * 0.012), 0, Math.PI * 2);
       ctx.fill();
 
-      // Solid dark circle badge
       ctx.fillStyle = '#000000';
       ctx.beginPath();
       ctx.arc(center, center, radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Crisp white border ring
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = Math.max(2, Math.round(totalSize * 0.005));
       ctx.stroke();
@@ -112,7 +106,6 @@ async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
         }
         ctx.drawImage(logoImg, center - w / 2, center - h / 2, w, h);
       } else {
-        // High contrast white text fallback
         ctx.fillStyle = '#ffffff';
         ctx.font = `900 ${Math.round(totalSize * 0.042)}px sans-serif`;
         ctx.textAlign = 'center';
@@ -135,6 +128,10 @@ async function createBrandedQrCanvas(textUrl, totalSize = 1200, callback) {
 
 function generateVectorQr(textUrl, format, callback) {
   createBrandedQrCanvas(textUrl, 800, (canvas) => {
+    if (!canvas) {
+      if (callback) callback(null);
+      return;
+    }
     const ctx = canvas.getContext('2d');
     const imgData = ctx.getImageData(0, 0, 800, 800);
     const data = imgData.data;
@@ -217,52 +214,268 @@ showpage
   });
 }
 
+/**
+ * Attaches swipe-to-dismiss gesture tracking to a bottom sheet modal.
+ */
+function setupBottomSheetGestures(modalBackdrop, modalContent, dragHandle) {
+  if (!modalBackdrop || !modalContent) return;
+
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+  let isTouchActive = false;
+
+  const onTouchStart = (e) => {
+    if (modalContent.scrollTop <= 0) {
+      startY = e.touches[0].clientY;
+      currentY = startY;
+      isDragging = true;
+      isTouchActive = true;
+    }
+  };
+
+  const onTouchMove = (e) => {
+    if (!isDragging) return;
+    const deltaY = e.touches[0].clientY - startY;
+
+    if (deltaY > 0) {
+      if (e.cancelable) e.preventDefault();
+      modalContent.style.transform = `translateY(${deltaY}px)`;
+      modalContent.style.transition = 'none';
+    } else {
+      modalContent.style.transform = 'translateY(0)';
+    }
+    currentY = e.touches[0].clientY;
+  };
+
+  const onTouchEnd = () => {
+    if (!isTouchActive) return;
+    isTouchActive = false;
+    isDragging = false;
+
+    const deltaY = currentY - startY;
+    modalContent.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+
+    if (deltaY > 70) {
+      closeSheetSmoothly(modalBackdrop, modalContent);
+    } else {
+      modalContent.style.transform = 'translateY(0)';
+    }
+  };
+
+  if (dragHandle) {
+    dragHandle.addEventListener('touchstart', onTouchStart, { passive: false });
+    dragHandle.addEventListener('touchmove', onTouchMove, { passive: false });
+    dragHandle.addEventListener('touchend', onTouchEnd, { passive: true });
+  }
+
+  modalContent.addEventListener('touchstart', onTouchStart, { passive: true });
+  modalContent.addEventListener('touchmove', onTouchMove, { passive: false });
+  modalContent.addEventListener('touchend', onTouchEnd, { passive: true });
+}
+
+function closeSheetSmoothly(modalBackdrop, modalContent, onClosed) {
+  if (!modalBackdrop) return;
+  if (modalContent) {
+    modalContent.style.transform = 'translateY(100%)';
+  }
+  setTimeout(() => {
+    modalBackdrop.classList.remove('active');
+    modalBackdrop.classList.add('hidden');
+    if (modalContent) modalContent.style.transform = '';
+    if (onClosed) onClosed();
+  }, 220);
+}
+
+// Real-time PWA Installation State Engine
 let deferredInstallPrompt = (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt) || null;
+let isAppInstalledOnDevice = false;
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-    window.__kinsDeferredInstallPrompt = e;
-  });
+async function detectActualInstalledState() {
+  if (typeof window === 'undefined') return false;
 
-  window.addEventListener('appinstalled', () => {
-    deferredInstallPrompt = null;
-    if (typeof window !== 'undefined') window.__kinsDeferredInstallPrompt = null;
-    showToast('🎉 Kins App installed successfully!', 'success');
-  });
+  // 1. Standalone display mode check
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                       window.navigator.standalone === true ||
+                       (typeof document !== 'undefined' && document.referrer.includes('android-app://'));
+
+  if (isStandalone) {
+    return true;
+  }
+
+  // 2. Native getInstalledRelatedApps() API check (Chrome/Android/Desktop PWA)
+  if (typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) {
+    try {
+      const related = await navigator.getInstalledRelatedApps();
+      if (related && related.length > 0) {
+        return true;
+      }
+    } catch (e) {}
+  }
+
+  return false;
 }
 
 export function initShareModal() {
   const shareBtn = document.getElementById('shareBtn');
   const shareModal = document.getElementById('shareModal');
+  const shareModalContent = document.getElementById('shareModalContent');
+  const sheetDragHandle = document.getElementById('sheetDragHandle');
   const closeShareModal = document.getElementById('closeShareModal');
   const nativeShareCtaBtn = document.getElementById('nativeShareCtaBtn');
   const downloadPwaCtaBtn = document.getElementById('downloadPwaCtaBtn');
+  
+  // Interactive Copy Rows & Badges
+  const copyUrlRow = document.getElementById('copyUrlRow');
   const copyUrlBtn = document.getElementById('copyUrlBtn');
+  const copyUrlStatus = document.getElementById('copyUrlStatus');
   const shareUrlInput = document.getElementById('shareUrlInput');
+
+  const copyHandleRow = document.getElementById('copyHandleRow');
   const handleCopyBtn = document.getElementById('handleCopyBtn');
+  const copyHandleStatus = document.getElementById('copyHandleStatus');
 
   // QR fullscreen & format selector modal elements
   const qrcodeCanvasWrapper = document.getElementById('qrcodeCanvasWrapper');
   const qrFullscreenModal = document.getElementById('qrFullscreenModal');
+  const qrFullscreenContent = document.getElementById('qrFullscreenContent');
+  const qrFullscreenDragHandle = document.getElementById('qrFullscreenDragHandle');
   const closeQrFullscreenBtn = document.getElementById('closeQrFullscreenBtn');
   const openQrDownloadModalBtn = document.getElementById('openQrDownloadModalBtn');
   const qrDownloadFormatModal = document.getElementById('qrDownloadFormatModal');
+  const qrDownloadFormatContent = document.getElementById('qrDownloadFormatContent');
+  const qrFormatDragHandle = document.getElementById('qrFormatDragHandle');
   const closeQrFormatModalBtn = document.getElementById('closeQrFormatModalBtn');
 
-  // Production domain for Kins Hub
+  // Band Logo format elements
+  const openLogoDownloadModalBtn = document.getElementById('openLogoDownloadModalBtn');
+  const openLogoDownloadModalBox = document.getElementById('openLogoDownloadModalBox');
+  const logoDownloadFormatModal = document.getElementById('logoDownloadFormatModal');
+  const logoDownloadFormatContent = document.getElementById('logoDownloadFormatContent');
+  const logoFormatDragHandle = document.getElementById('logoFormatDragHandle');
+  const closeLogoFormatModalBtn = document.getElementById('closeLogoFormatModalBtn');
+
+  // Production domain & dynamic UTM attribution matrix
   const baseDomain = 'https://kinsband-hub.vercel.app/';
-  const directLinkUrl = baseDomain + '?utm_source=share_modal&utm_medium=direct_link';
-  const qrCodeUrl = baseDomain + '?utm_source=share_modal&utm_medium=qr_code';
-  const nativeShareUrl = baseDomain + '?utm_source=share_modal&utm_medium=native_share';
+  const directLinkUrl = baseDomain + '?utm_source=direct_link&utm_medium=share_modal&utm_campaign=fan_share';
+  const qrCodeUrl = baseDomain + '?utm_source=qr_code&utm_medium=offline_scan&utm_campaign=gig_share';
+  const nativeShareUrl = baseDomain + '?utm_source=native_share&utm_medium=social&utm_campaign=fan_share';
 
   if (shareUrlInput) {
     shareUrlInput.value = directLinkUrl;
   }
 
-  // Handle Copy Button Micro-Interactions
-  async function performCopy(textToCopy, btnElement, successMessage) {
+  // Capability detection: elevate or streamline native share
+  const hasNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  if (!hasNativeShare && nativeShareCtaBtn) {
+    nativeShareCtaBtn.style.display = 'none';
+  }
+
+  // Setup Bottom Sheet Gestures on all 4 dialogs on mobile
+  setupBottomSheetGestures(shareModal, shareModalContent, sheetDragHandle);
+  setupBottomSheetGestures(qrFullscreenModal, qrFullscreenContent, qrFullscreenDragHandle);
+  setupBottomSheetGestures(qrDownloadFormatModal, qrDownloadFormatContent, qrFormatDragHandle);
+  setupBottomSheetGestures(logoDownloadFormatModal, logoDownloadFormatContent, logoFormatDragHandle);
+
+  // Helper to set Download Button Stage 1 (Installable / Uninstalled)
+  function setInstallableStage() {
+    isAppInstalledOnDevice = false;
+    if (!downloadPwaCtaBtn) return;
+    const pwaBtnIcon = document.getElementById('pwaBtnIcon');
+    const pwaBtnLabel = document.getElementById('pwaBtnLabel');
+    const pwaBtnSub = document.getElementById('pwaBtnSub');
+    const pwaProgressBar = document.getElementById('pwaProgressBar');
+    const pwaProgressStatus = document.getElementById('pwaProgressStatus');
+
+    downloadPwaCtaBtn.classList.remove('downloading', 'download-complete');
+    if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-download';
+    if (pwaBtnLabel) pwaBtnLabel.textContent = 'Download Kins App';
+    if (pwaBtnSub) pwaBtnSub.textContent = 'Install to home screen • Offline ready';
+    if (pwaProgressBar) pwaProgressBar.style.width = '0%';
+    if (pwaProgressStatus) pwaProgressStatus.textContent = 'INSTALL';
+  }
+
+  // Helper to set Download Button Stage 2 (Actually Installed / Downloaded)
+  function setDownloadedStage() {
+    isAppInstalledOnDevice = true;
+    if (!downloadPwaCtaBtn) return;
+    const pwaBtnIcon = document.getElementById('pwaBtnIcon');
+    const pwaBtnLabel = document.getElementById('pwaBtnLabel');
+    const pwaBtnSub = document.getElementById('pwaBtnSub');
+    const pwaProgressBar = document.getElementById('pwaProgressBar');
+    const pwaProgressStatus = document.getElementById('pwaProgressStatus');
+
+    downloadPwaCtaBtn.classList.remove('downloading');
+    downloadPwaCtaBtn.classList.add('download-complete');
+
+    if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-circle-check';
+    if (pwaBtnLabel) pwaBtnLabel.textContent = 'App Downloaded & Ready';
+    if (pwaBtnSub) pwaBtnSub.textContent = '✓ Offline enabled on this device';
+    if (pwaProgressBar) pwaProgressBar.style.width = '100%';
+    if (pwaProgressStatus) pwaProgressStatus.textContent = 'READY ✓';
+  }
+
+  // Real-time Installation State Synchronization
+  async function syncAppInstalledStatus() {
+    const actuallyInstalled = await detectActualInstalledState();
+    if (actuallyInstalled) {
+      setDownloadedStage();
+      try { localStorage.setItem('kins_pwa_downloaded', 'true'); } catch (e) {}
+    } else {
+      // Check if previously recorded in localStorage and if cache still exists
+      let hasCache = false;
+      try {
+        if ('caches' in window) {
+          hasCache = await caches.has('kins-link-bio-v32');
+        }
+      } catch (e) {}
+
+      try {
+        const stored = localStorage.getItem('kins_pwa_downloaded');
+        if (stored === 'true' && hasCache && !deferredInstallPrompt) {
+          setDownloadedStage();
+        } else {
+          setInstallableStage();
+        }
+      } catch (e) {
+        setInstallableStage();
+      }
+    }
+  }
+
+  syncAppInstalledStatus();
+
+  // Listen to beforeinstallprompt: browser fires this when app is NOT installed
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    window.__kinsDeferredInstallPrompt = e;
+    // App is currently NOT installed -> reset to Stage 1
+    setInstallableStage();
+  });
+
+  // Listen to appinstalled: fires immediately when user installs app
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    if (typeof window !== 'undefined') window.__kinsDeferredInstallPrompt = null;
+    setDownloadedStage();
+    try { localStorage.setItem('kins_pwa_downloaded', 'true'); } catch (e) {}
+    showToast('🎉 Kins App installed successfully!', 'success');
+  });
+
+  // Listen to standalone mode changes (e.g. desktop PWA window opens/closes)
+  try {
+    window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+      if (e.matches) {
+        setDownloadedStage();
+      } else {
+        syncAppInstalledStatus();
+      }
+    });
+  } catch (e) {}
+
+  // Generic Clipboard Copy Helper with Inline Micro-Interactions
+  async function performCopy(textToCopy, rowElement, statusBadge, iconElement, successLabel = 'COPIED! ✓') {
     let success = false;
     try {
       if (navigator.clipboard && window.isSecureContext) {
@@ -290,54 +503,85 @@ export function initShareModal() {
     }
 
     if (success) {
-      if (successMessage) showToast(successMessage);
-      if (btnElement) {
-        animateCopySuccess(btnElement);
+      if (iconElement) {
+        animateCopySuccess(iconElement.parentElement || iconElement);
+      }
+
+      if (statusBadge) {
+        const originalText = statusBadge.textContent;
+        statusBadge.textContent = successLabel;
+        if (rowElement) rowElement.classList.add('copied-active');
+
+        setTimeout(() => {
+          statusBadge.textContent = originalText;
+          if (rowElement) rowElement.classList.remove('copied-active');
+        }, 1800);
       }
     }
   }
 
-  if (handleCopyBtn) {
-    handleCopyBtn.addEventListener('click', () => {
-      performCopy('@KinsBandOfficial', handleCopyBtn, 'Copied @KinsBandOfficial to clipboard!');
+  // 1. Direct Link Tap-to-Copy Full Row Interaction
+  if (copyUrlRow) {
+    const handleUrlCopyAction = (e) => {
+      e.preventDefault();
+      const icon = document.getElementById('copyUrlIcon');
+      performCopy(directLinkUrl, copyUrlRow, copyUrlStatus, icon);
+    };
+
+    copyUrlRow.addEventListener('click', handleUrlCopyAction);
+    copyUrlRow.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleUrlCopyAction(e);
+      }
     });
   }
 
-  if (copyUrlBtn && shareUrlInput) {
-    copyUrlBtn.addEventListener('click', () => {
-      performCopy(shareUrlInput.value, copyUrlBtn, 'Link copied to clipboard!');
+  // 2. Band Handle Tap-to-Copy Full Row Interaction
+  if (copyHandleRow) {
+    const handleHandleCopyAction = (e) => {
+      e.preventDefault();
+      const icon = document.getElementById('copyHandleIcon');
+      performCopy('@KinsBandOfficial', copyHandleRow, copyHandleStatus, icon);
+    };
+
+    copyHandleRow.addEventListener('click', handleHandleCopyAction);
+    copyHandleRow.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleHandleCopyAction(e);
+      }
     });
   }
 
-  // Social App Share Buttons Handler
+  // 3. Social App Share Buttons with Dynamic UTM tracking
   const shareAppButtons = document.querySelectorAll('#shareAppsGrid .share-app-pill-btn');
   shareAppButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const app = btn.getAttribute('data-share-app') || 'other';
-      const shareTitle = 'Kins | Official Link in Bio';
       const shareMessage = 'Check out official music releases, merch, and tour dates for Kins!';
-      const appShareUrl = baseDomain + (baseDomain.includes('?') ? '&' : '?') + `utm_source=share_modal&utm_medium=app_${app}&utm_campaign=fan_share`;
+      const appShareUrl = `${baseDomain}?utm_source=${app}_share&utm_medium=social&utm_campaign=fan_share`;
 
       if (app === 'whatsapp') {
         const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareMessage} ${appShareUrl}`)}`;
         window.open(waUrl, '_blank', 'noopener,noreferrer');
         showToast('Opening WhatsApp...');
       } else if (app === 'instagram') {
-        performCopy(appShareUrl, btn, 'Link copied! Opening Instagram...');
+        performCopy(appShareUrl, null, null, btn.querySelector('i'), 'COPIED!');
+        showToast('Link copied! Opening Instagram...');
         window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
       } else if (app === 'sms') {
         const smsUrl = `sms:?&body=${encodeURIComponent(`${shareMessage} ${appShareUrl}`)}`;
         window.location.href = smsUrl;
         showToast('Opening Messages...');
       } else if (app === 'discord') {
-        performCopy(appShareUrl, btn, 'Link copied! Opening Discord...');
+        performCopy(appShareUrl, null, null, btn.querySelector('i'), 'COPIED!');
+        showToast('Link copied! Opening Discord...');
         window.open('https://discord.com/channels/@me', '_blank', 'noopener,noreferrer');
       }
     });
   });
 
-  // Native Web Share CTA Handler
+  // 4. Native Web Share CTA Handler
   async function triggerNativeShare() {
     if (navigator.share) {
       try {
@@ -346,11 +590,10 @@ export function initShareModal() {
           text: 'Check out official music releases, merch, and tour dates for Kins!',
           url: nativeShareUrl
         });
-      } catch (err) {
-        console.log('Native share dismissed:', err);
-      }
+      } catch (err) {}
     } else {
-      performCopy(nativeShareUrl, nativeShareCtaBtn, 'Share link copied to clipboard!');
+      performCopy(nativeShareUrl, null, null, nativeShareCtaBtn?.querySelector('i'));
+      showToast('Share link copied to clipboard!');
     }
   }
 
@@ -358,58 +601,66 @@ export function initShareModal() {
     nativeShareCtaBtn.addEventListener('click', triggerNativeShare);
   }
 
-  // Progressive Web App Download CTA with In-Button Progress Timeline
+  // 5. Two-Stage Download / Install App CTA Handler
   if (downloadPwaCtaBtn) {
     let isDownloading = false;
 
-    // Check if previously completed
-    if (typeof localStorage !== 'undefined' && localStorage.getItem('kins_pwa_downloaded') === 'true') {
-      const pwaBtnIcon = document.getElementById('pwaBtnIcon');
-      const pwaBtnLabel = document.getElementById('pwaBtnLabel');
-      const pwaProgressBar = document.getElementById('pwaProgressBar');
-      if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-circle-check';
-      if (pwaBtnLabel) pwaBtnLabel.textContent = 'App Downloaded & Ready';
-      if (pwaProgressBar) pwaProgressBar.style.width = '100%';
-      downloadPwaCtaBtn.classList.add('download-complete');
-    }
-
     downloadPwaCtaBtn.addEventListener('click', async () => {
-      if (isDownloading) return;
-
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                           window.navigator.standalone === true ||
-                           (typeof document !== 'undefined' && document.referrer.includes('android-app://'));
-
-      if (isStandalone) {
-        showToast('✓ Kins App is already installed & offline ready!', 'success');
+      // If already in Stage 2 & installed:
+      if (downloadPwaCtaBtn.classList.contains('download-complete')) {
+        showToast('✓ Kins App is installed on this device & ready offline!', 'success');
         return;
       }
 
+      if (isDownloading) return;
+
+      const actuallyInstalled = await detectActualInstalledState();
+      if (actuallyInstalled) {
+        setDownloadedStage();
+        try { localStorage.setItem('kins_pwa_downloaded', 'true'); } catch (e) {}
+        showToast('✓ Kins App is installed & offline ready!', 'success');
+        return;
+      }
+
+      // STAGE 1: Request to Download & In-Progress Caching
       const pwaBtnIcon = document.getElementById('pwaBtnIcon');
       const pwaBtnLabel = document.getElementById('pwaBtnLabel');
+      const pwaBtnSub = document.getElementById('pwaBtnSub');
       const pwaProgressBar = document.getElementById('pwaProgressBar');
       const pwaProgressStatus = document.getElementById('pwaProgressStatus');
 
       isDownloading = true;
-      downloadPwaCtaBtn.classList.remove('download-complete');
       downloadPwaCtaBtn.classList.add('downloading');
-      if (pwaProgressStatus) pwaProgressStatus.classList.remove('hidden');
       if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-spinner fa-spin';
-      if (pwaBtnLabel) pwaBtnLabel.textContent = 'Downloading App...';
-      if (pwaProgressBar) pwaProgressBar.style.width = '5%';
-      if (pwaProgressStatus) pwaProgressStatus.textContent = 'Starting...';
+      if (pwaBtnLabel) pwaBtnLabel.textContent = 'Downloading & Caching...';
+      if (pwaBtnSub) pwaBtnSub.textContent = 'Preparing offline app storage';
+      if (pwaProgressBar) pwaProgressBar.style.width = '12%';
+      if (pwaProgressStatus) pwaProgressStatus.textContent = '12%';
 
-      // 1. Gather all core application assets for complete offline installation
+      // Trigger native install prompt if available
+      const promptEvent = deferredInstallPrompt || (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt);
+      if (promptEvent) {
+        try {
+          promptEvent.prompt();
+          promptEvent.userChoice.then((choice) => {
+            if (choice && choice.outcome === 'accepted') {
+              showToast('🎉 Kins App installed to your device!', 'success');
+              deferredInstallPrompt = null;
+              if (typeof window !== 'undefined') window.__kinsDeferredInstallPrompt = null;
+            }
+          }).catch(() => {});
+        } catch (err) {}
+      }
+
+      // Cache core assets
       const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
       const assetUrls = [
         `${baseUrl}/`,
         `${baseUrl}/manifest.json`,
         `${baseUrl}/new.png`,
-        `${baseUrl}/kins-logo-new.png`,
         `${baseUrl}/followers.json`
       ];
 
-      // Add linked stylesheets, scripts and font assets on page
       document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
         const src = el.href || el.src;
         if (src && !assetUrls.includes(src) && !src.startsWith('chrome-extension')) {
@@ -417,113 +668,49 @@ export function initShareModal() {
         }
       });
 
-      const totalItems = assetUrls.length;
-      let completedItems = 0;
-      let totalBytesLoaded = 0;
-      const startTime = performance.now();
-
       let cacheStorage = null;
       try {
         if ('caches' in window) {
-          // Keep in sync with CACHE_NAME in public/sw.js — mismatched versions get purged on activate
           cacheStorage = await caches.open('kins-link-bio-v32');
         }
-      } catch (e) {
-        console.warn('CacheStorage initialization:', e);
-      }
+      } catch (e) {}
 
-      // Download and cache all assets tracking live byte stream and progress
+      let completedItems = 0;
       for (const url of assetUrls) {
         try {
           const response = await fetch(url, { cache: 'no-cache' });
-          if (response && response.ok) {
-            const clone = response.clone();
-            if (cacheStorage) {
-              await cacheStorage.put(url, clone).catch(() => {});
-            }
-
-            if (response.body && typeof ReadableStream !== 'undefined') {
-              const reader = response.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                if (value) {
-                  totalBytesLoaded += value.length;
-                }
-              }
-            } else {
-              const blob = await response.blob();
-              totalBytesLoaded += blob.size;
-            }
+          if (response && response.ok && cacheStorage) {
+            await cacheStorage.put(url, response.clone()).catch(() => {});
           }
-        } catch (err) {
-          console.warn('Asset fetch:', url, err);
-        }
+        } catch (err) {}
 
         completedItems += 1;
-        const percent = Math.min(98, Math.round((completedItems / totalItems) * 100));
-        const elapsedSec = (performance.now() - startTime) / 1000;
-        const speedBps = elapsedSec > 0 ? (totalBytesLoaded / elapsedSec) : 0;
-        const avgItemSize = totalBytesLoaded / completedItems;
-        const remainingItems = totalItems - completedItems;
-        const estRemainingBytes = remainingItems * avgItemSize;
-        const etaSec = speedBps > 0 ? Math.max(1, Math.ceil(estRemainingBytes / speedBps)) : 1;
-
-        if (pwaProgressBar) {
-          pwaProgressBar.style.width = `${percent}%`;
-        }
-        if (pwaProgressStatus) {
-          pwaProgressStatus.textContent = `${percent}% • ${etaSec}s left`;
-        }
+        const percent = Math.min(96, Math.round((completedItems / assetUrls.length) * 100));
+        if (pwaProgressBar) pwaProgressBar.style.width = `${percent}%`;
+        if (pwaProgressStatus) pwaProgressStatus.textContent = `${percent}%`;
       }
 
-      // 2. Complete download progress timeline
       if (pwaProgressBar) pwaProgressBar.style.width = '100%';
       if (pwaProgressStatus) pwaProgressStatus.textContent = '100%';
 
-      await new Promise(r => setTimeout(r, 250));
+      await new Promise(r => setTimeout(r, 200));
 
-      downloadPwaCtaBtn.classList.remove('downloading');
-      downloadPwaCtaBtn.classList.add('download-complete');
-      if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-circle-check';
-      if (pwaBtnLabel) pwaBtnLabel.textContent = 'App Downloaded & Ready';
-      if (pwaProgressStatus) pwaProgressStatus.textContent = 'Ready';
+      // STAGE 2: Transition to Completed & Verified State
+      setDownloadedStage();
+      try { localStorage.setItem('kins_pwa_downloaded', 'true'); } catch (e) {}
 
-      try {
-        localStorage.setItem('kins_pwa_downloaded', 'true');
-      } catch (e) {}
-
-      // 3. One-Press Native PWA Install prompt trigger if available
-      const promptEvent = deferredInstallPrompt || (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt);
-      if (promptEvent) {
-        try {
-          promptEvent.prompt();
-          const choiceResult = await promptEvent.userChoice;
-          if (choiceResult && choiceResult.outcome === 'accepted') {
-            showToast('🎉 Kins App installed to your device!', 'success');
-          } else {
-            showToast('✓ Kins App downloaded & cached offline!', 'success');
-          }
-          deferredInstallPrompt = null;
-          if (typeof window !== 'undefined') window.__kinsDeferredInstallPrompt = null;
-        } catch (err) {
-          console.warn('PWA prompt error:', err);
-          showToast('✓ Kins App downloaded & ready for offline use!', 'success');
-        }
+      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIos) {
+        showToast("📱 Ready! Tap Safari Share (↑) → 'Add to Home Screen' (+)", 'success');
       } else {
-        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        if (isIos) {
-          showToast("📱 Download complete! Tap Share (↑) → 'Add to Home Screen' (+) in Safari", 'success');
-        } else {
-          showToast('🎉 Kins App is 100% downloaded and ready for offline use!', 'success');
-        }
+        showToast('✓ Kins App is downloaded and ready for offline use!', 'success');
       }
 
       isDownloading = false;
     });
   }
 
-  // Render High-Resolution QR Code image with 100% scan accuracy
+  // 6. Render High-Resolution QR Code preview
   async function renderQrCode(containerId, displaySize) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -544,71 +731,98 @@ export function initShareModal() {
     });
   }
 
-  // Open Share Modal
+  // 7. Open / Close Share Modal
   if (shareBtn && shareModal && closeShareModal) {
     shareBtn.addEventListener('click', () => {
       shareModal.classList.remove('hidden');
       shareModal.classList.add('active');
+      if (shareModalContent) shareModalContent.style.transform = 'translateY(0)';
       lockScroll();
       renderQrCode('qrcodeCanvas', 100);
+      syncAppInstalledStatus();
     });
 
     closeShareModal.addEventListener('click', () => {
-      shareModal.classList.remove('active');
-      shareModal.classList.add('hidden');
-      unlockScroll();
+      closeSheetSmoothly(shareModal, shareModalContent, unlockScroll);
     });
 
     shareModal.addEventListener('click', (e) => {
       if (e.target === shareModal) {
-        shareModal.classList.remove('active');
-        shareModal.classList.add('hidden');
-        unlockScroll();
+        closeSheetSmoothly(shareModal, shareModalContent, unlockScroll);
       }
     });
   }
 
-  // Click QR Code to Fullscreen
+  // 8. QR Code Fullscreen Lightbox & 1-Click Fast Vector/HD Export
   if (qrcodeCanvasWrapper && qrFullscreenModal) {
     qrcodeCanvasWrapper.addEventListener('click', () => {
       qrFullscreenModal.classList.remove('hidden');
+      if (qrFullscreenContent) qrFullscreenContent.style.transform = 'translateY(0)';
       renderQrCode('qrcodeFullscreenCanvas', 260);
     });
 
     closeQrFullscreenBtn?.addEventListener('click', () => {
-      qrFullscreenModal.classList.add('hidden');
+      closeSheetSmoothly(qrFullscreenModal, qrFullscreenContent);
     });
 
     qrFullscreenModal.addEventListener('click', (e) => {
       if (e.target === qrFullscreenModal) {
-        qrFullscreenModal.classList.add('hidden');
+        closeSheetSmoothly(qrFullscreenModal, qrFullscreenContent);
       }
+    });
+
+    const fastExportBtns = qrFullscreenModal.querySelectorAll('[data-qr-quick-format]');
+    fastExportBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const format = btn.getAttribute('data-qr-quick-format') || 'png';
+        const triggerDownload = (dataUrl, filename) => {
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = filename;
+          a.click();
+          showToast(`✓ Downloaded QR Code (${format.toUpperCase()})!`);
+        };
+
+        if (format === 'png') {
+          createBrandedQrCanvas(qrCodeUrl, 1200, (canvas) => {
+            if (canvas) triggerDownload(canvas.toDataURL('image/png'), 'kins-official-qrcode.png');
+          });
+        } else if (format === 'svg') {
+          generateVectorQr(qrCodeUrl, 'svg', (dataUrl) => {
+            if (dataUrl) triggerDownload(dataUrl, 'kins-official-qrcode.svg');
+          });
+        } else if (format === 'eps') {
+          generateVectorQr(qrCodeUrl, 'eps', (dataUrl) => {
+            if (dataUrl) triggerDownload(dataUrl, 'kins-official-qrcode.eps');
+          });
+        }
+      });
     });
   }
 
-  // Download Format Selector Pop-Up Modal Controls
+  // 9. QR Format Download Modal
   if (openQrDownloadModalBtn && qrDownloadFormatModal) {
     openQrDownloadModalBtn.addEventListener('click', () => {
       qrDownloadFormatModal.classList.remove('hidden');
+      if (qrDownloadFormatContent) qrDownloadFormatContent.style.transform = 'translateY(0)';
     });
 
     closeQrFormatModalBtn?.addEventListener('click', () => {
-      qrDownloadFormatModal.classList.add('hidden');
+      closeSheetSmoothly(qrDownloadFormatModal, qrDownloadFormatContent);
     });
 
     qrDownloadFormatModal.addEventListener('click', (e) => {
       if (e.target === qrDownloadFormatModal) {
-        qrDownloadFormatModal.classList.add('hidden');
+        closeSheetSmoothly(qrDownloadFormatModal, qrDownloadFormatContent);
       }
     });
   }
 
-  // Format Selection Card Handlers (JPEG, PNG, EPS, SVG)
   const formatCards = document.querySelectorAll('#qrDownloadFormatModal .format-option-card');
   formatCards.forEach(card => {
     card.addEventListener('click', () => {
       const format = card.getAttribute('data-format') || 'png';
-      if (qrDownloadFormatModal) qrDownloadFormatModal.classList.add('hidden');
+      closeSheetSmoothly(qrDownloadFormatModal, qrDownloadFormatContent);
 
       showToast(`Preparing ${format.toUpperCase()} export...`);
 
@@ -617,61 +831,55 @@ export function initShareModal() {
         a.href = dataUrl;
         a.download = filename;
         a.click();
-        showToast(`Downloaded Kins QR Code (${format.toUpperCase()})!`);
+        showToast(`✓ Downloaded Kins QR Code (${format.toUpperCase()})!`);
       };
 
       if (format === 'jpeg') {
         createBrandedQrCanvas(qrCodeUrl, 1200, (canvas) => {
-          triggerDownload(canvas.toDataURL('image/jpeg', 0.98), 'kins-official-qrcode.jpg');
+          if (canvas) triggerDownload(canvas.toDataURL('image/jpeg', 0.98), 'kins-official-qrcode.jpg');
         });
       } else if (format === 'png') {
         createBrandedQrCanvas(qrCodeUrl, 1200, (canvas) => {
-          triggerDownload(canvas.toDataURL('image/png'), 'kins-official-qrcode.png');
+          if (canvas) triggerDownload(canvas.toDataURL('image/png'), 'kins-official-qrcode.png');
         });
       } else if (format === 'eps') {
         generateVectorQr(qrCodeUrl, 'eps', (dataUrl) => {
-          triggerDownload(dataUrl, 'kins-official-qrcode.eps');
+          if (dataUrl) triggerDownload(dataUrl, 'kins-official-qrcode.eps');
         });
       } else if (format === 'svg') {
         generateVectorQr(qrCodeUrl, 'svg', (dataUrl) => {
-          triggerDownload(dataUrl, 'kins-official-qrcode.svg');
+          if (dataUrl) triggerDownload(dataUrl, 'kins-official-qrcode.svg');
         });
       }
     });
   });
 
-  // Band Logo Format Selector Modal Controls
-  const openLogoDownloadModalBtn = document.getElementById('openLogoDownloadModalBtn');
-  const openLogoDownloadModalBox = document.getElementById('openLogoDownloadModalBox');
-  const logoDownloadFormatModal = document.getElementById('logoDownloadFormatModal');
-  const closeLogoFormatModalBtn = document.getElementById('closeLogoFormatModalBtn');
-
+  // 10. Band Logo Format Download Modal
   if (logoDownloadFormatModal) {
-    openLogoDownloadModalBtn?.addEventListener('click', () => {
+    const openLogoModal = () => {
       logoDownloadFormatModal.classList.remove('hidden');
-    });
+      if (logoDownloadFormatContent) logoDownloadFormatContent.style.transform = 'translateY(0)';
+    };
 
-    openLogoDownloadModalBox?.addEventListener('click', () => {
-      logoDownloadFormatModal.classList.remove('hidden');
-    });
+    openLogoDownloadModalBtn?.addEventListener('click', openLogoModal);
+    openLogoDownloadModalBox?.addEventListener('click', openLogoModal);
 
     closeLogoFormatModalBtn?.addEventListener('click', () => {
-      logoDownloadFormatModal.classList.add('hidden');
+      closeSheetSmoothly(logoDownloadFormatModal, logoDownloadFormatContent);
     });
 
     logoDownloadFormatModal.addEventListener('click', (e) => {
       if (e.target === logoDownloadFormatModal) {
-        logoDownloadFormatModal.classList.add('hidden');
+        closeSheetSmoothly(logoDownloadFormatModal, logoDownloadFormatContent);
       }
     });
   }
 
-  // Band Logo Export Format Handlers (PNG, JPG, SVG, WEBP)
   const logoFormatCards = document.querySelectorAll('#logoDownloadFormatModal .format-option-card');
   logoFormatCards.forEach(card => {
     card.addEventListener('click', () => {
       const format = card.getAttribute('data-logo-format') || 'png';
-      if (logoDownloadFormatModal) logoDownloadFormatModal.classList.add('hidden');
+      closeSheetSmoothly(logoDownloadFormatModal, logoDownloadFormatContent);
 
       showToast(`Preparing Band Logo (${format.toUpperCase()})...`);
       const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
@@ -681,7 +889,7 @@ export function initShareModal() {
         a.href = dataUrl;
         a.download = filename;
         a.click();
-        showToast(`Downloaded Band Logo (${format.toUpperCase()})!`);
+        showToast(`✓ Downloaded Band Logo (${format.toUpperCase()})!`);
       };
 
       if (format === 'png') {
@@ -722,19 +930,17 @@ export function initShareModal() {
     });
   });
 
-  // Keyboard Shortcuts (ESC to close modals)
+  // 11. Keyboard Shortcuts (ESC to close modals)
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (logoDownloadFormatModal && !logoDownloadFormatModal.classList.contains('hidden')) {
-        logoDownloadFormatModal.classList.add('hidden');
+        closeSheetSmoothly(logoDownloadFormatModal, logoDownloadFormatContent);
       } else if (qrDownloadFormatModal && !qrDownloadFormatModal.classList.contains('hidden')) {
-        qrDownloadFormatModal.classList.add('hidden');
+        closeSheetSmoothly(qrDownloadFormatModal, qrDownloadFormatContent);
       } else if (qrFullscreenModal && !qrFullscreenModal.classList.contains('hidden')) {
-        qrFullscreenModal.classList.add('hidden');
+        closeSheetSmoothly(qrFullscreenModal, qrFullscreenContent);
       } else if (shareModal && shareModal.classList.contains('active')) {
-        shareModal.classList.remove('active');
-        shareModal.classList.add('hidden');
-        unlockScroll();
+        closeSheetSmoothly(shareModal, shareModalContent, unlockScroll);
       }
     }
   });

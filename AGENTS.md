@@ -1,119 +1,223 @@
-# AGENTS.md — Master Context for AI Assistants
+# AGENTS.md — Master Context & Engineering Standards
 
-Read this fully before changing anything. It encodes hard lessons from real bugs,
-security leaks and perf regressions found in this codebase. Follow the rules;
-when a rule conflicts with something you see in older code, the rule wins —
-older code is being migrated toward these standards.
+Read this fully before modifying anything in this codebase. It encodes hard lessons from real production bugs, security leaks, Web Audio quirks, and mobile performance regressions. Follow these rules strictly; when a rule conflicts with legacy code, the rule wins — legacy code is actively being migrated toward these standards.
 
 ---
 
-## 1. What this project is
+## 1. What This Project Is
 
-Official band website ("link-in-bio" hub) for **Kins**: fan hub `/`, live stream hub `/live`, press kit `/epk`, plus serverless API routes. Live: `https://kinsband-hub.vercel.app`.
+Official band website and direct-to-fan platform for **Kins Band** (`https://kinsband-hub.vercel.app`).
 
-| Layer | Tech |
+The site combines a high-performance link-in-bio fan hub, live stream concert portal, interactive musician utility suite (standalone metronome & chromatic tuner), electronic press kit, and serverless fan-capture APIs.
+
+| Layer | Tech & Details |
 |---|---|
-| Framework | **Astro 4**, `output: 'hybrid'` (static pages + server endpoints), zero UI framework |
-| Hosting | **Vercel** serverless (`@astrojs/vercel`), Node 24 |
-| Client JS | Vanilla ES modules in `src/scripts/controllers/` (~25 files). No hydration framework |
-| Server JS | TypeScript strict (`astro/tsconfigs/strict`) for `src/lib/*` and `src/pages/api/*` |
-| Styling | Plain CSS, design-token system (`src/styles/tokens/variables.css`). No Tailwind/Sass |
-| Data/auth | Supabase — browser client (`PUBLIC_*` keys) + physically separate service-role module |
-| Notifications | Discord webhooks — **server-side proxies only** (see §3) |
-| Tests | Playwright, tiered: `e2e/tier1-smoke` … `tier4-integration` |
+| **Framework** | **Astro 4**, `output: 'hybrid'` (pre-rendered static pages + on-demand serverless endpoints), zero UI framework overhead |
+| **Hosting & Runtime** | **Vercel** serverless (`@astrojs/vercel`), Node 24 |
+| **Pages & Routes** | `/` (Fan hub), `/live` (Live stream portal), `/metronome` (Metronome & coach), `/tuner` (Chromatic tuner), `/epk` (Press kit, gated), `/404` |
+| **Client JS** | Vanilla ES modules in `src/scripts/controllers/` (modular, zero-framework, dynamic `import()` for heavy chunks) |
+| **Audio Engine** | Web Audio API + dedicated AudioWorklets (`public/worklets/click-worklet.js`, `public/tuner-worklet.js`) |
+| **Server JS** | TypeScript strict (`astro/tsconfigs/strict`) for `src/lib/*` and `src/pages/api/*` |
+| **Styling** | Plain CSS with neo-brutalist design tokens (`src/styles/tokens/variables.css`). No Tailwind, no Sass |
+| **Data & Auth** | Supabase — browser client (`PUBLIC_*` keys) + physically separate service-role client for SSR |
+| **Notifications** | Discord webhooks — **server-side proxies only** (see §3) |
+| **Testing** | Playwright, tiered: `e2e/tier1-smoke/` (`home.spec.ts`, `metronome.spec.ts`, `tuner.spec.ts`) |
 
-## 2. Where things live
+> **Navigation & Architecture Reference**: Consult `docs/PAGE_FILE_MAP.md` for the exact mapping of components, controllers, worklets, and APIs per page.
+
+---
+
+## 2. Codebase Layout
 
 ```
 src/
-  layouts/BaseLayout.astro        head, fonts/icons loading, theme+low-power detector, SW registration
-  middleware.ts                   security headers (incl. CSP Report-Only) on all SSR responses
-  pages/api/*.ts                  subscribe, unsubscribe/substack-webhook, feedback, request-song,
-                                  community-submission  ← ALL Discord traffic goes through here
-  lib/supabase.ts                 BROWSER client (PUBLIC_* env only, lazy back-compat export)
-  lib/supabaseServer.ts           SERVICE-ROLE client — server code ONLY, never import client-side
-  lib/discord.ts                  bot role management (env-configured)
-  lib/rateLimit.ts                per-IP limiter + getClientIp (reuse for new endpoints)
-  lib/sanitize.ts                 sanitizeText (control chars, @mention neutralizing, caps),
-                                  isValidHttpUrl  ← reuse for any user input reaching Discord
-  scripts/controllers/*.js        vanilla client controllers
-  settings/*.config.ts            SINGLE SOURCE OF TRUTH for content/dates/flags (re-exported via index.ts)
-  styles/global.css               site-wide CSS incl. runtime-DOM styles + anim gating rules
-public/sw.js                      service worker (CACHE_NAME must stay in sync with shareModal.js)
-vercel.json                       static-asset headers/caching
-supabase_rls_hardening.sql        DB policy migration (applied manually by owner)
+  layouts/
+    BaseLayout.astro              HTML shell, fonts/icons loading, theme & low-power detector, SW register
+  middleware.ts                   Security headers (CSP Report-Only, HSTS, X-Frame-Options) on SSR
+  pages/
+    index.astro                   Fan hub homepage
+    live.astro                    Live concert streaming hub
+    metronome.astro               Standalone metronome, practice coach & sheet viewer
+    tuner.astro                   Standalone chromatic instrument tuner
+    epk.astro                     Electronic press kit (gated)
+    404.astro                     Brutalist not-found page
+    api/*.ts                      Serverless endpoints (subscribe, fan-wall, feedback, request-song, etc.)
+  components/
+    epk/                          EPK sections (hero, bio, members, repertoire, specs, contact)
+    live/                         Live portal widgets (stream player, fan wall, chat reactions, setlist)
+    metronome/                    Metronome-specific subcomponents & modals
+    modals/                       Site-wide overlays (share, gig map, covers search, feedback, terms)
+    navigation/                   Top navigation bar and menu
+    sections/                     Homepage sections (hero, links, members, crew, merch, inspiration)
+    ui/                           Shared UI primitives (ToastContainer, AudioPlayer, ToolIcon)
+  lib/
+    discord.ts                    Discord webhook formatting and role dispatch
+    rateLimit.ts                  In-memory token bucket rate limiter & IP resolver
+    sanitize.ts                   Text sanitization, Discord @mention neutralizer, URL validator
+    supabase.ts                   BROWSER client (PUBLIC_* env only)
+    supabaseServer.ts             SERVICE-ROLE client — server code ONLY, never import client-side
+  scripts/
+    controllers/
+      metronome/                  Metronome engine (audioEngine, coachEngine, metroState, uiBindings, midi)
+      tuner/                      Tuner engine (audioEngine, pitchDetector, safetyMonitor, tunerState)
+      *.js                        Vanilla client controllers (audioPlayer, gigMap, liveChat, toast, etc.)
+    utils/
+      emailValidator.js           Email syntax and domain check
+  settings/
+    *.config.ts                   SINGLE SOURCE OF TRUTH for dates, gigs, links, members, features
+    index.ts                      Re-exports all configuration modules
+  styles/
+    tokens/                       Design tokens (variables.css, animations.css)
+    base/                         Base styles and responsive layout resets
+    global.css                    Site-wide styles, runtime DOM classes, animation gating rules
+public/
+  sw.js                           Service worker (cache rules; keep CACHE_NAME in sync with shareModal.js)
+  worklets/
+    click-worklet.js              Sample-accurate metronome AudioWorklet processor
+  tuner-worklet.js                High-precision pitch detection AudioWorklet processor
+  manifest.json                   PWA web manifest
+docs/
+  PAGE_FILE_MAP.md                Exact file map for every page and API route
+supabase_rls_hardening.sql        Supabase DB Row Level Security policies
 ```
 
-## 3. Security rules (non-negotiable)
+---
 
-1. **No secrets in anything imported by client code.** Webhook URLs, tokens, API keys never appear in `src/components/**` or `src/scripts/controllers/**`. All Discord posts go through a `/api/*` route reading `import.meta.env.X || process.env.X`. Before finishing ANY task: build, then grep the output:
-   ```
-   rg "discord(app)?\.com/api/webhooks" .vercel/output/static   # must be 0 hits
-   ```
-2. **Server/browser Supabase split is load-bearing.** Client controllers import `getSupabaseBrowserClient()` from `lib/supabase.ts`. NEVER import `supabaseServer.ts` from anything under `src/scripts/` or `src/components/` — one static import ships the master key.
-3. **Never trust the client.** Verify Google credentials server-side (see `verifyGoogleCredential` in `subscribe.ts`), sanitize every string entering a Discord payload (`sanitizeText`), validate URLs (`isValidHttpUrl`), rate-limit every public endpoint (`isRateLimited`), cap lengths (Discord embed description dies silently >4096 chars).
-4. **Honest responses only.** If the DB write or delivery failed, the endpoint returns a non-200 and the client shows an error toast and keeps the form usable. Fake-success bugs existed here before; do not reintroduce them.
-5. **Escape every dynamic interpolation into HTML.** Local `escapeHtml(str)` helper per controller is the established pattern (see `liveChatController.js`). For messages/status text prefer `textContent`. This includes external data (iTunes API fields were an XSS vector).
-6. **`sw.js` never caches `/api/*`** (auth/session risk) and only allow-listed prefixes (`/_astro/`, icons). If you add cached origins, update the CDN_CACHE_RULES structure deliberately.
+## 3. Security Rules (Non-Negotiable)
 
-## 4. Performance rules (target: 60fps on LOW-end phones)
+1. **Zero Secrets in Client Bundles**:
+   - Webhook URLs, bot tokens, service-role keys, and private API credentials must NEVER appear in `src/components/**` or `src/scripts/**`.
+   - All Discord notifications, email dispatches, and privileged DB queries route through `/api/*` endpoints reading `import.meta.env.*` / `process.env.*`.
+   - Always verify static build output before concluding tasks:
+     ```powershell
+     rg "discord(app)?\.com/api/webhooks" .vercel/output/static   # must be 0 hits
+     ```
+2. **Server / Browser Supabase Isolation**:
+   - Client scripts MUST ONLY import `getSupabaseBrowserClient()` from `src/lib/supabase.ts` (using `PUBLIC_SUPABASE_*` keys).
+   - `src/lib/supabaseServer.ts` uses the `SUPABASE_SERVICE_ROLE_KEY` and is strictly reserved for `src/pages/api/*`. Never import `supabaseServer.ts` into any file that Vite or Astro bundles for the browser.
+3. **Never Trust the Client**:
+   - Rate-limit every public API endpoint with `isRateLimited(ip, endpoint)` from `src/lib/rateLimit.ts`.
+   - Sanitize all text sent to Discord or stored in Supabase with `sanitizeText()` (`src/lib/sanitize.ts`) to prevent markdown injection and `@everyone`/`@here` pings.
+   - Validate URLs using `isValidHttpUrl()`.
+   - Truncate payloads safely (Discord embed descriptions fail silently if >4096 characters).
+   - Validate OAuth credentials server-side (e.g. Google One Tap via Google token info endpoint).
+4. **Honest Responses & Error Handling**:
+   - Do not return fake 200 HTTP status codes if an underlying database write or notification failed.
+   - API endpoints must return descriptive error status codes (400, 429, 500) and client controllers must catch them and display actionable feedback via `showToast('Error message', 'error')`.
+5. **Escape Dynamic HTML Interpolations**:
+   - Always escape user or external data (e.g. iTunes search results, chat messages, fan wall comments) before injecting into HTML.
+   - Use local `escapeHtml(str)` or prefer `element.textContent` over `element.innerHTML`.
+6. **Service Worker Restrictions (`public/sw.js`)**:
+   - `sw.js` must NEVER cache `/api/*` endpoints.
+   - Only allow-listed static assets (`/_astro/`, fonts, static icons, SVG assets) belong in cache strategies.
 
-These exist because profiling found each one causing real jank:
+---
 
-1. **Animate `transform` and `opacity` only.** No `width`/`height`/`left`/`top`/`margin`/`box-shadow`/`filter` in keyframes or per-frame JS writes. Progress bars → `scaleX(origin left)`; sliders/needles → `translateX(px)` computed from a cached rect.
-2. **Backdrop-filter budget: max ONE blurred layer visible per screen; never over a playing `<video>`; never as an always-on fixed layer.** Backgrounds ≥0.9 alpha don't need blur — use solid. Modal-scoped blurs are acceptable.
-3. **No DOM queries inside animation loops.** Cache NodeLists/rects; invalidate caches on play/pause/state-class changes (see `getCachedVinylThumbs` + invalidation hooks in `audioPlayer.js`). Same for `getBoundingClientRect` in event handlers — reuse the resize-maintained cache.
-4. **Listeners:** scroll/resize/pointermove → `{ passive: true }` + rAF coalescing. Search inputs → ~150 ms debounce. Non-passive `touchmove` (preventDefault) attaches ONLY while the gesture is active and detaches on end.
-5. **Bounded DOM & timers:** cap growing lists (chat = last 100). Store interval IDs; guard against double-init; clear on expiry; skip ticks when `document.hidden`.
-6. **Motion respect:** everything honors `prefers-reduced-motion` (global kill-switch in global.css) and `html.low-power-mode` (set by the detector in BaseLayout for ≤4 cores / ≤4 GB / saveData / slow 2G). Extend the detector instead of inventing per-feature opt-outs.
-7. **Off-screen gating:** infinite CSS animations live inside `[data-anim-gated]` sections (IntersectionObserver in index.astro toggles `.offscreen` → `animation-play-state: paused`). Below-fold heavy sections use `content-visibility: auto`.
-8. `will-change:` only for `transform`/`opacity`, only on things actually animating.
-9. **JS payload discipline:** interaction-gated/heavy controllers load via idle-time dynamic `import()` (pattern in ShareModal/GigMapSheet/AudioPlayer/CoversSearchOverlay/SubscribeSection). Don't convert them back to static imports; don't add new eager heavyweight deps to page bundles (the 217 KB Supabase chunk loads post-LCP for a reason).
+## 4. Performance & Audio Architecture (Target: 60fps on Low-End Phones)
 
-## 5. Correctness patterns (bugs that shipped here before)
+1. **Animation Rules**:
+   - Animate `transform` and `opacity` ONLY. Avoid animating `width`, `height`, `left`, `top`, `margin`, `padding`, `box-shadow`, or `filter`.
+   - Progress bars must use `transform: scaleX(...)` with `transform-origin: left`.
+   - Sliders, vinyl needles, and gauges must use `transform: translateX(...)` or `transform: rotate(...)` calculated from cached dimensions.
+2. **Backdrop-Filter Budget**:
+   - Maximum **ONE** active blurred layer per screen.
+   - NEVER place a `backdrop-filter` over playing `<video>` elements or as an always-on fixed header. Use solid background colors (e.g., alpha ≥ 0.95) instead.
+3. **DOM & Layout Thrashing**:
+   - Do not query the DOM or call `getBoundingClientRect()` inside `requestAnimationFrame`, scroll handlers, or audio tick loops.
+   - Cache element references and bounding rects; invalidate only on window resize or view transitions.
+4. **Event Listeners**:
+   - Scroll, resize, and pointermove listeners must use `{ passive: true }` and coalesce work into `requestAnimationFrame`.
+   - Input search listeners must debounce by at least 150ms.
+5. **Web Audio & AudioWorklet Guidelines**:
+   - **User Gesture Unlock**: Browsers suspend `AudioContext` until the first explicit user interaction (click/touch). All audio controllers must check `audioContext.state === 'suspended'` and call `await audioContext.resume()` inside the user gesture handler.
+   - **Sample-Accurate Timing**: Never rely on `setInterval` or `setTimeout` for musical timing. Use `AudioContext.currentTime` scheduling or dedicated AudioWorklets (`click-worklet.js`).
+   - **Hardware Stream Cleanup**: When stopping the chromatic tuner or unmounting its audio engine, always explicitly stop all tracks on the microphone `MediaStream` (`stream.getTracks().forEach(t => t.stop())`) and close or suspend the context.
+6. **Motion & Low-Power Mode**:
+   - Respect `prefers-reduced-motion` (kill-switch in `src/styles/global.css`).
+   - Respect `html.low-power-mode` (automatically toggled by `BaseLayout.astro` when device memory ≤4GB, CPU cores ≤4, `saveData` is enabled, or network is 2G).
+7. **Off-Screen Animation Gating**:
+   - Infinite CSS animations belong inside `[data-anim-gated]` containers. The IntersectionObserver in `index.astro` toggles `.offscreen` to apply `animation-play-state: paused`.
+   - Heavy below-the-fold sections must declare `content-visibility: auto; contain-intrinsic-size: ...`.
+8. **Lazy Loading Discipline**:
+   - Heavy, interaction-gated controllers (e.g., `ShareModal`, `GigMapSheet`, `AudioPlayer`, `CoversSearchOverlay`, `SubscribeSection`, `liveUploadController`) load via dynamic `import()` on demand or `requestIdleCallback`. Never revert them to eager static imports.
 
-- **Single source of truth:** dates/counters/flag values come from `src/settings/*.config.ts`. Never re-hardcode a value inline in a controller (a duplicated gig date froze the homepage countdown for months).
-- **Timezones:** venue times are Australia/Sydney. Use the DST-aware conversion helper in `heroFeatureController.js` (`venueLocalTimeToMs`). Naive `new Date('YYYY-MM-DDTHH:mm')` parses viewer-local — wrong for everyone.
-- **Async toggle races:** rapid play/pause-style toggles need a generation counter captured before an await and verified after (see `vinylStopGeneration` in `audioPlayer.js`). Any code path whose continuation calls pause()/stop() MUST be guarded.
-- **Storage access throws** in private-mode/locked-down Safari. Wrap every `localStorage` call in try/catch helpers (`storageGet/Set/Remove` pattern).
-- **No implicit globals:** `elementId` window named-access breaks under bundling/refactors — always `getElementById` (this bit us: `sheetDragHandle`).
-- **Dead features get deleted or clearly gated.** Shipping stubs with empty datasets, undefined functions, or fake downloads ("coming soon" buttons wired to nothing, `.zip` files that are txt) is how this repo accumulated 5k lines of landmines. Check `functionality.config.ts` flags — note most flags are currently decorative; wire or remove.
-- **Client-side "payments"/perks are theater.** Tip superchats, subscriber gates, poll results are cosmetic. Never imply money moved; never attach real perks to forgeable client state without server enforcement.
-- **Runtime-created DOM cannot use Astro component `<style>` scopes** (no data-astro-cid attr). Such styles belong in `global.css` (see reaction-particle classes).
+---
 
-## 6. UI/UX consistency (do not drift)
+## 5. Correctness & State Patterns
 
-1. **Design tokens first** (`tokens/variables.css`): colors (`--accent-neon-yellow #F2FD43`, `--btn-green #53FC18`, surface/text scales), fonts (`--font-heading` Syne / `--font-display` Cinzel / `--font-secondary` Space Grotesk), easings (`--ease-snappy`, `--ease-tactile`), radii. No new one-off hex values unless matching the existing brutalist palette exactly.
-2. **Neo-brutalist language:** solid `#000` borders (2–3 px), hard offset shadows (`3px 3px 0px #000`), pill badges, uppercase Space Grotesk labels with letter-spacing. Copy an existing sibling component's styling before inventing markup (e.g., mirror `MembersSection` card patterns, nav button patterns in TopNav).
-3. **Transitions enumerate their properties explicitly.** `transition: all` is banned (style-recalc blowups); typical set: `transform var(--ease-tactile) .16s, background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease`.
-4. **Micro-interactions:** press feedback via existing `brutal-press` class; hover lifts `translate(-Npx,-Npx)` + shadow grow; icon pops via scale keyframes. Durations 0.12–0.35 s; longer only for deliberate sequences (song-change wipe 850 ms, curtain).
-5. **Feedback contract:** every action ends in either success state or an actionable error toast (`showToast`), never silence, never fake success. Loading states disable the submit control and show spinner (copy an existing handler).
-6. **Dark theme + reduced motion are first-class:** verify changes under `[data-theme="dark"]`, `prefers-reduced-motion`, and `html.low-power-mode`.
+1. **Single Source of Truth**:
+   - All band dates, gig schedules, links, member profiles, cover songs, and feature flags MUST reside in `src/settings/*.config.ts` (re-exported via `src/settings/index.ts`). Never hardcode business data inline.
+2. **Timezones & Date Parsing**:
+   - Show dates and venue times are in Australia/Sydney (`Australia/Sydney`).
+   - Naive `new Date('YYYY-MM-DDTHH:mm')` parses in the user's local browser timezone and breaks countdowns. Use the DST-aware helper `venueLocalTimeToMs` from `src/scripts/controllers/heroFeatureController.js`.
+3. **Async Race Conditions**:
+   - Audio toggles, media players, and modal transitions need generation counters captured before `await` and checked after (see `vinylStopGeneration` in `audioPlayer.js` or `metroState.js`).
+4. **Resilient Local Storage**:
+   - Safari in Private Mode or strict browser policies throw on `localStorage` access.
+   - Wrap storage access in try/catch helpers (e.g. `storageGet`, `storageSet`, `storageRemove` / `safeStorage`).
+5. **No Implicit Window Globals**:
+   - Never reference DOM elements directly via global IDs (e.g. `window.myElement`). Always use `document.getElementById('myElement')` or `querySelector`.
+6. **Runtime Dynamic DOM Styles**:
+   - DOM elements created dynamically via JavaScript cannot use Astro component scoped `<style>` classes (they lack `data-astro-cid`). Place runtime styles in `src/styles/global.css`.
 
-## 7. Process expectations
+---
 
-- **Take your time.** Read the surrounding code and both sides of a contract (caller+callee, HTML id ↔ JS selector, CSS class ↔ controller) before editing. Several past bugs came from edits that ignored the other half of a pair (form submit + button click both firing send).
-- **Verify claims by reading code, not assuming.** Grep for listeners before deleting events; check both pages sharing a chunk before moving exports.
-- **Match established patterns over cleverness.** When three controllers define local `escapeHtml`, follow suit rather than introducing a util import mid-file-set — or migrate all of them in one dedicated pass.
-- **Windows shell note:** PowerShell blocks `npm.ps1`; use `npm.cmd run build`.
-- **Finish every task with §8 verification.** Report what changed concisely; flag anything deferred instead of silently skipping.
+## 6. UI / Neo-Brutalist Design Tokens
 
-## 8. Verification checklist (run before declaring done)
+1. **Design Tokens First (`src/styles/tokens/variables.css`)**:
+   - **Colors**: `--accent-neon-yellow: #F2FD43`, `--btn-green: #53FC18`, `--bg-primary: #FAF8F5`, `--bg-surface: #FFFFFF`, `--text-primary: #0A0A0A`, `--border-color: #000000`.
+   - **Typography**: `--font-heading: 'Syne', sans-serif`, `--font-display: 'Cinzel', serif`, `--font-secondary: 'Space Grotesk', monospace`.
+   - **Borders & Shadows**: 2–3px solid `#000` borders, hard offset drop shadows (`3px 3px 0px #000` / `5px 5px 0px #000`).
+2. **Explicit CSS Transitions**:
+   - `transition: all` is **strictly banned** (causes heavy style recalcs and layout jumps).
+   - Enumerate transition properties explicitly:
+     ```css
+     transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+     ```
+3. **Tactile Micro-Interactions**:
+   - Buttons and interactive cards should use the `.brutal-press` class: `active: translate(2px, 2px)` with reduced shadow.
+   - Hover states: slight lift `translate(-2px, -2px)` with shadow expansion.
+
+---
+
+## 7. Workflow & Environment Notes
+
+- **Windows Shell**: PowerShell restricts `.ps1` script execution. Always execute npm commands using `npm.cmd`:
+  - Build: `npm.cmd run build`
+  - Dev: `npm.cmd run dev`
+  - Tests: `npx.cmd playwright test`
+- **Verification Before Declaring Tasks Done**:
+  - Run the checklist in §8.
+  - Verify both sides of any interface contract (caller + callee, HTML ID ↔ JS controller, API schema ↔ request body).
+
+---
+
+## 8. Verification Checklist (Run Before Completion)
+
+Run these checks to guarantee build correctness and security:
 
 ```powershell
-npm.cmd run build                      # must pass
-rg "discord(app)?\.com/api/webhooks" .vercel/output/static   # 0 hits, ALWAYS
-rg "transition:\s*all" src             # should stay at/near current count (≈18 legacy; don't add)
-rg "backdrop-filter" src               # only modal-scoped additions allowed
-rg "(?<!safe)(Storage\.)?(get|set|remove)Item" src/scripts   # new bare localStorage calls are a smell
+# 1. Full Production Build (must exit 0)
+npm.cmd run build
+
+# 2. Security Audit: Static Webhook & Secret Scan (must return 0 hits)
+rg "discord(app)?\.com/api/webhooks" .vercel/output/static
+
+# 3. CSS Performance Audit: Transition All (must not introduce new 'transition: all')
+rg "transition:\s*all" src
+
+# 4. Storage Safety Audit: Bare localStorage/sessionStorage calls
+rg "(?<!safe)(Storage\.)?(get|set|remove)Item" src/scripts
+
+# 5. Playwright Smoke Suite (for UI / interactive changes)
+npx.cmd playwright test e2e/tier1-smoke
 ```
-Plus: eyeball new/changed chunk sizes in build output against baseline (eager home JS ≈ 65 KB raw / 20 KB gz — growth needs justification), and run `npx playwright test e2e/tier1-smoke` when touching interactive flows.
 
-## 9. Known deferred items (don't rediscover, just know)
+---
 
-- `KINS_COVERS_DATA = []` — covers search has no data yet (owner must supply)
-- EPK download buttons generate placeholder text files labeled .zip/.pdf (page disabled)
-- CSP is Report-Only pending violation review; enforcing requires nonce migration of inline scripts
-- `epk.css` (~49 KB) leaks into `/` via shared chunk graph (Vite artifact, minor)
-- Font-weight trimming postponed pending per-rule audit (faux-bold regression risk)
-- In-memory rate limits are per-serverless-instance — move to durable store if abuse appears
+## 9. Known Deferred Items & Backlog
+
+- `KINS_COVERS_DATA = []` in `src/settings/rehearsal.config.ts`: Covers catalog data pending band submission.
+- EPK asset download deck generates placeholder files pending finalized high-res media package.
+- CSP in `src/middleware.ts` runs in `Content-Security-Policy-Report-Only` mode pending inline script nonce migration.
+- In-memory rate limits (`src/lib/rateLimit.ts`) are per serverless instance; migrate to Upstash / Redis if distributed abuse occurs.

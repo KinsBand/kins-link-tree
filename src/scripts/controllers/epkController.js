@@ -26,16 +26,33 @@ function initEpkMembersScroll() {
 
   if (!container) return;
 
+  let scrollSettleTimeout = null;
+
   function updateArrowsState() {
     if (!container) return;
     const maxScroll = container.scrollWidth - container.clientWidth;
+    const isOverflowing = maxScroll > 4;
+    const controlsGroup = prevBtn?.parentElement;
+    if (controlsGroup) {
+      controlsGroup.style.display = isOverflowing ? 'flex' : 'none';
+    }
+
+    const atStart = container.scrollLeft <= 5;
+    const atEnd = container.scrollLeft >= maxScroll - 5;
+
     if (prevBtn) {
-      prevBtn.style.opacity = container.scrollLeft <= 5 ? '0.4' : '1';
-      prevBtn.style.pointerEvents = container.scrollLeft <= 5 ? 'none' : 'auto';
+      prevBtn.style.opacity = atStart ? '0.35' : '1';
+      prevBtn.style.pointerEvents = atStart ? 'none' : 'auto';
+      prevBtn.disabled = atStart;
+      prevBtn.classList.toggle('is-disabled', atStart);
+      prevBtn.setAttribute('aria-disabled', String(atStart));
     }
     if (nextBtn) {
-      nextBtn.style.opacity = container.scrollLeft >= maxScroll - 5 ? '0.4' : '1';
-      nextBtn.style.pointerEvents = container.scrollLeft >= maxScroll - 5 ? 'none' : 'auto';
+      nextBtn.style.opacity = atEnd ? '0.35' : '1';
+      nextBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
+      nextBtn.disabled = atEnd;
+      nextBtn.classList.toggle('is-disabled', atEnd);
+      nextBtn.setAttribute('aria-disabled', String(atEnd));
     }
   }
 
@@ -62,14 +79,26 @@ function initEpkMembersScroll() {
         card.classList.remove('is-scroll-active');
       }
     });
+
+    if (scrollSettleTimeout) clearTimeout(scrollSettleTimeout);
+    scrollSettleTimeout = setTimeout(() => {
+      cards.forEach(card => card.classList.remove('is-scroll-active'));
+      const controlsGroup = prevBtn?.parentElement;
+      if (controlsGroup) {
+        controlsGroup.classList.remove('is-scrolling');
+      }
+    }, 800);
   }
 
   updateArrowsState();
-  updateActiveCardHighlight();
 
   // rAF-coalesced so scroll/resize never interleave rect reads with class writes (layout thrash)
   let epkScrollRafId = null;
   function scheduleEpkUpdate() {
+    const controlsGroup = prevBtn?.parentElement;
+    if (controlsGroup) {
+      controlsGroup.classList.add('is-scrolling');
+    }
     if (epkScrollRafId !== null) return;
     epkScrollRafId = requestAnimationFrame(() => {
       epkScrollRafId = null;
@@ -84,11 +113,15 @@ function initEpkMembersScroll() {
 
   prevBtn?.addEventListener('click', (e) => {
     e.preventDefault();
+    const controlsGroup = prevBtn?.parentElement;
+    if (controlsGroup) controlsGroup.classList.add('is-scrolling');
     container.scrollBy({ left: -260, behavior: 'smooth' });
   });
 
   nextBtn?.addEventListener('click', (e) => {
     e.preventDefault();
+    const controlsGroup = nextBtn?.parentElement;
+    if (controlsGroup) controlsGroup.classList.add('is-scrolling');
     container.scrollBy({ left: 260, behavior: 'smooth' });
   });
 

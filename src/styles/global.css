@@ -60,66 +60,288 @@ body.modal-open {
   display: none !important;
 }
 
+/* Reusable Drag-and-Drop Drop Target Placeholder */
+.drop-placeholder-slot {
+  background: var(--accent-gold-dashed-bg, rgba(242, 253, 67, 0.18)) !important;
+  border: 2px dashed var(--accent-gold-dashed-border, #000000) !important;
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: none !important;
+  pointer-events: none;
+  box-sizing: border-box;
+  transition: transform 0.16s var(--ease-tactile), opacity 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+/* Reusable Standardized Muted / Rest Beat Indicator — more-grey desaturated fill + prominent dashed greige border (distinct rest). Idle: no glow; active: subtle grey flash */
+.beat-muted-gold,
+.beat-muted,
+.beat-pip.is-muted,
+.beat-pip.is-mute {
+  background: var(--beat-muted-bg, rgba(82, 82, 80, 0.38)) !important;
+  background-color: var(--beat-muted-bg, rgba(82, 82, 80, 0.38)) !important;
+  border: 2px dashed var(--beat-muted-border, #9A9688) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  box-sizing: border-box !important;
+  opacity: var(--beat-muted-opacity, 0.78) !important;
+  /* Enumerated transitions only — no wildcard */
+  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--ease-tactile), opacity 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease, stroke 0.14s ease, fill 0.14s ease;
+  overflow: visible;
+}
+
+/* Active muted flash — slightly brighter grey + subtle glow (still desaturated, not vivid note) */
+.beat-muted-gold.active,
+.beat-muted.active,
+.beat-pip.is-muted.active,
+.beat-pip.is-mute.active {
+  background: var(--beat-muted-active-bg, rgba(102, 102, 100, 0.46)) !important;
+  background-color: var(--beat-muted-active-bg, rgba(102, 102, 100, 0.46)) !important;
+  border-color: var(--beat-muted-active-border, #B8B4A3) !important;
+  box-shadow: 0 0 8px var(--beat-muted-active-glow, rgba(155, 150, 136, 0.28)) !important;
+  opacity: var(--beat-muted-active-opacity, 0.92) !important;
+}
+
+/* Muted inner elements (icons, numerals, LED pips) reduced visibility */
+.beat-muted-gold > *,
+.beat-muted > *,
+.beat-pip.is-muted > *,
+.beat-pip.is-mute > *,
+.beat-muted-gold .beat-icon,
+.beat-muted .beat-icon,
+.beat-pip.is-muted .beat-icon {
+  opacity: var(--beat-muted-inner-opacity, 0.42) !important;
+}
+
+/* SVG Beat Arc — more-grey muted (reference image). Idle: grey fill + greige dashed stroke; Active: subtle grey glow flash */
+.beat-arc.is-muted,
+.beat-arc.is-mute,
+svg .beat-arc.is-muted {
+  fill: rgba(82, 82, 80, 0.38) !important;
+  stroke: #9A9688 !important;
+  stroke-dasharray: 5 4 !important;
+  stroke-linecap: butt !important;
+  stroke-width: 8 !important;
+  filter: none !important;
+  opacity: 0.78 !important;
+  transition: stroke 0.14s ease, fill 0.14s ease, opacity 0.14s ease, filter 0.14s ease;
+}
+.beat-arc.is-muted.active,
+.beat-arc.is-mute.active,
+svg .beat-arc.is-muted.active {
+  fill: rgba(102, 102, 100, 0.46) !important;
+  stroke: #B8B4A3 !important;
+  filter: drop-shadow(0 0 6px rgba(155, 150, 136, 0.28)) !important;
+  opacity: 0.92 !important;
+}
+
 /* ==========================================================================
-   Brutal Scrollbars (Option A — Brutal Block)
+   Unified Low / Mid / High Level Palette — Neo-Brutalist high-contrast tokens
+   Global fallbacks for .beat-pip and audio visualizer consumers.
+   Metronome dots/radials override with richer in-page styles below,
+   but these globals ensure any .beat-* container outside Astro scope
+   (JS-created DOM, tuner meter, audio visualizer) renders consistently.
    ========================================================================== */
-/* Firefox root-level & global scrollbar color (solid slab) */
-* {
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+.beat-low,
+.beat-pip.is-low,
+.tier-low.beat-pip {
+  --_lvl: var(--level-low, #FF9F1C);
+  --_lvl-bg: var(--level-low-bg, rgba(255, 159, 28, 0.16));
+  --_lvl-border: var(--level-low-border, rgba(255, 159, 28, 0.75));
+  --_lvl-glow: var(--level-low-glow, rgba(255, 159, 28, 0.35));
+  background-color: var(--_lvl-bg) !important;
+  border-color: var(--_lvl-border) !important;
+  color: var(--_lvl) !important;
+  box-sizing: border-box;
+  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--ease-tactile);
 }
 
-/* Webkit custom scrollbars */
-::-webkit-scrollbar {
-  width: var(--scrollbar-size-v);
-  height: var(--scrollbar-size-h);
+.beat-mid,
+.beat-pip.is-mid,
+.tier-mid.beat-pip {
+  --_lvl: var(--level-mid, #2EC4B6);
+  --_lvl-bg: var(--level-mid-bg, rgba(46, 196, 182, 0.16));
+  --_lvl-border: var(--level-mid-border, rgba(46, 196, 182, 0.75));
+  --_lvl-glow: var(--level-mid-glow, rgba(46, 196, 182, 0.35));
+  background-color: var(--_lvl-bg) !important;
+  border-color: var(--_lvl-border) !important;
+  color: var(--_lvl) !important;
+  box-sizing: border-box;
+  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--ease-tactile);
 }
 
-::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-  border: 2px solid #000000;
+.beat-high,
+.beat-pip.is-high,
+.tier-high.beat-pip {
+  --_lvl: var(--level-high, #53FC18);
+  --_lvl-bg: var(--level-high-bg, rgba(83, 252, 24, 0.16));
+  --_lvl-border: var(--level-high-border, rgba(83, 252, 24, 0.75));
+  --_lvl-glow: var(--level-high-glow, rgba(83, 252, 24, 0.38));
+  background-color: var(--_lvl-bg) !important;
+  border-color: var(--_lvl-border) !important;
+  color: var(--_lvl) !important;
+  box-sizing: border-box;
+  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--ease-tactile);
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border: 2px solid #000000;
+/* Generic beat-pip base — ensures border-box + enumerated transitions for all runtime JS pip elements */
+.beat-pip {
+  box-sizing: border-box;
+  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--ease-tactile), opacity 0.14s ease, box-shadow 0.14s ease;
+  overflow: visible;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+/* Tuner / Audio Visualizer bridge — maps same Low/Mid/High tokens to tuner meter, pegs and audio intensity */
+.tuner-level-low,
+.tuner-peg.is-low,
+.audio-level-low {
+  --_lvl: var(--level-low, #FF9F1C);
+  color: var(--_lvl);
+  border-color: var(--level-low-border, rgba(255, 159, 28, 0.75));
+  box-sizing: border-box;
+  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--ease-tactile), color 0.14s ease;
 }
 
-::-webkit-scrollbar-corner {
-  background: var(--scrollbar-track);
+.tuner-level-mid,
+.tuner-peg.is-mid,
+.audio-level-mid {
+  --_lvl: var(--level-mid, #2EC4B6);
+  color: var(--_lvl);
+  border-color: var(--level-mid-border, rgba(46, 196, 182, 0.75));
+  box-sizing: border-box;
+  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--ease-tactile), color 0.14s ease;
 }
 
-/* Horizontal Scrollbar Utility: Slimmer pill-radius variant for horizontal scrollers */
-.brutal-scroll-x {
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+.tuner-level-high,
+.tuner-peg.is-high,
+.audio-level-high {
+  --_lvl: var(--level-high, #53FC18);
+  color: var(--_lvl);
+  border-color: var(--level-high-border, rgba(83, 252, 24, 0.75));
+  box-sizing: border-box;
+  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s var(--ease-tactile), color 0.14s ease;
 }
 
-.brutal-scroll-x::-webkit-scrollbar {
-  height: 6px;
+/* Cross-component audio intensity helpers — use transform/opacity only for 60fps, enumerated transitions */
+.audio-intensity-low { background-color: var(--level-low-bg, rgba(255, 159, 28, 0.16)); border: 2px solid var(--level-low-border, #FF9F1C); box-sizing: border-box; }
+.audio-intensity-mid { background-color: var(--level-mid-bg, rgba(46, 196, 182, 0.16)); border: 2px solid var(--level-mid-border, #2EC4B6); box-sizing: border-box; }
+.audio-intensity-high { background-color: var(--level-high-bg, rgba(83, 252, 24, 0.16)); border: 2px solid var(--level-high-border, #53FC18); box-sizing: border-box; }
+
+/* ==========================================================================
+   Brutal Scrollbars (Desktop Fine-Pointer vs Mobile / Touch)
+   ========================================================================== */
+/* Desktop Fine Pointer: Custom Neo-Brutalist Solid Slab Scrollbars */
+@media (min-width: 769px) and (pointer: fine) {
+  /* Firefox root-level & global scrollbar color (solid slab) */
+  * {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  /* Webkit custom scrollbars */
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-size-v);
+    height: var(--scrollbar-size-h);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border: 2px solid #000000;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border: 2px solid #000000;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track);
+  }
+
+  /* Horizontal Scrollbar Utility: Slimmer pill-radius variant for desktop horizontal scrollers */
+  .brutal-scroll-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  .brutal-scroll-x::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .brutal-scroll-x::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-pill);
+  }
+
+  .brutal-scroll-x::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-pill);
+  }
+
+  .brutal-scroll-x::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
 }
 
-.brutal-scroll-x::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-  border: 1.5px solid #000000;
-  border-radius: var(--radius-pill);
-}
+/* Mobile & Touch Screens: Completely Hide All Vertical & Horizontal Scrollbars / Indicators */
+@media (max-width: 768px), (pointer: coarse), (hover: none) {
+  html,
+  body,
+  *,
+  *::before,
+  *::after {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
 
-.brutal-scroll-x::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border: 1.5px solid #000000;
-  border-radius: var(--radius-pill);
-}
+  html {
+    scrollbar-gutter: auto !important;
+  }
 
-.brutal-scroll-x::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    background: transparent !important;
+    -webkit-appearance: none !important;
+    opacity: 0 !important;
+  }
+
+  *::-webkit-scrollbar-thumb,
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-corner {
+    display: none !important;
+    background: transparent !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+  }
+
+  .brutal-scroll-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .brutal-scroll-x::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
 }
 
 /* Pure CSS Tape Realism */

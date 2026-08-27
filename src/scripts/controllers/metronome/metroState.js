@@ -5,15 +5,19 @@ import {
   METRO_SOUNDS,
   METRO_STORAGE_KEYS,
   COACH_DEFAULTS,
-  COACH_STORAGE_KEYS
+  COACH_STORAGE_KEYS,
+  METRO_DEFAULT_SETLISTS,
+  DEFAULT_BEAT_COLORS,
+  SHEET_STORAGE_KEYS
 } from '../../../settings/metronome.config';
 
+const DEFAULT_SOUND_ID = (METRO_SOUNDS.find((s) => s.id === 'click') || METRO_SOUNDS[0]).id;
 export const metroState = {
   bpm: METRO_BPM.default,
   timeSigIndex: 0,
   customTimeSig: null,
   subdivisionIndex: 0,
-  soundId: METRO_SOUNDS[0].id,
+  soundId: DEFAULT_SOUND_ID,
   volume: 0.8,
   accentFirst: false,
   flash: false,
@@ -22,6 +26,7 @@ export const metroState = {
   backgroundPlay: false,
   beatStyle: 'dots',
   beatTiers: ['mid', 'mid', 'mid', 'mid'],
+  levelColors: { low: DEFAULT_BEAT_COLORS.low, mid: DEFAULT_BEAT_COLORS.mid, high: DEFAULT_BEAT_COLORS.high },
   playing: false,
   starting: false,
   coachTab: 'inner-clock',
@@ -35,7 +40,14 @@ export const metroState = {
   sheetFollow: false,
   sheetLoop: false,
   sheetSync: false,
-  sheetMap: {}
+  sheetMap: {},
+  setlists: [],
+  activeSetlist: null,
+  activeSetlistSongIdx: 0,
+  activeSong: null,
+  currentSectionIdx: 0,
+  currentSectionBar: 1,
+  isCountIn: false
 };
 
 function storageGet(key) {
@@ -58,7 +70,7 @@ export function getSubdivision() {
 }
 
 export function getSound() {
-  return METRO_SOUNDS.find((s) => s.id === metroState.soundId) || METRO_SOUNDS[0];
+  return METRO_SOUNDS.find((s) => s.id === metroState.soundId) || METRO_SOUNDS.find((s) => s.id === 'click') || METRO_SOUNDS[0];
 }
 
 export function setBpm(value, persist = true) {
@@ -151,7 +163,69 @@ export function setBeatStyle(style, persist = true) {
   return next;
 }
 
-const VALID_BEAT_TIERS = ['low', 'mid', 'high'];
+const VALID_LEVEL_COLOR_TIERS = ['low', 'mid', 'high'];
+
+function isValidHexColor(hex) {
+  return typeof hex === 'string' && /^#[0-9A-Fa-f]{6}$/.test(hex.trim());
+}
+
+function hexToRgb(hex) {
+  const h = hex.trim().replace('#', '');
+  return {
+    r: parseInt(h.slice(0, 2), 16),
+    g: parseInt(h.slice(2, 4), 16),
+    b: parseInt(h.slice(4, 6), 16)
+  };
+}
+
+function hexToRgba(hex, alpha) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export function getLevelColor(tier) {
+  if (!VALID_LEVEL_COLOR_TIERS.includes(tier)) return DEFAULT_BEAT_COLORS.mid;
+  const c = metroState.levelColors && metroState.levelColors[tier];
+  return isValidHexColor(c) ? c.toUpperCase() : DEFAULT_BEAT_COLORS[tier];
+}
+
+export function setLevelColor(tier, hex, persist = true) {
+  if (!VALID_LEVEL_COLOR_TIERS.includes(tier)) return null;
+  if (!isValidHexColor(hex)) return null;
+  const normalized = hex.trim().toUpperCase();
+  if (!metroState.levelColors) metroState.levelColors = { ...DEFAULT_BEAT_COLORS };
+  metroState.levelColors[tier] = normalized;
+  if (persist) storageSet(METRO_STORAGE_KEYS.levelColors, JSON.stringify(metroState.levelColors));
+  applyLevelColors();
+  return normalized;
+}
+
+export function resetLevelColors(persist = true) {
+  metroState.levelColors = { low: DEFAULT_BEAT_COLORS.low, mid: DEFAULT_BEAT_COLORS.mid, high: DEFAULT_BEAT_COLORS.high };
+  if (persist) storageSet(METRO_STORAGE_KEYS.levelColors, JSON.stringify(metroState.levelColors));
+  applyLevelColors();
+  return { ...metroState.levelColors };
+}
+
+export function applyLevelColors() {
+  try {
+    const root = document.documentElement;
+    if (!root) return;
+    const colors = metroState.levelColors || DEFAULT_BEAT_COLORS;
+    const tiers = ['low', 'mid', 'high'];
+    tiers.forEach((tier) => {
+      const hex = isValidHexColor(colors[tier]) ? colors[tier].toUpperCase() : DEFAULT_BEAT_COLORS[tier];
+      root.style.setProperty(`--level-${tier}`, hex);
+      root.style.setProperty(`--level-${tier}-text`, hex);
+      root.style.setProperty(`--level-${tier}-active`, hex);
+      root.style.setProperty(`--level-${tier}-bg`, hexToRgba(hex, 0.16));
+      root.style.setProperty(`--level-${tier}-border`, hexToRgba(hex, 0.75));
+      root.style.setProperty(`--level-${tier}-glow`, hexToRgba(hex, 0.35));
+    });
+  } catch (e) {}
+}
+
+const VALID_BEAT_TIERS = ['mute', 'low', 'mid', 'high'];
 
 export function getBeatTier(index) {
   if (!Array.isArray(metroState.beatTiers)) return 'mid';
@@ -171,7 +245,7 @@ export function setBeatTier(index, tierId, persist = true) {
 
 export function cycleBeatTier(index, persist = true) {
   const cur = getBeatTier(index);
-  const cycleMap = { low: 'mid', mid: 'high', high: 'low' };
+  const cycleMap = { mid: 'high', high: 'low', low: 'mute', mute: 'mid' };
   const next = cycleMap[cur] || 'mid';
   return setBeatTier(index, next, persist);
 }
@@ -215,31 +289,54 @@ export function setCoachInner(patch, persist = true) {
 
 export function setCoachSpeed(patch, persist = true) {
   const cur = metroState.coachSpeed;
+  // Ensure direction exists for legacy persisted objects
+  if (!cur.direction || (cur.direction !== 'asc' && cur.direction !== 'desc')) cur.direction = 'asc';
+  // Handle direction toggle first — swap bounds if needed to keep range valid for new direction
+  if (patch.direction === 'asc' || patch.direction === 'desc') {
+    const newDir = patch.direction;
+    if (newDir !== cur.direction) {
+      // Swap start/target to preserve the same BPM range but reverse traversal
+      if (newDir === 'asc' && cur.start > cur.target) {
+        const tmp = cur.start; cur.start = cur.target; cur.target = tmp;
+      } else if (newDir === 'desc' && cur.start < cur.target) {
+        const tmp = cur.start; cur.start = cur.target; cur.target = tmp;
+      }
+      cur.direction = newDir;
+    }
+  }
   if (typeof patch.start === 'number') {
     let next = clampBpm(patch.start);
     next = Math.min(300, Math.max(30, next));
-    // enforce start <= target
-    if (typeof patch.target === 'number') {
-      // both provided together — clamp after
-    } else if (next > cur.target) next = cur.target;
     cur.start = next;
   }
   if (typeof patch.target === 'number') {
     let next = clampBpm(patch.target);
     next = Math.min(300, Math.max(30, next));
-    if (next < cur.start) next = cur.start;
     cur.target = next;
   }
-  // if both changed, ensure ordering still holds (start <= target)
-  if (cur.start > cur.target) {
-    // if target was just updated, push start down; otherwise push target up
+  // Enforce ordering based on current direction: asc => start <= target, desc => start >= target
+  if (cur.direction === 'asc' && cur.start > cur.target) {
     if (typeof patch.target === 'number' && typeof patch.start !== 'number') cur.start = cur.target;
-    else cur.target = cur.start;
+    else if (typeof patch.start === 'number' && typeof patch.target !== 'number') cur.target = cur.start;
+    else {
+      // both supplied or toggle — clamp target up to start
+      cur.target = cur.start;
+    }
+  } else if (cur.direction === 'desc' && cur.start < cur.target) {
+    if (typeof patch.target === 'number' && typeof patch.start !== 'number') cur.start = cur.target;
+    else if (typeof patch.start === 'number' && typeof patch.target !== 'number') cur.target = cur.start;
+    else {
+      cur.target = cur.start;
+    }
   }
-  if (typeof patch.step === 'number') cur.step = Math.min(50, Math.max(1, Math.round(patch.step)));
-  if (typeof patch.everyBars === 'number') cur.everyBars = Math.min(16, Math.max(1, Math.round(patch.everyBars)));
-  if (patch.unit === 'bars' || patch.unit === 'beats') cur.unit = patch.unit;
+  if (typeof patch.step === 'number') cur.step = Math.min(100, Math.max(1, Math.round(patch.step)));
+  if (typeof patch.everyBars === 'number') cur.everyBars = Math.min(999, Math.max(1, Math.round(patch.everyBars)));
+  if (patch.unit === 'bars' || patch.unit === 'beats' || patch.unit === 'seconds') cur.unit = patch.unit;
   if (typeof patch.repeat === 'boolean') cur.repeat = patch.repeat;
+  if (patch.direction === 'asc' || patch.direction === 'desc') cur.direction = patch.direction;
+  // Final sanitize: if still inverted (legacy data), fix
+  if (cur.direction === 'asc' && cur.start > cur.target) { const tmp = cur.start; cur.start = cur.target; cur.target = tmp; }
+  if (cur.direction === 'desc' && cur.start < cur.target) { const tmp = cur.start; cur.start = cur.target; cur.target = tmp; }
   if (persist) storageSet(COACH_STORAGE_KEYS.speed, JSON.stringify(cur));
   return true;
 }
@@ -354,7 +451,7 @@ export function restore() {
   const sub = storageGet(METRO_STORAGE_KEYS.subdivision);
   if (sub) metroState.subdivisionIndex = indexOfId(METRO_SUBDIVISIONS, sub);
   const sound = storageGet(METRO_STORAGE_KEYS.sound);
-  if (sound) metroState.soundId = METRO_SOUNDS.some((s) => s.id === sound) ? sound : METRO_SOUNDS[0].id;
+  if (sound) metroState.soundId = METRO_SOUNDS.some((s) => s.id === sound) ? sound : DEFAULT_SOUND_ID;
   const volume = parseInt(storageGet(METRO_STORAGE_KEYS.volume) || '', 10);
   if (!Number.isNaN(volume)) metroState.volume = Math.min(1, Math.max(0, volume / 100));
   metroState.accentFirst = storageGet(METRO_STORAGE_KEYS.accent) !== '0';
@@ -374,6 +471,21 @@ export function restore() {
     }
   } catch (e) {}
   syncBeatTiersLength(getTimeSignature().beatsPerBar, false);
+  // Restore custom beat colors (low/mid/high) — fallback to defaults if invalid
+  try {
+    const rawColors = storageGet(METRO_STORAGE_KEYS.levelColors);
+    if (rawColors) {
+      const parsed = JSON.parse(rawColors);
+      if (parsed && typeof parsed === 'object') {
+        ['low', 'mid', 'high'].forEach((tier) => {
+          if (isValidHexColor(parsed[tier])) {
+            metroState.levelColors[tier] = parsed[tier].toUpperCase();
+          }
+        });
+      }
+    }
+  } catch (e) {}
+  try { applyLevelColors(); } catch (e) {}
   try {
     const tab = storageGet(COACH_STORAGE_KEYS.activeTab);
     if (tab && ['inner-clock','speed-trainer','rhythm-step','tempo-primer'].includes(tab)) metroState.coachTab = tab;
@@ -385,14 +497,23 @@ export function restore() {
     }
     const speed = JSON.parse(storageGet(COACH_STORAGE_KEYS.speed) || 'null');
     if (speed && typeof speed === 'object') {
+      if (speed.direction === 'asc' || speed.direction === 'desc') metroState.coachSpeed.direction = speed.direction;
+      else metroState.coachSpeed.direction = metroState.coachSpeed.direction || 'asc';
       if (typeof speed.start === 'number') metroState.coachSpeed.start = Math.min(300, Math.max(30, clampBpm(speed.start)));
       if (typeof speed.target === 'number') metroState.coachSpeed.target = Math.min(300, Math.max(30, clampBpm(speed.target)));
-      if (metroState.coachSpeed.start > metroState.coachSpeed.target) metroState.coachSpeed.start = metroState.coachSpeed.target;
-      if (typeof speed.step === 'number') metroState.coachSpeed.step = Math.min(50, Math.max(1, Math.round(speed.step)));
-      if (typeof speed.everyBars === 'number') metroState.coachSpeed.everyBars = Math.min(16, Math.max(1, Math.round(speed.everyBars)));
-      if (speed.unit === 'bars' || speed.unit === 'beats') metroState.coachSpeed.unit = speed.unit;
+      // Enforce ordering based on direction for legacy data
+      if (metroState.coachSpeed.direction === 'asc' && metroState.coachSpeed.start > metroState.coachSpeed.target) {
+        const tmp = metroState.coachSpeed.start; metroState.coachSpeed.start = metroState.coachSpeed.target; metroState.coachSpeed.target = tmp;
+      } else if (metroState.coachSpeed.direction === 'desc' && metroState.coachSpeed.start < metroState.coachSpeed.target) {
+        const tmp = metroState.coachSpeed.start; metroState.coachSpeed.start = metroState.coachSpeed.target; metroState.coachSpeed.target = tmp;
+      }
+      if (typeof speed.step === 'number') metroState.coachSpeed.step = Math.min(100, Math.max(1, Math.round(speed.step)));
+      if (typeof speed.everyBars === 'number') metroState.coachSpeed.everyBars = Math.min(999, Math.max(1, Math.round(speed.everyBars)));
+      if (speed.unit === 'bars' || speed.unit === 'beats' || speed.unit === 'seconds') metroState.coachSpeed.unit = speed.unit;
       if (typeof speed.repeat === 'boolean') metroState.coachSpeed.repeat = speed.repeat;
     }
+    // Ensure direction default for fresh state
+    if (!metroState.coachSpeed.direction || (metroState.coachSpeed.direction !== 'asc' && metroState.coachSpeed.direction !== 'desc')) metroState.coachSpeed.direction = 'asc';
     const rhythm = JSON.parse(storageGet(COACH_STORAGE_KEYS.rhythm) || 'null');
     if (rhythm && typeof rhythm === 'object') {
       if (Array.isArray(rhythm.pattern) && rhythm.pattern.length) metroState.coachRhythm.pattern = rhythm.pattern.filter((x) => typeof x === 'string');
@@ -414,5 +535,80 @@ export function restore() {
       const sheetMap = JSON.parse(storageGet(SHEET_STORAGE_KEYS.perSong) || 'null');
       if (sheetMap && typeof sheetMap === 'object') metroState.sheetMap = sheetMap;
     } catch (e) {}
+    loadSetlists();
   } catch (e) {}
+}
+
+export function loadSetlists() {
+  try {
+    const raw = storageGet(METRO_STORAGE_KEYS.setlists);
+    if (!raw) {
+      metroState.setlists = METRO_DEFAULT_SETLISTS.map((s) => JSON.parse(JSON.stringify(s)));
+      return metroState.setlists;
+    }
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      metroState.setlists = parsed;
+    } else {
+      metroState.setlists = METRO_DEFAULT_SETLISTS.map((s) => JSON.parse(JSON.stringify(s)));
+    }
+  } catch (e) {
+    metroState.setlists = METRO_DEFAULT_SETLISTS.map((s) => JSON.parse(JSON.stringify(s)));
+  }
+  return metroState.setlists;
+}
+
+export function saveSetlists(persist = true) {
+  if (persist) {
+    try {
+      storageSet(METRO_STORAGE_KEYS.setlists, JSON.stringify(metroState.setlists));
+    } catch (e) {}
+  }
+  return metroState.setlists;
+}
+
+export function getSetlists() {
+  if (!Array.isArray(metroState.setlists) || metroState.setlists.length === 0) {
+    loadSetlists();
+  }
+  return metroState.setlists;
+}
+
+export function getSetlistById(id) {
+  const list = getSetlists();
+  return list.find((s) => s.id === id) || null;
+}
+
+export function upsertSetlist(setlistData) {
+  if (!setlistData || !setlistData.name) return null;
+  const list = getSetlists();
+  const id = setlistData.id || `setlist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const songs = Array.isArray(setlistData.songs) ? setlistData.songs : [];
+  const entry = {
+    id,
+    name: String(setlistData.name).trim().slice(0, 100) || 'Untitled Setlist',
+    songs,
+    updatedAt: Date.now(),
+    createdAt: setlistData.createdAt || Date.now()
+  };
+  const idx = list.findIndex((s) => s.id === id);
+  if (idx >= 0) {
+    list[idx] = entry;
+  } else {
+    list.unshift(entry);
+  }
+  saveSetlists(true);
+  return entry;
+}
+
+export function deleteSetlist(id) {
+  const list = getSetlists();
+  const next = list.filter((s) => s.id !== id);
+  metroState.setlists = next;
+  saveSetlists(true);
+  if (metroState.activeSetlist && metroState.activeSetlist.id === id) {
+    metroState.activeSetlist = null;
+    metroState.activeSetlistSongIdx = 0;
+  }
+  return true;
 }

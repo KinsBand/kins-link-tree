@@ -326,7 +326,7 @@ export function createUi(callbacks) {
     const dy = touch.clientY - sheetDrag.startY;
     sheetDrag.lastY = touch.clientY;
     if (!sheetDrag.engaged) {
-      const atTop = els.sheet.scrollTop <= 2;
+      const atTop = els.panelSettings ? els.panelSettings.scrollTop <= 2 : els.sheet.scrollTop <= 2;
       const onHandle = e.target === els.sheetHandle || els.sheetHandle.contains(e.target);
       if (dy > 8 && (atTop || onHandle)) {
         sheetDrag.engaged = true;

@@ -168,11 +168,28 @@ const members = [
     margin: 0;
   }
 
-  /* Scroll Navigation Arrow Buttons */
   .section-scroll-controls {
     display: flex;
     align-items: center;
     gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-2px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+
+  .section-scroll-controls.is-scrolling {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  @media (min-width: 768px) {
+    .section-scroll-controls {
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+    }
   }
 
   .scroll-arrow-btn {
@@ -192,16 +209,24 @@ const members = [
     transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease, opacity 0.16s ease;
   }
 
-  .scroll-arrow-btn:hover {
+  .scroll-arrow-btn:hover:not(:disabled):not(.is-disabled) {
     background: var(--accent-neon-yellow);
     color: #000000;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
 
-  .scroll-arrow-btn:active {
+  .scroll-arrow-btn:active:not(:disabled):not(.is-disabled) {
     transform: translate(1px, 1px);
     box-shadow: 1px 1px 0px #000000;
+  }
+
+  .scroll-arrow-btn:disabled,
+  .scroll-arrow-btn.is-disabled {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
   /* Horizontal Scroll Container mimicking Link-in-Bio page */

@@ -2,12 +2,12 @@
 import { rehearsalConfig } from '../../settings/rehearsal.config';
 import ToolIcon from '../ui/ToolIcon.astro';
 
-const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = rehearsalConfig;
+const { title, icon, desktopSubtitle, mobileSubtitle, tools } = rehearsalConfig;
 ---
 
 <section class="rehearsal-utilities-section" id="rehearsalUtilitiesSection" data-anim-gated>
   <div class="rehearsal-card">
-    <!-- Header -->
+    <!-- Header with Title & Top-Right Download Icon Button -->
     <div class="rehearsal-header">
       <div class="rehearsal-title-row">
         <div class="rehearsal-icon-box">
@@ -19,6 +19,17 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
           <p class="rehearsal-subtitle mobile-only">{mobileSubtitle}</p>
         </div>
       </div>
+      <button
+        type="button"
+        class="kins-tools-pwa-btn brutal-press"
+        id="kinsToolsPwaBtn"
+        data-track="utilities:pwa_download"
+        aria-label="Download KINS TOOLS app for offline use"
+        title="Download app for offline use"
+      >
+        <span class="pwa-btn-progress" id="kinsToolsPwaProgress" aria-hidden="true"></span>
+        <i class="fa-solid fa-download" id="kinsToolsPwaIcon" aria-hidden="true"></i>
+      </button>
     </div>
 
     <!-- Desktop 3-Column Grid / Mobile Stacked Cards -->
@@ -82,27 +93,6 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
         </article>
       ))}
     </div>
-
-    <!-- Offline Footer Banner -->
-    <div class="rehearsal-offline-banner">
-      <div class="banner-pill">
-        <i class={`${offlineBanner.icon} banner-bolt-icon`} aria-hidden="true"></i>
-        <span class="banner-text">{offlineBanner.desktop}</span>
-      </div>
-      <button
-        type="button"
-        class="kins-tools-pwa-btn brutal-press"
-        id="kinsToolsPwaBtn"
-        data-track="utilities:pwa_download"
-        aria-label="Download app for offline use"
-      >
-        <span class="pwa-btn-progress" id="kinsToolsPwaProgress" aria-hidden="true"></span>
-        <span class="pwa-btn-inner">
-          <i class="fa-solid fa-download" id="kinsToolsPwaIcon" aria-hidden="true"></i>
-          <span id="kinsToolsPwaLabel">Download</span>
-        </span>
-      </button>
-    </div>
   </div>
 </section>
 
@@ -127,7 +117,7 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     const pwaLabel = document.getElementById('kinsToolsPwaLabel');
     const pwaProgress = document.getElementById('kinsToolsPwaProgress');
 
-    if (!pwaBtn || !pwaIcon || !pwaLabel || !pwaProgress) return;
+    if (!pwaBtn || !pwaIcon || !pwaProgress) return;
 
     let isDownloading = false;
 
@@ -140,24 +130,29 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
       pwaBtn.classList.remove('downloading');
       pwaBtn.classList.add('download-complete');
       pwaIcon.className = 'fa-solid fa-circle-check';
-      pwaLabel.textContent = 'Downloaded';
+      if (pwaLabel) pwaLabel.textContent = 'Downloaded';
       setProgress(100);
       pwaBtn.setAttribute('aria-label', 'App downloaded and ready offline');
+      pwaBtn.setAttribute('title', 'App downloaded and ready offline');
     }
 
     function markDownloading() {
       pwaBtn.classList.remove('download-complete');
       pwaBtn.classList.add('downloading');
       pwaIcon.className = 'fa-solid fa-spinner fa-spin';
-      pwaLabel.textContent = 'Downloading…';
+      if (pwaLabel) pwaLabel.textContent = 'Downloading…';
       setProgress(5);
+      pwaBtn.setAttribute('aria-label', 'Downloading…');
+      pwaBtn.setAttribute('title', 'Downloading…');
     }
 
     function resetIdle() {
       pwaBtn.classList.remove('downloading', 'download-complete');
       pwaIcon.className = 'fa-solid fa-download';
-      pwaLabel.textContent = 'Download';
+      if (pwaLabel) pwaLabel.textContent = 'Download';
       setProgress(0);
+      pwaBtn.setAttribute('aria-label', 'Download KINS TOOLS app for offline use');
+      pwaBtn.setAttribute('title', 'Download for offline use');
     }
 
     function isStandalone() {
@@ -201,10 +196,12 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
         const result = await installPwa({
           onProgress: ({ percent, eta }) => {
             setProgress(percent);
-            if (percent < 100) {
-              pwaLabel.textContent = `${percent}% • ${eta}s`;
-            } else {
-              pwaLabel.textContent = 'Finalizing…';
+            if (pwaLabel) {
+              if (percent < 100) {
+                pwaLabel.textContent = `${percent}% • ${eta}s`;
+              } else {
+                pwaLabel.textContent = 'Finalizing…';
+              }
             }
           },
         });
@@ -262,8 +259,9 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
   /* Header */
   .rehearsal-header {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     border-bottom: 2px solid #000000;
     padding-bottom: 14px;
   }
@@ -272,6 +270,8 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
+    flex: 1;
   }
 
   .rehearsal-icon-box {
@@ -521,49 +521,7 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     box-shadow: 3px 3px 0px #000000;
   }
 
-  /* Offline Banner — text + PWA download */
-  .rehearsal-offline-banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-    border-top: 2px dashed #000000;
-    padding-top: 14px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .banner-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 6px 14px;
-    background: #ffffff;
-    border: 1.5px solid #000000;
-    box-shadow: 1.5px 1.5px 0px #000000;
-    border-radius: var(--radius-pill);
-    text-align: center;
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .banner-bolt-icon {
-    color: #000000;
-    font-size: 0.82rem;
-    flex-shrink: 0;
-  }
-
-  .banner-text {
-    font-family: var(--font-secondary);
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    color: var(--text-card-primary);
-    text-transform: uppercase;
-  }
-
+  /* Top-Right PWA Download Icon Button */
   .kins-tools-pwa-btn {
     position: relative;
     overflow: hidden;
@@ -571,19 +529,24 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    min-width: 116px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     padding: 0;
-    background: var(--accent-neon-yellow);
+    background: #ffffff;
+    color: #000000;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-xs);
     cursor: pointer;
     box-sizing: border-box;
-    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
   }
 
   .kins-tools-pwa-btn:hover {
-    background: #faff60;
+    background: var(--accent-neon-yellow);
+    color: #000000;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
@@ -596,6 +559,13 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
   .kins-tools-pwa-btn:disabled {
     cursor: wait;
     opacity: 0.95;
+  }
+
+  .kins-tools-pwa-btn i {
+    position: relative;
+    z-index: 1;
+    font-size: 0.95rem;
+    color: inherit;
   }
 
   .pwa-btn-progress {
@@ -613,30 +583,14 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     will-change: transform;
   }
 
-  .pwa-btn-inner {
-    position: relative;
-    z-index: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 7px 14px;
-    font-family: var(--font-secondary);
-    font-size: 0.76rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #000000;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
   .kins-tools-pwa-btn.downloading {
     background: #ffffff;
+    color: #000000;
   }
 
   .kins-tools-pwa-btn.download-complete {
     background: #53c678;
+    color: #000000;
   }
 
   .kins-tools-pwa-btn.download-complete .pwa-btn-progress {
@@ -742,28 +696,16 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     color: #f5f5f7;
   }
 
-  :global([data-theme="dark"]) .rehearsal-offline-banner {
-    border-top-color: rgba(255, 255, 255, 0.15);
-  }
-
-  :global([data-theme="dark"]) .banner-pill {
-    background: #18181c;
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 1.5px 1.5px 0px #000000;
-  }
-
-  :global([data-theme="dark"]) .banner-bolt-icon {
-    color: var(--accent-neon-yellow, #f2fd43);
-  }
-
-  :global([data-theme="dark"]) .banner-text {
-    color: var(--text-muted, #a1a1aa);
-  }
-
   :global([data-theme="dark"]) .kins-tools-pwa-btn {
-    background: var(--accent-neon-yellow, #f2fd43);
+    background: #27272a;
+    color: var(--text-white, #f5f5f7);
     border-color: #000000;
     box-shadow: 2px 2px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .kins-tools-pwa-btn:hover {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
   }
 
   :global([data-theme="dark"]) .kins-tools-pwa-btn.downloading {
@@ -771,15 +713,8 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     color: var(--text-white, #f5f5f7);
   }
 
-  :global([data-theme="dark"]) .kins-tools-pwa-btn.downloading .pwa-btn-inner {
-    color: var(--text-white, #f5f5f7);
-  }
-
   :global([data-theme="dark"]) .kins-tools-pwa-btn.download-complete {
     background: #53c678;
-  }
-
-  :global([data-theme="dark"]) .kins-tools-pwa-btn.download-complete .pwa-btn-inner {
     color: #000000;
   }
 
@@ -913,34 +848,12 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
       text-overflow: ellipsis;
     }
 
-    .rehearsal-offline-banner {
-      padding-top: 10px;
-      gap: 8px;
-      justify-content: center;
-    }
-
-    .banner-pill {
-      padding: 5px 10px;
-      gap: 6px;
-      max-width: 100%;
-      box-sizing: border-box;
-      flex: 1 1 auto;
-    }
-
-    .banner-text {
-      font-size: 0.70rem;
-      white-space: normal;
-    }
-
     .kins-tools-pwa-btn {
-      min-width: 102px;
-      flex-shrink: 0;
-    }
-
-    .pwa-btn-inner {
-      padding: 6px 12px;
-      font-size: 0.70rem;
-      gap: 5px;
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      min-height: 30px;
+      font-size: 0.85rem;
     }
   }
 
@@ -981,20 +894,6 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools, offlineBanner } = r
     .tool-action-btn {
       padding: 6px 3px;
       font-size: 0.68rem;
-    }
-
-    .rehearsal-offline-banner {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .banner-pill {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .kins-tools-pwa-btn {
-      width: 100%;
     }
   }
 

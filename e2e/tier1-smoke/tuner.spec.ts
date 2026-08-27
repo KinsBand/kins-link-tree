@@ -140,17 +140,13 @@ test.describe('tier1 smoke — tuner', () => {
     await lightBtn.click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'standard');
 
-    // Test Privacy Policy modal trigger
-    await page.locator('#tunerOpenPrivacyFooterBtn').click();
-    await expect(page.locator('#privacyModal')).toBeVisible();
+    // Test Legal modal trigger
+    await page.locator('#tunerOpenLegalFooterBtn').click();
+    const legalModal = page.locator('#legalModal');
+    await expect(legalModal).toBeVisible();
+    await expect(legalModal.locator('#legalTabPrivacy')).toHaveAttribute('aria-selected', 'true');
     await page.keyboard.press('Escape');
-    await expect(page.locator('#privacyModal')).toBeHidden();
-
-    // Test Terms modal trigger
-    await page.locator('#tunerOpenTermsFooterBtn').click();
-    await expect(page.locator('#termsModal')).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(page.locator('#termsModal')).toBeHidden();
+    await expect(legalModal).toBeHidden();
 
     // Test Feedback / Suggest Improvement modal trigger
     await page.locator('#tunerOpenSuggestImprovementFooterBtn').click();

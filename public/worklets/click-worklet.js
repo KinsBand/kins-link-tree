@@ -34,6 +34,17 @@ var WORKLET_AHEAD_BLOCKS = 2;
 var WORKLET_TAIL_SEC = 0.01;
 var MAX_ACTIVE_VOICES = 32;
 
+/* Soft-knee ceiling. The transfer curve is continuous at the knee
+   (output == input at |x| = KNEE), so crossing it never steps the
+   waveform, and asymptotic to 1.0 so overlapping voices can never
+   exceed digital full scale. */
+var WORKLET_LIMIT_KNEE = 0.8;
+
+/* Release ramp applied to ringing voices on stop/sync: truncating a
+   mid-decay click hard-cuts the waveform and pops; a ~4ms cosine-ish
+   fade lands every voice at true zero instead. */
+var WORKLET_RELEASE_SEC = 0.004;
+
 class KinsClickProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
@@ -55,7 +66,10 @@ class KinsClickProcessor extends AudioWorkletProcessor {
     this.sounds = {};
     this.buffers = new Map(); /* "<id>:<accent>:<tier>" -> Float32Array */
     this.active = [];         /* [{frame, buf}] sorted implicitly by push order */
+    this.releaseFrame = -1;   /* absolute frame from which voices fade out; -1 = off */
+    this.releaseFrames = Math.max(32, Math.round(WORKLET_RELEASE_SEC * sampleRate));
     this.cachedSampleRate = sampleRate;
+    this._phase = 0;          /* phase-integrated synth accumulator */
 
     var self = this;
     this.port.onmessage = function (e) { self.onMessage(e.data); };
@@ -83,13 +97,13 @@ class KinsClickProcessor extends AudioWorkletProcessor {
         if (Array.isArray(m.tiers)) this.beatTiers = m.tiers;
         this.clickCounter = 0;
         this.beatCounter = 0;
-        this.nextClickTime = currentTime + 0.06;
-        this.active.length = 0;
+        this.nextClickTime = currentTime + 0.08; /* mirrors startOffsetSec */
+        this.releaseVoices();
         this.playing = true;
         break;
       case 'stop':
         this.playing = false;
-        this.active.length = 0;
+        this.releaseVoices();
         break;
       case 'tiers':
         if (Array.isArray(m.tiers)) this.beatTiers = m.tiers;
@@ -98,11 +112,11 @@ class KinsClickProcessor extends AudioWorkletProcessor {
         /* Resume-after-interruption/background: jump the cursor to a fresh
            point on the current clock instead of scheduling missed clicks in
            the past (they would all fire at once as a distorted burst). Beat
-           counters are preserved so the bar position never jumps. Any
-           already-rendered-but-unplayed clicks are dropped. */
-        var offset = (typeof m.offsetSec === 'number' && m.offsetSec > 0) ? m.offsetSec : 0.06;
+           counters are preserved so the bar position never jumps. Ringing
+           voices release over ~4ms rather than being truncated mid-wave. */
+        var offset = (typeof m.offsetSec === 'number' && m.offsetSec > 0) ? m.offsetSec : 0.08;
         if (this.playing) {
-          this.active.length = 0;
+          this.releaseVoices();
           this.nextClickTime = currentTime + offset;
         }
         break;
@@ -123,8 +137,20 @@ class KinsClickProcessor extends AudioWorkletProcessor {
       { id: 'click', type: 'square', freq: 1100, accentFreq: 1750, decay: 0.04, gain: 0.5 };
   }
 
+  /* Start a short fade-out on everything currently ringing. The earliest
+     release wins so repeated stop/start cycles can't extend or restart it;
+     process() clears it once no voices remain. */
+  releaseVoices() {
+    if (this.active.length && this.releaseFrame < 0) {
+      this.releaseFrame = Math.round(currentTime * sampleRate);
+    }
+  }
+
   /* Pre-render one click into a Float32Array:
      - Band-limited multi-harmonic acoustic modeling for each timbre
+     - Phase-integrated pitch sweeps (true exponential glide — evaluating
+       sin(2π·f(t)·t) directly would superimpose f'(t)·t onto the
+       instantaneous frequency and warp the sweep into a warble)
      - Smooth 0.75ms cosine attack ramp (completely eliminates DC step pop)
      - Exponential decay envelope
      - Smooth 2ms cosine fade-out at the tail (guarantees landing at true zero) */
@@ -150,47 +176,74 @@ class KinsClickProcessor extends AudioWorkletProcessor {
 
     var attackN = Math.max(2, Math.round(0.00075 * sampleRate)); // 0.75ms cosine ramp
     var lnRatio = Math.log(0.0005 / peak);
-    var fadeN = Math.max(2, Math.round(0.002 * sampleRate));     // 2ms tail fade
+    var fadeN = Math.min(n, Math.max(2, Math.round(0.002 * sampleRate))); // 2ms tail fade
 
     var soundId = sound.id || 'click';
+    var TWO_PI = 2 * Math.PI;
 
     for (var i = 0; i < n; i++) {
       var tSec = i / sampleRate;
-      var wave = 0;
+      var instFreq = freq;   /* instantaneous frequency for this sample */
+      var mixA = 1, mixB = 0, harmMul = 2;
 
-      if (soundId === 'click') {
+      if (soundId === 'click' || soundId === 'classic-click') {
         // Mechanical Wood Metronome: snappy pitch-swept transient + wood resonance
-        var sweepFactor = Math.max(1, 1 + 1.2 * Math.exp(-tSec / 0.0035));
-        var currentFreq = freq * sweepFactor;
-        var ph = (2 * Math.PI * currentFreq * tSec) % (2 * Math.PI);
-        // Multi-harmonic warm body (fundamental + 2nd harmonic)
-        wave = 0.75 * Math.sin(ph) + 0.25 * Math.sin(2 * ph);
+        instFreq = freq * (1 + 1.2 * Math.exp(-tSec / 0.0035));
+        mixA = 0.75; mixB = 0.25; harmMul = 2;
       } else if (soundId === 'woodblock') {
         // Resonant Woodblock: fundamental + hollow 2.76x wood resonance mode
-        var ph1 = (2 * Math.PI * freq * tSec) % (2 * Math.PI);
-        var ph2 = (2 * Math.PI * (freq * 2.76) * tSec) % (2 * Math.PI);
-        wave = 0.78 * Math.sin(ph1) + 0.22 * Math.sin(ph2);
-      } else if (soundId === 'beep') {
+        mixA = 0.78; mixB = 0.22; harmMul = 2.76;
+      } else if (soundId === 'beep' || soundId === 'digital-beep') {
         // Studio Sine Pulse: pure fundamental with gentle 2nd harmonic roundness
-        var phB = (2 * Math.PI * freq * tSec) % (2 * Math.PI);
-        wave = 0.92 * Math.sin(phB) + 0.08 * Math.sin(2 * phB);
-      } else if (soundId === 'rimshot') {
+        mixA = 0.92; mixB = 0.08; harmMul = 2;
+      } else if (soundId === 'rimshot' || soundId === 'rim-click') {
         // Drum Stick / Rimshot: crisp transient with fast secondary harmonic burst
-        var sweepR = Math.max(1, 1 + 1.6 * Math.exp(-tSec / 0.002));
-        var phR1 = (2 * Math.PI * (freq * sweepR) * tSec) % (2 * Math.PI);
-        var phR2 = (2 * Math.PI * (freq * 1.62) * tSec) % (2 * Math.PI);
-        wave = 0.7 * Math.sin(phR1) + 0.3 * Math.sin(phR2);
+        instFreq = freq * (1 + 1.6 * Math.exp(-tSec / 0.002));
+        mixA = 0.7; mixB = 0.3; harmMul = 1.62;
       } else if (soundId === 'cowbell') {
         // 808-Style Metallic Percussion: dual metal modes
-        var phC1 = (2 * Math.PI * freq * tSec) % (2 * Math.PI);
-        var phC2 = (2 * Math.PI * (freq * 1.45) * tSec) % (2 * Math.PI);
-        wave = 0.58 * Math.sin(phC1) + 0.42 * Math.sin(phC2);
-      } else {
+        mixA = 0.58; mixB = 0.42; harmMul = 1.45;
+      } else if (soundId === 'voice-count') {
+        // Voice Count: warm vocal-like tone — fundamental + soft 2nd harmonic, no sweep
+        // Mild formant-ish mix; tier ratio already moves pitch for low/mid/high; mute handled upstream
+        mixA = 0.84; mixB = 0.16; harmMul = 1.98;
+      } else if (soundId === 'tick') {
+        // Tick: ultra-crisp bright tick with very fast pitch snap
+        instFreq = freq * (1 + 0.95 * Math.exp(-tSec / 0.0018));
+        mixA = 0.70; mixB = 0.30; harmMul = 2;
+      } else if (soundId === 'synth-pluck' || soundId === 'synthpluck') {
+        // Synth Pluck: modern pluck with fast pitch fall + bright overtone shimmer
+        instFreq = freq * (1 + 0.65 * Math.exp(-tSec / 0.006));
+        mixA = 0.62; mixB = 0.38; harmMul = 2.5;
+      } else if (soundId === 'bell') {
+        // Bell: large bell — long metallic shimmer with inharmonic partial
+        mixA = 0.56; mixB = 0.44; harmMul = 2.76;
+      } else if (soundId === 'claves') {
+        // Claves: high wooden strike — sharp, hollow
+        mixA = 0.78; mixB = 0.22; harmMul = 1.91;
+      } else if (soundId === 'kick') {
+        // Kick: deep thump with strong downward sweep (starts ~3x, falls to fundamental)
+        instFreq = freq * (1 + 2.0 * Math.exp(-tSec / 0.018));
+        mixA = 0.88; mixB = 0.12; harmMul = 1;
+      } else if (soundId === 'hihat' || soundId === 'hi-hat') {
+        // Hi-Hat: closed metallic sizzle — high, airy, very short
+        mixA = 0.38; mixB = 0.62; harmMul = 1.52;
+      }
+
+      /* Accumulate phase from the per-sample angular increment so sweeps
+         glide exactly as designed; wrap keeps the accumulator precise. */
+      this._phase += (TWO_PI * instFreq) / sampleRate;
+      if (this._phase > TWO_PI) this._phase -= TWO_PI;
+      var wave = mixA * Math.sin(this._phase) + mixB * Math.sin(harmMul * this._phase);
+
+      if (soundId !== 'click' && soundId !== 'classic-click' && soundId !== 'woodblock' && soundId !== 'beep' && soundId !== 'digital-beep' &&
+          soundId !== 'rimshot' && soundId !== 'rim-click' && soundId !== 'cowbell' && soundId !== 'voice-count' && soundId !== 'tick' &&
+          soundId !== 'synth-pluck' && soundId !== 'synthpluck' && soundId !== 'bell' && soundId !== 'claves' && soundId !== 'kick' &&
+          soundId !== 'hihat' && soundId !== 'hi-hat') {
         // Fallback to waveform by type
-        var phF = (2 * Math.PI * freq * tSec) % (2 * Math.PI);
-        if (sound.type === 'sine') wave = Math.sin(phF);
-        else if (sound.type === 'triangle') wave = (2 / Math.PI) * Math.asin(Math.sin(phF));
-        else wave = 0.8 * Math.sin(phF) + 0.2 * Math.sin(3 * phF); // band-limited square approx
+        if (sound.type === 'sine') wave = Math.sin(this._phase);
+        else if (sound.type === 'triangle') wave = (2 / Math.PI) * Math.asin(Math.sin(this._phase));
+        else wave = 0.8 * Math.sin(this._phase) + 0.2 * Math.sin(3 * this._phase); // band-limited square approx
       }
 
       // Cosine attack envelope + exponential decay
@@ -205,11 +258,13 @@ class KinsClickProcessor extends AudioWorkletProcessor {
 
       buf[i] = wave * peak * env;
     }
+    this._phase = 0;
 
-    // Smooth cosine fade-out at the tail to guarantee landing at true zero
+    // Smooth cosine fade-out across the last fadeN samples: gain runs 1 → 0
+    // so the buffer terminates at true zero with no end-of-click tick.
     for (var j = 0; j < fadeN; j++) {
-      var fadeRatio = 0.5 * (1 - Math.cos((Math.PI * j) / fadeN));
-      buf[n - 1 - (fadeN - 1 - j)] *= fadeRatio;
+      var fadeGain = 0.5 * (1 + Math.cos((Math.PI * j) / fadeN));
+      buf[n - fadeN + j] *= fadeGain;
     }
 
     this.buffers.set(key, buf);
@@ -225,10 +280,14 @@ class KinsClickProcessor extends AudioWorkletProcessor {
       var beatInBar = ((beatIndex % this.beatsPerBar) + this.beatsPerBar) % this.beatsPerBar;
       var isAccent = this.accentFirst && startsABeat && beatInBar === 0;
       var tier = (this.beatTiers && this.beatTiers[beatInBar]) || 'mid';
-      var buf = this.getBuffer(this.currentSound(), isAccent, tier);
-
-      if (this.active.length < MAX_ACTIVE_VOICES) {
-        this.active.push({ frame: this.nextClickTime * sampleRate, buf: buf });
+      // Mute tier + voice-count: visual beat still fires but no worklet audio (voice handled via main-thread Web Speech)
+      var curSound = this.currentSound();
+      var isVoice = curSound && curSound.id === 'voice-count';
+      if (tier !== 'mute' && !isVoice) {
+        var buf = this.getBuffer(curSound, isAccent, tier);
+        if (this.active.length < MAX_ACTIVE_VOICES) {
+          this.active.push({ frame: this.nextClickTime * sampleRate, buf: buf });
+        }
       }
 
       this.scheduledTotal++;
@@ -238,7 +297,8 @@ class KinsClickProcessor extends AudioWorkletProcessor {
         n: this.scheduledTotal,
         beatInBar: beatInBar,
         isAccent: isAccent,
-        tier: tier
+        tier: tier,
+        isBeatStart: startsABeat
       });
       if (startsABeat) this.beatCounter++;
       this.clickCounter++;
@@ -254,6 +314,8 @@ class KinsClickProcessor extends AudioWorkletProcessor {
 
     if (this.active.length) {
       var blockStart = currentTime * sampleRate;
+      var relStart = this.releaseFrame;
+      var relN = this.releaseFrames;
       for (var i = this.active.length - 1; i >= 0; i--) {
         var a = this.active[i];
         var offset = Math.round(a.frame) - blockStart;
@@ -263,17 +325,36 @@ class KinsClickProcessor extends AudioWorkletProcessor {
         var srcStart = offset < 0 ? -offset : 0;
         var dstStart = offset > 0 ? offset : 0;
         var n = Math.min(a.buf.length - srcStart, out.length - dstStart);
-        for (var j = 0; j < n; j++) out[dstStart + j] += a.buf[srcStart + j];
+        if (relStart >= 0) {
+          /* Release window active: every voice fades linearly to zero
+             over relN frames from relStart, so stop/sync never truncate
+             a mid-decay waveform (which pops). */
+          for (var j = 0; j < n; j++) {
+            var df = blockStart + dstStart + j - relStart;
+            if (df >= relN) break; /* remainder of this block is silent */
+            var g = df < 0 ? 1 : 1 - df / relN;
+            out[dstStart + j] += a.buf[srcStart + j] * g;
+          }
+        } else {
+          for (var k = 0; k < n; k++) out[dstStart + k] += a.buf[srcStart + k];
+        }
         if (srcStart + n >= a.buf.length) this.active.splice(i, 1);
       }
+      if (!this.active.length) this.releaseFrame = -1;
 
-      // Fast, transparent soft saturation limiter: guarantees zero digital clipping (0 dBFS)
+      // Continuous soft-knee ceiling: output == input at the knee, then
+      // asymptotic to 1.0, so overlap never clips AND crossing the knee
+      // never steps the waveform (the old hard tanh swap crackled).
       for (var s = 0; s < out.length; s++) {
         var val = out[s];
-        if (val > 0.8 || val < -0.8) {
-          out[s] = Math.tanh(val);
+        if (val > WORKLET_LIMIT_KNEE || val < -WORKLET_LIMIT_KNEE) {
+          var over = Math.abs(val) - WORKLET_LIMIT_KNEE;
+          var shaped = WORKLET_LIMIT_KNEE + (1 - WORKLET_LIMIT_KNEE) * Math.tanh(over / (1 - WORKLET_LIMIT_KNEE));
+          out[s] = val < 0 ? -shaped : shaped;
         }
       }
+    } else if (this.releaseFrame >= 0) {
+      this.releaseFrame = -1;
     }
 
     return true; /* stay alive even while silent so start() is instant */

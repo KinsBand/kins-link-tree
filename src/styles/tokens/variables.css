@@ -32,6 +32,47 @@
   --accent-neon-yellow-glow: rgba(242, 253, 67, 0.35);
   --accent-neon: #f2fd43;
   --accent-crimson: #ef4444;
+  --accent-gold-dashed-bg: rgba(242, 253, 67, 0.18);
+  --accent-gold-dashed-border: #000000;
+
+  /* Unified Low / Mid / High Level Palette — Neo-Brutalist high-contrast tokens
+     Low  (Sub/Bass)   — Deep Amber / Warm Orange  #FF9F1C  — high contrast on dark #0A0A0A and light #FAF8F5
+     Mid  (Body/Primary)— Vivid Cyan / Electric Teal #2EC4B6 (alt #00E5FF) — electric depth on dark, clean on light
+     High (Accent/Peak) — Signature Neon Green      #53FC18 (alt #F2FD43)  — peak pop, matches brand neon */
+  --level-low: #FF9F1C;
+  --level-low-bg: rgba(255, 159, 28, 0.16);
+  --level-low-border: rgba(255, 159, 28, 0.75);
+  --level-low-text: #FF9F1C;
+  --level-low-glow: rgba(255, 159, 28, 0.35);
+  --level-low-active: #FF9F1C;
+  --level-mid: #2EC4B6;
+  --level-mid-alt: #00E5FF;
+  --level-mid-bg: rgba(46, 196, 182, 0.16);
+  --level-mid-border: rgba(46, 196, 182, 0.75);
+  --level-mid-text: #2EC4B6;
+  --level-mid-glow: rgba(46, 196, 182, 0.35);
+  --level-mid-active: #2EC4B6;
+  --level-high: #53FC18;
+  --level-high-alt: #F2FD43;
+  --level-high-bg: rgba(83, 252, 24, 0.16);
+  --level-high-border: rgba(83, 252, 24, 0.75);
+  --level-high-text: #53FC18;
+  --level-high-glow: rgba(83, 252, 24, 0.38);
+  --level-high-active: #53FC18;
+
+  /* Muted / Rest Beat — desaturated mid-grey fill + prominent dashed greige border (reference image: grey khaki muted arc).
+      More grey than warm gold so rest is instantly distinct from vivid low/mid/high notes; flash retains subtle grey glow. */
+  --beat-muted-bg: rgba(82, 82, 80, 0.38);
+  --beat-muted-bg-alt: rgba(155, 150, 136, 0.14);
+  --beat-muted-border: #9A9688;
+  --beat-muted-border-style: 2px dashed #9A9688;
+  --beat-muted-opacity: 0.78;
+  --beat-muted-inner-opacity: 0.42;
+  /* Active muted flash — slightly brighter grey + subtle glow, still desaturated */
+  --beat-muted-active-bg: rgba(102, 102, 100, 0.46);
+  --beat-muted-active-border: #B8B4A3;
+  --beat-muted-active-glow: rgba(155, 150, 136, 0.28);
+  --beat-muted-active-opacity: 0.92;
 
   /* Brutalist Borders & Radii */
   --border-brutal: 3px solid #000000;
@@ -125,6 +166,42 @@ body[data-theme="dark"],
   --accent-neon-yellow-glow: rgba(212, 175, 55, 0.22);
   --accent-neon: #d4af37;
   --accent-crimson: #ef4444;
+  --accent-gold-dashed-bg: rgba(212, 175, 55, 0.18);
+  --accent-gold-dashed-border: #000000;
+
+  /* Unified Low / Mid / High Level Palette — dark mode retains hue, adjusted glow for legibility */
+  --level-low: #FF9F1C;
+  --level-low-bg: rgba(255, 159, 28, 0.18);
+  --level-low-border: rgba(255, 159, 28, 0.8);
+  --level-low-text: #FF9F1C;
+  --level-low-glow: rgba(255, 159, 28, 0.32);
+  --level-low-active: #FF9F1C;
+  --level-mid: #2EC4B6;
+  --level-mid-alt: #00E5FF;
+  --level-mid-bg: rgba(46, 196, 182, 0.18);
+  --level-mid-border: rgba(46, 196, 182, 0.8);
+  --level-mid-text: #2EC4B6;
+  --level-mid-glow: rgba(46, 196, 182, 0.32);
+  --level-mid-active: #2EC4B6;
+  --level-high: #53FC18;
+  --level-high-alt: #F2FD43;
+  --level-high-bg: rgba(83, 252, 24, 0.18);
+  --level-high-border: rgba(83, 252, 24, 0.8);
+  --level-high-text: #53FC18;
+  --level-high-glow: rgba(83, 252, 24, 0.32);
+  --level-high-active: #53FC18;
+
+  /* Muted / Rest Beat — dark variant: same more-grey muted palette for legibility */
+  --beat-muted-bg: rgba(82, 82, 80, 0.38);
+  --beat-muted-bg-alt: rgba(155, 150, 136, 0.14);
+  --beat-muted-border: #9A9688;
+  --beat-muted-border-style: 2px dashed #9A9688;
+  --beat-muted-opacity: 0.78;
+  --beat-muted-inner-opacity: 0.42;
+  --beat-muted-active-bg: rgba(102, 102, 100, 0.46);
+  --beat-muted-active-border: #B8B4A3;
+  --beat-muted-active-glow: rgba(155, 150, 136, 0.28);
+  --beat-muted-active-opacity: 0.92;
 
   /* Hard Offset Drop Shadows */
   --shadow-brutal-black: 3px 3px 0px #000000;

@@ -11,8 +11,13 @@ html {
   max-width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  scrollbar-gutter: stable;
   position: relative;
+}
+
+@media (min-width: 769px) and (pointer: fine) {
+  html {
+    scrollbar-gutter: stable;
+  }
 }
 
 body {
@@ -66,5 +71,19 @@ body {
   min-width: 0 !important;
   box-sizing: border-box !important;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.artist-filter-scroll-container::-webkit-scrollbar,
+.epk-video-grid-wrapper::-webkit-scrollbar,
+.epk-photos-grid-wrapper::-webkit-scrollbar,
+.epk-tour-table-wrapper::-webkit-scrollbar,
+.fan-cams-reel-container::-webkit-scrollbar,
+.tablature-code-block::-webkit-scrollbar,
+.fan-wall-filter-bar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 

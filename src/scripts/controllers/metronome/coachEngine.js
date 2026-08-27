@@ -5,6 +5,7 @@ let generation = 0;
 let live = null;
 let callbacks = null;
 let barCount = 0;
+let beatCount = 0;
 let beatInBarCounter = 0;
 
 function subdivIdToPerBeat(id) {
@@ -51,7 +52,11 @@ export function createCoachEngine(cbs) {
         innerMuted: false
       };
       barCount = 0;
+      beatCount = 0;
       beatInBarCounter = -1;
+      const now = performance.now();
+      live.startTime = now;
+      live.lastStepTime = now;
       if (tabId === 'inner-clock') {
         live.currentBpm = metroState.bpm;
         live.phase = 'audible';
@@ -59,9 +64,16 @@ export function createCoachEngine(cbs) {
         if (callbacks.onCoachTick) callbacks.onCoachTick(getLiveSnapshot());
       } else if (tabId === 'speed-trainer') {
         const s = metroState.coachSpeed;
+        if (!s.direction || (s.direction !== 'asc' && s.direction !== 'desc')) s.direction = 'asc';
         live.currentBpm = s.start;
         live.speedSteps = Math.max(1, Math.ceil(Math.abs(s.target - s.start) / Math.max(1, s.step)));
         live.speedStepIdx = 0;
+        live.dir = s.direction === 'desc' ? -1 : 1;
+        live.currentBoundTarget = s.target;
+        live.repeatPending = false;
+        // Validate dir matches bounds: if asc but target < start, flip dir to reach target (legacy fix)
+        if (live.dir === 1 && s.target < s.start) live.dir = -1;
+        if (live.dir === -1 && s.target > s.start) live.dir = 1;
         if (callbacks.applyBpm) callbacks.applyBpm(live.currentBpm, false);
         if (callbacks.onCoachTick) callbacks.onCoachTick(getLiveSnapshot());
       } else if (tabId === 'rhythm-step') {
@@ -90,19 +102,58 @@ export function createCoachEngine(cbs) {
       return live;
     },
     getGeneration() { return generation; },
-    handleBeat(beatInBar, isAccent) {
+    handleBeat(beatInBar, isAccent, isBeatStart) {
       if (!live || !live.running) return;
+      const isBeat = isBeatStart !== false;
+      // Only count physical beats, not subdivision clicks — otherwise bars
+      // advance N× per beat when perBeat > 1 (e.g. 1/8 = 2 clicks/beat)
+      // and speed-trainer 'beats' unit advances at click rate instead of beat rate.
+      if (isBeat) {
+        beatCount++;
+        live.beatCount = beatCount;
+      }
+
       /* A bar boundary is any wrap/restart of the beat position: 0 after
          a higher beat, equal values under 1-beat meters, or a drop after
-         a mid-run time-signature change. The old `=== 0 && prev !== 0`
-         check silently skipped every bar under 1/x signatures. */
-      const isNewBar = beatInBarCounter < 0 || beatInBar <= beatInBarCounter;
-      beatInBarCounter = beatInBar;
-      if (isNewBar && beatInBar === 0) {
-        barCount++;
-        live.barCount = barCount;
-        handleBarBoundary();
+         a mid-run time-signature change. Only evaluate on beat starts. */
+      const isNewBar = isBeat && (beatInBarCounter < 0 || beatInBar <= beatInBarCounter);
+      if (isBeat) beatInBarCounter = beatInBar;
+
+      if (live.tabId === 'speed-trainer') {
+        const s = metroState.coachSpeed;
+        const unit = s.unit || 'bars';
+        if (unit === 'beats') {
+          const every = Math.max(1, s.everyBars);
+          if (beatCount % every === 0) {
+            advanceSpeedTrainerStep();
+          }
+        } else if (unit === 'seconds') {
+          const now = performance.now();
+          const elapsed = (now - (live.lastStepTime || now)) / 1000;
+          const everySec = Math.max(1, s.everyBars);
+          if (elapsed >= everySec) {
+            live.lastStepTime = now;
+            advanceSpeedTrainerStep();
+          }
+        } else {
+          // unit === 'bars'
+          if (isNewBar && beatInBar === 0) {
+            barCount++;
+            live.barCount = barCount;
+            const every = Math.max(1, s.everyBars);
+            if (barCount % every === 0) {
+              advanceSpeedTrainerStep();
+            }
+          }
+        }
+      } else {
+        if (isNewBar && beatInBar === 0) {
+          barCount++;
+          live.barCount = barCount;
+          handleBarBoundary();
+        }
       }
+
       if (callbacks.onCoachTick) callbacks.onCoachTick(getLiveSnapshot());
     },
     handlePrimerTap(tapTime) {
@@ -145,7 +196,6 @@ export function createCoachEngine(cbs) {
       live.primerTarget = nt;
       live.primerTaps = [];
       live.primerResult = null;
-      // persist target? optional
       if (callbacks.onCoachTick) callbacks.onCoachTick(getLiveSnapshot());
       return nt;
     }
@@ -154,6 +204,54 @@ export function createCoachEngine(cbs) {
 
 function stopInternal() {
   if (live) live.running = false;
+}
+
+function advanceSpeedTrainerStep() {
+  if (!live || !live.running) return;
+  const s = metroState.coachSpeed;
+  // Ensure direction field exists
+  if (!s.direction || (s.direction !== 'asc' && s.direction !== 'desc')) s.direction = 'asc';
+  // Use live.dir which reflects current traversal direction (may have flipped for ping-pong)
+  let dir = typeof live.dir === 'number' ? live.dir : (s.direction === 'desc' ? -1 : 1);
+  // Sync dir with configured direction if live.dir not yet flipped and bounds suggest opposite
+  // (initial dir already validated at start)
+  const step = Math.max(1, s.step) * dir;
+  const boundTarget = live.currentBoundTarget != null ? live.currentBoundTarget : s.target;
+  let next = live.currentBpm + step;
+  const reached = dir > 0 ? next >= boundTarget : next <= boundTarget;
+  if (reached) {
+    next = boundTarget;
+    // Update step index to reflect edge
+    if (dir > 0) live.speedStepIdx = live.speedSteps;
+    else live.speedStepIdx = 0;
+    live.currentBpm = next;
+    if (callbacks.applyBpm) callbacks.applyBpm(next, false);
+    if (s.repeat) {
+      // Ping-pong: reverse direction and swap bound target for next leg
+      // Same step size is used for the descent (spec: "same count up but in the count down")
+      live.dir = dir * -1;
+      // Toggle bound between start and target
+      live.currentBoundTarget = boundTarget === s.target ? s.start : s.target;
+      live.lastStepTime = performance.now();
+      // Reset step index for next leg (so progress reflects position within range)
+      if (live.dir > 0) live.speedStepIdx = 0;
+      else live.speedStepIdx = live.speedSteps;
+      // Do not return early — keep at bound this tick, next tick will move away
+    } else {
+      // No repeat: stay at bound, keep dir unchanged (future ticks will keep clamping)
+      live.dir = dir;
+    }
+  } else {
+    live.currentBpm = next;
+    // Update step index proportionally: count steps from start
+    const travelled = Math.abs(next - s.start);
+    const total = Math.max(1, Math.abs(s.target - s.start));
+    const approxIdx = Math.round((travelled / total) * live.speedSteps);
+    live.speedStepIdx = Math.min(live.speedSteps, Math.max(0, approxIdx));
+    // Keep dir and bound unchanged
+    live.dir = dir;
+    if (callbacks.applyBpm) callbacks.applyBpm(next, false);
+  }
 }
 
 function handleBarBoundary() {
@@ -165,7 +263,6 @@ function handleBarBoundary() {
     if (cfg.random) {
       const jitter = Math.floor(Math.random() * 3) - 1; // -1,0,1
       if (live.phase === 'audible') {
-        // decide next muted length randomized
         const nm = Math.min(8, Math.max(1, muted + jitter));
         live.nextMuted = nm;
       } else {
@@ -184,41 +281,6 @@ function handleBarBoundary() {
       live.phase = 'audible';
       live.phaseBar = 0;
       if (callbacks.setMuted) callbacks.setMuted(false);
-    }
-  } else if (live.tabId === 'speed-trainer') {
-    const s = metroState.coachSpeed;
-    const every = Math.max(1, s.everyBars);
-    // only act every `every` bars
-    if (barCount % every !== 0) return;
-    const target = s.target;
-    const dir = target >= s.start ? 1 : -1;
-    const step = Math.max(1, s.step) * dir;
-    let next = live.currentBpm + step;
-    const reached = dir > 0 ? next >= target : next <= target;
-    if (reached) {
-      next = target;
-      live.speedStepIdx = live.speedSteps;
-      if (s.repeat) {
-        // schedule reset next cycle
-        if (live.repeatPending) {
-          next = s.start;
-          live.currentBpm = next;
-          live.speedStepIdx = 0;
-          live.repeatPending = false;
-          if (callbacks.applyBpm) callbacks.applyBpm(next, false);
-          return;
-        }
-        live.repeatPending = true;
-      }
-      live.currentBpm = next;
-      if (callbacks.applyBpm) callbacks.applyBpm(next, false);
-      if (!s.repeat) {
-        // will auto-stop after this bar? let UI show completed
-      }
-    } else {
-      live.currentBpm = next;
-      live.speedStepIdx = Math.min(live.speedSteps, live.speedStepIdx + 1);
-      if (callbacks.applyBpm) callbacks.applyBpm(next, false);
     }
   } else if (live.tabId === 'rhythm-step') {
     const cfg = metroState.coachRhythm;

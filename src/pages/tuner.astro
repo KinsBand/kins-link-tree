@@ -2,8 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
 import FeedbackModal from '../components/modals/FeedbackModal.astro';
-import PrivacyModal from '../components/modals/PrivacyModal.astro';
-import TermsModal from '../components/modals/TermsModal.astro';
+import LegalModal from '../components/modals/LegalModal.astro';
 ---
 
 <BaseLayout
@@ -129,9 +128,6 @@ import TermsModal from '../components/modals/TermsModal.astro';
 
       <section class="tuner-sheet-panel" id="tunerPanelSettings" hidden aria-label="Settings">
         <p class="tuner-sheet-title">SETTINGS</p>
-        <button type="button" class="tuner-sheet-feedback-btn brutal-press" data-open-feedback data-feedback-category="Tuner" data-track="tuner:feedback_open" aria-haspopup="dialog" aria-label="Send feedback about the tuner">
-          <i class="fa-solid fa-comment-dots" aria-hidden="true"></i>
-        </button>
 
         <p class="tuner-settings-label">INSTRUMENT</p>
         <div class="tuner-sheet-instruments" id="tunerSheetInstrumentRow" role="radiogroup" aria-label="Instrument"></div>
@@ -213,11 +209,11 @@ import TermsModal from '../components/modals/TermsModal.astro';
           </div>
 
           <nav class="footer-legal-links" aria-label="Legal & Feedback Links">
-            <button type="button" id="tunerOpenPrivacyFooterBtn" class="footer-legal-btn open-privacy-trigger">Privacy Policy</button>
+            <a href="/" class="footer-legal-btn">HOME</a>
             <span class="legal-bullet" aria-hidden="true">•</span>
-            <button type="button" id="tunerOpenSuggestImprovementFooterBtn" class="footer-legal-btn open-feedback-trigger" data-open-feedback data-feedback-category="Tuner">Suggest Improvement</button>
+            <button type="button" id="tunerOpenSuggestImprovementFooterBtn" class="footer-legal-btn open-feedback-trigger" data-open-feedback data-feedback-category="Tuner">FEEDBACK</button>
             <span class="legal-bullet" aria-hidden="true">•</span>
-            <button type="button" id="tunerOpenTermsFooterBtn" class="footer-legal-btn open-terms-trigger">Fan Submission Terms</button>
+            <button type="button" id="tunerOpenLegalFooterBtn" class="footer-legal-btn open-legal-trigger">LEGAL</button>
           </nav>
         </div>
       </section>
@@ -270,8 +266,7 @@ import TermsModal from '../components/modals/TermsModal.astro';
     </div>
   </main>
 
-  <PrivacyModal />
-  <TermsModal />
+  <LegalModal />
   <FeedbackModal />
 
   <ToastContainer />
@@ -1160,13 +1155,16 @@ import TermsModal from '../components/modals/TermsModal.astro';
     border: 3px solid #000000;
     border-bottom: none;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    padding: 36px 18px calc(18px + env(safe-area-inset-bottom));
+    padding: 32px 18px 0 18px;
     transform: translateY(102%);
     transition: transform 0.24s var(--ease-snappy);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
     outline: none;
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
+  }
+
+  .tuner-sheet.open {
+    padding-bottom: 0;
   }
 
   .tuner-sheet.open {
@@ -1182,7 +1180,7 @@ import TermsModal from '../components/modals/TermsModal.astro';
     top: 0;
     left: 0;
     right: 0;
-    height: 36px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1204,58 +1202,39 @@ import TermsModal from '../components/modals/TermsModal.astro';
     display: flex;
     flex-direction: column;
     gap: 12px;
+    position: static;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
   }
 
   .tuner-sheet-title {
     position: absolute;
-    top: 12px;
-    left: 18px;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
     margin: 0;
     font-family: var(--font-secondary);
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     font-weight: 900;
-    letter-spacing: 0.24em;
-    text-align: left;
-    color: #a1a1aa;
-    line-height: 1;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  .tuner-sheet-feedback-btn {
-    position: absolute;
-    top: 6px;
-    right: 14px;
-    z-index: 3;
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    background: #1e1e24;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-align: center;
     color: #f5f5f7;
+    line-height: 1;
+    z-index: 10;
+    pointer-events: none;
+    white-space: nowrap;
+    background: #141418;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: var(--radius-pill);
-    font-size: 0.72rem;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
-  }
-
-  .tuner-sheet-feedback-btn:hover {
-    transform: translate(-1px, -1px);
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    box-shadow: 3px 3px 0px #000000;
-  }
-
-  .tuner-sheet-feedback-btn:focus-visible {
-    outline: 2px solid var(--accent-neon-yellow);
-    outline-offset: 2px;
+    padding: 6px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .tuner-settings-label {
@@ -2748,7 +2727,6 @@ import TermsModal from '../components/modals/TermsModal.astro';
     .tuner-hint,
     .tuner-sheet,
     .tuner-sheet-backdrop,
-    .tuner-sheet-feedback-btn,
     :global(.tuner-sheet-chip),
     .tuner-sheet-toggle-track,
     :global(.tuner-sheet-toggle-knob),
@@ -2765,6 +2743,466 @@ import TermsModal from '../components/modals/TermsModal.astro';
 
   :global(html.low-power-mode) .tuner-needle {
     display: none;
+  }
+
+  /* ===== Light mode (standard) overrides — ensures sheet & page flip from dark to light ===== */
+  html[data-theme="standard"] .tuner-page {
+    background-color: #f5f4ef;
+    background-image: radial-gradient(circle at 50% 20%, #ffffff 0%, #f5f4ef 62%, #ebebea 100%);
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuner-header-nav {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuner-icon-btn {
+    background: #ffffff;
+    color: #0a0a0c;
+    border-color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-icon-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-pill {
+    background: #ffffff;
+    color: #0a0a0c;
+    border-color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-pill:hover {
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-pill-title {
+    color: #71717a;
+  }
+  html[data-theme="standard"] .tuner-pill-tuning .tuner-pill-label {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuner-pill.off {
+    color: #71717a;
+  }
+  html[data-theme="standard"] .tuner-meter-btn {
+    background: #ffffff;
+    border-color: #000000;
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-meter-btn:hover {
+    box-shadow: 5px 5px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-meter {
+    background: #ebe9e1;
+    border: 2px solid rgba(0, 0, 0, 0.12);
+  }
+  html[data-theme="standard"] .tuner-meter-ticks {
+    background-image: repeating-linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.28) 0 2px,
+      transparent 2px calc((100% - 2px) / 12)
+    );
+  }
+  html[data-theme="standard"] .tuner-meter-zone {
+    background: rgba(242, 253, 67, 0.45);
+    border-left-color: rgba(0, 0, 0, 0.35);
+    border-right-color: rgba(0, 0, 0, 0.35);
+  }
+  html[data-theme="standard"] .tuner-needle {
+    background: #000000;
+  }
+  html[data-theme="standard"] .tuner-badge-side,
+  html[data-theme="standard"] .tuner-cents {
+    background: #ffffff;
+    color: #0a0a0c;
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-cents.is-in-tune {
+    color: #000000;
+    background: var(--btn-green);
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .tuner-cents.is-flat,
+  html[data-theme="standard"] .tuner-cents.is-sharp {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuner-status.pill-neutral,
+  html[data-theme="standard"] .tuner-status.pill-off {
+    background: #ffffff;
+    color: #0a0a0c;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .tuner-note {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuner-note-octave {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuner-note-freq {
+    color: #52525b;
+  }
+  html[data-theme="standard"] .tuner-hint {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuner-low-mic-hint {
+    background: #e4e4e7;
+    color: #27272a;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  html[data-theme="standard"] .tuner-inst-card {
+    background: #ffffff;
+    color: #0a0a0c;
+    border-color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-inst-card:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-inst-card.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-inst-label {
+    color: inherit;
+  }
+  html[data-theme="standard"] .tuner-mic-cta {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-mic-cta:hover {
+    box-shadow: 5px 5px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-mic-cta.listening {
+    background: var(--btn-green);
+    color: #000000;
+  }
+
+  /* Chromatic Rail in Light Mode */
+  html[data-theme="standard"] .tuner-chromatic-rail :global(.rail-note) {
+    color: #0a0a0c;
+    opacity: 0.45;
+  }
+  html[data-theme="standard"] .tuner-chromatic-rail :global(.rail-note.is-near) {
+    opacity: 0.9;
+    color: #000000;
+  }
+  html[data-theme="standard"] .tuner-chromatic-rail :global(.rail-note.active),
+  html[data-theme="standard"] .tuner-chromatic-rail :global(.rail-note.is-exact) {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    opacity: 1;
+  }
+  html[data-theme="standard"] .tuner-view.mode-chromatic .tuner-needle {
+    background: #000000;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Drum Kit SVG in Light Mode */
+  html[data-theme="standard"] :global(.tuner-cymbal) {
+    fill: rgba(0, 0, 0, 0.08);
+    stroke: #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-stand) {
+    stroke: #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-drum-shape) {
+    fill: #ffffff;
+    stroke: #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-drum-hub) {
+    fill: rgba(0, 0, 0, 0.12);
+  }
+  html[data-theme="standard"] :global(.tuner-drum-label) {
+    fill: #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-drum.active .tuner-drum-shape) {
+    stroke: #000000;
+    fill: var(--accent-neon-yellow);
+  }
+
+  /* Tuning Library View in Light Mode */
+  html[data-theme="standard"] .tuning-top-fixed {
+    background-color: #f5f4ef;
+  }
+  html[data-theme="standard"] .tuning-title {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuning-back-btn {
+    background: #ffffff;
+    color: #0a0a0c;
+    border-color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .tuning-back-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] .tuning-instrument-btn {
+    background: #ffffff;
+    color: #0a0a0c;
+    border-color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .tuning-instrument-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] .tuning-search-box {
+    background: #ffffff;
+    border-color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .tuning-search-box:focus-within {
+    border-color: #000000;
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] .tuning-search-icon {
+    color: #000000;
+  }
+  html[data-theme="standard"] .tuning-search-box input {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuning-search-box input::placeholder {
+    color: #71717a;
+  }
+  html[data-theme="standard"] .tuning-filter-chip {
+    background: #ffffff;
+    color: #52525b;
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+  }
+  html[data-theme="standard"] .tuning-filter-chip:hover {
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .tuning-filter-chip.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] :global(.tuning-category) {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+  }
+  html[data-theme="standard"] :global(.tuning-category-head) {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] :global(.tuning-category .tuning-caret) {
+    color: #71717a;
+  }
+  html[data-theme="standard"] :global(.tuning-card) {
+    background: #ffffff;
+    color: #0a0a0c;
+    border-color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] :global(.tuning-card:hover) {
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] :global(.tuning-card-name) {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] :global(.tuning-card-notes) {
+    color: #52525b;
+  }
+  html[data-theme="standard"] :global(.tuning-card.active) {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] :global(.tuning-card.active .tuning-card-name) {
+    color: #000000;
+  }
+  html[data-theme="standard"] :global(.tuning-card.active .tuning-card-notes) {
+    color: #27272a;
+  }
+  html[data-theme="standard"] :global(.tuning-card-radio) {
+    border: 2.5px solid #71717a;
+  }
+  html[data-theme="standard"] :global(.tuning-card-radio.checked) {
+    background: var(--btn-green);
+    border-color: #000000;
+    color: #000000;
+  }
+  html[data-theme="standard"] :global(.tuning-empty) {
+    color: #71717a;
+  }
+
+  /* Settings Sheet in Light Mode */
+  html[data-theme="standard"] .tuner-sheet {
+    background: #ffffff;
+    color: #0a0a0c;
+    border-color: #000000;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
+  }
+  html[data-theme="standard"] .tuner-sheet-handle::before {
+    background: #d4d4d8;
+  }
+  html[data-theme="standard"] .tuner-sheet-title {
+    background: #ffffff;
+    color: #0a0a0c;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-settings-label,
+  html[data-theme="standard"] .tuner-sheet-setup-label {
+    color: #71717a;
+  }
+  html[data-theme="standard"] .tuner-sheet-setup-btn {
+    background: #f5f4ef;
+    color: #0a0a0c;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-sheet-setup-btn:hover {
+    background: #ffffff;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-sheet-setup-btn[aria-expanded="true"] {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-sheet-chip) {
+    background: #f5f4ef;
+    color: #0a0a0c;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-sheet-chip:hover) {
+    background: #ffffff;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-sheet-chip.active) {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .tuner-sheet-toggle-track {
+    background: #e4e4e7;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-sheet-toggle-knob) {
+    background: #71717a;
+  }
+  html[data-theme="standard"] .tuner-sheet-toggle input:checked + .tuner-sheet-toggle-track {
+    background: var(--accent-neon-yellow);
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .tuner-sheet-toggle input:checked + .tuner-sheet-toggle-track :global(.tuner-sheet-toggle-knob) {
+    background: #000000;
+  }
+  html[data-theme="standard"] .tuner-sheet-toggle-text {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] .tuner-copy-link-card {
+    background: #f5f4ef;
+    color: #0a0a0c;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-copy-link-card:hover {
+    background: #ffffff;
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] .tuner-copy-link-left i {
+    color: #000000;
+  }
+  html[data-theme="standard"] .tuner-copy-badge {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] .tuner-settings-copy-wrap,
+  html[data-theme="standard"] .tuner-sheet-footer-card {
+    border-top: 2px solid rgba(0, 0, 0, 0.1);
+  }
+  html[data-theme="standard"] .footer-brand-badge {
+    background: #f5f4ef;
+    color: #0a0a0c;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+  }
+  html[data-theme="standard"] .footer-brand-badge:hover {
+    background: #ffffff;
+  }
+  html[data-theme="standard"] .footer-brand-icon {
+    color: #000000;
+  }
+  html[data-theme="standard"] .tuner-sheet-footer-card .footer-legal-btn {
+    color: #71717a;
+  }
+  html[data-theme="standard"] .tuner-sheet-footer-card .footer-legal-btn:hover {
+    color: #000000;
+    background: rgba(0, 0, 0, 0.06);
+  }
+  html[data-theme="standard"] .tuner-sheet-footer-card .legal-bullet {
+    color: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Dropdown Menus in Light Mode */
+  html[data-theme="standard"] :global(.tuner-menu-panel) {
+    background: #ffffff;
+    color: #0a0a0c;
+    border: 2px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-menu-row) {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] :global(.tuner-menu-row:hover) {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  html[data-theme="standard"] :global(.tuner-menu-row.active) {
+    background: rgba(242, 253, 67, 0.25);
+  }
+  html[data-theme="standard"] :global(.tuner-menu-row-title) {
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] :global(.tuner-menu-row-sub) {
+    color: #71717a;
+  }
+  html[data-theme="standard"] :global(.tuner-menu-check) {
+    color: #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-menu-divider) {
+    background: rgba(0, 0, 0, 0.12);
+  }
+  html[data-theme="standard"] :global(.tuner-toggle) {
+    background: #e4e4e7;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-toggle.on) {
+    background: var(--btn-green);
+  }
+  html[data-theme="standard"] :global(.tuner-toggle-knob) {
+    background: #ffffff;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-custom-input) {
+    background: #f5f4ef;
+    border: 2px solid #000000;
+    color: #0a0a0c;
+  }
+  html[data-theme="standard"] :global(.tuner-custom-input:focus-visible) {
+    border-color: #000000;
+  }
+  html[data-theme="standard"] :global(.tuner-custom-apply) {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
   }
 </style>
 
@@ -2828,32 +3266,23 @@ import TermsModal from '../components/modals/TermsModal.astro';
         return;
       }
 
-      var privacyBtn = target.closest('#tunerOpenPrivacyFooterBtn, #openPrivacyFooterBtn, .open-privacy-trigger');
-      if (privacyBtn) {
+      var legalBtn = target.closest('#tunerOpenLegalFooterBtn, #openLegalFooterBtn, .open-legal-trigger, #tunerOpenPrivacyFooterBtn, #openPrivacyFooterBtn, .open-privacy-trigger, #tunerOpenTermsFooterBtn, #openTermsFooterBtn, .open-terms-trigger');
+      if (legalBtn) {
         e.preventDefault();
         e.stopPropagation();
-        var privacyModal = document.getElementById('privacyModal');
-        if (typeof window.openPrivacyModal === 'function') {
+        var isSubmissions = legalBtn.id === 'tunerOpenTermsFooterBtn' || legalBtn.id === 'openTermsFooterBtn' || legalBtn.classList.contains('open-terms-trigger');
+        var initialTab = isSubmissions ? 'submissions' : 'privacy';
+        if (typeof window.openLegalModal === 'function') {
+          window.openLegalModal(initialTab);
+        } else if (typeof window.openPrivacyModal === 'function') {
           window.openPrivacyModal();
-        } else if (privacyModal) {
-          privacyModal.classList.remove('is-closing');
-          privacyModal.classList.remove('hidden');
-          document.body.classList.add('modal-open');
-        }
-        return;
-      }
-
-      var termsBtn = target.closest('#tunerOpenTermsFooterBtn, #openTermsFooterBtn, .open-terms-trigger');
-      if (termsBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        var termsModal = document.getElementById('termsModal');
-        if (typeof window.openTermsModal === 'function') {
-          window.openTermsModal();
-        } else if (termsModal) {
-          termsModal.classList.remove('is-closing');
-          termsModal.classList.remove('hidden');
-          document.body.classList.add('modal-open');
+        } else {
+          var legalModal = document.getElementById('legalModal');
+          if (legalModal) {
+            legalModal.classList.remove('is-closing');
+            legalModal.classList.remove('hidden');
+            document.body.classList.add('modal-open');
+          }
         }
         return;
       }

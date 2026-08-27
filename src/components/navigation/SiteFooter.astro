@@ -1,0 +1,333 @@
+---
+import { epkConfig } from '../../settings/epk.config';
+import { functionalityConfig } from '../../settings/functionality.config';
+
+const baseUrl = import.meta.env.BASE_URL;
+const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.enabled ?? true);
+---
+
+<footer class="site-footer">
+  <div class="footer-inner-card">
+    <!-- Theme Selector Segmented Control -->
+    <div class="footer-theme-toggle-wrap">
+      <div
+        class="footer-theme-toggle-btn"
+        id="themeToggleBtn"
+        role="group"
+        aria-label="Toggle Display Theme"
+        data-track="footer:theme_toggle"
+      >
+        <span class="theme-current-title" id="themeCurrentTitle">Light</span>
+        <div class="theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
+          <button
+            type="button"
+            class="theme-pill-btn active theme-pill-light"
+            id="themePillLightBtn"
+            data-theme-target="standard"
+            aria-label="Light Mode"
+            title="Switch to Light Mode"
+          >
+            <i class="fa-solid fa-sun" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="theme-pill-btn theme-pill-dark"
+            id="themePillDarkBtn"
+            data-theme-target="dark"
+            aria-label="Dark Mode"
+            title="Switch to Dark Mode"
+          >
+            <i class="fa-solid fa-moon" aria-hidden="true"></i>
+          </button>
+        </div>
+        <span class="theme-mode-label">Mode</span>
+      </div>
+    </div>
+
+    <!-- Official Brand Badge -->
+    <div class="footer-badge-row">
+      <span class="footer-brand-badge">
+        <i class="fa-solid fa-compact-disc footer-brand-icon" aria-hidden="true"></i>
+        <span class="footer-copyright-text">@<span id="copyrightYear">2026</span> KINS.</span>
+      </span>
+    </div>
+
+    <!-- Compact Single-Row Navigation: [EPK] • [FEEDBACK] • [LEGAL] -->
+    <nav class="footer-nav-row" aria-label="Site Links and Legal Navigation">
+      {isEpkEnabled && (
+        <>
+          <a
+            href={`${baseUrl}epk`}
+            class="footer-nav-item footer-nav-link"
+            data-track="footer:nav_epk"
+          >
+            EPK
+          </a>
+          <span class="footer-nav-dot" aria-hidden="true">•</span>
+        </>
+      )}
+
+      <button
+        type="button"
+        id="openFeedbackFooterBtn"
+        class="footer-nav-item footer-nav-btn open-feedback-trigger"
+        data-open-feedback
+        data-track="footer:nav_feedback"
+      >
+        FEEDBACK
+      </button>
+
+      <span class="footer-nav-dot" aria-hidden="true">•</span>
+
+      <button
+        type="button"
+        id="openLegalFooterBtn"
+        class="footer-nav-item footer-nav-btn open-legal-trigger"
+        data-track="footer:nav_legal"
+      >
+        LEGAL
+      </button>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  /* ==========================================================================
+     SiteFooter Styles: Minimalist, Responsive Single-Row Footer
+     ========================================================================== */
+
+  .site-footer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 16px 120px;
+    margin-top: 16px;
+    position: relative;
+    z-index: 10;
+    box-sizing: border-box;
+    border-top: 2px solid #000000;
+  }
+
+  @media (min-width: 1024px) {
+    .site-footer {
+      padding: 32px 16px 56px;
+    }
+  }
+
+  .footer-inner-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  /* Full-Width Theme Toggle Button & Segmented Pill Control */
+  .footer-theme-toggle-wrap {
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 2px;
+  }
+
+  .footer-theme-toggle-btn {
+    width: 100%;
+    min-height: 48px;
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    padding: 6px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    user-select: none;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+  }
+
+  .footer-theme-toggle-btn:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .footer-theme-toggle-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .theme-current-title {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.92rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-card-primary);
+    flex: 1 1 0;
+    text-align: left;
+  }
+
+  .theme-pill-segmented {
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    border-radius: 20px;
+    padding: 3px;
+    gap: 3px;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    flex: 0 0 auto;
+  }
+
+  .theme-pill-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    background: transparent;
+    color: var(--text-card-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    font-size: 0.82rem;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.18s ease, color 0.18s ease, box-shadow 0.16s ease;
+  }
+
+  .theme-pill-btn:hover {
+    color: var(--text-card-primary);
+    transform: scale(1.1);
+  }
+
+  .theme-pill-btn.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 1px 1px 0px #000000;
+    transform: scale(1.06);
+  }
+
+  .theme-mode-label {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-card-secondary);
+    flex: 1 1 0;
+    text-align: right;
+  }
+
+  /* Official Brand Badge */
+  .footer-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .footer-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: #18181b;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 5px 14px;
+    border-radius: 6px;
+    user-select: none;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .footer-brand-badge:hover {
+    background: #27272a;
+    transform: translateY(-1px);
+  }
+
+  .footer-brand-icon {
+    font-size: 0.8rem;
+    color: var(--accent-neon-yellow);
+  }
+
+  /* Compact Single-Row Navigation: [EPK] • [FEEDBACK] • [LEGAL] */
+  .footer-nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 8px 12px;
+    max-width: 100%;
+    margin: 2px auto 0;
+  }
+
+  .footer-nav-item {
+    background: transparent;
+    border: none;
+    color: #a1a1aa;
+    font-family: var(--font-secondary);
+    font-size: 11px;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-decoration: none;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    user-select: none;
+    transition: color 0.16s ease, background-color 0.16s ease, transform 0.16s var(--ease-tactile);
+  }
+
+  .footer-nav-item:hover,
+  .footer-nav-item:focus-visible {
+    color: var(--accent-neon-yellow);
+    background: rgba(255, 255, 255, 0.07);
+    outline: none;
+    transform: translateY(-1px);
+  }
+
+  .footer-nav-item:active {
+    transform: translateY(1px);
+  }
+
+  .footer-nav-dot {
+    color: rgba(255, 255, 255, 0.28);
+    font-size: 10px;
+    line-height: 1;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  @media (max-width: 480px) {
+    .footer-nav-row {
+      gap: 4px 8px;
+    }
+    .footer-nav-item {
+      font-size: 10.5px;
+      padding: 3px 6px;
+      letter-spacing: 0.06em;
+    }
+  }
+</style>

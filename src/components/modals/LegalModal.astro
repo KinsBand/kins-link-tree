@@ -1,0 +1,782 @@
+---
+import { generalEmail } from '../../settings/contact.config';
+---
+
+<div
+  class="modal-backdrop hidden"
+  id="legalModal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="legalModalTitle"
+  data-track-container="modal:legal"
+>
+  <div class="modal-content legal-modal-container">
+    <!-- Header with Title, Icon & Close Button -->
+    <div class="legal-modal-header">
+      <div class="legal-header-title-group">
+        <div class="legal-header-icon-badge" aria-hidden="true">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+        <div class="legal-header-text">
+          <span class="legal-header-tag">OFFICIAL POLICIES</span>
+          <h3 id="legalModalTitle">Legal & Guidelines</h3>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="legal-close-btn brutal-press"
+        id="closeLegalModalBtn"
+        aria-label="Close Legal Modal"
+        data-track="legal:close_btn"
+      >
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- Segmented Control / Tab Selector -->
+    <div class="legal-segmented-wrap">
+      <div
+        class="legal-segmented-control"
+        role="tablist"
+        aria-label="Legal document tabs"
+        id="legalTabList"
+      >
+        <button
+          type="button"
+          class="legal-tab-btn active"
+          role="tab"
+          id="legalTabPrivacy"
+          aria-selected="true"
+          aria-controls="legalPanelPrivacy"
+          tabindex="0"
+          data-tab-target="privacy"
+          data-track="legal:tab_privacy"
+        >
+          <i class="fa-solid fa-shield-halved legal-tab-icon" aria-hidden="true"></i>
+          <span>Privacy</span>
+        </button>
+        <button
+          type="button"
+          class="legal-tab-btn"
+          role="tab"
+          id="legalTabSubmissions"
+          aria-selected="false"
+          aria-controls="legalPanelSubmissions"
+          tabindex="-1"
+          data-tab-target="submissions"
+          data-track="legal:tab_submissions"
+        >
+          <i class="fa-solid fa-file-contract legal-tab-icon" aria-hidden="true"></i>
+          <span>Submissions</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Body Content -->
+    <div class="legal-modal-body" id="legalModalBody">
+      <!-- Panel 1: Privacy Policy Content -->
+      <section
+        class="legal-tab-panel"
+        id="legalPanelPrivacy"
+        role="tabpanel"
+        aria-labelledby="legalTabPrivacy"
+        tabindex="0"
+      >
+        <div class="legal-highlight-card">
+          <div class="legal-highlight-meta">
+            <i class="fa-solid fa-clock" aria-hidden="true"></i>
+            <span>LAST UPDATED: AUGUST 2026</span>
+          </div>
+          <p class="legal-intro-text">
+            <strong>Kins</strong> ("we", "our", or "us") respects your privacy. This policy outlines how we handle personal information collected through our official website and fan features.
+          </p>
+        </div>
+
+        <div class="legal-content-section">
+          <h4 class="legal-section-heading">1. Information We Collect</h4>
+          <div class="legal-bullet-box">
+            <div class="bullet-item">
+              <span class="bullet-tag">EMAIL</span>
+              <p>When you subscribe to our fan updates, we collect your email to deliver release announcements, gig/tour drops, and band news.</p>
+            </div>
+            <div class="bullet-item">
+              <span class="bullet-tag">SUBMISSIONS</span>
+              <p>If you submit a fan clip, video link, or message, we collect the link and public handle you provide.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="legal-content-section">
+          <h4 class="legal-section-heading">2. How We Use Your Data</h4>
+          <p class="legal-body-text">
+            We only use your information for official band communications and featured fan experiences. We never sell, rent, or trade your personal information to third-party advertisers.
+          </p>
+        </div>
+
+        <div class="legal-content-section">
+          <h4 class="legal-section-heading">3. Service Providers</h4>
+          <p class="legal-body-text">
+            We use trusted delivery infrastructure (such as Substack and Supabase) to deliver email updates and host site features. These services process data strictly on our behalf in compliance with modern privacy standards.
+          </p>
+        </div>
+
+        <div class="legal-content-section">
+          <h4 class="legal-section-heading">4. Unsubscribing & Rights</h4>
+          <p class="legal-body-text">
+            You can opt out at any time via the "Unsubscribe" link in any update email, or by emailing us directly at <a href={`mailto:${generalEmail}`} class="legal-link">{generalEmail}</a>.
+          </p>
+        </div>
+
+        <div class="legal-content-section">
+          <h4 class="legal-section-heading">5. Privacy Contact</h4>
+          <p class="legal-body-text">For privacy questions or data deletion requests, contact:</p>
+          <div class="legal-contact-pill">
+            <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+            <a href={`mailto:${generalEmail}`} class="legal-link">{generalEmail}</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 2: Fan Submission Terms Content -->
+      <section
+        class="legal-tab-panel hidden"
+        id="legalPanelSubmissions"
+        role="tabpanel"
+        aria-labelledby="legalTabSubmissions"
+        tabindex="0"
+      >
+        <div class="legal-highlight-card accent-border">
+          <div class="legal-highlight-meta accent-text">
+            <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+            <span>CREW GUIDELINES & RIGHTS</span>
+          </div>
+          <p class="legal-intro-text">
+            By submitting a link, clip, or message to Kins, you grant us permission to feature or embed your clip on our official website and socials. <strong>You maintain 100% full ownership of your original video and audio content.</strong>
+          </p>
+        </div>
+
+        <div class="legal-content-section">
+          <h4 class="legal-section-heading">1. Ownership & License</h4>
+          <div class="legal-bullet-box">
+            <div class="bullet-item">
+              <span class="bullet-tag">YOUR RIGHTS</span>
+              <p>You retain 100% copyright and intellectual property rights to your original video and audio.</p>
+            </div>
+            <div class="bullet-item">
+              <span class="bullet-tag">BAND LICENSE</span>
+              <p>Submitting grants Kins a non-exclusive, royalty-free, revocable license to display or embed your clip across official digital channels.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="legal-content-section">
+          <h4 class="legal-section-heading">2. Content Responsibilities</h4>
+          <p class="legal-body-text">
+            You represent that your submission does not infringe any third-party copyrights or privacy rights. Kins reserves the right to review, select, or remove any featured clip at our discretion.
+          </p>
+        </div>
+
+        <div class="legal-content-section">
+          <h4 class="legal-section-heading">3. Takedown & Removal Requests</h4>
+          <p class="legal-body-text">
+            If you wish to remove a previously submitted clip from the site, email us with your clip details and we will promptly remove it:
+          </p>
+          <div class="legal-contact-pill">
+            <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+            <a href={`mailto:${generalEmail}?subject=Kins%20Clip%20Removal%20Request`} class="legal-link">{generalEmail}</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal Footer Action -->
+    <div class="legal-modal-footer">
+      <button
+        type="button"
+        class="legal-footer-close-btn brutal-press"
+        id="legalFooterCloseBtn"
+        data-track="legal:footer_close"
+      >
+        <span>Close</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ==========================================================================
+     Tabbed Legal Modal Styles (Responsive, Dark Container, Neo-Brutalist Accents)
+     ========================================================================== */
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s ease;
+  }
+
+  .modal-backdrop.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .modal-backdrop.is-closing {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .legal-modal-container {
+    background: #141416;
+    border: 3px solid #000000;
+    border-radius: 10px;
+    box-shadow: 6px 6px 0px #000000;
+    width: 100%;
+    max-width: 540px;
+    max-height: 88vh;
+    max-height: 88dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: legalModalPopIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .legal-modal-container.is-closing {
+    animation: legalModalPopOut 0.18s ease forwards;
+  }
+
+  @keyframes legalModalPopIn {
+    from {
+      transform: scale(0.96) translateY(6px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes legalModalPopOut {
+    from {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: scale(0.96) translateY(6px);
+      opacity: 0;
+    }
+  }
+
+  /* Modal Header */
+  .legal-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #1c1c20;
+    border-bottom: 3px solid #000000;
+  }
+
+  .legal-header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .legal-header-icon-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .legal-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .legal-header-tag {
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: var(--accent-neon-yellow);
+    text-transform: uppercase;
+  }
+
+  .legal-header-title-group h3 {
+    font-family: var(--font-heading);
+    font-size: clamp(0.92rem, 3.5vw, 1.05rem);
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .legal-close-btn {
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--text-card-primary);
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.92rem;
+    flex-shrink: 0;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .legal-close-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  /* Segmented Control Bar */
+  .legal-segmented-wrap {
+    padding: 10px 16px;
+    background: #141416;
+    border-bottom: 2px solid #27272a;
+  }
+
+  .legal-segmented-control {
+    display: flex;
+    background: #0f0f11;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 4px;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .legal-tab-btn {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: transparent;
+    border: 1.5px solid transparent;
+    border-radius: 6px;
+    color: #a1a1aa;
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 7px 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  .legal-tab-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .legal-tab-btn.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    font-weight: 900;
+  }
+
+  .legal-tab-icon {
+    font-size: 0.8rem;
+  }
+
+  /* Scrollable Modal Body */
+  .legal-modal-body {
+    padding: 16px 18px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: #a1a1aa;
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .legal-tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    outline: none;
+  }
+
+  .legal-tab-panel.hidden {
+    display: none;
+  }
+
+  .legal-highlight-card {
+    background: #1c1c20;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .legal-highlight-card.accent-border {
+    border-left: 4px solid var(--accent-neon-yellow);
+  }
+
+  .legal-highlight-meta {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legal-intro-text {
+    color: #ffffff;
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .legal-intro-text strong {
+    color: #ffffff;
+  }
+
+  .legal-content-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .legal-section-heading {
+    font-family: var(--font-heading);
+    font-size: 0.86rem;
+    font-weight: 900;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 0;
+  }
+
+  .legal-body-text {
+    margin: 0;
+    color: #d4d4d8;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .legal-bullet-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .bullet-item {
+    background: #1c1c20;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .bullet-tag {
+    align-self: flex-start;
+    font-size: 0.58rem;
+    font-weight: 900;
+    color: #000000;
+    background: var(--accent-neon-yellow);
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
+
+  .bullet-item p {
+    margin: 0;
+    color: #d4d4d8;
+    font-size: 0.79rem;
+    line-height: 1.4;
+  }
+
+  .legal-contact-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #1c1c20;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    padding: 7px 12px;
+    border-radius: 6px;
+    width: fit-content;
+    color: var(--accent-neon-yellow);
+    margin-top: 4px;
+  }
+
+  .legal-link {
+    color: var(--accent-neon-yellow);
+    font-weight: 800;
+    text-decoration: underline;
+    transition: color 0.16s ease;
+  }
+
+  .legal-link:hover {
+    color: #ffffff;
+  }
+
+  /* Modal Footer */
+  .legal-modal-footer {
+    padding: 12px 16px;
+    background: #1c1c20;
+    border-top: 3px solid #000000;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .legal-footer-close-btn {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: 2.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
+  }
+
+  .legal-footer-close-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+    background: #ffffff;
+  }
+
+  @media (max-width: 480px) {
+    .legal-tab-btn {
+      font-size: 0.72rem;
+      padding: 6px 8px;
+    }
+  }
+</style>
+
+<script>
+  const legalModal = document.getElementById('legalModal');
+  const closeLegalModalBtn = document.getElementById('closeLegalModalBtn');
+  const legalFooterCloseBtn = document.getElementById('legalFooterCloseBtn');
+  const tabList = document.getElementById('legalTabList');
+  const tabPrivacy = document.getElementById('legalTabPrivacy');
+  const tabSubmissions = document.getElementById('legalTabSubmissions');
+  const panelPrivacy = document.getElementById('legalPanelPrivacy');
+  const panelSubmissions = document.getElementById('legalPanelSubmissions');
+
+  const CLOSE_ANIM_MS = 190;
+  let closeTimer: ReturnType<typeof setTimeout> | null = null;
+  let previousActiveElement: HTMLElement | null = null;
+
+  const prefersReducedMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function isOtherModalOpen(): boolean {
+    const ids = ['feedbackModal', 'communitySubmissionModal', 'shareModal', 'gigMapSheet'];
+    return ids.some((id) => {
+      const el = document.getElementById(id);
+      return !!el && !el.classList.contains('hidden');
+    });
+  }
+
+  function setActiveTab(target: 'privacy' | 'submissions', focusTab = false) {
+    if (!tabPrivacy || !tabSubmissions || !panelPrivacy || !panelSubmissions) return;
+
+    if (target === 'submissions') {
+      tabSubmissions.classList.add('active');
+      tabSubmissions.setAttribute('aria-selected', 'true');
+      tabSubmissions.setAttribute('tabindex', '0');
+      panelSubmissions.classList.remove('hidden');
+
+      tabPrivacy.classList.remove('active');
+      tabPrivacy.setAttribute('aria-selected', 'false');
+      tabPrivacy.setAttribute('tabindex', '-1');
+      panelPrivacy.classList.add('hidden');
+
+      if (focusTab) tabSubmissions.focus();
+    } else {
+      tabPrivacy.classList.add('active');
+      tabPrivacy.setAttribute('aria-selected', 'true');
+      tabPrivacy.setAttribute('tabindex', '0');
+      panelPrivacy.classList.remove('hidden');
+
+      tabSubmissions.classList.remove('active');
+      tabSubmissions.setAttribute('aria-selected', 'false');
+      tabSubmissions.setAttribute('tabindex', '-1');
+      panelSubmissions.classList.add('hidden');
+
+      if (focusTab) tabPrivacy.focus();
+    }
+  }
+
+  function finishClose() {
+    closeTimer = null;
+    if (!legalModal) return;
+    legalModal.classList.remove('is-closing');
+    legalModal.classList.add('hidden');
+
+    if (!isOtherModalOpen()) {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
+
+    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+      previousActiveElement.focus();
+      previousActiveElement = null;
+    }
+  }
+
+  function hideLegalModal() {
+    if (!legalModal) return;
+    if (legalModal.classList.contains('hidden') || legalModal.classList.contains('is-closing')) return;
+
+    if (prefersReducedMotion) {
+      finishClose();
+      return;
+    }
+
+    legalModal.classList.add('is-closing');
+    closeTimer = setTimeout(finishClose, CLOSE_ANIM_MS);
+  }
+
+  function openLegalModal(initialTab: 'privacy' | 'submissions' = 'privacy') {
+    if (!legalModal) return;
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+
+    if (document.activeElement instanceof HTMLElement) {
+      previousActiveElement = document.activeElement;
+    }
+
+    setActiveTab(initialTab);
+
+    legalModal.classList.remove('is-closing');
+    legalModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+
+    // Move focus inside dialog for accessibility
+    setTimeout(() => {
+      const activeTabEl = initialTab === 'submissions' ? tabSubmissions : tabPrivacy;
+      activeTabEl?.focus();
+    }, 50);
+  }
+
+  // Keyboard navigation for ARIA Tablist (ArrowLeft / ArrowRight / Home / End)
+  tabList?.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const currentTarget = tabPrivacy?.classList.contains('active') ? 'privacy' : 'submissions';
+      const nextTarget = currentTarget === 'privacy' ? 'submissions' : 'privacy';
+      setActiveTab(nextTarget, true);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setActiveTab('privacy', true);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setActiveTab('submissions', true);
+    }
+  });
+
+  tabPrivacy?.addEventListener('click', () => setActiveTab('privacy'));
+  tabSubmissions?.addEventListener('click', () => setActiveTab('submissions'));
+
+  closeLegalModalBtn?.addEventListener('click', hideLegalModal);
+  legalFooterCloseBtn?.addEventListener('click', hideLegalModal);
+
+  legalModal?.addEventListener('click', (e) => {
+    if (e.target === legalModal) hideLegalModal();
+  });
+
+  // Focus trap & Escape key handler
+  window.addEventListener('keydown', (e) => {
+    if (!legalModal || legalModal.classList.contains('hidden')) return;
+
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      hideLegalModal();
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      const focusableElements = legalModal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const visibleFocusables = Array.from(focusableElements).filter(
+        (el) => !el.closest('.hidden') && el.offsetParent !== null
+      );
+
+      if (visibleFocusables.length === 0) return;
+
+      const firstEl = visibleFocusables[0];
+      const lastEl = visibleFocusables[visibleFocusables.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        }
+      } else {
+        if (document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
+    }
+  });
+
+  // Expose global controller functions
+  (window as any).openLegalModal = openLegalModal;
+  (window as any).closeLegalModal = hideLegalModal;
+
+  // Backward-compatible aliases for other triggers
+  (window as any).openPrivacyModal = () => openLegalModal('privacy');
+  (window as any).openTermsModal = () => openLegalModal('submissions');
+</script>

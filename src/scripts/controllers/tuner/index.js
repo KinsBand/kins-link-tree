@@ -504,9 +504,24 @@ function stopEverything() {
   if (state.listening || state.starting) stopMic();
 }
 
+function clearStaleMediaSession() {
+  try {
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      try { navigator.mediaSession.metadata = null; } catch {}
+      try { navigator.mediaSession.playbackState = 'none'; } catch {}
+      try { navigator.mediaSession.setActionHandler('play', null); } catch {}
+      try { navigator.mediaSession.setActionHandler('pause', null); } catch {}
+      try { navigator.mediaSession.setActionHandler('stop', null); } catch {}
+    }
+  } catch {}
+}
+
 export function initTuner() {
   if (initialized) return;
   initialized = true;
+
+  // Tuner must not show a playback notification — clear any stale session
+  clearStaleMediaSession();
 
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   lowPower = document.documentElement.classList.contains('low-power-mode');

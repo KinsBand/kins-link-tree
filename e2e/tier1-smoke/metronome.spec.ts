@@ -7,7 +7,9 @@ import { test, expect, type Page } from '@playwright/test';
 /* Dev-only toolbar overlays the bottom of the viewport in `astro dev` */
 async function openMetro(page: Page) {
   await page.goto('/metronome');
-  await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+  try {
+    await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+  } catch (e) {}
 }
 
 test.describe('tier1 smoke — metronome', () => {
@@ -69,6 +71,8 @@ test.describe('tier1 smoke — metronome', () => {
     await openMetro(page);
     await page.locator('#metroSetlistBtn').click();
     await expect(page.locator('#metroPanelSetlist')).toBeVisible();
+    await page.locator('#metroNavSongs').click();
+    await expect(page.locator('#metroSongsBrowseView')).toBeVisible();
     await expect(page.locator('#metroSetlistFilters')).toBeVisible();
     await expect(page.locator('.metro-setlist-filter[data-filter="inspires"]')).toHaveAttribute('aria-selected', 'true');
     // Inspires mirrors What Inspires Us — first is Turnip Farm at 147 BPM
@@ -82,6 +86,8 @@ test.describe('tier1 smoke — metronome', () => {
     await openMetro(page);
     await page.locator('#metroSetlistBtn').click();
     await expect(page.locator('#metroPanelSetlist')).toBeVisible();
+    await page.locator('#metroNavSongs').click();
+    await expect(page.locator('#metroSongsBrowseView')).toBeVisible();
 
     // default inspires
     await expect(page.locator('.metro-setlist-filter[data-filter="inspires"]')).toHaveClass(/active/);
@@ -92,15 +98,52 @@ test.describe('tier1 smoke — metronome', () => {
     await page.locator('.metro-setlist-filter[data-filter="covers"]').click();
     await expect(page.locator('.metro-setlist-filter[data-filter="covers"]')).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('.metro-setlist-empty')).toBeVisible();
-    await expect(page.locator('.metro-setlist-empty')).toContainText('No covers yet');
+    await expect(page.locator('.metro-setlist-empty')).toContainText('NO SONGS FOUND');
 
     // originals empty state
     await page.locator('.metro-setlist-filter[data-filter="originals"]').click();
     await expect(page.locator('.metro-setlist-filter[data-filter="originals"]')).toHaveAttribute('aria-selected', 'true');
-    await expect(page.locator('.metro-setlist-empty')).toContainText('Originals coming soon');
+    await expect(page.locator('.metro-setlist-empty')).toContainText('NO SONGS FOUND');
 
     // back to inspires restores list
     await page.locator('.metro-setlist-filter[data-filter="inspires"]').click();
+    await expect(page.locator('.metro-setlist-row')).toHaveCount(15);
+  });
+
+  test('setlist sheet updates floating pill title and expands search to full width', async ({ page }) => {
+    await openMetro(page);
+    await page.locator('#metroSetlistBtn').click();
+    await expect(page.locator('#metroPanelSetlist')).toBeVisible();
+
+    const pillTitle = page.locator('#metroSetlistSheetMainTitle');
+    await expect(pillTitle).toHaveText('SETLISTS');
+    await expect(page.locator('#metroBottomAddBtnLabel')).toHaveText('SETLIST');
+
+    // Switch to songs
+    await page.locator('#metroNavSongs').click();
+    await expect(pillTitle).toHaveText('SONGS');
+    await expect(page.locator('#metroBottomAddBtnLabel')).toHaveText('SONG');
+
+    // Expand search
+    const dock = page.locator('#metroBottomFixedDock');
+    const searchPill = page.locator('#metroBottomSearchPill');
+    const searchInput = page.locator('#metroBottomSearchInput');
+    const searchToggleBtn = page.locator('#metroBottomSearchToggleBtn');
+
+    await searchToggleBtn.click();
+    await expect(dock).toHaveClass(/is-search-expanded/);
+    await expect(searchPill).toHaveClass(/expanded/);
+    await expect(searchInput).toBeVisible();
+
+    // Type query
+    await searchInput.fill('Turnip');
+    await expect(page.locator('.metro-setlist-row')).toHaveCount(1);
+    await expect(page.locator('.metro-setlist-row').first()).toContainText('Turnip Farm');
+
+    // Close search
+    await page.locator('#metroBottomSearchCloseBtn').click();
+    await expect(dock).not.toHaveClass(/is-search-expanded/);
+    await expect(page.locator('#metroBottomAddBtn')).toBeVisible();
     await expect(page.locator('.metro-setlist-row')).toHaveCount(15);
   });
 
@@ -177,10 +220,102 @@ test.describe('tier1 smoke — metronome', () => {
     await expect(repeatBtn).toHaveAttribute('aria-pressed', 'true');
     await expect(repeatBtn).toHaveClass(/active/);
 
-    // Verify Unit toggle
+    // Verify Unit toggle (bars, beats, seconds)
+    const barsBtn = speedPanel.locator('#coachSpeedUnitToggle .metro-unit-btn[data-unit="bars"]');
     const beatsBtn = speedPanel.locator('#coachSpeedUnitToggle .metro-unit-btn[data-unit="beats"]');
+    const secondsBtn = speedPanel.locator('#coachSpeedUnitToggle .metro-unit-btn[data-unit="seconds"]');
+    await expect(barsBtn).toBeVisible();
+    await expect(beatsBtn).toBeVisible();
+    await expect(secondsBtn).toBeVisible();
+
+    await secondsBtn.click();
+    await expect(secondsBtn).toHaveClass(/active/);
+    await expect(speedPanel.locator('#coachSpeedEveryVal')).toContainText('Seconds');
+
     await beatsBtn.click();
     await expect(beatsBtn).toHaveClass(/active/);
+    await expect(speedPanel.locator('#coachSpeedEveryVal')).toContainText('Beats');
+
+    // Test click-to-edit custom amount on Interval amount (#coachSpeedEveryVal)
+    const everyVal = speedPanel.locator('#coachSpeedEveryVal');
+    await everyVal.click();
+    const inlineInput = everyVal.locator('input');
+    await expect(inlineInput).toBeVisible();
+    await inlineInput.fill('15');
+    await inlineInput.press('Enter');
+    await expect(speedPanel.locator('#coachSpeedEveryVal')).toHaveText('15 Beats');
+
+    // Test click-to-edit custom amount on Step BPM (#coachSpeedStepVal)
+    const stepVal = speedPanel.locator('#coachSpeedStepVal');
+    await stepVal.click();
+    const stepInput = stepVal.locator('input');
+    await expect(stepInput).toBeVisible();
+    await stepInput.fill('25');
+    await stepInput.press('Enter');
+    await expect(speedPanel.locator('#coachSpeedStepVal')).toHaveText('+25 BPM');
+  });
+
+  test('dynamic island takes over coach deck button when mode begins and restores on stop/cancel', async ({ page }) => {
+    await openMetro(page);
+    const coachBtn = page.locator('#metroCoachBtn');
+    const liveDock = page.locator('#metroCoachLiveDock');
+    const playBtn = page.locator('#metroPlayBtn');
+    const topbarTitle = page.locator('#metroTopbarTitle');
+
+    // Initially: coach button visible, dynamic island live dock hidden, topbar title hidden
+    await expect(coachBtn).toBeVisible();
+    await expect(liveDock).toBeHidden();
+    await expect(topbarTitle).toBeHidden();
+
+    // Open coach deck and start Inner Clock session
+    await coachBtn.click();
+    await expect(page.locator('#metroPanelCoach')).toBeVisible();
+    await page.locator('#metroCoachTab-inner-clock').click();
+    await expect(page.locator('#metroCoachPanel-inner-clock')).toBeVisible();
+    const startBtn = page.locator('#metroCoachPanel-inner-clock .metro-coach-cta');
+    await startBtn.click();
+
+    // Mode begins: sheet closes, metronome is playing, coach button is hidden, dynamic island is visible
+    // and topbar title displays the active mode title between KINS! and Settings
+    await expect(page.locator('#metroSheet')).toBeHidden();
+    await expect(playBtn).toHaveClass(/playing/);
+    await expect(coachBtn).toBeHidden();
+    await expect(topbarTitle).toBeVisible();
+    await expect(topbarTitle).toHaveText('INNER CLOCK');
+    await expect(liveDock).toBeVisible();
+    await expect(liveDock).toContainText('AUDIBLE');
+    await expect(liveDock.locator('.metro-coach-live-stop')).toBeVisible();
+
+    // Stop session via dynamic island STOP button
+    await liveDock.locator('.metro-coach-live-stop').click();
+    await expect(liveDock).toBeHidden();
+    await expect(topbarTitle).toBeHidden();
+    await expect(coachBtn).toBeVisible();
+    await expect(playBtn).not.toHaveClass(/playing/);
+
+    // Start session again and test stopping via main Play/Stop button
+    await coachBtn.click();
+    await page.locator('#metroCoachPanel-inner-clock .metro-coach-cta').click();
+    await expect(liveDock).toBeVisible();
+    await expect(topbarTitle).toBeVisible();
+    await expect(coachBtn).toBeHidden();
+    await playBtn.click(); // main stop
+    await expect(liveDock).toBeHidden();
+    await expect(topbarTitle).toBeHidden();
+    await expect(coachBtn).toBeVisible();
+    await expect(playBtn).not.toHaveClass(/playing/);
+
+    // Start session again and test stopping via Escape
+    await coachBtn.click();
+    await page.locator('#metroCoachPanel-inner-clock .metro-coach-cta').click();
+    await expect(liveDock).toBeVisible();
+    await expect(topbarTitle).toBeVisible();
+    await expect(coachBtn).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect(liveDock).toBeHidden();
+    await expect(topbarTitle).toBeHidden();
+    await expect(coachBtn).toBeVisible();
+    await expect(playBtn).not.toHaveClass(/playing/);
   });
 
   test('settings sheet exposes sound, volume and toggle buttons', async ({ page }) => {
@@ -202,9 +337,9 @@ test.describe('tier1 smoke — metronome', () => {
     const grid = page.locator('.metro-settoggle-grid');
     await page.locator('#metroSettingsBtn').click();
     await expect(grid).toBeVisible();
-    // at least four buttons per row
+    // two per row (2×2 grid) — user request: 2 row by 2 row
     const columns = await grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
-    expect(columns).toBeGreaterThanOrEqual(4);
+    expect(columns).toBeGreaterThanOrEqual(2);
 
     // defaults: options off
     await expect(page.locator('#metroFlashToggle')).toHaveAttribute('aria-pressed', 'false');
@@ -230,7 +365,7 @@ test.describe('tier1 smoke — metronome', () => {
     await expect(page.locator('#metroKeepAwakeToggle')).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('per-beat pitch tiers: default renders all MID, tap cycles low/mid/high, reset restores defaults', async ({ page }) => {
+  test('per-beat pitch tiers: default renders all MID, tap cycles low/mid/high/mute, reset restores defaults', async ({ page }) => {
     await openMetro(page);
     const dots = page.locator('#metroBeatDots .metro-beat-dot');
     await expect(dots).toHaveCount(4);
@@ -254,7 +389,13 @@ test.describe('tier1 smoke — metronome', () => {
     await expect(dots.nth(0)).toHaveAttribute('aria-label', 'Beat 1 — pitch low');
     await expect(dots.nth(0)).toHaveClass(/tier-low/);
 
-    // Tap first dot: low -> mid
+    // Tap first dot: low -> mute
+    await dots.nth(0).click();
+    await expect(dots.nth(0)).toHaveAttribute('data-tier', 'mute');
+    await expect(dots.nth(0)).toHaveAttribute('aria-label', 'Beat 1 — muted');
+    await expect(dots.nth(0)).toHaveClass(/tier-mute/);
+
+    // Tap first dot: mute -> mid
     await dots.nth(0).click();
     await expect(dots.nth(0)).toHaveAttribute('data-tier', 'mid');
     await expect(dots.nth(0)).toHaveAttribute('aria-label', 'Beat 1 — pitch mid');
@@ -265,7 +406,17 @@ test.describe('tier1 smoke — metronome', () => {
 
     await page.locator('#metroSettingsBtn').click();
     await expect(page.locator('#metroPanelSettings')).toBeVisible();
+
+    // Reset pitch map
     await page.locator('#metroResetPitchBtn').click();
+
+    // Test beat colors reset independently
+    await page.locator('#metroColorLow').fill('#112233');
+    await page.locator('#metroColorLow').dispatchEvent('change');
+    await expect(page.locator('#metroColorHexLow')).toHaveText('#112233');
+    await page.locator('#metroResetColorsBtn').click();
+    await expect(page.locator('#metroColorHexLow')).toHaveText('#FF9F1C');
+
     await page.keyboard.press('Escape');
 
     await expect(dots.nth(0)).toHaveAttribute('data-tier', 'mid');
@@ -287,6 +438,10 @@ test.describe('tier1 smoke — metronome', () => {
     await segs.nth(0).focus();
     await page.keyboard.press('Enter');
     await expect(segs.nth(0)).toHaveAttribute('data-tier', 'low');
+
+    await page.keyboard.press('Enter');
+    await expect(segs.nth(0)).toHaveAttribute('data-tier', 'mute');
+    await expect(segs.nth(0)).toHaveClass(/tier-mute/);
 
     // Reset back to dots style and default tiers
     await page.locator('#metroSettingsBtn').click();
@@ -369,9 +524,9 @@ test.describe('tier1 smoke — metronome', () => {
     await play.click();
     await expect(play).toHaveClass(/playing/);
 
-    // live BPM change
-    await page.locator('#metroBpmPlus').click();
-    await page.locator('#metroBpmPlus').click();
+    // live BPM change via scroll/keyboard (stepper buttons removed — scroll up increases)
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowUp');
     await expect(page.locator('#metroBpmNum')).toHaveText('122');
 
     // live subdivision change mid-run
@@ -482,17 +637,20 @@ test.describe('tier1 smoke — metronome', () => {
     await lightBtn.click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'standard');
 
-    // Test Privacy Policy modal trigger
-    await page.locator('#metroOpenPrivacyFooterBtn').click();
-    await expect(page.locator('#privacyModal')).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(page.locator('#privacyModal')).toBeHidden();
+    // Ensure footer is scrolled into view (sheet is scrollable, buttons at bottom)
+    await page.evaluate(() => {
+      const sc = document.querySelector('#metroPanelSettings .metro-settings-scroll') || document.querySelector('#metroSettingsScroll');
+      if (sc) sc.scrollTop = sc.scrollHeight;
+    });
+    await page.waitForTimeout(200);
 
-    // Test Terms modal trigger
-    await page.locator('#metroOpenTermsFooterBtn').click();
-    await expect(page.locator('#termsModal')).toBeVisible();
+    // Test Legal modal trigger
+    await page.locator('#metroOpenLegalFooterBtn').click();
+    const legalModal = page.locator('#legalModal');
+    await expect(legalModal).toBeVisible();
+    await expect(legalModal.locator('#legalTabPrivacy')).toHaveAttribute('aria-selected', 'true');
     await page.keyboard.press('Escape');
-    await expect(page.locator('#termsModal')).toBeHidden();
+    await expect(legalModal).toBeHidden();
 
     // Test Feedback / Suggest Improvement modal trigger
     await page.locator('#metroOpenSuggestImprovementFooterBtn').click();
