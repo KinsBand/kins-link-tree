@@ -277,11 +277,17 @@ import LegalModal from '../components/modals/LegalModal.astro';
     width: 100%;
     max-width: 560px;
     margin: 0 auto;
-    padding: 18px 16px 28px;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(10px + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
     min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
     background-color: var(--bg-dark);
     background-image: var(--bg-dark-gradient);
     color: var(--text-white);
@@ -290,20 +296,23 @@ import LegalModal from '../components/modals/LegalModal.astro';
   .tuner-view {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    flex: 1;
+    justify-content: space-between;
+    gap: clamp(6px, 1.2dvh, 12px);
+    flex: 1 1 auto;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .tuning-view {
     display: flex;
     flex-direction: column;
     gap: 0;
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
-    height: calc(100vh - 46px);
-    height: calc(100dvh - 46px);
-    max-height: calc(100vh - 46px);
-    max-height: calc(100dvh - 46px);
+    height: 100%;
+    max-height: 100%;
     overflow: hidden;
   }
 
@@ -316,8 +325,13 @@ import LegalModal from '../components/modals/LegalModal.astro';
   .tuner-middle-scroll {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
     min-width: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
   }
 
   /* ---------- Top bar ---------- */
@@ -981,24 +995,21 @@ import LegalModal from '../components/modals/LegalModal.astro';
     justify-content: center;
     align-items: center;
     flex: 1 1 auto;
-    min-height: 220px;
+    min-height: 0;
     min-width: 0;
     width: 100%;
     height: 100%;
-    max-height: none;
+    max-height: 100%;
+    overflow: hidden;
   }
 
   .tuner-figure :global(svg) {
     width: 100%;
     max-width: 560px;
-    height: auto;
-    max-height: min(520px, 56dvh);
-    flex: 1 1 auto;
-  }
-
-  .tuner-middle-scroll {
-    flex: 1 1 auto;
-    min-height: 180px;
+    height: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    flex: 0 1 auto;
   }
 
   /* ---------- Instrument cards ---------- */
@@ -1013,7 +1024,7 @@ import LegalModal from '../components/modals/LegalModal.astro';
     border: var(--border-brutal-sm);
     box-shadow: var(--shadow-brutal-black);
     border-radius: var(--radius-md);
-    padding: 10px 4px 12px;
+    padding: clamp(6px, 1dvh, 10px) 4px clamp(8px, 1.2dvh, 12px);
     color: var(--text-white);
     cursor: pointer;
     touch-action: manipulation;
@@ -1021,7 +1032,7 @@ import LegalModal from '../components/modals/LegalModal.astro';
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: clamp(3px, 0.6dvh, 6px);
     transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
   }
 
@@ -1043,8 +1054,8 @@ import LegalModal from '../components/modals/LegalModal.astro';
   }
 
   .tuner-inst-card svg {
-    width: 26px;
-    height: 26px;
+    width: clamp(20px, 3dvh, 26px);
+    height: clamp(20px, 3dvh, 26px);
   }
 
   /* ---------- Mic start/stop CTA (above instrument cards) ---------- */
@@ -1061,9 +1072,9 @@ import LegalModal from '../components/modals/LegalModal.astro';
     border: var(--border-brutal);
     box-shadow: var(--shadow-brutal-black-lg);
     border-radius: var(--radius-pill);
-    padding: 14px 18px;
+    padding: clamp(8px, 1.4dvh, 14px) 18px;
     font-family: var(--font-secondary);
-    font-size: 0.95rem;
+    font-size: clamp(0.85rem, 2dvh, 0.95rem);
     font-weight: 800;
     letter-spacing: 0.06em;
     cursor: pointer;
@@ -1092,9 +1103,10 @@ import LegalModal from '../components/modals/LegalModal.astro';
   .tuner-footer-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: clamp(6px, 1.2dvh, 12px);
     margin-top: auto;
     width: 100%;
+    flex-shrink: 0;
   }
 
   .tuner-bottom-settings {

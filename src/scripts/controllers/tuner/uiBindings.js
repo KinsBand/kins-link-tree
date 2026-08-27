@@ -303,15 +303,44 @@ export function createUi(callbacks) {
     }
   }
 
+  function isScrollableContainerAtTop(target, root) {
+    if (!target) return true;
+    let el = target;
+    while (el && el !== root && el !== document.body) {
+      if (el instanceof HTMLElement) {
+        const style = window.getComputedStyle(el);
+        const overflowY = style.overflowY;
+        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 1) {
+          if (el.scrollTop > 2) {
+            return false;
+          }
+        }
+      }
+      el = el.parentElement;
+    }
+    return true;
+  }
+
   function attachSheetDrag() {
     if (!els || !els.sheet || !els.sheetHandle) return;
     els.sheet.addEventListener('touchstart', (e) => {
       if (!sheetOpen || e.touches.length !== 1) return;
+      const target = e.target;
+      const onHandle = Boolean(els.sheetHandle && (target === els.sheetHandle || els.sheetHandle.contains(target)));
+
+      if (!onHandle && target && target.closest) {
+        const isInteractive = target.closest('button, input, select, textarea, label, a, .tuner-sheet-inst-chip, .tuner-sheet-mode-chip, .tuner-sheet-setup-btn');
+        if (isInteractive) return;
+      }
+
       sheetDrag = {
         startY: e.touches[0].clientY,
+        startX: e.touches[0].clientX,
         lastY: e.touches[0].clientY,
         startTime: performance.now(),
         engaged: false,
+        onHandle,
+        target,
         translateY: 0
       };
       document.addEventListener('touchmove', onSheetDragMove, { passive: false });
@@ -324,21 +353,38 @@ export function createUi(callbacks) {
     if (!sheetDrag || !els || !els.sheet || !els.sheetHandle) return;
     const touch = e.touches[0];
     const dy = touch.clientY - sheetDrag.startY;
+    const dx = touch.clientX - sheetDrag.startX;
     sheetDrag.lastY = touch.clientY;
+
     if (!sheetDrag.engaged) {
-      const atTop = els.panelSettings ? els.panelSettings.scrollTop <= 2 : els.sheet.scrollTop <= 2;
-      const onHandle = e.target === els.sheetHandle || els.sheetHandle.contains(e.target);
-      if (dy > 8 && (atTop || onHandle)) {
-        sheetDrag.engaged = true;
-        els.sheet.classList.add('dragging');
-      } else if (Math.abs(dy) > 8) {
-        cleanupSheetDragListeners();
-        sheetDrag = null;
-        return;
+      if (sheetDrag.onHandle) {
+        if (dy > 8) {
+          sheetDrag.engaged = true;
+          els.sheet.classList.add('dragging');
+        } else if (dy < -8 || Math.abs(dx) > 16) {
+          cleanupSheetDragListeners();
+          sheetDrag = null;
+          return;
+        } else {
+          return;
+        }
       } else {
-        return;
+        const atTop = (els.panelSettings ? els.panelSettings.scrollTop <= 2 : els.sheet.scrollTop <= 2) && isScrollableContainerAtTop(sheetDrag.target, els.sheet);
+        const isVerticalPull = dy > 24 && Math.abs(dy) > Math.abs(dx) * 1.5;
+
+        if (atTop && isVerticalPull) {
+          sheetDrag.engaged = true;
+          els.sheet.classList.add('dragging');
+        } else if (Math.abs(dy) > 16 || Math.abs(dx) > 16 || dy < 0 || !atTop) {
+          cleanupSheetDragListeners();
+          sheetDrag = null;
+          return;
+        } else {
+          return;
+        }
       }
     }
+
     if (e.cancelable) e.preventDefault();
     let targetY = Math.max(0, dy);
     if (targetY > 0) {
@@ -367,7 +413,7 @@ export function createUi(callbacks) {
     }
     if (!wasEngaged) return;
     els.sheet.classList.remove('dragging');
-    if (translateY > 90 || velocity > 0.35) {
+    if (translateY > 120 || (translateY > 45 && velocity > 0.6)) {
       closeSheet();
     } else {
       els.sheet.style.transform = '';

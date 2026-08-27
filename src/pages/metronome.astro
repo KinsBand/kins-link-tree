@@ -1149,15 +1149,21 @@ import LegalModal from '../components/modals/LegalModal.astro';
 
   /* ---------- dial — matte black card feel, gold BPM ========== */
   .metro-dial {
-    --metro-dot-radius: calc(min(86vw, 380px) / 2 - 24px);
+    --metro-dial-size: min(86vw, 380px, calc(100dvh - 280px));
+    --metro-dot-radius: calc(var(--metro-dial-size) / 2 - 22px);
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: min(86vw, 380px);
+    width: var(--metro-dial-size);
+    height: var(--metro-dial-size);
     aspect-ratio: 1;
-    margin: 16px auto;
-    flex-shrink: 0;
+    margin: auto auto;
+    flex: 0 1 auto;
+    min-width: 190px;
+    min-height: 190px;
+    max-width: 380px;
+    max-height: 380px;
     cursor: ns-resize;
     touch-action: none;
     user-select: none;
@@ -1168,6 +1174,10 @@ import LegalModal from '../components/modals/LegalModal.astro';
       0 8px 32px rgba(0, 0, 0, 0.55),
       inset 0 1px 0 rgba(255, 255, 255, 0.06),
       inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  .metro-view.has-strip .metro-dial {
+    --metro-dial-size: min(82vw, 330px, calc(100dvh - 340px));
   }
 
   .metro-beat-dots {
@@ -1534,7 +1544,7 @@ import LegalModal from '../components/modals/LegalModal.astro';
   }
 
   .metro-dial[data-beat-style="radial"] {
-    --metro-dot-radius: calc(min(86vw, 380px) / 2 - 18px);
+    --metro-dot-radius: calc(var(--metro-dial-size) / 2 - 18px);
   }
 
   .metro-dial-core {
@@ -6237,13 +6247,17 @@ import LegalModal from '../components/modals/LegalModal.astro';
   /* ---------- desktop ---------- */
   @media (min-width: 768px) {
     .metro-view {
-      padding-top: 28px;
-      padding-bottom: 28px;
+      padding-top: max(16px, calc(14px + env(safe-area-inset-top, 0px)));
+      padding-bottom: max(16px, calc(14px + env(safe-area-inset-bottom, 0px)));
     }
 
     .metro-dial {
-      --metro-dot-radius: 160px;
-      width: 380px;
+      --metro-dial-size: min(380px, calc(100dvh - 280px));
+      --metro-dot-radius: calc(var(--metro-dial-size) / 2 - 22px);
+    }
+
+    .metro-view.has-strip .metro-dial {
+      --metro-dial-size: min(340px, calc(100dvh - 340px));
     }
 
     .metro-stepper-strip {
@@ -6278,6 +6292,99 @@ import LegalModal from '../components/modals/LegalModal.astro';
     .metro-bpm-input {
       font-size: clamp(2.8rem, 15vw, 4.2rem);
       width: 3.8ch;
+    }
+  }
+
+  @media (max-height: 720px) {
+    .metro-view {
+      padding-top: calc(6px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .metro-dial {
+      --metro-dial-size: min(80vw, 320px, calc(100dvh - 230px));
+      margin: 2px auto;
+    }
+
+    .metro-view.has-strip .metro-dial {
+      --metro-dial-size: min(76vw, 280px, calc(100dvh - 280px));
+    }
+
+    .metro-bpm-num {
+      font-size: clamp(2.8rem, min(16vw, 7vh), 4.4rem);
+    }
+
+    .metro-bpm-input {
+      font-size: clamp(2.4rem, min(14vw, 6vh), 3.8rem);
+    }
+
+    .metro-pill-row {
+      margin-top: 6px;
+      padding: 4px 10px;
+    }
+
+    .metro-coach-btn {
+      min-height: 44px;
+      padding: 10px 14px;
+      margin-top: 6px;
+      font-size: 0.85rem;
+    }
+
+    .metro-controls .metro-icon-btn,
+    .metro-tap-btn,
+    .metro-play-btn,
+    .metro-now-playing {
+      height: 46px;
+      min-height: 46px;
+    }
+
+    .metro-back-pill,
+    .metro-topbar .metro-icon-btn {
+      height: 44px;
+      min-height: 44px;
+    }
+  }
+
+  @media (max-height: 600px) {
+    .metro-dial {
+      --metro-dial-size: min(74vw, 240px, calc(100dvh - 180px));
+      margin: 1px auto;
+    }
+
+    .metro-bpm-num {
+      font-size: clamp(2.2rem, min(14vw, 5.5vh), 3.2rem);
+    }
+
+    .metro-bpm-input {
+      font-size: clamp(2rem, min(12vw, 5vh), 2.8rem);
+    }
+
+    .metro-tempo-marking {
+      font-size: 0.62rem;
+      height: 14px;
+      line-height: 14px;
+      margin-bottom: 0;
+    }
+
+    .metro-coach-btn {
+      min-height: 38px;
+      padding: 6px 10px;
+      margin-top: 4px;
+      font-size: 0.8rem;
+    }
+
+    .metro-controls .metro-icon-btn,
+    .metro-tap-btn,
+    .metro-play-btn,
+    .metro-now-playing {
+      height: 40px;
+      min-height: 40px;
+    }
+
+    .metro-back-pill,
+    .metro-topbar .metro-icon-btn {
+      height: 38px;
+      min-height: 38px;
     }
   }
 

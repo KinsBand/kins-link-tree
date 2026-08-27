@@ -4329,19 +4329,73 @@ export function createUi(callbacks) {
     }
   }
 
+  function isScrollableContainerAtTop(target, root) {
+    if (!target) return true;
+    let el = target;
+    while (el && el !== root && el !== document.body) {
+      if (el instanceof HTMLElement) {
+        const style = window.getComputedStyle(el);
+        const overflowY = style.overflowY;
+        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 1) {
+          if (el.scrollTop > 2) {
+            return false;
+          }
+        }
+      }
+      el = el.parentElement;
+    }
+    return true;
+  }
+
+  function isPanelAtTop(panel) {
+    if (!panel) return (els.sheet ? els.sheet.scrollTop <= 2 : true);
+    if (panel === els.panelSettings) {
+      return els.settingsScroll ? els.settingsScroll.scrollTop <= 2 : true;
+    }
+    if (panel === els.panelSetlist) {
+      const activePane = panel.querySelector('.metro-view-pane:not([hidden])');
+      if (activePane && activePane.scrollHeight > activePane.clientHeight + 1) {
+        if (activePane.scrollTop > 2) return false;
+      }
+      const pickerList = document.querySelector('.metro-picker-list');
+      if (pickerList && pickerList.scrollHeight > pickerList.clientHeight + 1) {
+        if (pickerList.scrollTop > 2) return false;
+      }
+      return panel.scrollTop <= 2;
+    }
+    if (panel === els.panelCoach) {
+      const activeCoachPanel = panel.querySelector('.metro-coach-panel:not([hidden]), .metro-coach-panels');
+      if (activeCoachPanel && activeCoachPanel.scrollHeight > activeCoachPanel.clientHeight + 1) {
+        if (activeCoachPanel.scrollTop > 2) return false;
+      }
+      return panel.scrollTop <= 2;
+    }
+    return panel.scrollTop <= 2;
+  }
+
   function attachSheetDrag() {
     els.sheet.addEventListener('touchstart', (e) => {
       if (!sheetOpen || e.touches.length !== 1) return;
       // Don't start sheet drag when interacting with a reorderable song row
       if (songDragState && songDragState.isDragging) return;
-      if (e.target && e.target.closest && e.target.closest('.metro-setlist-song-row, .metro-setlist-song-drag-handle')) {
-        return;
+      
+      const target = e.target;
+      const onHandle = Boolean(els.handle && (target === els.handle || els.handle.contains(target)));
+
+      // If not on handle, ignore touch on interactive form controls or list items
+      if (!onHandle && target && target.closest) {
+        const isInteractive = target.closest('button, input, select, textarea, label, a, .metro-toggle, .metro-dual-range, .metro-color-input, .metro-setlist-song-row, .metro-setlist-song-drag-handle, .metro-stepper-btn, .metro-chip, .metro-sub-chip, .metro-beatstyle-chip, .metro-settings-btn-chip, .metro-coach-tab, .metro-setlist-filter, .metro-setlist-sort-chip, .metro-picker-item');
+        if (isInteractive) return;
       }
+
       drag = {
         startY: e.touches[0].clientY,
+        startX: e.touches[0].clientX,
         lastY: e.touches[0].clientY,
         startTime: performance.now(),
         engaged: false,
+        onHandle,
+        target,
         translateY: 0
       };
       document.addEventListener('touchmove', onDragMove, { passive: false });
@@ -4361,30 +4415,44 @@ export function createUi(callbacks) {
     }
     const touch = e.touches[0];
     const dy = touch.clientY - drag.startY;
+    const dx = touch.clientX - drag.startX;
     drag.lastY = touch.clientY;
+
     if (!drag.engaged) {
-      const atTop = (() => {
-        if (!activePanel) return els.sheet.scrollTop <= 2;
-        if (activePanel === els.panelSettings && els.settingsScroll) return els.settingsScroll.scrollTop <= 2;
-        return activePanel.scrollTop <= 2;
-      })();
-      const onHandle = e.target === els.handle || els.handle.contains(e.target);
-      if (dy > 8 && (atTop || onHandle)) {
-        drag.engaged = true;
-        els.sheet.classList.add('dragging');
-      } else if (Math.abs(dy) > 8) {
-        cleanupDragListeners();
-        drag = null;
-        return;
+      if (drag.onHandle) {
+        if (dy > 8) {
+          drag.engaged = true;
+          els.sheet.classList.add('dragging');
+        } else if (dy < -8 || Math.abs(dx) > 16) {
+          cleanupDragListeners();
+          drag = null;
+          return;
+        } else {
+          return;
+        }
       } else {
-        return;
+        // Content-initiated drag: must be at top of active panel AND target scroll hierarchy
+        const atTop = isPanelAtTop(activePanel) && isScrollableContainerAtTop(drag.target, els.sheet);
+        const isVerticalPull = dy > 24 && Math.abs(dy) > Math.abs(dx) * 1.5;
+
+        if (atTop && isVerticalPull) {
+          drag.engaged = true;
+          els.sheet.classList.add('dragging');
+        } else if (Math.abs(dy) > 16 || Math.abs(dx) > 16 || dy < 0 || !atTop) {
+          // Normal content scrolling or horizontal swipe — release sheet drag listener
+          cleanupDragListeners();
+          drag = null;
+          return;
+        } else {
+          return;
+        }
       }
     }
+
     if (e.cancelable) e.preventDefault();
     let targetY = Math.max(0, dy);
     if (targetY > 0) {
-      const over = targetY;
-      targetY = over * 0.82;
+      targetY = targetY * 0.82;
     }
     drag.translateY = targetY;
     if (!dragRafId) {
@@ -4409,7 +4477,7 @@ export function createUi(callbacks) {
     }
     if (!wasEngaged) return;
     els.sheet.classList.remove('dragging');
-    if (translateY > 90 || velocity > 0.35) {
+    if (translateY > 120 || (translateY > 45 && velocity > 0.6)) {
       closeSheet();
     } else {
       els.sheet.style.transform = '';
