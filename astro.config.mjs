@@ -5,8 +5,23 @@ export default defineConfig({
   output: 'hybrid',
   adapter: vercel(),
   site: 'https://kinsband-hub.vercel.app',
+  devToolbar: { enabled: false },
   build: {
-    format: 'directory'
+    format: 'directory',
+    inlineStylesheets: 'auto'
+  },
+  vite: {
+    build: {
+      cssMinify: true,
+      chunkSizeWarningLimit: 500,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            supabase: ['@supabase/supabase-js']
+          }
+        }
+      }
+    }
   }
 });
 

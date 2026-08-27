@@ -17,12 +17,14 @@ const {
   title = siteConfig.title,
   description = siteConfig.description,
   image = `${import.meta.env.BASE_URL}new.png`,
-  url = siteConfig.siteUrl
+  url: urlProp,
 } = Astro.props;
 
 const baseUrl = import.meta.env.BASE_URL;
 const siteOrigin = siteConfig.siteUrl.endsWith('/') ? siteConfig.siteUrl : `${siteConfig.siteUrl}/`;
-const canonicalUrl = url.startsWith('http') ? url : new URL(url.replace(/^\//, ''), siteOrigin).href;
+// Canonical: prefer explicit url prop, otherwise derive from Astro.url (correct per-page URL), fallback to siteUrl for 404/static edge cases
+const rawUrl = urlProp ?? (Astro.url ? Astro.url.href : siteConfig.siteUrl);
+const canonicalUrl = rawUrl.startsWith('http') ? rawUrl : new URL(rawUrl.replace(/^\//, ''), siteOrigin).href;
 const absoluteImage = image.startsWith('http') ? image : new URL(image.replace(/^\//, ''), siteOrigin).href;
 
 const musicGroupSchema = {
@@ -55,21 +57,28 @@ const musicGroupSchema = {
   <title>{title}</title>
   <meta name="description" content={description}>
   <link rel="canonical" href={canonicalUrl}>
+  <link rel="alternate" hreflang="en" href={canonicalUrl} />
+  <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
 
   <script type="application/ld+json" set:html={JSON.stringify(musicGroupSchema)}></script>
 
   <!-- Open Graph / Facebook Meta Tags -->
   <meta property="og:type" content="website">
   <meta property="og:url" content={canonicalUrl}>
+  <meta property="og:site_name" content="KINS">
+  <meta property="og:locale" content="en_AU">
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
   <meta property="og:image" content={absoluteImage}>
+  <meta property="og:image:alt" content={`${epkConfig.bandName} — Official band website and music`}>
 
   <!-- Twitter Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content={title}>
   <meta name="twitter:description" content={description}>
   <meta name="twitter:image" content={absoluteImage}>
+  <meta name="twitter:image:alt" content={`${epkConfig.bandName} — Official band website and music`}>
+  <meta name="twitter:creator" content="@KinsBandOfficial">
 
   <!-- Favicon & Touch Icons -->
   <link rel="icon" type="image/x-icon" href={`${baseUrl}favicon.ico`}>
@@ -87,18 +96,15 @@ const musicGroupSchema = {
   <meta name="application-name" content="KINS">
   
   <!-- Google Fonts: Syne, Cinzel, Space Grotesk with display=swap -->
-  <!-- Non-render-blocking: fallback fonts paint instantly, webfonts swap in when ready -->
+  <!-- Non-render-blocking: single print trick avoids duplicate preload/network chain -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap"></noscript>
 
-  <!-- FontAwesome Icons (non-render-blocking) -->
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
+  <!-- FontAwesome Icons (self-hosted, eliminates 3P cookie surface + 100 KiB blocking chain) -->
+  <link rel="stylesheet" href={`${baseUrl}fonts/fontawesome/all.min.css`} media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href={`${baseUrl}fonts/fontawesome/all.min.css`}></noscript>
 
   <!-- Lightweight Hardware & Theme Detector (Zero FOUC) -->
   <script is:inline>

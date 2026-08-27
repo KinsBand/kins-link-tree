@@ -1244,6 +1244,54 @@ import ToolIcon from '../ui/ToolIcon.astro';
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
+
+  /* ===== Mobile Bottom Sheet ===== */
+  @media (max-width: 640px) {
+    .modal-backdrop {
+      align-items: flex-end;
+      padding: 0;
+    }
+
+    .feedback-modal-enhanced {
+      max-width: 100%;
+      max-height: 94vh;
+      max-height: 94dvh;
+      border-radius: 14px 14px 0 0;
+      border-bottom: none;
+      box-shadow: 0 -4px 0px #000000;
+      animation: feedbackSheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feedback-modal-enhanced.is-closing {
+      animation: feedbackSheetSlideDown 0.22s ease forwards;
+    }
+
+    .modal-header {
+      border-radius: 14px 14px 0 0;
+    }
+
+    @keyframes feedbackSheetSlideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes feedbackSheetSlideDown {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+    }
+  }
 </style>
 
 <script>

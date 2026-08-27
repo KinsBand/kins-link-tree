@@ -54,6 +54,27 @@ const { name, class: className = '', size = 16 } = Astro.props;
     <path d="M3.5 20.5h17" />
     <path d="M5.5 20.5v1.5M18.5 20.5v1.5" />
   </svg>
+) : name === 'theory' ? (
+  <svg
+    class={`tool-svg-icon tool-theory-icon ${className}`}
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <!-- Music Theory Reference Book & Notes -->
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    <path d="M9 7h6" />
+    <path d="M9 11h4" />
+    <circle cx="15" cy="11" r="1.5" fill="currentColor" stroke="none" />
+    <path d="M16.5 11V6.5" />
+  </svg>
 ) : (
   <i class={`${name} ${className}`} aria-hidden="true"></i>
 )}

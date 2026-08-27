@@ -216,25 +216,40 @@ export const COACH_STORAGE_KEYS = {
   midiDevice: 'kins-metro-midi-device'
 } as const;
 
-/* Beat scheduling.
-   Legacy path (no AudioWorklet): lookahead scheduler — "A Tale of Two
-   Clocks". 25ms main-thread tick, 0.3s ahead on the audio clock so GC /
-   layout stalls up to ~300ms cannot starve the schedule. Tempo & option
-   changes flush already-scheduled clicks beyond changeGuardSec and
-   reschedule at the new settings so they land immediately instead of up
-   to one full lookahead later.
-   Worklet path: scheduling runs inside the AudioWorkletProcessor on the
-   audio rendering thread (immune to ALL main-thread stalls); these knobs
-   only apply to the legacy fallback. */
+/* Canonical gain staging — mirrors cwilso pitch hierarchy + LibreMetronome
+   4-tier + Tone.js bus headroom. Single source of truth for both main-thread
+   legacy path and AudioWorklet processors (worklet imports cannot read TS config,
+   so worklet duplicates these with a consistency comment). */
+export const METRO_GAIN = {
+  accent: 0.80, // -1.94 dBFS downbeat
+  beat: 0.60,   // -4.44 dBFS on-beat
+  sub: 0.40,    // -7.96 dBFS subdivision (then * G_sub)
+  subMix: 0.707, // -3.01 dB summed-bus headroom
+  master: 0.90,  // -0.92 dB true-peak safety
+  knee: 0.80,    // worklet soft-knee ceiling
+  epsilon: 0.0001 // -80 dB floor — never exponentialRampToValueAtTime(0)
+} as const;
+
+/* Beat scheduling — dual-clock lookahead (cwilso "A Tale of Two Clocks").
+   Legacy path: 25ms tick via DEDICATED WORKER (metro-worker.js), 0.1s
+   lookAhead + 0.05s updateInterval = 150ms total heuristic latency (Tone.js
+   pattern: updateInterval = lookAhead/2). Worklet path schedules inside the
+   audio rendering thread (immune to ALL main-thread stalls). */
 export const METRO_TIMING = {
   schedulerIntervalMs: 25,
-  scheduleAheadSec: 0.3,
+  scheduleAheadSec: 0.1,
+  updateIntervalMs: 50,
+  lookAheadSec: 0.1,
+  /* Dedicated worker ticker for main-thread throttling immunity (cwilso pattern).
+     Falls back to main-thread setInterval if CSP blocks Worker or offline. */
+  workerUrl: '/worklets/metro-worker.js',
   /* Lookahead used while document.hidden: background tabs throttle timers
-     to ≥1s, so the visible-mode 0.3s window starves and the cursor falls
-     behind (machine-gun catch-up bursts). Wide enough to ride out a full
-     intensive-throttle tick without growing latency when visible again —
-     flushFrom() re-tightens on every tempo/option change. */
-  hiddenScheduleAheadSec: 4,
+     to ≥1s, so the visible-mode window starves — widen only while hidden
+     (cwilso recommends 1.1s on blur; keep 1.2s to survive 1s intensive
+     throttle without reintroducing massive latency when visible again).
+     Worker keeps 25ms ticks even hidden; this still covers non-Worker
+     fallback and Worker→main postMessage jank. */
+  hiddenScheduleAheadSec: 1.2,
   /* Legacy schedulerTick resync: if the cursor falls further behind now
      than this, missed clicks are SKIPPED (cursor jumps forward, counters
      advance to keep bar position) instead of being scheduled in the past
@@ -260,7 +275,9 @@ export const METRO_TIMING = {
   visualDrainLeadSec: 0.02,
   /* AudioWorklet module (progressive enhancement over the legacy path) */
   workletName: 'kins-click',
-  workletUrl: '/worklets/click-worklet.js'
+  workletUrl: '/worklets/click-worklet.js',
+  /* Hardware sampleRate divergence check interval (Bluetooth route) */
+  hardwareCheckMs: 1000
 } as const;
 
 export const METRO_COPY = {

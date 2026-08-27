@@ -16,6 +16,7 @@ import SubscribeSection from '../components/sections/SubscribeSection.astro';
 // Navigation Components
 import TopNav from '../components/navigation/TopNav.astro';
 import SiteFooter from '../components/navigation/SiteFooter.astro';
+import { functionalityConfig } from '../settings/functionality.config';
 
 // Modal Components
 import ShareModal from '../components/modals/ShareModal.astro';
@@ -32,6 +33,7 @@ import AudioPlayer from '../components/ui/AudioPlayer.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
 
 const baseUrl = import.meta.env.BASE_URL;
+const isToolsEnabled = functionalityConfig.enableKinsTools ?? false;
 ---
 
 <BaseLayout title="Kins | Official Link in Bio">
@@ -55,7 +57,7 @@ const baseUrl = import.meta.env.BASE_URL;
         <KinsCrewSpotlight />
         <MerchSection />
         <InspirationVault />
-        <KinsToolsSection />
+        {isToolsEnabled && <KinsToolsSection />}
 
         <SiteFooter />
       </main>

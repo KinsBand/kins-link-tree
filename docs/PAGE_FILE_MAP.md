@@ -177,6 +177,18 @@ Paths are prefixed with `@` so you can drop them straight into chat/agent contex
 
 ---
 
+## `/theory` — Music Theory Cheat Sheets (Guitar & Drums)
+
+**Page:** @src/pages/theory.astro (markup + topbar, dual pill tabs, expandable search & all theory CSS inline)
+
+**Modals & UI Components:**
+- @src/components/ui/ToastContainer.astro
+
+**Settings:**
+- @src/settings/rehearsal.config.ts — tools list entry
+
+---
+
 ## `/epk` — Press kit (page currently disabled)
 
 **Page:** @src/pages/epk.astro

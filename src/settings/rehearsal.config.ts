@@ -66,7 +66,21 @@ export const rehearsalConfig: RehearsalConfig = {
       mobileBtn: 'Open Metro →',
       url: '/metronome',
     },
-
+    {
+      id: 'theory',
+      icon: 'theory',
+      title: 'THEORY 🎸🥁',
+      shortTitle: 'THEORY',
+      desktopBullets: [
+        'Guitar & drum theory charts',
+        'Scales, modes & CAGED system',
+        'Rudiments, time & grooves',
+      ],
+      mobileBlurb: 'Guitar & Drum charts · Scales, chords, rudiments',
+      desktopBtn: 'Launch Theory →',
+      mobileBtn: 'Open Theory →',
+      url: '/theory',
+    },
   ],
   offlineBanner: {
     icon: 'fa-solid fa-bolt',

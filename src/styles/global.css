@@ -43,9 +43,10 @@ body::before {
   content: "";
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
-  background-image: url("/noise-tile.png");
+  background-image: url("/noise-tile.webp");
   background-repeat: repeat;
-  background-size: 128px 128px;
+  background-size: 64px 64px;
+  image-rendering: pixelated;
   opacity: 0.055;
   pointer-events: none;
   z-index: 999;

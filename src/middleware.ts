@@ -13,14 +13,14 @@ import { defineMiddleware } from 'astro:middleware';
 const CSP_DIRECTIVES = [
   "default-src 'self'",
   // 'unsafe-inline'/'unsafe-eval' needed until nonce migration; accounts.google.com serves the GIS loader,
-  // cdnjs loads qrcode.js, unpkg loads Leaflet when the gig map opens.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://cdnjs.cloudflare.com https://unpkg.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
+  // cdnjs loads qrcode.js, unpkg loads Leaflet when the gig map opens, jsdelivr loads sheet music deps.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
   "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
   // data:/blob: cover fan-wall uploads and canvas-generated QR downloads
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob: https://*.supabase.co https://*.cartocdn.com https://*.basemaps.cartocdn.com https://images.unsplash.com https:",
   "media-src 'self' blob: https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://itunes.apple.com https://accounts.google.com https://oauth2.googleapis.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://itunes.apple.com https://accounts.google.com https://oauth2.googleapis.com https://cdn.jsdelivr.net https://*.basemaps.cartocdn.com https://*.cartocdn.com",
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://accounts.google.com",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
@@ -34,9 +34,11 @@ const ENFORCED_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(self), payment=(), usb=()',
+  'Permissions-Policy': 'camera=(), microphone=(self), payment=(), usb=(), interest-cohort=()',
   // Google One Tap opens popups — same-origin-allow-popups keeps it working under a COOP
-  'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
+  'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+  'Cross-Origin-Resource-Policy': 'same-origin',
+  'Origin-Agent-Cluster': '?1'
 };
 
 export const onRequest = defineMiddleware((context, next) => {

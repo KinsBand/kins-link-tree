@@ -1,0 +1,3510 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ToastContainer from '../components/ui/ToastContainer.astro';
+import { functionalityConfig } from '../settings/functionality.config';
+
+if (!functionalityConfig.enableTheoryPage && !functionalityConfig.enableKinsTools) {
+  return Astro.redirect('/');
+}
+
+// Guitar Theory Categories Data
+const guitarCategories = [
+  {
+    id: 'guitar-fretboard-hero',
+    title: 'Interactive Fretboard & Chord Box Sandbox',
+    icon: 'fa-solid fa-guitar',
+    badge: 'Visual Sandbox',
+    chip: 'fretboard',
+  },
+  {
+    id: 'guitar-scales',
+    title: 'Scales & Modes',
+    icon: 'fa-solid fa-music',
+    badge: 'Melody & Soloing',
+    chip: 'scales',
+    subfilters: ['all', 'pentatonic', 'blues', 'modes', 'major-minor'],
+    items: [
+      { id: 'pentatonic-minor', name: 'Minor Pentatonic', type: 'pentatonic', formula: '1 - ♭3 - 4 - 5 - ♭7', notes: 'The cornerstone rock, blues, and metal soloing scale.', fretPattern: 'Root on Low E (Fret 5 for A) • Box 1 shape across all 6 strings' },
+      { id: 'pentatonic-major', name: 'Major Pentatonic', type: 'pentatonic', formula: '1 - 2 - 3 - 5 - 6', notes: 'Sweet, soulful sound for southern rock, country, and pop.', fretPattern: 'Root on Low E (Fret 5 for A) • Sweet major 3rd & 6th intervals' },
+      { id: 'blues', name: 'Blues Scale', type: 'blues', formula: '1 - ♭3 - 4 - ♭5 - 5 - ♭7', notes: 'Minor pentatonic with the gritty diminished 5th (blue note).', fretPattern: 'Root on Low E • Blue note on A string (fret 6) & G string (fret 8)' },
+      { id: 'major', name: 'Major Scale (Ionian)', type: 'major-minor', formula: '1 - 2 - 3 - 4 - 5 - 6 - 7', notes: 'Diatonic root of all western harmony (W - W - H - W - W - W - H).', fretPattern: 'Root on Low E (Fret 8 for C) • 3 notes per string form' },
+      { id: 'natural-minor', name: 'Natural Minor (Aeolian)', type: 'major-minor', formula: '1 - 2 - ♭3 - 4 - 5 - ♭6 - ♭7', notes: 'Relative minor to major scale (W - H - W - W - H - W - W).', fretPattern: 'Root on Low E (Fret 5 for A) • Dark, melancholic tonality' },
+      { id: 'dorian', name: 'Dorian Mode', type: 'modes', formula: '1 - 2 - ♭3 - 4 - 5 - 6 - ♭7', notes: 'Minor scale with a bright natural 6th (Funk, Santana, Jam rock).', fretPattern: 'Root on Low E (Fret 5 for A) • Natural 6th replaces flat 6th' },
+      { id: 'mixolydian', name: 'Mixolydian Mode', type: 'modes', formula: '1 - 2 - 3 - 4 - 5 - 6 - ♭7', notes: 'Major scale with flat 7th (AC/DC, Grateful Dead, classic rock).', fretPattern: 'Root on Low E (Fret 5 for A) • Dominant 7th chord pairing' },
+    ],
+  },
+  {
+    id: 'guitar-chords',
+    title: 'Chord Charts & Construction',
+    icon: 'fa-solid fa-layer-group',
+    badge: 'Harmony & Rhythm',
+    chip: 'chords',
+    subfilters: ['all', 'open', 'barre', '7ths', 'power'],
+    items: [
+      { id: 'c-major', name: 'C Major (Open)', type: 'open', formula: '1 - 3 - 5 (C - E - G)', notes: 'Muted 6th string, open 1st & 3rd strings.', mutePattern: '✕ - 3 - 2 - ◯ - 1 - ◯' },
+      { id: 'g-major', name: 'G Major (Open)', type: 'open', formula: '1 - 3 - 5 (G - B - D)', notes: 'Full 6-string acoustic resonance with root on 6th string.', mutePattern: '3 - 2 - ◯ - ◯ - ◯ - 3' },
+      { id: 'd-major', name: 'D Major (Open)', type: 'open', formula: '1 - 3 - 5 (D - F♯ - A)', notes: 'Mute low E & A strings; root on open 4th string.', mutePattern: '✕ - ✕ - ◯ - 2 - 3 - 2' },
+      { id: 'a-minor', name: 'A Minor (Open)', type: 'open', formula: '1 - ♭3 - 5 (A - C - E)', notes: 'Mute low E string; root on open 5th string.', mutePattern: '✕ - ◯ - 2 - 2 - 1 - ◯' },
+      { id: 'e-minor', name: 'E Minor (Open)', type: 'open', formula: '1 - ♭3 - 5 (E - G - B)', notes: 'Heavy 6-string minor chord; lowest open root on guitar.', mutePattern: '◯ - 2 - 2 - ◯ - ◯ - ◯' },
+      { id: 'f-barre', name: 'F Major (Barre E-Shape)', type: 'barre', formula: '1 - 3 - 5 (F - A - C)', notes: 'Full 1st-fret index finger barre across all 6 strings.', mutePattern: '1 - 3 - 3 - 2 - 1 - 1' },
+      { id: 'bm-barre', name: 'B Minor (Barre A-Shape)', type: 'barre', formula: '1 - ♭3 - 5 (B - D - F♯)', notes: '2nd-fret index barre on 5 strings; root on 5th string.', mutePattern: '✕ - 2 - 4 - 4 - 3 - 2' },
+      { id: 'a7', name: 'A7 Dominant (Open)', type: '7ths', formula: '1 - 3 - 5 - ♭7 (A - C♯ - E - G)', notes: 'Classic blues turnaround and tension chord.', mutePattern: '✕ - ◯ - 2 - ◯ - 2 - ◯' },
+      { id: 'cmaj7', name: 'Cmaj7 (Open)', type: '7ths', formula: '1 - 3 - 5 - 7 (C - E - G - B)', notes: 'Dreamy, lush jazz and indie pop harmony.', mutePattern: '✕ - 3 - 2 - ◯ - ◯ - ◯' },
+      { id: 'e5', name: 'E5 Power Chord', type: 'power', formula: '1 - 5 (E - B)', notes: 'Neither major nor minor; high-gain rock and punk staple.', mutePattern: '◯ - 2 - 2 - ✕ - ✕ - ✕' },
+    ],
+  },
+  {
+    id: 'guitar-caged',
+    title: 'CAGED System & Fretboard',
+    icon: 'fa-solid fa-shapes',
+    badge: 'Neck Landmark',
+    chip: 'caged',
+    items: [
+      { id: 'c-shape', name: 'C Shape Position', formula: 'Root on 5th string', notes: 'Connects to D Shape behind it, A Shape ahead of it.' },
+      { id: 'a-shape', name: 'A Shape Position', formula: 'Root on 5th string', notes: 'Standard barre chord shape; common soloing launchpad.' },
+      { id: 'g-shape', name: 'G Shape Position', formula: 'Root on 6th string', notes: 'Wide fret span; excellent arpeggio extension shape.' },
+      { id: 'e-shape', name: 'E Shape Position', formula: 'Root on 6th string', notes: 'Primary 6th-string root barre chord and minor pentatonic box 1.' },
+      { id: 'd-shape', name: 'D Shape Position', formula: 'Root on 4th string', notes: 'Upper-register chord voicing and screaming lead box.' },
+      { id: 'octaves', name: 'Octave Jump Rules', formula: 'Str 6 → Str 4 (+2 frets) • Str 5 → Str 3 (+2 frets)', notes: 'Instant fretboard navigation landmarks across B-string shift.' },
+    ],
+  },
+  {
+    id: 'guitar-intervals',
+    title: 'Intervals & Harmony',
+    icon: 'fa-solid fa-circle-nodes',
+    badge: 'Ear & Theory',
+    chip: 'intervals',
+    items: [
+      { name: 'Minor 2nd / Major 2nd', formula: '1 semitone / 2 semitones', notes: 'Half step (clashing tension) / Whole step (scale motion).' },
+      { name: 'Minor 3rd / Major 3rd', formula: '3 semitones / 4 semitones', notes: 'Defines minor (sad/dark) vs major (happy/bright) tonality.' },
+      { name: 'Perfect 4th / Tritone', formula: '5 semitones / 6 semitones (♭5)', notes: 'Suspension / Diminished 5th tension (the "Devil\'s Interval").' },
+      { name: 'Perfect 5th / Octave', formula: '7 semitones / 12 semitones', notes: 'Power chord foundation / Complete 12-semitone pitch cycle.' },
+      { name: 'Circle of Fifths', formula: 'C - G - D - A - E - B - F♯ - D♭ - A♭ - E♭ - B♭ - F', notes: 'Key signatures, modulation paths, and chord progression maps.' },
+    ],
+  },
+  {
+    id: 'guitar-tunings',
+    title: 'Alternate Tunings & Voicings',
+    icon: 'fa-solid fa-sliders',
+    badge: 'Tuning Guide',
+    chip: 'tunings',
+    items: [
+      { name: 'Standard Tuning (EADGBE)', formula: 'E2 - A2 - D3 - G3 - B3 - E4', notes: 'Universal tuning; 4ths between strings with major 3rd on G-B.', pitches: [82.41, 110.0, 146.83, 196.0, 246.94, 329.63] },
+      { name: 'Drop D (DADGBE)', formula: 'D2 - A2 - D3 - G3 - B3 - E4', notes: 'One-finger power chords with deep heavy rock bass extension.', pitches: [73.42, 110.0, 146.83, 196.0, 246.94, 329.63] },
+      { name: 'DADGAD (Modal Celtic)', formula: 'D2 - A2 - D3 - G3 - A3 - D4', notes: 'Open modal resonance for folk, acoustic, and Led Zeppelin riffs.', pitches: [73.42, 110.0, 146.83, 196.0, 220.0, 293.66] },
+      { name: 'Open G (DGDGBD)', formula: 'D2 - G2 - D3 - G3 - B3 - D4', notes: 'Keith Richards / Rolling Stones & slide blues standard.', pitches: [73.42, 98.0, 146.83, 196.0, 246.94, 293.66] },
+      { name: 'Half-Step Down (E♭ Standard)', formula: 'E♭2 - A♭2 - D♭3 - G♭3 - B♭3 - E♭4', notes: 'Jimi Hendrix, Stevie Ray Vaughan, reduced string tension.', pitches: [77.78, 103.83, 138.59, 185.0, 233.08, 311.13] },
+    ],
+  },
+];
+
+// Drum Theory Categories Data
+const drumCategories = [
+  {
+    id: 'drum-grid-hero',
+    title: 'Interactive 16-Step Beat Grid & Sticking Sandbox',
+    icon: 'fa-solid fa-drum',
+    badge: 'Visual Sandbox',
+    chip: 'drum-grid',
+  },
+  {
+    id: 'drum-rudiments',
+    title: 'Essential Rudiments & Sticking',
+    icon: 'fa-solid fa-drumstick-bite',
+    badge: 'Sticking & Hands',
+    chip: 'rudiments',
+    subfilters: ['all', 'rolls', 'diddles', 'flams-drags'],
+    items: [
+      { id: 'single-stroke', name: 'Single Stroke Roll', type: 'rolls', formula: 'R L R L | R L R L', notes: 'Fundamental speed, endurance, and dynamic control building block.', sticking: 'R-L-R-L-R-L-R-L', accent: 'Even velocity' },
+      { id: 'double-stroke', name: 'Double Stroke Roll', type: 'rolls', formula: 'R R L L | R R L L', notes: 'Bounce control, buzz rolls, and fast open-handed fills.', sticking: 'R-R-L-L-R-R-L-L', accent: 'Snap on 2nd stroke' },
+      { id: 'paradiddle', name: 'Single Paradiddle', type: 'diddles', formula: 'R L R R | L R L L', notes: 'Combines singles and doubles; alternates lead hand across bars.', sticking: 'R-L-R-R-L-R-L-L', accent: '> on strokes 1 & 5' },
+      { id: 'double-paradiddle', name: 'Double Paradiddle', type: 'diddles', formula: 'R L R L R R | L R L R L L', notes: '6-stroke diddle perfect for 6/8 and triplet groove accents.', sticking: 'R-L-R-L-R-R-L-R-L-R-L-L', accent: 'Triplet swing' },
+      { id: 'flam', name: 'Flam', type: 'flams-drags', formula: 'lR | rL', notes: 'Grace note preceding primary downbeat accent for thick texture.', sticking: 'lR-rL', accent: 'Grace note 2" / Accent 10"' },
+      { id: 'drag', name: 'Drag / Ruff', type: 'flams-drags', formula: 'llR | rrL', notes: 'Two quick bounce grace notes sliding into the accented downbeat.', sticking: 'llR-rrL', accent: 'Tight double grace' },
+      { id: 'paradiddle-diddle', name: 'Paradiddle-Diddle', type: 'diddles', formula: 'R L R R L L | R L R R L L', notes: 'Smooth 6-stroke roll alternative for modern jazz, funk, and gospel.', sticking: 'R-L-R-R-L-L', accent: 'Lead hand stays on Right' },
+    ],
+  },
+  {
+    id: 'drum-meter',
+    title: 'Time Signatures & Meter',
+    icon: 'fa-solid fa-stopwatch',
+    badge: 'Time & Pulse',
+    chip: 'meter',
+    items: [
+      { name: '4/4 Common Time', formula: '4 quarter notes per bar', notes: 'Backbeat on 2 & 4; rock, pop, funk standard pulse.' },
+      { name: '3/4 Waltz Meter', formula: '3 quarter notes per bar', notes: 'Strong accent on beat 1; dance waltz and ballad meter.' },
+      { name: '6/8 Compound Duple', formula: '6 eighth notes (2 dotted pulses)', notes: 'Counted 1-2-3, 4-5-6; pulses on 1 & 4 (slow rock / blues).' },
+      { name: '7/8 Odd Meter', formula: '7 eighth notes per bar', notes: 'Grouped 2+2+3 or 3+2+2; prog rock and Balkan dance rhythm.' },
+      { name: '5/4 Odd Meter', formula: '5 quarter notes per bar', notes: 'Grouped 3+2 or 2+3 (Dave Brubeck "Take Five", Mission Impossible).' },
+      { name: '12/8 Blues Shuffle', formula: '12 eighth notes (4 triplets)', notes: 'Heavy four-pulse triplet groove for Chicago blues and soul.' },
+    ],
+  },
+  {
+    id: 'drum-polyrhythms',
+    title: 'Polyrhythms & Independence',
+    icon: 'fa-solid fa-code-fork',
+    badge: 'Coordination',
+    chip: 'polyrhythms',
+    items: [
+      { name: '3 against 2 (3:2)', formula: 'Mnemonic: "Not Dif-fi-cult"', notes: 'Hand 1 plays 3 even pulses while Hand 2 plays 2 across same measure.' },
+      { name: '4 against 3 (4:3)', formula: 'Mnemonic: "Pass the Gol-den But-ter"', notes: 'Cross-rhythm tension creating shifting downbeats.' },
+      { name: '4-Way Limb Independence', formula: 'RH (Ride) + LH (Snare) + RF (Kick) + LF (Hi-Hat)', notes: 'Isolating all 4 limbs across different rhythmic subdivisions.' },
+      { name: 'Ostinato Foot Overlays', formula: 'Repeating bass/hi-hat pattern with soloing hands', notes: 'Samba foot pattern or jazz swing pedal ostinato.' },
+    ],
+  },
+  {
+    id: 'drum-grooves',
+    title: 'Groove Templates & Feels',
+    icon: 'fa-solid fa-sliders',
+    badge: 'Styles & Pocket',
+    chip: 'grooves',
+    items: [
+      { id: 'rock-8', name: 'Standard 8th Rock Beat', formula: 'Kick on 1 & 3 | Snare on 2 & 4 | Hi-Hat on 8ths', notes: 'The driving backbone of modern rock and pop drumming.' },
+      { id: 'funk-16', name: '16th Funk Pocket', formula: 'Syncopated kick & ghost snares on "e" and "a"', notes: 'Tower of Power / Clyde Stubblefield tight funk groove.' },
+      { id: 'jazz-swing', name: 'Jazz Swing Ride Pattern', formula: '1, 2-and, 3, 4-and ("spang-a-lang")', notes: 'Hi-hat pedal chicks on 2 & 4 with feathering kick drum.' },
+      { id: 'purdie-shuffle', name: 'Half-Time Shuffle (Purdie)', formula: 'Triplet ghost snares with half-time backbeat on 3', notes: 'Bernard Purdie / Toto "Rosanna" legendary shuffle groove.' },
+      { id: 'bossa-nova', name: 'Bossa Nova / Latin', formula: 'Cross-stick clave pattern over steady kick 8ths', notes: 'Smooth Brazilian syncopation with delicate hi-hat control.' },
+    ],
+  },
+  {
+    id: 'drum-subdivisions',
+    title: 'Subdivisions & Dynamics',
+    icon: 'fa-solid fa-wave-square',
+    badge: 'Accents & Feel',
+    chip: 'subdivisions',
+    items: [
+      { name: 'Quarter Notes (1/4)', formula: '1 - 2 - 3 - 4', notes: 'Primary pulse reference and metronome click anchor.' },
+      { name: '8th Notes (1/8)', formula: '1 & 2 & 3 & 4 &', notes: 'Straight standard subdivisions.' },
+      { name: '16th Notes (1/16)', formula: '1 e & a 2 e & a 3 e & a 4 e & a', notes: 'Double-speed groove subdivisions for funk and hi-hat rolls.' },
+      { name: '8th Triplets', formula: '1-trip-let 2-trip-let 3-trip-let 4-trip-let', notes: '3 notes per quarter-note pulse; swing and shuffle foundation.' },
+      { name: 'Ghost Notes vs Accents', formula: 'Ghost (1-2" drop) vs Accent (8-12" whip)', notes: 'Dynamic height contrast that transforms mechanical beats into music.' },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="KINS THEORY 🎸🥁 — Visual Music Theory for Guitar & Drums"
+  description="Interactive music theory tools by KINS. Real visual guitar fretboard with live sound synthesis, chord diagrams with muted/open strings, 16-step drum beat sequencer with audio playback, rudiment sticking flows, and polyrhythms."
+>
+  <main class="theory-page" id="theoryPage">
+    <div class="theory-view" id="theoryView">
+      <!-- Top Navigation Header -->
+      <header class="theory-topbar" id="theoryTopbar">
+        <!-- Branded Back Button -->
+        <a
+          href="/"
+          class="theory-back-btn brutal-press"
+          aria-label="Back to KINS home"
+          title="Back to KINS home"
+          data-track="theory:back_home"
+        >
+          <svg class="back-icon" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M12.5 3.5L6 10l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="back-label">KINS!</span>
+        </a>
+
+        <!-- Dual Selector Tabs (Connected Pill UI) -->
+        <div class="theory-pill-wrap" id="theoryPillWrap">
+          <div class="theory-segmented-pill" role="tablist" aria-label="Instrument Theory Selection">
+            <button
+              type="button"
+              class="theory-tab-btn active brutal-press"
+              role="tab"
+              id="guitarTabBtn"
+              aria-selected="true"
+              aria-controls="guitarPanel"
+              data-instrument="guitar"
+              data-track="theory:tab_guitar"
+            >
+              <span class="tab-emoji" aria-hidden="true">🎸</span>
+              <span class="tab-label">GUITAR</span>
+            </button>
+            <button
+              type="button"
+              class="theory-tab-btn brutal-press"
+              role="tab"
+              id="drumsTabBtn"
+              aria-selected="false"
+              aria-controls="drumsPanel"
+              data-instrument="drums"
+              data-track="theory:tab_drums"
+            >
+              <span class="tab-emoji" aria-hidden="true">🥁</span>
+              <span class="tab-label">DRUMS</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions (Theme Toggle + Expandable Search) -->
+        <div class="theory-topbar-actions" id="theoryTopbarActions">
+          <button
+            type="button"
+            class="theory-icon-btn theory-theme-toggle brutal-press"
+            id="theoryThemeToggleBtn"
+            aria-label="Toggle dark / light theme"
+            title="Toggle theme"
+            data-track="theory:theme_toggle"
+          >
+            <i class="fa-solid fa-moon" id="theoryThemeIcon" aria-hidden="true"></i>
+          </button>
+
+          <!-- Expandable Search Controller -->
+          <div class="theory-search-container" id="theorySearchContainer">
+            <div class="theory-search-expandable" id="theorySearchExpandable">
+              <input
+                type="search"
+                class="theory-search-input"
+                id="theorySearchInput"
+                placeholder="Search scales, chords, rudiments... (Press '/' to focus)"
+                aria-label="Search theory topics"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <button
+              type="button"
+              class="theory-icon-btn theory-search-toggle brutal-press"
+              id="theorySearchToggleBtn"
+              aria-label="Open search"
+              aria-expanded="false"
+              title="Search theory topics (/)"
+              data-track="theory:search_toggle"
+            >
+              <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true">
+                <circle cx="8.5" cy="8.5" r="5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                <path d="M12.5 12.5L16.5 16.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+              <svg class="close-icon" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Sticky Category Filter Chips Bar -->
+      <nav class="theory-chip-bar" id="theoryChipBar" aria-label="Category Quick Filters">
+        <div class="chip-scroll-row" id="guitarChipsRow">
+          <button type="button" class="theory-chip-btn active brutal-press" data-filter="all">✦ All Topics</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="fretboard">🎸 Visual Fretboard</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="scales">🎼 Scales & Modes</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="chords">▤ Chord Charts</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="caged">❖ CAGED System</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="intervals">☍ Intervals & Circle</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="tunings">⫸ Tunings</button>
+        </div>
+        <div class="chip-scroll-row" id="drumsChipsRow" hidden>
+          <button type="button" class="theory-chip-btn active brutal-press" data-filter="all">✦ All Topics</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="drum-grid">🥁 16-Step Beat Grid</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="rudiments">🥢 Rudiments</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="meter">⏱ Time & Meter</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="polyrhythms">☍ Polyrhythms</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="grooves">🎛 Groove Templates</button>
+          <button type="button" class="theory-chip-btn brutal-press" data-filter="subdivisions">〰 Subdivisions</button>
+        </div>
+      </nav>
+
+      <!-- Main Content Area -->
+      <div class="theory-content-container">
+        <!-- ================================================================= -->
+        <!-- GUITAR TAB PANEL -->
+        <!-- ================================================================= -->
+        <section
+          id="guitarPanel"
+          class="theory-tab-panel active"
+          role="tabpanel"
+          aria-labelledby="guitarTabBtn"
+        >
+          <!-- 1. Hero Visual Fretboard Sandbox -->
+          <article class="theory-category-card hero-visual-card" data-category-id="guitar-fretboard-hero" data-chip="fretboard">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box">
+                  <i class="fa-solid fa-guitar" aria-hidden="true"></i>
+                </div>
+                <div>
+                  <h2 class="category-title">Interactive Visual Fretboard</h2>
+                  <p class="category-subtitle">Live note positions, chord fingerings, muted strings, root intervals & sound synthesis.</p>
+                </div>
+              </div>
+              <div class="header-action-group">
+                <button type="button" class="audio-action-btn brutal-press" id="guitarStrumBtn" title="Play scale arpeggio or chord strum" aria-label="Play scale or chord sound">
+                  <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+                  <span id="guitarStrumBtnText">STRUM / HEAR</span>
+                </button>
+                <span class="category-badge">Real Fretboard</span>
+              </div>
+            </header>
+
+            <!-- Fretboard Mode Selector -->
+            <div class="fretboard-mode-bar">
+              <span class="fret-control-label">MODE:</span>
+              <div class="segmented-sub-pills" id="fretModeSelector">
+                <button type="button" class="sub-pill-btn active brutal-press" data-fret-mode="scales">Scales & Modes</button>
+                <button type="button" class="sub-pill-btn brutal-press" data-fret-mode="chords">Chord Shapes</button>
+                <button type="button" class="sub-pill-btn brutal-press" data-fret-mode="caged">CAGED System</button>
+              </div>
+            </div>
+
+            <!-- Root Key & Preset Selector Pills -->
+            <div class="fretboard-controls-row">
+              <!-- Full 12-Tone Chromatic Root Key Selector -->
+              <div class="fret-control-group" id="guitarRootGroup">
+                <span class="fret-control-label">ROOT KEY:</span>
+                <div class="fret-pills-wrap" id="guitarRootPills">
+                  {['A', 'Bb', 'B', 'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab'].map((key) => (
+                    <button type="button" class={`fret-pill-btn ${key === 'A' ? 'active' : ''} brutal-press`} data-root={key}>
+                      {key}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <!-- Scale / Chord Preset Pills -->
+              <div class="fret-control-group" id="guitarPresetGroup">
+                <span class="fret-control-label" id="guitarPresetLabel">SCALE:</span>
+                <div class="fret-pills-wrap" id="guitarPresetPills">
+                  <!-- Dynamically populated via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Live SVG/DOM Fretboard Visualizer -->
+            <div class="fretboard-visual-wrapper">
+              <div class="fretboard-scroll-area">
+                <div class="fretboard-canvas" id="guitarFretboardCanvas" role="img" aria-label="Visual 6-String Guitar Fretboard">
+                  <!-- Rendered dynamically by script -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Legend & Info Bar -->
+            <footer class="fretboard-legend-bar" id="guitarFretLegend">
+              <div class="legend-item"><span class="legend-dot root-dot">R</span> Root Note</div>
+              <div class="legend-item"><span class="legend-dot note-dot">●</span> Scale / Chord Tone</div>
+              <div class="legend-item"><span class="legend-mute">✕</span> Muted String</div>
+              <div class="legend-item"><span class="legend-open">◯</span> Open String</div>
+              <div class="legend-summary" id="guitarFretSummary">A Minor Pentatonic • 1 - ♭3 - 4 - 5 - ♭7 (A - C - D - E - G)</div>
+            </footer>
+          </article>
+
+          <!-- 2. Scales & Modes Category -->
+          <article class="theory-category-card" data-category-id="guitar-scales" data-chip="scales">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-music" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">Scales & Modes</h2>
+                  <p class="category-subtitle">Essential scale formulas, interval degrees and fret positions.</p>
+                </div>
+              </div>
+              <span class="category-badge">Melody & Soloing</span>
+            </header>
+
+            <!-- In-Section Sub-Filters -->
+            <div class="section-subfilters-row" data-target-list="scales-list">
+              <button type="button" class="subfilter-btn active brutal-press" data-type="all">All Scales</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="pentatonic">Pentatonic</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="blues">Blues Scale</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="modes">Diatonic Modes</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="major-minor">Major / Minor</button>
+            </div>
+
+            <div class="category-items-list" id="scales-list">
+              {guitarCategories[1].items?.map((item) => (
+                <div class="theory-item-row" data-subfilter-type={item.type} data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+                  <div class="item-name-col">
+                    <div class="item-title-row">
+                      <strong class="item-name">{item.name}</strong>
+                      <span class="item-type-tag">{item.type}</span>
+                    </div>
+                    <span class="item-notes">{item.notes}</span>
+                    <span class="item-fret-hint"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> {item.fretPattern}</span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                    <div class="item-action-btns">
+                      <button type="button" class="item-quick-btn brutal-press" data-load-scale={item.id} title="Load into visual fretboard">
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i> View on Neck
+                      </button>
+                      <button type="button" class="item-icon-quick-btn brutal-press" data-copy-text={item.formula} title="Copy formula to clipboard">
+                        <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <!-- 3. Chord Construction Category -->
+          <article class="theory-category-card" data-category-id="guitar-chords" data-chip="chords">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">Chord Charts & Construction</h2>
+                  <p class="category-subtitle">Open voicings, movable barre chords and harmonic fingering maps.</p>
+                </div>
+              </div>
+              <span class="category-badge">Harmony & Rhythm</span>
+            </header>
+
+            <!-- In-Section Sub-Filters -->
+            <div class="section-subfilters-row" data-target-list="chords-list">
+              <button type="button" class="subfilter-btn active brutal-press" data-type="all">All Chords</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="open">Open Chords</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="barre">Barre Chords</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="7ths">7th Chords</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="power">Power Chords</button>
+            </div>
+
+            <div class="category-items-list" id="chords-list">
+              {guitarCategories[2].items?.map((item) => (
+                <div class="theory-item-row" data-subfilter-type={item.type} data-search-target={`${item.name} ${item.formula} ${item.notes} ${item.mutePattern}`}>
+                  <div class="item-name-col">
+                    <div class="item-title-row">
+                      <strong class="item-name">{item.name}</strong>
+                      <span class="item-type-tag">{item.type}</span>
+                    </div>
+                    <span class="item-notes">{item.notes}</span>
+                    <span class="item-mute-badge">Fingering (6→1): <strong>{item.mutePattern}</strong></span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                    <div class="item-action-btns">
+                      <button type="button" class="item-quick-btn brutal-press" data-load-chord={item.id} title="Load into visual fretboard">
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i> View Chord
+                      </button>
+                      <button type="button" class="item-icon-quick-btn brutal-press" data-copy-text={`${item.name} Fingering: ${item.mutePattern}`} title="Copy fingering to clipboard">
+                        <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <!-- 4. CAGED System Category -->
+          <article class="theory-category-card" data-category-id="guitar-caged" data-chip="caged">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-shapes" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">CAGED System & Fretboard</h2>
+                  <p class="category-subtitle">5 interconnected chord positions mapping the entire guitar neck.</p>
+                </div>
+              </div>
+              <span class="category-badge">Neck Landmark</span>
+            </header>
+
+            <div class="category-items-list">
+              {guitarCategories[3].items?.map((item) => (
+                <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+                  <div class="item-name-col">
+                    <strong class="item-name">{item.name}</strong>
+                    <span class="item-notes">{item.notes}</span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                    {item.id && item.id !== 'octaves' && (
+                      <div class="item-action-btns">
+                        <button type="button" class="item-quick-btn brutal-press" data-load-caged={item.id} title="Load shape in fretboard">
+                          <i class="fa-solid fa-eye" aria-hidden="true"></i> View Shape
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <!-- 5. Intervals & Harmony Category (with Interactive Circle of Fifths) -->
+          <article class="theory-category-card" data-category-id="guitar-intervals" data-chip="intervals">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-circle-nodes" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">Intervals & Harmony</h2>
+                  <p class="category-subtitle">Semitone distances, chord qualities and the Circle of Fifths.</p>
+                </div>
+              </div>
+              <span class="category-badge">Ear & Theory</span>
+            </header>
+
+            <!-- Interactive Circle of Fifths Interactive Key Map -->
+            <div class="circle-fifths-container">
+              <div class="circle-fifths-header">
+                <span class="circle-title"><i class="fa-solid fa-rotate" aria-hidden="true"></i> CIRCLE OF FIFTHS EXPLORER</span>
+                <span class="circle-hint">Tap any key to inspect root, relative minor & accidentals</span>
+              </div>
+              <div class="circle-keys-grid" id="circleKeysGrid">
+                <!-- Dynamically populated via JS -->
+              </div>
+              <div class="circle-detail-card" id="circleDetailCard">
+                <span class="circle-detail-key" id="circleDetailKey">Key of C Major</span>
+                <span class="circle-detail-minor" id="circleDetailMinor">Relative Minor: A Minor</span>
+                <span class="circle-detail-acc" id="circleDetailAcc">0 Sharps / 0 Flats</span>
+              </div>
+            </div>
+
+            <div class="category-items-list">
+              {guitarCategories[4].items?.map((item) => (
+                <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+                  <div class="item-name-col">
+                    <strong class="item-name">{item.name}</strong>
+                    <span class="item-notes">{item.notes}</span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <!-- 6. Alternate Tunings Category (with Audio Tone Generator) -->
+          <article class="theory-category-card" data-category-id="guitar-tunings" data-chip="tunings">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-sliders" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">Alternate Tunings & Voicings</h2>
+                  <p class="category-subtitle">Open, modal and dropped pitch configurations with reference tones.</p>
+                </div>
+              </div>
+              <span class="category-badge">Tuning Guide</span>
+            </header>
+
+            <div class="category-items-list">
+              {guitarCategories[5].items?.map((item) => (
+                <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+                  <div class="item-name-col">
+                    <strong class="item-name">{item.name}</strong>
+                    <span class="item-notes">{item.notes}</span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                    {item.pitches && (
+                      <div class="item-action-btns">
+                        <button type="button" class="item-quick-btn brutal-press" data-play-tuning={JSON.stringify(item.pitches)} title="Play reference strings">
+                          <i class="fa-solid fa-volume-high" aria-hidden="true"></i> Play Tones
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- DRUMS TAB PANEL -->
+        <!-- ================================================================= -->
+        <section
+          id="drumsPanel"
+          class="theory-tab-panel"
+          role="tabpanel"
+          aria-labelledby="drumsTabBtn"
+          hidden
+        >
+          <!-- 1. Hero Visual Drum Matrix & Sticking Sandbox -->
+          <article class="theory-category-card hero-visual-card" data-category-id="drum-grid-hero" data-chip="drum-grid">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box">
+                  <i class="fa-solid fa-drum" aria-hidden="true"></i>
+                </div>
+                <div>
+                  <h2 class="category-title">Interactive Drum Beat Grid & Sticking</h2>
+                  <p class="category-subtitle">16-step drum sequencer matrix with audio playback, sticking flows & polyrhythms.</p>
+                </div>
+              </div>
+              <div class="header-action-group">
+                <button type="button" class="audio-action-btn brutal-press" id="drumPlayToggleBtn" aria-label="Start or stop drum groove playback">
+                  <i class="fa-solid fa-play" id="drumPlayIcon" aria-hidden="true"></i>
+                  <span id="drumPlayText">PLAY BEAT</span>
+                </button>
+                <span class="category-badge">Real Beat Grid</span>
+              </div>
+            </header>
+
+            <!-- Drum Mode Selector -->
+            <div class="fretboard-mode-bar">
+              <span class="fret-control-label">VIEW:</span>
+              <div class="segmented-sub-pills" id="drumModeSelector">
+                <button type="button" class="sub-pill-btn active brutal-press" data-drum-mode="grid">16-Step Beat Grid</button>
+                <button type="button" class="sub-pill-btn brutal-press" data-drum-mode="sticking">Rudiment Sticking</button>
+                <button type="button" class="sub-pill-btn brutal-press" data-drum-mode="polyrhythm">Polyrhythm Circles</button>
+              </div>
+
+              <!-- BPM Tempo Selector -->
+              <div class="drum-tempo-bar" id="drumTempoBar">
+                <span class="fret-control-label">TEMPO:</span>
+                <div class="drum-tempo-controls">
+                  <button type="button" class="tempo-step-btn brutal-press" id="drumBpmMinus" aria-label="Decrease tempo">-5</button>
+                  <span class="drum-bpm-val" id="drumBpmDisplay">110 BPM</span>
+                  <button type="button" class="tempo-step-btn brutal-press" id="drumBpmPlus" aria-label="Increase tempo">+5</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Groove Style / Rudiment Selector Pills -->
+            <div class="fretboard-controls-row">
+              <div class="fret-control-group">
+                <span class="fret-control-label" id="drumPresetLabel">GROOVE STYLE:</span>
+                <div class="fret-pills-wrap" id="drumPresetPills">
+                  <!-- Dynamically injected -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Drum Visualizer Canvas / Grid -->
+            <div class="fretboard-visual-wrapper">
+              <div class="fretboard-scroll-area">
+                <div class="drum-canvas-container" id="drumVisualCanvas" role="img" aria-label="Visual Drum Sequencer Grid">
+                  <!-- Rendered dynamically by script -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Drum Legend Bar -->
+            <footer class="fretboard-legend-bar" id="drumLegendBar">
+              <div class="legend-item"><span class="drum-step-active"></span> Primary Hit</div>
+              <div class="legend-item"><span class="drum-step-ghost"></span> Ghost Note / Accent</div>
+              <div class="legend-item"><span class="legend-dot root-dot">R</span> Right Hand</div>
+              <div class="legend-item"><span class="legend-dot note-dot">L</span> Left Hand</div>
+              <div class="legend-summary" id="drumSummaryText">Standard 8th Rock • Hi-Hat 8ths, Snare on 2 & 4, Kick on 1 & 3</div>
+            </footer>
+          </article>
+
+          <!-- 2. Essential Rudiments Category -->
+          <article class="theory-category-card" data-category-id="drum-rudiments" data-chip="rudiments">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-drumstick-bite" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">Essential Rudiments & Sticking</h2>
+                  <p class="category-subtitle">Standard snare rudiments, bounce diddles, flams and hand flows.</p>
+                </div>
+              </div>
+              <span class="category-badge">Sticking & Hands</span>
+            </header>
+
+            <!-- In-Section Sub-Filters -->
+            <div class="section-subfilters-row" data-target-list="rudiments-list">
+              <button type="button" class="subfilter-btn active brutal-press" data-type="all">All Rudiments</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="rolls">Rolls</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="diddles">Diddles</button>
+              <button type="button" class="subfilter-btn brutal-press" data-type="flams-drags">Flams & Drags</button>
+            </div>
+
+            <div class="category-items-list" id="rudiments-list">
+              {drumCategories[1].items?.map((item) => (
+                <div class="theory-item-row" data-subfilter-type={item.type} data-search-target={`${item.name} ${item.formula} ${item.notes} ${item.sticking}`}>
+                  <div class="item-name-col">
+                    <div class="item-title-row">
+                      <strong class="item-name">{item.name}</strong>
+                      <span class="item-type-tag">{item.type}</span>
+                    </div>
+                    <span class="item-notes">{item.notes}</span>
+                    <span class="item-sticking-flow">Sticking: <code>{item.sticking}</code> ({item.accent})</span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                    <div class="item-action-btns">
+                      <button type="button" class="item-quick-btn brutal-press" data-load-rudiment={item.id} title="Load in sticking visualizer">
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i> View Flow
+                      </button>
+                      <button type="button" class="item-icon-quick-btn brutal-press" data-copy-text={`${item.name} Sticking: ${item.sticking}`} title="Copy sticking to clipboard">
+                        <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <!-- 3. Time Signatures & Meter Category -->
+          <article class="theory-category-card" data-category-id="drum-meter" data-chip="meter">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">Time Signatures & Meter</h2>
+                  <p class="category-subtitle">Simple, compound, and odd meters with pulse subdivision maps.</p>
+                </div>
+              </div>
+              <span class="category-badge">Time & Pulse</span>
+            </header>
+
+            <div class="category-items-list">
+              {drumCategories[2].items?.map((item) => (
+                <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+                  <div class="item-name-col">
+                    <strong class="item-name">{item.name}</strong>
+                    <span class="item-notes">{item.notes}</span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <!-- 4. Polyrhythms Category -->
+          <article class="theory-category-card" data-category-id="drum-polyrhythms" data-chip="polyrhythms">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-code-fork" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">Polyrhythms & Independence</h2>
+                  <p class="category-subtitle">Cross-pulse coordination, mnemonics and 4-way limb independence.</p>
+                </div>
+              </div>
+              <span class="category-badge">Coordination</span>
+            </header>
+
+            <div class="category-items-list">
+              {drumCategories[3].items?.map((item) => (
+                <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+                  <div class="item-name-col">
+                    <strong class="item-name">{item.name}</strong>
+                    <span class="item-notes">{item.notes}</span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <!-- 5. Groove Templates Category -->
+          <article class="theory-category-card" data-category-id="drum-grooves" data-chip="grooves">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-sliders" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">Groove Templates & Feels</h2>
+                  <p class="category-subtitle">Standard styles, syncopations and groove pocket structures.</p>
+                </div>
+              </div>
+              <span class="category-badge">Styles & Pocket</span>
+            </header>
+
+            <div class="category-items-list">
+              {drumCategories[4].items?.map((item) => (
+                <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+                  <div class="item-name-col">
+                    <strong class="item-name">{item.name}</strong>
+                    <span class="item-notes">{item.notes}</span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                    {item.id && (
+                      <div class="item-action-btns">
+                        <button type="button" class="item-quick-btn brutal-press" data-load-groove={item.id} title="Load into beat grid">
+                          <i class="fa-solid fa-eye" aria-hidden="true"></i> View Groove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <!-- 6. Subdivisions Category -->
+          <article class="theory-category-card" data-category-id="drum-subdivisions" data-chip="subdivisions">
+            <header class="category-header">
+              <div class="category-title-wrap">
+                <div class="category-icon-box"><i class="fa-solid fa-wave-square" aria-hidden="true"></i></div>
+                <div>
+                  <h2 class="category-title">Subdivisions & Dynamics</h2>
+                  <p class="category-subtitle">Grid timing, ghost note drops and accented whip strokes.</p>
+                </div>
+              </div>
+              <span class="category-badge">Accents & Feel</span>
+            </header>
+
+            <div class="category-items-list">
+              {drumCategories[5].items?.map((item) => (
+                <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+                  <div class="item-name-col">
+                    <strong class="item-name">{item.name}</strong>
+                    <span class="item-notes">{item.notes}</span>
+                  </div>
+                  <div class="item-actions-col">
+                    <code class="item-formula">{item.formula}</code>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <!-- Empty Search State -->
+        <div class="theory-empty-state" id="theoryEmptyState" hidden>
+          <div class="empty-state-card">
+            <div class="empty-icon-box" aria-hidden="true">🔍</div>
+            <h3 class="empty-title">NO MATCHING TOPICS</h3>
+            <p class="empty-desc" id="theoryEmptyDesc">No theory categories match your search.</p>
+            <button type="button" class="empty-reset-btn brutal-press" id="theoryResetSearchBtn">
+              CLEAR SEARCH
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <ToastContainer />
+</BaseLayout>
+
+<script>
+  import { initTheme, toggleTheme, getCurrentTheme } from '../scripts/controllers/themeController.js';
+
+  function initTheoryInteractive() {
+    // Initialize Theme support & update UI icon
+    initTheme();
+    const themeToggleBtn = document.getElementById('theoryThemeToggleBtn');
+    const themeIcon = document.getElementById('theoryThemeIcon');
+
+    function syncThemeIcon() {
+      const isDark = getCurrentTheme() === 'dark';
+      if (themeIcon) {
+        themeIcon.className = `fa-solid ${isDark ? 'fa-sun' : 'fa-moon'}`;
+      }
+    }
+    syncThemeIcon();
+    window.addEventListener('kins:theme-change', syncThemeIcon);
+
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        toggleTheme();
+        syncThemeIcon();
+      });
+    }
+
+    const guitarTabBtn = document.getElementById('guitarTabBtn');
+    const drumsTabBtn = document.getElementById('drumsTabBtn');
+    const guitarPanel = document.getElementById('guitarPanel');
+    const drumsPanel = document.getElementById('drumsPanel');
+    const guitarChipsRow = document.getElementById('guitarChipsRow');
+    const drumsChipsRow = document.getElementById('drumsChipsRow');
+
+    const topbar = document.getElementById('theoryTopbar');
+    const searchContainer = document.getElementById('theorySearchContainer');
+    const searchToggleBtn = document.getElementById('theorySearchToggleBtn');
+    const searchInput = document.getElementById('theorySearchInput') as HTMLInputElement | null;
+    const emptyState = document.getElementById('theoryEmptyState');
+    const emptyDesc = document.getElementById('theoryEmptyDesc');
+    const resetSearchBtn = document.getElementById('theoryResetSearchBtn');
+
+    let activeInstrument = 'guitar';
+    let isSearchOpen = false;
+
+    // Web Audio Synthesizer Engine (Lightweight, pure Web Audio)
+    let audioCtx: AudioContext | null = null;
+
+    function getAudioContext(): AudioContext {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // Pluck a guitar frequency tone with string resonance envelope
+    function playTone(freq: number, duration: number = 0.8, delay: number = 0) {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime + delay;
+        
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        // Warm triangle-saw pluck harmonic
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(0.28, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start(now);
+        osc.stop(now + duration + 0.05);
+      } catch {}
+    }
+
+    // Drum sound synthesizers
+    function playDrumSound(type: string, delay: number = 0) {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime + delay;
+
+        if (type === 'kick') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(38, now + 0.12);
+          gain.gain.setValueAtTime(0.6, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.36);
+        } else if (type === 'snare' || type === 'ghost') {
+          const isGhost = type === 'ghost';
+          // Noise component
+          const bufferSize = ctx.sampleRate * 0.18;
+          const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+          const noise = ctx.createBufferSource();
+          noise.buffer = noiseBuffer;
+          const noiseFilter = ctx.createBiquadFilter();
+          noiseFilter.type = 'highpass';
+          noiseFilter.frequency.value = 1000;
+          const noiseGain = ctx.createGain();
+          const vol = isGhost ? 0.12 : 0.45;
+          noiseGain.gain.setValueAtTime(vol, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + (isGhost ? 0.08 : 0.2));
+          noise.connect(noiseFilter);
+          noiseFilter.connect(noiseGain);
+          noiseGain.connect(ctx.destination);
+          noise.start(now);
+          noise.stop(now + 0.22);
+
+          // Body tone
+          const osc = ctx.createOscillator();
+          const oscGain = ctx.createGain();
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + 0.08);
+          oscGain.gain.setValueAtTime(isGhost ? 0.08 : 0.3, now);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.connect(oscGain);
+          oscGain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.13);
+        } else if (type === 'hihat' || type === 'ride') {
+          const isRide = type === 'ride';
+          const bufferSize = ctx.sampleRate * (isRide ? 0.3 : 0.05);
+          const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+          const noise = ctx.createBufferSource();
+          noise.buffer = noiseBuffer;
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'highpass';
+          filter.frequency.value = isRide ? 6000 : 8500;
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(isRide ? 0.25 : 0.35, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + (isRide ? 0.28 : 0.06));
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          noise.start(now);
+          noise.stop(now + (isRide ? 0.3 : 0.07));
+        }
+      } catch {}
+    }
+
+    // Switch Instrument Tabs
+    function setInstrument(inst: string) {
+      activeInstrument = inst;
+      if (inst === 'guitar') {
+        guitarTabBtn?.classList.add('active');
+        guitarTabBtn?.setAttribute('aria-selected', 'true');
+        drumsTabBtn?.classList.remove('active');
+        drumsTabBtn?.setAttribute('aria-selected', 'false');
+
+        if (guitarPanel) {
+          guitarPanel.hidden = false;
+          guitarPanel.classList.add('active');
+        }
+        if (drumsPanel) {
+          drumsPanel.hidden = true;
+          drumsPanel.classList.remove('active');
+        }
+
+        if (guitarChipsRow) guitarChipsRow.hidden = false;
+        if (drumsChipsRow) drumsChipsRow.hidden = true;
+      } else {
+        drumsTabBtn?.classList.add('active');
+        drumsTabBtn?.setAttribute('aria-selected', 'true');
+        guitarTabBtn?.classList.remove('active');
+        guitarTabBtn?.setAttribute('aria-selected', 'false');
+
+        if (drumsPanel) {
+          drumsPanel.hidden = false;
+          drumsPanel.classList.add('active');
+        }
+        if (guitarPanel) {
+          guitarPanel.hidden = true;
+          guitarPanel.classList.remove('active');
+        }
+
+        if (drumsChipsRow) drumsChipsRow.hidden = false;
+        if (guitarChipsRow) guitarChipsRow.hidden = true;
+      }
+
+      resetCategoryChips();
+      applySearchFilter();
+    }
+
+    if (guitarTabBtn) guitarTabBtn.addEventListener('click', () => setInstrument('guitar'));
+    if (drumsTabBtn) drumsTabBtn.addEventListener('click', () => setInstrument('drums'));
+
+    // Category Filter Chips
+    function handleChipClick(e: MouseEvent) {
+      const chipBtn = (e.target as HTMLElement).closest('.theory-chip-btn');
+      if (!chipBtn) return;
+      const parentRow = chipBtn.closest('.chip-scroll-row');
+      if (parentRow) {
+        parentRow.querySelectorAll('.theory-chip-btn').forEach((b) => b.classList.remove('active'));
+      }
+      chipBtn.classList.add('active');
+
+      const filter = chipBtn.getAttribute('data-filter');
+      const currentPanel = activeInstrument === 'guitar' ? guitarPanel : drumsPanel;
+      if (!currentPanel) return;
+      const cards = currentPanel.querySelectorAll('.theory-category-card');
+
+      cards.forEach((card) => {
+        const cardChip = card.getAttribute('data-chip');
+        if (filter === 'all' || cardChip === filter) {
+          (card as HTMLElement).hidden = false;
+        } else {
+          (card as HTMLElement).hidden = true;
+        }
+      });
+    }
+
+    if (guitarChipsRow) guitarChipsRow.addEventListener('click', handleChipClick);
+    if (drumsChipsRow) drumsChipsRow.addEventListener('click', handleChipClick);
+
+    function resetCategoryChips() {
+      const activeRow = activeInstrument === 'guitar' ? guitarChipsRow : drumsChipsRow;
+      if (!activeRow) return;
+      activeRow.querySelectorAll('.theory-chip-btn').forEach((b, idx) => {
+        if (idx === 0) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+      const currentPanel = activeInstrument === 'guitar' ? guitarPanel : drumsPanel;
+      if (currentPanel) {
+        currentPanel.querySelectorAll('.theory-category-card').forEach((c) => ((c as HTMLElement).hidden = false));
+      }
+    }
+
+    // In-Section Sub-Filters
+    document.querySelectorAll('.section-subfilters-row').forEach((row) => {
+      row.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('.subfilter-btn');
+        if (!btn) return;
+        row.querySelectorAll('.subfilter-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const type = btn.getAttribute('data-type');
+        const listId = row.getAttribute('data-target-list');
+        if (!listId) return;
+        const list = document.getElementById(listId);
+        if (!list) return;
+
+        list.querySelectorAll('.theory-item-row').forEach((item) => {
+          const itemType = item.getAttribute('data-subfilter-type');
+          if (type === 'all' || itemType === type) {
+            (item as HTMLElement).hidden = false;
+          } else {
+            (item as HTMLElement).hidden = true;
+          }
+        });
+      });
+    });
+
+    // Expandable Search Logic
+    function openSearch() {
+      if (isSearchOpen) return;
+      isSearchOpen = true;
+      if (topbar) topbar.classList.add('is-search-active');
+      if (searchContainer) searchContainer.classList.add('is-expanded');
+      if (searchToggleBtn) {
+        searchToggleBtn.setAttribute('aria-expanded', 'true');
+        searchToggleBtn.setAttribute('aria-label', 'Close search');
+      }
+      setTimeout(() => searchInput?.focus(), 50);
+    }
+
+    function closeSearch() {
+      if (!isSearchOpen) return;
+      isSearchOpen = false;
+      if (topbar) topbar.classList.remove('is-search-active');
+      if (searchContainer) searchContainer.classList.remove('is-expanded');
+      if (searchToggleBtn) {
+        searchToggleBtn.setAttribute('aria-expanded', 'false');
+        searchToggleBtn.setAttribute('aria-label', 'Open search');
+      }
+      if (searchInput) searchInput.value = '';
+      applySearchFilter();
+    }
+
+    if (searchToggleBtn) {
+      searchToggleBtn.addEventListener('click', () => (isSearchOpen ? closeSearch() : openSearch()));
+    }
+    if (resetSearchBtn) resetSearchBtn.addEventListener('click', closeSearch);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && !isSearchOpen && (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA')) {
+        e.preventDefault();
+        openSearch();
+      } else if (e.key === 'Escape' && isSearchOpen) {
+        closeSearch();
+      }
+    });
+
+    // Real-time Search Filtering
+    function applySearchFilter() {
+      if (!searchInput) return;
+      const query = searchInput.value.trim().toLowerCase();
+      const currentPanel = activeInstrument === 'guitar' ? guitarPanel : drumsPanel;
+      if (!currentPanel) return;
+      const categoryCards = currentPanel.querySelectorAll('.theory-category-card');
+
+      let visibleCount = 0;
+
+      if (!query) {
+        categoryCards.forEach((card) => {
+          (card as HTMLElement).hidden = false;
+          card.querySelectorAll('.theory-item-row').forEach((r) => ((r as HTMLElement).hidden = false));
+        });
+        if (emptyState) emptyState.hidden = true;
+        return;
+      }
+
+      categoryCards.forEach((card) => {
+        const title = card.querySelector('.category-title')?.textContent?.toLowerCase() || '';
+        const badge = card.querySelector('.category-badge')?.textContent?.toLowerCase() || '';
+        const items = card.querySelectorAll('.theory-item-row');
+        let cardHasMatch = false;
+
+        const catMatches = title.includes(query) || badge.includes(query);
+
+        items.forEach((item) => {
+          const target = item.getAttribute('data-search-target')?.toLowerCase() || '';
+          if (catMatches || target.includes(query)) {
+            (item as HTMLElement).hidden = false;
+            cardHasMatch = true;
+          } else {
+            (item as HTMLElement).hidden = true;
+          }
+        });
+
+        if (cardHasMatch || catMatches) {
+          (card as HTMLElement).hidden = false;
+          visibleCount++;
+        } else {
+          (card as HTMLElement).hidden = true;
+        }
+      });
+
+      if (emptyState) {
+        if (visibleCount === 0) {
+          emptyState.hidden = false;
+          if (emptyDesc) emptyDesc.textContent = `No ${activeInstrument} theory topics match "${query}".`;
+        } else {
+          emptyState.hidden = true;
+        }
+      }
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applySearchFilter);
+
+    // Clipboard copy with feedback
+    document.addEventListener('click', async (e) => {
+      const copyBtn = (e.target as HTMLElement).closest('[data-copy-text]');
+      if (!copyBtn) return;
+      const textToCopy = copyBtn.getAttribute('data-copy-text');
+      if (!textToCopy) return;
+
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        const { showToast } = await import('../scripts/controllers/toast.js');
+        showToast('✓ Copied to clipboard!', 'success');
+      } catch {
+        const { showToast } = await import('../scripts/controllers/toast.js');
+        showToast('✓ Copied!', 'info');
+      }
+    });
+
+    // =========================================================================
+    // GUITAR FRETBOARD & SOUND ENGINE
+    // =========================================================================
+    const FRET_NOTES = [
+      ['E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B', 'C', 'C#', 'D', 'Eb', 'E'],
+      ['B', 'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'],
+      ['G', 'Ab', 'A', 'Bb', 'B', 'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G'],
+      ['D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B', 'C', 'C#', 'D'],
+      ['A', 'Bb', 'B', 'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A'],
+      ['E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B', 'C', 'C#', 'D', 'Eb', 'E'],
+    ];
+
+    const STRING_BASE_FREQS = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41]; // High E (str 0) to Low E (str 5)
+
+    function getFretFreq(strIndex: number, fret: number): number {
+      const base = STRING_BASE_FREQS[strIndex];
+      return base * Math.pow(2, fret / 12);
+    }
+
+    const SCALES_DATA: Record<string, { name: string; intervals: number[]; degrees: Record<number, string> }> = {
+      'pentatonic-minor': { name: 'Minor Pentatonic', intervals: [0, 3, 5, 7, 10], degrees: { 0: 'R', 3: '♭3', 5: '4', 7: '5', 10: '♭7' } },
+      'pentatonic-major': { name: 'Major Pentatonic', intervals: [0, 2, 4, 7, 9], degrees: { 0: 'R', 2: '2', 4: '3', 7: '5', 9: '6' } },
+      'blues': { name: 'Blues Scale', intervals: [0, 3, 5, 6, 7, 10], degrees: { 0: 'R', 3: '♭3', 5: '4', 6: '♭5', 7: '5', 10: '♭7' } },
+      'natural-minor': { name: 'Natural Minor', intervals: [0, 2, 3, 5, 7, 8, 10], degrees: { 0: 'R', 2: '2', 3: '♭3', 5: '4', 7: '5', 8: '♭6', 10: '♭7' } },
+      'major': { name: 'Major (Ionian)', intervals: [0, 2, 4, 5, 7, 9, 11], degrees: { 0: 'R', 2: '2', 4: '3', 5: '4', 7: '5', 9: '6', 11: '7' } },
+      'dorian': { name: 'Dorian Mode', intervals: [0, 2, 3, 5, 7, 9, 10], degrees: { 0: 'R', 2: '2', 3: '♭3', 5: '4', 7: '5', 9: '6', 10: '♭7' } },
+      'mixolydian': { name: 'Mixolydian Mode', intervals: [0, 2, 4, 5, 7, 9, 10], degrees: { 0: 'R', 2: '2', 4: '3', 5: '4', 7: '5', 9: '6', 10: '♭7' } },
+    };
+
+    const CHORDS_DATA: Record<string, { name: string; root: string; frets: (number | string)[]; labels: string[]; desc: string }> = {
+      'c-major': { name: 'C Major', root: 'C', frets: ['✕', 3, 2, 0, 1, 0], labels: ['✕', 'R', '3', '5', 'R', '3'], desc: 'Open C Major chord with muted Low E string.' },
+      'g-major': { name: 'G Major', root: 'G', frets: [3, 2, 0, 0, 0, 3], labels: ['R', '3', '5', 'R', '3', 'R'], desc: 'Open G Major chord across all 6 strings.' },
+      'd-major': { name: 'D Major', root: 'D', frets: ['✕', '✕', 0, 2, 3, 2], labels: ['✕', '✕', 'R', '5', 'R', '3'], desc: 'Open D Major chord with muted Low E and A strings.' },
+      'a-minor': { name: 'A Minor', root: 'A', frets: ['✕', 0, 2, 2, 1, 0], labels: ['✕', 'R', '5', 'R', '♭3', '5'], desc: 'Open A Minor chord with muted Low E string.' },
+      'e-minor': { name: 'E Minor', root: 'E', frets: [0, 2, 2, 0, 0, 0], labels: ['R', '5', 'R', '♭3', '5', 'R'], desc: 'Open E Minor chord on lowest open string.' },
+      'f-barre': { name: 'F Major (Barre)', root: 'F', frets: [1, 3, 3, 2, 1, 1], labels: ['R', '5', 'R', '3', '5', 'R'], desc: 'Full 1st fret index barre across 6 strings.' },
+      'bm-barre': { name: 'B Minor (Barre)', root: 'B', frets: ['✕', 2, 4, 4, 3, 2], labels: ['✕', 'R', '5', 'R', '♭3', '5'], desc: '2nd fret index barre on 5 strings (A-Shape).' },
+      'a7': { name: 'A7 Dominant', root: 'A', frets: ['✕', 0, 2, 0, 2, 0], labels: ['✕', 'R', '5', '♭7', '3', '5'], desc: 'Blues turnaround open dominant 7th.' },
+      'cmaj7': { name: 'Cmaj7', root: 'C', frets: ['✕', 3, 2, 0, 0, 0], labels: ['✕', 'R', '3', '5', '7', '3'], desc: 'Lush major 7th acoustic harmony.' },
+      'e5': { name: 'E5 Power Chord', root: 'E', frets: [0, 2, 2, '✕', '✕', '✕'], labels: ['R', '5', 'R', '✕', '✕', '✕'], desc: 'High-gain rock and punk power chord.' },
+    };
+
+    const CAGED_DATA: Record<string, { name: string; frets: (number | string)[]; labels: string[]; desc: string }> = {
+      'c-shape': { name: 'C Shape Position', frets: ['✕', 3, 2, 0, 1, 0], labels: ['✕', 'R', '3', '5', 'R', '3'], desc: 'Root on 5th string (Fret 3 for C).' },
+      'a-shape': { name: 'A Shape Position', frets: ['✕', 0, 2, 2, 2, 0], labels: ['✕', 'R', '5', 'R', '3', '5'], desc: 'Root on 5th string (Fret 0 for A / Fret 3 for C).' },
+      'g-shape': { name: 'G Shape Position', frets: [3, 2, 0, 0, 0, 3], labels: ['R', '3', '5', 'R', '3', 'R'], desc: 'Root on 6th string (Fret 3 for G).' },
+      'e-shape': { name: 'E Shape Position', frets: [0, 2, 2, 1, 0, 0], labels: ['R', '5', 'R', '3', '5', 'R'], desc: 'Root on 6th string (Fret 0 for E / Fret 8 for C).' },
+      'd-shape': { name: 'D Shape Position', frets: ['✕', '✕', 0, 2, 3, 2], labels: ['✕', '✕', 'R', '5', 'R', '3'], desc: 'Root on 4th string (Fret 0 for D / Fret 10 for C).' },
+    };
+
+    const CHROMATIC_SCALE = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+    let currentFretMode = 'scales';
+    let currentRoot = 'A';
+    let currentScaleKey = 'pentatonic-minor';
+    let currentChordKey = 'c-major';
+    let currentCagedKey = 'e-shape';
+
+    const fretModeSelector = document.getElementById('fretModeSelector');
+    const guitarRootGroup = document.getElementById('guitarRootGroup');
+    const guitarRootPills = document.getElementById('guitarRootPills');
+    const guitarPresetLabel = document.getElementById('guitarPresetLabel');
+    const guitarPresetPills = document.getElementById('guitarPresetPills');
+    const guitarFretboardCanvas = document.getElementById('guitarFretboardCanvas');
+    const guitarFretSummary = document.getElementById('guitarFretSummary');
+    const guitarStrumBtn = document.getElementById('guitarStrumBtn');
+
+    if (fretModeSelector) {
+      fretModeSelector.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('.sub-pill-btn');
+        if (!btn) return;
+        fretModeSelector.querySelectorAll('.sub-pill-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFretMode = btn.getAttribute('data-fret-mode') || 'scales';
+        renderGuitarControls();
+        renderFretboard();
+      });
+    }
+
+    function renderGuitarControls() {
+      if (!guitarPresetPills) return;
+      guitarPresetPills.innerHTML = '';
+
+      if (currentFretMode === 'scales') {
+        if (guitarRootGroup) (guitarRootGroup as HTMLElement).hidden = false;
+        if (guitarPresetLabel) guitarPresetLabel.textContent = 'SCALE:';
+        Object.keys(SCALES_DATA).forEach((key) => {
+          const item = SCALES_DATA[key];
+          const btn = document.createElement('button');
+          btn.className = `fret-pill-btn ${key === currentScaleKey ? 'active' : ''} brutal-press`;
+          btn.textContent = item.name;
+          btn.addEventListener('click', () => {
+            currentScaleKey = key;
+            guitarPresetPills.querySelectorAll('.fret-pill-btn').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderFretboard();
+          });
+          guitarPresetPills.appendChild(btn);
+        });
+      } else if (currentFretMode === 'chords') {
+        if (guitarRootGroup) (guitarRootGroup as HTMLElement).hidden = true;
+        if (guitarPresetLabel) guitarPresetLabel.textContent = 'CHORD:';
+        Object.keys(CHORDS_DATA).forEach((key) => {
+          const item = CHORDS_DATA[key];
+          const btn = document.createElement('button');
+          btn.className = `fret-pill-btn ${key === currentChordKey ? 'active' : ''} brutal-press`;
+          btn.textContent = item.name;
+          btn.addEventListener('click', () => {
+            currentChordKey = key;
+            guitarPresetPills.querySelectorAll('.fret-pill-btn').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderFretboard();
+          });
+          guitarPresetPills.appendChild(btn);
+        });
+      } else if (currentFretMode === 'caged') {
+        if (guitarRootGroup) (guitarRootGroup as HTMLElement).hidden = true;
+        if (guitarPresetLabel) guitarPresetLabel.textContent = 'SHAPE:';
+        Object.keys(CAGED_DATA).forEach((key) => {
+          const item = CAGED_DATA[key];
+          const btn = document.createElement('button');
+          btn.className = `fret-pill-btn ${key === currentCagedKey ? 'active' : ''} brutal-press`;
+          btn.textContent = item.name;
+          btn.addEventListener('click', () => {
+            currentCagedKey = key;
+            guitarPresetPills.querySelectorAll('.fret-pill-btn').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderFretboard();
+          });
+          guitarPresetPills.appendChild(btn);
+        });
+      }
+    }
+
+    if (guitarRootPills) {
+      guitarRootPills.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('.fret-pill-btn');
+        if (!btn) return;
+        guitarRootPills.querySelectorAll('.fret-pill-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentRoot = btn.getAttribute('data-root') || 'A';
+        renderFretboard();
+      });
+    }
+
+    function renderFretboard() {
+      if (!guitarFretboardCanvas) return;
+
+      const stringNames = ['E', 'B', 'G', 'D', 'A', 'E'];
+      const stringThickness = [1.2, 1.5, 1.8, 2.2, 2.6, 3.0];
+
+      let html = '<div class="fret-neck-grid">';
+
+      // Nut String Indicators
+      html += '<div class="fret-nut-row">';
+      html += '<div class="fret-marker-header">NUT</div>';
+
+      for (let s = 5; s >= 0; s--) {
+        let headerMark = '◯';
+        let markClass = 'open-str';
+
+        if (currentFretMode === 'chords') {
+          const chord = CHORDS_DATA[currentChordKey];
+          const strFret = chord.frets[5 - s];
+          if (strFret === '✕') {
+            headerMark = '✕';
+            markClass = 'mute-str';
+          } else if (strFret === 0) {
+            headerMark = '◯';
+            markClass = 'open-str';
+          } else {
+            headerMark = stringNames[5 - s];
+            markClass = 'fretted-str';
+          }
+        } else if (currentFretMode === 'caged') {
+          const shape = CAGED_DATA[currentCagedKey];
+          const strFret = shape.frets[5 - s];
+          if (strFret === '✕') {
+            headerMark = '✕';
+            markClass = 'mute-str';
+          } else if (strFret === 0) {
+            headerMark = '◯';
+            markClass = 'open-str';
+          } else {
+            headerMark = stringNames[5 - s];
+            markClass = 'fretted-str';
+          }
+        } else {
+          headerMark = stringNames[5 - s];
+          markClass = 'fretted-str';
+        }
+
+        html += `<div class="nut-string-indicator ${markClass}">${headerMark}</div>`;
+      }
+      html += '</div>';
+
+      // Frets columns 0 to 12
+      html += '<div class="frets-body">';
+      const singleInlays = [3, 5, 7, 9];
+
+      for (let f = 0; f <= 12; f++) {
+        html += `<div class="fret-col fret-${f}">`;
+        html += `<div class="fret-num">${f === 0 ? 'Open' : f}</div>`;
+
+        for (let s = 5; s >= 0; s--) {
+          const noteOnFret = FRET_NOTES[s][f];
+          let dotHtml = '';
+          const strIdx = 5 - s;
+          const noteFreq = getFretFreq(strIdx, f);
+
+          if (currentFretMode === 'scales') {
+            const scale = SCALES_DATA[currentScaleKey];
+            const rootIdx = CHROMATIC_SCALE.indexOf(currentRoot);
+            const noteIdx = CHROMATIC_SCALE.indexOf(noteOnFret);
+            const interval = (noteIdx - rootIdx + 12) % 12;
+
+            if (scale.intervals.includes(interval)) {
+              const deg = scale.degrees[interval];
+              const isRoot = interval === 0;
+              dotHtml = `<button type="button" class="fret-note-dot ${isRoot ? 'is-root' : 'is-scale'} brutal-press" data-freq="${noteFreq.toFixed(2)}" title="${noteOnFret} (${deg}) — Tap to hear">${isRoot ? 'R' : deg}</button>`;
+            }
+          } else if (currentFretMode === 'chords') {
+            const chord = CHORDS_DATA[currentChordKey];
+            const chordFret = chord.frets[5 - s];
+            const chordLabel = chord.labels[5 - s];
+            if (chordFret === f && chordFret !== '✕') {
+              const isRoot = chordLabel === 'R';
+              dotHtml = `<button type="button" class="fret-note-dot ${isRoot ? 'is-root' : 'is-chord'} brutal-press" data-freq="${noteFreq.toFixed(2)}" title="${noteOnFret} (${chordLabel}) — Tap to hear">${chordLabel}</button>`;
+            }
+          } else if (currentFretMode === 'caged') {
+            const shape = CAGED_DATA[currentCagedKey];
+            const shapeFret = shape.frets[5 - s];
+            const shapeLabel = shape.labels[5 - s];
+            if (shapeFret === f && shapeFret !== '✕') {
+              const isRoot = shapeLabel === 'R';
+              dotHtml = `<button type="button" class="fret-note-dot ${isRoot ? 'is-root' : 'is-chord'} brutal-press" data-freq="${noteFreq.toFixed(2)}" title="${noteOnFret} (${shapeLabel}) — Tap to hear">${shapeLabel}</button>`;
+            }
+          }
+
+          html += `
+            <div class="fret-cell" style="--str-gauge: ${stringThickness[5 - s]}px;">
+              <span class="fret-string-wire"></span>
+              ${dotHtml}
+            </div>`;
+        }
+
+        // Realistic Fret Inlay Markers
+        if (singleInlays.includes(f)) {
+          html += `<div class="fretboard-inlay-single" aria-hidden="true"></div>`;
+        } else if (f === 12) {
+          html += `<div class="fretboard-inlay-double" aria-hidden="true"><span></span><span></span></div>`;
+        }
+
+        html += '</div>';
+      }
+
+      html += '</div></div>';
+      guitarFretboardCanvas.innerHTML = html;
+
+      // Note tap to play sound
+      guitarFretboardCanvas.querySelectorAll('.fret-note-dot').forEach((dot) => {
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const freq = parseFloat(dot.getAttribute('data-freq') || '0');
+          if (freq > 0) playTone(freq, 0.75);
+        });
+      });
+
+      if (guitarFretSummary) {
+        if (currentFretMode === 'scales') {
+          const s = SCALES_DATA[currentScaleKey];
+          guitarFretSummary.textContent = `${currentRoot} ${s.name} • Formula: ${Object.values(s.degrees).join(' - ')}`;
+        } else if (currentFretMode === 'chords') {
+          const c = CHORDS_DATA[currentChordKey];
+          guitarFretSummary.textContent = `${c.name} • ${c.desc}`;
+        } else if (currentFretMode === 'caged') {
+          const g = CAGED_DATA[currentCagedKey];
+          guitarFretSummary.textContent = `${g.name} • ${g.desc}`;
+        }
+      }
+    }
+
+    // Strum chord or scale sound
+    if (guitarStrumBtn) {
+      guitarStrumBtn.addEventListener('click', () => {
+        if (currentFretMode === 'chords') {
+          const chord = CHORDS_DATA[currentChordKey];
+          let delay = 0;
+          for (let s = 0; s < 6; s++) {
+            const f = chord.frets[s];
+            if (f !== '✕' && typeof f === 'number') {
+              const freq = getFretFreq(s, f);
+              playTone(freq, 1.2, delay);
+              delay += 0.04;
+            }
+          }
+        } else if (currentFretMode === 'caged') {
+          const shape = CAGED_DATA[currentCagedKey];
+          let delay = 0;
+          for (let s = 0; s < 6; s++) {
+            const f = shape.frets[s];
+            if (f !== '✕' && typeof f === 'number') {
+              const freq = getFretFreq(s, f);
+              playTone(freq, 1.2, delay);
+              delay += 0.04;
+            }
+          }
+        } else {
+          // Play ascending scale arpeggio
+          const dots = Array.from(document.querySelectorAll('.fret-note-dot')) as HTMLElement[];
+          const freqs = dots.map(d => parseFloat(d.getAttribute('data-freq') || '0')).filter(f => f > 0);
+          const uniqueFreqs = Array.from(new Set(freqs)).sort((a, b) => a - b).slice(0, 10);
+          uniqueFreqs.forEach((freq, idx) => {
+            playTone(freq, 0.6, idx * 0.12);
+          });
+        }
+      });
+    }
+
+    // Load from catalog quick actions
+    document.addEventListener('click', (e) => {
+      const scaleBtn = (e.target as HTMLElement).closest('[data-load-scale]');
+      if (scaleBtn) {
+        const id = scaleBtn.getAttribute('data-load-scale');
+        if (id && SCALES_DATA[id]) {
+          currentFretMode = 'scales';
+          currentScaleKey = id;
+          fretModeSelector?.querySelectorAll('.sub-pill-btn').forEach(b => {
+            if (b.getAttribute('data-fret-mode') === 'scales') b.classList.add('active');
+            else b.classList.remove('active');
+          });
+          renderGuitarControls();
+          renderFretboard();
+          document.querySelector('[data-category-id="guitar-fretboard-hero"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+
+      const chordBtn = (e.target as HTMLElement).closest('[data-load-chord]');
+      if (chordBtn) {
+        const id = chordBtn.getAttribute('data-load-chord');
+        if (id && CHORDS_DATA[id]) {
+          currentFretMode = 'chords';
+          currentChordKey = id;
+          fretModeSelector?.querySelectorAll('.sub-pill-btn').forEach(b => {
+            if (b.getAttribute('data-fret-mode') === 'chords') b.classList.add('active');
+            else b.classList.remove('active');
+          });
+          renderGuitarControls();
+          renderFretboard();
+          document.querySelector('[data-category-id="guitar-fretboard-hero"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+
+      const cagedBtn = (e.target as HTMLElement).closest('[data-load-caged]');
+      if (cagedBtn) {
+        const id = cagedBtn.getAttribute('data-load-caged');
+        if (id && CAGED_DATA[id]) {
+          currentFretMode = 'caged';
+          currentCagedKey = id;
+          fretModeSelector?.querySelectorAll('.sub-pill-btn').forEach(b => {
+            if (b.getAttribute('data-fret-mode') === 'caged') b.classList.add('active');
+            else b.classList.remove('active');
+          });
+          renderGuitarControls();
+          renderFretboard();
+          document.querySelector('[data-category-id="guitar-fretboard-hero"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+
+      // Alternate tuning tone playback
+      const tuningBtn = (e.target as HTMLElement).closest('[data-play-tuning]');
+      if (tuningBtn) {
+        try {
+          const pitches = JSON.parse(tuningBtn.getAttribute('data-play-tuning') || '[]');
+          pitches.forEach((freq: number, i: number) => {
+            playTone(freq, 1.4, i * 0.28);
+          });
+        } catch {}
+      }
+    });
+
+    // =========================================================================
+    // INTERACTIVE CIRCLE OF FIFTHS
+    // =========================================================================
+    const CIRCLE_DATA = [
+      { key: 'C', minor: 'Am', acc: '0 Sharps / 0 Flats' },
+      { key: 'G', minor: 'Em', acc: '1 Sharp (F♯)' },
+      { key: 'D', minor: 'Bm', acc: '2 Sharps (F♯, C♯)' },
+      { key: 'A', minor: 'F♯m', acc: '3 Sharps (F♯, C♯, G♯)' },
+      { key: 'E', minor: 'C♯m', acc: '4 Sharps (F♯, C♯, G♯, D♯)' },
+      { key: 'B', minor: 'G♯m', acc: '5 Sharps (F♯, C♯, G♯, D♯, A♯)' },
+      { key: 'F♯ / G♭', minor: 'D♯m / E♭m', acc: '6 Sharps / 6 Flats' },
+      { key: 'D♭', minor: 'B♭m', acc: '5 Flats (B♭, E♭, A♭, D♭, G♭)' },
+      { key: 'A♭', minor: 'Fm', acc: '4 Flats (B♭, E♭, A♭, D♭)' },
+      { key: 'E♭', minor: 'Cm', acc: '3 Flats (B♭, E♭, A♭)' },
+      { key: 'B♭', minor: 'Gm', acc: '2 Flats (B♭, E♭)' },
+      { key: 'F', minor: 'Dm', acc: '1 Flat (B♭)' },
+    ];
+
+    const circleGrid = document.getElementById('circleKeysGrid');
+    const circleDetailKey = document.getElementById('circleDetailKey');
+    const circleDetailMinor = document.getElementById('circleDetailMinor');
+    const circleDetailAcc = document.getElementById('circleDetailAcc');
+
+    if (circleGrid) {
+      circleGrid.innerHTML = '';
+      CIRCLE_DATA.forEach((item, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `circle-key-btn ${idx === 0 ? 'active' : ''} brutal-press`;
+        btn.innerHTML = `<span class="circle-key-name">${item.key}</span><span class="circle-minor-name">${item.minor}</span>`;
+        btn.addEventListener('click', () => {
+          circleGrid.querySelectorAll('.circle-key-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (circleDetailKey) circleDetailKey.textContent = `Key of ${item.key} Major`;
+          if (circleDetailMinor) circleDetailMinor.textContent = `Relative Minor: ${item.minor}`;
+          if (circleDetailAcc) circleDetailAcc.textContent = `Accidentals: ${item.acc}`;
+        });
+        circleGrid.appendChild(btn);
+      });
+    }
+
+    // =========================================================================
+    // DRUMS STEP GRID & STICKING AUDIO SEQUENCER
+    // =========================================================================
+    const DRUM_GROOVES: Record<string, { name: string; desc: string; steps: number; grid: Record<string, number[]> }> = {
+      'rock-8': {
+        name: 'Standard 8th Rock',
+        desc: 'Rock groove • Kick on 1 & 3, Snare on 2 & 4, Hi-Hat straight 8ths.',
+        steps: 16,
+        grid: {
+          'Hi-Hat':  [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+          'Snare':   [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+          'Kick':    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+          'Ghost SD':[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        },
+      },
+      'funk-16': {
+        name: '16th Funk Pocket',
+        desc: 'Syncopated funk • Ghost notes on snare creating continuous dynamic drive.',
+        steps: 16,
+        grid: {
+          'Hi-Hat':  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+          'Snare':   [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+          'Kick':    [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+          'Ghost SD':[0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0],
+        },
+      },
+      'jazz-swing': {
+        name: 'Jazz Ride Swing',
+        desc: 'Swing feel ("spang-a-lang") • Feathered kick and hi-hat chicks on 2 & 4.',
+        steps: 16,
+        grid: {
+          'Ride':    [1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1],
+          'Snare':   [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+          'Hi-Hat':  [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+          'Kick':    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        },
+      },
+      'purdie-shuffle': {
+        name: 'Half-Time Purdie Shuffle',
+        desc: 'Bernard Purdie shuffle • Triplets with backbeat on 3 and ghost rolls.',
+        steps: 12,
+        grid: {
+          'Hi-Hat':  [1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1],
+          'Snare':   [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+          'Ghost SD':[0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+          'Kick':    [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+        },
+      },
+      'bossa-nova': {
+        name: 'Bossa Nova / Latin',
+        desc: 'Latin groove • Cross-stick syncopation over steady bass pulse.',
+        steps: 16,
+        grid: {
+          'Hi-Hat':  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+          'Snare':   [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0],
+          'Kick':    [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
+          'Ghost SD':[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        },
+      },
+    };
+
+    const DRUM_RUDIMENTS_FLOW: Record<string, { name: string; sticking: string[]; accents: number[] }> = {
+      'single-stroke': { name: 'Single Stroke Roll', sticking: ['R', 'L', 'R', 'L', 'R', 'L', 'R', 'L'], accents: [1, 0, 0, 0, 1, 0, 0, 0] },
+      'double-stroke': { name: 'Double Stroke Roll', sticking: ['R', 'R', 'L', 'L', 'R', 'R', 'L', 'L'], accents: [1, 0, 1, 0, 1, 0, 1, 0] },
+      'paradiddle': { name: 'Single Paradiddle', sticking: ['R', 'L', 'R', 'R', 'L', 'R', 'L', 'L'], accents: [1, 0, 0, 0, 1, 0, 0, 0] },
+      'double-paradiddle': { name: 'Double Paradiddle', sticking: ['R', 'L', 'R', 'L', 'R', 'R', 'L', 'R', 'L', 'R', 'L', 'L'], accents: [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0] },
+      'flam': { name: 'Flam Tap', sticking: ['lR', 'R', 'rL', 'L', 'lR', 'R', 'rL', 'L'], accents: [1, 0, 1, 0, 1, 0, 1, 0] },
+      'drag': { name: 'Single Drag Tap', sticking: ['llR', 'L', 'rrL', 'R', 'llR', 'L', 'rrL', 'R'], accents: [1, 0, 1, 0, 1, 0, 1, 0] },
+      'paradiddle-diddle': { name: 'Paradiddle-Diddle', sticking: ['R', 'L', 'R', 'R', 'L', 'L'], accents: [1, 0, 0, 0, 0, 0] },
+    };
+
+    let currentDrumMode = 'grid';
+    let currentDrumGrooveKey = 'rock-8';
+    let currentRudimentKey = 'paradiddle';
+    let drumBpm = 110;
+    let isDrumPlaying = false;
+    let drumIntervalId: number | null = null;
+    let currentStepIdx = 0;
+
+    const drumModeSelector = document.getElementById('drumModeSelector');
+    const drumPresetLabel = document.getElementById('drumPresetLabel');
+    const drumPresetPills = document.getElementById('drumPresetPills');
+    const drumVisualCanvas = document.getElementById('drumVisualCanvas');
+    const drumSummaryText = document.getElementById('drumSummaryText');
+    const drumPlayToggleBtn = document.getElementById('drumPlayToggleBtn');
+    const drumPlayIcon = document.getElementById('drumPlayIcon');
+    const drumPlayText = document.getElementById('drumPlayText');
+    const drumBpmDisplay = document.getElementById('drumBpmDisplay');
+    const drumBpmMinus = document.getElementById('drumBpmMinus');
+    const drumBpmPlus = document.getElementById('drumBpmPlus');
+
+    if (drumModeSelector) {
+      drumModeSelector.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('.sub-pill-btn');
+        if (!btn) return;
+        stopDrumPlayback();
+        drumModeSelector.querySelectorAll('.sub-pill-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentDrumMode = btn.getAttribute('data-drum-mode') || 'grid';
+        renderDrumControls();
+        renderDrumVisual();
+      });
+    }
+
+    function updateBpm(delta: number) {
+      drumBpm = Math.max(50, Math.min(220, drumBpm + delta));
+      if (drumBpmDisplay) drumBpmDisplay.textContent = `${drumBpm} BPM`;
+      if (isDrumPlaying) {
+        stopDrumPlayback();
+        startDrumPlayback();
+      }
+    }
+
+    if (drumBpmMinus) drumBpmMinus.addEventListener('click', () => updateBpm(-5));
+    if (drumBpmPlus) drumBpmPlus.addEventListener('click', () => updateBpm(5));
+
+    function renderDrumControls() {
+      if (!drumPresetPills) return;
+      drumPresetPills.innerHTML = '';
+
+      if (currentDrumMode === 'grid') {
+        if (drumPresetLabel) drumPresetLabel.textContent = 'GROOVE STYLE:';
+        Object.keys(DRUM_GROOVES).forEach((key) => {
+          const item = DRUM_GROOVES[key];
+          const btn = document.createElement('button');
+          btn.className = `fret-pill-btn ${key === currentDrumGrooveKey ? 'active' : ''} brutal-press`;
+          btn.textContent = item.name;
+          btn.addEventListener('click', () => {
+            stopDrumPlayback();
+            currentDrumGrooveKey = key;
+            drumPresetPills.querySelectorAll('.fret-pill-btn').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderDrumVisual();
+          });
+          drumPresetPills.appendChild(btn);
+        });
+      } else if (currentDrumMode === 'sticking') {
+        if (drumPresetLabel) drumPresetLabel.textContent = 'RUDIMENT:';
+        Object.keys(DRUM_RUDIMENTS_FLOW).forEach((key) => {
+          const item = DRUM_RUDIMENTS_FLOW[key];
+          const btn = document.createElement('button');
+          btn.className = `fret-pill-btn ${key === currentRudimentKey ? 'active' : ''} brutal-press`;
+          btn.textContent = item.name;
+          btn.addEventListener('click', () => {
+            stopDrumPlayback();
+            currentRudimentKey = key;
+            drumPresetPills.querySelectorAll('.fret-pill-btn').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderDrumVisual();
+          });
+          drumPresetPills.appendChild(btn);
+        });
+      } else if (currentDrumMode === 'polyrhythm') {
+        if (drumPresetLabel) drumPresetLabel.textContent = 'CROSS-RHYTHM:';
+        ['3:2 Cross-Rhythm', '4:3 Metric'].forEach((name, idx) => {
+          const btn = document.createElement('button');
+          btn.className = `fret-pill-btn ${idx === 0 ? 'active' : ''} brutal-press`;
+          btn.textContent = name;
+          btn.addEventListener('click', () => {
+            stopDrumPlayback();
+            drumPresetPills.querySelectorAll('.fret-pill-btn').forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderDrumVisual();
+          });
+          drumPresetPills.appendChild(btn);
+        });
+      }
+    }
+
+    function renderDrumVisual() {
+      if (!drumVisualCanvas) return;
+
+      if (currentDrumMode === 'grid') {
+        const groove = DRUM_GROOVES[currentDrumGrooveKey];
+        const stepCount = groove.steps;
+        let html = '<div class="drum-grid-matrix">';
+
+        // Header Beat Labels
+        html += '<div class="drum-matrix-row drum-matrix-header">';
+        html += '<div class="drum-voice-label">VOICE</div>';
+        for (let i = 0; i < stepCount; i++) {
+          const beatNum = Math.floor(i / 4) + 1;
+          const sub = ['1', 'e', '&', 'a'][i % 4];
+          const isDownbeat = i % 4 === 0;
+          html += `<div class="drum-step-cell header-cell ${isDownbeat ? 'is-downbeat' : ''}" data-step-col="${i}">${isDownbeat ? `<strong>${beatNum}</strong>` : sub}</div>`;
+        }
+        html += '</div>';
+
+        // Grid Rows
+        Object.keys(groove.grid).forEach((voice) => {
+          const rowHits = groove.grid[voice];
+          html += '<div class="drum-matrix-row">';
+          html += `<div class="drum-voice-label"><strong>${voice}</strong></div>`;
+          for (let i = 0; i < stepCount; i++) {
+            const isHit = rowHits[i] === 1;
+            const isDownbeat = i % 4 === 0;
+            html += `
+              <div class="drum-step-cell ${isDownbeat ? 'is-downbeat' : ''}" data-step-col="${i}">
+                <span class="drum-hit-block ${isHit ? (voice.includes('Ghost') ? 'is-ghost' : 'is-active') : ''}"></span>
+              </div>`;
+          }
+          html += '</div>';
+        });
+
+        html += '</div>';
+        drumVisualCanvas.innerHTML = html;
+        if (drumSummaryText) drumSummaryText.textContent = `${groove.name} • ${groove.desc}`;
+      } else if (currentDrumMode === 'sticking') {
+        const r = DRUM_RUDIMENTS_FLOW[currentRudimentKey] || DRUM_RUDIMENTS_FLOW['paradiddle'];
+        let html = '<div class="sticking-flow-ribbon">';
+        r.sticking.forEach((hand, i) => {
+          const isAccent = r.accents[i] === 1;
+          const isRight = hand.includes('R');
+          html += `
+            <div class="sticking-note-card ${isAccent ? 'is-accented-card' : ''}" data-sticking-idx="${i}">
+              <span class="sticking-accent-mark">${isAccent ? '▼' : ''}</span>
+              <div class="sticking-badge ${isRight ? 'is-right' : 'is-left'}">${hand}</div>
+              <span class="sticking-step-count">${i + 1}</span>
+            </div>`;
+        });
+        html += '</div>';
+        drumVisualCanvas.innerHTML = html;
+        if (drumSummaryText) drumSummaryText.textContent = `${r.name} • Visual sticking alternation and accent dynamics.`;
+      } else if (currentDrumMode === 'polyrhythm') {
+        let html = `
+          <div class="polyrhythm-interlock-view">
+            <div class="poly-pulse-row">
+              <span class="poly-label">Pulse 1 (3 Beats):</span>
+              <div class="poly-ticks"><span class="poly-tick is-hit">1</span><span class="poly-tick"></span><span class="poly-tick is-hit">2</span><span class="poly-tick"></span><span class="poly-tick is-hit">3</span><span class="poly-tick"></span></div>
+            </div>
+            <div class="poly-pulse-row">
+              <span class="poly-label">Pulse 2 (2 Beats):</span>
+              <div class="poly-ticks"><span class="poly-tick is-hit">1</span><span class="poly-tick"></span><span class="poly-tick"></span><span class="poly-tick is-hit">2</span><span class="poly-tick"></span><span class="poly-tick"></span></div>
+            </div>
+            <div class="poly-mnemonic">Mnemonic: <strong>"NOT DIF-FI-CULT"</strong> (Beat 1 hits together, Beat 2 cross-rhythms).</div>
+          </div>`;
+        drumVisualCanvas.innerHTML = html;
+        if (drumSummaryText) drumSummaryText.textContent = '3:2 Polyrhythm • 3 notes over 2 evenly spaced measure pulses.';
+      }
+    }
+
+    // Drum Audio Playback Loop
+    function startDrumPlayback() {
+      if (isDrumPlaying) return;
+      isDrumPlaying = true;
+      currentStepIdx = 0;
+      if (drumPlayIcon) drumPlayIcon.className = 'fa-solid fa-stop';
+      if (drumPlayText) drumPlayText.textContent = 'STOP';
+
+      const groove = DRUM_GROOVES[currentDrumGrooveKey];
+      const stepCount = groove.steps;
+      const stepTimeMs = (60 / drumBpm / (stepCount === 12 ? 3 : 4)) * 1000;
+
+      function stepTick() {
+        if (!isDrumPlaying) return;
+
+        // Highlight active column in DOM
+        document.querySelectorAll('.drum-step-cell.is-playing').forEach(c => c.classList.remove('is-playing'));
+        document.querySelectorAll(`[data-step-col="${currentStepIdx}"]`).forEach(c => c.classList.add('is-playing'));
+
+        // Play sounds for this step
+        Object.keys(groove.grid).forEach(voice => {
+          const hits = groove.grid[voice];
+          if (hits[currentStepIdx] === 1) {
+            if (voice === 'Kick') playDrumSound('kick');
+            else if (voice === 'Snare') playDrumSound('snare');
+            else if (voice === 'Ghost SD') playDrumSound('ghost');
+            else if (voice === 'Hi-Hat') playDrumSound('hihat');
+            else if (voice === 'Ride') playDrumSound('ride');
+          }
+        });
+
+        currentStepIdx = (currentStepIdx + 1) % stepCount;
+      }
+
+      stepTick();
+      drumIntervalId = window.setInterval(stepTick, stepTimeMs);
+    }
+
+    function stopDrumPlayback() {
+      if (!isDrumPlaying) return;
+      isDrumPlaying = false;
+      if (drumIntervalId !== null) {
+        clearInterval(drumIntervalId);
+        drumIntervalId = null;
+      }
+      document.querySelectorAll('.drum-step-cell.is-playing').forEach(c => c.classList.remove('is-playing'));
+      if (drumPlayIcon) drumPlayIcon.className = 'fa-solid fa-play';
+      if (drumPlayText) drumPlayText.textContent = 'PLAY BEAT';
+    }
+
+    if (drumPlayToggleBtn) {
+      drumPlayToggleBtn.addEventListener('click', () => {
+        if (isDrumPlaying) stopDrumPlayback();
+        else startDrumPlayback();
+      });
+    }
+
+    // Load groove from catalog
+    document.addEventListener('click', (e) => {
+      const grooveBtn = (e.target as HTMLElement).closest('[data-load-groove]');
+      if (grooveBtn) {
+        const id = grooveBtn.getAttribute('data-load-groove');
+        if (id && DRUM_GROOVES[id]) {
+          currentDrumMode = 'grid';
+          currentDrumGrooveKey = id;
+          drumModeSelector?.querySelectorAll('.sub-pill-btn').forEach(b => {
+            if (b.getAttribute('data-drum-mode') === 'grid') b.classList.add('active');
+            else b.classList.remove('active');
+          });
+          renderDrumControls();
+          renderDrumVisual();
+          document.querySelector('[data-category-id="drum-grid-hero"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+
+      const rudimentBtn = (e.target as HTMLElement).closest('[data-load-rudiment]');
+      if (rudimentBtn) {
+        const id = rudimentBtn.getAttribute('data-load-rudiment');
+        if (id && DRUM_RUDIMENTS_FLOW[id]) {
+          currentDrumMode = 'sticking';
+          currentRudimentKey = id;
+          drumModeSelector?.querySelectorAll('.sub-pill-btn').forEach(b => {
+            if (b.getAttribute('data-drum-mode') === 'sticking') b.classList.add('active');
+            else b.classList.remove('active');
+          });
+          renderDrumControls();
+          renderDrumVisual();
+          document.querySelector('[data-category-id="drum-grid-hero"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+    });
+
+    // Initial Renders
+    renderGuitarControls();
+    renderFretboard();
+    renderDrumControls();
+    renderDrumVisual();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTheoryInteractive);
+  } else {
+    initTheoryInteractive();
+  }
+</script>
+
+<style>
+  /* ==========================================================================
+     Theory Hub Scaffolding & Layout
+     ========================================================================== */
+  .theory-page {
+    min-height: 100vh;
+    width: 100%;
+    background-color: var(--bg-primary, #faf8f5);
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 16px 14px 60px;
+  }
+
+  .theory-view {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-sizing: border-box;
+  }
+
+  /* ==========================================================================
+     Sticky Top Navigation Header
+     ========================================================================== */
+  .theory-topbar {
+    position: sticky;
+    top: 10px;
+    z-index: 50;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background-color: var(--card-white, #ffffff);
+    border: var(--border-brutal, 2.5px solid #000000);
+    box-shadow: var(--shadow-brutal-black, 3px 3px 0px #000000);
+    border-radius: var(--radius-md, 10px);
+    padding: 8px 12px;
+    transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .theory-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 12px 0 10px;
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs, 6px);
+    cursor: pointer;
+    text-decoration: none;
+    flex-shrink: 0;
+    z-index: 5;
+    box-sizing: border-box;
+    font-family: var(--font-heading, sans-serif);
+    font-size: 0.85rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
+  }
+
+  .theory-back-btn:hover {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .theory-back-btn .back-icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+
+  .theory-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs, 6px);
+    cursor: pointer;
+    text-decoration: none;
+    flex-shrink: 0;
+    z-index: 5;
+    box-sizing: border-box;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
+  }
+
+  .theory-icon-btn:hover {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .theory-icon-btn svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+  }
+
+  /* Connected Dual-Segment Pill UI */
+  .theory-pill-wrap {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
+    z-index: 2;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .theory-segmented-pill {
+    display: inline-flex;
+    align-items: center;
+    background: #f4f4f5;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill, 9999px);
+    padding: 3px;
+    gap: 3px;
+    box-sizing: border-box;
+  }
+
+  .theory-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 18px;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-pill, 9999px);
+    background: transparent;
+    color: #52525b;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    box-sizing: border-box;
+    white-space: nowrap;
+    transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, transform 0.12s var(--ease-tactile);
+  }
+
+  .theory-tab-btn:hover:not(.active) {
+    background: #e4e4e7;
+    color: #000000;
+  }
+
+  .theory-tab-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+  }
+
+  /* Actions Group (Theme Toggle + Search) */
+  .theory-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 4;
+  }
+
+  .theory-theme-toggle {
+    font-size: 0.95rem;
+  }
+
+  /* Expandable Search Controller */
+  .theory-search-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 4;
+  }
+
+  .theory-search-expandable {
+    position: absolute;
+    right: 44px;
+    width: 0;
+    max-width: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    transition: width 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+  }
+
+  .theory-search-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs, 6px);
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+  }
+
+  .theory-search-input:focus {
+    border-color: #000000;
+    box-shadow: 3px 3px 0px var(--accent-neon-yellow, #f2fd43);
+  }
+
+  .theory-search-toggle .close-icon { display: none; }
+  .theory-search-toggle .search-icon { display: block; }
+
+  .theory-topbar.is-search-active .theory-pill-wrap {
+    display: none;
+  }
+
+  .theory-topbar.is-search-active .theory-theme-toggle {
+    display: none;
+  }
+
+  .theory-topbar.is-search-active .theory-topbar-actions {
+    flex: 1;
+  }
+
+  .theory-topbar.is-search-active .theory-search-container {
+    position: static;
+    flex: 1;
+  }
+
+  .theory-topbar.is-search-active .theory-search-expandable {
+    position: static;
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+    opacity: 1;
+    pointer-events: auto;
+    margin-right: 8px;
+    margin-left: 8px;
+  }
+
+  .theory-topbar.is-search-active .theory-search-toggle {
+    background: #ff5252;
+    color: #ffffff;
+  }
+
+  .theory-topbar.is-search-active .theory-search-toggle .search-icon { display: none; }
+  .theory-topbar.is-search-active .theory-search-toggle .close-icon { display: block; }
+
+  /* ==========================================================================
+     Sticky Category Filter Chips Bar
+     ========================================================================== */
+  .theory-chip-bar {
+    position: sticky;
+    top: 66px;
+    z-index: 45;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+    padding: 4px 0 6px;
+  }
+
+  .theory-chip-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip-scroll-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    width: max-content;
+  }
+
+  .chip-scroll-row[hidden] {
+    display: none !important;
+  }
+
+  .theory-chip-btn {
+    padding: 6px 14px;
+    background: var(--card-white, #ffffff);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill, 9999px);
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  }
+
+  .theory-chip-btn:hover:not(.active) {
+    background: #f4f4f5;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .theory-chip-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    border-color: #000000;
+    box-shadow: 2.5px 2.5px 0px #000000;
+  }
+
+  /* ==========================================================================
+     Category Cards & Content Area
+     ========================================================================== */
+  .theory-content-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-sizing: border-box;
+  }
+
+  .theory-tab-panel[hidden] {
+    display: none !important;
+  }
+
+  .theory-category-card {
+    background: var(--card-white, #ffffff);
+    border: var(--border-brutal, 2.5px solid #000000);
+    box-shadow: var(--shadow-brutal-black, 3px 3px 0px #000000);
+    border-radius: var(--radius-md, 10px);
+    padding: 20px 22px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .theory-category-card[hidden] {
+    display: none !important;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 14px;
+  }
+
+  .category-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .category-icon-box {
+    width: 38px;
+    height: 38px;
+    background: var(--accent-neon-yellow, #f2fd43);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs, 6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .category-icon-box i { font-size: 1.05rem; color: #000000; }
+
+  .category-title {
+    font-family: var(--font-heading, sans-serif);
+    font-size: 1.18rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-card-primary, #0a0a0a);
+    margin: 0;
+    line-height: 1.15;
+  }
+
+  .category-subtitle {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.78rem;
+    color: var(--text-card-secondary, #52525b);
+    margin: 2px 0 0;
+    line-height: 1.35;
+  }
+
+  .header-action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .audio-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs, 6px);
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .audio-action-btn:hover {
+    background: #faff60;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .category-badge {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.70rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 9px;
+    background: #f4f4f5;
+    color: #27272a;
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-pill, 9999px);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* In-Section Sub-Filters */
+  .section-subfilters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: 2px;
+  }
+
+  .subfilter-btn {
+    padding: 5px 12px;
+    background: #f4f4f5;
+    color: #27272a;
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-xs, 6px);
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease, transform 0.12s var(--ease-tactile);
+  }
+
+  .subfilter-btn:hover:not(.active) {
+    background: #e4e4e7;
+  }
+
+  .subfilter-btn.active {
+    background: #000000;
+    color: var(--accent-neon-yellow, #f2fd43);
+  }
+
+  /* Category Item Rows */
+  .category-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .theory-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 16px;
+    background: #ffffff;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-sm, 8px);
+    box-sizing: border-box;
+    transition: background-color 0.12s ease, transform 0.12s var(--ease-tactile), box-shadow 0.12s ease;
+  }
+
+  .theory-item-row:hover {
+    background: #fafafa;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .theory-item-row[hidden] {
+    display: none !important;
+  }
+
+  .item-name-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .item-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .item-name {
+    font-family: var(--font-heading, sans-serif);
+    font-size: 0.94rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    color: var(--text-card-primary, #0a0a0a);
+  }
+
+  .item-type-tag {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    padding: 2px 7px;
+    background: #e4e4e7;
+    color: #18181b;
+    border: 1px solid #000000;
+    border-radius: 4px;
+  }
+
+  .item-notes {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-card-secondary, #52525b);
+    line-height: 1.4;
+  }
+
+  .item-fret-hint, .item-mute-badge, .item-sticking-flow {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.75rem;
+    color: #18181b;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  .item-actions-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .item-formula {
+    display: inline-block;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.80rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    background: #f4f4f5;
+    color: #000000;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .item-action-btns {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .item-quick-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    background: #ffffff;
+    color: #000000;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.70rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.1s var(--ease-tactile), background-color 0.1s ease;
+  }
+
+  .item-quick-btn:hover {
+    background: var(--accent-neon-yellow, #f2fd43);
+  }
+
+  .item-icon-quick-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: #ffffff;
+    color: #000000;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: 4px;
+    font-size: 0.70rem;
+    cursor: pointer;
+    transition: transform 0.1s var(--ease-tactile), background-color 0.1s ease;
+  }
+
+  .item-icon-quick-btn:hover {
+    background: var(--accent-neon-yellow, #f2fd43);
+  }
+
+  /* ==========================================================================
+     Circle of Fifths Interactive Explorer
+     ========================================================================== */
+  .circle-fifths-container {
+    background: #faf8f5;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-sm, 8px);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-sizing: border-box;
+  }
+
+  .circle-fifths-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .circle-title {
+    font-family: var(--font-heading, sans-serif);
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: #000000;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .circle-hint {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.72rem;
+    color: #71717a;
+  }
+
+  .circle-keys-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+
+  .circle-key-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    background: #ffffff;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-secondary, monospace);
+    transition: transform 0.1s var(--ease-tactile), background-color 0.1s ease;
+  }
+
+  .circle-key-btn:hover:not(.active) {
+    background: #f4f4f5;
+  }
+
+  .circle-key-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .circle-key-name {
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: #000000;
+  }
+
+  .circle-minor-name {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #52525b;
+  }
+
+  .circle-detail-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.76rem;
+    font-weight: 800;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .circle-detail-key { color: #000000; font-weight: 900; }
+  .circle-detail-minor { color: #27272a; }
+  .circle-detail-acc { color: #52525b; }
+
+  /* ==========================================================================
+     Visual Fretboard & Drum Matrix Styling
+     ========================================================================== */
+  .hero-visual-card {
+    background: #ffffff;
+  }
+
+  .fretboard-mode-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .fret-control-label {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.74rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    color: #52525b;
+  }
+
+  .segmented-sub-pills {
+    display: inline-flex;
+    background: #f4f4f5;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill, 9999px);
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .sub-pill-btn {
+    padding: 4px 12px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-pill, 9999px);
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: #52525b;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+  }
+
+  .sub-pill-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .drum-tempo-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .drum-tempo-controls {
+    display: flex;
+    align-items: center;
+    background: #f4f4f5;
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-xs, 6px);
+    padding: 2px 4px;
+    gap: 6px;
+  }
+
+  .tempo-step-btn {
+    padding: 2px 6px;
+    background: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.70rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .drum-bpm-val {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.74rem;
+    font-weight: 900;
+    color: #000000;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  .fretboard-controls-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .fret-control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .fret-control-group[hidden] {
+    display: none !important;
+  }
+
+  .fret-pills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .fret-pill-btn {
+    padding: 4px 9px;
+    background: #ffffff;
+    color: #000000;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.1s var(--ease-tactile), background-color 0.1s ease;
+  }
+
+  .fret-pill-btn:hover:not(.active) {
+    background: #f4f4f5;
+  }
+
+  .fret-pill-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+  }
+
+  /* Fretboard Canvas Container */
+  .fretboard-visual-wrapper {
+    width: 100%;
+    background: #141418;
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: var(--radius-sm, 8px);
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .fretboard-scroll-area {
+    width: 100%;
+    overflow-x: auto;
+    padding: 14px 12px;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #4b4b58 #141418;
+  }
+
+  .fret-neck-grid {
+    display: flex;
+    min-width: 720px;
+    user-select: none;
+    position: relative;
+  }
+
+  .fret-nut-row {
+    display: flex;
+    flex-direction: column;
+    width: 48px;
+    flex-shrink: 0;
+    border-right: 4px solid #f2fd43;
+    padding-right: 6px;
+  }
+
+  .fret-marker-header {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.68rem;
+    font-weight: 900;
+    color: var(--accent-neon-yellow, #f2fd43);
+  }
+
+  .nut-string-indicator {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.84rem;
+    font-weight: 900;
+  }
+
+  .nut-string-indicator.mute-str { color: #ff5252; }
+  .nut-string-indicator.open-str { color: #53fc18; }
+  .nut-string-indicator.fretted-str { color: #a1a1aa; }
+
+  .frets-body {
+    display: flex;
+    flex: 1;
+    position: relative;
+  }
+
+  .fret-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid #4b4b58;
+    position: relative;
+  }
+
+  .fret-col.fret-0 {
+    flex: 0.7;
+  }
+
+  .fret-num {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.70rem;
+    font-weight: 800;
+    color: #d4d4d8;
+    border-bottom: 1px solid #33333f;
+  }
+
+  .fret-cell {
+    height: 32px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fret-string-wire {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: var(--str-gauge, 2px);
+    background: #8e8e98;
+    z-index: 1;
+  }
+
+  .fret-note-dot {
+    position: relative;
+    z-index: 2;
+    width: 23px;
+    height: 23px;
+    border-radius: 50%;
+    border: 1.5px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.68rem;
+    font-weight: 900;
+    box-shadow: 1.5px 1.5px 0px rgba(0,0,0,0.9);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.1s var(--ease-tactile);
+  }
+
+  .fret-note-dot:hover {
+    transform: scale(1.2);
+  }
+
+  .fret-note-dot.is-root {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    border-color: #000000;
+    transform: scale(1.15);
+  }
+
+  .fret-note-dot.is-scale, .fret-note-dot.is-chord {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  /* Fretboard Inlays */
+  .fretboard-inlay-single {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: rgba(242, 253, 67, 0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .fretboard-inlay-double {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .fretboard-inlay-double span {
+    width: 8px;
+    height: 8px;
+    background: rgba(242, 253, 67, 0.4);
+    border-radius: 50%;
+  }
+
+  .fretboard-legend-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #52525b;
+    border-top: 1.5px solid #e4e4e7;
+    padding-top: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid #000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    font-weight: 900;
+  }
+
+  .legend-dot.root-dot { background: var(--accent-neon-yellow, #f2fd43); color: #000; }
+  .legend-dot.note-dot { background: #fff; color: #000; }
+  .legend-mute { color: #ff5252; font-weight: 900; }
+  .legend-open { color: #53fc18; font-weight: 900; }
+
+  .legend-summary {
+    margin-left: auto;
+    font-weight: 800;
+    color: #18181b;
+  }
+
+  /* Drum Matrix Grid */
+  .drum-grid-matrix {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 640px;
+  }
+
+  .drum-matrix-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .drum-voice-label {
+    width: 86px;
+    flex-shrink: 0;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.74rem;
+    color: #d4d4d8;
+    text-align: right;
+    padding-right: 8px;
+  }
+
+  .drum-step-cell {
+    flex: 1;
+    height: 28px;
+    background: #222228;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    transition: background-color 0.08s ease;
+  }
+
+  .drum-step-cell.is-downbeat {
+    border-left: 2px solid var(--accent-neon-yellow, #f2fd43);
+  }
+
+  .drum-step-cell.is-playing {
+    background: #3f3f4e !important;
+  }
+
+  .drum-step-cell.header-cell {
+    background: transparent;
+    color: #a1a1aa;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.72rem;
+  }
+
+  .drum-hit-block {
+    width: 80%;
+    height: 80%;
+    border-radius: 2px;
+  }
+
+  .drum-hit-block.is-active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    box-shadow: 0 0 8px rgba(242, 253, 67, 0.7);
+  }
+
+  .drum-hit-block.is-ghost {
+    background: #53fc18;
+    opacity: 0.85;
+  }
+
+  .drum-step-active { width: 13px; height: 13px; background: var(--accent-neon-yellow, #f2fd43); border-radius: 2px; display: inline-block; }
+  .drum-step-ghost { width: 13px; height: 13px; background: #53fc18; border-radius: 2px; display: inline-block; }
+
+  /* Sticking Ribbon */
+  .sticking-flow-ribbon {
+    display: flex;
+    gap: 8px;
+    min-width: 520px;
+    padding: 10px 0;
+  }
+
+  .sticking-note-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .sticking-accent-mark {
+    font-size: 0.72rem;
+    color: var(--accent-neon-yellow, #f2fd43);
+    height: 14px;
+  }
+
+  .sticking-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+    border: 2px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.98rem;
+    font-weight: 900;
+    box-shadow: 1.5px 1.5px 0px #000;
+  }
+
+  .sticking-badge.is-right { background: var(--accent-neon-yellow, #f2fd43); color: #000; }
+  .sticking-badge.is-left { background: #ffffff; color: #000; }
+
+  .sticking-step-count {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.70rem;
+    color: #a1a1aa;
+  }
+
+  /* Polyrhythm Visual */
+  .polyrhythm-interlock-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .poly-pulse-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .poly-label {
+    width: 140px;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.80rem;
+    color: #e4e4e7;
+    font-weight: 700;
+  }
+
+  .poly-ticks {
+    display: flex;
+    flex: 1;
+    gap: 4px;
+  }
+
+  .poly-tick {
+    flex: 1;
+    height: 30px;
+    background: #24242c;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.78rem;
+    color: #71717a;
+  }
+
+  .poly-tick.is-hit {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    font-weight: 900;
+  }
+
+  .poly-mnemonic {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.82rem;
+    color: #f4f4f5;
+    background: #22222a;
+    border: 1.5px solid #000000;
+    padding: 8px 14px;
+    border-radius: 6px;
+  }
+
+  /* Empty State */
+  .theory-empty-state {
+    width: 100%;
+    padding: 30px 10px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .theory-empty-state[hidden] {
+    display: none !important;
+  }
+
+  .empty-state-card {
+    background: var(--card-white, #ffffff);
+    border: var(--border-brutal, 2.5px solid #000000);
+    box-shadow: var(--shadow-brutal-black, 3px 3px 0px #000000);
+    border-radius: var(--radius-md, 10px);
+    padding: 30px 20px;
+    text-align: center;
+    max-width: 420px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .empty-icon-box { font-size: 2.2rem; margin-bottom: 4px; }
+  .empty-title { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 900; margin: 0; }
+  .empty-desc { font-family: var(--font-secondary); font-size: 0.82rem; color: #52525b; margin: 0; }
+
+  .empty-reset-btn {
+    margin-top: 8px;
+    padding: 8px 18px;
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs, 6px);
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  /* ==========================================================================
+     Dark Mode Adjustments
+     ========================================================================== */
+  :global([data-theme="dark"]) .theory-page {
+    background-color: var(--bg-primary, #0f0f12);
+  }
+
+  :global([data-theme="dark"]) .theory-topbar,
+  :global([data-theme="dark"]) .theory-category-card,
+  :global([data-theme="dark"]) .empty-state-card {
+    background-color: var(--md-sys-color-surface-container, #18181c);
+    border-color: #000000;
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.9);
+  }
+
+  :global([data-theme="dark"]) .category-header {
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+
+  :global([data-theme="dark"]) .theory-back-btn,
+  :global([data-theme="dark"]) .theory-icon-btn,
+  :global([data-theme="dark"]) .theory-chip-btn,
+  :global([data-theme="dark"]) .fret-pill-btn,
+  :global([data-theme="dark"]) .subfilter-btn,
+  :global([data-theme="dark"]) .item-quick-btn,
+  :global([data-theme="dark"]) .item-icon-quick-btn,
+  :global([data-theme="dark"]) .circle-key-btn,
+  :global([data-theme="dark"]) .circle-detail-card {
+    background: #27272a;
+    color: var(--text-white, #f5f5f7);
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .theory-chip-btn.active,
+  :global([data-theme="dark"]) .fret-pill-btn.active,
+  :global([data-theme="dark"]) .circle-key-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+  }
+
+  :global([data-theme="dark"]) .theory-segmented-pill,
+  :global([data-theme="dark"]) .segmented-sub-pills,
+  :global([data-theme="dark"]) .drum-tempo-controls,
+  :global([data-theme="dark"]) .circle-fifths-container {
+    background: #15151a;
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .sub-pill-btn,
+  :global([data-theme="dark"]) .theory-tab-btn {
+    color: #a1a1aa;
+  }
+
+  :global([data-theme="dark"]) .sub-pill-btn.active,
+  :global([data-theme="dark"]) .theory-tab-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+  }
+
+  :global([data-theme="dark"]) .category-title,
+  :global([data-theme="dark"]) .item-name,
+  :global([data-theme="dark"]) .drum-bpm-val,
+  :global([data-theme="dark"]) .circle-title,
+  :global([data-theme="dark"]) .circle-key-name,
+  :global([data-theme="dark"]) .circle-detail-key {
+    color: var(--text-white, #f5f5f7);
+  }
+
+  :global([data-theme="dark"]) .category-subtitle,
+  :global([data-theme="dark"]) .item-notes,
+  :global([data-theme="dark"]) .fretboard-legend-bar,
+  :global([data-theme="dark"]) .fret-control-label,
+  :global([data-theme="dark"]) .circle-minor-name,
+  :global([data-theme="dark"]) .circle-detail-minor,
+  :global([data-theme="dark"]) .circle-detail-acc {
+    color: var(--text-muted, #a1a1aa);
+  }
+
+  :global([data-theme="dark"]) .legend-summary {
+    color: var(--text-white, #f5f5f7);
+  }
+
+  :global([data-theme="dark"]) .theory-item-row {
+    background: #222228;
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .item-fret-hint,
+  :global([data-theme="dark"]) .item-mute-badge,
+  :global([data-theme="dark"]) .item-sticking-flow {
+    color: #e4e4e7;
+  }
+
+  :global([data-theme="dark"]) .item-formula {
+    background: #18181c;
+    color: var(--accent-neon-yellow, #f2fd43);
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .theory-search-input {
+    background: #18181c;
+    color: #f5f5f7;
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .category-badge,
+  :global([data-theme="dark"]) .item-type-tag {
+    background: #222228;
+    color: #d4d4d8;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* ==========================================================================
+     Mobile Viewport Responsiveness
+     ========================================================================== */
+  @media (max-width: 640px) {
+    .theory-page {
+      padding: 10px 8px 30px;
+    }
+
+    .theory-topbar {
+      padding: 6px 8px;
+      gap: 8px;
+    }
+
+    .theory-chip-bar {
+      top: 58px;
+    }
+
+    .theory-tab-btn {
+      padding: 5px 12px;
+      font-size: 0.75rem;
+    }
+
+    .theory-category-card {
+      padding: 14px 12px;
+      gap: 12px;
+    }
+
+    .category-title {
+      font-size: 1rem;
+    }
+
+    .category-header {
+      flex-wrap: wrap;
+    }
+
+    .header-action-group {
+      width: 100%;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+
+    .theory-item-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .item-actions-col {
+      width: 100%;
+      align-items: flex-start;
+      flex-direction: row;
+      justify-content: space-between;
+      border-top: 1px dashed rgba(0, 0, 0, 0.15);
+      padding-top: 8px;
+    }
+
+    :global([data-theme="dark"]) .item-actions-col {
+      border-top-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .circle-keys-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

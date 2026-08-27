@@ -202,6 +202,7 @@ function initEpkMobileDrawer() {
     drawer?.classList.add('is-open');
     backdrop?.classList.add('is-open');
     drawer?.setAttribute('aria-hidden', 'false');
+    if (drawer) drawer.inert = false;
     hamburgerBtn?.setAttribute('aria-expanded', 'true');
     document.body.style.overflow = 'hidden';
   }
@@ -210,9 +211,12 @@ function initEpkMobileDrawer() {
     drawer?.classList.remove('is-open');
     backdrop?.classList.remove('is-open');
     drawer?.setAttribute('aria-hidden', 'true');
+    if (drawer) drawer.inert = true;
     hamburgerBtn?.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
   }
+  // Initialize hidden drawer as inert
+  if (drawer) drawer.inert = true;
 
   hamburgerBtn?.addEventListener('click', openDrawer);
   closeDrawerBtn?.addEventListener('click', closeDrawer);

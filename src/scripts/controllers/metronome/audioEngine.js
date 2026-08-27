@@ -1,4 +1,4 @@
-import { METRO_SOUNDS, METRO_TIMING } from '../../../settings/metronome.config';
+import { METRO_GAIN, METRO_SOUNDS, METRO_TIMING } from '../../../settings/metronome.config';
 import { getSound } from './metroState.js';
 
 /* KINS Metronome click engine — two paths behind one API.
@@ -37,6 +37,7 @@ export function createMetroEngine() {
   let masterGain = null;
   let compressor = null;
   let softClipper = null;
+  let hpFilter = null;
 
   /* Worklet path */
   let workletNode = null;
@@ -45,6 +46,9 @@ export function createMetroEngine() {
   /* Legacy path timers */
   let schedulerTimer = null;
   let uiRafId = null;
+  let metroWorker = null;
+  let workerAvailable = false;
+  let hardwareCheckId = null;
 
   /* Scheduling cursor + bookkeeping (legacy owns these; worklet mirrors
      them internally) */
@@ -86,6 +90,7 @@ export function createMetroEngine() {
   let maxTickDeltaMs = 0;
   let lastTickPerf = 0;
   let firedBeats = 0;
+  let masterRestoreTimeout = null;
 
   function safeCall(fn, arg) {
     if (!fn) return;
@@ -110,6 +115,15 @@ export function createMetroEngine() {
   }
 
   function setupDynamicsPipeline() {
+    // 0. DC Blocker HPF 30Hz — removes accumulated DC from summed tails
+    try {
+      hpFilter = ctx.createBiquadFilter();
+      hpFilter.type = 'highpass';
+      hpFilter.frequency.setValueAtTime(30, ctx.currentTime);
+      hpFilter.Q.setValueAtTime(0.707, ctx.currentTime);
+    } catch (e) {
+      hpFilter = null;
+    }
     // 1. Fast-Attack Dynamics Compressor for Macro Leveling (-6dB, 1ms attack, 50ms release)
     compressor = ctx.createDynamicsCompressor();
     try {
@@ -129,11 +143,28 @@ export function createMetroEngine() {
     }
     // 3. Master Linear Gain 0.90 (-0.92 dBFS true peak safety)
     masterGain = ctx.createGain();
-    try { masterGain.gain.setValueAtTime(0.90, ctx.currentTime); } catch (e) { masterGain.gain.value = 0.90; }
+    try { masterGain.gain.setValueAtTime(METRO_GAIN.master, ctx.currentTime); } catch (e) { masterGain.gain.value = METRO_GAIN.master; }
+  }
 
-    // Wire: worklet/osc -> compressor -> softClipper -> masterGain -> destination
-    // Legacy oscs connect to compressor input; worklet connects there too.
-    // We keep a separate inputGain for legacy if needed, but connect logic is below.
+  function initMetroWorker() {
+    if (metroWorker || workerAvailable) return;
+    try {
+      const url = METRO_TIMING.workerUrl || '/worklets/metro-worker.js';
+      metroWorker = new Worker(url);
+      metroWorker.onmessage = (e) => {
+        if (e.data === 'tick') schedulerTick();
+      };
+      metroWorker.onerror = () => {
+        try { metroWorker.terminate(); } catch (e2) {}
+        metroWorker = null;
+        workerAvailable = false;
+      };
+      try { metroWorker.postMessage({ interval: METRO_TIMING.schedulerIntervalMs }); } catch (e) {}
+      workerAvailable = true;
+    } catch (e) {
+      metroWorker = null;
+      workerAvailable = false;
+    }
   }
 
   function setupUnlockProtocol() {
@@ -208,8 +239,8 @@ export function createMetroEngine() {
         if (runRef.playing) {
           const saved = { bpm: runRef.bpm, perBeat: runPerBeat, beatsPerBar: runBeatsPerBar, accentFirst: runAccentFirst, tiers: [...runBeatTiers] };
           const wasPlaying = true;
-          // Teardown invalid context
           try { if (workletNode) workletNode.disconnect(); } catch (e) {}
+          try { if (hpFilter) hpFilter.disconnect(); } catch (e) {}
           try { if (compressor) compressor.disconnect(); } catch (e) {}
           try { if (softClipper) softClipper.disconnect(); } catch (e) {}
           try { if (masterGain) masterGain.disconnect(); } catch (e) {}
@@ -218,6 +249,7 @@ export function createMetroEngine() {
           masterGain = null;
           compressor = null;
           softClipper = null;
+          hpFilter = null;
           workletNode = null;
           usingWorklet = false;
           hardwareSampleRate = currentRate;
@@ -282,11 +314,11 @@ export function createMetroEngine() {
     attachStateHandler();
     setupUnlockProtocol();
     setupBackgroundSilence();
+    initMetroWorker();
 
-    // Connect dynamics chain: worklet/legacy -> compressor -> softClipper -> masterGain -> destination
-    // We will connect workletNode to compressor input after creation; legacy oscs also connect to compressor.
-    // For now, wire compressor -> softClipper -> masterGain -> destination
+    // Wire: hpFilter -> compressor -> softClipper -> masterGain -> destination
     try {
+      if (hpFilter) hpFilter.connect(compressor);
       if (softClipper) {
         compressor.connect(softClipper);
         softClipper.connect(masterGain);
@@ -304,28 +336,29 @@ export function createMetroEngine() {
     if (ctx.audioWorklet) {
       try {
         await ctx.audioWorklet.addModule(METRO_TIMING.workletUrl);
-        // Try spec processor first, fallback to legacy name if needed
+        // Prefer kins-click (tier-aware, accent=mute/high) — metronome-processor is spec path without tier support
         let nodeCreated = false;
         try {
-          workletNode = new AudioWorkletNode(ctx, 'metronome-processor', {
-            numberOfInputs: 0,
-            numberOfOutputs: 1,
-            outputChannelCount: [2]
-          });
-          nodeCreated = true;
-        } catch (e) {
-          // Fallback to kins-click if metronome-processor not registered
           workletNode = new AudioWorkletNode(ctx, METRO_TIMING.workletName, {
             numberOfInputs: 0,
             numberOfOutputs: 1,
             outputChannelCount: [1]
           });
           nodeCreated = true;
+        } catch (e) {
+          workletNode = new AudioWorkletNode(ctx, 'metronome-processor', {
+            numberOfInputs: 0,
+            numberOfOutputs: 1,
+            outputChannelCount: [2]
+          });
+          nodeCreated = true;
         }
         if (nodeCreated && workletNode) {
           workletNode.port.onmessage = onWorkletMessage;
-          // Connect through dynamics pipeline
-          try { workletNode.connect(compressor); } catch (e) { workletNode.connect(masterGain); }
+          try {
+            if (hpFilter) workletNode.connect(hpFilter);
+            else workletNode.connect(compressor);
+          } catch (e) { try { workletNode.connect(masterGain); } catch (e2) {} }
           // Send sound tables
           postToWorklet({
             type: 'sounds',
@@ -334,11 +367,10 @@ export function createMetroEngine() {
               accentFreq: s.accentFreq, decay: s.decay, gain: s.gain
             }))
           });
-          // Also prime spec gains
           try {
-            if (workletNode.parameters.has('accentGain')) workletNode.parameters.get('accentGain').setValueAtTime(0.80, ctx.currentTime);
-            if (workletNode.parameters.has('beatGain')) workletNode.parameters.get('beatGain').setValueAtTime(0.60, ctx.currentTime);
-            if (workletNode.parameters.has('subGain')) workletNode.parameters.get('subGain').setValueAtTime(0.40, ctx.currentTime);
+            if (workletNode.parameters.has('accentGain')) workletNode.parameters.get('accentGain').setValueAtTime(METRO_GAIN.accent, ctx.currentTime);
+            if (workletNode.parameters.has('beatGain')) workletNode.parameters.get('beatGain').setValueAtTime(METRO_GAIN.beat, ctx.currentTime);
+            if (workletNode.parameters.has('subGain')) workletNode.parameters.get('subGain').setValueAtTime(METRO_GAIN.sub, ctx.currentTime);
           } catch (e) {}
           usingWorklet = true;
         }
@@ -352,10 +384,11 @@ export function createMetroEngine() {
     // If not using worklet, ensure legacy oscs feed compressor
     // (scheduleClick will connect to compressor if available, else masterGain)
 
-    // Periodic hardware sampleRate check (Bluetooth route)
-    try {
-      setInterval(() => { if (ctx && runRef.playing) handleHardwareAdaptation(); }, 1000);
-    } catch (e) {}
+    if (hardwareCheckId === null) {
+      try {
+        hardwareCheckId = setInterval(() => { if (ctx && runRef.playing) handleHardwareAdaptation(); }, METRO_TIMING.hardwareCheckMs || 1000);
+      } catch (e) { hardwareCheckId = null; }
+    }
 
     return true;
   }
@@ -412,41 +445,39 @@ export function createMetroEngine() {
       scheduledTotal++;
       return;
     }
-    const t = tier || 'mid';
-    const ratio = t === 'low' ? 0.75 : (t === 'high' ? 1.5 : 1);
+    let t = time;
+    if (ctx && t <= ctx.currentTime) t = ctx.currentTime + 0.001;
+    const tt = tier || 'mid';
+    const ratio = tt === 'low' ? 0.75 : (tt === 'high' ? 1.5 : 1);
     const baseFreq = isAccent ? sound.accentFreq : sound.freq;
     const freq = baseFreq * ratio;
-    // Bounded headroom: accent 0.80, beat 0.60, sub 0.40 scaled by equal-power
     let nominalGain;
-    if (isAccent) nominalGain = 0.80;
-    else if (startsABeat) nominalGain = 0.60;
-    else nominalGain = 0.40;
-    // Apply equal-power subdivision scaling for non-accent subdivisions
+    if (isAccent) nominalGain = METRO_GAIN.accent;
+    else if (startsABeat) nominalGain = METRO_GAIN.beat;
+    else nominalGain = METRO_GAIN.sub;
     if (!isAccent && !startsABeat) {
       nominalGain *= getSubdivisionScale(runPerBeat);
     }
-    // Also scale by sound's intrinsic gain normalized (sound.gain ~0.5) -> keep but clamp
-    const peakGain = Math.max(0.0001, Math.min(1, nominalGain * (Math.max(0.0001, sound.gain) / 0.5)));
+    const peakGain = Math.max(METRO_GAIN.epsilon, Math.min(1, nominalGain * (Math.max(METRO_GAIN.epsilon, sound.gain) / 0.5)));
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = sound.type;
-    osc.frequency.setValueAtTime(freq, time);
+    osc.frequency.setValueAtTime(freq, t);
 
-    /* Anti-pop micro attack (0.75ms) + smooth exponential decay to epsilon 1e-4 */
-    const epsilon = 0.0001;
-    gain.gain.setValueAtTime(epsilon, time);
-    gain.gain.exponentialRampToValueAtTime(peakGain, time + 0.0008);
-    gain.gain.exponentialRampToValueAtTime(epsilon, time + sound.decay);
+    const epsilon = METRO_GAIN.epsilon;
+    gain.gain.setValueAtTime(epsilon, t);
+    gain.gain.exponentialRampToValueAtTime(peakGain, t + 0.0008);
+    gain.gain.exponentialRampToValueAtTime(epsilon, t + sound.decay);
     osc.connect(gain);
-    // Route through compressor for headroom, not direct to master
     try {
-      if (compressor) gain.connect(compressor);
+      if (hpFilter) gain.connect(hpFilter);
+      else if (compressor) gain.connect(compressor);
       else gain.connect(masterGain);
     } catch (e) { gain.connect(masterGain); }
-    osc.start(time);
-    osc.stop(time + sound.decay + 0.02);
-    pendingSources.push({ osc, gain, time, startsABeat });
+    osc.start(t);
+    osc.stop(t + sound.decay + 0.02);
+    pendingSources.push({ osc, gain, time: t, startsABeat });
     scheduledTotal++;
   }
 
@@ -538,8 +569,9 @@ export function createMetroEngine() {
       const startsABeat = Math.abs(clickCounter % runPerBeat) < 1e-9;
       const soundingBeat = startsABeat ? beatCounter : beatCounter - 1;
       const beatInBar = ((Math.max(0, soundingBeat) % runBeatsPerBar) + runBeatsPerBar) % runBeatsPerBar;
-      const isAccent = runAccentFirst && startsABeat && beatInBar === 0;
       const tier = (runBeatTiers && runBeatTiers[beatInBar]) || 'mid';
+      // Accent is exclusively tier 'high' on beat starts (user report: no accent unless beat is high)
+      const isAccent = tier === 'high' && startsABeat;
       scheduleClick(nextClickTime, isAccent, startsABeat, tier);
       visualQueue.push({ time: nextClickTime, beatInBar, isAccent, tier, isBeatStart: startsABeat });
       nextClickTime += clickDur;
@@ -549,9 +581,24 @@ export function createMetroEngine() {
   }
 
   function ensureSchedulerTimer() {
+    if (metroWorker && workerAvailable) {
+      lastTickPerf = 0;
+      try { metroWorker.postMessage('start'); } catch (e) {}
+      return;
+    }
     if (schedulerTimer === null) {
       lastTickPerf = 0;
       schedulerTimer = setInterval(schedulerTick, METRO_TIMING.schedulerIntervalMs);
+    }
+  }
+
+  function clearSchedulerTimer() {
+    if (metroWorker && workerAvailable) {
+      try { metroWorker.postMessage('stop'); } catch (e) {}
+    }
+    if (schedulerTimer !== null) {
+      clearInterval(schedulerTimer);
+      schedulerTimer = null;
     }
   }
 
@@ -641,6 +688,11 @@ export function createMetroEngine() {
     lastTickDeltaMs = 0;
     maxTickDeltaMs = 0;
     interruptedPending = false;
+    if (masterRestoreTimeout) { clearTimeout(masterRestoreTimeout); masterRestoreTimeout = null; }
+    try {
+      masterGain.gain.cancelScheduledValues(ctx.currentTime);
+      masterGain.gain.setValueAtTime(METRO_GAIN.master, ctx.currentTime);
+    } catch (e) {}
     runRef.playing = true;
     // Background silence for iOS
     if (typeof document !== 'undefined' && runRef.playing) {
@@ -662,19 +714,17 @@ export function createMetroEngine() {
         accentFirst: runAccentFirst,
         tiers: runBeatTiers
       });
-      // Also drive via AudioParams for spec path (k-rate)
       try {
         const now = ctx.currentTime;
         if (workletNode.parameters.has('bpm')) workletNode.parameters.get('bpm').setValueAtTime(runRef.bpm, now);
         if (workletNode.parameters.has('subdivision')) workletNode.parameters.get('subdivision').setValueAtTime(runPerBeat, now);
-        if (workletNode.parameters.has('accentGain')) workletNode.parameters.get('accentGain').setValueAtTime(0.80, now);
-        if (workletNode.parameters.has('beatGain')) workletNode.parameters.get('beatGain').setValueAtTime(0.60, now);
+        if (workletNode.parameters.has('accentGain')) workletNode.parameters.get('accentGain').setValueAtTime(METRO_GAIN.accent, now);
+        if (workletNode.parameters.has('beatGain')) workletNode.parameters.get('beatGain').setValueAtTime(METRO_GAIN.beat, now);
         if (workletNode.parameters.has('subGain')) {
-          const gSub = 0.40 * getSubdivisionScale(runPerBeat);
+          const gSub = METRO_GAIN.sub * getSubdivisionScale(runPerBeat);
           workletNode.parameters.get('subGain').setValueAtTime(gSub, now);
         }
         if (workletNode.parameters.has('isPlaying')) workletNode.parameters.get('isPlaying').setValueAtTime(1, now);
-        // Spec RESET_PHASE
         workletNode.port.postMessage({ type: 'RESET_PHASE' });
       } catch (e) {}
     } else {
@@ -689,38 +739,46 @@ export function createMetroEngine() {
     runRef.playing = false;
     interruptedPending = false;
     pauseBackgroundSilence();
+    clearSchedulerTimer();
     if (usingWorklet && workletNode && ctx) {
       postToWorklet({ type: 'stop' });
       try {
         if (workletNode.parameters.has('isPlaying')) workletNode.parameters.get('isPlaying').setValueAtTime(0, ctx.currentTime);
       } catch (e) {}
-      // Spec-compliant 3ms de-click on masterGain
-      try {
-        const now = ctx.currentTime;
-        const g = masterGain.gain;
-        g.cancelAndHoldAtTime(now);
-        g.setValueAtTime(g.value, now);
-        g.exponentialRampToValueAtTime(0.0001, now + 0.003);
-        // Restore 0.90 after fade
-        g.setValueAtTime(0.90, now + 0.004);
-      } catch (e) {
-        try { masterGain.gain.setTargetAtTime(0, ctx.currentTime, 0.001); setTimeout(() => { try { masterGain.gain.setValueAtTime(0.90, ctx.currentTime); } catch (e2) {} }, 10); } catch (e3) {}
-      }
     } else if (ctx) {
       flushFrom(METRO_TIMING.stopFlushGuardSec, true);
       pendingSources.length = 0;
+    }
+    if (ctx && masterGain) {
       try {
         const now = ctx.currentTime;
         const g = masterGain.gain;
-        g.cancelAndHoldAtTime(now);
-        g.setValueAtTime(g.value, now);
-        g.exponentialRampToValueAtTime(0.0001, now + 0.003);
-        g.setValueAtTime(0.90, now + 0.004);
-      } catch (e) {}
-    }
-    if (schedulerTimer !== null) {
-      clearInterval(schedulerTimer);
-      schedulerTimer = null;
+        try { g.cancelAndHoldAtTime(now); } catch (e) { try { g.cancelScheduledValues(now); } catch (e2) {} }
+        const held = g.value;
+        g.setValueAtTime(held, now);
+        g.exponentialRampToValueAtTime(METRO_GAIN.epsilon, now + 0.003);
+        if (masterRestoreTimeout) clearTimeout(masterRestoreTimeout);
+        masterRestoreTimeout = setTimeout(() => {
+          masterRestoreTimeout = null;
+          if (!ctx) return;
+          try {
+            if (!runRef.playing) {
+              g.cancelScheduledValues(ctx.currentTime);
+              g.setValueAtTime(METRO_GAIN.master, ctx.currentTime);
+            }
+          } catch (e) {}
+        }, 12);
+      } catch (e) {
+        try {
+          masterGain.gain.setTargetAtTime(0, ctx.currentTime, 0.001);
+          if (masterRestoreTimeout) clearTimeout(masterRestoreTimeout);
+          masterRestoreTimeout = setTimeout(() => {
+            masterRestoreTimeout = null;
+            if (!ctx) return;
+            try { masterGain.gain.setValueAtTime(METRO_GAIN.master, ctx.currentTime); } catch (e2) {}
+          }, 12);
+        } catch (e3) {}
+      }
     }
     if (uiRafId !== null) {
       cancelAnimationFrame(uiRafId);
@@ -755,15 +813,13 @@ export function createMetroEngine() {
     if (typeof opts.accentFirst === 'boolean') runAccentFirst = opts.accentFirst;
     if (typeof opts.vibrate === 'boolean') runVibrate = opts.vibrate;
     if (usingWorklet && workletNode) {
-      // Drive subdivision via AudioParam if available (spec)
       try {
         let handled = false;
         if (typeof opts.perBeat === 'number' && workletNode.parameters.has('subdivision')) {
           workletNode.parameters.get('subdivision').setValueAtTime(opts.perBeat, ctx.currentTime);
           handled = true;
-          // Also update subGain with equal-power scaling
           try {
-            const gSub = 0.40 * getSubdivisionScale(opts.perBeat);
+            const gSub = METRO_GAIN.sub * getSubdivisionScale(opts.perBeat);
             if (workletNode.parameters.has('subGain')) workletNode.parameters.get('subGain').setValueAtTime(gSub, ctx.currentTime);
           } catch (e) {}
         }
@@ -825,19 +881,19 @@ export function createMetroEngine() {
     const t = tierId || 'mid';
     const ratio = t === 'low' ? 0.75 : (t === 'high' ? 1.5 : 1);
     const freq = sound.freq * ratio;
-    // Preview uses bounded gain (0.50 nominal) with headroom
-    const peakGain = Math.max(0.0001, Math.min(0.6, 0.50 * (Math.max(0.0001, sound.gain) / 0.5)));
+    const peakGain = Math.max(METRO_GAIN.epsilon, Math.min(0.6, 0.50 * (Math.max(METRO_GAIN.epsilon, sound.gain) / 0.5)));
     const time = ctx.currentTime + 0.01;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = sound.type;
     osc.frequency.setValueAtTime(freq, time);
-    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.setValueAtTime(METRO_GAIN.epsilon, time);
     gain.gain.exponentialRampToValueAtTime(peakGain, time + 0.0008);
-    gain.gain.exponentialRampToValueAtTime(0.0001, time + sound.decay);
+    gain.gain.exponentialRampToValueAtTime(METRO_GAIN.epsilon, time + sound.decay);
     osc.connect(gain);
     try {
-      if (compressor) gain.connect(compressor);
+      if (hpFilter) gain.connect(hpFilter);
+      else if (compressor) gain.connect(compressor);
       else gain.connect(masterGain);
     } catch (e) { gain.connect(masterGain); }
     osc.start(time);
@@ -853,7 +909,7 @@ export function createMetroEngine() {
 
   function setVolume(value) {
     if (!masterGain || !ctx) return;
-    const target = Math.max(0.00001, Math.min(1, value * 0.90)); // preserve 0.90 headroom
+    const target = Math.max(0.00001, Math.min(1, value * METRO_GAIN.master));
     try { masterGain.gain.setTargetAtTime(target, ctx.currentTime, 0.015); } catch (e) { try { masterGain.gain.value = target; } catch (e2) {} }
   }
 

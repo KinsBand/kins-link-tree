@@ -350,13 +350,16 @@ export function createUi(callbacks) {
     buildRadialRing();
     buildTsGrid();
     buildSubRow();
-    buildSetlist();
-    buildSoundRow();
     buildCoachTabs();
-    // apply persisted beat colors before first render
     try { applyLevelColors(); } catch (e) {}
     renderBeatColors();
     bindBeatColorEvents();
+    // Defer heaviest setlist/sound builds to idle — keeps FCP/TBT low without breaking coach tests
+    const scheduleIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
+    scheduleIdle(() => {
+      buildSetlist();
+      buildSoundRow();
+    });
     attachListeners();
     renderAll();
     // apply saved tab
@@ -428,20 +431,39 @@ export function createUi(callbacks) {
     const segSpan = 360 / beats - gapDeg;
 
     const createSegPath = (i, start, end) => {
-      const path = document.createElementNS(NS, 'path');
       const tier = getBeatTier(i);
-      path.setAttribute('d', describeArc(cx, cy, r, start, end));
+      const arcD = describeArc(cx, cy, r, start, end);
+      const label = METRO_COPY.beatTierAria ? METRO_COPY.beatTierAria(i + 1, tier) : `Beat ${i + 1} — pitch ${tier}`;
+      // Transparent hit path — 44px stroke ensures WCAG 2.5.8 minimum target (visual stays 8px)
+      const hit = document.createElementNS(NS, 'path');
+      hit.setAttribute('d', arcD);
+      hit.setAttribute('class', 'metro-radial-seg-hit');
+      hit.setAttribute('fill', 'none');
+      hit.setAttribute('stroke', 'transparent');
+      hit.setAttribute('stroke-width', '44');
+      hit.setAttribute('stroke-linecap', 'round');
+      hit.style.pointerEvents = 'stroke';
+      hit.dataset.index = String(i);
+      hit.setAttribute('data-track', 'metronome:tier_cycle');
+      hit.setAttribute('aria-hidden', 'true');
+      const fire = (e) => {
+        e.stopPropagation();
+        if (callbacks.onTierCycle) callbacks.onTierCycle(i);
+      };
+      hit.addEventListener('click', fire);
+      // Append hit before visual so visual renders on top
+      els.radialRing.appendChild(hit);
+      // Visual path — preserves original 8px design and a11y semantics
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', arcD);
       path.setAttribute('class', `metro-radial-seg beat-pip tier-${tier} is-${tier} beat-${tier}${tier === 'mute' ? ' beat-muted-gold beat-muted is-muted' : ''}`);
       path.setAttribute('role', 'button');
       path.setAttribute('tabindex', '0');
       path.dataset.index = String(i);
       path.dataset.tier = tier;
       path.setAttribute('data-track', 'metronome:tier_cycle');
-      path.setAttribute('aria-label', METRO_COPY.beatTierAria ? METRO_COPY.beatTierAria(i + 1, tier) : `Beat ${i + 1} — pitch ${tier}`);
-      path.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (callbacks.onTierCycle) callbacks.onTierCycle(i);
-      });
+      path.setAttribute('aria-label', label);
+      path.addEventListener('click', fire);
       path.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -449,6 +471,7 @@ export function createUi(callbacks) {
           if (callbacks.onTierCycle) callbacks.onTierCycle(i);
         }
       });
+      path._hitPath = hit;
       return path;
     };
 
@@ -501,6 +524,9 @@ export function createUi(callbacks) {
           seg.classList.remove('beat-muted-gold', 'is-muted', 'is-mute', 'beat-muted');
         }
         seg.setAttribute('aria-label', label);
+        // Also sync sibling hit path if present (44px transparent hit area)
+        const hit = seg._hitPath;
+        if (hit) hit.setAttribute('aria-label', label);
       }
     });
   }
@@ -2487,6 +2513,27 @@ export function createUi(callbacks) {
       else if (tab.id === 'tempo-primer') panel.appendChild(buildTempoPrimerEditor());
       els.coachPanelsWrap.appendChild(panel);
     });
+
+    // "Suggest a Module" CTA — distinct ghost button after the real tabs
+    const suggestBtn = document.createElement('button');
+    suggestBtn.type = 'button';
+    suggestBtn.className = 'metro-coach-suggest-btn brutal-press';
+    suggestBtn.setAttribute('aria-label', 'Suggest a new practice module');
+    suggestBtn.setAttribute('data-track', 'metronome:coach_suggest_module');
+    suggestBtn.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i> SUGGEST';
+    suggestBtn.addEventListener('click', () => {
+      if (typeof window.openFeedbackModal === 'function') {
+        window.openFeedbackModal('Metronome');
+      } else {
+        const modal = document.getElementById('feedbackModal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          document.body.classList.add('modal-open');
+        }
+      }
+    });
+    els.coachTablist.appendChild(suggestBtn);
+
     if (els.coachLive) {
       els.coachLive.textContent = '';
       els.coachLive.hidden = true;

@@ -12,4 +12,7 @@ export const functionalityConfig = {
   audioAutoPlay: false,
   enableLivePage: true,
   enableEpkPage: true,
+  enableKinsTools: false,
+  enableTheoryPage: false,
 };
+

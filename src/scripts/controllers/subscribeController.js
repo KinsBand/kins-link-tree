@@ -60,7 +60,8 @@ export function setSubscriptionState(isSubscribed, email = null) {
     console.warn('localStorage error:', e);
   }
 
-  document.cookie = `${COOKIE_NAME}=${valStr}; path=/; max-age=31536000; SameSite=Lax`;
+  const securePart = typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${COOKIE_NAME}=${valStr}; path=/; max-age=31536000; SameSite=Lax${securePart}`;
 
   window.dispatchEvent(new CustomEvent('kins:subscription-change', {
     detail: { isSubscribed, email: email || getSubscriberEmail() }

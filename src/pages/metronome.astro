@@ -51,12 +51,12 @@ import LegalModal from '../components/modals/LegalModal.astro';
       </div>
 
       <section class="metro-dial" id="metroDial" aria-label="Tempo (drag or scroll to adjust)">
-        <div class="metro-beat-dots" id="metroBeatDots" aria-hidden="true"></div>
-        <svg class="metro-radial-ring" id="metroRadialRing" aria-hidden="true" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="metro-beat-dots" id="metroBeatDots" role="group" aria-label="Beat pitch selectors — tap to cycle Low/Mid/High/Mute"></div>
+        <svg class="metro-radial-ring" id="metroRadialRing" role="group" aria-label="Beat pitch selectors" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet"></svg>
         <div class="metro-dial-core">
           <div class="metro-tempo-marking" id="metroTempoMarking" aria-live="polite">Allegro</div>
           <div class="metro-bpm-row">
-            <button type="button" class="metro-bpm-num" id="metroBpmNum" tabindex="0" role="slider" aria-valuemin="20" aria-valuemax="300" aria-valuenow="120" aria-label="Tap to edit tempo BPM">120</button>
+            <button type="button" class="metro-bpm-num" id="metroBpmNum" aria-label="Tempo 120 BPM — tap to edit, drag dial or use arrow keys to adjust">120</button>
             <input type="number" class="metro-bpm-input" id="metroBpmInput" inputmode="numeric" pattern="[0-9]*" min="20" max="300" step="1" hidden aria-label="Edit tempo BPM" />
           </div>
           <p class="metro-bpm-unit">BPM</p>
@@ -639,19 +639,6 @@ import LegalModal from '../components/modals/LegalModal.astro';
     color: var(--text-white);
     overflow: hidden;
     position: relative;
-  }
-
-  /* subtle warm gold vignette texture overlay */
-  .metro-page::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background-image: url("/noise-tile.png");
-    background-repeat: repeat;
-    background-size: 128px 128px;
-    opacity: 0.045;
-    pointer-events: none;
-    z-index: 0;
   }
 
   .metro-page :global([hidden]) {
@@ -1403,25 +1390,35 @@ import LegalModal from '../components/modals/LegalModal.astro';
     stroke: rgba(255, 255, 255, 0.08);
     stroke-width: 8;
     stroke-linecap: round;
-    pointer-events: stroke;
+    pointer-events: none;
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     outline: none;
-    transition: stroke 0.12s ease, filter 0.12s ease, stroke-width 0.12s ease, opacity 0.12s ease;
+    transition: stroke 0.12s ease, stroke-width 0.12s ease, opacity 0.12s ease;
     opacity: 0.9;
+  }
+
+  /* Hit path carries pointer events, visual path is non-interactive */
+  .metro-radial-ring :global(.metro-radial-seg-hit) {
+    pointer-events: stroke;
+  }
+
+  .metro-radial-ring :global(.metro-radial-seg-group:focus-visible) {
+    outline: 2px solid #F2FD43;
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 
   .metro-radial-ring :global(.metro-radial-seg:active) {
     outline: none;
     -webkit-tap-highlight-color: transparent;
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+    opacity: 1;
   }
 
   .metro-radial-ring :global(.metro-radial-seg:focus-visible) {
     outline: none;
     stroke-width: 9.5;
-    filter: drop-shadow(0 0 6px #F2FD43);
   }
 
   /* Idle radial segments — unified Low/Mid/High via level tokens
@@ -1570,18 +1567,16 @@ import LegalModal from '../components/modals/LegalModal.astro';
     margin-bottom: 2px;
     text-align: center;
     opacity: 0;
-    filter: blur(6px);
-    transform: scale(0.95);
+    transform: translateY(4px) scale(0.95);
     pointer-events: none;
     user-select: none;
-    transition: opacity 0.38s ease, filter 0.38s ease, transform 0.38s var(--ease-snappy);
-    will-change: opacity, transform, filter;
+    transition: opacity 0.38s ease, transform 0.38s var(--ease-snappy);
+    will-change: opacity, transform;
   }
 
   .metro-tempo-marking.is-visible {
     opacity: 1;
-    filter: blur(0px);
-    transform: scale(1);
+    transform: translateY(0) scale(1);
   }
 
   .metro-tempo-marking.swap-anim-a {
@@ -1599,51 +1594,43 @@ import LegalModal from '../components/modals/LegalModal.astro';
   @keyframes tempoBlurInA {
     0% {
       opacity: 0.15;
-      filter: blur(6px);
-      transform: scale(0.93);
+      transform: translateY(4px) scale(0.93);
     }
     100% {
       opacity: 1;
-      filter: blur(0px);
-      transform: scale(1);
+      transform: translateY(0) scale(1);
     }
   }
 
   @keyframes tempoBlurInB {
     0% {
       opacity: 0.15;
-      filter: blur(6px);
-      transform: scale(0.93);
+      transform: translateY(4px) scale(0.93);
     }
     100% {
       opacity: 1;
-      filter: blur(0px);
-      transform: scale(1);
+      transform: translateY(0) scale(1);
     }
   }
 
   @keyframes tempoBlurOut {
     0% {
       opacity: 1;
-      filter: blur(0px);
-      transform: scale(1);
+      transform: translateY(0) scale(1);
     }
     100% {
       opacity: 0;
-      filter: blur(6px);
-      transform: scale(0.95);
+      transform: translateY(-3px) scale(0.95);
     }
   }
 
   :global(html.low-power-mode) .metro-tempo-marking {
-    filter: none !important;
     animation: none !important;
     transition: opacity 0.2s ease;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .metro-tempo-marking {
-      filter: none !important;
       animation: none !important;
       transition: opacity 0.2s ease;
     }
@@ -1671,13 +1658,24 @@ import LegalModal from '../components/modals/LegalModal.astro';
     background: transparent;
     border: 2px solid transparent;
     border-radius: 8px;
-    padding: 2px 8px;
+    padding: 10px 16px;
+    min-width: 44px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
     transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .metro-bpm-num::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: inherit;
+    pointer-events: auto;
   }
 
   .metro-bpm-num:hover {
@@ -5995,6 +5993,47 @@ import LegalModal from '../components/modals/LegalModal.astro';
   :global(.metro-coach-tab[aria-selected='true']) {
     background: var(--accent-neon-yellow);
     color: #000000;
+  }
+
+  :global(.metro-coach-suggest-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+    padding: 11px 14px;
+    background: transparent;
+    color: #71717a;
+    border: 2px dashed #3f3f46;
+    border-radius: var(--radius-md);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease,
+                color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  :global(.metro-coach-suggest-btn:hover) {
+    background: rgba(242, 253, 67, 0.1);
+    color: var(--accent-neon-yellow);
+    border-color: var(--accent-neon-yellow);
+    transform: translate(-1px, -1px);
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  :global(.metro-coach-suggest-btn:active) {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+  }
+
+  :global(.metro-coach-suggest-btn i) {
+    font-size: 0.68rem;
   }
 
   .metro-coach-panel {

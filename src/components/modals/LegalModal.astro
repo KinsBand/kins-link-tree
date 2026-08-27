@@ -597,6 +597,54 @@ import { generalEmail } from '../../settings/contact.config';
       padding: 6px 8px;
     }
   }
+
+  /* ===== Mobile Bottom Sheet ===== */
+  @media (max-width: 640px) {
+    .modal-backdrop {
+      align-items: flex-end;
+      padding: 0;
+    }
+
+    .legal-modal-container {
+      max-width: 100%;
+      max-height: 94vh;
+      max-height: 94dvh;
+      border-radius: 14px 14px 0 0;
+      border-bottom: none;
+      box-shadow: 0 -4px 0px #000000;
+      animation: legalSheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .legal-modal-container.is-closing {
+      animation: legalSheetSlideDown 0.22s ease forwards;
+    }
+
+    .legal-modal-header {
+      border-radius: 14px 14px 0 0;
+    }
+
+    @keyframes legalSheetSlideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes legalSheetSlideDown {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+    }
+  }
 </style>
 
 <script>
