@@ -1,5 +1,8 @@
 ---
 import { generalEmail, bookingEmail } from '../../settings/contact.config';
+import { siteConfig } from '../../settings/site.config';
+
+const tipJarUrl = siteConfig.tipJarUrl || '';
 ---
 
 <section class="subscribe-section" id="subscribeFormSection">
@@ -129,11 +132,34 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
           </div>
         </div>
       </div>
-      <div class="feedback-action-row">
-        <button type="button" class="open-feedback-btn" id="openFeedbackFromContactsBtn">
-          <i class="fa-solid fa-lightbulb"></i>
-          <span>Suggest Improvement or Report Issue</span>
+      <div class="contacts-actions-row">
+        <button type="button" class="contacts-action-btn feedback-action-btn brutal-press" id="openFeedbackFromContactsBtn" aria-label="Suggest improvement or report issue">
+          <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+          <span>Suggest Feedback</span>
         </button>
+        {tipJarUrl ? (
+          <a
+            href={tipJarUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="contacts-action-btn tip-action-btn brutal-press"
+            id="openTipFromContactsBtn"
+            aria-label="Tip or support Kins on Ko-fi"
+          >
+            <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+            <span>Tip / Support Kins</span>
+          </a>
+        ) : (
+          <button
+            type="button"
+            class="contacts-action-btn tip-action-btn brutal-press"
+            id="openTipFromContactsBtn"
+            aria-label="Tip or support Kins"
+          >
+            <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+            <span>Tip / Support Kins</span>
+          </button>
+        )}
       </div>
     </div>
   </div>
@@ -952,37 +978,110 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
     transform: translate(-1px, -1px);
   }
 
-  .feedback-action-row {
+  .contacts-actions-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
     margin-top: 6px;
     padding-top: 8px;
     border-top: 1.5px dashed rgba(0, 0, 0, 0.2);
   }
 
-  .open-feedback-btn {
-    width: 100%;
-    background: var(--surface-input);
-    border: 2px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    color: var(--text-card-primary);
-    padding: 8px 12px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    font-family: var(--font-secondary);
-    font-size: 0.76rem;
-    font-weight: 800;
-    letter-spacing: 0.03em;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  @media (max-width: 440px) {
+    .contacts-actions-row {
+      grid-template-columns: 1fr;
+    }
   }
 
-  .open-feedback-btn:hover {
-    background: var(--accent-neon-yellow);
+  .contacts-action-btn {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    box-sizing: border-box;
+    white-space: nowrap;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+  }
+
+  .contacts-action-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary, var(--accent-neon-yellow));
+    outline-offset: 2px;
+  }
+
+  .feedback-action-btn {
+    background: var(--surface-input);
+    color: var(--text-card-primary);
+  }
+
+  .feedback-action-btn:hover {
+    background: var(--surface-card-light-hover);
+    color: var(--text-card-primary);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .tip-action-btn {
+    background: var(--btn-brand-primary, var(--accent-neon-yellow));
+    color: #000000;
+  }
+
+  .tip-action-btn:hover {
+    background: var(--btn-brand-hover, #faff60);
     color: #000000;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .contacts-actions-row,
+  :root[data-theme="dark"] .contacts-actions-row {
+    border-top: 1.5px dashed #2e2e36;
+  }
+
+  :global([data-theme="dark"]) .contacts-action-btn,
+  :root[data-theme="dark"] .contacts-action-btn {
+    border: 1.5px solid #2e2e36;
+    box-shadow: none;
+  }
+
+  :global([data-theme="dark"]) .feedback-action-btn,
+  :root[data-theme="dark"] .feedback-action-btn {
+    background: #1c1c21;
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) .feedback-action-btn:hover,
+  :root[data-theme="dark"] .feedback-action-btn:hover {
+    background: #27272e;
+    border-color: #43434f;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  :global([data-theme="dark"]) .tip-action-btn,
+  :root[data-theme="dark"] .tip-action-btn {
+    background: var(--btn-brand-primary, #d4af37);
+    color: #000000;
+    border-color: var(--brand-accent-primary, #d4af37);
+  }
+
+  :global([data-theme="dark"]) .tip-action-btn:hover,
+  :root[data-theme="dark"] .tip-action-btn:hover {
+    background: #e5b948;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 10px rgba(212, 175, 55, 0.35);
   }
 </style>
 
@@ -1514,4 +1613,11 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
     feedbackModal?.classList.remove('hidden');
     document.body.classList.add('modal-open');
   });
+
+  const tipBtn = document.getElementById('openTipFromContactsBtn');
+  if (tipBtn && tipBtn.tagName.toLowerCase() === 'button') {
+    tipBtn.addEventListener('click', () => {
+      showToast('☕ Tip jar launching soon! Thank you for the support!', 'info');
+    });
+  }
 </script>
