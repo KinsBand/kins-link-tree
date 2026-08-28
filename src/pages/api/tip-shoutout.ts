@@ -16,17 +16,19 @@ const AMOUNT_RE = /^\$?\d{1,4}(\.\d{1,2})?$/;
 
 const TipShoutoutSchema = z.object({
   amount: z.string().regex(AMOUNT_RE, 'Invalid tip amount'),
-  message: z.string().max(200).optional()
-});
+  message: z.string().max(400).nullable().optional()
+}).passthrough();
 
 function getDiscordWebhookUrl(): string {
-  return (
-    import.meta.env.DISCORD_TIP_WEBHOOK_URL ||
-    process.env.DISCORD_TIP_WEBHOOK_URL ||
-    import.meta.env.DISCORD_COMMUNITY_WEBHOOK_URL ||
-    process.env.DISCORD_COMMUNITY_WEBHOOK_URL ||
-    ''
-  );
+  if (typeof process !== 'undefined' && process.env) {
+    const url = process.env.DISCORD_TIP_WEBHOOK_URL || process.env.DISCORD_COMMUNITY_WEBHOOK_URL;
+    if (url) return String(url).replace(/^["']|["']$/g, '').trim();
+  }
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    const url = import.meta.env.DISCORD_TIP_WEBHOOK_URL || import.meta.env.DISCORD_COMMUNITY_WEBHOOK_URL;
+    if (url) return String(url).replace(/^["']|["']$/g, '').trim();
+  }
+  return '';
 }
 
 function jsonResponse(data: Record<string, unknown>, status: number): Response {

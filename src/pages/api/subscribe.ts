@@ -28,13 +28,13 @@ const SubscribeRequestSchema = z.object({
 });
 
 const getEnv = (key: string): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
-  }
+  let val = '';
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key] || '';
+    val = String(process.env[key]);
+  } else if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+    val = String(import.meta.env[key]);
   }
-  return '';
+  return val.replace(/^["']|["']$/g, '').trim();
 };
 
 /**
@@ -394,8 +394,11 @@ export const POST: APIRoute = async ({ request }) => {
         );
       } else {
         try {
+          const effectiveFrom = isSandboxFrom ? 'onboarding@resend.dev' : fromEmail;
+          console.info(`[Resend] Dispatching welcome email to ${cleanEmail} from ${effectiveFrom}`);
+
           const resendPayload: Record<string, unknown> = {
-            from: fromEmail,
+            from: effectiveFrom,
             to: [cleanEmail],
             reply_to: replyToEmail,
             subject: 'Welcome to the Kins Band Fan Club! 🎸✨',
@@ -413,6 +416,9 @@ export const POST: APIRoute = async ({ request }) => {
 
           if (resendRes.ok) {
             welcomeEmailSent = true;
+            const resData = (await resendRes.json().catch(() => ({}))) as { id?: string };
+            console.info(`[Resend] Welcome email delivered successfully to ${cleanEmail} (ID: ${resData.id || 'OK'})`);
+
             // Mark welcome_email_sent = true in Supabase (ignore if column missing on legacy schema)
             if (db) {
               const upd = await db

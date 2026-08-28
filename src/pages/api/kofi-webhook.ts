@@ -12,7 +12,13 @@ import {
 export const prerender = false;
 
 function getEnv(key: string): string {
-  return (import.meta.env[key] as string | undefined) || process.env[key] || '';
+  let val = '';
+  if (typeof process !== 'undefined' && process.env && process.env[key]) {
+    val = String(process.env[key]);
+  } else if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+    val = String(import.meta.env[key]);
+  }
+  return val.replace(/^["']|["']$/g, '').trim();
 }
 
 const KofiDataSchema = z.object({

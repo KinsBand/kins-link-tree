@@ -35,13 +35,13 @@ export interface NotifyConfig {
 }
 
 function getEnv(key: string): string {
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
-  }
+  let val = '';
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key] || '';
+    val = String(process.env[key]);
+  } else if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+    val = String(import.meta.env[key]);
   }
-  return '';
+  return val.replace(/^["']|["']$/g, '').trim();
 }
 
 /**
@@ -106,8 +106,12 @@ export async function sendNotifyEmail(
     };
   }
 
+  const effectiveFrom = config.fromEmail.toLowerCase().includes('resend.dev')
+    ? 'onboarding@resend.dev'
+    : config.fromEmail;
+
   const payload: Record<string, unknown> = {
-    from: config.fromEmail,
+    from: effectiveFrom,
     to: recipients,
     subject: options.subject,
     html: options.html,
@@ -144,6 +148,7 @@ export async function sendNotifyEmail(
 
       if (res.ok) {
         const data = (await res.json().catch(() => ({}))) as { id?: string };
+        console.info(`[notifyEmail] Delivered successfully via Resend (ID: ${data.id || 'OK'}) to: ${recipients.join(', ')}`);
         return {
           ok: true,
           id: data.id,

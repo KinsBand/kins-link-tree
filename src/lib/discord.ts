@@ -12,13 +12,13 @@ export interface DiscordConfig {
 }
 
 const getEnv = (key: string): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
-  }
+  let val = '';
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key] || '';
+    val = String(process.env[key]);
+  } else if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+    val = String(import.meta.env[key]);
   }
-  return '';
+  return val.replace(/^["']|["']$/g, '').trim();
 };
 
 export function getDiscordConfig(): DiscordConfig {

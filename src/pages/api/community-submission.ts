@@ -14,18 +14,20 @@ export const prerender = false;
 const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
 
 const CommunitySubmissionSchema = z.object({
-  url: z.string().min(1).max(500),
-  category: z.string().max(60).optional(),
-  handle: z.string().max(80).optional(),
-  title: z.string().max(120).optional()
-});
+  url: z.string().min(1).max(1000),
+  category: z.string().max(100).nullable().optional(),
+  handle: z.string().max(100).nullable().optional(),
+  title: z.string().max(200).nullable().optional()
+}).passthrough();
 
 function getDiscordWebhookUrl(): string {
-  return (
-    import.meta.env.DISCORD_COMMUNITY_CLIP_WEBHOOK_URL ||
-    process.env.DISCORD_COMMUNITY_CLIP_WEBHOOK_URL ||
-    ''
-  );
+  if (typeof process !== 'undefined' && process.env && process.env.DISCORD_COMMUNITY_CLIP_WEBHOOK_URL) {
+    return String(process.env.DISCORD_COMMUNITY_CLIP_WEBHOOK_URL).replace(/^["']|["']$/g, '').trim();
+  }
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DISCORD_COMMUNITY_CLIP_WEBHOOK_URL) {
+    return String(import.meta.env.DISCORD_COMMUNITY_CLIP_WEBHOOK_URL).replace(/^["']|["']$/g, '').trim();
+  }
+  return '';
 }
 
 function jsonResponse(data: Record<string, unknown>, status: number): Response {

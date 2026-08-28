@@ -17,17 +17,19 @@ const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/ma
 const RequestSongSchema = z.object({
   songTitle: z.string().min(1).max(120),
   artist: z.string().min(1).max(120),
-  reason: z.string().max(500).optional(),
-  email: z.string().max(200).optional(),
-  isSubscribed: z.boolean().optional()
-});
+  reason: z.string().max(1000).nullable().optional(),
+  email: z.string().max(254).nullable().optional(),
+  isSubscribed: z.boolean().nullable().optional()
+}).passthrough();
 
 function getDiscordWebhookUrl(): string {
-  return (
-    import.meta.env.DISCORD_REQUEST_SONG_WEBHOOK_URL ||
-    process.env.DISCORD_REQUEST_SONG_WEBHOOK_URL ||
-    ''
-  );
+  if (typeof process !== 'undefined' && process.env && process.env.DISCORD_REQUEST_SONG_WEBHOOK_URL) {
+    return String(process.env.DISCORD_REQUEST_SONG_WEBHOOK_URL).replace(/^["']|["']$/g, '').trim();
+  }
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DISCORD_REQUEST_SONG_WEBHOOK_URL) {
+    return String(import.meta.env.DISCORD_REQUEST_SONG_WEBHOOK_URL).replace(/^["']|["']$/g, '').trim();
+  }
+  return '';
 }
 
 function jsonResponse(data: Record<string, unknown>, status: number): Response {

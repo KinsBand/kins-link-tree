@@ -16,28 +16,35 @@ const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/ma
 
 const FeedbackRequestSchema = z.object({
   feedback: z.object({
-    type: z.string().max(60).optional(),
-    category: z.string().max(80).optional(),
-    user_message: z.string().max(2000).optional(),
-    details: z.string().max(2000).optional(),
-    contact: z.string().max(200).optional()
-  }).optional(),
-  feedbackType: z.string().max(60).optional(),
-  category: z.string().max(80).optional(),
-  details: z.string().max(2000).optional(),
-  contact: z.string().max(200).optional(),
-  viewportWithDpr: z.string().max(100).optional(),
-  viewport: z.string().max(100).optional(),
-  environment: z.string().max(150).optional(),
-  url: z.string().max(400).optional(),
-  formattedDate: z.string().max(60).optional(),
-  lastError: z.string().max(600).optional(),
-  screenshotDataUrl: z.string().max(3_000_000).optional()
-});
+    type: z.string().max(100).nullable().optional(),
+    category: z.string().max(100).nullable().optional(),
+    user_message: z.string().max(4000).nullable().optional(),
+    details: z.string().max(4000).nullable().optional(),
+    contact: z.string().max(300).nullable().optional()
+  }).passthrough().nullable().optional(),
+  feedbackType: z.string().max(100).nullable().optional(),
+  category: z.string().max(100).nullable().optional(),
+  details: z.string().max(4000).nullable().optional(),
+  contact: z.string().max(300).nullable().optional(),
+  viewportWithDpr: z.string().max(200).nullable().optional(),
+  viewport: z.string().max(200).nullable().optional(),
+  environment: z.string().max(300).nullable().optional(),
+  url: z.string().max(1000).nullable().optional(),
+  formattedDate: z.string().max(200).nullable().optional(),
+  lastError: z.string().max(2000).nullable().optional(),
+  screenshotDataUrl: z.string().max(6_000_000).nullable().optional()
+}).passthrough();
 
 function getDiscordWebhookUrl(feedbackType: string): string {
-  const env = (name: string): string =>
-    (import.meta.env[name] as string | undefined) || process.env[name] || '';
+  const env = (name: string): string => {
+    if (typeof process !== 'undefined' && process.env && process.env[name]) {
+      return String(process.env[name]).replace(/^["']|["']$/g, '').trim();
+    }
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[name]) {
+      return String(import.meta.env[name]).replace(/^["']|["']$/g, '').trim();
+    }
+    return '';
+  };
 
   if (feedbackType.includes('Bug')) {
     return env('DISCORD_FEEDBACK_WEBHOOK_BUG') || env('DISCORD_FEEDBACK_WEBHOOK_URL');
@@ -64,6 +71,7 @@ export const POST: APIRoute = async ({ request }) => {
     const rawBody = await request.json().catch(() => null);
     const parsed = FeedbackRequestSchema.safeParse(rawBody);
     if (!parsed.success) {
+      console.warn('[feedback] validation failed:', JSON.stringify(parsed.error.format()));
       return jsonError('Invalid feedback payload.', 400);
     }
 
