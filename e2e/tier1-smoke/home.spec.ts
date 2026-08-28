@@ -249,13 +249,13 @@ test.describe('tier1 smoke — home hub', () => {
     await expect(streamsTab).toBeVisible();
     await expect(socialsTab).toBeHidden();
 
-    // Verify recommended stream platforms have .is-recommended and ★ REC badge
+    // Verify recommended stream platforms have .is-recommended and minimalist ★ badge
     const appleMusicCard = streamsTab.locator('a[data-name="Apple Music"]');
     const ytMusicCard = streamsTab.locator('a[data-name="YT Music"]');
     await expect(appleMusicCard).toHaveClass(/is-recommended/);
-    await expect(appleMusicCard.locator('.rec-badge-chip')).toBeVisible();
+    await expect(appleMusicCard.locator('.rec-star-badge')).toBeVisible();
     await expect(ytMusicCard).toHaveClass(/is-recommended/);
-    await expect(ytMusicCard.locator('.rec-badge-chip')).toBeVisible();
+    await expect(ytMusicCard.locator('.rec-star-badge')).toBeVisible();
 
     // Switch to Socials tab and check recommended socials (Instagram, TikTok)
     await socialsBtn.click();
