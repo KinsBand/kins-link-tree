@@ -5,182 +5,207 @@ const baseUrl = import.meta.env.BASE_URL;
 
 <nav class="epk-nav-sticky" id="epkNavSticky">
   <div class="epk-nav-container">
+    <!-- Left Area: KINS! Back Button & Desktop Brand Anchor -->
     <div class="epk-nav-left">
-      <a href={baseUrl} class="epk-nav-back-btn" title="Back to Official Link-in-Bio">
-        <i class="fa-solid fa-arrow-left epk-back-icon"></i>
-        <span class="epk-back-text-full">Link-in-Bio</span>
-        <span class="epk-back-text-mobile">Back</span>
+      <a href={baseUrl} class="epk-nav-back-btn brutal-press" title="Back to KINS Link-in-Bio" aria-label="Back to KINS Link-in-Bio">
+        <i class="fa-solid fa-arrow-left epk-back-icon" aria-hidden="true"></i>
+        <span class="epk-back-label">KINS!</span>
       </a>
-      <a href="#epk-hero" class="epk-nav-brand" title="KINS Official EPK">
+
+      <a href="#epk-hero" class="epk-nav-brand desktop-brand" title="KINS Official EPK">
         <img 
           src={`${baseUrl}${epkConfig.logoImage}`} 
           alt={epkConfig.bandName} 
           class="epk-nav-logo-img" 
-          width="76"
-          height="24"
-          style="height: 24px; width: auto; max-width: 80px; object-fit: contain;"
+          width="130"
+          height="32"
+          loading="eager"
         />
         <span class="epk-brand-badge">EPK '26</span>
       </a>
     </div>
 
-    <!-- Desktop Navigation Links -->
-    <div class="epk-nav-links">
-      <a href="#epk-members" class="epk-nav-link"><i class="fa-solid fa-users"></i> Lineup</a>
-      <a href="#epk-repertoire" class="epk-nav-link"><i class="fa-solid fa-bolt"></i> Repertoire</a>
-      <a href="#epk-bio" class="epk-nav-link"><i class="fa-solid fa-file-lines"></i> Bio</a>
-      <a href="#epk-photos" class="epk-nav-link"><i class="fa-solid fa-camera"></i> Photos</a>
-      <a href="#epk-contact" class="epk-nav-link"><i class="fa-solid fa-envelope"></i> Contact</a>
-      <a href="#epk-downloads" class="epk-nav-link"><i class="fa-solid fa-download"></i> Assets</a>
+    <!-- Mobile Center: Centered KINS Logo in Top Bar -->
+    <div class="epk-nav-center-mobile">
+      <a href="#epk-hero" class="epk-nav-brand mobile-brand" title="KINS Official EPK">
+        <img 
+          src={`${baseUrl}${epkConfig.logoImage}`} 
+          alt={epkConfig.bandName} 
+          class="epk-nav-logo-img" 
+          width="110"
+          height="28"
+          loading="eager"
+        />
+        <span class="epk-brand-badge">EPK '26</span>
+      </a>
     </div>
 
-    <!-- Desktop Right Action Buttons & Mobile Hamburger -->
+    <!-- Desktop Navigation Links & Mobile Hamburger -->
     <div class="epk-nav-right">
-      <a href="#epk-downloads" class="epk-nav-download-cta" title="Jump to Downloadable Production Deck">
+      <!-- Desktop Navigation Links -->
+      <div class="epk-nav-links">
+        <a href="#epk-members" class="epk-nav-link"><i class="fa-solid fa-users"></i> Lineup</a>
+        <a href="#epk-repertoire" class="epk-nav-link"><i class="fa-solid fa-bolt"></i> Live Format</a>
+        <a href="#epk-bio" class="epk-nav-link"><i class="fa-solid fa-file-lines"></i> Bio</a>
+        <a href="#epk-photos" class="epk-nav-link"><i class="fa-solid fa-camera"></i> Photos</a>
+        <a href="#epk-contact" class="epk-nav-link"><i class="fa-solid fa-envelope"></i> Contact</a>
+      </div>
+
+      <a href="#epk-downloads" class="epk-nav-download-cta brutal-press" title="Jump to Downloadable Assets Deck">
         <i class="fa-solid fa-download"></i>
-        <span class="epk-cta-text">Asset Deck</span>
+        <span class="epk-cta-text">Assets</span>
       </a>
 
-      <button type="button" id="themeToggleBtn" class="epk-nav-theme-btn" aria-label="Toggle Theme" title="Toggle Theme">
-        <span class="theme-toggle-icon-badge">
-          <i class="theme-toggle-icon fa-solid fa-sun" id="themeToggleIcon"></i>
-        </span>
-      </button>
-
       <!-- Mobile Hamburger Button -->
-      <button type="button" id="epkHamburgerBtn" class="epk-hamburger-btn" aria-label="Open navigation menu" aria-expanded="false">
+      <button type="button" id="epkHamburgerBtn" class="epk-hamburger-btn brutal-press" aria-label="Open navigation menu" aria-expanded="false">
         <i class="fa-solid fa-bars" id="epkHamburgerIcon"></i>
       </button>
     </div>
   </div>
 
   <!-- Mobile Drawer Slide-Over Menu -->
-  <div class="epk-drawer-backdrop" id="epkDrawerBackdrop"></div>
-  <aside class="epk-mobile-drawer" id="epkMobileDrawer" aria-hidden="true">
+  <div class="epk-drawer-backdrop" id="epkDrawerBackdrop" aria-hidden="true"></div>
+  <aside class="epk-mobile-drawer" id="epkMobileDrawer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="EPK Navigation Drawer">
     <div class="epk-drawer-header">
       <div class="drawer-brand">
         <img 
           src={`${baseUrl}${epkConfig.logoImage}`} 
           alt={epkConfig.bandName} 
           class="drawer-logo-img" 
-          width="70"
-          height="22"
-          style="height: 22px; width: auto; max-width: 75px; object-fit: contain;"
+          width="100"
+          height="26"
         />
         <span class="epk-brand-badge">EPK '26</span>
       </div>
-      <button type="button" id="epkCloseDrawerBtn" class="drawer-close-btn" aria-label="Close navigation menu">
+      <button type="button" id="epkCloseDrawerBtn" class="drawer-close-btn brutal-press" aria-label="Close navigation menu">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
     <div class="epk-drawer-links">
-      <a href="#epk-members" class="epk-drawer-link">
+      <a href="#epk-members" class="epk-drawer-link brutal-press">
         <i class="fa-solid fa-users link-icon"></i>
         <span class="link-label">Band Lineup</span>
         <i class="fa-solid fa-chevron-right link-arrow"></i>
       </a>
-      <a href="#epk-repertoire" class="epk-drawer-link">
+      <a href="#epk-repertoire" class="epk-drawer-link brutal-press">
         <i class="fa-solid fa-bolt link-icon"></i>
-        <span class="link-label">Live Repertoire</span>
+        <span class="link-label">Live Format & Booking</span>
         <i class="fa-solid fa-chevron-right link-arrow"></i>
       </a>
-      <a href="#epk-bio" class="epk-drawer-link">
+      <a href="#epk-bio" class="epk-drawer-link brutal-press">
         <i class="fa-solid fa-file-lines link-icon"></i>
         <span class="link-label">Band Biography</span>
         <i class="fa-solid fa-chevron-right link-arrow"></i>
       </a>
-      <a href="#epk-photos" class="epk-drawer-link">
+      <a href="#epk-photos" class="epk-drawer-link brutal-press">
         <i class="fa-solid fa-camera link-icon"></i>
         <span class="link-label">Press Photos</span>
         <i class="fa-solid fa-chevron-right link-arrow"></i>
       </a>
-      <a href="#epk-contact" class="epk-drawer-link">
+      <a href="#epk-contact" class="epk-drawer-link brutal-press">
         <i class="fa-solid fa-envelope link-icon"></i>
         <span class="link-label">Direct Contact</span>
         <i class="fa-solid fa-chevron-right link-arrow"></i>
       </a>
-      <a href="#epk-downloads" class="epk-drawer-link">
+      <a href="#epk-downloads" class="epk-drawer-link brutal-press">
         <i class="fa-solid fa-download link-icon"></i>
-        <span class="link-label">Production Assets</span>
+        <span class="link-label">Asset Downloads</span>
         <i class="fa-solid fa-chevron-right link-arrow"></i>
       </a>
     </div>
 
     <div class="epk-drawer-footer">
-      <button type="button" id="drawerThemeToggleBtn" class="drawer-theme-btn">
-        <span class="theme-toggle-icon-badge">
-          <i class="theme-toggle-icon fa-solid fa-sun" id="drawerThemeToggleIcon"></i>
-        </span>
-        <span class="drawer-theme-label" id="drawerThemeToggleLabel">Light Mode</span>
-      </button>
+      <!-- Enhanced Theme Selector Inside Mobile Drawer -->
+      <div class="drawer-theme-toggle-wrap">
+        <div class="drawer-theme-toggle-btn" id="drawerThemeToggleBtn" role="group" aria-label="Toggle Display Theme">
+          <span class="drawer-theme-current-title" id="drawerThemeCurrentTitle">Light</span>
+          <div class="drawer-theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
+            <button type="button" class="drawer-theme-pill-btn active" id="drawerThemePillLight" data-theme-target="standard" aria-label="Light Mode" title="Light Mode">
+              <i class="fa-solid fa-sun" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="drawer-theme-pill-btn" id="drawerThemePillDark" data-theme-target="dark" aria-label="Dark Mode" title="Dark Mode">
+              <i class="fa-solid fa-moon" aria-hidden="true"></i>
+            </button>
+          </div>
+          <span class="drawer-theme-mode-label">Mode</span>
+        </div>
+      </div>
 
-      <a href={baseUrl} class="drawer-return-link">
-        <i class="fa-solid fa-arrow-left"></i> Return to Link-in-Bio
+      <!-- KINS! Back Link in Drawer -->
+      <a href={baseUrl} class="drawer-return-link brutal-press" title="Return to KINS Link-in-Bio">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>KINS!</span>
       </a>
     </div>
   </aside>
 </nav>
 
 <style>
+  /* ==========================================================================
+     EPK Header Sticky Navigation Bar
+     ========================================================================== */
   .epk-nav-sticky {
     position: sticky;
     top: 0;
     left: 0;
     width: 100%;
     max-width: 100%;
+    height: 64px;
     z-index: 950;
-    background: rgba(20, 20, 24, 0.94);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: rgba(18, 18, 20, 0.96);
     border-bottom: 3px solid #000000;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
     user-select: none;
     box-sizing: border-box;
-    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
   }
 
   [data-theme="dark"] .epk-nav-sticky {
-    background: rgba(14, 14, 18, 0.96);
+    background: rgba(14, 14, 18, 0.98);
   }
 
   .epk-nav-container {
     max-width: 1200px;
     width: 100%;
+    height: 100%;
     margin: 0 auto;
-    padding: 8px 12px;
+    padding: 0 clamp(12px, 2vw, 24px);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 12px;
     box-sizing: border-box;
   }
 
+  /* Left Area */
   .epk-nav-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 14px;
     min-width: 0;
   }
 
+  /* KINS! Back Button (Brutalist Pill) */
   .epk-nav-back-btn {
     background: var(--surface-card-light);
     color: var(--text-card-primary);
-    border: 2px solid #000000;
+    border: 2.5px solid #000000;
     box-shadow: 2px 2px 0px #000000;
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-family: var(--font-secondary);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     flex-shrink: 0;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
   }
 
   .epk-nav-back-btn:hover {
@@ -190,38 +215,34 @@ const baseUrl = import.meta.env.BASE_URL;
     box-shadow: 3px 3px 0px #000000;
   }
 
-  .epk-back-text-full {
-    display: inline-block;
+  .epk-nav-back-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
-  .epk-back-text-mobile {
-    display: none;
+  .epk-back-icon {
+    font-size: 0.76rem;
   }
 
-  @media (max-width: 767px) {
-    .epk-back-text-full {
-      display: none;
-    }
-    .epk-back-text-mobile {
-      display: inline-block;
-    }
+  .epk-back-label {
+    letter-spacing: 0.04em;
   }
 
+  /* Brand Logo & EPK Badge */
   .epk-nav-brand {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     text-decoration: none;
     min-width: 0;
   }
 
-  /* Small Logo in Header */
   .epk-nav-logo-img {
-    height: 22px !important;
+    height: 32px !important;
     width: auto !important;
-    max-width: 75px !important;
+    max-width: 130px !important;
     object-fit: contain !important;
-    filter: drop-shadow(1px 1px 0px #000000);
+    filter: drop-shadow(0 0 10px rgba(242, 253, 67, 0.25)) drop-shadow(1px 1px 0px #000000);
     display: block;
     transition: transform 0.16s var(--ease-tactile);
   }
@@ -234,20 +255,30 @@ const baseUrl = import.meta.env.BASE_URL;
     background: var(--accent-neon-yellow);
     color: #000000;
     border: 1.5px solid #000000;
-    font-family: var(--font-secondary);
-    font-size: 0.55rem;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.6rem;
     font-weight: 900;
-    padding: 1px 4px;
-    border-radius: 3px;
-    letter-spacing: 0.04em;
+    padding: 2px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.06em;
     flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .desktop-brand {
+    display: inline-flex;
+  }
+
+  .epk-nav-center-mobile {
+    display: none;
   }
 
   /* Desktop Navigation Links */
   .epk-nav-links {
     display: none;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
   }
 
   @media (min-width: 960px) {
@@ -265,7 +296,7 @@ const baseUrl = import.meta.env.BASE_URL;
     text-transform: uppercase;
     text-decoration: none;
     padding: 6px 10px;
-    border-radius: 4px;
+    border-radius: 6px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -277,22 +308,23 @@ const baseUrl = import.meta.env.BASE_URL;
     background: rgba(255, 255, 255, 0.06);
   }
 
+  /* Right Area */
   .epk-nav-right {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-shrink: 0;
   }
 
   .epk-nav-download-cta {
     background: var(--accent-neon-yellow);
     color: #000000;
-    border: 2px solid #000000;
+    border: 2.5px solid #000000;
     box-shadow: 2px 2px 0px #000000;
-    border-radius: 6px;
-    padding: 5px 10px;
-    font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.76rem;
     font-weight: 900;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -300,7 +332,7 @@ const baseUrl = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
   }
 
   .epk-nav-download-cta:hover {
@@ -310,39 +342,18 @@ const baseUrl = import.meta.env.BASE_URL;
     box-shadow: 3px 3px 0px #000000;
   }
 
-  .epk-nav-theme-btn {
-    background: var(--surface-card-light);
-    border: 2px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    border-radius: 6px;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.16s var(--ease-tactile);
-  }
-
-  .epk-nav-theme-btn:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
-  }
-
-  .theme-toggle-icon {
-    font-size: 0.82rem;
-    color: #000000;
+  .epk-nav-download-cta:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   /* Hamburger Menu Button on Mobile */
   .epk-hamburger-btn {
     display: none;
     background: var(--surface-card-light);
-    border: 2px solid #000000;
+    border: 2.5px solid #000000;
     box-shadow: 2px 2px 0px #000000;
-    border-radius: 6px;
+    border-radius: 8px;
     width: 44px;
     height: 44px;
     min-width: 44px;
@@ -351,7 +362,7 @@ const baseUrl = import.meta.env.BASE_URL;
     justify-content: center;
     cursor: pointer;
     color: var(--text-card-primary);
-    font-size: 1rem;
+    font-size: 1.05rem;
     transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
@@ -362,24 +373,43 @@ const baseUrl = import.meta.env.BASE_URL;
     box-shadow: 3px 3px 0px #000000;
   }
 
-  /* Responsive Rules: Hide desktop CTAs on mobile, show hamburger */
+  /* ==========================================================================
+     Mobile View Rules (< 768px)
+     ========================================================================== */
   @media (max-width: 767px) {
+    .desktop-brand {
+      display: none !important;
+    }
+
+    .epk-nav-center-mobile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .mobile-brand .epk-nav-logo-img {
+      height: 28px !important;
+      max-width: 105px !important;
+    }
+
     .epk-nav-download-cta {
       display: none !important;
     }
-    .epk-nav-theme-btn {
-      display: none !important;
-    }
+
     .epk-hamburger-btn {
       display: inline-flex;
     }
   }
 
-  /* Mobile Drawer Overlay */
+  /* ==========================================================================
+     Mobile Drawer Slide-Over Menu
+     ========================================================================== */
   .epk-drawer-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.78);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     z-index: 998;
@@ -400,6 +430,7 @@ const baseUrl = import.meta.env.BASE_URL;
     bottom: 0;
     width: min(85vw, 320px);
     height: 100vh;
+    height: 100dvh;
     background: #141418;
     border-left: 3px solid #000000;
     box-shadow: -6px 0 0px #000000;
@@ -414,6 +445,7 @@ const baseUrl = import.meta.env.BASE_URL;
     pointer-events: none;
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s ease;
     overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   [data-theme="dark"] .epk-mobile-drawer {
@@ -441,9 +473,9 @@ const baseUrl = import.meta.env.BASE_URL;
   }
 
   .drawer-logo-img {
-    height: 22px !important;
+    height: 26px !important;
     width: auto !important;
-    max-width: 75px !important;
+    max-width: 95px !important;
     object-fit: contain !important;
   }
 
@@ -452,21 +484,21 @@ const baseUrl = import.meta.env.BASE_URL;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: var(--text-card-primary);
-    transition: transform 0.16s var(--ease-tactile);
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .drawer-close-btn:hover {
-    background: var(--accent-crimson);
+    background: #ef4444;
     color: #ffffff;
     transform: scale(1.05);
   }
@@ -475,7 +507,9 @@ const baseUrl = import.meta.env.BASE_URL;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin: 20px 0;
+    margin: 16px 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
   }
 
   .epk-drawer-link {
@@ -485,8 +519,8 @@ const baseUrl = import.meta.env.BASE_URL;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 8px;
     padding: 12px 14px;
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.84rem;
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -527,9 +561,15 @@ const baseUrl = import.meta.env.BASE_URL;
     gap: 12px;
     padding-top: 14px;
     border-top: 2px solid #000000;
+    flex-shrink: 0;
   }
 
-  .drawer-theme-btn {
+  /* Segmented Theme Toggle in Drawer */
+  .drawer-theme-toggle-wrap {
+    width: 100%;
+  }
+
+  .drawer-theme-toggle-btn {
     width: 100%;
     min-height: 44px;
     background: var(--surface-card-light);
@@ -537,43 +577,101 @@ const baseUrl = import.meta.env.BASE_URL;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 8px;
-    padding: 8px 14px;
+    padding: 4px 12px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 10px;
-    transition: transform 0.16s var(--ease-tactile);
+    user-select: none;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
-  .drawer-theme-btn:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
-  }
-
-  .drawer-theme-label {
-    font-family: var(--font-secondary);
-    font-size: 0.8rem;
+  .drawer-theme-current-title {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.84rem;
     font-weight: 900;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--text-card-primary);
+    flex: 1 1 0;
+    text-align: left;
   }
 
-  .drawer-return-link {
-    font-family: var(--font-secondary);
-    font-size: 0.74rem;
+  .drawer-theme-pill-segmented {
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface-input);
+    border: 1.5px solid #000000;
+    border-radius: 20px;
+    padding: 2px;
+    gap: 2px;
+    box-shadow: 1px 1px 0px #000000;
+    flex: 0 0 auto;
+  }
+
+  .drawer-theme-pill-btn {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    min-height: 26px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-card-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    font-size: 0.76rem;
+    transition: background-color 0.16s ease, color 0.16s ease;
+  }
+
+  .drawer-theme-pill-btn.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+  }
+
+  .drawer-theme-mode-label {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.78rem;
     font-weight: 800;
-    color: var(--text-muted);
-    text-align: center;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-card-secondary);
+    flex: 1 1 0;
+    text-align: right;
+  }
+
+  /* Drawer Return KINS! Button */
+  .drawer-return-link {
+    background: var(--surface-card-light);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.84rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .drawer-return-link:hover {
-    color: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
   }
 </style>

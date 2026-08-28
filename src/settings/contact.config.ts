@@ -11,8 +11,8 @@ export interface BandContact {
   icon: string;
 }
 
-export const bookingEmail = "booking@kinsband.com";
-export const generalEmail = "hello@kinsband.com";
+export const bookingEmail = "BookingsKinsBand@gmail.com";
+export const generalEmail = "HelloKinsBand@gmail.com";
 
 export const contacts: BandContact[] = [
   {

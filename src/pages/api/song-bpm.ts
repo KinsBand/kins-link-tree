@@ -1,8 +1,14 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { sanitizeText } from '../../lib/sanitize';
 import { isRateLimited as rlCheck, getClientIp as getIp } from '../../lib/rateLimit';
 
 export const prerender = false;
+
+const SongBpmQuerySchema = z.object({
+  title: z.string().min(1).max(200),
+  artist: z.string().max(200).optional().default('')
+});
 
 function hashToBpm(title: string, artist: string): number {
   const str = `${title.toLowerCase().trim()}::${artist.toLowerCase().trim()}`;
@@ -41,15 +47,21 @@ export const GET: APIRoute = async ({ request }) => {
     const url = new URL(request.url);
     const rawTitle = url.searchParams.get('title') || url.searchParams.get('q') || '';
     const rawArtist = url.searchParams.get('artist') || url.searchParams.get('a') || '';
-    const title = sanitizeText(rawTitle, 200);
-    const artist = sanitizeText(rawArtist, 200);
 
-    if (!title || title.length < 1) {
-      return new Response(JSON.stringify({ status: 'error', message: 'Missing ?title=' }), {
+    const parsed = SongBpmQuerySchema.safeParse({
+      title: rawTitle ? rawTitle.trim() : '',
+      artist: rawArtist ? rawArtist.trim() : ''
+    });
+
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ status: 'error', message: 'Missing or invalid ?title=' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
+
+    const title = sanitizeText(parsed.data.title, 200);
+    const artist = sanitizeText(parsed.data.artist, 200);
 
     // 1) Try MusicBrainz -> AcousticBrainz
     try {

@@ -1,13 +1,28 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
 import { generalEmail } from '../../settings/contact.config';
+import {
+  getNotifyConfig,
+  sendNotifyEmail,
+  generateBrutalistEmailHtml,
+  type BrutalistField
+} from '../../lib/notifyEmail';
 
 export const prerender = false;
 
 const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
 
-function getWebhookUrl(): string {
+const RequestSongSchema = z.object({
+  songTitle: z.string().min(1).max(120),
+  artist: z.string().min(1).max(120),
+  reason: z.string().max(500).optional(),
+  email: z.string().max(200).optional(),
+  isSubscribed: z.boolean().optional()
+});
+
+function getDiscordWebhookUrl(): string {
   return (
     import.meta.env.DISCORD_REQUEST_SONG_WEBHOOK_URL ||
     process.env.DISCORD_REQUEST_SONG_WEBHOOK_URL ||
@@ -15,98 +30,141 @@ function getWebhookUrl(): string {
   );
 }
 
+function jsonResponse(data: Record<string, unknown>, status: number): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     if (isRateLimited(`request-song:${getClientIp(request)}`, 5, 60 * 1000)) {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Too many requests. Please try again in a minute.' }),
-        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      return jsonResponse(
+        { status: 'error', message: 'Too many requests. Please try again in a minute.' },
+        429
       );
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== 'object') {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Invalid payload.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+    const rawBody = await request.json().catch(() => null);
+    const parsed = RequestSongSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return jsonResponse(
+        { status: 'error', message: 'Please provide valid Song Title and Original Artist.' },
+        400
       );
     }
 
+    const body = parsed.data;
     const songTitle = sanitizeText(body.songTitle, 120);
     const artist = sanitizeText(body.artist, 120);
-
-    if (!songTitle || !artist) {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Please provide both Song Title and Original Artist.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const reason = sanitizeText(body.reason, 500) || 'None provided';
-    const email = sanitizeText(body.email, 200) || 'Not provided';
+    const reason = sanitizeText(body.reason || '', 500) || 'None provided';
+    const email = sanitizeText(body.email || '', 200) || 'Not provided';
     const isSubscribed = body.isSubscribed === true;
 
-    const webhookUrl = getWebhookUrl();
-    if (!webhookUrl) {
-      console.error('[request-song] DISCORD_REQUEST_SONG_WEBHOOK_URL is not configured.');
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Cover request service is not available right now.' }),
-        { status: 503, headers: { 'Content-Type': 'application/json' } }
+    const notifyConfig = getNotifyConfig();
+    const discordWebhookUrl = getDiscordWebhookUrl();
+
+    if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
+      console.error('[request-song] Neither Resend API key nor Discord webhook is configured.');
+      return jsonResponse(
+        { status: 'error', message: 'Cover request service is not available right now.' },
+        503
       );
     }
 
-    const discordPayload = {
-      username: 'Kins Cover Request System',
-      avatar_url: AVATAR_URL,
-      embeds: [
-        {
-          title: '🎵 New Cover Song Request',
-          color: isSubscribed ? 0xf2fd43 : 0x5865f2,
-          fields: [
-            { name: 'Song Title', value: `**${songTitle}**`, inline: true },
-            { name: 'Original Artist', value: `**${artist}**`, inline: true },
-            {
-              name: 'Fan Status',
-              value: isSubscribed
-                ? '✅ **Subscribed Fan** (Notified via Substack)'
-                : '👤 Guest / Unsubscribed',
-              inline: true
-            },
-            { name: 'Why should Kins cover this?', value: reason, inline: false },
-            { name: 'Contact Email', value: email === 'Not provided' ? 'Not provided' : `\`${email}\``, inline: false }
-          ],
-          footer: {
-            text: `Kins Cover Request System • Forwarded to ${generalEmail}`
-          },
-          timestamp: new Date().toISOString()
-        }
-      ]
-    };
+    const subject = `[Cover Request] ${songTitle} - ${artist}`;
 
-    const discordRes = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(discordPayload)
+    const fields: BrutalistField[] = [
+      { label: 'Song Title', value: songTitle },
+      { label: 'Original Artist', value: artist },
+      {
+        label: 'Fan Status',
+        value: isSubscribed ? 'Subscribed Fan (Substack)' : 'Guest / Unsubscribed'
+      },
+      {
+        label: 'Fan Email',
+        value: email,
+        isCode: email !== 'Not provided'
+      }
+    ];
+
+    const html = generateBrutalistEmailHtml({
+      title: `🎵 Cover Request: ${songTitle}`,
+      badge: isSubscribed ? 'VIP SUBSCRIBER REQUEST' : 'FAN COVER REQUEST',
+      badgeBg: isSubscribed ? '#f2fd43' : '#e9e9eb',
+      badgeColor: '#000000',
+      description: reason,
+      fields,
+      footerNote: `Kins Cover Request System • Forwarded to ${generalEmail}`
     });
 
-    if (!discordRes.ok) {
-      const resText = await discordRes.text().catch(() => '');
-      console.error('[request-song] Discord webhook failed:', discordRes.status, resText.slice(0, 200));
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Failed to submit your request. Please try again later.' }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+    const isContactEmail = email.includes('@') && !email.includes(' ');
+
+    // 1. Primary: Send structured HTML email via Resend
+    if (notifyConfig.resendApiKey) {
+      const emailResult = await sendNotifyEmail({
+        subject,
+        html,
+        text: `[Cover Request] ${songTitle} - ${artist}\n\nFan Status: ${isSubscribed ? 'Subscribed' : 'Guest'}\nContact: ${email}\n\nWhy should Kins cover this?\n${reason}`,
+        replyTo: isContactEmail ? email : undefined
+      });
+
+      if (!emailResult.ok) {
+        console.warn('[request-song] Resend email delivery failed:', emailResult.error);
+      }
     }
 
-    return new Response(
-      JSON.stringify({ status: 'success', message: 'Cover request received!' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    // 2. Secondary fallback: Send Discord webhook if configured
+    if (discordWebhookUrl && discordWebhookUrl.startsWith('https://')) {
+      try {
+        const discordPayload = {
+          username: 'Kins Cover Request System',
+          avatar_url: AVATAR_URL,
+          embeds: [
+            {
+              title: '🎵 New Cover Song Request',
+              color: isSubscribed ? 0xf2fd43 : 0x5865f2,
+              fields: [
+                { name: 'Song Title', value: `**${songTitle}**`, inline: true },
+                { name: 'Original Artist', value: `**${artist}**`, inline: true },
+                {
+                  name: 'Fan Status',
+                  value: isSubscribed
+                    ? '✅ **Subscribed Fan** (Notified via Substack)'
+                    : '👤 Guest / Unsubscribed',
+                  inline: true
+                },
+                { name: 'Why should Kins cover this?', value: reason, inline: false },
+                { name: 'Contact Email', value: email === 'Not provided' ? 'Not provided' : `\`${email}\``, inline: false }
+              ],
+              footer: {
+                text: `Kins Cover Request System • Forwarded to ${generalEmail}`
+              },
+              timestamp: new Date().toISOString()
+            }
+          ]
+        };
+
+        await fetch(discordWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(discordPayload)
+        }).catch(() => {});
+      } catch (hookErr) {
+        console.warn('[request-song] Discord webhook fallback failed:', hookErr);
+      }
+    }
+
+    return jsonResponse(
+      { status: 'success', message: 'Cover request received!' },
+      200
     );
   } catch (err) {
     console.error('Request song API error:', err);
-    return new Response(
-      JSON.stringify({ status: 'error', message: 'Failed to process cover request.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    return jsonResponse(
+      { status: 'error', message: 'Failed to process cover request.' },
+      500
     );
   }
 };

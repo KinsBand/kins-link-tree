@@ -31,7 +31,7 @@ export interface EpkPressPhoto {
 }
 
 export const epkConfig = {
-  enabled: true,
+  enabled: false,
   // Band Core Identity
   bandName: "KINS",
   handle: "@KinsBandOfficial",
@@ -57,36 +57,66 @@ export const epkConfig = {
 
   // Live Repertoire & Performance Offering (Day-0 Verified for Booking Agents)
   repertoire: {
-    title: "Live Repertoire & Performance Format",
-    subtitle: "Turnkey live set configurations tailored for club headliners, support slots, and multi-band bills.",
+    title: "Live Formats & Booking",
+    subtitle: "Turnkey live set options and stage requirements tailored for support slots and club bills.",
     setOptions: [
-      { length: "30 Min", label: "Support / Opening Set", desc: "Fast, punchy, high-octane set designed to capture the room immediately." },
-      { length: "45 Min", label: "Feature / Co-Headline", desc: "Balanced dynamic arc of original anthems and select crowd-pleasing post-punk covers." },
-      { length: "60 Min", label: "Full Headline Set", desc: "Comprehensive full-throttle live show with extended instrumental builds and high-energy encore." }
+      { length: "30 Min", label: "Opening / Support Set", desc: "High-octane, punchy set designed for multi-band bills and tour support slots." },
+      { length: "45 Min", label: "Feature / Co-Headline Set", desc: "Dynamic balance of original anthems and select crowd-pleasing post-punk covers." }
     ],
     setBreakdown: [
       {
         title: "High-Voltage Originals",
         icon: "fa-bolt",
-        description: "Original material driven by muscular bass grooves, syncopated drum rhythms, jagged chorused guitars, and commanding vocal hooks."
+        description: "Original material driven by driving bass grooves, syncopated drums, and jagged chorused guitars."
       },
       {
         title: "Curated Post-Punk Covers",
         icon: "fa-record-vinyl",
-        description: "Reimagined high-energy renditions of seminal tracks from artists including The Cure, Joy Division, and The Strokes that immediately connect with live crowds."
+        description: "Select high-energy renditions from seminal post-punk artists (The Cure, Joy Division, The Strokes)."
       },
       {
-        title: "Stage Presence & Volume",
-        icon: "fa-fire",
-        description: "Tight four-piece live execution with professional gain staging, seamless song transitions, and charismatic crowd connection."
+        title: "Turnkey 4-Piece Execution",
+        icon: "fa-sliders",
+        description: "Professional gain staging, IEM monitoring, and quick line-check changeover."
       }
     ]
   },
 
-  // Focused 1-Paragraph Band Biography (Day-0 Honest)
+  // 3-Tier Press Biography Matrix (Short, Medium, Large)
+  bios: {
+    short: {
+      id: "short",
+      label: "Short",
+      pillLabel: "Short (~50w)",
+      wordCount: "48 Words",
+      targetUse: "PRESS USE: SOCIALS & LINEUP POSTERS",
+      description: "Elevator pitch for lineup posters, social blurbs, and quick festival announcements.",
+      text: "Hailing from Newcastle, NSW, Australia, KINS (@KinsBandOfficial) are an explosive four-piece post-punk and alternative rock outfit. Formed in late 2024, the band fuses driving rhythm urgency, jagged chorused guitars, and visceral vocal hooks reminiscent of Fontaines D.C., IDLES, and The Cure. Direct booking: BookingsKinsBand@gmail.com."
+    },
+    medium: {
+      id: "medium",
+      label: "Medium",
+      pillLabel: "Medium (~135w)",
+      wordCount: "135 Words",
+      targetUse: "PRESS USE: GIG GUIDES & PRESS RELEASES",
+      description: "Standard program bio for festival guides, venue listings, radio intros, and press write-ups.",
+      text: "Hailing from the coastal rock hub of Newcastle, NSW, Australia, KINS (@KinsBandOfficial) are an explosive four-piece post-punk and alternative rock outfit. Formed in late 2024 by Vivian (lead vocals, rhythm guitar), Charlie (lead guitar, backing vocals), Oscar (bass, synthesizers), and Trai (drums), the band creates a visceral sonic identity grounded in driving rhythm section urgency, jagged chorused guitar interplay, and impassioned melodic hooks. Drawing stylistic cues from the kinetic intensity of Fontaines D.C. and IDLES alongside the atmospheric textures of The Cure, KINS deliver high-octane live performances built to transform club rooms with raw volume, dynamic tension, and unrelenting stage presence. For booking and touring inquiries, contact BookingsKinsBand@gmail.com."
+    },
+    large: {
+      id: "large",
+      label: "Large",
+      pillLabel: "Large (~280w)",
+      wordCount: "282 Words",
+      targetUse: "PRESS USE: EDITORIAL, INTERVIEWS & FEATURES",
+      description: "Comprehensive editorial narrative for music journalists, print interviews, and deep-dive features.",
+      text: "Formed in late 2024 in the historic coastal rock hub of Newcastle, NSW, Australia, KINS (@KinsBandOfficial) are a high-voltage four-piece post-punk and alternative rock unit delivering visceral energy, relentless rhythm, and brooding atmospheric wall-of-sound texture.\n\nThe lineup brings together Vivian (lead vocals, rhythm guitar), Charlie (lead guitar, backing vocals), Oscar (bass guitar, synthesizers), and Trai (drums and percussion). Together, the quartet establishes a commanding sonic signature built upon locked-groove basslines, driving drum pacing, jagged chorused guitar interplay, and impassioned vocal anthems.\n\nRooted in the lineage of classic UK and Australian post-punk revivalists while carving out an urgent modern sound, KINS draw creative inspiration from the kinetic intensity of Fontaines D.C. and IDLES alongside the rich tonal textures of The Cure and Joy Division. Their songwriting balances dynamic tension with explosive releases, crafting songs tailored for intimate club rooms and expansive festival stages alike.\n\nOperating with professional stage discipline and a shared DIY ethos, KINS provide turnkey live setups adaptable for support slots, co-headline bills, and multi-band showcases. With an expanding catalogue of original material and reimagined post-punk anthems, KINS represent the new wave of Australian alternative rock. Direct all booking, press, and festival inquiries to BookingsKinsBand@gmail.com."
+    }
+  },
+
+  // Backward compatibility alias for single bio consumers
   bio: {
-    wordCount: "135 Words",
-    text: "Hailing from the coastal rock hub of Newcastle, NSW, Australia, KINS (@KinsBandOfficial) are an explosive four-piece post-punk and alternative rock outfit. Formed in late 2024 by Vivian (lead vocals, rhythm guitar), Charlie (lead guitar, backing vocals), Oscar (bass, synthesizers), and Trai (drums), the band creates a visceral sonic identity grounded in driving rhythm section urgency, jagged chorused guitar interplay, and impassioned melodic hooks. Drawing stylistic cues from the kinetic intensity of Fontaines D.C. and IDLES alongside the atmospheric textures of The Cure, KINS deliver high-octane live performances built to transform club rooms with raw volume, dynamic tension, and unrelenting stage presence. For booking and touring inquiries, contact booking@kinsband.com."
+    wordCount: "48 Words",
+    text: "Hailing from Newcastle, NSW, Australia, KINS (@KinsBandOfficial) are an explosive four-piece post-punk and alternative rock outfit. Formed in late 2024, the band fuses driving rhythm urgency, jagged chorused guitars, and visceral vocal hooks reminiscent of Fontaines D.C., IDLES, and The Cure. Direct booking: BookingsKinsBand@gmail.com."
   },
 
   // Press Photography & Visual Assets

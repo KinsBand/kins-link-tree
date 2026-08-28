@@ -5,97 +5,99 @@ import kinsLogoImg from '../../assets/new.png';
 
 <!-- 1. Share Modal / Bottom Sheet Backdrop -->
 <div class="modal-backdrop hidden" id="shareModal" role="dialog" aria-modal="true" aria-label="Share Kins Official Page" data-track-container="modal:share">
-  <div class="modal-content share-modal-enhanced" id="shareModalContent">
-    
-    <!-- Mobile Drag Handle Bar -->
-    <div class="sheet-drag-handle" id="sheetDragHandle" aria-hidden="true">
-      <span class="sheet-drag-pill"></span>
-    </div>
+  <div class="share-sheet-wrapper" id="shareSheetWrapper">
 
-    <!-- Header -->
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="brand-mini-badge">Kins • Official Link Tree</span>
-        <h3>SHARE</h3>
+    <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
+    <div class="sheet-floating-pill-header" id="shareFloatingPillHeader">
+      <div class="sheet-pill-title">
+        <i class="fa-solid fa-share-nodes"></i>
+        <span>SHARE</span>
       </div>
-      <button class="close-modal-btn" id="closeShareModal" aria-label="Close share modal" data-track="share:close">
+      <button class="sheet-pill-close-btn brutal-press" id="closeShareModal" aria-label="Close share modal" data-track="share:close">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
-    <div class="modal-body share-modal-body">
-      <!-- 1. Native Web Share CTA (Prioritized when navigator.share is available) -->
-      <button type="button" class="native-share-primary-btn brutal-press" id="nativeShareCtaBtn" data-track="share:native_app" data-share-app="native">
-        <i class="fa-solid fa-arrow-up-from-bracket"></i>
-        <span>Share via App...</span>
-      </button>
-
-      <!-- 2. Direct Social Apps Share Grid -->
-      <div class="share-field-group" id="socialAppsSection">
-        <div class="share-field-header-row">
-          <label class="share-field-label">Share to App</label>
-        </div>
-        <div class="share-apps-grid" id="shareAppsGrid">
-          <button type="button" class="share-app-pill-btn instagram brutal-press" data-share-app="instagram" title="Share on Instagram">
-            <i class="fa-brands fa-instagram"></i>
-            <span>Instagram</span>
-          </button>
-          <button type="button" class="share-app-pill-btn messages brutal-press" data-share-app="sms" title="Share via Messages">
-            <i class="fa-solid fa-comment-sms"></i>
-            <span>Messages</span>
-          </button>
-          <button type="button" class="share-app-pill-btn whatsapp brutal-press" data-share-app="whatsapp" title="Share on WhatsApp">
-            <i class="fa-brands fa-whatsapp"></i>
-            <span>WhatsApp</span>
-          </button>
-          <button type="button" class="share-app-pill-btn discord brutal-press" data-share-app="discord" title="Share on Discord">
-            <i class="fa-brands fa-discord"></i>
-            <span>Discord</span>
-          </button>
-        </div>
+    <!-- Main Sheet / Modal Card Content -->
+    <div class="modal-content share-modal-enhanced" id="shareModalContent">
+      
+      <!-- Mobile Drag Handle Bar -->
+      <div class="sheet-drag-handle" id="sheetDragHandle" aria-hidden="true">
+        <span class="sheet-drag-pill"></span>
       </div>
 
-      <!-- 3. Direct Link Full-Row Interactive Target -->
-      <div class="share-field-group">
-        <label class="share-field-label">Direct Link</label>
-        <div class="interactive-copy-row brutal-press" id="copyUrlRow" role="button" tabindex="0" aria-label="Copy website direct link" data-track="share:copy_url_row">
-          <div class="copy-row-left">
-            <div class="copy-row-icon-wrap">
-              <i class="fa-solid fa-link link-input-icon"></i>
-            </div>
-            <div class="copy-row-text-stack">
-              <span class="copy-row-primary">kinsband-hub.vercel.app</span>
-              <span class="copy-row-secondary" id="copyUrlHint">Full UTM link with attribution</span>
-            </div>
+      <div class="modal-body share-modal-body">
+        <!-- 1. Native Web Share CTA (Prioritized when navigator.share is available) -->
+        <button type="button" class="native-share-primary-btn brutal-press" id="nativeShareCtaBtn" data-track="share:native_app" data-share-app="native">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i>
+          <span>Share via App...</span>
+        </button>
+
+        <!-- 2. Direct Social Apps Share Grid -->
+        <div class="share-field-group" id="socialAppsSection">
+          <div class="share-field-header-row">
+            <label class="share-field-label">Share to App</label>
           </div>
-          <div class="copy-row-right">
-            <span class="copy-row-status-badge" id="copyUrlStatus">TAP TO COPY</span>
-            <div class="icon-only-copy-btn" id="copyUrlBtn">
-              <i class="fa-regular fa-copy" id="copyUrlIcon"></i>
-            </div>
+          <div class="share-apps-grid" id="shareAppsGrid">
+            <button type="button" class="share-app-pill-btn instagram brutal-press" data-share-app="instagram" title="Share on Instagram">
+              <i class="fa-brands fa-instagram"></i>
+              <span>Instagram</span>
+            </button>
+            <button type="button" class="share-app-pill-btn messages brutal-press" data-share-app="sms" title="Share via Messages">
+              <i class="fa-solid fa-comment-sms"></i>
+              <span>Messages</span>
+            </button>
+            <button type="button" class="share-app-pill-btn whatsapp brutal-press" data-share-app="whatsapp" title="Share on WhatsApp">
+              <i class="fa-brands fa-whatsapp"></i>
+              <span>WhatsApp</span>
+            </button>
+            <button type="button" class="share-app-pill-btn discord brutal-press" data-share-app="discord" title="Share on Discord">
+              <i class="fa-brands fa-discord"></i>
+              <span>Discord</span>
+            </button>
           </div>
         </div>
-        <!-- Hidden input for clipboard fallback -->
-        <input type="hidden" id="shareUrlInput" value="https://kinsband-hub.vercel.app/?utm_source=direct_link&utm_medium=share_modal&utm_campaign=fan_share">
-      </div>
 
-      <!-- 4. Band Handle Full-Row Interactive Target -->
-      <div class="share-field-group">
-        <label class="share-field-label">Band Handle</label>
-        <div class="interactive-copy-row brutal-press" id="copyHandleRow" role="button" tabindex="0" aria-label="Copy band handle @KinsBandOfficial" data-track="share:copy_handle_row">
-          <div class="copy-row-left">
-            <div class="copy-row-icon-wrap">
-              <i class="fa-solid fa-at handle-at-icon"></i>
+        <!-- 3. Direct Link Full-Row Interactive Target -->
+        <div class="share-field-group">
+          <label class="share-field-label">Direct Link</label>
+          <div class="interactive-copy-row brutal-press" id="copyUrlRow" role="button" tabindex="0" aria-label="Copy website direct link" data-track="share:copy_url_row">
+            <div class="copy-row-left">
+              <div class="copy-row-icon-wrap">
+                <i class="fa-solid fa-link link-input-icon"></i>
+              </div>
+              <div class="copy-row-text-stack">
+                <span class="copy-row-primary">kinsband-hub.vercel.app</span>
+                <span class="copy-row-secondary" id="copyUrlHint">Full UTM link with attribution</span>
+              </div>
             </div>
-            <div class="copy-row-text-stack">
-              <span class="copy-row-primary">@KinsBandOfficial</span>
-              <span class="copy-row-secondary" id="copyHandleHint">Official artist handle</span>
+            <div class="copy-row-right">
+              <div class="icon-only-copy-btn" id="copyUrlBtn">
+                <i class="fa-regular fa-copy" id="copyUrlIcon"></i>
+              </div>
             </div>
           </div>
-          <div class="copy-row-right">
-            <span class="copy-row-status-badge" id="copyHandleStatus">TAP TO COPY</span>
-            <div class="icon-only-copy-btn" id="handleCopyBtn">
-              <i class="fa-regular fa-copy" id="copyHandleIcon"></i>
+          <!-- Hidden input for clipboard fallback -->
+          <input type="hidden" id="shareUrlInput" value="https://kinsband-hub.vercel.app/?utm_source=direct_link&utm_medium=share_modal&utm_campaign=fan_share">
+        </div>
+
+        <!-- 4. Band Handle Full-Row Interactive Target -->
+        <div class="share-field-group">
+          <label class="share-field-label">Band Handle</label>
+          <div class="interactive-copy-row brutal-press" id="copyHandleRow" role="button" tabindex="0" aria-label="Copy band handle @KinsBandOfficial" data-track="share:copy_handle_row">
+            <div class="copy-row-left">
+              <div class="copy-row-icon-wrap">
+                <i class="fa-solid fa-at handle-at-icon"></i>
+              </div>
+              <div class="copy-row-text-stack">
+                <span class="copy-row-primary">@KinsBandOfficial</span>
+                <span class="copy-row-secondary" id="copyHandleHint">Official artist handle</span>
+              </div>
+            </div>
+            <div class="copy-row-right">
+              <div class="icon-only-copy-btn" id="handleCopyBtn">
+                <i class="fa-regular fa-copy" id="copyHandleIcon"></i>
+              </div>
             </div>
           </div>
         </div>
@@ -166,41 +168,44 @@ import kinsLogoImg from '../../assets/new.png';
 
 <!-- 7. Fullscreen QR Code Lightbox Modal / Bottom Sheet -->
 <div class="modal-backdrop hidden" id="qrFullscreenModal" role="dialog" aria-modal="true" aria-label="Full screen QR Code">
-  <div class="qr-fullscreen-content" id="qrFullscreenContent">
-    <div class="sheet-drag-handle" id="qrFullscreenDragHandle" aria-hidden="true">
-      <span class="sheet-drag-pill"></span>
-    </div>
-    
-    <!-- Modal Header with Clean Title & Close Button -->
-    <div class="modal-header qr-fullscreen-header-bar">
-      <div class="modal-title-group">
-        <span class="brand-mini-badge">Kins Official</span>
-        <h3>Scan QR Code</h3>
+  <div class="qr-fullscreen-sheet-wrapper" id="qrFullscreenSheetWrapper">
+    <!-- Floating Pill Header -->
+    <div class="sheet-floating-pill-header" id="qrFullscreenFloatingPillHeader">
+      <div class="sheet-pill-title">
+        <i class="fa-solid fa-qrcode"></i>
+        <span>QR CODE</span>
       </div>
-      <button class="close-modal-btn" id="closeQrFullscreenBtn" aria-label="Close full screen QR code">
+      <button class="sheet-pill-close-btn brutal-press" id="closeQrFullscreenBtn" aria-label="Close full screen QR code">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
-    <div class="qr-fullscreen-canvas-wrapper" id="qrcodeFullscreenCanvas"></div>
-    <p class="qr-fullscreen-sub">Point mobile camera to view Kins official link tree</p>
-    
-    <!-- Instant 1-Click Fast Export Bar -->
-    <div class="qr-fast-export-bar">
-      <span class="fast-export-label">Fast Export Formats:</span>
-      <div class="fast-export-buttons">
-        <button type="button" class="fast-export-btn brutal-press" data-qr-quick-format="png" title="Download High Resolution PNG">
-          <i class="fa-solid fa-image"></i>
-          <span>PNG HD</span>
-        </button>
-        <button type="button" class="fast-export-btn brutal-press" data-qr-quick-format="svg" title="Download Scalable Vector Graphic">
-          <i class="fa-solid fa-bezier-curve"></i>
-          <span>SVG Vector</span>
-        </button>
-        <button type="button" class="fast-export-btn brutal-press" data-qr-quick-format="eps" title="Download Print Shop EPS Vector">
-          <i class="fa-solid fa-file-lines"></i>
-          <span>EPS Vector</span>
-        </button>
+    <!-- Main Sheet / Modal Content -->
+    <div class="qr-fullscreen-content" id="qrFullscreenContent">
+      <div class="sheet-drag-handle" id="qrFullscreenDragHandle" aria-hidden="true">
+        <span class="sheet-drag-pill"></span>
+      </div>
+
+      <div class="qr-fullscreen-canvas-wrapper" id="qrcodeFullscreenCanvas"></div>
+      <p class="qr-fullscreen-sub">Point mobile camera to view Kins official link tree</p>
+      
+      <!-- Instant 1-Click Fast Export Bar -->
+      <div class="qr-fast-export-bar">
+        <span class="fast-export-label">Fast Export Formats:</span>
+        <div class="fast-export-buttons">
+          <button type="button" class="fast-export-btn brutal-press" data-qr-quick-format="png" title="Download High Resolution PNG">
+            <i class="fa-solid fa-image"></i>
+            <span>PNG HD</span>
+          </button>
+          <button type="button" class="fast-export-btn brutal-press" data-qr-quick-format="svg" title="Download Scalable Vector Graphic">
+            <i class="fa-solid fa-bezier-curve"></i>
+            <span>SVG Vector</span>
+          </button>
+          <button type="button" class="fast-export-btn brutal-press" data-qr-quick-format="eps" title="Download Print Shop EPS Vector">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>EPS Vector</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -208,104 +213,114 @@ import kinsLogoImg from '../../assets/new.png';
 
 <!-- 8. QR Format Selection Download Modal / Bottom Sheet -->
 <div class="modal-backdrop hidden" id="qrDownloadFormatModal" role="dialog" aria-modal="true" aria-label="Select QR Code Download Format">
-  <div class="qr-format-modal-content" id="qrDownloadFormatContent">
-    <div class="sheet-drag-handle" id="qrFormatDragHandle" aria-hidden="true">
-      <span class="sheet-drag-pill"></span>
-    </div>
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="brand-mini-badge">Export Vector & HD Assets</span>
-        <h3>Download QR Code</h3>
+  <div class="qr-download-sheet-wrapper" id="qrDownloadSheetWrapper">
+    <!-- Floating Pill Header -->
+    <div class="sheet-floating-pill-header" id="qrDownloadFloatingPillHeader">
+      <div class="sheet-pill-title">
+        <i class="fa-solid fa-download"></i>
+        <span>EXPORT QR</span>
       </div>
-      <button class="close-modal-btn" id="closeQrFormatModalBtn" aria-label="Close format selector">
+      <button class="sheet-pill-close-btn brutal-press" id="closeQrFormatModalBtn" aria-label="Close format selector">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <div class="format-options-grid">
-      <button type="button" class="format-option-card brutal-press" data-format="jpeg">
-        <div class="format-badge-icon jpeg">JPG</div>
-        <div class="format-details">
-          <span class="format-name">JPEG Image</span>
-          <span class="format-desc">High resolution 300 DPI image</span>
-        </div>
-        <i class="fa-solid fa-download format-action-icon"></i>
-      </button>
-      <button type="button" class="format-option-card brutal-press" data-format="png">
-        <div class="format-badge-icon png">PNG</div>
-        <div class="format-details">
-          <span class="format-name">PNG Image</span>
-          <span class="format-desc">Ultra HD 300 DPI crisp raster</span>
-        </div>
-        <i class="fa-solid fa-download format-action-icon"></i>
-      </button>
-      <button type="button" class="format-option-card brutal-press" data-format="eps">
-        <div class="format-badge-icon eps">EPS</div>
-        <div class="format-details">
-          <span class="format-name">EPS Vector</span>
-          <span class="format-desc">Professional print shop vector</span>
-        </div>
-        <i class="fa-solid fa-download format-action-icon"></i>
-      </button>
-      <button type="button" class="format-option-card brutal-press" data-format="svg">
-        <div class="format-badge-icon svg">SVG</div>
-        <div class="format-details">
-          <span class="format-name">SVG Vector</span>
-          <span class="format-desc">Scalable vector graphics</span>
-        </div>
-        <i class="fa-solid fa-download format-action-icon"></i>
-      </button>
+
+    <!-- Main Sheet / Modal Content -->
+    <div class="qr-format-modal-content" id="qrDownloadFormatContent">
+      <div class="sheet-drag-handle" id="qrFormatDragHandle" aria-hidden="true">
+        <span class="sheet-drag-pill"></span>
+      </div>
+      <div class="format-options-grid">
+        <button type="button" class="format-option-card brutal-press" data-format="jpeg">
+          <div class="format-badge-icon jpeg">JPG</div>
+          <div class="format-details">
+            <span class="format-name">JPEG Image</span>
+            <span class="format-desc">High resolution 300 DPI image</span>
+          </div>
+          <i class="fa-solid fa-download format-action-icon"></i>
+        </button>
+        <button type="button" class="format-option-card brutal-press" data-format="png">
+          <div class="format-badge-icon png">PNG</div>
+          <div class="format-details">
+            <span class="format-name">PNG Image</span>
+            <span class="format-desc">Ultra HD 300 DPI crisp raster</span>
+          </div>
+          <i class="fa-solid fa-download format-action-icon"></i>
+        </button>
+        <button type="button" class="format-option-card brutal-press" data-format="eps">
+          <div class="format-badge-icon eps">EPS</div>
+          <div class="format-details">
+            <span class="format-name">EPS Vector</span>
+            <span class="format-desc">Professional print shop vector</span>
+          </div>
+          <i class="fa-solid fa-download format-action-icon"></i>
+        </button>
+        <button type="button" class="format-option-card brutal-press" data-format="svg">
+          <div class="format-badge-icon svg">SVG</div>
+          <div class="format-details">
+            <span class="format-name">SVG Vector</span>
+            <span class="format-desc">Scalable vector graphics</span>
+          </div>
+          <i class="fa-solid fa-download format-action-icon"></i>
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- 9. Band Logo Format Selection Download Modal / Bottom Sheet -->
 <div class="modal-backdrop hidden" id="logoDownloadFormatModal" role="dialog" aria-modal="true" aria-label="Select Band Logo Download Format">
-  <div class="qr-format-modal-content" id="logoDownloadFormatContent">
-    <div class="sheet-drag-handle" id="logoFormatDragHandle" aria-hidden="true">
-      <span class="sheet-drag-pill"></span>
-    </div>
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="brand-mini-badge">Kins Official Brand Asset</span>
-        <h3>Download Band Logo</h3>
+  <div class="logo-download-sheet-wrapper" id="logoDownloadSheetWrapper">
+    <!-- Floating Pill Header -->
+    <div class="sheet-floating-pill-header" id="logoDownloadFloatingPillHeader">
+      <div class="sheet-pill-title">
+        <i class="fa-solid fa-download"></i>
+        <span>EXPORT LOGO</span>
       </div>
-      <button class="close-modal-btn" id="closeLogoFormatModalBtn" aria-label="Close format selector">
+      <button class="sheet-pill-close-btn brutal-press" id="closeLogoFormatModalBtn" aria-label="Close format selector">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <div class="format-options-grid">
-      <button type="button" class="format-option-card brutal-press" data-logo-format="png">
-        <div class="format-badge-icon png">PNG</div>
-        <div class="format-details">
-          <span class="format-name">PNG Transparent</span>
-          <span class="format-desc">High resolution transparent logo</span>
-        </div>
-        <i class="fa-solid fa-download format-action-icon"></i>
-      </button>
-      <button type="button" class="format-option-card brutal-press" data-logo-format="jpeg">
-        <div class="format-badge-icon jpeg">JPG</div>
-        <div class="format-details">
-          <span class="format-name">JPEG Image</span>
-          <span class="format-desc">High contrast dark background image</span>
-        </div>
-        <i class="fa-solid fa-download format-action-icon"></i>
-      </button>
-      <button type="button" class="format-option-card brutal-press" data-logo-format="svg">
-        <div class="format-badge-icon svg">SVG</div>
-        <div class="format-details">
-          <span class="format-name">SVG Vector</span>
-          <span class="format-desc">Scalable vector graphics logo</span>
-        </div>
-        <i class="fa-solid fa-download format-action-icon"></i>
-      </button>
-      <button type="button" class="format-option-card brutal-press" data-logo-format="webp">
-        <div class="format-badge-icon eps">WEBP</div>
-        <div class="format-details">
-          <span class="format-name">WebP Image</span>
-          <span class="format-desc">Optimized web format logo</span>
-        </div>
-        <i class="fa-solid fa-download format-action-icon"></i>
-      </button>
+
+    <!-- Main Sheet / Modal Content -->
+    <div class="qr-format-modal-content" id="logoDownloadFormatContent">
+      <div class="sheet-drag-handle" id="logoFormatDragHandle" aria-hidden="true">
+        <span class="sheet-drag-pill"></span>
+      </div>
+      <div class="format-options-grid">
+        <button type="button" class="format-option-card brutal-press" data-logo-format="png">
+          <div class="format-badge-icon png">PNG</div>
+          <div class="format-details">
+            <span class="format-name">PNG Transparent</span>
+            <span class="format-desc">High resolution transparent logo</span>
+          </div>
+          <i class="fa-solid fa-download format-action-icon"></i>
+        </button>
+        <button type="button" class="format-option-card brutal-press" data-logo-format="jpeg">
+          <div class="format-badge-icon jpeg">JPG</div>
+          <div class="format-details">
+            <span class="format-name">JPEG Image</span>
+            <span class="format-desc">High contrast dark background image</span>
+          </div>
+          <i class="fa-solid fa-download format-action-icon"></i>
+        </button>
+        <button type="button" class="format-option-card brutal-press" data-logo-format="svg">
+          <div class="format-badge-icon svg">SVG</div>
+          <div class="format-details">
+            <span class="format-name">SVG Vector</span>
+            <span class="format-desc">Scalable vector graphics logo</span>
+          </div>
+          <i class="fa-solid fa-download format-action-icon"></i>
+        </button>
+        <button type="button" class="format-option-card brutal-press" data-logo-format="webp">
+          <div class="format-badge-icon eps">WEBP</div>
+          <div class="format-details">
+            <span class="format-name">WebP Image</span>
+            <span class="format-desc">Optimized web format logo</span>
+          </div>
+          <i class="fa-solid fa-download format-action-icon"></i>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -419,7 +434,92 @@ import kinsLogoImg from '../../assets/new.png';
     pointer-events: none;
   }
 
-  /* Modal Header */
+  /* Floating Header Pill Container (Above Sheet / Modal) */
+  .share-sheet-wrapper,
+  .qr-fullscreen-sheet-wrapper,
+  .qr-download-sheet-wrapper,
+  .logo-download-sheet-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 440px;
+    gap: 12px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .qr-fullscreen-sheet-wrapper {
+    max-width: 420px;
+  }
+
+  .sheet-floating-pill-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: var(--surface-card-panel, #f5f4ef);
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 9999px;
+    padding: 6px 6px 6px 18px;
+    z-index: 20;
+    user-select: none;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .sheet-pill-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .sheet-pill-title i {
+    font-size: 0.85rem;
+    color: var(--brand-accent-primary, #f2fd43);
+    filter: drop-shadow(0 0 1px #000000);
+  }
+
+  :global([data-theme="dark"]) .sheet-pill-title i {
+    color: var(--brand-accent-primary, #d4af37);
+  }
+
+  .sheet-pill-close-btn {
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .sheet-pill-close-btn i {
+    font-size: 0.88rem;
+    pointer-events: none;
+  }
+
+  .sheet-pill-close-btn:hover {
+    background: var(--btn-brand-hover, #ffffff);
+    transform: scale(1.05);
+  }
+
+  /* Secondary Sub-Modal Headers (QR / Logo Modals) */
   .modal-header {
     display: flex;
     align-items: center;
@@ -608,27 +708,22 @@ import kinsLogoImg from '../../assets/new.png';
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    background: var(--surface-input);
+    background: var(--surface-card-panel, #f5f4ef);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 8px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     cursor: pointer;
     user-select: none;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.15s var(--ease-tactile), background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    transition: transform 0.15s var(--ease-tactile), background-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .interactive-copy-row:hover {
-    background: var(--surface-card-light-hover);
+    background: var(--surface-card-panel-hover, #ffffff);
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
-  }
-
-  .interactive-copy-row.copied-active {
-    background: #e6ffed;
-    border-color: #000000;
   }
 
   .copy-row-left {
@@ -690,31 +785,11 @@ import kinsLogoImg from '../../assets/new.png';
     flex-shrink: 0;
   }
 
-  .copy-row-status-badge {
-    font-family: var(--font-secondary);
-    font-size: 0.62rem;
-    font-weight: 800;
-    color: var(--text-card-secondary);
-    background: rgba(0, 0, 0, 0.06);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    padding: 3px 6px;
-    border-radius: 4px;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
-  }
-
-  .interactive-copy-row.copied-active .copy-row-status-badge {
-    background: #53c678;
-    color: #000000;
-    border-color: #000000;
-  }
-
   .icon-only-copy-btn {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--surface-card-panel, #f5f4ef);
+    color: var(--text-card-primary);
     border: 1.5px solid #000000;
-    box-shadow: 1px 1px 0px #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
     width: 32px;
     height: 32px;
     min-width: 32px;
@@ -726,10 +801,23 @@ import kinsLogoImg from '../../assets/new.png';
     cursor: pointer;
     flex-shrink: 0;
     pointer-events: none;
+    transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .interactive-copy-row:hover .icon-only-copy-btn {
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
   }
 
   .icon-only-copy-btn i {
-    font-size: 0.84rem;
+    font-size: 0.88rem;
+    transition: transform 0.15s ease, color 0.15s ease;
+  }
+
+  .icon-only-copy-btn i.fa-check,
+  .icon-only-copy-btn .text-check-success {
+    color: #10b981 !important;
+    font-weight: 900 !important;
   }
 
   /* Dual Asset Grid: QR (Left) | Logo (Right) */
@@ -1174,7 +1262,48 @@ import kinsLogoImg from '../../assets/new.png';
       padding: 0;
     }
 
-    .share-modal-enhanced,
+    .share-sheet-wrapper,
+    .qr-fullscreen-sheet-wrapper,
+    .qr-download-sheet-wrapper,
+    .logo-download-sheet-wrapper {
+      max-width: 100%;
+      width: 100%;
+      gap: 10px;
+      padding: 0 0 max(10px, env(safe-area-inset-bottom)) 0;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-backdrop#shareModal:not(.hidden) .share-sheet-wrapper,
+    .modal-backdrop#shareModal:global(.active) .share-sheet-wrapper,
+    .modal-backdrop#qrFullscreenModal:not(.hidden) .qr-fullscreen-sheet-wrapper,
+    .modal-backdrop#qrFullscreenModal:global(.active) .qr-fullscreen-sheet-wrapper,
+    .modal-backdrop#qrDownloadFormatModal:not(.hidden) .qr-download-sheet-wrapper,
+    .modal-backdrop#qrDownloadFormatModal:global(.active) .qr-download-sheet-wrapper,
+    .modal-backdrop#logoDownloadFormatModal:not(.hidden) .logo-download-sheet-wrapper,
+    .modal-backdrop#logoDownloadFormatModal:global(.active) .logo-download-sheet-wrapper {
+      transform: translateY(0);
+    }
+
+    .sheet-floating-pill-header {
+      margin-bottom: 2px;
+      box-shadow: 2px 2px 0px #000000;
+    }
+
+    .share-modal-enhanced {
+      max-width: 100%;
+      width: 100%;
+      border-radius: 20px 20px 0 0;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+      border-top: 3px solid #000000;
+      box-shadow: 0px -4px 0px rgba(0, 0, 0, 0.35);
+      padding: 10px 16px max(20px, env(safe-area-inset-bottom)) 16px;
+      max-height: 82vh;
+      transform: none;
+    }
+
     .qr-fullscreen-content,
     .qr-format-modal-content {
       max-width: 100%;
@@ -1187,15 +1316,7 @@ import kinsLogoImg from '../../assets/new.png';
       box-shadow: 0px -4px 0px rgba(0, 0, 0, 0.35);
       padding: 10px 16px max(20px, env(safe-area-inset-bottom)) 16px;
       max-height: 86vh;
-      transform: translateY(100%);
-      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .modal-backdrop#shareModal:not(.hidden) .share-modal-enhanced,
-    .modal-backdrop#qrFullscreenModal:not(.hidden) .qr-fullscreen-content,
-    .modal-backdrop#qrDownloadFormatModal:not(.hidden) .qr-format-modal-content,
-    .modal-backdrop#logoDownloadFormatModal:not(.hidden) .qr-format-modal-content {
-      transform: translateY(0);
+      transform: none;
     }
 
     .sheet-drag-handle {

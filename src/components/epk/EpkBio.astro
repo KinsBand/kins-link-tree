@@ -1,6 +1,6 @@
 ---
 import { epkConfig } from '../../settings/epk.config';
-const { bio } = epkConfig;
+const { bios } = epkConfig;
 ---
 
 <section class="epk-section epk-bio-section" id="epk-bio">
@@ -9,30 +9,87 @@ const { bio } = epkConfig;
       <i class="fa-solid fa-file-lines"></i> BIOGRAPHY
     </div>
     <h2 class="epk-section-title">Band Biography</h2>
-    <p class="epk-section-subtitle">Official 1-paragraph press biography for promoters, festival programs, and media.</p>
+    <p class="epk-section-subtitle">Official press biographies tailored for lineup posters, gig guides, and media interviews.</p>
   </div>
 
   <div class="epk-bio-card">
+    <!-- Top Action & Length Toggle Bar -->
     <div class="bio-card-top">
-      <div class="bio-card-tags">
-        <span class="bio-word-badge">{bio.wordCount}</span>
-        <span class="bio-status-badge">PRESS & PROGRAM READY</span>
+      <!-- Segmented Length Toggle -->
+      <div class="bio-segmented-control" role="tablist" aria-label="Select biography length">
+        <button 
+          type="button" 
+          class="bio-toggle-btn active brutal-press" 
+          role="tab" 
+          id="bioTabShort" 
+          aria-selected="true" 
+          aria-controls="bioPanelShort" 
+          data-bio-tier="short"
+        >
+          <span>Short (~50w)</span>
+        </button>
+        <button 
+          type="button" 
+          class="bio-toggle-btn brutal-press" 
+          role="tab" 
+          id="bioTabMedium" 
+          aria-selected="false" 
+          aria-controls="bioPanelMedium" 
+          data-bio-tier="medium"
+        >
+          <span>Medium (~135w)</span>
+        </button>
+        <button 
+          type="button" 
+          class="bio-toggle-btn brutal-press" 
+          role="tab" 
+          id="bioTabLarge" 
+          aria-selected="false" 
+          aria-controls="bioPanelLarge" 
+          data-bio-tier="large"
+        >
+          <span>Large (~280w)</span>
+        </button>
       </div>
 
+      <!-- 1-Click Copy Bio Button -->
       <button 
         type="button" 
-        class="epk-copy-bio-btn" 
+        class="epk-copy-bio-btn brutal-press" 
         id="epkCopyBioBtn"
-        data-copy-text={bio.text}
-        aria-label="Copy band biography to clipboard"
+        data-active-tier="short"
+        title="Copy active biography to clipboard"
+        aria-label="Copy active biography to clipboard"
       >
-        <i class="fa-regular fa-copy"></i>
-        <span>Copy Bio Text</span>
+        <i class="fa-regular fa-copy" aria-hidden="true"></i>
+        <span>Copy Bio</span>
       </button>
     </div>
 
+    <!-- Metadata Use-Case Badge Bar -->
+    <div class="bio-meta-strip">
+      <span class="bio-word-badge" id="bioWordBadge">{bios.short.wordCount}</span>
+      <span class="bio-status-badge" id="bioTargetUseBadge">{bios.short.targetUse}</span>
+    </div>
+
+    <!-- Bio Content Panels -->
     <div class="bio-card-body">
-      <p class="bio-text-paragraph">{bio.text}</p>
+      <!-- Short Bio Panel (Default Active) -->
+      <div class="bio-panel active" id="bioPanelShort" role="tabpanel" aria-labelledby="bioTabShort" data-bio-content="short">
+        <p class="bio-text-paragraph">{bios.short.text}</p>
+      </div>
+
+      <!-- Medium Bio Panel -->
+      <div class="bio-panel" id="bioPanelMedium" role="tabpanel" aria-labelledby="bioTabMedium" data-bio-content="medium" hidden>
+        <p class="bio-text-paragraph">{bios.medium.text}</p>
+      </div>
+
+      <!-- Large Bio Panel -->
+      <div class="bio-panel" id="bioPanelLarge" role="tabpanel" aria-labelledby="bioTabLarge" data-bio-content="large" hidden>
+        {bios.large.text.split('\n\n').map((para) => (
+          <p class="bio-text-paragraph">{para}</p>
+        ))}
+      </div>
     </div>
   </div>
 </section>
@@ -42,18 +99,18 @@ const { bio } = epkConfig;
     max-width: 1200px;
     width: 100%;
     margin: 0 auto;
-    padding: 48px 14px;
+    padding: 44px 16px;
     box-sizing: border-box;
     border-bottom: 3px solid #000000;
   }
 
-  /* Left-aligned Section Header */
+  /* Section Header */
   .epk-section-header {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     text-align: left;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     gap: 6px;
     width: 100%;
   }
@@ -64,7 +121,7 @@ const { bio } = epkConfig;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 4px;
-    font-family: var(--font-secondary);
+    font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.7rem;
     font-weight: 900;
     letter-spacing: 0.08em;
@@ -78,7 +135,7 @@ const { bio } = epkConfig;
 
   .epk-section-title {
     font-family: var(--font-heading);
-    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-size: clamp(1.45rem, 3.2vw, 2rem);
     font-weight: 900;
     color: var(--text-white);
     letter-spacing: -0.01em;
@@ -87,7 +144,7 @@ const { bio } = epkConfig;
 
   .epk-section-subtitle {
     font-family: var(--font-primary);
-    font-size: 0.88rem;
+    font-size: 0.86rem;
     color: var(--text-muted);
     max-width: 650px;
     line-height: 1.4;
@@ -100,10 +157,10 @@ const { bio } = epkConfig;
     border: 3px solid #000000;
     box-shadow: 3px 3px 0px #000000;
     border-radius: 10px;
-    padding: 22px;
+    padding: clamp(14px, 2.5vw, 22px);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
     box-sizing: border-box;
     width: 100%;
   }
@@ -122,48 +179,56 @@ const { bio } = epkConfig;
     border-bottom-color: rgba(255, 255, 255, 0.15);
   }
 
-  .bio-card-tags {
-    display: flex;
+  /* Segmented Toggle */
+  .bio-segmented-control {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 4px;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    max-width: 100%;
     flex-wrap: wrap;
   }
 
-  .bio-word-badge {
-    background: #000000;
-    color: var(--accent-neon-yellow);
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
+  .bio-toggle-btn {
+    background: transparent;
+    border: 1.5px solid transparent;
+    color: var(--text-card-secondary);
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.76rem;
     font-weight: 800;
-    padding: 3px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
   }
 
-  .bio-status-badge {
-    background: rgba(0, 0, 0, 0.08);
+  .bio-toggle-btn:hover {
     color: var(--text-card-primary);
-    font-family: var(--font-secondary);
-    font-size: 0.65rem;
-    font-weight: 800;
-    padding: 3px 8px;
-    border-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.18);
   }
 
-  [data-theme="dark"] .bio-status-badge {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.15);
+  .bio-toggle-btn.active {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 1px 1px 0px #000000;
+    font-weight: 900;
   }
 
+  /* Copy Bio Button */
   .epk-copy-bio-btn {
     background: var(--accent-neon-yellow);
     color: #000000;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
-    padding: 7px 14px;
-    font-family: var(--font-secondary);
+    padding: 6px 14px;
+    font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.76rem;
     font-weight: 900;
     letter-spacing: 0.04em;
@@ -182,16 +247,76 @@ const { bio } = epkConfig;
     box-shadow: 3px 3px 0px #000000;
   }
 
+  /* Meta Strip */
+  .bio-meta-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .bio-word-badge {
+    background: #000000;
+    color: var(--accent-neon-yellow);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .bio-status-badge {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-card-primary);
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    letter-spacing: 0.04em;
+  }
+
+  [data-theme="dark"] .bio-status-badge {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Bio Panels */
   .bio-card-body {
     display: flex;
     flex-direction: column;
+    gap: 12px;
+  }
+
+  .bio-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: bioFadeIn 0.2s ease-out;
+  }
+
+  .bio-panel[hidden] {
+    display: none !important;
+  }
+
+  @keyframes bioFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .bio-text-paragraph {
     font-family: var(--font-primary);
-    font-size: clamp(0.95rem, 2.2vw, 1.05rem);
+    font-size: clamp(0.92rem, 2vw, 1.02rem);
     font-weight: 450;
-    line-height: 1.65;
+    line-height: 1.6;
     color: var(--text-card-primary);
     margin: 0;
   }

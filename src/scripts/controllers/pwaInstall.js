@@ -3,6 +3,7 @@
  * Keeps CACHE_NAME in sync with public/sw.js and handles deferredInstallPrompt.
  */
 import { showToast } from './toast.js';
+import { safeSet } from '../utils/safeStorage.js';
 
 const CACHE_NAME = 'kins-link-bio-v32';
 
@@ -20,9 +21,7 @@ if (typeof window !== 'undefined') {
     deferredInstallPrompt = null;
     window.__kinsDeferredInstallPrompt = null;
     window.dispatchEvent(new CustomEvent('kins:pwa-installed'));
-    try {
-      localStorage.setItem('kins_pwa_downloaded', 'true');
-    } catch {}
+    safeSet('kins_pwa_downloaded', 'true');
     showToast('🎉 Kins App installed successfully!', 'success');
   });
 }
@@ -154,9 +153,7 @@ export async function installPwa({ onProgress } = {}) {
 
   await cacheCoreAssets(onProgress);
 
-  try {
-    localStorage.setItem('kins_pwa_downloaded', 'true');
-  } catch {}
+  safeSet('kins_pwa_downloaded', 'true');
 
   const outcome = await promptInstall();
 

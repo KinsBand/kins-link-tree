@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import crypto from 'node:crypto';
+import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
 import { getSupabaseServiceClient } from '../../lib/supabaseServer';
@@ -8,6 +9,15 @@ export const prerender = false;
 
 const ALLOWED_SCOPES = /^hero-poll:[a-z0-9_]{1,40}$|^cover-request:[a-zA-Z0-9_-]{1,60}$/;
 const MAX_CHOICE_LEN = 60;
+
+const VoteGetQuerySchema = z.object({
+  scope: z.string().regex(ALLOWED_SCOPES, 'Invalid poll scope')
+});
+
+const VotePostBodySchema = z.object({
+  scope: z.string().regex(ALLOWED_SCOPES, 'Invalid poll scope'),
+  choice: z.string().max(MAX_CHOICE_LEN).optional().default('')
+});
 
 function getEnv(key: string): string {
   return (import.meta.env[key] as string | undefined) || process.env[key] || '';
@@ -28,10 +38,15 @@ function json(data: unknown, status = 200): Response {
 
 export const GET: APIRoute = async ({ url }) => {
   try {
-    const scope = sanitizeText(url.searchParams.get('scope') || '', 80);
-    if (!ALLOWED_SCOPES.test(scope)) {
+    const parsedQuery = VoteGetQuerySchema.safeParse({
+      scope: url.searchParams.get('scope') || ''
+    });
+
+    if (!parsedQuery.success) {
       return json({ status: 'error', message: 'Invalid poll scope.' }, 400);
     }
+
+    const scope = parsedQuery.data.scope;
 
     const supabase = getSupabaseServiceClient();
     if (!supabase) {
@@ -68,18 +83,14 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ status: 'error', message: 'Too many votes. Try again shortly.' }, 429);
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== 'object') {
+    const rawBody = await request.json().catch(() => null);
+    const parsed = VotePostBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
       return json({ status: 'error', message: 'Invalid payload.' }, 400);
     }
 
-    const scope = sanitizeText(String(body.scope || ''), 80);
-    const rawChoice = String(body.choice ?? '');
+    const { scope, choice: rawChoice } = parsed.data;
     const choice = sanitizeText(rawChoice, MAX_CHOICE_LEN);
-
-    if (!ALLOWED_SCOPES.test(scope)) {
-      return json({ status: 'error', message: 'Invalid poll scope.' }, 400);
-    }
 
     const supabase = getSupabaseServiceClient();
     if (!supabase) return json({ status: 'error', message: 'Vote service unavailable.' }, 503);

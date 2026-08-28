@@ -5,7 +5,6 @@ const baseUrl = import.meta.env.BASE_URL;
 
 <header class="epk-hero-viewport" id="epk-hero">
   <div class="epk-hero-bg-layer">
-    <!-- Clean Background Layer with Visual Poster -->
     <img 
       src={`${baseUrl}${epkConfig.heroImage}`} 
       alt="KINS Band Visual" 
@@ -16,39 +15,27 @@ const baseUrl = import.meta.env.BASE_URL;
   </div>
 
   <div class="epk-hero-content-container">
-    <!-- Small Centered Band Logo at Top Center -->
-    <div class="epk-hero-center-logo-box">
-      <img 
-        src={`${baseUrl}${epkConfig.logoImage}`} 
-        alt={epkConfig.bandName} 
-        class="epk-hero-center-logo"
-        width="100"
-        height="32"
-        style="height: 32px; width: auto; max-width: 100px; object-fit: contain; display: block;"
-      />
-    </div>
-
-    <!-- Explicit Geographic Anchor Badge -->
+    <!-- Top Metadata Badges: Origin Anchor & Genre -->
     <div class="epk-hero-top-badges">
       <span class="epk-badge-origin" title="East Coast Australia Tour Routing Anchor">
-        <i class="fa-solid fa-location-dot"></i> {epkConfig.origin}
-        <span class="origin-sublabel">• {epkConfig.originDetails}</span>
+        <i class="fa-solid fa-location-dot epk-pin-icon" aria-hidden="true"></i>
+        <span>{epkConfig.origin}</span>
+      </span>
+      <span class="epk-badge-genre">
+        {epkConfig.genreMain}
       </span>
     </div>
 
-    <!-- Editorial Genre & RIYL Reference Block -->
-    <div class="epk-hero-genre-block">
-      <div class="epk-hero-genre-row">
-        {epkConfig.subGenres.map(genre => (
-          <span class="epk-genre-tag">{genre}</span>
-        ))}
-      </div>
-      
-      <!-- Promoters RIYL ("Sounds Like") Compatibility Comp -->
-      <div class="epk-riyl-badge">
-        <span class="riyl-label">RIYL / SOUNDS LIKE:</span>
-        <span class="riyl-artists">{epkConfig.riyl.join(' • ')}</span>
-      </div>
+    <!-- Editorial Brand Headline -->
+    <div class="epk-hero-title-wrap">
+      <h1 class="epk-hero-title">KINS</h1>
+      <span class="epk-hero-subtitle-tag">OFFICIAL ELECTRONIC PRESS KIT 2026</span>
+    </div>
+
+    <!-- Streamlined RIYL / Promoters Compatibility Comp -->
+    <div class="epk-riyl-badge">
+      <span class="riyl-label">RIYL / SOUNDS LIKE:</span>
+      <span class="riyl-artists">{epkConfig.riyl.join(' • ')}</span>
     </div>
 
     <!-- Sonic Positioning Statement Card -->
@@ -58,19 +45,23 @@ const baseUrl = import.meta.env.BASE_URL;
       </p>
     </div>
 
-    <!-- Day-0 Clean Verified CTAs -->
+    <!-- Focused Action CTAs -->
     <div class="epk-hero-cta-grid">
-      <a href="#epk-contact" class="epk-hero-primary-btn">
-        <i class="fa-solid fa-calendar-check"></i> Booking Inquiries
+      <a href="#epk-contact" class="epk-hero-primary-btn brutal-press">
+        <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+        <span>Booking Inquiries</span>
       </a>
-      <a href="#epk-repertoire" class="epk-hero-secondary-btn">
-        <i class="fa-solid fa-bolt"></i> Live Repertoire
+      <a href="#epk-repertoire" class="epk-hero-secondary-btn brutal-press">
+        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+        <span>Live Format</span>
       </a>
-      <a href="#epk-members" class="epk-hero-deck-btn">
-        <i class="fa-solid fa-users"></i> Band Lineup
+      <a href="#epk-members" class="epk-hero-deck-btn brutal-press">
+        <i class="fa-solid fa-users" aria-hidden="true"></i>
+        <span>Lineup</span>
       </a>
-      <a href="#epk-downloads" class="epk-hero-deck-btn">
-        <i class="fa-solid fa-sliders"></i> Stage Plot & Specs
+      <a href="#epk-downloads" class="epk-hero-deck-btn brutal-press">
+        <i class="fa-solid fa-download" aria-hidden="true"></i>
+        <span>Assets</span>
       </a>
     </div>
   </div>
@@ -81,14 +72,14 @@ const baseUrl = import.meta.env.BASE_URL;
     position: relative;
     width: 100%;
     max-width: 100%;
-    min-height: 58vh;
+    min-height: 52vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 44px 14px 48px;
+    padding: clamp(32px, 5vw, 48px) 16px clamp(40px, 6vw, 56px);
     box-sizing: border-box;
     overflow: hidden;
-    border-bottom: 4px solid #000000;
+    border-bottom: 3px solid #000000;
   }
 
   .epk-hero-bg-layer {
@@ -107,8 +98,8 @@ const baseUrl = import.meta.env.BASE_URL;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 30%;
-    filter: brightness(0.4) contrast(1.15) grayscale(20%);
+    object-position: center 25%;
+    filter: brightness(0.35) contrast(1.15) grayscale(25%);
     transform: scale(1.02);
     z-index: 0;
   }
@@ -117,48 +108,31 @@ const baseUrl = import.meta.env.BASE_URL;
     position: absolute;
     inset: 0;
     z-index: 2;
-    background: radial-gradient(circle at 50% 35%, rgba(15, 15, 18, 0.45) 0%, rgba(10, 10, 12, 0.88) 85%, #08080a 100%),
-                linear-gradient(to bottom, rgba(14, 14, 18, 0.65) 0%, rgba(14, 14, 18, 0.96) 100%);
+    background: 
+      radial-gradient(circle at 50% 35%, rgba(15, 15, 18, 0.4) 0%, rgba(10, 10, 12, 0.88) 85%, #08080a 100%),
+      linear-gradient(to bottom, rgba(14, 14, 18, 0.5) 0%, rgba(14, 14, 18, 0.98) 100%);
   }
 
   .epk-hero-content-container {
     position: relative;
     z-index: 3;
-    max-width: 960px;
+    max-width: 860px;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 12px;
+    gap: 14px;
     box-sizing: border-box;
   }
 
-  /* Small Centered Band Logo */
-  .epk-hero-center-logo-box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .epk-hero-center-logo {
-    height: 32px !important;
-    width: auto !important;
-    max-width: 100px !important;
-    object-fit: contain !important;
-    filter: drop-shadow(2px 2px 0px #000000);
-    display: block;
-    transition: transform 0.2s var(--ease-tactile);
-  }
-
-  .epk-hero-center-logo:hover {
-    transform: scale(1.05);
-  }
-
+  /* Top Badges */
   .epk-hero-top-badges {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .epk-badge-origin {
@@ -167,7 +141,7 @@ const baseUrl = import.meta.env.BASE_URL;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
-    font-family: var(--font-secondary);
+    font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.74rem;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -175,116 +149,117 @@ const baseUrl = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
   }
 
-  .origin-sublabel {
-    color: var(--text-card-secondary);
-    font-weight: 600;
-    font-size: 0.68rem;
+  .epk-pin-icon {
+    color: #ef4444;
+    font-size: 0.72rem;
   }
 
-  .epk-hero-genre-block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-  }
-
-  .epk-hero-genre-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 0;
-  }
-
-  .epk-genre-tag {
+  .epk-badge-genre {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(8px);
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
     color: #f5f5f7;
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
   }
 
-  /* RIYL / Compatibility Bar */
+  /* Title Wrap */
+  .epk-hero-title-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .epk-hero-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    margin: 0;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(242, 253, 67, 0.2);
+  }
+
+  .epk-hero-subtitle-tag {
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: clamp(0.68rem, 1.8vw, 0.8rem);
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* RIYL Bar */
   .epk-riyl-badge {
-    background: rgba(0, 0, 0, 0.65);
+    background: rgba(0, 0, 0, 0.7);
     border: 1.5px solid var(--accent-neon-yellow);
-    border-radius: 4px;
-    padding: 2px 8px;
+    border-radius: 6px;
+    padding: 4px 12px;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: wrap;
     justify-content: center;
+    max-width: 100%;
   }
 
   .riyl-label {
-    font-family: var(--font-secondary);
-    font-size: 0.58rem;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.62rem;
     font-weight: 900;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     color: var(--accent-neon-yellow);
   }
 
   .riyl-artists {
     font-family: var(--font-secondary);
-    font-size: 0.68rem;
+    font-size: 0.74rem;
     font-weight: 700;
     color: #ffffff;
   }
 
+  /* Pitch Card */
   .epk-hero-pitch-card {
     width: 100%;
-    max-width: 760px;
-    background: rgba(18, 18, 22, 0.88);
-    backdrop-filter: blur(12px);
+    max-width: 720px;
+    background: rgba(18, 18, 22, 0.92);
     border: 2.5px solid #000000;
     box-shadow: 3px 3px 0px var(--accent-neon-yellow), 3px 3px 0px 2px #000000;
     border-radius: 8px;
     padding: 14px 18px;
     box-sizing: border-box;
+    margin-top: 2px;
   }
 
   .epk-hero-pitch-text {
     font-family: var(--font-primary);
-    font-size: clamp(0.95rem, 2.2vw, 1.12rem);
+    font-size: clamp(0.92rem, 2vw, 1.05rem);
     font-weight: 500;
     line-height: 1.5;
     color: var(--text-white);
     margin: 0;
-    word-break: break-word;
   }
 
-  /* Day-0 CTAs */
+  /* CTAs Grid */
   .epk-hero-cta-grid {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
     width: 100%;
-    max-width: 380px;
-    gap: 8px;
-    margin-top: 4px;
+    max-width: 600px;
+    margin-top: 6px;
     box-sizing: border-box;
-  }
-
-  @media (min-width: 600px) {
-    .epk-hero-cta-grid {
-      flex-direction: row;
-      max-width: 100%;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-    }
   }
 
   .epk-hero-primary-btn {
@@ -292,10 +267,10 @@ const baseUrl = import.meta.env.BASE_URL;
     color: #000000;
     border: 2.5px solid #000000;
     box-shadow: 2.5px 2.5px 0px #000000;
-    border-radius: 6px;
-    padding: 10px 16px;
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.84rem;
     font-weight: 900;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -303,16 +278,9 @@ const baseUrl = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     box-sizing: border-box;
-    width: 100%;
     transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
-  }
-
-  @media (min-width: 600px) {
-    .epk-hero-primary-btn {
-      width: auto;
-    }
   }
 
   .epk-hero-primary-btn:hover {
@@ -327,10 +295,10 @@ const baseUrl = import.meta.env.BASE_URL;
     color: var(--text-card-primary);
     border: 2.5px solid #000000;
     box-shadow: 2.5px 2.5px 0px #000000;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 10px 16px;
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.84rem;
     font-weight: 900;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -338,16 +306,9 @@ const baseUrl = import.meta.env.BASE_URL;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     box-sizing: border-box;
-    width: 100%;
     transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
-  }
-
-  @media (min-width: 600px) {
-    .epk-hero-secondary-btn {
-      width: auto;
-    }
   }
 
   .epk-hero-secondary-btn:hover {
@@ -362,9 +323,9 @@ const baseUrl = import.meta.env.BASE_URL;
     color: var(--text-white);
     border: 2px solid rgba(255, 255, 255, 0.35);
     box-shadow: 2.5px 2.5px 0px #000000;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 10px 14px;
-    font-family: var(--font-secondary);
+    font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -375,19 +336,25 @@ const baseUrl = import.meta.env.BASE_URL;
     justify-content: center;
     gap: 6px;
     box-sizing: border-box;
-    width: 100%;
     transition: transform 0.16s var(--ease-tactile), border-color 0.16s ease, color 0.16s ease;
-  }
-
-  @media (min-width: 600px) {
-    .epk-hero-deck-btn {
-      width: auto;
-    }
   }
 
   .epk-hero-deck-btn:hover {
     border-color: var(--accent-neon-yellow);
     color: var(--accent-neon-yellow);
     transform: translate(-1px, -1px);
+  }
+
+  @media (max-width: 599px) {
+    .epk-hero-cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .epk-hero-primary-btn {
+      grid-column: span 2;
+      padding: 11px 16px;
+    }
   }
 </style>

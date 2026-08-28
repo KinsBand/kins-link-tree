@@ -4,6 +4,7 @@
 
 @import './tokens/variables.css';
 @import './tokens/animations.css';
+@import './base/reset.css';
 @import './base/layout.css';
 
 /* Vinyl Spin Animation */
@@ -410,7 +411,7 @@ svg .beat-arc.is-muted.active {
   border-color: #000000 !important;
   transform: scale(1.06) !important;
   box-shadow: 3px 3px 0px #000000 !important;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
 }
 
 .text-check-success {
@@ -995,7 +996,7 @@ body.is-audio-playing .stylus-head-group {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  transition: all 0.18s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -1096,7 +1097,7 @@ body.is-audio-playing .stylus-head-group {
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
   white-space: nowrap !important;
   user-select: none !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
@@ -1185,7 +1186,7 @@ body.is-audio-playing .stylus-head-group {
   justify-content: center !important;
   gap: 7px !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
   user-select: none !important;
 }
 
@@ -1254,7 +1255,7 @@ body.is-audio-playing .stylus-head-group {
   font-size: 1.18rem !important;
   font-weight: 500 !important;
   cursor: pointer !important;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: background-color 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
   user-select: none !important;
   text-decoration: none !important;
   padding: 0 !important;
@@ -1423,7 +1424,7 @@ body.is-audio-playing .stylus-head-group {
   font-size: 0.88rem;
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 2px 6px rgba(0, 0, 0, 0.4);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
   user-select: none;
   position: relative;
   -webkit-tap-highlight-color: transparent;
@@ -1532,7 +1533,7 @@ body.is-audio-playing .stylus-head-group {
   align-items: center;
   justify-content: center;
   font-size: 1rem;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
 }
 
 .gig-lightbox-close:hover {
@@ -1649,7 +1650,7 @@ html.low-power-mode .sheet-container {
 
 /* Keyboard Focus Trapping & Accessibility Outline */
 :focus-visible {
-  outline: 2px solid var(--btn-green);
+  outline: 2px solid var(--brand-accent-primary);
   outline-offset: 2px;
 }
 
@@ -2206,6 +2207,195 @@ html, body {
   max-width: 100% !important;
   box-sizing: border-box !important;
 }
+
+/* ==========================================================================
+   Email Domain Autocomplete Suggestions (Subscribe Sections)
+   ========================================================================== */
+.email-suggestions-wrap {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-height: 54px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transform-origin: top center;
+  overflow: hidden;
+  transition: opacity 0.22s var(--ease-snappy),
+              transform 0.22s var(--ease-snappy),
+              max-height 0.22s var(--ease-snappy),
+              margin-top 0.22s var(--ease-snappy);
+  will-change: opacity, transform, max-height;
+}
+
+.email-suggestions-wrap.is-closing {
+  opacity: 0 !important;
+  transform: translateY(-8px) scale(0.96) !important;
+  max-height: 0 !important;
+  margin-top: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              max-height 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              margin-top 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.email-suggestions-wrap.hidden {
+  display: none !important;
+}
+
+.email-suggestions-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 2px 6px 2px;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+}
+
+/* Desktop Fine-Pointer Horizontal Scrollbar */
+@media (min-width: 769px) and (pointer: fine) {
+  .email-suggestions-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb, var(--brand-accent-primary, #f2fd43)) var(--surface-card-panel, #f5f4ef);
+    padding-bottom: 6px;
+  }
+
+  .email-suggestions-list::-webkit-scrollbar {
+    display: block;
+    height: 5px;
+  }
+
+  .email-suggestions-list::-webkit-scrollbar-track {
+    background: var(--surface-card-panel, #f5f4ef);
+    border: 1px solid #000000;
+    border-radius: var(--radius-pill, 9999px);
+  }
+
+  .email-suggestions-list::-webkit-scrollbar-thumb {
+    background: var(--btn-brand-primary, var(--accent-neon-yellow, #f2fd43));
+    border: 1px solid #000000;
+    border-radius: var(--radius-pill, 9999px);
+  }
+
+  .email-suggestions-list::-webkit-scrollbar-thumb:hover {
+    background: var(--btn-brand-hover, #faff60);
+  }
+
+  [data-theme="dark"] .email-suggestions-list {
+    scrollbar-color: var(--brand-accent-primary, #d4af37) #141418;
+  }
+
+  [data-theme="dark"] .email-suggestions-list::-webkit-scrollbar-track {
+    background: #141418;
+    border-color: #2e2e36;
+  }
+
+  [data-theme="dark"] .email-suggestions-list::-webkit-scrollbar-thumb {
+    background: var(--brand-accent-primary, #d4af37);
+    border-color: #2e2e36;
+  }
+}
+
+/* Mobile Touch Screens: Hide Scrollbar Indicator */
+@media (max-width: 768px), (pointer: coarse) {
+  .email-suggestions-list {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .email-suggestions-list::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.email-domain-chip {
+  flex: 0 0 auto;
+  background: var(--surface-input, #ffffff);
+  border: var(--border-brutal-sm, 2px solid #000000);
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-card-primary, #000000);
+  font-family: var(--font-secondary, 'Space Grotesk', sans-serif);
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 5px 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.14s var(--ease-tactile), background-color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, color 0.14s ease;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.email-domain-chip:hover,
+.email-domain-chip.is-highlighted {
+  background: var(--btn-brand-hover, #faff60);
+  color: #000000;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.email-domain-chip.is-selected {
+  background: var(--btn-brand-primary, var(--accent-neon-yellow, #f2fd43));
+  color: #000000;
+  border-color: #000000;
+  font-weight: 900;
+  box-shadow: 2px 2px 0px #000000;
+  transform: translateY(0);
+}
+
+.email-domain-chip:active {
+  transform: translate(1px, 1px);
+  box-shadow: 0.5px 0.5px 0px #000000;
+}
+
+.email-domain-chip:focus-visible {
+  outline: 2px solid var(--brand-accent-primary, #f2fd43);
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] .email-domain-chip {
+  background: #1c1c21;
+  border: 1.5px solid #2e2e36;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .email-domain-chip:hover,
+[data-theme="dark"] .email-domain-chip.is-highlighted {
+  background: #282832;
+  color: #ffffff;
+  border-color: var(--brand-accent-primary, #d4af37);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+}
+
+[data-theme="dark"] .email-domain-chip.is-selected {
+  background: var(--btn-brand-primary, #d4af37);
+  color: #000000;
+  border-color: var(--brand-accent-primary, #d4af37);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+  font-weight: 900;
+}
+
+[data-theme="dark"] .email-domain-chip:focus-visible {
+  outline: 2px solid var(--brand-accent-primary, #d4af37);
+  outline-offset: 2px;
+}
+
 
 
 

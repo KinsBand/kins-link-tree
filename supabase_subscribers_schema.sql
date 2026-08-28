@@ -16,6 +16,12 @@ CREATE TABLE IF NOT EXISTS public.subscribers (
 
 -- Ensure name column exists if table was created previously
 ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS name TEXT;
+-- Segmentation / lifecycle columns required by /api/subscribe.ts (idempotent adds for legacy tables)
+ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS is_subscribed BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS unsubscribed_at TIMESTAMPTZ;
+ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS welcome_email_sent BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS alerts_opt_in BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- 2. Create index on email for ultra-fast lookup and upserts
 CREATE INDEX IF NOT EXISTS idx_subscribers_email ON public.subscribers (email);

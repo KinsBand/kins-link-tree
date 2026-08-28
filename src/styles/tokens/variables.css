@@ -1,9 +1,9 @@
 /* ==========================================================================
-   Kins (@KinsBandOfficial) - Neo-Brutalist Rock Visual System Tokens
+   Kins Official — Neo-Brutalist Semantic Visual System Tokens
    ========================================================================== */
 
 :root {
-  /* System Color Tokens - High-Contrast Neo-Brutalist Canvas */
+  /* Surfaces & System Containers */
   --md-sys-color-primary: #f2fd43;
   --md-sys-color-on-primary: #000000;
   --md-sys-color-primary-container: #1a1a1a;
@@ -16,29 +16,63 @@
   --md-sys-color-outline-variant: rgba(255, 255, 255, 0.12);
   --md-sys-color-inverse-surface: #f5f4ef;
 
-  /* Surfaces & Backgrounds */
-  --bg-chalkboard: #161618;
-  --bg-dark: #0f0f12;
-  --bg-dark-gradient: radial-gradient(circle at 50% 20%, #202026 0%, #111114 60%, #0a0a0c 100%);
+  --surface-canvas: #141416;
+  --surface-base: #1c1c20;
+  --surface-elevated: #24242a;
   --surface-card: #18181c;
-  --surface-card-light: #f5f4ef;
-  --surface-card-light-hover: #ffffff;
+  --surface-card-panel: #f5f4ef;
+  --surface-card-panel-hover: #ffffff;
   --surface-tape: rgba(245, 245, 240, 0.95);
   --surface-input: #ffffff;
   --surface-input-border: #000000;
+  --surface-overlay: rgba(0, 0, 0, 0.75);
 
-  /* Accents & Highlights */
-  --accent-neon-yellow: #f2fd43;
-  --accent-neon-yellow-glow: rgba(242, 253, 67, 0.35);
-  --accent-neon: #f2fd43;
-  --accent-crimson: #ef4444;
-  --accent-gold-dashed-bg: rgba(242, 253, 67, 0.18);
+  /* Legacy Surface Aliases */
+  --bg-chalkboard: #161618;
+  --bg-dark: #0f0f12;
+  --bg-dark-gradient: radial-gradient(circle at 50% 20%, #202026 0%, #111114 60%, #0a0a0c 100%);
+  --surface-card-light: var(--surface-card-panel);
+  --surface-card-light-hover: var(--surface-card-panel-hover);
+  --card-white: var(--surface-card-panel);
+  --card-bg: var(--surface-card);
+  --card-white-shadow: 3px 3px 0px #000000;
+
+  /* Typography & Semantic Text */
+  --text-on-dark: #f5f5f7;
+  --text-on-light: #0a0a0c;
+  --text-muted: #8e8e93;
+  --text-card-primary: #000000;
+  --text-card-secondary: #4b4b4b;
+  --text-card-subtle: #555555;
+  --text-card-muted: #71717a;
+
+  /* Legacy Typography Aliases */
+  --text-dark: var(--text-on-light);
+  --text-white: var(--text-on-dark);
+
+  /* Interactive & Brand CTAs */
+  --btn-brand-primary: #f2fd43;
+  --btn-brand-hover: #faff60;
+  --btn-brand-shadow: 3px 3px 0px #000000;
+  --btn-brand-text: #000000;
+  --brand-accent-primary: #f2fd43;
+  --brand-accent-glow: rgba(242, 253, 67, 0.35);
+  --status-danger: #ef4444;
+  --drop-target-bg: rgba(242, 253, 67, 0.18);
+
+  /* Legacy Brand & Button Aliases */
+  --btn-green: var(--btn-brand-primary);
+  --btn-green-hover: var(--btn-brand-hover);
+  --btn-green-shadow: var(--btn-brand-shadow);
+  --btn-text-color: var(--btn-brand-text);
+  --accent-neon-yellow: var(--brand-accent-primary);
+  --accent-neon-yellow-glow: var(--brand-accent-glow);
+  --accent-neon: var(--brand-accent-primary);
+  --accent-crimson: var(--status-danger);
+  --accent-gold-dashed-bg: var(--drop-target-bg);
   --accent-gold-dashed-border: #000000;
 
-  /* Unified Low / Mid / High Level Palette — Neo-Brutalist high-contrast tokens
-     Low  (Sub/Bass)   — Deep Amber / Warm Orange  #FF9F1C  — high contrast on dark #0A0A0A and light #FAF8F5
-     Mid  (Body/Primary)— Vivid Cyan / Electric Teal #2EC4B6 (alt #00E5FF) — electric depth on dark, clean on light
-     High (Accent/Peak) — Signature Neon Green      #53FC18 (alt #F2FD43)  — peak pop, matches brand neon */
+  /* Audio Visualizer & Level Palette (Metronome / Tuner) */
   --level-low: #FF9F1C;
   --level-low-bg: rgba(255, 159, 28, 0.16);
   --level-low-border: rgba(255, 159, 28, 0.75);
@@ -60,15 +94,13 @@
   --level-high-glow: rgba(83, 252, 24, 0.38);
   --level-high-active: #53FC18;
 
-  /* Muted / Rest Beat — desaturated mid-grey fill + prominent dashed greige border (reference image: grey khaki muted arc).
-      More grey than warm gold so rest is instantly distinct from vivid low/mid/high notes; flash retains subtle grey glow. */
+  /* Muted / Rest Beat Indicator */
   --beat-muted-bg: rgba(82, 82, 80, 0.38);
   --beat-muted-bg-alt: rgba(155, 150, 136, 0.14);
   --beat-muted-border: #9A9688;
   --beat-muted-border-style: 2px dashed #9A9688;
   --beat-muted-opacity: 0.78;
   --beat-muted-inner-opacity: 0.42;
-  /* Active muted flash — slightly brighter grey + subtle glow, still desaturated */
   --beat-muted-active-bg: rgba(102, 102, 100, 0.46);
   --beat-muted-active-border: #B8B4A3;
   --beat-muted-active-glow: rgba(155, 150, 136, 0.28);
@@ -92,24 +124,6 @@
   --shadow-brutal-yellow-lg: 4px 4px 0px #f2fd43;
   --shadow-ambient: 0 10px 30px rgba(0, 0, 0, 0.6);
 
-  /* Button Tokens */
-  --btn-green: #f2fd43;
-  --btn-green-hover: #faff60;
-  --btn-green-shadow: 3px 3px 0px #000000;
-  --btn-text-color: #000000;
-  --card-white: #f5f4ef;
-  --card-bg: #18181c;
-  --card-white-shadow: 3px 3px 0px #000000;
-
-  /* Typography & Text Colors */
-  --text-dark: #0a0a0c;
-  --text-card-primary: #000000;
-  --text-card-secondary: #4b4b4b;
-  --text-card-subtle: #555555;
-  --text-card-muted: #71717a;
-  --text-white: #f5f5f7;
-  --text-muted: #8e8e93;
-
   /* Typographic Hierarchy */
   --font-display: 'Cinzel', 'Syne', Georgia, serif;
   --font-heading: 'Syne', 'Outfit', -apple-system, sans-serif;
@@ -131,13 +145,13 @@
 }
 
 /* ==========================================================================
-   Dark Mode Palette (No Harsh Yellow, No Harsh White)
+   Dark Theme Overrides — Anti-Fatigue Muted Warm Gold
    ========================================================================== */
 :root[data-theme="dark"],
 html[data-theme="dark"],
 body[data-theme="dark"],
 [data-theme="dark"] {
-  /* System Color Tokens */
+  /* Surfaces & System Containers */
   --md-sys-color-primary: #d4af37;
   --md-sys-color-on-primary: #000000;
   --md-sys-color-primary-container: #222228;
@@ -150,26 +164,63 @@ body[data-theme="dark"],
   --md-sys-color-outline-variant: rgba(255, 255, 255, 0.12);
   --md-sys-color-inverse-surface: #1c1c22;
 
-  /* Surfaces & Backgrounds */
-  --bg-chalkboard: #0d0d10;
-  --bg-dark: #08080a;
-  --bg-dark-gradient: radial-gradient(circle at 50% 20%, #16161c 0%, #0c0c0f 60%, #060608 100%);
+  --surface-canvas: #0e0e12;
+  --surface-base: #15151a;
+  --surface-elevated: #1e1e24;
   --surface-card: #141418;
-  --surface-card-light: #1c1c22;
-  --surface-card-light-hover: #26262e;
+  --surface-card-panel: #1c1c22;
+  --surface-card-panel-hover: #26262e;
   --surface-tape: rgba(38, 38, 46, 0.95);
   --surface-input: #141418;
   --surface-input-border: #33333f;
+  --surface-overlay: rgba(0, 0, 0, 0.85);
 
-  /* Muted Warm Gold / Amber Accents */
-  --accent-neon-yellow: #d4af37;
-  --accent-neon-yellow-glow: rgba(212, 175, 55, 0.22);
-  --accent-neon: #d4af37;
-  --accent-crimson: #ef4444;
-  --accent-gold-dashed-bg: rgba(212, 175, 55, 0.18);
+  /* Legacy Surface Aliases */
+  --bg-chalkboard: #0d0d10;
+  --bg-dark: #08080a;
+  --bg-dark-gradient: radial-gradient(circle at 50% 20%, #16161c 0%, #0c0c0f 60%, #060608 100%);
+  --surface-card-light: var(--surface-card-panel);
+  --surface-card-light-hover: var(--surface-card-panel-hover);
+  --card-white: var(--surface-card-panel);
+  --card-bg: var(--surface-card);
+  --card-white-shadow: 3px 3px 0px #000000;
+
+  /* Typography & Semantic Text */
+  --text-on-dark: #f5f5f7;
+  --text-on-light: #f4f4f6;
+  --text-card-primary: #f4f4f6;
+  --text-card-secondary: #a1a1aa;
+  --text-card-subtle: #8e8e93;
+  --text-card-muted: #71717a;
+  --text-muted: #a1a1aa;
+
+  /* Legacy Typography Aliases */
+  --text-dark: var(--text-on-light);
+  --text-white: var(--text-on-dark);
+
+  /* Interactive & Brand CTAs */
+  --btn-brand-primary: #d4af37;
+  --btn-brand-hover: #e5c07b;
+  --btn-brand-shadow: 3px 3px 0px #000000;
+  --btn-brand-text: #000000;
+  --brand-accent-primary: #d4af37;
+  --brand-accent-glow: rgba(212, 175, 55, 0.22);
+  --status-danger: #ef4444;
+  --drop-target-bg: rgba(212, 175, 55, 0.18);
+
+  /* Legacy Brand & Button Aliases */
+  --btn-green: var(--btn-brand-primary);
+  --btn-green-hover: var(--btn-brand-hover);
+  --btn-green-shadow: var(--btn-brand-shadow);
+  --btn-text-color: var(--btn-brand-text);
+  --accent-neon-yellow: var(--brand-accent-primary);
+  --accent-neon-yellow-glow: var(--brand-accent-glow);
+  --accent-neon: var(--brand-accent-primary);
+  --accent-crimson: var(--status-danger);
+  --accent-gold-dashed-bg: var(--drop-target-bg);
   --accent-gold-dashed-border: #000000;
 
-  /* Unified Low / Mid / High Level Palette — dark mode retains hue, adjusted glow for legibility */
+  /* Unified Low / Mid / High Level Palette (Dark Mode adjustments) */
   --level-low: #FF9F1C;
   --level-low-bg: rgba(255, 159, 28, 0.18);
   --level-low-border: rgba(255, 159, 28, 0.8);
@@ -191,7 +242,7 @@ body[data-theme="dark"],
   --level-high-glow: rgba(83, 252, 24, 0.32);
   --level-high-active: #53FC18;
 
-  /* Muted / Rest Beat — dark variant: same more-grey muted palette for legibility */
+  /* Muted / Rest Beat (Dark Mode) */
   --beat-muted-bg: rgba(82, 82, 80, 0.38);
   --beat-muted-bg-alt: rgba(155, 150, 136, 0.14);
   --beat-muted-border: #9A9688;
@@ -208,24 +259,6 @@ body[data-theme="dark"],
   --shadow-brutal-black-lg: 4px 4px 0px #000000;
   --shadow-brutal-yellow: 3px 3px 0px #000000;
   --shadow-brutal-yellow-lg: 4px 4px 0px #000000;
-
-  /* Button Tokens */
-  --btn-green: #d4af37;
-  --btn-green-hover: #e5c07b;
-  --btn-green-shadow: 3px 3px 0px #000000;
-  --btn-text-color: #000000;
-  --card-white: #1c1c22;
-  --card-bg: #141418;
-  --card-white-shadow: 3px 3px 0px #000000;
-
-  /* Typography & Text Colors */
-  --text-dark: #f4f4f6;
-  --text-card-primary: #f4f4f6;
-  --text-card-secondary: #a1a1aa;
-  --text-card-subtle: #8e8e93;
-  --text-card-muted: #71717a;
-  --text-white: #f5f5f7;
-  --text-muted: #a1a1aa;
 
   /* Brutalist Custom Scrollbars (Dark Mode / Muted Gold) */
   --scrollbar-thumb: #d4af37;

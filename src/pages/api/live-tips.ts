@@ -1,8 +1,13 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { getSupabaseServiceClient } from '../../lib/supabaseServer';
 
 export const prerender = false;
+
+const LiveTipsQuerySchema = z.object({
+  after: z.string().max(100).optional().default('')
+});
 
 /**
  * Confirmed (Ko-fi webhook-verified) tips for live-chat superchat rendering.
@@ -18,8 +23,12 @@ export const GET: APIRoute = async ({ request, url }) => {
       );
     }
 
-    const afterParam = url.searchParams.get('after') || '';
-    const afterMs = Date.parse(afterParam);
+    const parsedQuery = LiveTipsQuerySchema.safeParse({
+      after: url.searchParams.get('after') || ''
+    });
+
+    const afterParam = parsedQuery.success ? parsedQuery.data.after : '';
+    const afterMs = afterParam ? Date.parse(afterParam) : NaN;
     const supabase = getSupabaseServiceClient();
     if (!supabase) {
       return new Response(

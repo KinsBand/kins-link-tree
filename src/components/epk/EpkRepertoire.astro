@@ -1,14 +1,15 @@
 ---
 import { epkConfig } from '../../settings/epk.config';
+import { bookingEmail } from '../../settings/contact.config';
 const { repertoire } = epkConfig;
 ---
 
 <section class="epk-section epk-repertoire-section" id="epk-repertoire">
   <div class="epk-section-header">
     <div class="epk-header-tag">
-      <i class="fa-solid fa-bolt"></i> LIVE SHOW
+      <i class="fa-solid fa-bolt"></i> LIVE FORMATS
     </div>
-    <h2 class="epk-section-title">Live Repertoire & Performance</h2>
+    <h2 class="epk-section-title">Live Formats & Booking</h2>
     <p class="epk-section-subtitle">{repertoire.subtitle}</p>
   </div>
 
@@ -17,13 +18,13 @@ const { repertoire } = epkConfig;
     <!-- Top Header Strip -->
     <div class="repertoire-header-strip">
       <div class="repertoire-title-box">
-        <i class="fa-solid fa-music repertoire-icon"></i>
-        <h3 class="repertoire-title">Turnkey Set Configurations</h3>
+        <i class="fa-solid fa-music repertoire-icon" aria-hidden="true"></i>
+        <h3 class="repertoire-title">Turnkey Set Options</h3>
       </div>
-      <span class="repertoire-live-badge"><span class="pulse-dot"></span> READY TO BOOK</span>
+      <span class="repertoire-live-badge"><span class="pulse-dot"></span> AVAILABLE FOR BOOKING</span>
     </div>
 
-    <!-- Set Options Row -->
+    <!-- Set Options Row (2 Compact Cards) -->
     <div class="repertoire-set-options-grid">
       {repertoire.setOptions.map((opt) => (
         <div class="set-option-card">
@@ -36,7 +37,7 @@ const { repertoire } = epkConfig;
       ))}
     </div>
 
-    <!-- Setlist Breakdown Cards -->
+    <!-- Key Live Highlights Strip -->
     <div class="repertoire-breakdown-grid">
       {repertoire.setBreakdown.map((item) => (
         <div class="repertoire-feature-card">
@@ -54,27 +55,28 @@ const { repertoire } = epkConfig;
     <!-- Booking Inquiries Footer Strip -->
     <div class="repertoire-booking-strip">
       <div class="booking-note-wrap">
-        <i class="fa-solid fa-calendar-check booking-icon"></i>
-        <span class="booking-note-text">Available for club bookings, festival slots & East Coast tour routing:</span>
+        <i class="fa-solid fa-calendar-check booking-icon" aria-hidden="true"></i>
+        <span class="booking-note-text">Inquiries for club bills, support slots & festival lineups:</span>
       </div>
       <div class="booking-actions-row">
         <button 
           type="button" 
-          class="epk-email-copy-btn" 
-          data-email="booking@kinsband.com" 
-          title="Copy booking@kinsband.com to clipboard"
+          class="epk-email-copy-btn brutal-press" 
+          data-email={bookingEmail} 
+          title={`Copy ${bookingEmail} to clipboard`}
+          aria-label="Copy booking email to clipboard"
         >
-          <i class="fa-solid fa-copy"></i>
-          <span class="copy-email-text">booking@kinsband.com</span>
+          <i class="fa-solid fa-copy" aria-hidden="true"></i>
+          <span class="copy-email-text">{bookingEmail}</span>
           <span class="copy-badge">Copy</span>
         </button>
 
         <a 
-          href="mailto:booking@kinsband.com?subject=Live%20Booking%20Inquiry%20-%20KINS" 
-          class="booking-send-btn" 
-          title="Open email to booking@kinsband.com"
+          href={`mailto:${bookingEmail}?subject=Live%20Booking%20Inquiry%20-%20KINS`} 
+          class="booking-send-btn brutal-press" 
+          title={`Open email to ${bookingEmail}`}
         >
-          <i class="fa-solid fa-paper-plane"></i>
+          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
           <span>Inquire Now</span>
         </a>
       </div>
@@ -87,18 +89,18 @@ const { repertoire } = epkConfig;
     max-width: 1200px;
     width: 100%;
     margin: 0 auto;
-    padding: 48px 14px;
+    padding: 44px 16px;
     box-sizing: border-box;
     border-bottom: 3px solid #000000;
   }
 
-  /* Left-aligned Section Header */
+  /* Section Header */
   .epk-section-header {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     text-align: left;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     gap: 6px;
     width: 100%;
   }
@@ -109,7 +111,7 @@ const { repertoire } = epkConfig;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 4px;
-    font-family: var(--font-secondary);
+    font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.7rem;
     font-weight: 900;
     letter-spacing: 0.08em;
@@ -123,7 +125,7 @@ const { repertoire } = epkConfig;
 
   .epk-section-title {
     font-family: var(--font-heading);
-    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-size: clamp(1.45rem, 3.2vw, 2rem);
     font-weight: 900;
     color: var(--text-white);
     letter-spacing: -0.01em;
@@ -132,7 +134,7 @@ const { repertoire } = epkConfig;
 
   .epk-section-subtitle {
     font-family: var(--font-primary);
-    font-size: 0.88rem;
+    font-size: 0.86rem;
     color: var(--text-muted);
     max-width: 650px;
     line-height: 1.4;
@@ -156,9 +158,9 @@ const { repertoire } = epkConfig;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 18px;
+    padding: 10px 16px;
     background: #141418;
-    border-bottom: 3px solid #000000;
+    border-bottom: 2.5px solid #000000;
     box-sizing: border-box;
     flex-wrap: wrap;
     gap: 8px;
@@ -171,13 +173,13 @@ const { repertoire } = epkConfig;
   }
 
   .repertoire-icon {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: var(--accent-neon-yellow);
   }
 
   .repertoire-title {
     font-family: var(--font-heading);
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 900;
     color: #ffffff;
     margin: 0;
@@ -186,13 +188,13 @@ const { repertoire } = epkConfig;
   .repertoire-live-badge {
     background: var(--accent-neon-yellow);
     color: #000000;
-    border: 2px solid #000000;
+    border: 1.5px solid #000000;
     box-shadow: 1.5px 1.5px 0px #000000;
     border-radius: 4px;
-    font-family: var(--font-secondary);
-    font-size: 0.65rem;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.62rem;
     font-weight: 900;
-    padding: 2px 8px;
+    padding: 2px 7px;
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -200,26 +202,27 @@ const { repertoire } = epkConfig;
   }
 
   .pulse-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: #16a34a;
+    box-shadow: 0 0 4px #16a34a;
   }
 
-  /* Set Options Grid */
+  /* Set Options Grid (2 Cards) */
   .repertoire-set-options-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 10px;
-    padding: 16px;
+    padding: 14px 16px;
     box-sizing: border-box;
     background: rgba(0, 0, 0, 0.03);
     border-bottom: 2px dashed rgba(0, 0, 0, 0.2);
   }
 
-  @media (min-width: 720px) {
+  @media (min-width: 640px) {
     .repertoire-set-options-grid {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 12px;
     }
   }
@@ -246,7 +249,7 @@ const { repertoire } = epkConfig;
     background: #000000;
     color: var(--accent-neon-yellow);
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     font-weight: 900;
     padding: 2px 6px;
     border-radius: 4px;
@@ -272,15 +275,15 @@ const { repertoire } = epkConfig;
   .repertoire-breakdown-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 16px;
+    gap: 10px;
+    padding: 14px 16px;
     box-sizing: border-box;
   }
 
   @media (min-width: 768px) {
     .repertoire-breakdown-grid {
       grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+      gap: 12px;
     }
   }
 
@@ -289,21 +292,21 @@ const { repertoire } = epkConfig;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 8px;
-    padding: 14px;
+    padding: 12px;
     display: flex;
-    gap: 12px;
+    gap: 10px;
     box-sizing: border-box;
     transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
   }
 
   .repertoire-feature-card:hover {
     transform: translate(-1px, -1px);
-    box-shadow: 3.5px 3.5px 0px #000000;
+    box-shadow: 3px 3px 0px #000000;
   }
 
   .feature-card-icon-box {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 6px;
     background: var(--accent-neon-yellow);
     border: 2px solid #000000;
@@ -312,20 +315,20 @@ const { repertoire } = epkConfig;
     align-items: center;
     justify-content: center;
     color: #000000;
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     flex-shrink: 0;
   }
 
   .feature-card-content {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
   }
 
   .feature-card-title {
     font-family: var(--font-heading);
-    font-size: 0.92rem;
+    font-size: 0.86rem;
     font-weight: 800;
     color: var(--text-card-primary);
     margin: 0;
@@ -333,7 +336,7 @@ const { repertoire } = epkConfig;
 
   .feature-card-desc {
     font-family: var(--font-primary);
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     color: var(--text-card-secondary);
     line-height: 1.35;
     margin: 0;
@@ -345,10 +348,10 @@ const { repertoire } = epkConfig;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
-    padding: 14px 18px;
+    gap: 10px;
+    padding: 12px 16px;
     background: rgba(0, 0, 0, 0.06);
-    border-top: 2px dashed rgba(0, 0, 0, 0.25);
+    border-top: 2px dashed rgba(0, 0, 0, 0.2);
     box-sizing: border-box;
   }
 
@@ -365,12 +368,12 @@ const { repertoire } = epkConfig;
 
   .booking-icon {
     color: var(--accent-neon-yellow);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .booking-note-text {
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.76rem;
     font-weight: 800;
     color: var(--text-card-primary);
   }
@@ -388,13 +391,13 @@ const { repertoire } = epkConfig;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
-    padding: 7px 12px;
+    padding: 6px 10px;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
     font-family: var(--font-mono);
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     font-weight: 800;
     transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
   }
@@ -409,10 +412,10 @@ const { repertoire } = epkConfig;
   .copy-badge {
     background: #000000;
     color: var(--accent-neon-yellow);
-    font-family: var(--font-secondary);
+    font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.55rem;
     font-weight: 900;
-    padding: 2px 5px;
+    padding: 1px 4px;
     border-radius: 3px;
     text-transform: uppercase;
   }
@@ -423,12 +426,12 @@ const { repertoire } = epkConfig;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
-    padding: 7px 14px;
+    padding: 6px 12px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     text-decoration: none;
-    font-family: var(--font-secondary);
+    font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.74rem;
     font-weight: 900;
     text-transform: uppercase;

@@ -2,24 +2,28 @@
 import ToolIcon from '../ui/ToolIcon.astro';
 ---
 
-<div class="modal-backdrop hidden" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle" data-track-container="modal:feedback">
-  <div class="modal-content feedback-modal-enhanced">
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <div class="feedback-header-icon-circle">
-          <i class="fa-solid fa-lightbulb" id="feedbackHeaderIcon"></i>
-        </div>
-        <div class="modal-title-text-wrap">
-          <h3 id="feedbackModalTitle">Suggest Improvement</h3>
-          <p class="modal-subtitle-text">Help us make the Kins site better</p>
-        </div>
+<div class="modal-backdrop hidden" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackPillTitle" data-track-container="modal:feedback">
+  <div class="feedback-sheet-wrapper" id="feedbackSheetWrapper">
+
+    <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
+    <div class="sheet-floating-pill-header" id="feedbackFloatingPillHeader">
+      <div class="sheet-pill-title" id="feedbackPillTitle">
+        <i class="fa-solid fa-comment-dots" id="feedbackPillIcon"></i>
+        <span>FEEDBACK</span>
       </div>
-      <button class="close-modal-btn" id="closeFeedbackModal" aria-label="Close feedback modal" data-track="feedback:close">
+      <button class="sheet-pill-close-btn brutal-press" id="closeFeedbackModal" aria-label="Close feedback modal" data-track="feedback:close">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
-    <div class="modal-body feedback-modal-body">
+    <!-- Main Sheet / Modal Content -->
+    <div class="modal-content feedback-modal-enhanced" id="feedbackModalContent">
+      <!-- Mobile Drag Handle Bar -->
+      <div class="sheet-drag-handle" id="feedbackDragHandle" aria-hidden="true">
+        <span class="sheet-drag-pill"></span>
+      </div>
+
+      <div class="modal-body feedback-modal-body">
       <!-- Form View -->
       <form id="siteFeedbackForm" class="site-feedback-form">
         
@@ -206,7 +210,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
           <i class="fa-solid fa-circle-check"></i>
         </div>
         <h4>Thanks for the feedback!</h4>
-        <p>Your note has been sent directly to our Discord team.</p>
+        <p>Your note has been sent directly to the Kins team.</p>
         
         <div class="discord-cta-wrap">
           <a 
@@ -235,6 +239,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     </div>
   </div>
 </div>
+</div>
 
 <style>
   .modal-backdrop {
@@ -262,20 +267,33 @@ import ToolIcon from '../ui/ToolIcon.astro';
     pointer-events: none;
   }
 
+  /* Floating Header Pill Container (Above Sheet / Modal) */
+  .feedback-sheet-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 490px;
+    gap: 12px;
+    position: relative;
+    z-index: 10;
+    animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   .feedback-modal-enhanced {
     width: 100%;
     max-width: 490px;
-    max-height: 92vh;
+    max-height: 85vh;
+    max-height: 85dvh;
     overflow-y: auto;
     overscroll-behavior: contain;
     background: var(--surface-card-light);
     border: 3px solid #000000;
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: 6px 6px 0px #000000;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes modalPopIn {
@@ -294,7 +312,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     pointer-events: none;
   }
 
-  .feedback-modal-enhanced.is-closing {
+  .feedback-sheet-wrapper.is-closing {
     animation: feedbackModalPopOut 0.18s ease forwards;
   }
 
@@ -309,97 +327,91 @@ import ToolIcon from '../ui/ToolIcon.astro';
     }
   }
 
-  /* Adaptable Header & Title */
-  .modal-header {
-    display: flex;
+  /* Floating Header Pill (Above Sheet / Modal) */
+  .sheet-floating-pill-header {
+    display: inline-flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 16px;
-    gap: 10px;
-    border-bottom: 2px solid #000000;
-    position: sticky;
-    top: 0;
-    background: var(--surface-card-light);
-    z-index: 10;
+    gap: 14px;
+    background: var(--surface-card-panel, #f5f4ef);
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 9999px;
+    padding: 6px 6px 6px 18px;
+    z-index: 20;
+    user-select: none;
+    transition: transform 0.16s var(--ease-tactile);
   }
 
-  .modal-title-group {
+  .sheet-pill-title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-width: 0;
-    flex: 1;
-  }
-
-  .feedback-header-icon-circle {
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    background: var(--accent-neon-yellow);
-    border: 2px solid #000000;
-    box-shadow: 1.5px 1.5px 0px #000000;
-    color: #000000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    flex-shrink: 0;
-  }
-
-  .modal-title-text-wrap {
-    min-width: 0;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .modal-title-group h3 {
-    margin: 0;
-    font-family: var(--font-heading, system-ui);
-    font-size: clamp(0.95rem, 3.8vw, 1.15rem);
+    gap: 8px;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.88rem;
     font-weight: 900;
     color: var(--text-card-primary);
-    letter-spacing: -0.01em;
-    white-space: normal;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    line-height: 1.2;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
-  .modal-subtitle-text {
-    margin: 2px 0 0 0;
-    font-family: var(--font-secondary, system-ui);
-    font-size: clamp(0.68rem, 2.6vw, 0.74rem);
-    font-weight: 600;
-    color: var(--text-card-secondary);
-    white-space: normal;
-    overflow-wrap: break-word;
-    line-height: 1.25;
+  .sheet-pill-title i {
+    font-size: 0.85rem;
+    color: var(--brand-accent-primary, #f2fd43);
+    filter: drop-shadow(0 0 1px #000000);
+    transition: color 0.16s ease;
   }
 
-  .close-modal-btn {
-    background: var(--surface-input);
-    border: 2.5px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    color: var(--text-card-primary);
+  :global([data-theme="dark"]) .sheet-pill-title i {
+    color: var(--brand-accent-primary, #d4af37);
+  }
+
+  .sheet-pill-close-btn {
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
     width: 32px;
     height: 32px;
-    border-radius: 6px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 9999px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85rem;
     cursor: pointer;
-    flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
-  .close-modal-btn:hover {
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    transform: translate(-1px, -1px);
+  .sheet-pill-close-btn i {
+    font-size: 0.88rem;
+    pointer-events: none;
+  }
+
+  .sheet-pill-close-btn:hover {
+    background: var(--btn-brand-hover, #ffffff);
+    transform: scale(1.05);
+  }
+
+  /* Sheet Drag Handle (Hidden on Desktop, Visible on Mobile) */
+  .sheet-drag-handle {
+    display: none;
+    width: 100%;
+    padding: 8px 0 4px 0;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .sheet-drag-pill {
+    width: 42px;
+    height: 5px;
+    background: #000000;
+    border-radius: 999px;
+    opacity: 0.35;
+    pointer-events: none;
   }
 
   .feedback-modal-body {
@@ -1252,22 +1264,38 @@ import ToolIcon from '../ui/ToolIcon.astro';
       padding: 0;
     }
 
-    .feedback-modal-enhanced {
+    .feedback-sheet-wrapper {
       max-width: 100%;
-      max-height: 94vh;
-      max-height: 94dvh;
-      border-radius: 14px 14px 0 0;
-      border-bottom: none;
-      box-shadow: 0 -4px 0px #000000;
+      width: 100%;
+      gap: 10px;
+      padding: 0 0 max(10px, env(safe-area-inset-bottom)) 0;
       animation: feedbackSheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .feedback-modal-enhanced.is-closing {
+    .feedback-sheet-wrapper.is-closing {
       animation: feedbackSheetSlideDown 0.22s ease forwards;
     }
 
-    .modal-header {
-      border-radius: 14px 14px 0 0;
+    .sheet-floating-pill-header {
+      margin-bottom: 2px;
+      box-shadow: 2px 2px 0px #000000;
+    }
+
+    .sheet-drag-handle {
+      display: flex;
+    }
+
+    .feedback-modal-enhanced {
+      max-width: 100%;
+      max-height: 82vh;
+      max-height: 82dvh;
+      border-radius: 18px 18px 0 0;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+      border-top: 3px solid #000000;
+      box-shadow: 0 -4px 0px rgba(0, 0, 0, 0.35);
+      animation: none;
     }
 
     @keyframes feedbackSheetSlideUp {
@@ -1309,7 +1337,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   const detailsInput = document.getElementById('feedbackDetailsInput') as HTMLTextAreaElement;
   const charCounter = document.getElementById('charCounter');
   const detailsLabel = document.getElementById('detailsLabel');
-  const headerIcon = document.getElementById('feedbackHeaderIcon');
+  const headerIcon = document.getElementById('feedbackPillIcon');
   const categoryDisplayLabel = document.getElementById('categoryDisplayLabel');
   const selectedTypeInput = document.getElementById('selectedFeedbackTypeInput') as HTMLInputElement;
   const selectedCategoryInput = document.getElementById('selectedCategoryInput') as HTMLInputElement;
@@ -1470,6 +1498,118 @@ import ToolIcon from '../ui/ToolIcon.astro';
     }
   });
 
+  // Swipe-to-Dismiss Bottom Sheet Gestures
+  const feedbackSheetWrapper = document.getElementById('feedbackSheetWrapper');
+  const feedbackDragHandle = document.getElementById('feedbackDragHandle');
+  const feedbackFloatingPill = document.getElementById('feedbackFloatingPillHeader');
+  const feedbackContent = document.getElementById('feedbackModalContent');
+
+  function setupBottomSheetGestures() {
+    if (!modal || !feedbackSheetWrapper) return;
+
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let isTouchActive = false;
+    let startedFromTop = false;
+
+    // Direct handle touch (always allows dragging down)
+    const onHandleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+      currentY = startY;
+      isDragging = true;
+      isTouchActive = true;
+      startedFromTop = true;
+    };
+
+    // Body content touch (ONLY allows dragging when at the absolute top of the form)
+    const onBodyTouchStart = (e: TouchEvent) => {
+      if (feedbackContent && feedbackContent.scrollTop <= 0) {
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        isDragging = false;
+        isTouchActive = true;
+        startedFromTop = true;
+      } else {
+        startedFromTop = false;
+        isDragging = false;
+        isTouchActive = false;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isTouchActive || !startedFromTop || !feedbackSheetWrapper) return;
+
+      // If form content has been scrolled down, never drag the sheet
+      if (feedbackContent && feedbackContent.scrollTop > 0) {
+        if (isDragging) {
+          isDragging = false;
+          feedbackSheetWrapper.style.transform = '';
+        }
+        return;
+      }
+
+      const deltaY = e.touches[0].clientY - startY;
+
+      // Require a deadzone threshold of 10px downward to prevent accidental triggers while scrolling form
+      if (deltaY > 10) {
+        isDragging = true;
+        if (e.cancelable) e.preventDefault();
+        const visualDelta = deltaY - 10;
+        feedbackSheetWrapper.style.transform = `translateY(${visualDelta}px)`;
+        feedbackSheetWrapper.style.transition = 'none';
+      } else {
+        if (isDragging) {
+          feedbackSheetWrapper.style.transform = '';
+        }
+      }
+      currentY = e.touches[0].clientY;
+    };
+
+    const onTouchEnd = () => {
+      if (!isTouchActive || !feedbackSheetWrapper) return;
+      isTouchActive = false;
+      startedFromTop = false;
+
+      if (!isDragging) return;
+      isDragging = false;
+
+      const deltaY = currentY - startY;
+      feedbackSheetWrapper.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+
+      // Must be pulled down at least 80px when at the top to dismiss
+      if (deltaY > 80) {
+        feedbackSheetWrapper.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+          finishCloseFeedback();
+          if (feedbackSheetWrapper) feedbackSheetWrapper.style.transform = '';
+        }, 180);
+      } else {
+        feedbackSheetWrapper.style.transform = '';
+      }
+    };
+
+    if (feedbackDragHandle) {
+      feedbackDragHandle.addEventListener('touchstart', onHandleTouchStart, { passive: false });
+      feedbackDragHandle.addEventListener('touchmove', onTouchMove, { passive: false });
+      feedbackDragHandle.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
+
+    if (feedbackFloatingPill) {
+      feedbackFloatingPill.addEventListener('touchstart', onHandleTouchStart, { passive: false });
+      feedbackFloatingPill.addEventListener('touchmove', onTouchMove, { passive: false });
+      feedbackFloatingPill.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
+
+    if (feedbackContent) {
+      feedbackContent.addEventListener('touchstart', onBodyTouchStart, { passive: true });
+      feedbackContent.addEventListener('touchmove', onTouchMove, { passive: false });
+      feedbackContent.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
+  }
+
+  setupBottomSheetGestures();
+
   // Global Open Helper & Triggers
   (window as any).openFeedbackModal = function(presetCategory?: string) {
     if (!modal) return;
@@ -1526,9 +1666,6 @@ import ToolIcon from '../ui/ToolIcon.astro';
         if (btnText) btnText.textContent = "Report Issue";
         if (headerIcon) {
           headerIcon.className = "fa-solid fa-bug";
-          (headerIcon.parentElement as HTMLElement).style.color = "#f87171";
-          (headerIcon.parentElement as HTMLElement).style.borderColor = "rgba(239, 68, 68, 0.4)";
-          (headerIcon.parentElement as HTMLElement).style.backgroundColor = "rgba(239, 68, 68, 0.15)";
         }
       } else if (type.includes('Content')) {
         if (detailsLabel) detailsLabel.textContent = "What text or information should be corrected?";
@@ -1536,9 +1673,6 @@ import ToolIcon from '../ui/ToolIcon.astro';
         if (btnText) btnText.textContent = "Send Correction";
         if (headerIcon) {
           headerIcon.className = "fa-solid fa-pen-nib";
-          (headerIcon.parentElement as HTMLElement).style.color = "#60a5fa";
-          (headerIcon.parentElement as HTMLElement).style.borderColor = "rgba(59, 130, 246, 0.4)";
-          (headerIcon.parentElement as HTMLElement).style.backgroundColor = "rgba(59, 130, 246, 0.15)";
         }
       } else {
         if (detailsLabel) detailsLabel.textContent = "What improvement would you like to see?";
@@ -1546,9 +1680,6 @@ import ToolIcon from '../ui/ToolIcon.astro';
         if (btnText) btnText.textContent = "Send Improvement";
         if (headerIcon) {
           headerIcon.className = "fa-solid fa-lightbulb";
-          (headerIcon.parentElement as HTMLElement).style.color = "#f59e0b";
-          (headerIcon.parentElement as HTMLElement).style.borderColor = "rgba(245, 158, 11, 0.35)";
-          (headerIcon.parentElement as HTMLElement).style.backgroundColor = "rgba(245, 158, 11, 0.15)";
         }
       }
     });
@@ -1673,10 +1804,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     if (selectedCategoryInput) selectedCategoryInput.value = 'General Site';
     if (categoryDisplayLabel) categoryDisplayLabel.textContent = 'General Site';
     if (headerIcon) {
-      headerIcon.className = 'fa-solid fa-lightbulb';
-      (headerIcon.parentElement as HTMLElement).style.color = "#f59e0b";
-      (headerIcon.parentElement as HTMLElement).style.borderColor = "rgba(245, 158, 11, 0.35)";
-      (headerIcon.parentElement as HTMLElement).style.backgroundColor = "rgba(245, 158, 11, 0.15)";
+      headerIcon.className = 'fa-solid fa-comment-dots';
     }
     if (btnText) btnText.textContent = 'Send Improvement';
   });

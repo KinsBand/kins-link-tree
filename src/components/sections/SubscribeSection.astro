@@ -17,13 +17,19 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
       <!-- 1-Tap Social Auth Row -->
       <div class="social-auth-row">
         <button type="button" class="social-auth-btn google-auth-btn" id="googleAuthBtn" aria-label="Subscribe with Google">
-          <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-          </svg>
-          <span>Google</span>
+          <div class="google-btn-left">
+            <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+            </svg>
+            <span class="google-btn-title">Google</span>
+          </div>
+          <div class="google-btn-details" aria-label="Permissions: Name and Email">
+            <span class="google-detail-tag"><i class="fa-solid fa-check check-icon" aria-hidden="true"></i>Name</span>
+            <span class="google-detail-tag"><i class="fa-solid fa-check check-icon" aria-hidden="true"></i>Email</span>
+          </div>
         </button>
       </div>
 
@@ -38,7 +44,7 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
       <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
         <div class="unified-input-container">
           <input
-            type="email"
+            type="text"
             name="email"
             id="emailInput"
             placeholder="Enter your email..."
@@ -51,6 +57,11 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
           <button type="submit" id="subscribeSubmitBtn" class="unified-join-btn" aria-label="Join Kins Fan Club">
             <span>JOIN ➔</span>
           </button>
+        </div>
+
+        <!-- Quick Domain Autocomplete Suggestions -->
+        <div class="email-suggestions-wrap hidden" id="emailSuggestionsWrap" role="listbox" aria-label="Email domain suggestions">
+          <div class="email-suggestions-list" id="emailSuggestionsList"></div>
         </div>
       </form>
     </div>
@@ -228,25 +239,23 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
   }
 
   .social-auth-btn {
-    height: 46px;
-    min-height: 46px;
-    max-height: 46px;
+    min-height: 48px;
     background: var(--surface-input);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 8px;
     color: var(--text-card-primary);
     font-family: var(--font-secondary);
-    font-size: 0.88rem;
-    font-weight: 700;
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
+    justify-content: space-between;
+    padding: 6px 14px;
+    gap: 12px;
     cursor: pointer;
     user-select: none;
     transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
     box-sizing: border-box;
+    width: 100%;
   }
 
   .social-auth-btn:hover {
@@ -260,10 +269,59 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
     box-shadow: 1px 1px 0px #000000;
   }
 
+  .social-auth-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary, var(--accent-neon-yellow));
+    outline-offset: 2px;
+  }
+
   .social-auth-btn:disabled {
     opacity: 0.85;
     cursor: wait;
     transform: none;
+  }
+
+  .google-btn-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .google-btn-title {
+    font-family: var(--font-secondary);
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .google-btn-details {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .google-detail-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface-card-light);
+    border: 1.5px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-family: var(--font-secondary);
+    font-size: 0.70rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .google-detail-tag .check-icon {
+    font-size: 0.62rem;
+    color: #16a34a;
+    font-weight: 900;
   }
 
   :global([data-theme="dark"]) .social-auth-btn,
@@ -281,6 +339,24 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
     border-color: #43434f;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  :global([data-theme="dark"]) .google-btn-title,
+  :root[data-theme="dark"] .google-btn-title {
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) .google-detail-tag,
+  :root[data-theme="dark"] .google-detail-tag {
+    background: #25252d;
+    border: 1px solid #3d3d49;
+    box-shadow: none;
+    color: #f4f4f6;
+  }
+
+  :global([data-theme="dark"]) .google-detail-tag .check-icon,
+  :root[data-theme="dark"] .google-detail-tag .check-icon {
+    color: var(--brand-accent-primary, #d4af37);
   }
 
   .social-icon {
@@ -443,6 +519,216 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
   :root[data-theme="dark"] .unified-join-btn:active {
     background: #c59727;
     transform: scale(0.98);
+  }
+
+  /* Email Domain Autocomplete Suggestions (AGENTS.md compliant) */
+  .email-suggestions-wrap {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    max-height: 64px;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transform-origin: top center;
+    overflow: hidden;
+    transition: opacity 0.22s var(--ease-snappy),
+                transform 0.22s var(--ease-snappy),
+                max-height 0.22s var(--ease-snappy),
+                margin-top 0.22s var(--ease-snappy);
+    will-change: opacity, transform, max-height;
+  }
+
+  .email-suggestions-wrap.is-closing {
+    opacity: 0 !important;
+    transform: translateY(-8px) scale(0.96) !important;
+    max-height: 0 !important;
+    margin-top: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                max-height 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                margin-top 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .email-suggestions-wrap.hidden {
+    display: none !important;
+  }
+
+  .email-suggestions-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 6px;
+    align-items: center;
+    padding: 4px 2px 6px 2px;
+    width: 100%;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+  }
+
+  /* Desktop Fine-Pointer Horizontal Scrollbar */
+  @media (min-width: 769px) and (pointer: fine) {
+    .email-suggestions-list {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb, var(--brand-accent-primary, #f2fd43)) var(--surface-card-panel, #f5f4ef);
+      padding-bottom: 6px;
+    }
+
+    .email-suggestions-list::-webkit-scrollbar {
+      display: block;
+      height: 5px;
+    }
+
+    .email-suggestions-list::-webkit-scrollbar-track {
+      background: var(--surface-card-panel, #f5f4ef);
+      border: 1px solid #000000;
+      border-radius: var(--radius-pill, 9999px);
+    }
+
+    .email-suggestions-list::-webkit-scrollbar-thumb {
+      background: var(--btn-brand-primary, var(--accent-neon-yellow, #f2fd43));
+      border: 1px solid #000000;
+      border-radius: var(--radius-pill, 9999px);
+    }
+
+    .email-suggestions-list::-webkit-scrollbar-thumb:hover {
+      background: var(--btn-brand-hover, #faff60);
+    }
+
+    :global([data-theme="dark"]) .email-suggestions-list,
+    :root[data-theme="dark"] .email-suggestions-list {
+      scrollbar-color: var(--brand-accent-primary, #d4af37) #141418;
+    }
+
+    :global([data-theme="dark"]) .email-suggestions-list::-webkit-scrollbar-track,
+    :root[data-theme="dark"] .email-suggestions-list::-webkit-scrollbar-track {
+      background: #141418;
+      border-color: #2e2e36;
+    }
+
+    :global([data-theme="dark"]) .email-suggestions-list::-webkit-scrollbar-thumb,
+    :root[data-theme="dark"] .email-suggestions-list::-webkit-scrollbar-thumb {
+      background: var(--brand-accent-primary, #d4af37);
+      border-color: #2e2e36;
+    }
+  }
+
+  /* Mobile Touch Screens: Hide Scrollbar Indicator */
+  @media (max-width: 768px), (pointer: coarse) {
+    .email-suggestions-list {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .email-suggestions-list::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  :global(.email-domain-chip),
+  .email-domain-chip {
+    flex: 0 0 auto;
+    background: var(--surface-input, #ffffff);
+    border: var(--border-brutal-sm, 2px solid #000000);
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-sm, 6px);
+    color: var(--text-card-primary, #000000);
+    font-family: var(--font-secondary, 'Space Grotesk', sans-serif);
+    font-size: 0.74rem;
+    font-weight: 800;
+    line-height: 1.2;
+    padding: 5px 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.14s var(--ease-tactile), background-color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, color 0.14s ease;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+  }
+
+  :global(.email-domain-chip:hover),
+  .email-domain-chip:hover,
+  :global(.email-domain-chip.is-highlighted),
+  .email-domain-chip.is-highlighted {
+    background: var(--btn-brand-hover, #faff60);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  :global(.email-domain-chip.is-selected),
+  .email-domain-chip.is-selected {
+    background: var(--btn-brand-primary, var(--accent-neon-yellow));
+    color: #000000;
+    border-color: #000000;
+    font-weight: 900;
+    box-shadow: 2px 2px 0px #000000;
+    transform: translateY(0);
+  }
+
+  :global(.email-domain-chip:active),
+  .email-domain-chip:active {
+    transform: translate(1px, 1px);
+    box-shadow: 0.5px 0.5px 0px #000000;
+  }
+
+  :global(.email-domain-chip:focus-visible),
+  .email-domain-chip:focus-visible {
+    outline: 2px solid var(--brand-accent-primary, var(--accent-neon-yellow));
+    outline-offset: 2px;
+  }
+
+  :global([data-theme="dark"]) :global(.email-domain-chip),
+  :root[data-theme="dark"] :global(.email-domain-chip),
+  :global([data-theme="dark"]) .email-domain-chip,
+  :root[data-theme="dark"] .email-domain-chip {
+    background: #1c1c21;
+    border: 1.5px solid #2e2e36;
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) :global(.email-domain-chip:hover),
+  :root[data-theme="dark"] :global(.email-domain-chip:hover),
+  :global([data-theme="dark"]) :global(.email-domain-chip.is-highlighted),
+  :root[data-theme="dark"] :global(.email-domain-chip.is-highlighted),
+  :global([data-theme="dark"]) .email-domain-chip:hover,
+  :root[data-theme="dark"] .email-domain-chip:hover,
+  :global([data-theme="dark"]) .email-domain-chip.is-highlighted,
+  :root[data-theme="dark"] .email-domain-chip.is-highlighted {
+    background: #282832;
+    color: #ffffff;
+    border-color: var(--brand-accent-primary, #d4af37);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+  }
+
+  :global([data-theme="dark"]) :global(.email-domain-chip.is-selected),
+  :root[data-theme="dark"] :global(.email-domain-chip.is-selected),
+  :global([data-theme="dark"]) .email-domain-chip.is-selected,
+  :root[data-theme="dark"] .email-domain-chip.is-selected {
+    background: var(--btn-brand-primary, #d4af37);
+    color: #000000;
+    border-color: var(--brand-accent-primary, #d4af37);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+    font-weight: 900;
+  }
+
+  :global([data-theme="dark"]) :global(.email-domain-chip:focus-visible),
+  :root[data-theme="dark"] :global(.email-domain-chip:focus-visible),
+  :global([data-theme="dark"]) .email-domain-chip:focus-visible,
+  :root[data-theme="dark"] .email-domain-chip:focus-visible {
+    outline: 2px solid var(--brand-accent-primary, #d4af37);
+    outline-offset: 2px;
   }
 
   .subscribed-success-badge {
@@ -754,7 +1040,11 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
 
   function setInputCaretPosition(input: HTMLInputElement, pos: number) {
     if (!input) return;
-    input.focus();
+    try {
+      input.focus({ preventScroll: true });
+    } catch (e) {
+      input.focus();
+    }
     try {
       input.setSelectionRange(pos, pos);
     } catch (err) {
@@ -765,6 +1055,275 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
         input.type = origType;
       } catch (e) {}
     }
+  }
+
+  // --- Email Domain Autocomplete Suggestions Controller ---
+  const POPULAR_DOMAINS = [
+    '@gmail.com',
+    '@outlook.com',
+    '@icloud.com',
+    '@yahoo.com',
+    '@hotmail.com',
+    '@proton.me'
+  ];
+
+  const emailInput = document.getElementById('emailInput') as HTMLInputElement;
+  const suggestionsWrap = document.getElementById('emailSuggestionsWrap');
+  const suggestionsList = document.getElementById('emailSuggestionsList');
+  let highlightedIndex = -1;
+  let lastKnownCaretPos = 0;
+  let hideSuggestionsTimer: any = null;
+
+  function showSuggestionsContainer() {
+    if (!suggestionsWrap) return;
+    if (hideSuggestionsTimer) {
+      clearTimeout(hideSuggestionsTimer);
+      hideSuggestionsTimer = null;
+    }
+    suggestionsWrap.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      suggestionsWrap?.classList.remove('is-closing');
+    });
+  }
+
+  function hideSuggestionsContainer(immediate = false) {
+    if (!suggestionsWrap) return;
+    if (hideSuggestionsTimer) {
+      clearTimeout(hideSuggestionsTimer);
+      hideSuggestionsTimer = null;
+    }
+    if (immediate) {
+      suggestionsWrap.classList.add('is-closing');
+      suggestionsWrap.classList.add('hidden');
+      highlightedIndex = -1;
+      return;
+    }
+    suggestionsWrap.classList.add('is-closing');
+    hideSuggestionsTimer = setTimeout(() => {
+      if (suggestionsWrap.classList.contains('is-closing')) {
+        suggestionsWrap.classList.add('hidden');
+      }
+      highlightedIndex = -1;
+      hideSuggestionsTimer = null;
+    }, 220);
+  }
+
+  function updateCaretTracking() {
+    if (!emailInput) return;
+    try {
+      if (typeof emailInput.selectionStart === 'number') {
+        lastKnownCaretPos = emailInput.selectionStart;
+      }
+    } catch (e) {}
+  }
+
+  function renderEmailSuggestions() {
+    if (!emailInput || !suggestionsWrap || !suggestionsList) return;
+    const rawVal = emailInput.value;
+    const trimmed = rawVal.trim();
+
+    let username = trimmed;
+    let queryDomain = '';
+    const hasAt = trimmed.includes('@');
+
+    if (hasAt) {
+      const atIdx = trimmed.indexOf('@');
+      username = trimmed.slice(0, atIdx);
+      queryDomain = trimmed.slice(atIdx).toLowerCase();
+    }
+
+    // Identify which popular domain is currently selected in the input (if any)
+    let selectedDomain = '';
+    if (hasAt && queryDomain) {
+      const matched = POPULAR_DOMAINS.find(d => d.toLowerCase() === queryDomain);
+      if (matched) {
+        selectedDomain = matched;
+      }
+    }
+
+    // Always keep all options available when a suggestion is pressed or user is typing.
+    // If user typed a partial domain (e.g. '@o') that doesn't fully match a completed domain,
+    // filter to matching domains or show all if prefix has no direct match.
+    let matches = POPULAR_DOMAINS;
+    if (hasAt && queryDomain && queryDomain !== '@' && !selectedDomain) {
+      const filtered = POPULAR_DOMAINS.filter((d) => d.toLowerCase().startsWith(queryDomain));
+      matches = filtered.length > 0 ? filtered : POPULAR_DOMAINS;
+    }
+
+    suggestionsList.innerHTML = '';
+    matches.forEach((domainStr) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'email-domain-chip brutal-press';
+      if (domainStr === selectedDomain) {
+        chip.classList.add('is-selected');
+        chip.setAttribute('aria-selected', 'true');
+      } else {
+        chip.setAttribute('aria-selected', 'false');
+      }
+      chip.setAttribute('role', 'option');
+      chip.setAttribute('data-domain', domainStr);
+      chip.setAttribute('tabindex', '-1');
+      chip.textContent = domainStr;
+
+      // Mobile Touch Gesture Handler (Distinguish between scroll swipe and tap)
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchStartTime = 0;
+      let isTouchScrolling = false;
+
+      chip.addEventListener('touchstart', (e) => {
+        updateCaretTracking();
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchStartTime = Date.now();
+        isTouchScrolling = false;
+      }, { passive: true });
+
+      chip.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        const dx = Math.abs(touch.clientX - touchStartX);
+        const dy = Math.abs(touch.clientY - touchStartY);
+        if (dx > 8 || dy > 8) {
+          isTouchScrolling = true;
+        }
+      }, { passive: true });
+
+      chip.addEventListener('touchend', (e) => {
+        const timeElapsed = Date.now() - touchStartTime;
+        if (!isTouchScrolling && timeElapsed < 500) {
+          e.preventDefault();
+          applyDomain(domainStr);
+        }
+      });
+
+      // Pointer & Desktop Click Handling
+      chip.addEventListener('pointerdown', () => {
+        updateCaretTracking();
+      });
+
+      chip.addEventListener('mousedown', (e) => {
+        updateCaretTracking();
+        e.preventDefault(); // Prevent input from losing focus
+      });
+
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        applyDomain(domainStr);
+      });
+
+      suggestionsList.appendChild(chip);
+    });
+
+    highlightedIndex = -1;
+    showSuggestionsContainer();
+  }
+
+  function applyDomain(domainStr: string) {
+    if (!emailInput) return;
+    const currentVal = emailInput.value;
+    const atIdx = currentVal.indexOf('@');
+    const user = atIdx >= 0 ? currentVal.slice(0, atIdx) : currentVal;
+
+    // Capture exact cursor position where the user was typing
+    const currentCaret = (typeof emailInput.selectionStart === 'number' && emailInput.selectionStart >= 0) 
+      ? emailInput.selectionStart 
+      : lastKnownCaretPos;
+
+    // If caret was within the username, keep it at that exact position.
+    // If caret was in the domain part, keep it right after the username.
+    const targetCaret = Math.min(currentCaret, user.length);
+
+    // Set new email with selected domain
+    emailInput.value = user + domainStr;
+    setInputCaretPosition(emailInput, targetCaret);
+    lastKnownCaretPos = targetCaret;
+
+    // Re-render suggestions so all options remain visible with the active domain styled
+    renderEmailSuggestions();
+  }
+
+  function updateChipHighlight() {
+    if (!suggestionsList) return;
+    const chips = suggestionsList.querySelectorAll('.email-domain-chip');
+    chips.forEach((chip, idx) => {
+      chip.classList.toggle('is-highlighted', idx === highlightedIndex);
+    });
+  }
+
+  if (emailInput) {
+    emailInput.addEventListener('input', () => {
+      updateCaretTracking();
+      renderEmailSuggestions();
+    });
+
+    emailInput.addEventListener('click', () => {
+      updateCaretTracking();
+    });
+
+    emailInput.addEventListener('keyup', () => {
+      updateCaretTracking();
+    });
+
+    emailInput.addEventListener('select', () => {
+      updateCaretTracking();
+    });
+
+    emailInput.addEventListener('focus', () => {
+      updateCaretTracking();
+      renderEmailSuggestions();
+    });
+
+    emailInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (document.activeElement !== emailInput && !suggestionsWrap?.contains(document.activeElement)) {
+          hideSuggestionsContainer();
+        }
+      }, 150);
+    });
+
+    emailInput.addEventListener('keydown', (e) => {
+      if (suggestionsWrap?.classList.contains('hidden') || suggestionsWrap?.classList.contains('is-closing') || !suggestionsList) return;
+      const chips = suggestionsList.querySelectorAll('.email-domain-chip');
+      if (!chips.length) return;
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        highlightedIndex = (highlightedIndex + 1) % chips.length;
+        updateChipHighlight();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        highlightedIndex = (highlightedIndex - 1 + chips.length) % chips.length;
+        updateChipHighlight();
+      } else if (e.key === 'Tab' || (e.key === 'Enter' && highlightedIndex >= 0)) {
+        if (highlightedIndex >= 0 && chips[highlightedIndex]) {
+          e.preventDefault();
+          const domain = chips[highlightedIndex].getAttribute('data-domain');
+          if (domain) applyDomain(domain);
+        }
+      } else if (e.key === 'Escape') {
+        hideSuggestionsContainer();
+      }
+    });
+  }
+
+  // Desktop horizontal wheel scrolling for suggestion list & container
+  function handleSuggestionsWheel(e: WheelEvent) {
+    if (!suggestionsList || !suggestionsWrap) return;
+    if (suggestionsWrap.classList.contains('hidden') || suggestionsWrap.classList.contains('is-closing')) return;
+
+    if (Math.abs(e.deltaY) >= Math.abs(e.deltaX) && e.deltaY !== 0) {
+      e.preventDefault();
+      suggestionsList.scrollLeft += e.deltaY * 1.15;
+    }
+  }
+
+  if (suggestionsWrap) {
+    suggestionsWrap.addEventListener('wheel', handleSuggestionsWheel, { passive: false });
+  }
+  if (suggestionsList) {
+    suggestionsList.addEventListener('wheel', handleSuggestionsWheel, { passive: false });
   }
 
   if (subscribeForm) {

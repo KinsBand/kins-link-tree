@@ -3238,11 +3238,23 @@ import LegalModal from '../components/modals/LegalModal.astro';
       .catch((err) => console.error('KINS Tuner failed to load:', err));
   }
 
+  function teardown() {
+    if (!initialized) return;
+    initialized = false;
+    loadController()
+      .then((mod) => mod.teardownTuner())
+      .catch(() => {});
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start, { once: true });
   } else {
     start();
   }
+
+  document.addEventListener('astro:page-load', start);
+  document.addEventListener('astro:before-swap', teardown);
+  window.addEventListener('pagehide', teardown);
 
   document.addEventListener(
     'click',

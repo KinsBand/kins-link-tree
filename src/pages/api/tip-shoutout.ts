@@ -1,13 +1,25 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
+import {
+  getNotifyConfig,
+  sendNotifyEmail,
+  generateBrutalistEmailHtml,
+  type BrutalistField
+} from '../../lib/notifyEmail';
 
 export const prerender = false;
 
 const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
 const AMOUNT_RE = /^\$?\d{1,4}(\.\d{1,2})?$/;
 
-function getWebhookUrl(): string {
+const TipShoutoutSchema = z.object({
+  amount: z.string().regex(AMOUNT_RE, 'Invalid tip amount'),
+  message: z.string().max(200).optional()
+});
+
+function getDiscordWebhookUrl(): string {
   return (
     import.meta.env.DISCORD_TIP_WEBHOOK_URL ||
     process.env.DISCORD_TIP_WEBHOOK_URL ||
@@ -17,86 +29,118 @@ function getWebhookUrl(): string {
   );
 }
 
+function jsonResponse(data: Record<string, unknown>, status: number): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
 /**
  * Fan shoutout intent submitted alongside opening the Ko-fi page.
- * This is NOT a payment confirmation — it is delivered to Discord flagged
- * as pending so the band can reconcile against the Ko-fi dashboard.
+ * This is NOT a payment confirmation — it is delivered flagged as pending
+ * so the band can reconcile against the Ko-fi dashboard.
  */
 export const POST: APIRoute = async ({ request }) => {
   try {
     if (isRateLimited(`tip-shoutout:${getClientIp(request)}`, 5, 60 * 1000)) {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Too many requests. Please try again in a minute.' }),
-        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      return jsonResponse(
+        { status: 'error', message: 'Too many requests. Please try again in a minute.' },
+        429
       );
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== 'object') {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Invalid payload.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+    const rawBody = await request.json().catch(() => null);
+    const parsed = TipShoutoutSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return jsonResponse(
+        { status: 'error', message: 'Invalid tip amount or payload.' },
+        400
       );
     }
 
-    const rawAmount = String(body.amount || '').trim();
-    if (!AMOUNT_RE.test(rawAmount)) {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Invalid tip amount.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
+    const body = parsed.data;
+    const rawAmount = body.amount.trim();
     const amount = rawAmount.startsWith('$') ? rawAmount : `$${rawAmount}`;
-    const message = sanitizeText(String(body.message || ''), 200) || 'No message attached';
+    const message = sanitizeText(body.message || '', 200) || 'No message attached';
 
-    const webhookUrl = getWebhookUrl();
-    if (!webhookUrl) {
-      console.error('[tip-shoutout] No tip Discord webhook configured.');
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Shoutout service is not available right now.' }),
-        { status: 503, headers: { 'Content-Type': 'application/json' } }
+    const notifyConfig = getNotifyConfig();
+    const discordWebhookUrl = getDiscordWebhookUrl();
+
+    if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
+      console.error('[tip-shoutout] Neither Resend API key nor Discord webhook is configured.');
+      return jsonResponse(
+        { status: 'error', message: 'Shoutout service is not available right now.' },
+        503
       );
     }
 
-    const discordPayload = {
-      username: 'Kins Tip Line',
-      avatar_url: AVATAR_URL,
-      embeds: [
-        {
-          title: '⚡ Tip Shoutout (PENDING PAYMENT)',
-          color: 0x53fc18,
-          description: `**Amount (intended):** ${amount}\n**Message:** ${message}`,
-          footer: { text: 'Reconcile against Ko-fi dashboard — payment not yet confirmed.' },
-          timestamp: new Date().toISOString()
-        }
-      ]
-    };
+    const subject = `[Tip Shoutout][Pending] ${amount} from Fan`;
 
-    const discordRes = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(discordPayload)
+    const fields: BrutalistField[] = [
+      { label: 'Intended Amount', value: amount },
+      { label: 'Status', value: 'Pending Ko-fi Reconciliation' }
+    ];
+
+    const html = generateBrutalistEmailHtml({
+      title: `⚡ Tip Shoutout: ${amount}`,
+      badge: 'TIP SHOUTOUT • PENDING PAYMENT',
+      badgeBg: '#53fc18',
+      badgeColor: '#000000',
+      description: message,
+      fields,
+      footerNote: 'Reconcile against Ko-fi dashboard — payment not yet confirmed'
     });
 
-    if (!discordRes.ok) {
-      const resText = await discordRes.text().catch(() => '');
-      console.error('[tip-shoutout] Discord webhook failed:', discordRes.status, resText.slice(0, 200));
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Could not send your shoutout right now.' }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+    // 1. Primary: Send email notification via Resend
+    if (notifyConfig.resendApiKey) {
+      const emailResult = await sendNotifyEmail({
+        subject,
+        html,
+        text: `[Tip Shoutout: Pending] ${amount}\n\nMessage:\n${message}\n\nNote: Reconcile against Ko-fi dashboard.`
+      });
+
+      if (!emailResult.ok) {
+        console.warn('[tip-shoutout] Resend email delivery failed:', emailResult.error);
+      }
     }
 
-    return new Response(
-      JSON.stringify({ status: 'success', message: 'Shoutout sent to the band!' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    // 2. Secondary fallback: Send Discord webhook if configured
+    if (discordWebhookUrl && discordWebhookUrl.startsWith('https://')) {
+      try {
+        const discordPayload = {
+          username: 'Kins Tip Line',
+          avatar_url: AVATAR_URL,
+          embeds: [
+            {
+              title: '⚡ Tip Shoutout (PENDING PAYMENT)',
+              color: 0x53fc18,
+              description: `**Amount (intended):** ${amount}\n**Message:** ${message}`,
+              footer: { text: 'Reconcile against Ko-fi dashboard — payment not yet confirmed.' },
+              timestamp: new Date().toISOString()
+            }
+          ]
+        };
+
+        await fetch(discordWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(discordPayload)
+        }).catch(() => {});
+      } catch (hookErr) {
+        console.warn('[tip-shoutout] Discord webhook fallback failed:', hookErr);
+      }
+    }
+
+    return jsonResponse(
+      { status: 'success', message: 'Shoutout sent to the band!' },
+      200
     );
   } catch (err) {
     console.error('[tip-shoutout] error:', err);
-    return new Response(
-      JSON.stringify({ status: 'error', message: 'Failed to process shoutout.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    return jsonResponse(
+      { status: 'error', message: 'Failed to process shoutout.' },
+      500
     );
   }
 };

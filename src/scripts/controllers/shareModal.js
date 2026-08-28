@@ -215,63 +215,105 @@ showpage
 }
 
 /**
- * Attaches swipe-to-dismiss gesture tracking to a bottom sheet modal.
+ * Attaches swipe-to-dismiss gesture tracking to a bottom sheet modal with accidental scroll protection.
  */
-function setupBottomSheetGestures(modalBackdrop, modalContent, dragHandle) {
-  if (!modalBackdrop || !modalContent) return;
+function setupBottomSheetGestures(modalBackdrop, sheetWrapper, dragHandle, floatingPill, scrollContainer) {
+  if (!modalBackdrop || !sheetWrapper) return;
 
   let startY = 0;
   let currentY = 0;
   let isDragging = false;
   let isTouchActive = false;
+  let startedFromTop = false;
 
-  const onTouchStart = (e) => {
-    if (modalContent.scrollTop <= 0) {
+  const scrollEl = scrollContainer || sheetWrapper.querySelector('.modal-body, .qr-format-modal-content, .qr-fullscreen-content, .share-modal-enhanced') || sheetWrapper;
+
+  // Direct handle / pill touch (always allows dragging down)
+  const onHandleTouchStart = (e) => {
+    startY = e.touches[0].clientY;
+    currentY = startY;
+    isDragging = true;
+    isTouchActive = true;
+    startedFromTop = true;
+  };
+
+  // Content body touch (ONLY allows dragging when at the absolute top of content)
+  const onBodyTouchStart = (e) => {
+    if (scrollEl && scrollEl.scrollTop <= 0) {
       startY = e.touches[0].clientY;
       currentY = startY;
-      isDragging = true;
+      isDragging = false;
       isTouchActive = true;
+      startedFromTop = true;
+    } else {
+      startedFromTop = false;
+      isDragging = false;
+      isTouchActive = false;
     }
   };
 
   const onTouchMove = (e) => {
-    if (!isDragging) return;
+    if (!isTouchActive || !startedFromTop || !sheetWrapper) return;
+
+    // If content has been scrolled down, never drag the sheet
+    if (scrollEl && scrollEl.scrollTop > 0) {
+      if (isDragging) {
+        isDragging = false;
+        sheetWrapper.style.transform = '';
+      }
+      return;
+    }
+
     const deltaY = e.touches[0].clientY - startY;
 
-    if (deltaY > 0) {
+    // Require deadzone threshold of 10px downward to prevent accidental triggers while scrolling content
+    if (deltaY > 10) {
+      isDragging = true;
       if (e.cancelable) e.preventDefault();
-      modalContent.style.transform = `translateY(${deltaY}px)`;
-      modalContent.style.transition = 'none';
+      const visualDelta = deltaY - 10;
+      sheetWrapper.style.transform = `translateY(${visualDelta}px)`;
+      sheetWrapper.style.transition = 'none';
     } else {
-      modalContent.style.transform = 'translateY(0)';
+      if (isDragging) {
+        sheetWrapper.style.transform = '';
+      }
     }
     currentY = e.touches[0].clientY;
   };
 
   const onTouchEnd = () => {
-    if (!isTouchActive) return;
+    if (!isTouchActive || !sheetWrapper) return;
     isTouchActive = false;
+    startedFromTop = false;
+
+    if (!isDragging) return;
     isDragging = false;
 
     const deltaY = currentY - startY;
-    modalContent.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+    sheetWrapper.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
 
-    if (deltaY > 70) {
-      closeSheetSmoothly(modalBackdrop, modalContent);
+    if (deltaY > 80) {
+      closeSheetSmoothly(modalBackdrop, sheetWrapper);
     } else {
-      modalContent.style.transform = 'translateY(0)';
+      sheetWrapper.style.transform = '';
     }
   };
 
   if (dragHandle) {
-    dragHandle.addEventListener('touchstart', onTouchStart, { passive: false });
+    dragHandle.addEventListener('touchstart', onHandleTouchStart, { passive: false });
     dragHandle.addEventListener('touchmove', onTouchMove, { passive: false });
     dragHandle.addEventListener('touchend', onTouchEnd, { passive: true });
   }
 
-  modalContent.addEventListener('touchstart', onTouchStart, { passive: true });
-  modalContent.addEventListener('touchmove', onTouchMove, { passive: false });
-  modalContent.addEventListener('touchend', onTouchEnd, { passive: true });
+  if (floatingPill) {
+    floatingPill.addEventListener('touchstart', onHandleTouchStart, { passive: false });
+    floatingPill.addEventListener('touchmove', onTouchMove, { passive: false });
+    floatingPill.addEventListener('touchend', onTouchEnd, { passive: true });
+  }
+
+  sheetWrapper.addEventListener('touchstart', onBodyTouchStart, { passive: true });
+  sheetWrapper.addEventListener('touchmove', onTouchMove, { passive: false });
+  sheetWrapper.addEventListener('touchend', onTouchEnd, { passive: true });
 }
 
 function closeSheetSmoothly(modalBackdrop, modalContent, onClosed) {
@@ -319,30 +361,33 @@ async function detectActualInstalledState() {
 export function initShareModal() {
   const shareBtn = document.getElementById('shareBtn');
   const shareModal = document.getElementById('shareModal');
+  const shareSheetWrapper = document.getElementById('shareSheetWrapper');
   const shareModalContent = document.getElementById('shareModalContent');
   const sheetDragHandle = document.getElementById('sheetDragHandle');
   const closeShareModal = document.getElementById('closeShareModal');
   const nativeShareCtaBtn = document.getElementById('nativeShareCtaBtn');
   const downloadPwaCtaBtn = document.getElementById('downloadPwaCtaBtn');
   
-  // Interactive Copy Rows & Badges
+  // Interactive Copy Rows
   const copyUrlRow = document.getElementById('copyUrlRow');
   const copyUrlBtn = document.getElementById('copyUrlBtn');
-  const copyUrlStatus = document.getElementById('copyUrlStatus');
   const shareUrlInput = document.getElementById('shareUrlInput');
 
   const copyHandleRow = document.getElementById('copyHandleRow');
   const handleCopyBtn = document.getElementById('handleCopyBtn');
-  const copyHandleStatus = document.getElementById('copyHandleStatus');
 
   // QR fullscreen & format selector modal elements
   const qrcodeCanvasWrapper = document.getElementById('qrcodeCanvasWrapper');
   const qrFullscreenModal = document.getElementById('qrFullscreenModal');
+  const qrFullscreenSheetWrapper = document.getElementById('qrFullscreenSheetWrapper');
+  const qrFullscreenFloatingPill = document.getElementById('qrFullscreenFloatingPillHeader');
   const qrFullscreenContent = document.getElementById('qrFullscreenContent');
   const qrFullscreenDragHandle = document.getElementById('qrFullscreenDragHandle');
   const closeQrFullscreenBtn = document.getElementById('closeQrFullscreenBtn');
   const openQrDownloadModalBtn = document.getElementById('openQrDownloadModalBtn');
   const qrDownloadFormatModal = document.getElementById('qrDownloadFormatModal');
+  const qrDownloadSheetWrapper = document.getElementById('qrDownloadSheetWrapper');
+  const qrDownloadFloatingPill = document.getElementById('qrDownloadFloatingPillHeader');
   const qrDownloadFormatContent = document.getElementById('qrDownloadFormatContent');
   const qrFormatDragHandle = document.getElementById('qrFormatDragHandle');
   const closeQrFormatModalBtn = document.getElementById('closeQrFormatModalBtn');
@@ -351,9 +396,12 @@ export function initShareModal() {
   const openLogoDownloadModalBtn = document.getElementById('openLogoDownloadModalBtn');
   const openLogoDownloadModalBox = document.getElementById('openLogoDownloadModalBox');
   const logoDownloadFormatModal = document.getElementById('logoDownloadFormatModal');
+  const logoDownloadSheetWrapper = document.getElementById('logoDownloadSheetWrapper');
+  const logoDownloadFloatingPill = document.getElementById('logoDownloadFloatingPillHeader');
   const logoDownloadFormatContent = document.getElementById('logoDownloadFormatContent');
   const logoFormatDragHandle = document.getElementById('logoFormatDragHandle');
   const closeLogoFormatModalBtn = document.getElementById('closeLogoFormatModalBtn');
+  const shareFloatingPill = document.getElementById('shareFloatingPillHeader');
 
   // Production domain & dynamic UTM attribution matrix
   const baseDomain = 'https://kinsband-hub.vercel.app/';
@@ -371,11 +419,11 @@ export function initShareModal() {
     nativeShareCtaBtn.style.display = 'none';
   }
 
-  // Setup Bottom Sheet Gestures on all 4 dialogs on mobile
-  setupBottomSheetGestures(shareModal, shareModalContent, sheetDragHandle);
-  setupBottomSheetGestures(qrFullscreenModal, qrFullscreenContent, qrFullscreenDragHandle);
-  setupBottomSheetGestures(qrDownloadFormatModal, qrDownloadFormatContent, qrFormatDragHandle);
-  setupBottomSheetGestures(logoDownloadFormatModal, logoDownloadFormatContent, logoFormatDragHandle);
+  // Setup Bottom Sheet Gestures on all dialogs on mobile with accidental scroll protection
+  setupBottomSheetGestures(shareModal, shareSheetWrapper || shareModalContent, sheetDragHandle, shareFloatingPill, shareModalContent);
+  setupBottomSheetGestures(qrFullscreenModal, qrFullscreenSheetWrapper || qrFullscreenContent, qrFullscreenDragHandle, qrFullscreenFloatingPill, qrFullscreenContent);
+  setupBottomSheetGestures(qrDownloadFormatModal, qrDownloadSheetWrapper || qrDownloadFormatContent, qrFormatDragHandle, qrDownloadFloatingPill, qrDownloadFormatContent);
+  setupBottomSheetGestures(logoDownloadFormatModal, logoDownloadSheetWrapper || logoDownloadFormatContent, logoFormatDragHandle, logoDownloadFloatingPill, logoDownloadFormatContent);
 
   // Helper to set Download Button Stage 1 (Installable / Uninstalled)
   function setInstallableStage() {
@@ -474,8 +522,8 @@ export function initShareModal() {
     });
   } catch (e) {}
 
-  // Generic Clipboard Copy Helper with Inline Micro-Interactions
-  async function performCopy(textToCopy, rowElement, statusBadge, iconElement, successLabel = 'COPIED! ✓') {
+  // Generic Clipboard Copy Helper with Inline Tick Micro-Interaction
+  async function performCopy(textToCopy, iconElement) {
     let success = false;
     try {
       if (navigator.clipboard && window.isSecureContext) {
@@ -502,21 +550,8 @@ export function initShareModal() {
       }
     }
 
-    if (success) {
-      if (iconElement) {
-        animateCopySuccess(iconElement.parentElement || iconElement);
-      }
-
-      if (statusBadge) {
-        const originalText = statusBadge.textContent;
-        statusBadge.textContent = successLabel;
-        if (rowElement) rowElement.classList.add('copied-active');
-
-        setTimeout(() => {
-          statusBadge.textContent = originalText;
-          if (rowElement) rowElement.classList.remove('copied-active');
-        }, 1800);
-      }
+    if (success && iconElement) {
+      animateCopySuccess(iconElement.parentElement || iconElement);
     }
   }
 
@@ -525,7 +560,7 @@ export function initShareModal() {
     const handleUrlCopyAction = (e) => {
       e.preventDefault();
       const icon = document.getElementById('copyUrlIcon');
-      performCopy(directLinkUrl, copyUrlRow, copyUrlStatus, icon);
+      performCopy(directLinkUrl, icon);
     };
 
     copyUrlRow.addEventListener('click', handleUrlCopyAction);
@@ -541,7 +576,7 @@ export function initShareModal() {
     const handleHandleCopyAction = (e) => {
       e.preventDefault();
       const icon = document.getElementById('copyHandleIcon');
-      performCopy('@KinsBandOfficial', copyHandleRow, copyHandleStatus, icon);
+      performCopy('@KinsBandOfficial', icon);
     };
 
     copyHandleRow.addEventListener('click', handleHandleCopyAction);
@@ -566,7 +601,7 @@ export function initShareModal() {
         window.open(waUrl, '_blank', 'noopener,noreferrer');
         showToast('Opening WhatsApp...');
       } else if (app === 'instagram') {
-        performCopy(appShareUrl, null, null, btn.querySelector('i'), 'COPIED!');
+        performCopy(appShareUrl, btn.querySelector('i'));
         showToast('Link copied! Opening Instagram...');
         window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
       } else if (app === 'sms') {
@@ -574,7 +609,7 @@ export function initShareModal() {
         window.location.href = smsUrl;
         showToast('Opening Messages...');
       } else if (app === 'discord') {
-        performCopy(appShareUrl, null, null, btn.querySelector('i'), 'COPIED!');
+        performCopy(appShareUrl, btn.querySelector('i'));
         showToast('Link copied! Opening Discord...');
         window.open('https://discord.com/channels/@me', '_blank', 'noopener,noreferrer');
       }
@@ -592,7 +627,7 @@ export function initShareModal() {
         });
       } catch (err) {}
     } else {
-      performCopy(nativeShareUrl, null, null, nativeShareCtaBtn?.querySelector('i'));
+      performCopy(nativeShareUrl, nativeShareCtaBtn?.querySelector('i'));
       showToast('Share link copied to clipboard!');
     }
   }
@@ -736,19 +771,20 @@ export function initShareModal() {
     shareBtn.addEventListener('click', () => {
       shareModal.classList.remove('hidden');
       shareModal.classList.add('active');
-      if (shareModalContent) shareModalContent.style.transform = 'translateY(0)';
+      if (shareSheetWrapper) shareSheetWrapper.style.transform = 'translateY(0)';
+      else if (shareModalContent) shareModalContent.style.transform = 'translateY(0)';
       lockScroll();
       renderQrCode('qrcodeCanvas', 100);
       syncAppInstalledStatus();
     });
 
     closeShareModal.addEventListener('click', () => {
-      closeSheetSmoothly(shareModal, shareModalContent, unlockScroll);
+      closeSheetSmoothly(shareModal, shareSheetWrapper || shareModalContent, unlockScroll);
     });
 
     shareModal.addEventListener('click', (e) => {
       if (e.target === shareModal) {
-        closeSheetSmoothly(shareModal, shareModalContent, unlockScroll);
+        closeSheetSmoothly(shareModal, shareSheetWrapper || shareModalContent, unlockScroll);
       }
     });
   }
@@ -757,17 +793,18 @@ export function initShareModal() {
   if (qrcodeCanvasWrapper && qrFullscreenModal) {
     qrcodeCanvasWrapper.addEventListener('click', () => {
       qrFullscreenModal.classList.remove('hidden');
-      if (qrFullscreenContent) qrFullscreenContent.style.transform = 'translateY(0)';
+      if (qrFullscreenSheetWrapper) qrFullscreenSheetWrapper.style.transform = 'translateY(0)';
+      else if (qrFullscreenContent) qrFullscreenContent.style.transform = 'translateY(0)';
       renderQrCode('qrcodeFullscreenCanvas', 260);
     });
 
     closeQrFullscreenBtn?.addEventListener('click', () => {
-      closeSheetSmoothly(qrFullscreenModal, qrFullscreenContent);
+      closeSheetSmoothly(qrFullscreenModal, qrFullscreenSheetWrapper || qrFullscreenContent);
     });
 
     qrFullscreenModal.addEventListener('click', (e) => {
       if (e.target === qrFullscreenModal) {
-        closeSheetSmoothly(qrFullscreenModal, qrFullscreenContent);
+        closeSheetSmoothly(qrFullscreenModal, qrFullscreenSheetWrapper || qrFullscreenContent);
       }
     });
 
@@ -804,16 +841,17 @@ export function initShareModal() {
   if (openQrDownloadModalBtn && qrDownloadFormatModal) {
     openQrDownloadModalBtn.addEventListener('click', () => {
       qrDownloadFormatModal.classList.remove('hidden');
-      if (qrDownloadFormatContent) qrDownloadFormatContent.style.transform = 'translateY(0)';
+      if (qrDownloadSheetWrapper) qrDownloadSheetWrapper.style.transform = 'translateY(0)';
+      else if (qrDownloadFormatContent) qrDownloadFormatContent.style.transform = 'translateY(0)';
     });
 
     closeQrFormatModalBtn?.addEventListener('click', () => {
-      closeSheetSmoothly(qrDownloadFormatModal, qrDownloadFormatContent);
+      closeSheetSmoothly(qrDownloadFormatModal, qrDownloadSheetWrapper || qrDownloadFormatContent);
     });
 
     qrDownloadFormatModal.addEventListener('click', (e) => {
       if (e.target === qrDownloadFormatModal) {
-        closeSheetSmoothly(qrDownloadFormatModal, qrDownloadFormatContent);
+        closeSheetSmoothly(qrDownloadFormatModal, qrDownloadSheetWrapper || qrDownloadFormatContent);
       }
     });
   }
@@ -822,7 +860,7 @@ export function initShareModal() {
   formatCards.forEach(card => {
     card.addEventListener('click', () => {
       const format = card.getAttribute('data-format') || 'png';
-      closeSheetSmoothly(qrDownloadFormatModal, qrDownloadFormatContent);
+      closeSheetSmoothly(qrDownloadFormatModal, qrDownloadSheetWrapper || qrDownloadFormatContent);
 
       showToast(`Preparing ${format.toUpperCase()} export...`);
 
@@ -858,19 +896,20 @@ export function initShareModal() {
   if (logoDownloadFormatModal) {
     const openLogoModal = () => {
       logoDownloadFormatModal.classList.remove('hidden');
-      if (logoDownloadFormatContent) logoDownloadFormatContent.style.transform = 'translateY(0)';
+      if (logoDownloadSheetWrapper) logoDownloadSheetWrapper.style.transform = 'translateY(0)';
+      else if (logoDownloadFormatContent) logoDownloadFormatContent.style.transform = 'translateY(0)';
     };
 
     openLogoDownloadModalBtn?.addEventListener('click', openLogoModal);
     openLogoDownloadModalBox?.addEventListener('click', openLogoModal);
 
     closeLogoFormatModalBtn?.addEventListener('click', () => {
-      closeSheetSmoothly(logoDownloadFormatModal, logoDownloadFormatContent);
+      closeSheetSmoothly(logoDownloadFormatModal, logoDownloadSheetWrapper || logoDownloadFormatContent);
     });
 
     logoDownloadFormatModal.addEventListener('click', (e) => {
       if (e.target === logoDownloadFormatModal) {
-        closeSheetSmoothly(logoDownloadFormatModal, logoDownloadFormatContent);
+        closeSheetSmoothly(logoDownloadFormatModal, logoDownloadSheetWrapper || logoDownloadFormatContent);
       }
     });
   }
@@ -879,7 +918,7 @@ export function initShareModal() {
   logoFormatCards.forEach(card => {
     card.addEventListener('click', () => {
       const format = card.getAttribute('data-logo-format') || 'png';
-      closeSheetSmoothly(logoDownloadFormatModal, logoDownloadFormatContent);
+      closeSheetSmoothly(logoDownloadFormatModal, logoDownloadSheetWrapper || logoDownloadFormatContent);
 
       showToast(`Preparing Band Logo (${format.toUpperCase()})...`);
       const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
@@ -940,7 +979,7 @@ export function initShareModal() {
       } else if (qrFullscreenModal && !qrFullscreenModal.classList.contains('hidden')) {
         closeSheetSmoothly(qrFullscreenModal, qrFullscreenContent);
       } else if (shareModal && shareModal.classList.contains('active')) {
-        closeSheetSmoothly(shareModal, shareModalContent, unlockScroll);
+        closeSheetSmoothly(shareModal, shareSheetWrapper || shareModalContent, unlockScroll);
       }
     }
   });

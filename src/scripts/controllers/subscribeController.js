@@ -1,25 +1,22 @@
 import { showToast } from './toast.js';
+import { safeGet, safeSet, safeRemove } from '../utils/safeStorage.js';
 
 const STORAGE_KEY = 'kins_subscribed';
 const COOKIE_NAME = 'kins_subscribed';
 const EMAIL_KEY = 'kins_subscriber_email';
 
 /**
- * Reads persistent subscription state from localStorage or fallback Cookie.
+ * Reads persistent subscription state from safeStorage or fallback Cookie.
  * Returns true if Subscribed (Active State), false if Unsubscribed (Normal State).
  */
 export function getSubscriptionState() {
   if (typeof window === 'undefined') return false;
 
-  try {
-    const localVal = localStorage.getItem(STORAGE_KEY);
-    if (localVal === 'true') return true;
-    if (localVal === 'false') return false;
-    const emailVal = localStorage.getItem(EMAIL_KEY);
-    if (emailVal && emailVal.length > 3) return true;
-  } catch (e) {
-    // Ignore storage errors
-  }
+  const localVal = safeGet(STORAGE_KEY);
+  if (localVal === 'true') return true;
+  if (localVal === 'false') return false;
+  const emailVal = safeGet(EMAIL_KEY);
+  if (emailVal && emailVal.length > 3) return true;
 
   const cookieMatch = document.cookie.match(new RegExp('(?:^|; )' + COOKIE_NAME + '=([^;]*)'));
   if (cookieMatch) {
@@ -30,34 +27,26 @@ export function getSubscriptionState() {
 }
 
 /**
- * Gets saved subscriber email from localStorage if available.
+ * Gets saved subscriber email from safeStorage if available.
  */
 export function getSubscriberEmail() {
   if (typeof window === 'undefined') return '';
-  try {
-    return localStorage.getItem(EMAIL_KEY) || '';
-  } catch (e) {
-    return '';
-  }
+  return safeGet(EMAIL_KEY, '') || '';
 }
 
 /**
- * Saves subscription state to both localStorage and Cookie, and triggers a sync event.
+ * Saves subscription state to both safeStorage and Cookie, and triggers a sync event.
  */
 export function setSubscriptionState(isSubscribed, email = null) {
   if (typeof window === 'undefined') return;
 
   const valStr = isSubscribed ? 'true' : 'false';
 
-  try {
-    localStorage.setItem(STORAGE_KEY, valStr);
-    if (isSubscribed && email) {
-      localStorage.setItem(EMAIL_KEY, email.trim());
-    } else if (!isSubscribed) {
-      localStorage.removeItem(EMAIL_KEY);
-    }
-  } catch (e) {
-    console.warn('localStorage error:', e);
+  safeSet(STORAGE_KEY, valStr);
+  if (isSubscribed && email) {
+    safeSet(EMAIL_KEY, email.trim());
+  } else if (!isSubscribed) {
+    safeRemove(EMAIL_KEY);
   }
 
   const securePart = typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : '';

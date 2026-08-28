@@ -1,6 +1,13 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { sanitizeText } from '../../lib/sanitize';
 import { getSupabaseServiceClient } from '../../lib/supabaseServer';
+import {
+  getNotifyConfig,
+  sendNotifyEmail,
+  generateBrutalistEmailHtml,
+  type BrutalistField
+} from '../../lib/notifyEmail';
 
 export const prerender = false;
 
@@ -8,16 +15,16 @@ function getEnv(key: string): string {
   return (import.meta.env[key] as string | undefined) || process.env[key] || '';
 }
 
-interface KofiWebhookData {
-  message_id?: string;
-  type?: string;
-  from_name?: string;
-  amount?: string;
-  currency?: string;
-  message?: string;
-  is_public?: boolean | string;
-  is_subscription_payment?: boolean;
-}
+const KofiDataSchema = z.object({
+  message_id: z.string().min(1).max(120),
+  type: z.string().max(50).optional(),
+  from_name: z.string().max(100).optional(),
+  amount: z.union([z.string(), z.number()]),
+  currency: z.string().max(10).optional(),
+  message: z.string().max(500).optional(),
+  is_public: z.union([z.boolean(), z.string()]).optional(),
+  is_subscription_payment: z.boolean().optional()
+}).passthrough();
 
 /**
  * Ko-fi payment webhook. Ko-fi POSTs application/x-www-form-urlencoded with
@@ -41,12 +48,19 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response('Missing payload', { status: 400 });
     }
 
-    let parsed: KofiWebhookData;
+    let parsedJson: unknown;
     try {
-      parsed = JSON.parse(raw);
+      parsedJson = JSON.parse(raw);
     } catch (_) {
       return new Response('Malformed payload', { status: 400 });
     }
+
+    const validated = KofiDataSchema.safeParse(parsedJson);
+    if (!validated.success) {
+      return new Response('Invalid tip payload schema', { status: 400 });
+    }
+
+    const parsed = validated.data;
 
     const expectedToken = getEnv('KOFI_VERIFICATION_TOKEN');
     const providedToken =
@@ -70,13 +84,14 @@ export const POST: APIRoute = async ({ request }) => {
 
     const supporterName = sanitizeText(String(parsed.from_name || 'Ko-fi Supporter'), 60);
     const tipMessage = sanitizeText(String(parsed.message || ''), 200);
+    const currency = sanitizeText(String(parsed.currency || 'AUD'), 8) || 'AUD';
     const isPublic = parsed.is_public !== false && parsed.is_public !== 'false';
 
     const { error: upsertError } = await supabase.from('tips').upsert(
       {
         kofi_id: String(parsed.message_id).slice(0, 120),
         amount: amountNum,
-        currency: sanitizeText(String(parsed.currency || 'AUD'), 8) || 'AUD',
+        currency,
         supporter_name: supporterName,
         message: tipMessage,
         is_public: isPublic,
@@ -90,6 +105,38 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response('Persist failed', { status: 502 });
     }
 
+    // 1. Primary: Send email notification via Resend
+    const notifyConfig = getNotifyConfig();
+    if (notifyConfig.resendApiKey) {
+      const subject = `[Ko-fi Tip] ${currency} ${amountNum.toFixed(2)} from ${supporterName}`;
+
+      const fields: BrutalistField[] = [
+        { label: 'Amount', value: `${currency} ${amountNum.toFixed(2)}` },
+        { label: 'Supporter', value: supporterName },
+        { label: 'Visibility', value: isPublic ? 'Public Superchat' : 'Private Tip' },
+        { label: 'Ko-fi ID', value: String(parsed.message_id), isCode: true }
+      ];
+
+      const html = generateBrutalistEmailHtml({
+        title: `💰 Confirmed Tip: ${currency} ${amountNum.toFixed(2)}`,
+        badge: 'KO-FI TIP • CONFIRMED',
+        badgeBg: '#f2fd43',
+        badgeColor: '#000000',
+        description: tipMessage || 'No message attached',
+        fields,
+        footerNote: 'Kins Tip Alert System'
+      });
+
+      sendNotifyEmail({
+        subject,
+        html,
+        text: `[Ko-fi Tip] ${currency} ${amountNum.toFixed(2)} from ${supporterName}\n\nMessage:\n${tipMessage || '—'}\n\nPublic: ${isPublic}`
+      }).catch((emailErr) => {
+        console.warn('[kofi-webhook] Resend email alert failed:', emailErr);
+      });
+    }
+
+    // 2. Secondary fallback: Send Discord webhook if configured
     const webhookUrl =
       import.meta.env.DISCORD_TIP_WEBHOOK_URL ||
       process.env.DISCORD_TIP_WEBHOOK_URL ||
@@ -108,7 +155,7 @@ export const POST: APIRoute = async ({ request }) => {
               {
                 title: '💰 CONFIRMED TIP (via Ko-fi)',
                 color: 0xf2fd43,
-                description: `**Amount:** ${parsed.currency || 'AUD'} ${amountNum.toFixed(2)}\n**From:** \`${supporterName}\`\n**Message:** ${tipMessage || '—'}`,
+                description: `**Amount:** ${currency} ${amountNum.toFixed(2)}\n**From:** \`${supporterName}\`\n**Message:** ${tipMessage || '—'}`,
                 timestamp: new Date().toISOString()
               }
             ]

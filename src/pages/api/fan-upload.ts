@@ -1,7 +1,14 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
 import { getSupabaseServiceClient } from '../../lib/supabaseServer';
+import {
+  getNotifyConfig,
+  sendNotifyEmail,
+  generateBrutalistEmailHtml,
+  type BrutalistField
+} from '../../lib/notifyEmail';
 
 export const prerender = false;
 
@@ -19,6 +26,12 @@ const ALLOWED_MIME = new Set([
 ]);
 const GIG_ID_RE = /^[a-zA-Z0-9_-]{1,60}$/;
 const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
+
+const FanUploadFormSchema = z.object({
+  caption: z.string().max(240).optional().default(''),
+  handle: z.string().max(60).optional().default(''),
+  gigId: z.string().regex(GIG_ID_RE, 'Invalid gig reference').optional().or(z.literal(''))
+});
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -82,17 +95,19 @@ export const POST: APIRoute = async ({ request }) => {
     }
     const mediaType = mime.startsWith('video/') ? 'video' : 'image';
 
-    const caption = sanitizeText(form.get('caption'), 240);
-    const handle = sanitizeText(form.get('handle'), 60);
+    const parsedFields = FanUploadFormSchema.safeParse({
+      caption: form.get('caption')?.toString() || '',
+      handle: form.get('handle')?.toString() || '',
+      gigId: form.get('gigId')?.toString() || undefined
+    });
 
-    let gigId = '';
-    const rawGigId = form.get('gigId');
-    if (typeof rawGigId === 'string' && rawGigId.trim()) {
-      gigId = rawGigId.trim();
-      if (!GIG_ID_RE.test(gigId)) {
-        return json({ status: 'error', message: 'Invalid gig reference.' }, 400);
-      }
+    if (!parsedFields.success) {
+      return json({ status: 'error', message: 'Invalid form fields in upload payload.' }, 400);
     }
+
+    const caption = sanitizeText(parsedFields.data.caption, 240);
+    const handle = sanitizeText(parsedFields.data.handle, 60);
+    const gigId = parsedFields.data.gigId || '';
 
     const supabase = getSupabaseServiceClient();
     if (!supabase) {
@@ -130,12 +145,46 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ status: 'error', message: 'Could not register your upload. Please try again.' }, 502);
     }
 
-    // Best-effort moderation alert. Webhook failure never fails the request.
+    const sizeKb = Math.max(1, Math.round(file.size / 1024));
+    const captionPreview = caption ? caption.slice(0, 300) : '—';
+    const filename = safeFilename(file.name);
+
+    // 1. Primary: Best-effort moderation alert email via Resend
+    const notifyConfig = getNotifyConfig();
+    if (notifyConfig.resendApiKey) {
+      const subject = `[Fan Upload][Moderation] ${filename}`;
+
+      const fields: BrutalistField[] = [
+        { label: 'File', value: filename, isCode: true },
+        { label: 'Size', value: `${sizeKb} KB` },
+        { label: 'Type', value: `${mediaType} (${mime})` },
+        { label: 'Handle', value: handle || 'Not provided', isCode: !!handle },
+        { label: 'Gig Ref', value: gigId || 'None' }
+      ];
+
+      const html = generateBrutalistEmailHtml({
+        title: `📸 New Fan Upload: ${filename}`,
+        badge: 'FAN UPLOAD • MODERATION',
+        badgeBg: '#f2fd43',
+        badgeColor: '#000000',
+        description: captionPreview !== '—' ? captionPreview : undefined,
+        fields,
+        footerNote: 'Approve or move to approved/ folder in Supabase to publish.'
+      });
+
+      sendNotifyEmail({
+        subject,
+        html,
+        text: `[Fan Upload: Moderation] ${filename}\n\nSize: ${sizeKb} KB\nHandle: ${handle || 'N/A'}\nGig: ${gigId || 'N/A'}\nCaption: ${captionPreview}`
+      }).catch((emailErr) => {
+        console.warn('[fan-upload] Resend moderation email alert failed:', emailErr);
+      });
+    }
+
+    // 2. Secondary: Best-effort Discord webhook alert
     const webhookUrl = resolveWebhookUrl();
     if (webhookUrl) {
       try {
-        const sizeKb = Math.max(1, Math.round(file.size / 1024));
-        const captionPreview = caption ? caption.slice(0, 300) : '—';
         await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -148,7 +197,7 @@ export const POST: APIRoute = async ({ request }) => {
                 color: 0xf2fd43,
                 description: captionPreview,
                 fields: [
-                  { name: 'File', value: `\`${safeFilename(file.name)}\``, inline: true },
+                  { name: 'File', value: `\`${filename}\``, inline: true },
                   { name: 'Size', value: `${sizeKb} KB`, inline: true },
                   { name: 'Type', value: `${mediaType} (${mime})`, inline: true },
                   { name: 'Handle', value: handle ? `\`${handle}\`` : '*Not provided*', inline: true },

@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { getSupabaseServiceClient } from '../../lib/supabaseServer';
 
@@ -6,6 +7,10 @@ export const prerender = false;
 
 const GIG_ID_RE = /^[a-zA-Z0-9_-]{1,60}$/;
 const MAX_ITEMS = 60;
+
+const FanWallQuerySchema = z.object({
+  gigId: z.string().regex(GIG_ID_RE, 'Invalid gig reference').optional().or(z.literal(''))
+});
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -20,14 +25,16 @@ export const GET: APIRoute = async ({ request, url }) => {
       return json({ status: 'error', message: 'Too many requests.' }, 429);
     }
 
-    let gigId = '';
-    const rawGigId = url?.searchParams.get('gigId');
-    if (rawGigId && rawGigId.trim()) {
-      gigId = rawGigId.trim();
-      if (!GIG_ID_RE.test(gigId)) {
-        return json({ status: 'error', message: 'Invalid gig reference.' }, 400);
-      }
+    const rawGigId = url?.searchParams.get('gigId') || '';
+    const parsedQuery = FanWallQuerySchema.safeParse({
+      gigId: rawGigId ? rawGigId.trim() : ''
+    });
+
+    if (!parsedQuery.success) {
+      return json({ status: 'error', message: 'Invalid gig reference.' }, 400);
     }
+
+    const gigId = parsedQuery.data.gigId || '';
 
     const supabase = getSupabaseServiceClient();
     if (!supabase) {

@@ -1,18 +1,23 @@
 /**
  * EPK Controller - Interactive features for KINS Electronic Press Kit
- * Manages Member scroll controls, 1-Click Bio copy, Mobile Drawer navigation, Email copy, and zero-friction asset downloads.
+ * Manages Member scroll controls, 3-Tier Bio length switching & 1-Click copy,
+ * Scroll-locked Mobile Drawer navigation with theme switcher, Email copy, smooth back-to-top,
+ * and zero-friction asset downloads.
  */
 
 import { showToast } from './toast.js';
-import { toggleTheme, getCurrentTheme, THEME_STORAGE_KEY } from './themeController.js';
+import { toggleTheme, setTheme, getCurrentTheme } from './themeController.js';
+import { epkConfig } from '../../settings/epk.config';
 
 export function initEpkController() {
   initEpkMembersScroll();
-  initEpkBioCopy();
+  initEpkBioToggle();
   initEpkMobileDrawer();
   initEpkDownloads();
   initEpkJumpLinks();
   initEpkEmailCopy();
+  initEpkBackToTop();
+  initEpkFooterModals();
 }
 
 /**
@@ -92,7 +97,6 @@ function initEpkMembersScroll() {
 
   updateArrowsState();
 
-  // rAF-coalesced so scroll/resize never interleave rect reads with class writes (layout thrash)
   let epkScrollRafId = null;
   function scheduleEpkUpdate() {
     const controlsGroup = prevBtn?.parentElement;
@@ -108,7 +112,6 @@ function initEpkMembersScroll() {
   }
 
   container.addEventListener('scroll', scheduleEpkUpdate, { passive: true });
-
   window.addEventListener('resize', scheduleEpkUpdate, { passive: true });
 
   prevBtn?.addEventListener('click', (e) => {
@@ -133,30 +136,72 @@ function initEpkMembersScroll() {
 }
 
 /**
- * 2. 1-Click Band Bio Copy to Clipboard
+ * 2. 3-Tier Bio Length Switcher & 1-Click Copy Controller
  */
-function initEpkBioCopy() {
-  const copyBtns = document.querySelectorAll('.epk-copy-bio-btn, #epkCopyBioBtn');
+function initEpkBioToggle() {
+  const toggleBtns = document.querySelectorAll('.bio-toggle-btn');
+  const panels = document.querySelectorAll('.bio-panel');
+  const wordBadge = document.getElementById('bioWordBadge');
+  const targetUseBadge = document.getElementById('bioTargetUseBadge');
+  const copyBtn = document.getElementById('epkCopyBioBtn');
 
-  copyBtns.forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const textToCopy = btn.getAttribute('data-copy-text');
-      if (!textToCopy) return;
+  let activeTier = 'short';
 
-      try {
-        await navigator.clipboard.writeText(textToCopy);
-        showToast('Band biography copied to clipboard!', 'success');
-      } catch (err) {
-        const textarea = document.createElement('textarea');
-        textarea.value = textToCopy;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        showToast('Band biography copied to clipboard!', 'success');
+  function setBioTier(tier) {
+    if (!epkConfig.bios[tier]) return;
+    activeTier = tier;
+
+    // Update toggle buttons active state
+    toggleBtns.forEach(btn => {
+      const isSelected = btn.getAttribute('data-bio-tier') === tier;
+      btn.classList.toggle('active', isSelected);
+      btn.setAttribute('aria-selected', String(isSelected));
+    });
+
+    // Update panels visibility
+    panels.forEach(panel => {
+      const isMatch = panel.getAttribute('data-bio-content') === tier;
+      if (isMatch) {
+        panel.removeAttribute('hidden');
+        panel.classList.add('active');
+      } else {
+        panel.setAttribute('hidden', '');
+        panel.classList.remove('active');
       }
     });
+
+    // Update metadata badges
+    if (wordBadge) wordBadge.textContent = epkConfig.bios[tier].wordCount;
+    if (targetUseBadge) targetUseBadge.textContent = epkConfig.bios[tier].targetUse;
+    if (copyBtn) copyBtn.setAttribute('data-active-tier', tier);
+  }
+
+  toggleBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tier = btn.getAttribute('data-bio-tier');
+      if (tier) setBioTier(tier);
+    });
+  });
+
+  // 1-Click Copy Bio Handler
+  copyBtn?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const bioData = epkConfig.bios[activeTier] || epkConfig.bios.short;
+    const textToCopy = bioData.text;
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      showToast(`${bioData.label} biography copied to clipboard!`, 'success');
+    } catch (err) {
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast(`${bioData.label} biography copied to clipboard!`, 'success');
+    }
   });
 }
 
@@ -168,7 +213,7 @@ function initEpkEmailCopy() {
   emailBtns.forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
-      const email = btn.getAttribute('data-email') || 'booking@kinsband.com';
+      const email = btn.getAttribute('data-email') || 'BookingsKinsBand@gmail.com';
       try {
         await navigator.clipboard.writeText(email);
         showToast(`Copied ${email} to clipboard!`, 'success');
@@ -186,7 +231,7 @@ function initEpkEmailCopy() {
 }
 
 /**
- * 4. Mobile Drawer Navigation & Backdrop Controller
+ * 4. Mobile Drawer Navigation & Backdrop Controller (with Scroll Lock)
  */
 function initEpkMobileDrawer() {
   const hamburgerBtn = document.getElementById('epkHamburgerBtn');
@@ -195,8 +240,9 @@ function initEpkMobileDrawer() {
   const backdrop = document.getElementById('epkDrawerBackdrop');
   const drawerLinks = document.querySelectorAll('.epk-drawer-link');
   const drawerThemeBtn = document.getElementById('drawerThemeToggleBtn');
-  const drawerThemeIcon = document.getElementById('drawerThemeToggleIcon');
-  const drawerThemeLabel = document.getElementById('drawerThemeToggleLabel');
+  const drawerThemeTitle = document.getElementById('drawerThemeCurrentTitle');
+  const drawerPillLight = document.getElementById('drawerThemePillLight');
+  const drawerPillDark = document.getElementById('drawerThemePillDark');
 
   function openDrawer() {
     drawer?.classList.add('is-open');
@@ -204,7 +250,10 @@ function initEpkMobileDrawer() {
     drawer?.setAttribute('aria-hidden', 'false');
     if (drawer) drawer.inert = false;
     hamburgerBtn?.setAttribute('aria-expanded', 'true');
+    // Lock page background scrolling
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
   }
 
   function closeDrawer() {
@@ -213,8 +262,12 @@ function initEpkMobileDrawer() {
     drawer?.setAttribute('aria-hidden', 'true');
     if (drawer) drawer.inert = true;
     hamburgerBtn?.setAttribute('aria-expanded', 'false');
+    // Restore page background scrolling
     document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.body.style.touchAction = '';
   }
+
   // Initialize hidden drawer as inert
   if (drawer) drawer.inert = true;
 
@@ -226,24 +279,38 @@ function initEpkMobileDrawer() {
     link.addEventListener('click', closeDrawer);
   });
 
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer?.classList.contains('is-open')) {
+      closeDrawer();
+    }
+  });
+
+  // Drawer Theme Controls
   function updateDrawerThemeUI() {
     const isDark = getCurrentTheme() === 'dark';
-    if (drawerThemeIcon) {
-      drawerThemeIcon.className = `theme-toggle-icon fa-solid ${isDark ? 'fa-moon' : 'fa-sun'}`;
+    if (drawerThemeTitle) {
+      drawerThemeTitle.textContent = isDark ? 'Dark' : 'Light';
     }
-    if (drawerThemeLabel) {
-      drawerThemeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+    if (drawerPillLight && drawerPillDark) {
+      drawerPillLight.classList.toggle('active', !isDark);
+      drawerPillDark.classList.toggle('active', isDark);
     }
   }
 
   updateDrawerThemeUI();
 
-  if (drawerThemeBtn) {
-    drawerThemeBtn.addEventListener('click', () => {
+  drawerThemeBtn?.addEventListener('click', (e) => {
+    // If clicking pill buttons directly, handle them specifically
+    const target = e.target;
+    if (target.closest('#drawerThemePillLight')) {
+      setTheme('standard');
+    } else if (target.closest('#drawerThemePillDark')) {
+      setTheme('dark');
+    } else {
       toggleTheme();
-      updateDrawerThemeUI();
-    });
-  }
+    }
+    updateDrawerThemeUI();
+  });
 
   window.addEventListener('kins:theme-change', updateDrawerThemeUI);
 }
@@ -291,14 +358,13 @@ VENUE / PROMOTER MUST PROVIDE:
 - 3x Active DI Boxes (Bass, Synth, Aux)
 - FOH Professional PA System & 4 Independent Monitor Mixes
 
-4. LIVE REPERTOIRE & SET OPTIONS:
-- 30-Min Support Set: Fast, high-energy set designed for opening / multi-band slots.
-- 45-Min Feature Set: Dynamic mix of high-voltage originals and select post-punk covers.
-- 60-Min Headline Set: Full-throttle live show with extended instrumental builds.
+4. LIVE SET OPTIONS:
+- 30-Min Opening / Support Set: High-octane set designed for multi-band bills and tour support slots.
+- 45-Min Feature / Co-Headline Set: Dynamic balance of original anthems and select crowd-pleasing post-punk covers.
 
 5. DIRECT OFFICIAL CONTACTS:
-- Booking & Live Routing: booking@kinsband.com
-- General & Inquiries: hello@kinsband.com
+- Booking & Live Routing: BookingsKinsBand@gmail.com
+- General & Inquiries: HelloKinsBand@gmail.com
 - Official Website: https://kinsband.com
 
 (Authorized for venue production, festival advance sheets, and press media usage.)`;
@@ -338,5 +404,41 @@ function initEpkJumpLinks() {
         }
       }
     });
+  });
+}
+
+/**
+ * 7. Smooth Back to Top
+ */
+function initEpkBackToTop() {
+  const backToTopBtn = document.getElementById('epkBackToTopBtn');
+  backToTopBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  });
+}
+
+/**
+ * 8. Footer Modals Integration (Feedback & Legal)
+ */
+function initEpkFooterModals() {
+  const feedbackBtn = document.getElementById('openFeedbackFooterBtn');
+  const legalBtn = document.getElementById('openLegalFooterBtn');
+
+  feedbackBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (typeof (window).openFeedbackModal === 'function') {
+      (window).openFeedbackModal('EPK / Press Kit');
+    }
+  });
+
+  legalBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (typeof (window).openLegalModal === 'function') {
+      (window).openLegalModal();
+    }
   });
 }

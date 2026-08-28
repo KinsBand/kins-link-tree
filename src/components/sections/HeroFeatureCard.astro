@@ -806,7 +806,7 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: all 0.18s ease;
+    transition: background-color 0.18s ease, color 0.18s ease;
     white-space: nowrap;
   }
 
@@ -1178,7 +1178,7 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.25s ease;
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
   }
 
   .poll-status-tag.voted {

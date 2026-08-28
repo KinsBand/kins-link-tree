@@ -1,20 +1,15 @@
-/**
- * Theme Controller - Kins Official Website
- * Manages Standard Mode vs Dark Mode switching with localStorage persistence
- */
+import { safeGet, safeSet } from '../utils/safeStorage.js';
 
 export const THEME_STORAGE_KEY = 'kins-theme';
 
 export function getPreferredTheme() {
-  try {
-    const saved = localStorage.getItem(THEME_STORAGE_KEY);
-    if (saved === 'dark' || saved === 'standard') {
-      return saved;
-    }
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-  } catch (e) {}
+  const saved = safeGet(THEME_STORAGE_KEY);
+  if (saved === 'dark' || saved === 'standard') {
+    return saved;
+  }
+  if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
   return 'standard';
 }
 
@@ -73,9 +68,7 @@ export function setTheme(theme) {
   const targetTheme = theme === 'dark' ? 'dark' : 'standard';
   document.documentElement.setAttribute('data-theme', targetTheme);
 
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, targetTheme);
-  } catch (e) {}
+  safeSet(THEME_STORAGE_KEY, targetTheme);
 
   updateThemeButtonUI(targetTheme);
 
@@ -126,12 +119,10 @@ export function initTheme() {
   // Listen for system theme changes if user has not explicitly set a preference
   if (window.matchMedia) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      try {
-        const saved = localStorage.getItem(THEME_STORAGE_KEY);
-        if (!saved) {
-          setTheme(e.matches ? 'dark' : 'standard');
-        }
-      } catch (err) {}
+      const saved = safeGet(THEME_STORAGE_KEY);
+      if (!saved) {
+        setTheme(e.matches ? 'dark' : 'standard');
+      }
     });
   }
 }

@@ -173,11 +173,10 @@ async function handleGoogleCredential(response) {
  */
 function fallbackToEmailForm(message) {
   const emailInput = document.getElementById('emailInput');
-  if (emailInput && !emailInput.value) {
-    emailInput.value = '@gmail.com';
-    emailInput.focus();
-    try { emailInput.setSelectionRange(0, 0); } catch (_) {}
-  } else if (emailInput) {
+  if (emailInput) {
+    if (!emailInput.value) {
+      emailInput.placeholder = 'Enter your Google email...';
+    }
     emailInput.focus();
   }
   showToast(message || 'Enter your Google email below and tap JOIN!');
@@ -215,6 +214,7 @@ async function ensureGoogleInitialized() {
         cancel_on_tap_outside: true,
         context: 'signup',
         itp_support: true,
+        use_fedcm_for_prompt: true,
         ...(nonceHashed ? { nonce: nonceHashed } : {})
       });
       googleReady = true;
@@ -257,15 +257,27 @@ async function handleGoogleBtnPress(e) {
       return;
     }
 
+    // FedCM-compliant: use_fedcm_for_prompt:true already set in initialize().
+    // Never call deprecated isNotDisplayed()/getNotDisplayedReason()/isSkippedMoment()/getSkippedReason()
+    // — they trigger [GSI_LOGGER] warnings and will stop functioning under FedCM.
+    // https://developers.google.com/identity/gsi/web/guides/fedcm-migration
     window.google.accounts.id.prompt((notification) => {
-      const notShown =
-        (typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed()) ||
-        (typeof notification.isSkippedMoment === 'function' && notification.isSkippedMoment());
-      if (notShown) {
-        console.info(
-          '[SocialAuth] One Tap not shown:',
-          notification.getNotDisplayedReason?.() || notification.getSkippedReason?.()
-        );
+      try {
+        // Only FedCM-safe status checks: isDisplayMoment() + isDisplayed()
+        const isDisplayMoment = typeof notification.isDisplayMoment === 'function'
+          ? notification.isDisplayMoment()
+          : false;
+        const isDisplayed = typeof notification.isDisplayed === 'function'
+          ? notification.isDisplayed()
+          : true;
+        if (isDisplayMoment && !isDisplayed) {
+          console.info('[SocialAuth] One Tap not displayed (FedCM)');
+          fallbackToEmailForm();
+        }
+        // For all other FedCM moments (skipped/dismissed), UI already handled by browser;
+        // no deprecated getSkippedReason/getNotDisplayedReason calls to avoid logger warnings.
+      } catch (e) {
+        console.warn('[SocialAuth] prompt callback warning:', e);
         fallbackToEmailForm();
       }
     });

@@ -14,8 +14,10 @@ import EpkContactMatrix from '../components/epk/EpkContactMatrix.astro';
 import EpkDownloadDeck from '../components/epk/EpkDownloadDeck.astro';
 import EpkFooter from '../components/epk/EpkFooter.astro';
 
-// UI Feedback
+// UI Feedback & Modals
 import ToastContainer from '../components/ui/ToastContainer.astro';
+import FeedbackModal from '../components/modals/FeedbackModal.astro';
+import LegalModal from '../components/modals/LegalModal.astro';
 
 const isEpkPageEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.enabled ?? true);
 const baseUrl = import.meta.env.BASE_URL || '/';
@@ -44,6 +46,8 @@ if (!isEpkPageEnabled) {
   </div>
 
   <ToastContainer />
+  <FeedbackModal />
+  <LegalModal />
 </BaseLayout>
 
 <style>

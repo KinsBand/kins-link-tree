@@ -7,24 +7,20 @@ import { generalEmail } from '../../settings/contact.config';
   id="legalModal"
   role="dialog"
   aria-modal="true"
-  aria-labelledby="legalModalTitle"
+  aria-labelledby="legalPillTitle"
   data-track-container="modal:legal"
 >
-  <div class="modal-content legal-modal-container">
-    <!-- Header with Title, Icon & Close Button -->
-    <div class="legal-modal-header">
-      <div class="legal-header-title-group">
-        <div class="legal-header-icon-badge" aria-hidden="true">
-          <i class="fa-solid fa-scale-balanced"></i>
-        </div>
-        <div class="legal-header-text">
-          <span class="legal-header-tag">OFFICIAL POLICIES</span>
-          <h3 id="legalModalTitle">Legal & Guidelines</h3>
-        </div>
+  <div class="legal-sheet-wrapper" id="legalSheetWrapper">
+
+    <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
+    <div class="sheet-floating-pill-header" id="legalFloatingPillHeader">
+      <div class="sheet-pill-title" id="legalPillTitle">
+        <i class="fa-solid fa-scale-balanced"></i>
+        <span>LEGAL</span>
       </div>
       <button
         type="button"
-        class="legal-close-btn brutal-press"
+        class="sheet-pill-close-btn brutal-press"
         id="closeLegalModalBtn"
         aria-label="Close Legal Modal"
         data-track="legal:close_btn"
@@ -33,7 +29,14 @@ import { generalEmail } from '../../settings/contact.config';
       </button>
     </div>
 
-    <!-- Segmented Control / Tab Selector -->
+    <!-- Main Sheet / Modal Content -->
+    <div class="modal-content legal-modal-container" id="legalModalContent">
+      <!-- Mobile Drag Handle Bar -->
+      <div class="sheet-drag-handle" id="legalDragHandle" aria-hidden="true">
+        <span class="sheet-drag-pill"></span>
+      </div>
+
+      <!-- Segmented Control / Tab Selector -->
     <div class="legal-segmented-wrap">
       <div
         class="legal-segmented-control"
@@ -188,19 +191,8 @@ import { generalEmail } from '../../settings/contact.config';
         </div>
       </section>
     </div>
-
-    <!-- Modal Footer Action -->
-    <div class="legal-modal-footer">
-      <button
-        type="button"
-        class="legal-footer-close-btn brutal-press"
-        id="legalFooterCloseBtn"
-        data-track="legal:footer_close"
-      >
-        <span>Close</span>
-      </button>
-    </div>
   </div>
+</div>
 </div>
 
 <style>
@@ -236,22 +228,39 @@ import { generalEmail } from '../../settings/contact.config';
     pointer-events: none;
   }
 
-  .legal-modal-container {
-    background: #141416;
-    border: 3px solid #000000;
-    border-radius: 10px;
-    box-shadow: 6px 6px 0px #000000;
-    width: 100%;
-    max-width: 540px;
-    max-height: 88vh;
-    max-height: 88dvh;
+  /* Floating Header Pill Container (Above Sheet / Modal) */
+  .legal-sheet-wrapper {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    align-items: center;
+    width: 100%;
+    max-width: 540px;
+    gap: 12px;
+    position: relative;
+    z-index: 10;
     animation: legalModalPopIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .legal-modal-container.is-closing {
+  .legal-modal-container {
+    background: #141416;
+    border: 3px solid #000000;
+    border-radius: 12px;
+    box-shadow: 6px 6px 0px #000000;
+    width: 100%;
+    max-width: 540px;
+    max-height: 85vh;
+    max-height: 85dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-backdrop.is-closing {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .legal-sheet-wrapper.is-closing {
     animation: legalModalPopOut 0.18s ease forwards;
   }
 
@@ -277,87 +286,90 @@ import { generalEmail } from '../../settings/contact.config';
     }
   }
 
-  /* Modal Header */
-  .legal-modal-header {
-    display: flex;
+  /* Floating Header Pill (Above Sheet / Modal) */
+  .sheet-floating-pill-header {
+    display: inline-flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 16px;
-    background: #1c1c20;
-    border-bottom: 3px solid #000000;
+    gap: 14px;
+    background: var(--surface-card-panel, #f5f4ef);
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 9999px;
+    padding: 6px 6px 6px 18px;
+    z-index: 20;
+    user-select: none;
+    transition: transform 0.16s var(--ease-tactile);
   }
 
-  .legal-header-title-group {
+  .sheet-pill-title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex: 1;
-    min-width: 0;
+    gap: 8px;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
-  .legal-header-icon-badge {
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    background: var(--accent-neon-yellow);
+  .sheet-pill-title i {
+    font-size: 0.85rem;
+    color: var(--brand-accent-primary, #f2fd43);
+    filter: drop-shadow(0 0 1px #000000);
+  }
+
+  :global([data-theme="dark"]) .sheet-pill-title i {
+    color: var(--brand-accent-primary, #d4af37);
+  }
+
+  .sheet-pill-close-btn {
+    background: var(--btn-brand-primary, #f2fd43);
     color: #000000;
     border: 2px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.95rem;
-    flex-shrink: 0;
-  }
-
-  .legal-header-text {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  .legal-header-tag {
-    font-family: var(--font-secondary);
-    font-size: 0.58rem;
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    color: var(--accent-neon-yellow);
-    text-transform: uppercase;
-  }
-
-  .legal-header-title-group h3 {
-    font-family: var(--font-heading);
-    font-size: clamp(0.92rem, 3.5vw, 1.05rem);
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #ffffff;
-    margin: 0;
-  }
-
-  .legal-close-btn {
-    background: var(--surface-input);
-    border: 2px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    color: var(--text-card-primary);
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    border-radius: 6px;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 9999px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.92rem;
-    flex-shrink: 0;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
-  .legal-close-btn:hover {
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
+  .sheet-pill-close-btn i {
+    font-size: 0.88rem;
+    pointer-events: none;
+  }
+
+  .sheet-pill-close-btn:hover {
+    background: var(--btn-brand-hover, #ffffff);
+    transform: scale(1.05);
+  }
+
+  /* Sheet Drag Handle (Hidden on Desktop, Visible on Mobile) */
+  .sheet-drag-handle {
+    display: none;
+    width: 100%;
+    padding: 8px 0 4px 0;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .sheet-drag-pill {
+    width: 42px;
+    height: 5px;
+    background: #ffffff;
+    border-radius: 999px;
+    opacity: 0.3;
+    pointer-events: none;
   }
 
   /* Segmented Control Bar */
@@ -560,37 +572,6 @@ import { generalEmail } from '../../settings/contact.config';
     color: #ffffff;
   }
 
-  /* Modal Footer */
-  .legal-modal-footer {
-    padding: 12px 16px;
-    background: #1c1c20;
-    border-top: 3px solid #000000;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .legal-footer-close-btn {
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    font-family: var(--font-secondary);
-    font-size: 0.8rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 8px 18px;
-    border-radius: 6px;
-    border: 2.5px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    cursor: pointer;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.16s ease;
-  }
-
-  .legal-footer-close-btn:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
-    background: #ffffff;
-  }
-
   @media (max-width: 480px) {
     .legal-tab-btn {
       font-size: 0.72rem;
@@ -605,22 +586,38 @@ import { generalEmail } from '../../settings/contact.config';
       padding: 0;
     }
 
-    .legal-modal-container {
+    .legal-sheet-wrapper {
       max-width: 100%;
-      max-height: 94vh;
-      max-height: 94dvh;
-      border-radius: 14px 14px 0 0;
-      border-bottom: none;
-      box-shadow: 0 -4px 0px #000000;
+      width: 100%;
+      gap: 10px;
+      padding: 0 0 max(10px, env(safe-area-inset-bottom)) 0;
       animation: legalSheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .legal-modal-container.is-closing {
+    .legal-sheet-wrapper.is-closing {
       animation: legalSheetSlideDown 0.22s ease forwards;
     }
 
-    .legal-modal-header {
-      border-radius: 14px 14px 0 0;
+    .sheet-floating-pill-header {
+      margin-bottom: 2px;
+      box-shadow: 2px 2px 0px #000000;
+    }
+
+    .sheet-drag-handle {
+      display: flex;
+    }
+
+    .legal-modal-container {
+      max-width: 100%;
+      max-height: 82vh;
+      max-height: 82dvh;
+      border-radius: 18px 18px 0 0;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+      border-top: 3px solid #000000;
+      box-shadow: 0 -4px 0px rgba(0, 0, 0, 0.35);
+      animation: none;
     }
 
     @keyframes legalSheetSlideUp {
@@ -650,7 +647,6 @@ import { generalEmail } from '../../settings/contact.config';
 <script>
   const legalModal = document.getElementById('legalModal');
   const closeLegalModalBtn = document.getElementById('closeLegalModalBtn');
-  const legalFooterCloseBtn = document.getElementById('legalFooterCloseBtn');
   const tabList = document.getElementById('legalTabList');
   const tabPrivacy = document.getElementById('legalTabPrivacy');
   const tabSubmissions = document.getElementById('legalTabSubmissions');
@@ -757,6 +753,128 @@ import { generalEmail } from '../../settings/contact.config';
     }, 50);
   }
 
+  // Delegated click listener for any legal modal triggers on the page
+  document.addEventListener('click', (e) => {
+    const trigger = (e.target as HTMLElement)?.closest?.('#openLegalFooterBtn, .open-legal-trigger, [data-open-legal]');
+    if (trigger) {
+      e.preventDefault();
+      const targetTab = (trigger.getAttribute('data-legal-tab') as 'privacy' | 'submissions') || 'privacy';
+      openLegalModal(targetTab);
+    }
+  });
+
+  // Swipe-to-Dismiss Bottom Sheet Gestures
+  const legalSheetWrapper = document.getElementById('legalSheetWrapper');
+  const legalDragHandle = document.getElementById('legalDragHandle');
+  const legalFloatingPill = document.getElementById('legalFloatingPillHeader');
+  const legalModalBody = document.getElementById('legalModalBody');
+
+  function setupBottomSheetGestures() {
+    if (!legalModal || !legalSheetWrapper) return;
+
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let isTouchActive = false;
+    let startedFromTop = false;
+
+    // Direct handle touch (always allows dragging down)
+    const onHandleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+      currentY = startY;
+      isDragging = true;
+      isTouchActive = true;
+      startedFromTop = true;
+    };
+
+    // Body content touch (ONLY allows dragging when at the absolute top of text)
+    const onBodyTouchStart = (e: TouchEvent) => {
+      if (legalModalBody && legalModalBody.scrollTop <= 0) {
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        isDragging = false; // require movement threshold
+        isTouchActive = true;
+        startedFromTop = true;
+      } else {
+        startedFromTop = false;
+        isDragging = false;
+        isTouchActive = false;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isTouchActive || !startedFromTop || !legalSheetWrapper) return;
+
+      // Ensure content hasn't been scrolled down; if scrolled down, never drag sheet
+      if (legalModalBody && legalModalBody.scrollTop > 0) {
+        if (isDragging) {
+          isDragging = false;
+          legalSheetWrapper.style.transform = '';
+        }
+        return;
+      }
+
+      const deltaY = e.touches[0].clientY - startY;
+
+      // Require a deadzone threshold of 10px downward when scrolling from body to prevent accidental triggers
+      if (deltaY > 10) {
+        isDragging = true;
+        if (e.cancelable) e.preventDefault();
+        const visualDelta = deltaY - 10;
+        legalSheetWrapper.style.transform = `translateY(${visualDelta}px)`;
+        legalSheetWrapper.style.transition = 'none';
+      } else {
+        if (isDragging) {
+          legalSheetWrapper.style.transform = '';
+        }
+      }
+      currentY = e.touches[0].clientY;
+    };
+
+    const onTouchEnd = () => {
+      if (!isTouchActive || !legalSheetWrapper) return;
+      isTouchActive = false;
+      startedFromTop = false;
+
+      if (!isDragging) return;
+      isDragging = false;
+
+      const deltaY = currentY - startY;
+      legalSheetWrapper.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+
+      // Must be pulled down at least 80px when at the top to dismiss
+      if (deltaY > 80) {
+        legalSheetWrapper.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+          finishClose();
+          if (legalSheetWrapper) legalSheetWrapper.style.transform = '';
+        }, 180);
+      } else {
+        legalSheetWrapper.style.transform = '';
+      }
+    };
+
+    if (legalDragHandle) {
+      legalDragHandle.addEventListener('touchstart', onHandleTouchStart, { passive: false });
+      legalDragHandle.addEventListener('touchmove', onTouchMove, { passive: false });
+      legalDragHandle.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
+
+    if (legalFloatingPill) {
+      legalFloatingPill.addEventListener('touchstart', onHandleTouchStart, { passive: false });
+      legalFloatingPill.addEventListener('touchmove', onTouchMove, { passive: false });
+      legalFloatingPill.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
+
+    if (legalModalBody) {
+      legalModalBody.addEventListener('touchstart', onBodyTouchStart, { passive: true });
+      legalModalBody.addEventListener('touchmove', onTouchMove, { passive: false });
+      legalModalBody.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
+  }
+
+  setupBottomSheetGestures();
+
   // Keyboard navigation for ARIA Tablist (ArrowLeft / ArrowRight / Home / End)
   tabList?.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
@@ -777,7 +895,6 @@ import { generalEmail } from '../../settings/contact.config';
   tabSubmissions?.addEventListener('click', () => setActiveTab('submissions'));
 
   closeLegalModalBtn?.addEventListener('click', hideLegalModal);
-  legalFooterCloseBtn?.addEventListener('click', hideLegalModal);
 
   legalModal?.addEventListener('click', (e) => {
     if (e.target === legalModal) hideLegalModal();

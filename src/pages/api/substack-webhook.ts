@@ -1,9 +1,28 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { getSupabaseServiceClient } from '../../lib/supabaseServer';
 import { validateRealEmail } from '../../scripts/utils/emailValidator.js';
 import { removeSubscriberRole, getDiscordConfig } from '../../lib/discord';
 
 export const prerender = false;
+
+const SubstackWebhookSchema = z.object({
+  email: z.string().max(254).optional(),
+  data: z.object({
+    email: z.string().max(254).optional(),
+    subscriber: z.object({ email: z.string().max(254).optional() }).optional()
+  }).optional(),
+  subscriber: z.object({ email: z.string().max(254).optional() }).optional(),
+  record: z.object({ email: z.string().max(254).optional() }).optional(),
+  user: z.object({ email: z.string().max(254).optional() }).optional(),
+  payload: z.object({ email: z.string().max(254).optional() }).optional(),
+  event: z.string().max(100).optional(),
+  type: z.string().max(100).optional(),
+  event_type: z.string().max(100).optional(),
+  action: z.string().max(100).optional(),
+  discordId: z.string().max(50).optional(),
+  discordUsername: z.string().max(50).optional()
+}).passthrough();
 
 /**
  * Handles Unsubscribe Webhook events from Substack, Zapier, or custom services.
@@ -31,7 +50,16 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    const body = await request.json().catch(() => ({}));
+    const rawBody = await request.json().catch(() => ({}));
+    const parsed = SubstackWebhookSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return new Response(
+        JSON.stringify({ status: 'error', message: 'Invalid webhook payload structure.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const body = parsed.data;
 
     // Extract email from diverse webhook structures (Substack, Zapier, Make, custom)
     const rawEmail =

@@ -888,6 +888,21 @@ export function initMetronome() {
   });
 }
 
+export function teardownMetronome() {
+  stopEverything();
+  disconnectMidi();
+  if (engine) {
+    try {
+      if (engine.ctx && engine.ctx.state !== 'closed') {
+        engine.ctx.close().catch(() => {});
+      }
+    } catch (e) {}
+  }
+  initialized = false;
+}
+
+
+
 /* ---------- metrodebug diagnostics chip ----------
    Dev-only scheduler health readout next to the window.__metroDebug test
    hook. Deliberately inline-styled and self-contained so it ships zero

@@ -573,3 +573,18 @@ export function initTuner() {
     }
   });
 }
+
+export function teardownTuner() {
+  stopEverything();
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  if (engine) {
+    try {
+      engine.stop();
+    } catch (e) {}
+  }
+  initialized = false;
+}
+

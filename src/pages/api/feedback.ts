@@ -1,12 +1,41 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
+import {
+  getNotifyConfig,
+  sendNotifyEmail,
+  generateBrutalistEmailHtml,
+  type BrutalistField,
+  type EmailAttachment
+} from '../../lib/notifyEmail';
 
 export const prerender = false;
 
 const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
 
-function getWebhookUrl(feedbackType: string): string {
+const FeedbackRequestSchema = z.object({
+  feedback: z.object({
+    type: z.string().max(60).optional(),
+    category: z.string().max(80).optional(),
+    user_message: z.string().max(2000).optional(),
+    details: z.string().max(2000).optional(),
+    contact: z.string().max(200).optional()
+  }).optional(),
+  feedbackType: z.string().max(60).optional(),
+  category: z.string().max(80).optional(),
+  details: z.string().max(2000).optional(),
+  contact: z.string().max(200).optional(),
+  viewportWithDpr: z.string().max(100).optional(),
+  viewport: z.string().max(100).optional(),
+  environment: z.string().max(150).optional(),
+  url: z.string().max(400).optional(),
+  formattedDate: z.string().max(60).optional(),
+  lastError: z.string().max(600).optional(),
+  screenshotDataUrl: z.string().max(3_000_000).optional()
+});
+
+function getDiscordWebhookUrl(feedbackType: string): string {
   const env = (name: string): string =>
     (import.meta.env[name] as string | undefined) || process.env[name] || '';
 
@@ -32,11 +61,13 @@ export const POST: APIRoute = async ({ request }) => {
       return jsonError('Too many requests. Please try again in a minute.', 429);
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== 'object') {
-      return jsonError('Invalid payload.', 400);
+    const rawBody = await request.json().catch(() => null);
+    const parsed = FeedbackRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return jsonError('Invalid feedback payload.', 400);
     }
 
+    const body = parsed.data;
     const feedback = body.feedback || {};
     const feedbackType = sanitizeText(
       feedback.type || body.feedbackType || 'Improvement / Idea',
@@ -59,50 +90,28 @@ export const POST: APIRoute = async ({ request }) => {
     const formattedDate = sanitizeText(body.formattedDate || new Date().toISOString(), 40);
     const lastError = sanitizeText(body.lastError || '', 500);
 
-    // Route to the correct Discord channel based on feedback type
+    // Determine prefix tag & badge styling
+    let subjectTypeTag = 'Improvement';
+    let badgeBg = '#f2fd43';
+    let badgeColor = '#000000';
     let embedColor = 0x3498db;
     let typeEmoji = '💡';
 
-    if (feedbackType.includes('Bug') || feedbackType === 'bug_report') {
+    if (feedbackType.toLowerCase().includes('bug') || feedbackType === 'bug_report') {
+      subjectTypeTag = 'Bug';
+      badgeBg = '#ef4444';
+      badgeColor = '#ffffff';
       embedColor = 0xe74c3c;
       typeEmoji = '🐛';
-    } else if (feedbackType.includes('Content')) {
+    } else if (feedbackType.toLowerCase().includes('content')) {
+      subjectTypeTag = 'Content';
+      badgeBg = '#e67e22';
+      badgeColor = '#ffffff';
       embedColor = 0xe67e22;
       typeEmoji = '📝';
     }
 
-    const webhookUrl = getWebhookUrl(feedbackType);
-    if (!webhookUrl || !webhookUrl.startsWith('https://')) {
-      console.error('[feedback] No Discord feedback webhook configured for type:', feedbackType);
-      return jsonError('Feedback service is not available right now. Please try again later.', 503);
-    }
-
-    const descriptionLines = [
-      '**User Message:**',
-      `"${details}"`,
-      '',
-      `• **Category:** ${category}`,
-      `• **Submitter:** ${contact ? `\`${contact}\`` : '*Anonymous Fan*'}`,
-      `• **Viewport:** \`${viewport}\``,
-      `• **Environment:** ${environment}`,
-      `• **Date:** ${formattedDate}`
-    ];
-
-    if (lastError) {
-      descriptionLines.push(`• **Last Error:** \`${lastError}\``);
-    }
-
-    if (url && url !== 'https://kinsband.com') {
-      descriptionLines.push(`• **Page:** \`${url}\``);
-    }
-
-    const embed: Record<string, unknown> = {
-      title: `${typeEmoji} ${feedbackType}: ${category}`,
-      description: descriptionLines.join('\n').slice(0, 4000),
-      color: embedColor,
-      footer: { text: 'Kins Site Diagnostics' },
-      timestamp: new Date().toISOString()
-    };
+    const subject = `[Feedback][${subjectTypeTag}] ${category}`;
 
     // Optional screenshot attachment sent as data URL by the client
     const screenshotDataUrl =
@@ -112,43 +121,138 @@ export const POST: APIRoute = async ({ request }) => {
         ? body.screenshotDataUrl
         : null;
 
-    let discordRes: Response;
+    const attachments: EmailAttachment[] = [];
+    let screenshotExt = 'png';
+    let screenshotBase64 = '';
 
     if (screenshotDataUrl) {
       const [meta, base64] = screenshotDataUrl.split(',');
       const extMatch = meta.match(/image\/(png|jpe?g|webp)/);
-      const ext = extMatch ? extMatch[1].replace('jpeg', 'jpg') : 'png';
-      const buffer = Buffer.from(base64, 'base64');
+      screenshotExt = extMatch ? extMatch[1].replace('jpeg', 'jpg') : 'png';
+      screenshotBase64 = base64;
 
-      const formData = new FormData();
-      formData.append('payload_json', JSON.stringify({
-        username: 'Kins Website Feedback',
-        avatar_url: AVATAR_URL,
-        embeds: [{ ...embed, image: { url: `attachment://screenshot.${ext}` } }]
-      }));
-      formData.append('files[0]', new Blob([buffer]), `screenshot.${ext}`);
-
-      discordRes = await fetch(webhookUrl, { method: 'POST', body: formData });
-    } else {
-      discordRes = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: 'Kins Website Feedback',
-          avatar_url: AVATAR_URL,
-          embeds: [embed]
-        })
+      attachments.push({
+        filename: `screenshot.${screenshotExt}`,
+        content: base64,
+        contentType: `image/${screenshotExt}`
       });
     }
 
-    if (!discordRes.ok) {
-      const resText = await discordRes.text().catch(() => '');
-      console.error('[feedback] Discord webhook failed:', discordRes.status, resText.slice(0, 200));
-      return jsonError("Couldn't deliver your feedback. Please try again later.", 502);
+    const fields: BrutalistField[] = [
+      { label: 'Category', value: category },
+      { label: 'Submitter', value: contact || 'Anonymous Fan', isCode: !!contact },
+      { label: 'Viewport', value: viewport, isCode: true },
+      { label: 'Environment', value: environment },
+      { label: 'Timestamp', value: formattedDate }
+    ];
+
+    if (url && url !== 'https://kinsband.com') {
+      fields.push({ label: 'Page URL', value: url, isLink: true, linkHref: url });
     }
 
+    if (lastError) {
+      fields.push({ label: 'Last Error', value: lastError, isCode: true });
+    }
+
+    if (attachments.length > 0) {
+      fields.push({ label: 'Attachment', value: `screenshot.${screenshotExt} (Attached to email)` });
+    }
+
+    const html = generateBrutalistEmailHtml({
+      title: `${typeEmoji} Feedback: ${category}`,
+      badge: `FEEDBACK • ${subjectTypeTag.toUpperCase()}`,
+      badgeBg,
+      badgeColor,
+      description: details,
+      fields,
+      footerNote: 'Kins Site Diagnostics'
+    });
+
+    const notifyConfig = getNotifyConfig();
+    const discordWebhookUrl = getDiscordWebhookUrl(feedbackType);
+
+    if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
+      console.error('[feedback] Neither Resend API key nor Discord webhook is configured.');
+      return jsonError('Feedback service is not available right now. Please try again later.', 503);
+    }
+
+    let emailDelivered = false;
+
+    // 1. Primary: Send structured HTML email via Resend
+    if (notifyConfig.resendApiKey) {
+      const isContactEmail = contact.includes('@') && !contact.includes(' ');
+      const emailResult = await sendNotifyEmail({
+        subject,
+        html,
+        text: `[Feedback: ${subjectTypeTag}] ${category}\n\nSubmitter: ${contact || 'Anonymous'}\n\nMessage:\n${details}\n\nViewport: ${viewport}\nEnvironment: ${environment}\nDate: ${formattedDate}`,
+        replyTo: isContactEmail ? contact : undefined,
+        attachments: attachments.length > 0 ? attachments : undefined
+      });
+
+      emailDelivered = emailResult.ok;
+      if (!emailDelivered) {
+        console.warn('[feedback] Resend email delivery failed:', emailResult.error);
+      }
+    }
+
+    // 2. Secondary fallback: Send Discord webhook if configured
+    if (discordWebhookUrl && discordWebhookUrl.startsWith('https://')) {
+      try {
+        const descriptionLines = [
+          '**User Message:**',
+          `"${details}"`,
+          '',
+          `• **Category:** ${category}`,
+          `• **Submitter:** ${contact ? `\`${contact}\`` : '*Anonymous Fan*'}`,
+          `• **Viewport:** \`${viewport}\``,
+          `• **Environment:** ${environment}`,
+          `• **Date:** ${formattedDate}`
+        ];
+
+        if (lastError) descriptionLines.push(`• **Last Error:** \`${lastError}\``);
+        if (url && url !== 'https://kinsband.com') descriptionLines.push(`• **Page:** \`${url}\``);
+
+        const embed = {
+          title: `${typeEmoji} ${feedbackType}: ${category}`,
+          description: descriptionLines.join('\n').slice(0, 4000),
+          color: embedColor,
+          footer: { text: 'Kins Site Diagnostics' },
+          timestamp: new Date().toISOString()
+        };
+
+        if (screenshotDataUrl && screenshotBase64) {
+          const buffer = Buffer.from(screenshotBase64, 'base64');
+          const formData = new FormData();
+          formData.append('payload_json', JSON.stringify({
+            username: 'Kins Website Feedback',
+            avatar_url: AVATAR_URL,
+            embeds: [{ ...embed, image: { url: `attachment://screenshot.${screenshotExt}` } }]
+          }));
+          formData.append('files[0]', new Blob([buffer]), `screenshot.${screenshotExt}`);
+
+          await fetch(discordWebhookUrl, { method: 'POST', body: formData }).catch(() => {});
+        } else {
+          await fetch(discordWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: 'Kins Website Feedback',
+              avatar_url: AVATAR_URL,
+              embeds: [embed]
+            })
+          }).catch(() => {});
+        }
+      } catch (hookErr) {
+        console.warn('[feedback] Discord webhook fallback failed:', hookErr);
+      }
+    }
+
+    // If Resend was configured or Discord succeeded, treat as received
     return new Response(
-      JSON.stringify({ status: 'success', message: 'Feedback received! Thank you for helping Kins improve the site.' }),
+      JSON.stringify({
+        status: 'success',
+        message: 'Feedback received! Thank you for helping Kins improve the site.'
+      }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (err) {

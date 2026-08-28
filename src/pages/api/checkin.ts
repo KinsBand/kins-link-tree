@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
 import { getSupabaseServiceClient } from '../../lib/supabaseServer';
@@ -7,6 +8,16 @@ export const prerender = false;
 
 const GIG_ID_RE = /^[a-zA-Z0-9_-]{1,60}$/;
 const DEVICE_RE = /^[0-9a-f-]{36}$/i;
+
+const PassportGetQuerySchema = z.object({
+  deviceId: z.string().regex(DEVICE_RE, 'Invalid device identity')
+});
+
+const CheckinPostBodySchema = z.object({
+  gigId: z.string().regex(GIG_ID_RE, 'Invalid show reference'),
+  deviceId: z.string().regex(DEVICE_RE, 'Invalid device identity'),
+  email: z.string().max(200).optional().default('')
+});
 
 const BADGE_DEFS: Record<string, { label: string; test: (ctx: BadgeCtx) => boolean }> = {
   FIRST_SHOW: {
@@ -85,10 +96,15 @@ export const GET: APIRoute = async ({ request, url }) => {
       return json({ status: 'error', message: 'Too many requests.' }, 429);
     }
 
-    const deviceId = sanitizeText(url.searchParams.get('deviceId') || '', 40);
-    if (!DEVICE_RE.test(deviceId)) {
+    const parsed = PassportGetQuerySchema.safeParse({
+      deviceId: url.searchParams.get('deviceId') || ''
+    });
+
+    if (!parsed.success) {
       return json({ status: 'error', message: 'Invalid device identity.' }, 400);
     }
+
+    const deviceId = parsed.data.deviceId;
 
     const supabase = getSupabaseServiceClient();
     if (!supabase) return json({ status: 'error', message: 'Passport unavailable.' }, 503);
@@ -114,15 +130,16 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ status: 'error', message: 'Slow down a moment.' }, 429);
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== 'object') return json({ status: 'error', message: 'Invalid payload.' }, 400);
+    const rawBody = await request.json().catch(() => null);
+    const parsed = CheckinPostBodySchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return json({ status: 'error', message: 'Invalid check-in payload.' }, 400);
+    }
 
-    const gigId = sanitizeText(String(body.gigId || ''), 60);
-    const deviceId = sanitizeText(String(body.deviceId || ''), 40);
-    const email = sanitizeText(String(body.email || ''), 200);
-
-    if (!GIG_ID_RE.test(gigId)) return json({ status: 'error', message: 'Invalid show reference.' }, 400);
-    if (!DEVICE_RE.test(deviceId)) return json({ status: 'error', message: 'Invalid device identity.' }, 400);
+    const { gigId: rawGigId, deviceId: rawDeviceId, email: rawEmail } = parsed.data;
+    const gigId = sanitizeText(rawGigId, 60);
+    const deviceId = sanitizeText(rawDeviceId, 40);
+    const email = sanitizeText(rawEmail, 200);
 
     const supabase = getSupabaseServiceClient();
     if (!supabase) return json({ status: 'error', message: 'Check-in service unavailable.' }, 503);
