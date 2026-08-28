@@ -72,11 +72,11 @@ export const POST: APIRoute = async ({ request }) => {
     const discordWebhookUrl = getDiscordWebhookUrl();
 
     if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
-      console.error('[community-submission] Neither Resend API key nor Discord webhook is configured.');
-      return jsonResponse(
-        { status: 'error', message: 'Clip submission service is not available right now.' },
-        503
-      );
+      console.warn('[community-submission] Received clip submission (Note: RESEND_API_KEY and Discord webhooks not configured in env):', {
+        category,
+        title,
+        clipUrl
+      });
     }
 
     const subject = `[Community Clip][${category}] ${title || 'Untitled'}`;

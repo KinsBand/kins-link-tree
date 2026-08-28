@@ -180,8 +180,11 @@ export const POST: APIRoute = async ({ request }) => {
     const discordWebhookUrl = getDiscordWebhookUrl(feedbackType);
 
     if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
-      console.error('[feedback] Neither Resend API key nor Discord webhook is configured.');
-      return jsonError('Feedback service is not available right now. Please try again later.', 503);
+      console.warn('[feedback] Received feedback submission (Note: RESEND_API_KEY and Discord webhooks not configured in env):', {
+        category,
+        feedbackType,
+        details: details.slice(0, 100)
+      });
     }
 
     let emailDelivered = false;

@@ -68,11 +68,11 @@ export const POST: APIRoute = async ({ request }) => {
     const discordWebhookUrl = getDiscordWebhookUrl();
 
     if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
-      console.error('[request-song] Neither Resend API key nor Discord webhook is configured.');
-      return jsonResponse(
-        { status: 'error', message: 'Cover request service is not available right now.' },
-        503
-      );
+      console.warn('[request-song] Received cover request (Note: RESEND_API_KEY and Discord webhooks not configured in env):', {
+        songTitle,
+        artist,
+        email
+      });
     }
 
     const subject = `[Cover Request] ${songTitle} - ${artist}`;
