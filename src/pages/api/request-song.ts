@@ -14,6 +14,26 @@ import {
 
 export const prerender = false;
 
+const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
+
+function getDiscordWebhookUrl(): string {
+  const env = (name: string): string => {
+    if (typeof process !== 'undefined' && process.env && process.env[name]) {
+      return String(process.env[name]).replace(/^["']|["']$/g, '').trim();
+    }
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[name]) {
+      return String(import.meta.env[name]).replace(/^["']|["']$/g, '').trim();
+    }
+    return '';
+  };
+
+  return (
+    env('DISCORD_REQUEST_SONG_WEBHOOK_URL') ||
+    env('DISCORD_COVER_REQUEST_WEBHOOK_URL') ||
+    env('DISCORD_COVERS_WEBHOOK_URL') ||
+    env('DISCORD_WEBHOOK_URL')
+  );
+}
 
 const RequestSongSchema = z.object({
   songTitle: z.string().min(1).max(120),
@@ -148,16 +168,67 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
+    // 2. Secondary: Send Discord webhook if configured
+    let discordDelivered = false;
+    const discordWebhookUrl = getDiscordWebhookUrl();
+    if (discordWebhookUrl && discordWebhookUrl.startsWith('https://')) {
+      try {
+        const discordPayload = {
+          username: 'Kins Cover Request System',
+          avatar_url: AVATAR_URL,
+          embeds: [
+            {
+              title: '🎵 New Cover Song Request',
+              color: isSubscribed ? 0xf2fd43 : 0x5865f2,
+              fields: [
+                { name: 'Song Title', value: `**${songTitle}**`, inline: true },
+                { name: 'Original Artist', value: `**${artist}**`, inline: true },
+                {
+                  name: 'Fan Status',
+                  value: isSubscribed
+                    ? '✅ **Subscribed Fan** (Notified via Substack)'
+                    : '👤 Guest / Unsubscribed',
+                  inline: true
+                },
+                { name: 'Why should Kins cover this?', value: reason, inline: false },
+                { name: 'Contact Email', value: email === 'Not provided' ? 'Not provided' : `\`${email}\``, inline: false }
+              ],
+              footer: {
+                text: `Kins Cover Request System • Forwarded to ${generalEmail}`
+              },
+              timestamp: new Date().toISOString()
+            }
+          ]
+        };
+
+        const res = await fetch(discordWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(discordPayload)
+        });
+        discordDelivered = res.ok;
+      } catch (hookErr) {
+        console.warn('[request-song] Discord webhook dispatch failed:', hookErr);
+      }
+    }
+
     console.info('[request-song] Processed —', {
       songTitle,
       artist,
       emailDelivered,
+      discordDelivered,
+      discordConfigured: !!(discordWebhookUrl && discordWebhookUrl.startsWith('https://')),
       dbPersisted,
       notifyEmail: notifyConfig.notifyEmail
     });
 
     return jsonResponse(
-      { status: 'success', message: 'Cover request received!', delivered: emailDelivered || dbPersisted },
+      {
+        status: 'success',
+        message: 'Cover request received!',
+        delivered: emailDelivered || discordDelivered || dbPersisted,
+        channel: emailDelivered ? 'email' : discordDelivered ? 'discord' : dbPersisted ? 'database' : 'logged'
+      },
       200
     );
   } catch (err) {

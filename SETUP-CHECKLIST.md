@@ -91,12 +91,12 @@ Then on the preview URL check, in order:
 - [ ] Share modal QR points at current domain
 - [ ] DevTools console: zero CSP violation reports (note any that appear)
 
-## 6. Google One Tap test (preview URL, not localhost)
+## 6. Google One Tap & Subscription test (preview URL, not localhost)
 
 FedCM suppresses One Tap on localhost. On the Vercel preview:
 - If no prompt appears: Chrome address-bar lock icon → **Site settings → Reset permissions**, reload
 - Sign in → verify session survives a hard reload (Subscribed state persists)
-- "Subscribe another email" → signs out cleanly, prompt can reappear
+- Coming soon badge & notifications indicate launch readiness cleanly
 
 ## 7. Performance baseline (record & keep)
 

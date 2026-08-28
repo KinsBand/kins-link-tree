@@ -14,6 +14,43 @@ import {
 
 export const prerender = false;
 
+const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
+
+function getDiscordWebhookUrl(feedbackType: string): string {
+  const env = (name: string): string => {
+    if (typeof process !== 'undefined' && process.env && process.env[name]) {
+      return String(process.env[name]).replace(/^["']|["']$/g, '').trim();
+    }
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[name]) {
+      return String(import.meta.env[name]).replace(/^["']|["']$/g, '').trim();
+    }
+    return '';
+  };
+
+  const typeLower = (feedbackType || '').toLowerCase();
+  if (typeLower.includes('bug') || typeLower.includes('broken')) {
+    return (
+      env('DISCORD_FEEDBACK_WEBHOOK_BUG') ||
+      env('DISCORD_FEEDBACK_BUG_WEBHOOK_URL') ||
+      env('DISCORD_FEEDBACK_WEBHOOK_URL') ||
+      env('DISCORD_WEBHOOK_URL')
+    );
+  }
+  if (typeLower.includes('content') || typeLower.includes('typo')) {
+    return (
+      env('DISCORD_FEEDBACK_WEBHOOK_CONTENT') ||
+      env('DISCORD_FEEDBACK_CONTENT_WEBHOOK_URL') ||
+      env('DISCORD_FEEDBACK_WEBHOOK_URL') ||
+      env('DISCORD_WEBHOOK_URL')
+    );
+  }
+  return (
+    env('DISCORD_FEEDBACK_WEBHOOK_IMPROVEMENT') ||
+    env('DISCORD_FEEDBACK_IMPROVEMENT_WEBHOOK_URL') ||
+    env('DISCORD_FEEDBACK_WEBHOOK_URL') ||
+    env('DISCORD_WEBHOOK_URL')
+  );
+}
 
 const FeedbackRequestSchema = z.object({
   feedback: z.object({
@@ -229,12 +266,73 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
+    // 2. Dispatch to Discord Webhook
+    let discordDelivered = false;
+    const discordWebhookUrl = getDiscordWebhookUrl(feedbackType);
+    if (discordWebhookUrl && discordWebhookUrl.startsWith('https://')) {
+      try {
+        const descriptionLines = [
+          '**User Message:**',
+          `"${details}"`,
+          '',
+          `• **Category:** ${category}`,
+          `• **Submitter:** ${contact ? `\`${contact}\`` : '*Anonymous Fan*'}`,
+          `• **Viewport:** \`${viewport}\``,
+          `• **Environment:** ${environment}`,
+          `• **Date:** ${formattedDate}`
+        ];
+
+        if (lastError) descriptionLines.push(`• **Last Error:** \`${lastError}\``);
+        if (url && url !== 'https://kinsband.com') descriptionLines.push(`• **Page:** \`${url}\``);
+
+        const embed = {
+          title: `${typeEmoji} ${feedbackType}: ${category}`,
+          description: descriptionLines.join('\n').slice(0, 4000),
+          color: embedColor,
+          footer: { text: 'Kins Site Diagnostics' },
+          timestamp: new Date().toISOString()
+        };
+
+        if (screenshotDataUrl && screenshotBase64) {
+          const buffer = Buffer.from(screenshotBase64, 'base64');
+          const formData = new FormData();
+          formData.append(
+            'payload_json',
+            JSON.stringify({
+              username: 'Kins Website Feedback',
+              avatar_url: AVATAR_URL,
+              embeds: [{ ...embed, image: { url: `attachment://screenshot.${screenshotExt}` } }]
+            })
+          );
+          formData.append('files[0]', new Blob([buffer]), `screenshot.${screenshotExt}`);
+
+          const res = await fetch(discordWebhookUrl, { method: 'POST', body: formData });
+          discordDelivered = res.ok;
+        } else {
+          const res = await fetch(discordWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: 'Kins Website Feedback',
+              avatar_url: AVATAR_URL,
+              embeds: [embed]
+            })
+          });
+          discordDelivered = res.ok;
+        }
+      } catch (hookErr) {
+        console.warn('[feedback] Discord webhook dispatch failed:', hookErr);
+      }
+    }
+
     // Always return success to user; server logs capture delivery health
     console.info('[feedback] Submission processed —', {
       category,
       feedbackType,
       hasScreenshot: attachments.length > 0,
       emailDelivered,
+      discordDelivered,
+      discordConfigured: !!(discordWebhookUrl && discordWebhookUrl.startsWith('https://')),
       dbPersisted,
       notifyEmail: notifyConfig.notifyEmail
     });
@@ -243,8 +341,8 @@ export const POST: APIRoute = async ({ request }) => {
       JSON.stringify({
         status: 'success',
         message: 'Feedback received! Thank you for helping Kins improve the site.',
-        delivered: emailDelivered || dbPersisted,
-        channel: emailDelivered ? 'email' : dbPersisted ? 'database' : 'logged'
+        delivered: emailDelivered || discordDelivered || dbPersisted,
+        channel: emailDelivered ? 'email' : discordDelivered ? 'discord' : dbPersisted ? 'database' : 'logged'
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

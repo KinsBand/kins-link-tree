@@ -126,7 +126,7 @@ export function initSubscribeBell() {
           setTimeout(() => emailInput.focus(), 500);
         }
 
-        showToast("Enter your email to subscribe to Kins updates!");
+        showToast("Fan club subscription is coming soon! Stay tuned.", 'info');
       } else {
         // Active State (Subscribed) -> Scroll to section; user must press the Unsubscribe button to opt out
         const subscribeFormSection = document.getElementById('subscribeFormSection');

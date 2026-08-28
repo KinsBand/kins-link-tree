@@ -12,14 +12,14 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
       <div class="subscribe-header">
         <div class="subscribe-title-row">
           <h3>Subscribe to Kins!</h3>
-          <span class="est-time-pill">1-Tap</span>
+          <span class="est-time-pill coming-soon-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> Coming Soon</span>
         </div>
-        <p class="subscribe-subtext">Receive new music, behind-the-scenes & gig drops.</p>
+        <p class="subscribe-subtext">Fan club & newsletter drops launching soon. Stay tuned!</p>
       </div>
 
       <!-- 1-Tap Social Auth Row -->
       <div class="social-auth-row">
-        <button type="button" class="social-auth-btn google-auth-btn" id="googleAuthBtn" aria-label="Subscribe with Google">
+        <button type="button" class="social-auth-btn google-auth-btn" id="googleAuthBtn" aria-label="Subscribe with Google (Coming Soon)">
           <div class="google-btn-left">
             <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
@@ -29,9 +29,8 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
             </svg>
             <span class="google-btn-title">Google</span>
           </div>
-          <div class="google-btn-details" aria-label="Permissions: Name and Email">
-            <span class="google-detail-tag"><i class="fa-solid fa-check check-icon" aria-hidden="true"></i>Name</span>
-            <span class="google-detail-tag"><i class="fa-solid fa-check check-icon" aria-hidden="true"></i>Email</span>
+          <div class="google-btn-details" aria-label="Coming Soon">
+            <span class="google-detail-tag coming-soon-tag"><i class="fa-regular fa-clock" aria-hidden="true"></i>Coming Soon</span>
           </div>
         </button>
       </div>
@@ -50,15 +49,14 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
             type="text"
             name="email"
             id="emailInput"
-            placeholder="Enter your email..."
-            required
+            placeholder="Fan club drops launching soon..."
             autocomplete="email"
             inputmode="email"
             autocapitalize="none"
             spellcheck="false"
           />
-          <button type="submit" id="subscribeSubmitBtn" class="unified-join-btn" aria-label="Join Kins Fan Club">
-            <span>JOIN ➔</span>
+          <button type="submit" id="subscribeSubmitBtn" class="unified-join-btn" aria-label="Join Kins Fan Club (Coming Soon)">
+            <span>SOON ➔</span>
           </button>
         </div>
 
@@ -81,10 +79,6 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
           <i class="fa-solid fa-envelope-open-text"></i>
           <span>Open Email App</span>
         </a>
-        <button type="button" id="subscribeAgainBtn" class="subscribe-again-btn brutal-press">
-          <i class="fa-solid fa-plus"></i>
-          <span>Subscribe Another Email</span>
-        </button>
       </div>
     </div>
 
@@ -820,36 +814,20 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     color: #000000;
   }
 
-  .subscribe-again-btn {
-    background: var(--surface-card-light-hover);
-    border: 2px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    color: var(--text-card-primary);
-    font-family: var(--font-secondary);
-    font-size: 0.76rem;
-    font-weight: 800;
-    padding: 7px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
-  }
-
-  .subscribe-again-btn:hover {
-    background: var(--accent-neon-yellow);
+  .coming-soon-pill {
+    background: var(--btn-brand-primary, #f2fd43);
     color: #000000;
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
+    font-weight: 900;
+    gap: 5px;
+    text-transform: uppercase;
   }
 
-  .subscribe-again-btn:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px #000000;
+  .coming-soon-tag {
+    background: var(--surface-card-panel, var(--surface-card-light));
+    color: var(--text-card-secondary);
+    font-weight: 800;
+    font-size: 0.70rem;
+    padding: 2px 7px;
   }
 
   .official-contacts-block {
@@ -1115,7 +1093,6 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
   const formContainer = document.getElementById('subscribeFormContainer');
   const successContainer = document.getElementById('subscribeSuccessContainer');
   const subscribeForm = document.getElementById('subscribeForm') as HTMLFormElement;
-  const subscribeAgainBtn = document.getElementById('subscribeAgainBtn');
 
   function setSubscribedState(isSubbed: boolean) {
     if (isSubbed) {
@@ -1426,131 +1403,18 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     suggestionsList.addEventListener('wheel', handleSuggestionsWheel, { passive: false });
   }
 
+  const googleAuthBtn = document.getElementById('googleAuthBtn');
+  googleAuthBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showToast('Fan club subscription is launching soon! Follow our socials for updates.', 'info');
+  });
+
   if (subscribeForm) {
     subscribeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const emailInput = document.getElementById('emailInput') as HTMLInputElement;
-      const submitBtn = subscribeForm.querySelector('button[type="submit"]') as HTMLButtonElement;
-
-      if (!emailInput || !emailInput.value) return;
-
-      const rawEmail = emailInput.value.trim();
-
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i>`;
-      }
-
-      // 1. Verify email syntax, reject throwaways/disposables, and verify real DNS MX reachability
-      const validation = await validateRealEmail(rawEmail);
-      if (!validation.valid) {
-        showToast(validation.error || "Please enter a valid, active email address.");
-        setInputCaretPosition(emailInput, 0);
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = `<span>JOIN ➔</span>`;
-        }
-        return;
-      }
-
-      const email = validation.cleanEmail!;
-
-      if (submitBtn) {
-        submitBtn.innerHTML = `<i class="fa-solid fa-compact-disc fa-spin"></i>`;
-      }
-
-      const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
-      const endpoint = `${baseUrl}/api/subscribe`;
-      const source = getReferralSource('website');
-
-      // 2. Dispatch to Server API endpoint
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, source }),
-        });
-        
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setSubscriptionState(true, email);
-          showToast(data.message || "You're subscribed! Check your inbox for your welcome email.");
-        } else {
-          // Server rejected the subscription — surface the real reason, keep the form usable
-          const data = await res.json().catch(() => ({}));
-          showToast(data.message || `Subscription failed (${res.status}). Please try again.`);
-        }
-      } catch (err) {
-        console.warn("Server API dispatch warning:", err);
-        showToast('Could not reach the subscription service. Please try again shortly.');
-      }
-
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>JOIN ➔</span>`;
-      }
+      showToast('Fan club subscription is launching soon! Follow our socials for updates.', 'info');
     });
   }
-
-  async function handleSubscribeAnother() {
-    setSubscriptionState(false);
-    setSubscribedState(false);
-    // End any Google/Supabase session and clear auto-select so One Tap can re-prompt cleanly
-    try {
-      const { signOutSocialAuth } = await loadSocialAuth();
-      await signOutSocialAuth();
-    } catch (err) {
-      console.warn('socialAuth sign-out unavailable:', err);
-    }
-
-    const emailInput = document.getElementById('emailInput') as HTMLInputElement;
-    if (emailInput) {
-      emailInput.value = '';
-      setTimeout(() => {
-        emailInput.focus();
-        setInputCaretPosition(emailInput, 0);
-      }, 100);
-    }
-
-    if (subscribeForm) {
-      const submitBtn = subscribeForm.querySelector('button[type="submit"]') as HTMLButtonElement;
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>JOIN ➔</span>`;
-      }
-    }
-
-    const subscribeFormSection = document.getElementById('subscribeFormSection');
-    if (subscribeFormSection) {
-      subscribeFormSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  }
-
-  if (subscribeAgainBtn) {
-    subscribeAgainBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      handleSubscribeAnother();
-    });
-  }
-
-  // Delegated fallback listener for dynamically rendered buttons
-  document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    const btn = target?.closest('#subscribeAgainBtn');
-    if (btn) {
-      e.preventDefault();
-      e.stopPropagation();
-      handleSubscribeAnother();
-    }
-  });
-
-  // Initialize Native 1-Tap Google GIS & Apple JS SDK (idle-time — after LCP)
-  scheduleIdle(() => {
-    loadSocialAuth()
-      .then((m) => m.initSocialAuth())
-      .catch((err) => console.warn('socialAuth init failed:', err));
-  });
 
   const openPrivacyFormBtn = document.getElementById('openPrivacyFormBtn');
 
