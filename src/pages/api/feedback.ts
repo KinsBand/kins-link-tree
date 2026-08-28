@@ -233,8 +233,9 @@ export const POST: APIRoute = async ({ request }) => {
     let emailDelivered = false;
 
     // 1. Primary: Send structured HTML email via Resend
+    // Strict email validation for replyTo — Discord handles like "@trai" must NOT be used (Resend 422)
     if (notifyConfig.resendApiKey) {
-      const isContactEmail = contact.includes('@') && !contact.includes(' ');
+      const isContactEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
       const emailResult = await sendNotifyEmail({
         subject,
         html,

@@ -54,13 +54,34 @@ export function getNotifyConfig(): NotifyConfig {
   const notifyEmail = (
     getEnv('NOTIFY_EMAIL') ||
     getEnv('HELLO_EMAIL') ||
+    getEnv('ADMIN_EMAIL') ||
     generalEmail ||
     'HelloKinsFan@gmail.com'
   ).trim();
 
-  const resendApiKey = getEnv('RESEND_API_KEY').trim();
-  const fromEmail = (getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>').trim();
-  const replyToEmail = (getEnv('RESEND_REPLY_TO') || notifyEmail).trim();
+  // RESEND_API_KEY is primary; also accept common alternates to avoid silent misconfig
+  const resendApiKey = (
+    getEnv('RESEND_API_KEY') ||
+    getEnv('RESEND_KEY') ||
+    getEnv('RESEND_TOKEN') ||
+    getEnv('RESEND_API_TOKEN')
+  ).trim();
+
+  const fromEmail = (
+    getEnv('RESEND_FROM_EMAIL') ||
+    getEnv('RESEND_FROM') ||
+    getEnv('FROM_EMAIL') ||
+    getEnv('RESEND_EMAIL_FROM') ||
+    'Kins Band <onboarding@resend.dev>'
+  ).trim();
+
+  const replyToEmail = (
+    getEnv('RESEND_REPLY_TO') ||
+    getEnv('RESEND_REPLY_TO_EMAIL') ||
+    getEnv('REPLY_TO') ||
+    notifyEmail
+  ).trim();
+
   const isSandbox = fromEmail.toLowerCase().includes('resend.dev');
   const hasResendKey = resendApiKey.length > 0 && resendApiKey.startsWith('re_');
 
@@ -146,14 +167,14 @@ export async function sendNotifyEmail(
     };
   }
 
-  // Sandbox mode note: onboarding@resend.dev can only deliver to the Resend account owner
-  // or verified recipients. If notifyEmail is external Gmail, this will 403 until a
-  // verified domain is added at https://resend.com/domains and RESEND_FROM_EMAIL is updated.
-  const effectiveFrom = config.isSandbox
-    ? config.fromEmail // keep display name if present, Resend accepts "Kins Band <onboarding@resend.dev>"
-    : config.fromEmail;
+  // Mirror welcome-email logic: sandbox must be bare onboarding@resend.dev
+  // (Resend example: "Acme <onboarding@resend.dev>" also works, but bare is most compatible)
+  const effectiveFrom = config.isSandbox ? 'onboarding@resend.dev' : config.fromEmail;
 
-  const replyTo = (options.replyTo || config.replyToEmail).trim();
+  // Validate reply_to — Resend 422s if not a real email. Fall back to config value if invalid.
+  const rawReplyTo = (options.replyTo || config.replyToEmail).trim();
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawReplyTo);
+  const replyTo = isValidEmail ? rawReplyTo : config.replyToEmail;
 
   const payload: Record<string, unknown> = {
     from: effectiveFrom,
@@ -216,9 +237,23 @@ export async function sendNotifyEmail(
         break;
       }
 
-      // 400/401/422: bad request or key invalid — do not retry
+      // 400/401/422: bad request or key invalid — try minimal payload once if 422 (often reply_to or attachment issue)
       if (res.status === 400 || res.status === 401 || res.status === 422) {
         console.warn(`[notifyEmail] Resend ${res.status} (bad request/auth) – check RESEND_API_KEY and payload:`, resText.slice(0, 400));
+        // One minimal retry for 422: strip optional fields that often cause validation failures (reply_to, text, attachments)
+        if (res.status === 422 && attempt === 1 && (payload.reply_to || payload.text || payload.attachments)) {
+          console.warn('[notifyEmail] Retrying with minimal payload (stripping reply_to/text/attachments) to isolate 422 cause...');
+          const minimal = { from: payload.from, to: payload.to, subject: payload.subject, html: payload.html };
+          // Overwrite payload for next loop iteration
+          (payload as Record<string, unknown>).reply_to = undefined;
+          delete (payload as Record<string, unknown>).reply_to;
+          delete (payload as Record<string, unknown>).text;
+          delete (payload as Record<string, unknown>).attachments;
+          // Keep from/to/subject/html
+          await sleep(300);
+          // Continue to next attempt (which will use minimal payload)
+          continue;
+        }
         break;
       }
 

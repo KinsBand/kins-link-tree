@@ -377,13 +377,13 @@ export const POST: APIRoute = async ({ request }) => {
       console.error('Discord role assignment error:', discordErr);
     }
 
-    // 3. Send Welcome Email via Resend
-    const resendApiKey = getEnv('RESEND_API_KEY').trim();
-    const fromEmail = (getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>').trim();
-    const replyToEmail = (getEnv('RESEND_REPLY_TO') || getEnv('RESEND_REPLY_TO_EMAIL') || 'HelloKinsFan@gmail.com').trim();
+    // 3. Send Welcome Email via Resend — use same config as feedback/cover for parity
     const notifyConfig = getNotifyConfig();
+    const resendApiKey = notifyConfig.resendApiKey;
+    const fromEmail = notifyConfig.fromEmail;
+    const replyToEmail = notifyConfig.replyToEmail;
 
-    const isSandboxFrom = fromEmail.toLowerCase().includes('resend.dev');
+    const isSandboxFrom = notifyConfig.isSandbox;
 
     if (resendApiKey) {
       try {

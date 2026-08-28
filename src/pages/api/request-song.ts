@@ -140,7 +140,7 @@ export const POST: APIRoute = async ({ request }) => {
       footerNote: `Kins Cover Request System • Forwarded to ${generalEmail}`
     });
 
-    const isContactEmail = email.includes('@') && !email.includes(' ');
+    const isContactEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     // 1. Primary: Send structured HTML email via Resend
     let emailDelivered = false;
