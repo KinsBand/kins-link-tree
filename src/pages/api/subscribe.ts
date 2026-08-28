@@ -377,74 +377,68 @@ export const POST: APIRoute = async ({ request }) => {
       console.error('Discord role assignment error:', discordErr);
     }
 
-    // 3. Send Welcome Email via Resend (if verified domain or testing to account owner)
+    // 3. Send Welcome Email via Resend
     const resendApiKey = getEnv('RESEND_API_KEY').trim();
     const fromEmail = (getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>').trim();
     const replyToEmail = (getEnv('RESEND_REPLY_TO') || getEnv('RESEND_REPLY_TO_EMAIL') || 'HelloKinsFan@gmail.com').trim();
     const notifyConfig = getNotifyConfig();
 
     const isSandboxFrom = fromEmail.toLowerCase().includes('resend.dev');
-    const isAccountOwnerRecipient = cleanEmail.toLowerCase() === notifyConfig.notifyEmail.toLowerCase();
 
     if (resendApiKey) {
-      if (isSandboxFrom && !isAccountOwnerRecipient) {
-        // Resend sandbox onboarding@resend.dev can only deliver to the account owner email
-        console.info(
-          `[Resend] Fan welcome email to ${cleanEmail} skipped: sending domain is currently in Resend sandbox mode (${fromEmail}). To send welcome emails to fans, verify a custom domain at https://resend.com/domains and set RESEND_FROM_EMAIL="Kins Band <newsletter@kinsband.com>".`
-        );
-      } else {
-        try {
-          const effectiveFrom = isSandboxFrom ? 'onboarding@resend.dev' : fromEmail;
-          console.info(`[Resend] Dispatching welcome email to ${cleanEmail} from ${effectiveFrom}`);
+      try {
+        const effectiveFrom = isSandboxFrom ? 'onboarding@resend.dev' : fromEmail;
+        console.info(`[Resend] Dispatching welcome email to ${cleanEmail} (from: ${effectiveFrom})...`);
 
-          const resendPayload: Record<string, unknown> = {
-            from: effectiveFrom,
-            to: [cleanEmail],
-            reply_to: replyToEmail,
-            subject: 'Welcome to the Kins Band Fan Club! 🎸✨',
-            html: generateWelcomeEmailHtml(cleanEmail)
-          };
+        const resendPayload: Record<string, unknown> = {
+          from: effectiveFrom,
+          to: [cleanEmail],
+          reply_to: replyToEmail,
+          subject: 'Welcome to the Kins Band Fan Club! 🎸✨',
+          html: generateWelcomeEmailHtml(cleanEmail)
+        };
 
-          const resendRes = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${resendApiKey}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(resendPayload)
-          });
+        const resendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(resendPayload)
+        });
 
-          if (resendRes.ok) {
-            welcomeEmailSent = true;
-            const resData = (await resendRes.json().catch(() => ({}))) as { id?: string };
-            console.info(`[Resend] Welcome email delivered successfully to ${cleanEmail} (ID: ${resData.id || 'OK'})`);
+        if (resendRes.ok) {
+          welcomeEmailSent = true;
+          const resData = (await resendRes.json().catch(() => ({}))) as { id?: string };
+          console.info(`[Resend] Welcome email delivered successfully to ${cleanEmail} (ID: ${resData.id || 'OK'})`);
 
-            // Mark welcome_email_sent = true in Supabase (ignore if column missing on legacy schema)
-            if (db) {
-              const upd = await db
-                .from('subscribers')
-                .update({ welcome_email_sent: true })
-                .eq('email', cleanEmail);
-              if (upd.error && upd.error.message?.includes('column "welcome_email_sent"')) {
-                console.warn('[Supabase] welcome_email_sent column missing — run supabase_schema_complete.sql');
-              }
-            }
-          } else {
-            const resendErrText = await resendRes.text().catch(() => '');
-            if (resendRes.status === 403) {
-              console.warn(
-                '[Resend] 403 Domain Restriction: Verify your custom domain at https://resend.com/domains and set RESEND_FROM_EMAIL to enable fan welcome emails.'
-              );
+          // Mark welcome_email_sent = true in Supabase
+          if (db) {
+            const upd = await db
+              .from('subscribers')
+              .update({ welcome_email_sent: true, updated_at: new Date().toISOString() })
+              .eq('email', cleanEmail);
+            if (upd.error) {
+              console.warn('[Supabase] Failed to mark welcome_email_sent = true:', upd.error.message);
             } else {
-              console.warn('Resend email delivery warning:', resendRes.status, resendErrText.slice(0, 200));
+              console.info(`[Supabase] Marked welcome_email_sent = true for ${cleanEmail}`);
             }
           }
-        } catch (emailErr) {
-          console.error('Resend dispatch error:', emailErr);
+        } else {
+          const resendErrText = await resendRes.text().catch(() => '');
+          if (resendRes.status === 403) {
+            console.warn(
+              `[Resend 403] Could not deliver welcome email to ${cleanEmail}: ${resendErrText.slice(0, 200)} — To send welcome emails to any fan address, add and verify your custom domain at https://resend.com/domains and set RESEND_FROM_EMAIL in Vercel environment variables.`
+            );
+          } else {
+            console.warn(`[Resend Error ${resendRes.status}] delivery failed:`, resendErrText.slice(0, 250));
+          }
         }
+      } catch (emailErr) {
+        console.error('[Resend Dispatch Error]:', emailErr);
       }
     } else {
-      console.info('[Resend] Skipped — RESEND_API_KEY not set.');
+      console.info('[Resend] Skipped — RESEND_API_KEY environment variable is not configured.');
     }
 
     // 4. Send internal notification email to NOTIFY_EMAIL & optional Discord webhook
