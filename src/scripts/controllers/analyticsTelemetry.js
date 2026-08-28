@@ -1,3 +1,5 @@
+import { initReferralTracker } from '../utils/referral.js';
+
 const TRACK_ATTR = 'data-track';
 const CONTAINER_ATTR = 'data-track-container';
 
@@ -20,6 +22,9 @@ export function trackEvent(name, props) {
 }
 
 export function initAnalyticsTelemetry() {
+  // Capture referral source (?ref=...) and clean URL immediately
+  initReferralTracker();
+
   if (initialized) return;
   initialized = true;
 

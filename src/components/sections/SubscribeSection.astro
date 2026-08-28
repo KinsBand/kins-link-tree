@@ -992,6 +992,7 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
 
   import { getSubscriptionState, setSubscriptionState } from '../../scripts/controllers/subscribeController.js';
   import { validateRealEmail } from '../../scripts/utils/emailValidator.js';
+  import { getReferralSource } from '../../scripts/utils/referral.js';
 
   // socialAuth pulls in the Supabase SDK (~200KB) — load it lazily so it never
   // competes with first paint. One shared promise avoids duplicate fetches.
@@ -1361,13 +1362,7 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
 
       const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
       const endpoint = `${baseUrl}/api/subscribe`;
-
-      let source = 'website';
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const ref = params.get('ref') || params.get('source') || params.get('utm_source') || params.get('src');
-        if (ref) source = ref.trim().slice(0, 50);
-      } catch (_) {}
+      const source = getReferralSource('website');
 
       // 2. Dispatch to Server API endpoint
       try {

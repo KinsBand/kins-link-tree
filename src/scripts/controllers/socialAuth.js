@@ -1,6 +1,7 @@
 import { showToast } from './toast.js';
 import { getSubscriptionState, setSubscriptionState } from './subscribeController.js';
 import { getSupabaseBrowserClient } from '../../lib/supabase';
+import { getReferralSource } from '../utils/referral.js';
 
 // Google OAuth Web Client ID (public by design — safe to expose)
 const GOOGLE_CLIENT_ID =
@@ -96,13 +97,8 @@ export async function submitSocialSubscription(email, name = '', avatar = '', so
 
   let resolvedSource = source;
   if (!resolvedSource) {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const ref = params.get('ref') || params.get('source') || params.get('utm_source') || params.get('src');
-      resolvedSource = ref ? `google_1tap:${ref.trim().slice(0, 40)}` : 'google_1tap';
-    } catch (_) {
-      resolvedSource = 'google_1tap';
-    }
+    const capturedRef = getReferralSource('');
+    resolvedSource = capturedRef ? `google_1tap:${capturedRef.slice(0, 40)}` : 'google_1tap';
   }
 
   const baseUrl =
