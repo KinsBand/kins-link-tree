@@ -56,6 +56,14 @@ export const GET: APIRoute = async ({ request, url }) => {
     const { data, error } = await query;
 
     if (error) {
+      if (
+        (error as any).code === 'PGRST205' ||
+        error.message?.includes('Could not find the table') ||
+        error.message?.includes('relation "public.fan_uploads" does not exist')
+      ) {
+        console.warn('[fan-wall] Table "fan_uploads" not initialized yet — returning empty items array.');
+        return json({ status: 'success', items: [] }, 200);
+      }
       console.error('[fan-wall] approved query failed:', error.message);
       return json({ status: 'error', message: 'Could not load fan wall media.' }, 502);
     }

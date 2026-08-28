@@ -58,7 +58,24 @@ async function loadPassportState(supabase: NonNullable<ReturnType<typeof getSupa
     .eq('device_id', deviceId)
     .order('created_at', { ascending: true });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (
+      (error as any).code === 'PGRST205' ||
+      error.message?.includes('Could not find the table') ||
+      error.message?.includes('relation "public.checkins" does not exist')
+    ) {
+      console.warn('[passport] Table "checkins" not initialized yet — returning empty passport state.');
+      return {
+        gigs: [],
+        totalGigs: 0,
+        ctx: { totalGigs: 0, newcastleCount: 0, distinctCities: 0 },
+        currentBadges: [],
+        allBadges: [],
+        earnedNow: []
+      };
+    }
+    throw new Error(error.message);
+  }
 
   const gigs = (checkins || []).map((row) => ({ gigId: row.gig_id, at: row.created_at }));
   const totalGigs = gigs.length;

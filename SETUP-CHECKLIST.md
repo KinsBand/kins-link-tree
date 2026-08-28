@@ -27,6 +27,9 @@ Project → **Settings → Environment Variables**. Add for Production + Preview
 | `PUBLIC_SUPABASE_URL` | Supabase Dashboard → Project Settings → API → Project URL |
 | `PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → API → anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → API → service_role key (**server secret**) |
+| `RESEND_API_KEY` | Resend Dashboard → API Keys → Create API Key |
+| `RESEND_FROM_EMAIL` | e.g. `Kins Band <newsletter@kinsband.com>` (requires verified domain at resend.com/domains) or default sandbox `onboarding@resend.dev` |
+| `NOTIFY_EMAIL` | Admin email to receive subscriber/feedback alerts (e.g. `HelloKinsFan@gmail.com`) |
 | `DISCORD_WEBHOOK_URL` | rotated subscribers webhook |
 | `DISCORD_FEEDBACK_WEBHOOK_IMPROVEMENT` | rotated #improvement webhook |
 | `DISCORD_FEEDBACK_WEBHOOK_BUG` | rotated #bug webhook |
@@ -61,15 +64,14 @@ Content-Type: application/json
 **Verify:** curl without the header → `401`; with it → `200 {"status":"success"...}`
 and the Discord alert fires.
 
-## 4. Run the database migration
+## 4. Run the database migration (All-in-One)
 
 Supabase Dashboard → **SQL Editor → New query** → paste all of
-`supabase_rls_hardening.sql` → Run.
+`supabase_schema_complete.sql` → **Run (Ctrl+Enter / Cmd+Enter)**.
 
-It removes public INSERT on `subscribers` and adds DB-enforced length caps on
-`live_chat`. The file ends with verification queries — run those too.
+This creates all required tables (`subscribers`, `votes`, `checkins`, `player_state`, `fan_uploads`, `qr_scans`, `tips`, `live_chat`), adds storage buckets, configures hardened RLS policies, and triggers `NOTIFY pgrst, 'reload schema'` so the schema cache refreshes immediately.
 
-**Verify:** final SELECT shows subscribers has ONLY the service-role policy.
+**Verify:** Table Editor in Supabase shows all tables present and healthy.
 
 ## 5. Redeploy + smoke test
 

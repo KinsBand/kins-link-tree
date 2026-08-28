@@ -61,6 +61,14 @@ export const GET: APIRoute = async ({ url }) => {
       .eq('scope', scope);
 
     if (error) {
+      if (
+        (error as any).code === 'PGRST205' ||
+        error.message?.includes('Could not find the table') ||
+        error.message?.includes('relation "public.votes" does not exist')
+      ) {
+        console.warn('[vote] Table "public.votes" not initialized yet — returning empty tallies. Run supabase_schema_complete.sql in Supabase SQL editor.');
+        return json({ status: 'success', scope, tallies: {}, initialized: false }, 200);
+      }
       console.error('[vote] tally query failed:', error.message);
       return json({ status: 'error', message: 'Could not load results.' }, 502);
     }
@@ -106,6 +114,14 @@ export const POST: APIRoute = async ({ request }) => {
         .eq('voter_key', voterKey);
 
       if (delError) {
+        if (
+          (delError as any).code === 'PGRST205' ||
+          delError.message?.includes('Could not find the table') ||
+          delError.message?.includes('relation "public.votes" does not exist')
+        ) {
+          console.warn('[vote] Table "public.votes" not found in Supabase.');
+          return json({ status: 'error', message: 'Voting is temporarily unavailable.' }, 503);
+        }
         console.error('[vote] delete failed:', delError.message);
         return json({ status: 'error', message: 'Could not remove your vote.' }, 502);
       }
@@ -124,6 +140,14 @@ export const POST: APIRoute = async ({ request }) => {
       );
 
     if (upsertError) {
+      if (
+        (upsertError as any).code === 'PGRST205' ||
+        upsertError.message?.includes('Could not find the table') ||
+        upsertError.message?.includes('relation "public.votes" does not exist')
+      ) {
+        console.warn('[vote] Table "public.votes" not found in Supabase.');
+        return json({ status: 'error', message: 'Voting is temporarily unavailable.' }, 503);
+      }
       console.error('[vote] upsert failed:', upsertError.message);
       return json({ status: 'error', message: 'Your vote could not be saved. Please try again.' }, 502);
     }

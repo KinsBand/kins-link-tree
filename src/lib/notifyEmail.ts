@@ -48,15 +48,16 @@ function getEnv(key: string): string {
  * Resolves destination and sender configuration for notification emails.
  */
 export function getNotifyConfig(): NotifyConfig {
-  const notifyEmail =
+  const notifyEmail = (
     getEnv('NOTIFY_EMAIL') ||
     getEnv('HELLO_EMAIL') ||
     generalEmail ||
-    'HelloKinsFan@gmail.com';
+    'HelloKinsFan@gmail.com'
+  ).trim();
 
   const resendApiKey = getEnv('RESEND_API_KEY').trim();
-  const fromEmail = getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>';
-  const replyToEmail = getEnv('RESEND_REPLY_TO') || notifyEmail;
+  const fromEmail = (getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>').trim();
+  const replyToEmail = (getEnv('RESEND_REPLY_TO') || notifyEmail).trim();
 
   return {
     notifyEmail,
@@ -88,18 +89,29 @@ export async function sendNotifyEmail(
     };
   }
 
-  const recipients = options.to
+  const rawRecipients = options.to
     ? Array.isArray(options.to)
       ? options.to
       : [options.to]
     : [config.notifyEmail];
+
+  const recipients = rawRecipients
+    .map((r) => String(r || '').trim())
+    .filter(Boolean);
+
+  if (recipients.length === 0) {
+    return {
+      ok: false,
+      error: 'No valid recipient email provided.'
+    };
+  }
 
   const payload: Record<string, unknown> = {
     from: config.fromEmail,
     to: recipients,
     subject: options.subject,
     html: options.html,
-    reply_to: options.replyTo || config.replyToEmail
+    reply_to: (options.replyTo || config.replyToEmail).trim()
   };
 
   if (options.text) {
@@ -141,6 +153,16 @@ export async function sendNotifyEmail(
 
       const resText = await res.text().catch(() => '');
       lastError = resText;
+
+      // 403 Forbidden: unverified sending domain or sandbox recipient restriction
+      if (res.status === 403) {
+        console.warn(
+          '[notifyEmail] Resend 403 (Domain/Recipient restricted):',
+          resText.slice(0, 300),
+          '— If using onboarding@resend.dev, verify a domain at https://resend.com/domains to send to external recipients.'
+        );
+        break;
+      }
 
       // If rate-limited (429) and attempts remaining, wait 700ms and retry
       if (res.status === 429 && attempt < maxAttempts) {

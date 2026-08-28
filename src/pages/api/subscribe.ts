@@ -316,8 +316,11 @@ export const POST: APIRoute = async ({ request }) => {
           dbSuccess = true;
         } else {
           const errMsg = error.message || '';
-          // Handle legacy schemas missing columns sequentially
-          if (errMsg.includes('column "name"')) {
+          const errCode = (error as any).code || '';
+
+          if (errCode === 'PGRST205' || errMsg.includes('Could not find the table') || errMsg.includes('relation "public.subscribers" does not exist')) {
+            console.warn('[Supabase] Table "public.subscribers" not found in schema cache. Please run supabase_schema_complete.sql in the Supabase SQL Editor.');
+          } else if (errMsg.includes('column "name"')) {
             const fallbackRecord = { ...subscriberRecord };
             delete fallbackRecord.name;
             const fallbackRes = await db
@@ -326,7 +329,7 @@ export const POST: APIRoute = async ({ request }) => {
             if (!fallbackRes.error) {
               dbSuccess = true;
             } else if (fallbackRes.error.message.includes('column "is_subscribed"') || fallbackRes.error.message.includes('column "unsubscribed_at"')) {
-              console.error('[Supabase Error] subscribers schema outdated — run supabase_subscribers_schema.sql + supabase_engagement.sql. Falling back to minimal columns.');
+              console.warn('[Supabase] subscribers schema outdated — run supabase_schema_complete.sql. Falling back to minimal columns.');
               const minimal = { email: cleanEmail, source: subscriberRecord.source } as Record<string, any>;
               if (subscriberRecord.name) minimal.name = subscriberRecord.name;
               const minimalRes = await db.from('subscribers').upsert(minimal, { onConflict: 'email', ignoreDuplicates: false });
@@ -336,7 +339,7 @@ export const POST: APIRoute = async ({ request }) => {
               console.error('[Supabase Error] subscribers upsert failed:', fallbackRes.error.message || fallbackRes.error);
             }
           } else if (errMsg.includes('column "is_subscribed"') || errMsg.includes('column "unsubscribed_at"') || errMsg.includes('column "welcome_email_sent"')) {
-            console.error('[Supabase Error] subscribers schema missing segmentation columns — run supabase_engagement.sql. Error:', errMsg);
+            console.warn('[Supabase] subscribers schema missing segmentation columns — run supabase_schema_complete.sql. Error:', errMsg);
             const minimal = { email: cleanEmail, source: subscriberRecord.source } as Record<string, any>;
             if (subscriberRecord.name) minimal.name = subscriberRecord.name;
             const minimalRes = await db.from('subscribers').upsert(minimal, { onConflict: 'email', ignoreDuplicates: false });
@@ -374,55 +377,68 @@ export const POST: APIRoute = async ({ request }) => {
       console.error('Discord role assignment error:', discordErr);
     }
 
-    // 3. Send Welcome Email via Resend (reply_to ensures replies reach HelloKinsFan@gmail.com)
-    const resendApiKey = getEnv('RESEND_API_KEY');
-    const fromEmail = getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>';
-    const replyToEmail = getEnv('RESEND_REPLY_TO') || getEnv('RESEND_REPLY_TO_EMAIL') || 'HelloKinsFan@gmail.com';
+    // 3. Send Welcome Email via Resend (if verified domain or testing to account owner)
+    const resendApiKey = getEnv('RESEND_API_KEY').trim();
+    const fromEmail = (getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>').trim();
+    const replyToEmail = (getEnv('RESEND_REPLY_TO') || getEnv('RESEND_REPLY_TO_EMAIL') || 'HelloKinsFan@gmail.com').trim();
+    const notifyConfig = getNotifyConfig();
+
+    const isSandboxFrom = fromEmail.toLowerCase().includes('resend.dev');
+    const isAccountOwnerRecipient = cleanEmail.toLowerCase() === notifyConfig.notifyEmail.toLowerCase();
 
     if (resendApiKey) {
-      try {
-        const resendPayload: Record<string, unknown> = {
-          from: fromEmail,
-          to: [cleanEmail],
-          reply_to: replyToEmail,
-          subject: 'Welcome to the Kins Band Fan Club! 🎸✨',
-          html: generateWelcomeEmailHtml(cleanEmail)
-        };
+      if (isSandboxFrom && !isAccountOwnerRecipient) {
+        // Resend sandbox onboarding@resend.dev can only deliver to the account owner email
+        console.info(
+          `[Resend] Fan welcome email to ${cleanEmail} skipped: sending domain is currently in Resend sandbox mode (${fromEmail}). To send welcome emails to fans, verify a custom domain at https://resend.com/domains and set RESEND_FROM_EMAIL="Kins Band <newsletter@kinsband.com>".`
+        );
+      } else {
+        try {
+          const resendPayload: Record<string, unknown> = {
+            from: fromEmail,
+            to: [cleanEmail],
+            reply_to: replyToEmail,
+            subject: 'Welcome to the Kins Band Fan Club! 🎸✨',
+            html: generateWelcomeEmailHtml(cleanEmail)
+          };
 
-        const resendRes = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(resendPayload)
-        });
+          const resendRes = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(resendPayload)
+          });
 
-        if (resendRes.ok) {
-          welcomeEmailSent = true;
-          // Mark welcome_email_sent = true in Supabase (ignore if column missing on legacy schema)
-          if (db) {
-            const upd = await db
-              .from('subscribers')
-              .update({ welcome_email_sent: true })
-              .eq('email', cleanEmail);
-            if (upd.error && upd.error.message?.includes('column "welcome_email_sent"')) {
-              console.warn('[Supabase] welcome_email_sent column missing — run supabase_subscribers_schema.sql');
+          if (resendRes.ok) {
+            welcomeEmailSent = true;
+            // Mark welcome_email_sent = true in Supabase (ignore if column missing on legacy schema)
+            if (db) {
+              const upd = await db
+                .from('subscribers')
+                .update({ welcome_email_sent: true })
+                .eq('email', cleanEmail);
+              if (upd.error && upd.error.message?.includes('column "welcome_email_sent"')) {
+                console.warn('[Supabase] welcome_email_sent column missing — run supabase_schema_complete.sql');
+              }
+            }
+          } else {
+            const resendErrText = await resendRes.text().catch(() => '');
+            if (resendRes.status === 403) {
+              console.warn(
+                '[Resend] 403 Domain Restriction: Verify your custom domain at https://resend.com/domains and set RESEND_FROM_EMAIL to enable fan welcome emails.'
+              );
+            } else {
+              console.warn('Resend email delivery warning:', resendRes.status, resendErrText.slice(0, 200));
             }
           }
-        } else {
-          const resendErrText = await resendRes.text().catch(() => '');
-          console.warn('Resend email delivery warning:', resendRes.status, resendErrText);
-          // Common causes: unverified from domain, or onboarding@resend.dev used for non-test recipient
-          if (resendRes.status === 403 || resendRes.status === 422) {
-            console.warn('[Resend Hint] Verify your sending domain at https://resend.com/domains or keep from=onboarding@resend.dev and set reply_to=HelloKinsFan@gmail.com');
-          }
+        } catch (emailErr) {
+          console.error('Resend dispatch error:', emailErr);
         }
-      } catch (emailErr) {
-        console.error('Resend dispatch error:', emailErr);
       }
     } else {
-      console.info('[Resend] Skipped — RESEND_API_KEY not set. Email not sent.');
+      console.info('[Resend] Skipped — RESEND_API_KEY not set.');
     }
 
     // 4. Send internal notification email to NOTIFY_EMAIL & optional Discord webhook
@@ -432,7 +448,8 @@ export const POST: APIRoute = async ({ request }) => {
           ? `⚠️ Roles Pending (${discordRoleResult.message || 'Check Bot Permissions'})`
           : `ℹ️ Roles: @Subscribed + @Listener (Auto-grants on join / handle match)`);
 
-    const notifyConfig = getNotifyConfig();
+    const asyncNotificationTasks: Promise<any>[] = [];
+
     if (notifyConfig.resendApiKey) {
       const subject = `[Fan Club Subscriber] ${cleanEmail}`;
       const fields: BrutalistField[] = [
@@ -444,9 +461,11 @@ export const POST: APIRoute = async ({ request }) => {
           label: 'Welcome Email',
           value: welcomeEmailSent
             ? '✅ Sent via Resend'
-            : resendApiKey
-              ? '⚠️ Failed / Rate Limited'
-              : 'ℹ️ Resend Key Not Set'
+            : isSandboxFrom
+              ? 'ℹ️ Queued (Resend in sandbox mode)'
+              : resendApiKey
+                ? '⚠️ Delivery Pending'
+                : 'ℹ️ Resend Key Not Set'
         }
       ];
 
@@ -459,13 +478,15 @@ export const POST: APIRoute = async ({ request }) => {
         footerNote: 'Kins Subscription System Dispatch'
       });
 
-      sendNotifyEmail({
-        subject,
-        html,
-        text: `[Fan Club Subscriber] ${cleanEmail}\n\nName: ${userName || 'N/A'}\nDiscord: ${roleStatusLine}\nDB Saved: ${dbSuccess}\nWelcome Email: ${welcomeEmailSent}`
-      }).catch((emailErr) => {
-        console.warn('[subscribe] Resend subscriber alert failed:', emailErr);
-      });
+      asyncNotificationTasks.push(
+        sendNotifyEmail({
+          subject,
+          html,
+          text: `[Fan Club Subscriber] ${cleanEmail}\n\nName: ${userName || 'N/A'}\nDiscord: ${roleStatusLine}\nDB Saved: ${dbSuccess}\nWelcome Email: ${welcomeEmailSent}`
+        }).catch((emailErr) => {
+          console.warn('[subscribe] Resend subscriber alert failed:', emailErr);
+        })
+      );
     }
 
     // Optional secondary alert to Discord webhook if configured
@@ -480,23 +501,32 @@ export const POST: APIRoute = async ({ request }) => {
 
         const nameLine = userName ? `\n• **Name:** ${userName}` : '';
 
-        await fetch(discordWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: 'Kins Subscribers Bot',
-            avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png',
-            embeds: [
-              {
-                title: '✉️ New Fan Club Subscriber!',
-                description: `**Email:** \`${cleanEmail}\`${nameLine}\n${memberLine}• **Discord Roles:** ${roleStatusLine}\n• **Database Saved:** ${dbSuccess ? '✅ Yes' : '⚠️ Pending Setup'}\n• **Welcome Email:** ${welcomeEmailSent ? '✅ Sent via Resend' : (resendApiKey ? '⚠️ Failed/Queued' : 'ℹ️ Resend Key Not Set')}\n• **Timestamp:** ${new Date().toISOString()}`,
-                color: 0xffeb3b, // Neon Yellow
-                footer: { text: 'Kins Subscription System' }
-              }
-            ]
+        asyncNotificationTasks.push(
+          fetch(discordWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: 'Kins Subscribers Bot',
+              avatar_url: 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png',
+              embeds: [
+                {
+                  title: '✉️ New Fan Club Subscriber!',
+                  description: `**Email:** \`${cleanEmail}\`${nameLine}\n${memberLine}• **Discord Roles:** ${roleStatusLine}\n• **Database Saved:** ${dbSuccess ? '✅ Yes' : '⚠️ Pending Setup'}\n• **Welcome Email:** ${welcomeEmailSent ? '✅ Sent via Resend' : (isSandboxFrom ? 'ℹ️ Queued (Resend Sandbox)' : (resendApiKey ? '⚠️ Pending' : 'ℹ️ Resend Key Not Set'))}\n• **Timestamp:** ${new Date().toISOString()}`,
+                  color: 0xffeb3b, // Neon Yellow
+                  footer: { text: 'Kins Subscription System' }
+                }
+              ]
+            })
+          }).catch((hookErr) => {
+            console.warn('[subscribe] Discord webhook alert failed:', hookErr);
           })
-        }).catch(() => {});
+        );
       } catch (_) {}
+    }
+
+    // Await all internal notifications cleanly before returning response
+    if (asyncNotificationTasks.length > 0) {
+      await Promise.allSettled(asyncNotificationTasks);
     }
 
     return new Response(
@@ -504,9 +534,7 @@ export const POST: APIRoute = async ({ request }) => {
         status: 'success',
         message: welcomeEmailSent
           ? "You're subscribed! Check your inbox for your welcome email."
-          : dbSuccess
-            ? "You're subscribed! You'll receive drops straight to your inbox."
-            : "You're subscribed! Check your inbox for your welcome email.",
+          : "You're subscribed! You'll receive upcoming drops and updates straight to your inbox.",
         email: cleanEmail,
         dbPersisted: dbSuccess,
         welcomeEmailSent

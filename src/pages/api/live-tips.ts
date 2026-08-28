@@ -51,6 +51,17 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     const { data, error } = await query;
     if (error) {
+      if (
+        (error as any).code === 'PGRST205' ||
+        error.message?.includes('Could not find the table') ||
+        error.message?.includes('relation "public.tips" does not exist')
+      ) {
+        console.warn('[live-tips] Table "tips" not initialized yet — returning empty tips array.');
+        return new Response(
+          JSON.stringify({ status: 'success', tips: [], serverTime: new Date().toISOString() }),
+          { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } }
+        );
+      }
       console.error('[live-tips] query failed:', error.message);
       return new Response(
         JSON.stringify({ status: 'error', message: 'Could not load tips.' }),
