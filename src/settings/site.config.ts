@@ -7,7 +7,7 @@ export const siteConfig = {
   handle: "@KinsBandOfficial",
   artistName: "Kins",
   copyrightYear: 2026,
-  siteUrl: "https://kinsband-hub.vercel.app/",
+  siteUrl: "https://kinshub.vercel.app",
   ogImage: "new.png",
   themeColor: "#0e0e0e",
   // Ko-fi page URL — set PUBLIC_KOFI_URL at build time. Empty = tip UI shows
