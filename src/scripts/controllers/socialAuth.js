@@ -91,8 +91,19 @@ async function generateNonce() {
  * Records the subscription server-side after Supabase auth succeeded.
  * Returns true only on genuine success — never fakes success on failure.
  */
-export async function submitSocialSubscription(email, name = '', avatar = '', source = 'google_1tap') {
+export async function submitSocialSubscription(email, name = '', avatar = '', source) {
   if (!email) return false;
+
+  let resolvedSource = source;
+  if (!resolvedSource) {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref') || params.get('source') || params.get('utm_source') || params.get('src');
+      resolvedSource = ref ? `google_1tap:${ref.trim().slice(0, 40)}` : 'google_1tap';
+    } catch (_) {
+      resolvedSource = 'google_1tap';
+    }
+  }
 
   const baseUrl =
     typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL
@@ -104,7 +115,7 @@ export async function submitSocialSubscription(email, name = '', avatar = '', so
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name, avatar, source })
+      body: JSON.stringify({ email, name, avatar, source: resolvedSource })
     });
 
     if (res.ok) {

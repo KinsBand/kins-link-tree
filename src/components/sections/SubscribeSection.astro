@@ -1362,12 +1362,19 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
       const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
       const endpoint = `${baseUrl}/api/subscribe`;
 
+      let source = 'website';
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref') || params.get('source') || params.get('utm_source') || params.get('src');
+        if (ref) source = ref.trim().slice(0, 50);
+      } catch (_) {}
+
       // 2. Dispatch to Server API endpoint
       try {
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email, source }),
         });
         
         if (res.ok) {
