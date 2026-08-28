@@ -9,6 +9,10 @@ build/
 *.min.css
 *.bundle.js
 
+# Un-ignore self-hosted FontAwesome (critical for icon rendering)
+!public/fonts/**
+!public/webfonts/**
+
 # Environment variables & Local State
 .env
 .env.local
