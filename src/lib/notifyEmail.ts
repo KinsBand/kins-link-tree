@@ -52,7 +52,7 @@ export function getNotifyConfig(): NotifyConfig {
     getEnv('NOTIFY_EMAIL') ||
     getEnv('HELLO_EMAIL') ||
     generalEmail ||
-    'HelloKinsBand@gmail.com';
+    'HelloKinsFan@gmail.com';
 
   const resendApiKey = getEnv('RESEND_API_KEY').trim();
   const fromEmail = getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>';

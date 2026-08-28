@@ -374,10 +374,10 @@ export const POST: APIRoute = async ({ request }) => {
       console.error('Discord role assignment error:', discordErr);
     }
 
-    // 3. Send Welcome Email via Resend (reply_to ensures replies reach helloKinsBand@gmail.com)
+    // 3. Send Welcome Email via Resend (reply_to ensures replies reach HelloKinsFan@gmail.com)
     const resendApiKey = getEnv('RESEND_API_KEY');
     const fromEmail = getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>';
-    const replyToEmail = getEnv('RESEND_REPLY_TO') || getEnv('RESEND_REPLY_TO_EMAIL') || 'helloKinsBand@gmail.com';
+    const replyToEmail = getEnv('RESEND_REPLY_TO') || getEnv('RESEND_REPLY_TO_EMAIL') || 'HelloKinsFan@gmail.com';
 
     if (resendApiKey) {
       try {
@@ -415,7 +415,7 @@ export const POST: APIRoute = async ({ request }) => {
           console.warn('Resend email delivery warning:', resendRes.status, resendErrText);
           // Common causes: unverified from domain, or onboarding@resend.dev used for non-test recipient
           if (resendRes.status === 403 || resendRes.status === 422) {
-            console.warn('[Resend Hint] Verify your sending domain at https://resend.com/domains or keep from=onboarding@resend.dev and set reply_to=helloKinsBand@gmail.com');
+            console.warn('[Resend Hint] Verify your sending domain at https://resend.com/domains or keep from=onboarding@resend.dev and set reply_to=HelloKinsFan@gmail.com');
           }
         }
       } catch (emailErr) {

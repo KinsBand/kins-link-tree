@@ -12,7 +12,7 @@ export interface BandContact {
 }
 
 export const bookingEmail = "BookingsKinsBand@gmail.com";
-export const generalEmail = "HelloKinsBand@gmail.com";
+export const generalEmail = "HelloKinsFan@gmail.com";
 
 export const contacts: BandContact[] = [
   {

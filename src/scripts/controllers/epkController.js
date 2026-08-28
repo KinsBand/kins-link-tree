@@ -364,7 +364,7 @@ VENUE / PROMOTER MUST PROVIDE:
 
 5. DIRECT OFFICIAL CONTACTS:
 - Booking & Live Routing: BookingsKinsBand@gmail.com
-- General & Inquiries: HelloKinsBand@gmail.com
+- General & Inquiries: HelloKinsFan@gmail.com
 - Official Website: https://kinsband.com
 
 (Authorized for venue production, festival advance sheets, and press media usage.)`;
