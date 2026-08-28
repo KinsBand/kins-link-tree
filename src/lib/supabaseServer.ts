@@ -7,15 +7,17 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
  */
 
 const getEnv = (key: string): string => {
+  let val = '';
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return String(process.env[key]).trim();
+    val = String(process.env[key]);
+  } else {
+    try {
+      if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+        val = String(import.meta.env[key] ?? '');
+      }
+    } catch (_) {}
   }
-  try {
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-      return String(import.meta.env[key] ?? '').trim();
-    }
-  } catch (_) {}
-  return '';
+  return val.replace(/^["']|["']$/g, '').trim();
 };
 
 let cachedClient: SupabaseClient | null = null;

@@ -2,8 +2,10 @@ import type { APIRoute } from 'astro';
 import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
+import { getSupabaseServiceClient } from '../../lib/supabaseServer';
 import {
   getNotifyConfig,
+  getNotifyHealth,
   sendNotifyEmail,
   generateBrutalistEmailHtml,
   type BrutalistField,
@@ -179,12 +181,53 @@ export const POST: APIRoute = async ({ request }) => {
     const notifyConfig = getNotifyConfig();
     const discordWebhookUrl = getDiscordWebhookUrl(feedbackType);
 
+    // 0. Persistent fallback: store in Supabase so no submission is ever lost
+    let dbPersisted = false;
+    try {
+      const supabase = getSupabaseServiceClient();
+      if (supabase) {
+        const { error: dbError } = await supabase.from('feedback_submissions').insert({
+          type: feedbackType,
+          category,
+          details,
+          contact: contact || null,
+          viewport,
+          environment,
+          url: url || null,
+          has_screenshot: attachments.length > 0
+        });
+        if (!dbError) {
+          dbPersisted = true;
+        } else {
+          // If table missing, log actionable hint
+          if (
+            (dbError as { code?: string }).code === 'PGRST205' ||
+            dbError.message?.includes('Could not find the table') ||
+            dbError.message?.includes('relation')
+          ) {
+            console.warn('[feedback] Table feedback_submissions missing — run supabase_schema_complete.sql in Supabase SQL Editor.');
+          } else {
+            console.warn('[feedback] DB insert failed:', dbError.message);
+          }
+        }
+      } else {
+        console.warn('[feedback] Supabase service client unavailable — skipping DB persistence (check PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in Vercel env).');
+      }
+    } catch (dbErr) {
+      console.warn('[feedback] DB persistence exception:', dbErr);
+    }
+
     if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
-      console.warn('[feedback] Received feedback submission (Note: RESEND_API_KEY and Discord webhooks not configured in env):', {
+      console.warn('[feedback] No delivery channel configured! RESEND_API_KEY and Discord webhooks both missing. Health:', getNotifyHealth(), {
         category,
         feedbackType,
-        details: details.slice(0, 100)
+        details: details.slice(0, 120),
+        dbPersisted
       });
+    }
+
+    if (notifyConfig.isSandbox && notifyConfig.resendApiKey) {
+      console.info('[feedback] Resend sandbox mode active (from:', notifyConfig.fromEmail, ') — if HelloKinsFan@gmail.com is not the Resend owner, delivery will 403 until a verified domain is added at https://resend.com/domains');
     }
 
     let emailDelivered = false;
@@ -258,11 +301,23 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    // If Resend was configured or Discord succeeded, treat as received
+    // Always return success to user; server logs capture delivery health
+    console.info('[feedback] Submission processed —', {
+      category,
+      feedbackType,
+      hasScreenshot: attachments.length > 0,
+      emailDelivered,
+      discordConfigured: !!(discordWebhookUrl && discordWebhookUrl.startsWith('https://')),
+      dbPersisted,
+      notifyEmail: notifyConfig.notifyEmail
+    });
+
     return new Response(
       JSON.stringify({
         status: 'success',
-        message: 'Feedback received! Thank you for helping Kins improve the site.'
+        message: 'Feedback received! Thank you for helping Kins improve the site.',
+        delivered: emailDelivered || dbPersisted,
+        channel: emailDelivered ? 'email' : dbPersisted ? 'database' : 'logged'
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

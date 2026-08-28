@@ -251,7 +251,58 @@ WITH CHECK (
 );
 
 -- =========================================================================
--- 9. RELOAD POSTGREST SCHEMA CACHE
+-- 9. FEEDBACK SUBMISSIONS TABLE (Persistent fallback for email delivery)
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS public.feedback_submissions (
+    id BIGSERIAL PRIMARY KEY,
+    type TEXT NOT NULL DEFAULT 'Improvement / Idea' CHECK (char_length(type) <= 100),
+    category TEXT NOT NULL DEFAULT 'General Site' CHECK (char_length(category) <= 100),
+    details TEXT NOT NULL CHECK (char_length(details) BETWEEN 1 AND 4000),
+    contact TEXT CHECK (contact IS NULL OR char_length(contact) <= 300),
+    viewport TEXT CHECK (viewport IS NULL OR char_length(viewport) <= 200),
+    environment TEXT CHECK (environment IS NULL OR char_length(environment) <= 300),
+    url TEXT CHECK (url IS NULL OR char_length(url) <= 1000),
+    has_screenshot BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW())
+);
+
+CREATE INDEX IF NOT EXISTS idx_feedback_created_at ON public.feedback_submissions (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feedback_type ON public.feedback_submissions (type);
+
+ALTER TABLE public.feedback_submissions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow service role full access to feedback_submissions" ON public.feedback_submissions;
+CREATE POLICY "Allow service role full access to feedback_submissions"
+ON public.feedback_submissions FOR ALL TO service_role
+USING (true) WITH CHECK (true);
+
+-- =========================================================================
+-- 10. COVER REQUESTS TABLE (Persistent fallback for email delivery)
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS public.cover_requests (
+    id BIGSERIAL PRIMARY KEY,
+    song_title TEXT NOT NULL CHECK (char_length(song_title) BETWEEN 1 AND 120),
+    artist TEXT NOT NULL CHECK (char_length(artist) BETWEEN 1 AND 120),
+    reason TEXT CHECK (reason IS NULL OR char_length(reason) <= 1000),
+    email TEXT CHECK (email IS NULL OR char_length(email) <= 254),
+    is_subscribed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW())
+);
+
+CREATE INDEX IF NOT EXISTS idx_cover_requests_created_at ON public.cover_requests (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_cover_requests_artist ON public.cover_requests (artist);
+
+ALTER TABLE public.cover_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow service role full access to cover_requests" ON public.cover_requests;
+CREATE POLICY "Allow service role full access to cover_requests"
+ON public.cover_requests FOR ALL TO service_role
+USING (true) WITH CHECK (true);
+
+-- =========================================================================
+-- 11. RELOAD POSTGREST SCHEMA CACHE
 -- =========================================================================
 
 NOTIFY pgrst, 'reload schema';

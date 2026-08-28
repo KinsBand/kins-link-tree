@@ -4,6 +4,7 @@ import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
 import {
   getNotifyConfig,
+  getNotifyHealth,
   sendNotifyEmail,
   generateBrutalistEmailHtml,
   type BrutalistField
@@ -70,11 +71,11 @@ export const POST: APIRoute = async ({ request }) => {
     const discordWebhookUrl = getDiscordWebhookUrl();
 
     if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
-      console.error('[tip-shoutout] Neither Resend API key nor Discord webhook is configured.');
-      return jsonResponse(
-        { status: 'error', message: 'Shoutout service is not available right now.' },
-        503
-      );
+      console.warn('[tip-shoutout] No delivery channel configured — logging only. Health:', getNotifyHealth(), { amount });
+    }
+
+    if (notifyConfig.isSandbox && notifyConfig.resendApiKey) {
+      console.info('[tip-shoutout] Resend sandbox mode — see https://resend.com/domains to enable external delivery to', notifyConfig.notifyEmail);
     }
 
     const subject = `[Tip Shoutout][Pending] ${amount} from Fan`;

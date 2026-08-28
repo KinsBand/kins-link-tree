@@ -32,6 +32,8 @@ export interface NotifyConfig {
   resendApiKey: string;
   fromEmail: string;
   replyToEmail: string;
+  isSandbox: boolean;
+  hasResendKey: boolean;
 }
 
 function getEnv(key: string): string {
@@ -46,6 +48,7 @@ function getEnv(key: string): string {
 
 /**
  * Resolves destination and sender configuration for notification emails.
+ * Canonical inbox is HelloKinsFan@gmail.com unless NOTIFY_EMAIL / HELLO_EMAIL overrides it.
  */
 export function getNotifyConfig(): NotifyConfig {
   const notifyEmail = (
@@ -58,12 +61,37 @@ export function getNotifyConfig(): NotifyConfig {
   const resendApiKey = getEnv('RESEND_API_KEY').trim();
   const fromEmail = (getEnv('RESEND_FROM_EMAIL') || 'Kins Band <onboarding@resend.dev>').trim();
   const replyToEmail = (getEnv('RESEND_REPLY_TO') || notifyEmail).trim();
+  const isSandbox = fromEmail.toLowerCase().includes('resend.dev');
+  const hasResendKey = resendApiKey.length > 0 && resendApiKey.startsWith('re_');
 
   return {
     notifyEmail,
     resendApiKey,
     fromEmail,
-    replyToEmail
+    replyToEmail,
+    isSandbox,
+    hasResendKey
+  };
+}
+
+/**
+ * Redacted health snapshot for logging / diagnostics without leaking secrets.
+ * Use in /api health checks or server logs.
+ */
+export function getNotifyHealth(): Record<string, unknown> {
+  const c = getNotifyConfig();
+  const maskedKey = c.resendApiKey
+    ? `${c.resendApiKey.slice(0, 5)}...${c.resendApiKey.slice(-4)}`
+    : '(missing)';
+  return {
+    notifyEmail: c.notifyEmail,
+    fromEmail: c.fromEmail,
+    replyToEmail: c.replyToEmail,
+    isSandbox: c.isSandbox,
+    hasResendKey: c.hasResendKey,
+    resendKeyPreview: maskedKey,
+    resendKeyValidFormat: c.hasResendKey,
+    timestamp: new Date().toISOString()
   };
 }
 
@@ -76,6 +104,7 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Dispatches an email notification via Resend with automatic retry on 429 burst limits.
+ * Returns structured result; caller decides whether to fallback to Discord or DB.
  */
 export async function sendNotifyEmail(
   options: SendNotifyEmailOptions
@@ -83,10 +112,21 @@ export async function sendNotifyEmail(
   const config = getNotifyConfig();
 
   if (!config.resendApiKey) {
+    console.warn(
+      '[notifyEmail] RESEND_API_KEY missing — cannot deliver to',
+      config.notifyEmail,
+      '— set RESEND_API_KEY in Vercel env (see .env.example / SETUP-CHECKLIST.md)'
+    );
     return {
       ok: false,
-      error: 'RESEND_API_KEY is not configured on server.'
+      error: 'RESEND_API_KEY is not configured on server. Set it in Vercel → Settings → Environment Variables.'
     };
+  }
+
+  if (!config.hasResendKey) {
+    console.warn(
+      '[notifyEmail] RESEND_API_KEY format invalid (expected re_... prefix) — check Vercel env value.'
+    );
   }
 
   const rawRecipients = options.to
@@ -106,16 +146,21 @@ export async function sendNotifyEmail(
     };
   }
 
-  const effectiveFrom = config.fromEmail.toLowerCase().includes('resend.dev')
-    ? 'onboarding@resend.dev'
+  // Sandbox mode note: onboarding@resend.dev can only deliver to the Resend account owner
+  // or verified recipients. If notifyEmail is external Gmail, this will 403 until a
+  // verified domain is added at https://resend.com/domains and RESEND_FROM_EMAIL is updated.
+  const effectiveFrom = config.isSandbox
+    ? config.fromEmail // keep display name if present, Resend accepts "Kins Band <onboarding@resend.dev>"
     : config.fromEmail;
+
+  const replyTo = (options.replyTo || config.replyToEmail).trim();
 
   const payload: Record<string, unknown> = {
     from: effectiveFrom,
     to: recipients,
     subject: options.subject,
     html: options.html,
-    reply_to: (options.replyTo || config.replyToEmail).trim()
+    reply_to: replyTo
   };
 
   if (options.text) {
@@ -157,15 +202,23 @@ export async function sendNotifyEmail(
       }
 
       const resText = await res.text().catch(() => '');
-      lastError = resText;
+      lastError = resText || `Resend HTTP ${res.status}`;
 
       // 403 Forbidden: unverified sending domain or sandbox recipient restriction
       if (res.status === 403) {
         console.warn(
-          '[notifyEmail] Resend 403 (Domain/Recipient restricted):',
-          resText.slice(0, 300),
-          '— If using onboarding@resend.dev, verify a domain at https://resend.com/domains to send to external recipients.'
+          '[notifyEmail] Resend 403 (Domain/Recipient restricted) to',
+          recipients.join(', '),
+          '—',
+          resText.slice(0, 400),
+          '— FIX: verify kinsband.com at https://resend.com/domains then set RESEND_FROM_EMAIL="Kins Band <noreply@kinsband.com>" in Vercel env. Sandbox onboarding@resend.dev only delivers to the Resend account owner.'
         );
+        break;
+      }
+
+      // 400/401/422: bad request or key invalid — do not retry
+      if (res.status === 400 || res.status === 401 || res.status === 422) {
+        console.warn(`[notifyEmail] Resend ${res.status} (bad request/auth) – check RESEND_API_KEY and payload:`, resText.slice(0, 400));
         break;
       }
 
@@ -176,7 +229,14 @@ export async function sendNotifyEmail(
         continue;
       }
 
-      console.warn(`[notifyEmail] Resend API error (${res.status}):`, resText.slice(0, 300));
+      // 5xx: transient, retry once
+      if (res.status >= 500 && attempt < maxAttempts) {
+        console.warn(`[notifyEmail] Resend ${res.status} transient — retrying in 500ms...`, resText.slice(0, 200));
+        await sleep(500);
+        continue;
+      }
+
+      console.warn(`[notifyEmail] Resend API error (${res.status}) to ${recipients.join(', ')}:`, resText.slice(0, 400));
       break;
     } catch (err: unknown) {
       lastError = err instanceof Error ? err.message : String(err);

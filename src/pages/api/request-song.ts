@@ -3,8 +3,10 @@ import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
 import { generalEmail } from '../../settings/contact.config';
+import { getSupabaseServiceClient } from '../../lib/supabaseServer';
 import {
   getNotifyConfig,
+  getNotifyHealth,
   sendNotifyEmail,
   generateBrutalistEmailHtml,
   type BrutalistField
@@ -67,12 +69,49 @@ export const POST: APIRoute = async ({ request }) => {
     const notifyConfig = getNotifyConfig();
     const discordWebhookUrl = getDiscordWebhookUrl();
 
+    // 0. Persistent fallback: store in Supabase so no cover request is ever lost
+    let dbPersisted = false;
+    try {
+      const supabase = getSupabaseServiceClient();
+      if (supabase) {
+        const { error: dbError } = await supabase.from('cover_requests').insert({
+          song_title: songTitle,
+          artist,
+          reason: reason === 'None provided' ? null : reason,
+          email: email === 'Not provided' ? null : email,
+          is_subscribed: isSubscribed
+        });
+        if (!dbError) {
+          dbPersisted = true;
+        } else {
+          if (
+            (dbError as { code?: string }).code === 'PGRST205' ||
+            dbError.message?.includes('Could not find the table') ||
+            dbError.message?.includes('relation')
+          ) {
+            console.warn('[request-song] Table cover_requests missing — run supabase_schema_complete.sql in Supabase SQL Editor.');
+          } else {
+            console.warn('[request-song] DB insert failed:', dbError.message);
+          }
+        }
+      } else {
+        console.warn('[request-song] Supabase service client unavailable — skipping DB persistence (check PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY).');
+      }
+    } catch (dbErr) {
+      console.warn('[request-song] DB persistence exception:', dbErr);
+    }
+
     if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
-      console.warn('[request-song] Received cover request (Note: RESEND_API_KEY and Discord webhooks not configured in env):', {
+      console.warn('[request-song] No delivery channel configured! RESEND_API_KEY and Discord webhooks both missing. Health:', getNotifyHealth(), {
         songTitle,
         artist,
-        email
+        email,
+        dbPersisted
       });
+    }
+
+    if (notifyConfig.isSandbox && notifyConfig.resendApiKey) {
+      console.info('[request-song] Resend sandbox mode active (from:', notifyConfig.fromEmail, ') — if HelloKinsFan@gmail.com is not the Resend owner, delivery will 403 until a verified domain is added at https://resend.com/domains');
     }
 
     const subject = `[Cover Request] ${songTitle} - ${artist}`;
@@ -104,6 +143,7 @@ export const POST: APIRoute = async ({ request }) => {
     const isContactEmail = email.includes('@') && !email.includes(' ');
 
     // 1. Primary: Send structured HTML email via Resend
+    let emailDelivered = false;
     if (notifyConfig.resendApiKey) {
       const emailResult = await sendNotifyEmail({
         subject,
@@ -112,8 +152,11 @@ export const POST: APIRoute = async ({ request }) => {
         replyTo: isContactEmail ? email : undefined
       });
 
+      emailDelivered = emailResult.ok;
       if (!emailResult.ok) {
-        console.warn('[request-song] Resend email delivery failed:', emailResult.error);
+        console.warn('[request-song] Resend email delivery failed:', emailResult.error, '— Health:', getNotifyHealth());
+      } else {
+        console.info('[request-song] Email delivered via Resend to', notifyConfig.notifyEmail);
       }
     }
 
@@ -158,8 +201,17 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
+    console.info('[request-song] Processed —', {
+      songTitle,
+      artist,
+      emailDelivered,
+      discordConfigured: !!(discordWebhookUrl && discordWebhookUrl.startsWith('https://')),
+      dbPersisted,
+      notifyEmail: notifyConfig.notifyEmail
+    });
+
     return jsonResponse(
-      { status: 'success', message: 'Cover request received!' },
+      { status: 'success', message: 'Cover request received!', delivered: emailDelivered || dbPersisted },
       200
     );
   } catch (err) {

@@ -69,9 +69,11 @@ and the Discord alert fires.
 Supabase Dashboard → **SQL Editor → New query** → paste all of
 `supabase_schema_complete.sql` → **Run (Ctrl+Enter / Cmd+Enter)**.
 
-This creates all required tables (`subscribers`, `votes`, `checkins`, `player_state`, `fan_uploads`, `qr_scans`, `tips`, `live_chat`), adds storage buckets, configures hardened RLS policies, and triggers `NOTIFY pgrst, 'reload schema'` so the schema cache refreshes immediately.
+This creates all required tables (`subscribers`, `votes`, `checkins`, `player_state`, `fan_uploads`, `qr_scans`, `tips`, `live_chat`, **`feedback_submissions`**, **`cover_requests`**), adds storage buckets, configures hardened RLS policies, and triggers `NOTIFY pgrst, 'reload schema'` so the schema cache refreshes immediately.
 
-**Verify:** Table Editor in Supabase shows all tables present and healthy.
+**Verify:** Table Editor in Supabase shows all tables present and healthy. Also hit `/api/notify-health` — it should report `supabase.configured: true`.
+
+> **Why the new tables?** Feedback & cover requests now persist to `feedback_submissions` / `cover_requests` before emailing, so even if Resend is down or 403s, no submission is lost. View them in Supabase Table Editor.
 
 ## 5. Redeploy + smoke test
 
@@ -114,11 +116,42 @@ regressions have something to compare against.
 
 ---
 
-### If something breaks after deploy
+### Email pipeline — Feedback & Cover Requests not arriving at HelloKinsFan@gmail.com
+
+This is the #1 post-deploy issue. Diagnose in 30 s:
+
+```powershell
+# 1. Redacted health (no secrets leak)
+curl https://kinshub.vercel.app/api/notify-health | jq
+
+# 2. Live probe (sends real test mail to NOTIFY_EMAIL) — requires ?token=HEALTHCHECK_TOKEN if set
+curl "https://kinshub.vercel.app/api/notify-health?check=send&token=YOUR_TOKEN"
+
+# Locally:
+node tools/verify-notify.mjs
+node tools/verify-notify.mjs --send-test
+```
+
+| Health output says | Meaning | Fix |
+|---|---|---|
+| `hasResendKey: false` | `RESEND_API_KEY` missing in Vercel | Vercel → Settings → Environment Variables → add `RESEND_API_KEY=re_...` (from https://resend.com/api-keys) → Redeploy. Preview + Production both. |
+| `isSandbox: true` + `Resend 403` in logs | `RESEND_FROM_EMAIL` is `onboarding@resend.dev` — sandbox only delivers to Resend account owner | Verify `kinsband.com` at https://resend.com/domains → set `RESEND_FROM_EMAIL="Kins Band <noreply@kinsband.com>"` (or `<hello@kinsband.com>`) in Vercel → Redeploy. Do NOT keep `onboarding@resend.dev` in production. |
+| `hasResendKey: true` but still no mail | Check spam / promotions + `notifyEmail` field in /api/notify-health — must be `HelloKinsFan@gmail.com` | Set `NOTIFY_EMAIL=HelloKinsFan@gmail.com` (or `HELLO_EMAIL`) in Vercel env. Also confirm `RESEND_REPLY_TO`. |
+| `supabase.configured: false` | DB fallback disabled | Set `PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (Step 2) and re-run `supabase_schema_complete.sql`. Feedback still logs but won't persist. |
+| 403 `Domain not verified` | FROM domain fails SPF/DKIM | Wait ~10 min after verifying domain in Resend, re-check DNS, redeploy. |
+
+**After fixing env, always Redeploy** (Vercel → Deployments → Redeploy) — serverless functions read env at build.
+
+**Verify end-to-end:**
+- [ ] Submit feedback (with screenshot) → email arrives at `HelloKinsFan@gmail.com` within 60 s (check Spam) + row appears in `feedback_submissions`
+- [ ] Submit cover request → email arrives + row in `cover_requests`
+- [ ] `/api/notify-health?check=send` returns `200` and email arrives
+
+### If something else breaks after deploy
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Forms fail with 503 | Discord env vars missing/mistyped in Vercel | Re-check names exactly (case-sensitive) |
+| Forms fail with 503 | Discord env vars missing/mistyped in Vercel (legacy) | Re-check names exactly (case-sensitive) — new code no longer 503s for feedback/cover, but logs health |
 | Unsubscribe automation 401s | Missing/wrong Bearer header | Step 3 |
 | Chat shows "not available" | `PUBLIC_SUPABASE_*` not set | Step 2 |
 | One Tap never prompts | FedCM permission cache / localhost | Step 6 reset trick |
