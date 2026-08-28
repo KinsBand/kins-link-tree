@@ -14,7 +14,6 @@ import {
 
 export const prerender = false;
 
-const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
 
 const RequestSongSchema = z.object({
   songTitle: z.string().min(1).max(120),
@@ -23,16 +22,6 @@ const RequestSongSchema = z.object({
   email: z.string().max(254).nullable().optional(),
   isSubscribed: z.boolean().nullable().optional()
 }).passthrough();
-
-function getDiscordWebhookUrl(): string {
-  if (typeof process !== 'undefined' && process.env && process.env.DISCORD_REQUEST_SONG_WEBHOOK_URL) {
-    return String(process.env.DISCORD_REQUEST_SONG_WEBHOOK_URL).replace(/^["']|["']$/g, '').trim();
-  }
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DISCORD_REQUEST_SONG_WEBHOOK_URL) {
-    return String(import.meta.env.DISCORD_REQUEST_SONG_WEBHOOK_URL).replace(/^["']|["']$/g, '').trim();
-  }
-  return '';
-}
 
 function jsonResponse(data: Record<string, unknown>, status: number): Response {
   return new Response(JSON.stringify(data), {
@@ -67,7 +56,6 @@ export const POST: APIRoute = async ({ request }) => {
     const isSubscribed = body.isSubscribed === true;
 
     const notifyConfig = getNotifyConfig();
-    const discordWebhookUrl = getDiscordWebhookUrl();
 
     // 0. Persistent fallback: store in Supabase so no cover request is ever lost
     let dbPersisted = false;
@@ -101,8 +89,8 @@ export const POST: APIRoute = async ({ request }) => {
       console.warn('[request-song] DB persistence exception:', dbErr);
     }
 
-    if (!notifyConfig.resendApiKey && (!discordWebhookUrl || !discordWebhookUrl.startsWith('https://'))) {
-      console.warn('[request-song] No delivery channel configured! RESEND_API_KEY and Discord webhooks both missing. Health:', getNotifyHealth(), {
+    if (!notifyConfig.resendApiKey) {
+      console.warn('[request-song] RESEND_API_KEY missing — email will not be sent. Health:', getNotifyHealth(), {
         songTitle,
         artist,
         email,
@@ -160,52 +148,10 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
-    // 2. Secondary fallback: Send Discord webhook if configured
-    if (discordWebhookUrl && discordWebhookUrl.startsWith('https://')) {
-      try {
-        const discordPayload = {
-          username: 'Kins Cover Request System',
-          avatar_url: AVATAR_URL,
-          embeds: [
-            {
-              title: '🎵 New Cover Song Request',
-              color: isSubscribed ? 0xf2fd43 : 0x5865f2,
-              fields: [
-                { name: 'Song Title', value: `**${songTitle}**`, inline: true },
-                { name: 'Original Artist', value: `**${artist}**`, inline: true },
-                {
-                  name: 'Fan Status',
-                  value: isSubscribed
-                    ? '✅ **Subscribed Fan** (Notified via Substack)'
-                    : '👤 Guest / Unsubscribed',
-                  inline: true
-                },
-                { name: 'Why should Kins cover this?', value: reason, inline: false },
-                { name: 'Contact Email', value: email === 'Not provided' ? 'Not provided' : `\`${email}\``, inline: false }
-              ],
-              footer: {
-                text: `Kins Cover Request System • Forwarded to ${generalEmail}`
-              },
-              timestamp: new Date().toISOString()
-            }
-          ]
-        };
-
-        await fetch(discordWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(discordPayload)
-        }).catch(() => {});
-      } catch (hookErr) {
-        console.warn('[request-song] Discord webhook fallback failed:', hookErr);
-      }
-    }
-
     console.info('[request-song] Processed —', {
       songTitle,
       artist,
       emailDelivered,
-      discordConfigured: !!(discordWebhookUrl && discordWebhookUrl.startsWith('https://')),
       dbPersisted,
       notifyEmail: notifyConfig.notifyEmail
     });

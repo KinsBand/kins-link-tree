@@ -200,6 +200,8 @@ export async function sendNotifyEmail(
   let lastStatus = 500;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const abortCtl = new AbortController();
+    const abortTimer = setTimeout(() => abortCtl.abort(), 8000);
     try {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -207,8 +209,10 @@ export async function sendNotifyEmail(
           Authorization: `Bearer ${config.resendApiKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: abortCtl.signal
       });
+      clearTimeout(abortTimer);
 
       lastStatus = res.status;
 
@@ -274,6 +278,7 @@ export async function sendNotifyEmail(
       console.warn(`[notifyEmail] Resend API error (${res.status}) to ${recipients.join(', ')}:`, resText.slice(0, 400));
       break;
     } catch (err: unknown) {
+      clearTimeout(abortTimer);
       lastError = err instanceof Error ? err.message : String(err);
       if (attempt < maxAttempts) {
         await sleep(500);
