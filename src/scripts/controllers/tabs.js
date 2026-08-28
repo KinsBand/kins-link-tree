@@ -38,6 +38,8 @@ export function setupSegmentedSwitcher(tabSelector, contentSelector) {
   });
 
   tabs.forEach(tab => {
+    if (tab.dataset.tabSwitcherBound) return;
+    tab.dataset.tabSwitcherBound = 'true';
     tab.addEventListener('click', (e) => {
       e.preventDefault();
       const targetId = tab.getAttribute('data-target');

@@ -167,4 +167,128 @@ test.describe('tier1 smoke — home hub', () => {
     await closeBtn.click();
     await expect(legalModal).toBeHidden();
   });
+
+  test('tabbed links renders Streams, Socials (default active), and Community tabs and switches smoothly', async ({ page }) => {
+    await page.goto('/');
+
+    const tabSwitcher = page.locator('.tabbed-links-section .brutal-tab-switcher');
+    await expect(tabSwitcher).toBeVisible();
+
+    const streamsBtn = page.locator('#tabStreamsBtn');
+    const socialsBtn = page.locator('#tabSocialsBtn');
+    const communityBtn = page.locator('#tabCommunityBtn');
+
+    // Verify all 3 tab buttons are present and ordered
+    await expect(streamsBtn).toBeVisible();
+    await expect(streamsBtn).toHaveText('STREAMS');
+    await expect(socialsBtn).toBeVisible();
+    await expect(socialsBtn).toHaveText('SOCIALS');
+    await expect(communityBtn).toBeVisible();
+    await expect(communityBtn).toHaveText('COMMUNITY');
+
+    // Verify Socials is the default active tab
+    await expect(socialsBtn).toHaveClass(/active/);
+    await expect(streamsBtn).not.toHaveClass(/active/);
+    await expect(communityBtn).not.toHaveClass(/active/);
+
+    const socialsTab = page.locator('#socialsTab');
+    const streamsTab = page.locator('#streamsTab');
+    const communityTab = page.locator('#communityTab');
+
+    await expect(socialsTab).toBeVisible();
+    await expect(streamsTab).toBeHidden();
+    await expect(communityTab).toBeHidden();
+
+    // Verify primary socials exist
+    await expect(socialsTab.locator('a[data-platform="instagram"]')).toBeVisible();
+    await expect(socialsTab.locator('a[data-platform="tiktok"]')).toBeVisible();
+
+    // Switch to Streams tab
+    await streamsBtn.click();
+    await expect(streamsBtn).toHaveClass(/active/);
+    await expect(socialsBtn).not.toHaveClass(/active/);
+    await expect(communityBtn).not.toHaveClass(/active/);
+    await expect(streamsTab).toBeVisible();
+    await expect(socialsTab).toBeHidden();
+    await expect(communityTab).toBeHidden();
+    await expect(streamsTab.locator('a[data-platform="spotify"]')).toBeVisible();
+
+    // Switch to Community tab
+    await communityBtn.click();
+    await expect(communityBtn).toHaveClass(/active/);
+    await expect(streamsBtn).not.toHaveClass(/active/);
+    await expect(socialsBtn).not.toHaveClass(/active/);
+    await expect(communityTab).toBeVisible();
+    await expect(streamsTab).toBeHidden();
+    await expect(socialsTab).toBeHidden();
+    await expect(communityTab.locator('a[data-platform="discord"]')).toBeVisible();
+    await expect(communityTab.locator('a[data-platform="reddit"]')).toBeVisible();
+    await expect(communityTab.locator('a[data-platform="patreon"]')).toBeVisible();
+    await expect(communityTab.locator('a[data-platform="pinterest"]')).toBeVisible();
+
+    // Switch back to Socials tab
+    await socialsBtn.click();
+    await expect(socialsBtn).toHaveClass(/active/);
+    await expect(socialsTab).toBeVisible();
+    await expect(streamsTab).toBeHidden();
+    await expect(communityTab).toBeHidden();
+  });
+
+  test('referral routing matrix opens Streams tab and highlights recommendations for ?ref=spotify', async ({ page }) => {
+    await page.goto('/?ref=spotify');
+
+    const streamsBtn = page.locator('#tabStreamsBtn');
+    const socialsBtn = page.locator('#tabSocialsBtn');
+    const streamsTab = page.locator('#streamsTab');
+    const socialsTab = page.locator('#socialsTab');
+    const communityTab = page.locator('#communityTab');
+
+    // Verify Streams tab is opened by default for spotify origin
+    await expect(streamsBtn).toHaveClass(/active/);
+    await expect(socialsBtn).not.toHaveClass(/active/);
+    await expect(streamsTab).toBeVisible();
+    await expect(socialsTab).toBeHidden();
+
+    // Verify recommended stream platforms have .is-recommended and ★ REC badge
+    const appleMusicCard = streamsTab.locator('a[data-name="Apple Music"]');
+    const ytMusicCard = streamsTab.locator('a[data-name="YT Music"]');
+    await expect(appleMusicCard).toHaveClass(/is-recommended/);
+    await expect(appleMusicCard.locator('.rec-badge-chip')).toBeVisible();
+    await expect(ytMusicCard).toHaveClass(/is-recommended/);
+    await expect(ytMusicCard.locator('.rec-badge-chip')).toBeVisible();
+
+    // Switch to Socials tab and check recommended socials (Instagram, TikTok)
+    await socialsBtn.click();
+    const instaCard = socialsTab.locator('a[data-name="Instagram"]');
+    const tikTokCard = socialsTab.locator('a[data-name="TikTok"]');
+    await expect(instaCard).toHaveClass(/is-recommended/);
+    await expect(tikTokCard).toHaveClass(/is-recommended/);
+
+    // Switch to Community tab and check recommended community (Discord, Reddit)
+    const communityBtn = page.locator('#tabCommunityBtn');
+    await communityBtn.click();
+    const discordCard = communityTab.locator('a[data-name="Discord"]');
+    const redditCard = communityTab.locator('a[data-name="Reddit"]');
+    await expect(discordCard).toHaveClass(/is-recommended/);
+    await expect(redditCard).toHaveClass(/is-recommended/);
+  });
+
+  test('referral routing matrix opens Community tab and highlights recommendations for ?ref=discord', async ({ page }) => {
+    await page.goto('/?ref=discord');
+
+    const communityBtn = page.locator('#tabCommunityBtn');
+    const communityTab = page.locator('#communityTab');
+
+    // Verify Community tab is opened by default for discord origin
+    await expect(communityBtn).toHaveClass(/active/);
+    await expect(communityTab).toBeVisible();
+
+    // Verify recommended community platforms for Discord (Reddit, Substack)
+    const redditCard = communityTab.locator('a[data-name="Reddit"]');
+    const substackCard = communityTab.locator('a[data-name="Substack"]');
+    await expect(redditCard).toHaveClass(/is-recommended/);
+    await expect(substackCard).toHaveClass(/is-recommended/);
+  });
 });
+
+

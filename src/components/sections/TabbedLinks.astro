@@ -1,78 +1,41 @@
 ---
-import { primarySocials, secondarySocials, primaryStreams, secondaryStreams } from '../../settings/links.config';
+import { 
+  primaryStreams, 
+  secondaryStreams, 
+  primarySocials, 
+  secondarySocials, 
+  primaryCommunity, 
+  secondaryCommunity 
+} from '../../settings/links.config';
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <section class="tabbed-links-section" data-track-container="main:tabs">
-  <!-- Neo-Brutalist Segmented Tabs -->
+  <!-- Neo-Brutalist Segmented Tabs: 1) STREAMS, 2) SOCIALS (Default Open), 3) COMMUNITY -->
   <div class="brutal-tab-switcher">
-    <button class="brutal-tab-btn active" id="tabSocialsBtn" data-target="socialsTab" data-track="tab-btn-socials" data-track-container="main:tabs">
-      SOCIALS
-    </button>
     <button class="brutal-tab-btn" id="tabStreamsBtn" data-target="streamsTab" data-track="tab-btn-streams" data-track-container="main:tabs">
       STREAMS
     </button>
-  </div>
-
-  <div class="tab-content active" id="socialsTab">
-    <div class="buttons-list">
-      {primarySocials.map((link) => (
-        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-track={`social-btn-${link.platform}`} data-track-container="main:socials_tab">
-          <div class="link-left-group">
-            <div class="link-icon-box">
-              <i class={link.icon}></i>
-            </div>
-            <span class="link-title-text">{link.name}</span>
-          </div>
-          <div class="link-arrow-block">
-            <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
-          </div>
-        </a>
-      ))}
-    </div>
-
-    <!-- Expandable Drawer for Extended Socials -->
-    <div class="more-socials-container" id="moreSocialsContainer">
-      <div class="buttons-list more-socials-list">
-        {secondarySocials.map((link) => (
-          <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-track={`secondary-social-${link.platform}`} data-track-container="main:socials_drawer">
-            <div class="link-left-group">
-              <div class="link-icon-box">
-                <i class={link.icon}></i>
-              </div>
-              <span class="link-title-text">{link.name}</span>
-            </div>
-            <div class="link-arrow-block">
-              <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
-            </div>
-          </a>
-        ))}
-      </div>
-    </div>
-
-    <button class="toggle-more-socials-btn" id="toggleMoreSocialsBtn" type="button" aria-label="Toggle all social channels" data-count={secondarySocials.length} data-track="toggle-more-socials" data-track-container="main:socials_tab">
-      <div class="mini-icon-preview">
-        {secondarySocials.slice(0, 4).map((link) => (
-          <span class="mini-icon-chip" title={link.name}>
-            <i class={link.icon}></i>
-          </span>
-        ))}
-      </div>
-      <span id="toggleSocialsText">Other (+{secondarySocials.length})</span>
-      <i class="fa-solid fa-chevron-down toggle-chevron" id="toggleSocialsIcon"></i>
+    <button class="brutal-tab-btn active" id="tabSocialsBtn" data-target="socialsTab" data-track="tab-btn-socials" data-track-container="main:tabs">
+      SOCIALS
+    </button>
+    <button class="brutal-tab-btn" id="tabCommunityBtn" data-target="communityTab" data-track="tab-btn-community" data-track-container="main:tabs">
+      COMMUNITY
     </button>
   </div>
 
+  <!-- STREAMS Tab Content -->
   <div class="tab-content" id="streamsTab">
     <div class="buttons-list">
       {primaryStreams.map((link) => (
-        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform} data-track={`stream-btn-${link.platform}`} data-track-container="main:streams_tab">
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform} data-name={link.name} data-track={`stream-btn-${link.platform}`} data-track-container="main:streams_tab">
           <div class="link-left-group">
             <div class="link-icon-box">
               <i class={link.icon}></i>
             </div>
             <span class="link-title-text">{link.name}</span>
+            <span class="rec-badge-chip" aria-label="Recommended">★ REC</span>
           </div>
           <div class="link-arrow-block">
             <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
@@ -82,35 +45,143 @@ const baseUrl = import.meta.env.BASE_URL;
     </div>
 
     <!-- Expandable Drawer for Extended Streams -->
-    <div class="more-socials-container" id="moreStreamsContainer">
-      <div class="buttons-list more-socials-list">
-        {secondaryStreams.map((link) => (
-          <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform} data-track={`secondary-stream-${link.platform}`} data-track-container="main:streams_drawer">
-            <div class="link-left-group">
-              <div class="link-icon-box">
-                <i class={link.icon}></i>
+    {secondaryStreams.length > 0 && (
+      <div class="more-socials-container" id="moreStreamsContainer">
+        <div class="buttons-list more-socials-list">
+          {secondaryStreams.map((link) => (
+            <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform} data-name={link.name} data-track={`secondary-stream-${link.platform}`} data-track-container="main:streams_drawer">
+              <div class="link-left-group">
+                <div class="link-icon-box">
+                  <i class={link.icon}></i>
+                </div>
+                <span class="link-title-text">{link.name}</span>
               </div>
-              <span class="link-title-text">{link.name}</span>
-            </div>
-            <div class="link-arrow-block">
-              <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
-            </div>
-          </a>
-        ))}
+              <div class="link-arrow-block">
+                <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
+              </div>
+            </a>
+          ))}
+        </div>
       </div>
+
+      <button class="toggle-more-socials-btn" id="toggleMoreStreamsBtn" type="button" aria-label="Toggle all streaming services" data-count={secondaryStreams.length} data-track="toggle-more-streams" data-track-container="main:streams_tab">
+        <div class="mini-icon-preview">
+          {secondaryStreams.slice(0, 4).map((link) => (
+            <span class="mini-icon-chip" title={link.name}>
+              <i class={link.icon}></i>
+            </span>
+          ))}
+        </div>
+        <span id="toggleStreamsText">Other (+{secondaryStreams.length})</span>
+        <i class="fa-solid fa-chevron-down toggle-chevron" id="toggleStreamsIcon"></i>
+      </button>
+    )}
+  </div>
+
+  <!-- SOCIALS Tab Content (Default Open) -->
+  <div class="tab-content active" id="socialsTab">
+    <div class="buttons-list">
+      {primarySocials.map((link) => (
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-name={link.name} data-track={`social-btn-${link.platform}`} data-track-container="main:socials_tab">
+          <div class="link-left-group">
+            <div class="link-icon-box">
+              <i class={link.icon}></i>
+            </div>
+            <span class="link-title-text">{link.name}</span>
+            <span class="rec-badge-chip" aria-label="Recommended">★ REC</span>
+          </div>
+          <div class="link-arrow-block">
+            <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
+          </div>
+        </a>
+      ))}
     </div>
 
-    <button class="toggle-more-socials-btn" id="toggleMoreStreamsBtn" type="button" aria-label="Toggle all streaming services" data-count={secondaryStreams.length} data-track="toggle-more-streams" data-track-container="main:streams_tab">
-      <div class="mini-icon-preview">
-        {secondaryStreams.slice(0, 4).map((link) => (
-          <span class="mini-icon-chip" title={link.name}>
-            <i class={link.icon}></i>
-          </span>
-        ))}
+    <!-- Expandable Drawer for Extended Socials -->
+    {secondarySocials.length > 0 && (
+      <div class="more-socials-container" id="moreSocialsContainer">
+        <div class="buttons-list more-socials-list">
+          {secondarySocials.map((link) => (
+            <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-name={link.name} data-track={`secondary-social-${link.platform}`} data-track-container="main:socials_drawer">
+              <div class="link-left-group">
+                <div class="link-icon-box">
+                  <i class={link.icon}></i>
+                </div>
+                <span class="link-title-text">{link.name}</span>
+              </div>
+              <div class="link-arrow-block">
+                <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
+              </div>
+            </a>
+          ))}
+        </div>
       </div>
-      <span id="toggleStreamsText">Other (+{secondaryStreams.length})</span>
-      <i class="fa-solid fa-chevron-down toggle-chevron" id="toggleStreamsIcon"></i>
-    </button>
+
+      <button class="toggle-more-socials-btn" id="toggleMoreSocialsBtn" type="button" aria-label="Toggle all social channels" data-count={secondarySocials.length} data-track="toggle-more-socials" data-track-container="main:socials_tab">
+        <div class="mini-icon-preview">
+          {secondarySocials.slice(0, 4).map((link) => (
+            <span class="mini-icon-chip" title={link.name}>
+              <i class={link.icon}></i>
+            </span>
+          ))}
+        </div>
+        <span id="toggleSocialsText">Other (+{secondarySocials.length})</span>
+        <i class="fa-solid fa-chevron-down toggle-chevron" id="toggleSocialsIcon"></i>
+      </button>
+    )}
+  </div>
+
+  <!-- COMMUNITY Tab Content -->
+  <div class="tab-content" id="communityTab">
+    <div class="buttons-list">
+      {primaryCommunity.map((link) => (
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-name={link.name} data-track={`community-btn-${link.platform}`} data-track-container="main:community_tab">
+          <div class="link-left-group">
+            <div class="link-icon-box">
+              <i class={link.icon}></i>
+            </div>
+            <span class="link-title-text">{link.name}</span>
+            <span class="rec-badge-chip" aria-label="Recommended">★ REC</span>
+          </div>
+          <div class="link-arrow-block">
+            <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <!-- Expandable Drawer for Extended Community -->
+    {secondaryCommunity && secondaryCommunity.length > 0 && (
+      <div class="more-socials-container" id="moreCommunityContainer">
+        <div class="buttons-list more-socials-list">
+          {secondaryCommunity.map((link) => (
+            <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-name={link.name} data-track={`secondary-community-${link.platform}`} data-track-container="main:community_drawer">
+              <div class="link-left-group">
+                <div class="link-icon-box">
+                  <i class={link.icon}></i>
+                </div>
+                <span class="link-title-text">{link.name}</span>
+              </div>
+              <div class="link-arrow-block">
+                <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <button class="toggle-more-socials-btn" id="toggleMoreCommunityBtn" type="button" aria-label="Toggle all community links" data-count={secondaryCommunity.length} data-track="toggle-more-community" data-track-container="main:community_tab">
+        <div class="mini-icon-preview">
+          {secondaryCommunity.slice(0, 4).map((link) => (
+            <span class="mini-icon-chip" title={link.name}>
+              <i class={link.icon}></i>
+            </span>
+          ))}
+        </div>
+        <span id="toggleCommunityText">Other (+{secondaryCommunity.length})</span>
+        <i class="fa-solid fa-chevron-down toggle-chevron" id="toggleCommunityIcon"></i>
+      </button>
+    )}
   </div>
 </section>
 
@@ -126,8 +197,8 @@ const baseUrl = import.meta.env.BASE_URL;
   /* Neo-Brutalist Tab Switcher */
   .brutal-tab-switcher {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
     width: 100%;
     user-select: none;
   }
@@ -135,11 +206,11 @@ const baseUrl = import.meta.env.BASE_URL;
   .brutal-tab-btn {
     min-height: 44px;
     height: 44px;
-    padding: 0 16px;
+    padding: 0 6px;
     font-family: var(--font-secondary);
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     font-weight: 900;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
     cursor: pointer;
     border-radius: 6px;
@@ -155,6 +226,7 @@ const baseUrl = import.meta.env.BASE_URL;
     z-index: 5;
     user-select: none;
     box-sizing: border-box;
+    white-space: nowrap;
   }
 
   .brutal-tab-btn:hover {
@@ -223,6 +295,12 @@ const baseUrl = import.meta.env.BASE_URL;
     box-shadow: 1px 1px 0px #000000;
   }
 
+  /* Highlighted / Recommended Card Styling */
+  .brutal-link-card.is-recommended {
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px var(--accent-neon-yellow), 3px 3px 0px 1px #000000;
+  }
+
   .link-left-group {
     display: flex;
     align-items: center;
@@ -260,6 +338,37 @@ const baseUrl = import.meta.env.BASE_URL;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  /* Recommended Badge Chip */
+  .rec-badge-chip {
+    display: none;
+    background: var(--brand-accent-primary);
+    color: #000000;
+    font-family: var(--font-secondary);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1.5px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-left: auto;
+    margin-right: 2px;
+    line-height: 1.2;
+    animation: popBadge 0.2s var(--ease-snappy) forwards;
+  }
+
+  .brutal-link-card.is-recommended .rec-badge-chip {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  @keyframes popBadge {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
   }
 
   .link-arrow-block {
@@ -380,73 +489,128 @@ const baseUrl = import.meta.env.BASE_URL;
 
 <script>
   import { setupSegmentedSwitcher } from '../../scripts/controllers/tabs.js';
-  setupSegmentedSwitcher('.tabbed-links-section .brutal-tab-btn', '.tabbed-links-section .tab-content');
+  import { getRoutingRuleForUser } from '../../scripts/utils/referral.js';
 
-  const tabSocials = document.getElementById('tabSocialsBtn');
-  const tabStreams = document.getElementById('tabStreamsBtn');
-  const contentSocials = document.getElementById('socialsTab');
-  const contentStreams = document.getElementById('streamsTab');
+  function applyReferralRouting() {
+    const rule = getRoutingRuleForUser();
 
-  if (tabSocials && tabStreams && contentSocials && contentStreams) {
-    tabSocials.addEventListener('click', (e) => {
-      e.preventDefault();
-      tabSocials.classList.add('active');
-      tabStreams.classList.remove('active');
-      contentSocials.classList.add('active');
-      contentSocials.style.display = 'block';
-      contentStreams.classList.remove('active');
-      contentStreams.style.display = 'none';
-    });
+    // 1. Activate default tab from routing rule (fallback to Socials)
+    let targetTabId = 'socialsTab';
+    let targetBtnId = 'tabSocialsBtn';
 
-    tabStreams.addEventListener('click', (e) => {
-      e.preventDefault();
-      tabStreams.classList.add('active');
-      tabSocials.classList.remove('active');
-      contentStreams.classList.add('active');
-      contentStreams.style.display = 'block';
-      contentSocials.classList.remove('active');
-      contentSocials.style.display = 'none';
-    });
-  }
-
-  const toggleSocialsBtn = document.getElementById('toggleMoreSocialsBtn');
-  const socialsDrawer = document.getElementById('moreSocialsContainer');
-  const socialsTextEl = document.getElementById('toggleSocialsText');
-
-  if (toggleSocialsBtn && socialsDrawer) {
-    const count = toggleSocialsBtn.getAttribute('data-count') || '8';
-    toggleSocialsBtn.addEventListener('click', () => {
-      const isOpen = socialsDrawer.classList.contains('active-drawer');
-      if (isOpen) {
-        socialsDrawer.classList.remove('active-drawer');
-        toggleSocialsBtn.classList.remove('active');
-        if (socialsTextEl) socialsTextEl.textContent = `Other (+${count})`;
-      } else {
-        socialsDrawer.classList.add('active-drawer');
-        toggleSocialsBtn.classList.add('active');
-        if (socialsTextEl) socialsTextEl.textContent = 'Show Less';
+    if (rule && rule.default_tab) {
+      if (rule.default_tab === 'Streams') {
+        targetTabId = 'streamsTab';
+        targetBtnId = 'tabStreamsBtn';
+      } else if (rule.default_tab === 'Community') {
+        targetTabId = 'communityTab';
+        targetBtnId = 'tabCommunityBtn';
+      } else if (rule.default_tab === 'Socials') {
+        targetTabId = 'socialsTab';
+        targetBtnId = 'tabSocialsBtn';
       }
+    }
+
+    const targetBtn = document.getElementById(targetBtnId);
+    const targetContent = document.getElementById(targetTabId);
+
+    if (targetBtn && targetContent) {
+      document.querySelectorAll('.tabbed-links-section .brutal-tab-btn').forEach((btn) => {
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('.tabbed-links-section .tab-content').forEach((content) => {
+        content.classList.remove('active');
+        content.style.display = 'none';
+      });
+
+      targetBtn.classList.add('active');
+      targetContent.classList.add('active');
+      targetContent.style.display = 'block';
+    }
+
+    // 2. Clear previous recommended badges
+    document.querySelectorAll('.tabbed-links-section .brutal-link-card.is-recommended').forEach((card) => {
+      card.classList.remove('is-recommended');
     });
+
+    // 3. Highlight and prioritize recommended platforms per tab
+    if (rule && rule.recommended) {
+      const tabConfigs = [
+        { containerId: 'streamsTab', recNames: rule.recommended.streams || [] },
+        { containerId: 'socialsTab', recNames: rule.recommended.socials || [] },
+        { containerId: 'communityTab', recNames: rule.recommended.community || [] }
+      ];
+
+      tabConfigs.forEach(({ containerId, recNames }) => {
+        const container = document.getElementById(containerId);
+        if (!container || !recNames.length) return;
+
+        const primaryList = container.querySelector('.buttons-list:not(.more-socials-list)');
+        if (!primaryList) return;
+
+        const cards = Array.from(primaryList.querySelectorAll('.brutal-link-card'));
+        const recCards = [];
+        const otherCards = [];
+
+        cards.forEach((card) => {
+          const name = (card.getAttribute('data-name') || '').toLowerCase();
+          const isRec = recNames.some((r) => r.toLowerCase() === name);
+          if (isRec) {
+            card.classList.add('is-recommended');
+            recCards.push(card);
+          } else {
+            otherCards.push(card);
+          }
+        });
+
+        // Reorder so recommended appear at the top of their list
+        if (recCards.length > 0) {
+          recCards.forEach((card) => primaryList.appendChild(card));
+          otherCards.forEach((card) => primaryList.appendChild(card));
+        }
+      });
+    }
   }
 
-  const toggleStreamsBtn = document.getElementById('toggleMoreStreamsBtn');
-  const streamsDrawer = document.getElementById('moreStreamsContainer');
-  const streamsTextEl = document.getElementById('toggleStreamsText');
+  function initTabbedLinks() {
+    setupSegmentedSwitcher('.tabbed-links-section .brutal-tab-btn', '.tabbed-links-section .tab-content');
+    applyReferralRouting();
 
-  if (toggleStreamsBtn && streamsDrawer) {
-    const count = toggleStreamsBtn.getAttribute('data-count') || '4';
-    toggleStreamsBtn.addEventListener('click', () => {
-      const isOpen = streamsDrawer.classList.contains('active-drawer');
-      if (isOpen) {
-        streamsDrawer.classList.remove('active-drawer');
-        toggleStreamsBtn.classList.remove('active');
-        if (streamsTextEl) streamsTextEl.textContent = `Other (+${count})`;
-      } else {
-        streamsDrawer.classList.add('active-drawer');
-        toggleStreamsBtn.classList.add('active');
-        if (streamsTextEl) streamsTextEl.textContent = 'Show Less';
+    const setupDrawer = (btnId, drawerId, textId) => {
+      const btn = document.getElementById(btnId);
+      const drawer = document.getElementById(drawerId);
+      const textEl = document.getElementById(textId);
+
+      if (btn && drawer && !btn.dataset.drawerBound) {
+        btn.dataset.drawerBound = 'true';
+        const count = btn.getAttribute('data-count') || '0';
+        btn.addEventListener('click', () => {
+          const isOpen = drawer.classList.contains('active-drawer');
+          if (isOpen) {
+            drawer.classList.remove('active-drawer');
+            btn.classList.remove('active');
+            if (textEl) textEl.textContent = `Other (+${count})`;
+          } else {
+            drawer.classList.add('active-drawer');
+            btn.classList.add('active');
+            if (textEl) textEl.textContent = 'Show Less';
+          }
+        });
       }
-    });
+    };
+
+    setupDrawer('toggleMoreStreamsBtn', 'moreStreamsContainer', 'toggleStreamsText');
+    setupDrawer('toggleMoreSocialsBtn', 'moreSocialsContainer', 'toggleSocialsText');
+    setupDrawer('toggleMoreCommunityBtn', 'moreCommunityContainer', 'toggleCommunityText');
   }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTabbedLinks);
+  } else {
+    initTabbedLinks();
+  }
+  document.addEventListener('astro:page-load', initTabbedLinks);
 </script>
+
+
 
