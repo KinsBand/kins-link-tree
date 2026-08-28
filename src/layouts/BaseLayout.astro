@@ -96,15 +96,14 @@ const musicGroupSchema = {
   <meta name="application-name" content="KINS">
   
   <!-- Google Fonts: Syne, Cinzel, Space Grotesk with display=swap -->
-  <!-- Non-render-blocking: single print trick avoids duplicate preload/network chain -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap"></noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap">
 
-  <!-- FontAwesome Icons (self-hosted, eliminates 3P cookie surface + 100 KiB blocking chain) -->
-  <link rel="stylesheet" href={`${baseUrl}fonts/fontawesome/all.min.css`} media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href={`${baseUrl}fonts/fontawesome/all.min.css`}></noscript>
+  <!-- FontAwesome Icons (self-hosted) -->
+  <link rel="preload" href={`${baseUrl}fonts/webfonts/fa-solid-900.woff2`} as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href={`${baseUrl}fonts/webfonts/fa-brands-400.woff2`} as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href={`${baseUrl}fonts/fontawesome/all.min.css`}>
 
   <!-- Lightweight Hardware & Theme Detector (Zero FOUC) -->
   <script is:inline>
