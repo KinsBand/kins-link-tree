@@ -1224,6 +1224,46 @@ export function initAudioPlayer() {
     return shuffled;
   }
 
+  let secondaryPreloadAudio = null;
+
+  function prebufferUpcomingTrack(track) {
+    if (!track) return;
+    try {
+      if (!secondaryPreloadAudio && typeof Audio !== 'undefined') {
+        secondaryPreloadAudio = new Audio();
+        secondaryPreloadAudio.muted = true;
+      }
+      if (track.previewUrl && secondaryPreloadAudio) {
+        const secureUrl = track.previewUrl.replace(/^http:\/\//i, 'https://');
+        if (secondaryPreloadAudio.src !== secureUrl) {
+          secondaryPreloadAudio.preload = 'auto';
+          secondaryPreloadAudio.src = secureUrl;
+          secondaryPreloadAudio.load();
+        }
+      }
+    } catch (e) {}
+
+    // Pre-cache upcoming artwork in memory
+    const cover = track.coverUrl || track.artworkUrl;
+    if (cover && typeof Image !== 'undefined') {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = cover;
+    }
+  }
+
+  function peekNextTrack() {
+    if (mixQueue.length === 0) {
+      const all = getAllInspiredTracks();
+      if (all.length === 0) return null;
+      mixQueue = shuffleArray(all);
+      if (currentPlayingTrack && mixQueue.length > 1 && mixQueue[0].title === currentPlayingTrack.title) {
+        mixQueue.push(mixQueue.shift());
+      }
+    }
+    return mixQueue.length > 0 ? mixQueue[0] : null;
+  }
+
   function getNextMixTrack() {
     if (mixQueue.length === 0) {
       const all = getAllInspiredTracks();
@@ -1234,7 +1274,13 @@ export function initAudioPlayer() {
         mixQueue.push(mixQueue.shift());
       }
     }
-    return mixQueue.shift();
+    const next = mixQueue.shift();
+    // Look ahead to pre-buffer the track following this one
+    const upcoming = peekNextTrack();
+    if (upcoming) {
+      prebufferUpcomingTrack(upcoming);
+    }
+    return next;
   }
 
   function playNextMixSong() {
@@ -1251,6 +1297,10 @@ export function initAudioPlayer() {
     if (allTracks.length === 0) return;
     mixQueue = shuffleArray(allTracks);
     const firstTrack = mixQueue.shift();
+    const secondTrack = peekNextTrack();
+    if (secondTrack) {
+      prebufferUpcomingTrack(secondTrack);
+    }
     if (firstTrack && window.playTrackPreview) {
       window.playTrackPreview(firstTrack);
       showToast(`Auto-Mix Started: "${firstTrack.title}"`);
@@ -1562,6 +1612,10 @@ export function initAudioPlayer() {
             startTimelineAnimation();
             updateToggleBtnState(true);
             showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
+            const upcoming = peekNextTrack();
+            if (upcoming) {
+              prebufferUpcomingTrack(upcoming);
+            }
           }).catch(err => {
             if (transitionId !== currentTransitionId) return;
             console.warn('Playback error:', err);

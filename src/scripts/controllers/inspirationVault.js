@@ -4,9 +4,34 @@ export const ITUNES_CACHE = new Map();
 export const ITUNES_INFLIGHT_PROMISES = new Map();
 export const IMAGE_PRELOAD_CACHE = new Map();
 
-// Optimized image loader with progressive quality for low-end devices
+/**
+ * Format Apple mzstatic artwork URLs for specific dimensions and modern formats (WebP).
+ * @param {string} rawUrl
+ * @param {number} size - Desired width/height (e.g. 100, 300, 600)
+ * @param {'webp' | 'jpg'} format - Target image format
+ * @returns {string}
+ */
+export function formatArtworkUrl(rawUrl, size = 300, format = 'webp') {
+  if (!rawUrl) return '';
+  const secure = rawUrl.replace(/^http:\/\//i, 'https://');
+  return secure
+    .replace(/\d+x\d+bb?\.(jpg|jpeg|png|webp)/i, `${size}x${size}bb.${format}`)
+    .replace(/\d+x\d+bb?/, `${size}x${size}bb`)
+    .replace(/\/\d+x\d+\./, `/${size}x${size}.`);
+}
+
+// Optimized image loader with progressive WebP quality and instant LQIP mounting
 export function loadAlbumArt(imgElement, artworkUrl, highResUrl = null) {
-  if (!imgElement) return Promise.resolve(false);
+  if (!imgElement || !artworkUrl) return Promise.resolve(false);
+  
+  const targetHighRes = highResUrl || formatArtworkUrl(artworkUrl, 300, 'webp');
+  const thumbUrl = formatArtworkUrl(artworkUrl, 100, 'jpg');
+
+  if (IMAGE_PRELOAD_CACHE.has(targetHighRes)) {
+    imgElement.src = targetHighRes;
+    imgElement.classList.remove('hidden');
+    return Promise.resolve(true);
+  }
   
   if (IMAGE_PRELOAD_CACHE.has(artworkUrl)) {
     imgElement.src = artworkUrl;
@@ -15,35 +40,49 @@ export function loadAlbumArt(imgElement, artworkUrl, highResUrl = null) {
   }
   
   return new Promise((resolve) => {
+    // 1. Immediately display the fast LQIP thumbnail if available
+    imgElement.src = thumbUrl || artworkUrl;
+    imgElement.classList.remove('hidden');
+
     const tempImg = new Image();
-    const thumbUrl = artworkUrl ? artworkUrl.replace(/600x600bb\./, '100x100bb.').replace(/600x600/, '100x100') : artworkUrl;
-    
+    tempImg.decoding = 'async';
+    if ('fetchPriority' in tempImg) {
+      tempImg.fetchPriority = 'high';
+    }
+
     tempImg.onload = () => {
-      IMAGE_PRELOAD_CACHE.set(thumbUrl, tempImg);
-      imgElement.src = thumbUrl;
-      imgElement.classList.remove('hidden');
-      
-      if (highResUrl && highResUrl !== thumbUrl) {
-        const highResImg = new Image();
-        highResImg.onload = () => {
-          IMAGE_PRELOAD_CACHE.set(highResUrl, highResImg);
-          if (imgElement.parentNode && imgElement.parentNode.contains(imgElement)) {
-            imgElement.src = highResUrl;
-          }
-        };
-        highResImg.onerror = () => resolve(true);
-        highResImg.src = highResUrl;
+      IMAGE_PRELOAD_CACHE.set(targetHighRes, tempImg);
+      if (imgElement.parentNode && imgElement.parentNode.contains(imgElement)) {
+        imgElement.src = targetHighRes;
       }
       resolve(true);
     };
     
     tempImg.onerror = () => {
-      imgElement.src = artworkUrl;
-      imgElement.classList.remove('hidden');
-      resolve(false);
+      // Fallback to JPG version if WebP is unsupported or fails
+      const fallbackJpg = formatArtworkUrl(artworkUrl, 300, 'jpg');
+      if (fallbackJpg !== targetHighRes) {
+        const jpgImg = new Image();
+        jpgImg.decoding = 'async';
+        jpgImg.onload = () => {
+          IMAGE_PRELOAD_CACHE.set(fallbackJpg, jpgImg);
+          if (imgElement.parentNode && imgElement.parentNode.contains(imgElement)) {
+            imgElement.src = fallbackJpg;
+          }
+          resolve(true);
+        };
+        jpgImg.onerror = () => {
+          imgElement.src = artworkUrl;
+          resolve(false);
+        };
+        jpgImg.src = fallbackJpg;
+      } else {
+        imgElement.src = artworkUrl;
+        resolve(false);
+      }
     };
     
-    tempImg.src = thumbUrl;
+    tempImg.src = targetHighRes;
   });
 }
 
@@ -52,12 +91,14 @@ export async function prefetchTrackArtwork(tracks) {
   if (!tracks || tracks.length === 0) return;
   
   const promises = tracks.map(async (track) => {
-    if (track.coverUrl || track.artworkUrl) {
-      const url = track.coverUrl || track.artworkUrl;
-      if (!IMAGE_PRELOAD_CACHE.has(url)) {
+    const rawUrl = track.coverUrl || track.artworkUrl;
+    if (rawUrl) {
+      const webpUrl = formatArtworkUrl(rawUrl, 300, 'webp');
+      if (!IMAGE_PRELOAD_CACHE.has(webpUrl)) {
         const img = new Image();
-        img.src = url;
-        IMAGE_PRELOAD_CACHE.set(url, img);
+        img.decoding = 'async';
+        img.src = webpUrl;
+        IMAGE_PRELOAD_CACHE.set(webpUrl, img);
       }
     }
     if (track.artist && track.title && (!track.previewUrl || !track.coverUrl)) {
@@ -66,10 +107,12 @@ export async function prefetchTrackArtwork(tracks) {
         if (meta.artworkUrl) {
           track.coverUrl = meta.artworkUrl;
           track.artworkUrl = meta.artworkUrl;
-          if (!IMAGE_PRELOAD_CACHE.has(meta.artworkUrl)) {
+          const webpUrl = formatArtworkUrl(meta.artworkUrl, 300, 'webp');
+          if (!IMAGE_PRELOAD_CACHE.has(webpUrl)) {
             const img = new Image();
-            img.src = meta.artworkUrl;
-            IMAGE_PRELOAD_CACHE.set(meta.artworkUrl, img);
+            img.decoding = 'async';
+            img.src = webpUrl;
+            IMAGE_PRELOAD_CACHE.set(webpUrl, img);
           }
         }
         if (meta.previewUrl) {
@@ -96,9 +139,10 @@ export async function getITunesTrackData(artist, title) {
       const query = encodeURIComponent(`${cleanArtist} ${cleanTitle}`.trim());
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       
-      let res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=1`, {
+      // Highly scoped query: media=music, entity=song, limit=1, country=US for deterministic low-latency indexing
+      let res = await fetch(`https://itunes.apple.com/search?term=${query}&media=music&entity=song&limit=1&country=US`, {
         signal: controller.signal,
         headers: { 'Accept': 'application/json' }
       });
@@ -108,9 +152,9 @@ export async function getITunesTrackData(artist, title) {
       if (!data.results || data.results.length === 0) {
         const fallbackQuery = encodeURIComponent(cleanTitle);
         const fallbackController = new AbortController();
-        const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 4000);
+        const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 3000);
         
-        res = await fetch(`https://itunes.apple.com/search?term=${fallbackQuery}&entity=song&limit=1`, {
+        res = await fetch(`https://itunes.apple.com/search?term=${fallbackQuery}&media=music&entity=song&limit=1&country=US`, {
           signal: fallbackController.signal,
           headers: { 'Accept': 'application/json' }
         });
@@ -121,14 +165,16 @@ export async function getITunesTrackData(artist, title) {
       if (data.results && data.results.length > 0) {
         const item = data.results[0];
         const rawArt = (item.artworkUrl100 || item.artworkUrl60 || null)?.replace(/^http:\/\//i, 'https://');
-        const lowResUrl = rawArt;
-        const highResUrl = rawArt ? rawArt.replace(/100x100bb?\./, '600x600bb.').replace(/100x100/, '600x600') : null;
+        const lowResUrl = rawArt ? formatArtworkUrl(rawArt, 100, 'jpg') : null;
+        const webpUrl = rawArt ? formatArtworkUrl(rawArt, 300, 'webp') : null;
+        const highResUrl = rawArt ? formatArtworkUrl(rawArt, 600, 'jpg') : null;
         const previewUrl = item.previewUrl ? item.previewUrl.replace(/^http:\/\//i, 'https://') : null;
         const result = { 
-          artworkUrl: highResUrl, 
-          rawArtworkUrl: lowResUrl, 
+          artworkUrl: webpUrl || highResUrl, 
+          rawArtworkUrl: lowResUrl,
+          highResArtworkUrl: highResUrl,
           previewUrl,
-          isHighResAvailable: !!highResUrl
+          isHighResAvailable: !!(webpUrl || highResUrl)
         };
         ITUNES_CACHE.set(cacheKey, result);
         return result;
@@ -136,7 +182,7 @@ export async function getITunesTrackData(artist, title) {
     } catch (e) {
       console.warn('iTunes API fetch error:', e);
     }
-    const fallback = { artworkUrl: null, rawArtworkUrl: null, previewUrl: null, isHighResAvailable: false };
+    const fallback = { artworkUrl: null, rawArtworkUrl: null, highResArtworkUrl: null, previewUrl: null, isHighResAvailable: false };
     ITUNES_CACHE.set(cacheKey, fallback);
     return fallback;
   })().finally(() => {

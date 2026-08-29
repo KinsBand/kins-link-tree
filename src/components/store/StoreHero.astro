@@ -1,0 +1,83 @@
+---
+import { storeConfig } from '../../settings/store.config';
+---
+
+<!-- Announcement Ticker Strip (All screens) -->
+<div class="store-announcement-strip" data-track-container="store:ticker">
+  <div class="announcement-content">
+    <span class="ticker-dot"></span>
+    <span class="ticker-text"><strong>{storeConfig.dropName}</strong> • {storeConfig.shippingNotice}</span>
+    <span class="ticker-sep">•</span>
+    <button type="button" class="ticker-alert-btn" id="openHeroWaitlistBtn" data-action="open-waitlist">
+      <i class="fa-solid fa-bell"></i> GET DROP ALERTS
+    </button>
+  </div>
+</div>
+
+<style>
+  .store-announcement-strip {
+    width: 100%;
+    background: var(--surface-card-panel);
+    border-bottom: 2px solid #000000;
+    padding: 6px 12px;
+    box-sizing: border-box;
+  }
+
+  .announcement-content {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-primary);
+    font-size: 0.72rem;
+    color: var(--text-card-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ticker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--status-danger);
+    flex-shrink: 0;
+  }
+
+  .ticker-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ticker-sep {
+    color: var(--text-card-secondary);
+  }
+
+  .ticker-alert-btn {
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border: 1px solid #000000;
+    border-radius: var(--radius-xs);
+    font-family: var(--font-heading);
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 2px 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .ticker-alert-btn:hover {
+    background: var(--btn-brand-hover);
+  }
+
+  @media (max-width: 540px) {
+    .ticker-sep, .ticker-alert-btn {
+      display: none;
+    }
+  }
+</style>

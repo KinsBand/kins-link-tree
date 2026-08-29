@@ -8,6 +8,7 @@ import kinsLogoNew from '../../assets/new.png';
 const baseUrl = import.meta.env.BASE_URL;
 const isLive = liveConfig.status === 'live';
 const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.enabled ?? true);
+const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
 ---
 
 <header class="top-nav" id="topNavHeader" data-track-container="nav:top_bar">
@@ -21,8 +22,11 @@ const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.e
 
   <!-- Unified Center Action Cluster: [🔔 Notification] [🔍 Search / LIVE NOW] [↗ Share] -->
   <div class="top-nav-center-cluster">
-    <button class="nav-brutal-btn nav-icon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates" title="Subscribe" data-track="nav:subscribe">
+    <button class="nav-brutal-btn nav-icon-btn top-subscribe-soon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates (Coming Soon)" title="Subscribe (Coming Soon)" data-track="nav:subscribe">
       <i class="fa-solid fa-bell nav-icon"></i>
+      <div class="bell-soon-diagonal-banner" aria-hidden="true">
+        <span>SOON</span>
+      </div>
     </button>
 
     {isLive ? (
@@ -48,6 +52,12 @@ const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.e
 
   <!-- Desktop View: Top-Right Symmetrical Action -->
   <div class="top-nav-right-col">
+    {isStoreEnabled && (
+      <a href={`${baseUrl}store`} class="top-nav-store-btn" title="Official Merch Store" data-track="nav:store_link">
+        <i class="fa-solid fa-bag-shopping nav-store-icon"></i>
+        <span>STORE</span>
+      </a>
+    )}
     {isEpkEnabled && (
       <a href={`${baseUrl}epk`} class="top-nav-epk-btn" title="Electronic Press Kit" data-track="nav:epk_link">
         <span>EPK</span>
@@ -196,6 +206,40 @@ const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.e
       display: flex;
       align-items: center;
       justify-self: end;
+      gap: 8px;
+    }
+
+    .top-nav-store-btn {
+      background: var(--btn-brand-primary);
+      border: 2px solid #000000;
+      box-shadow: 2px 2px 0px #000000;
+      color: var(--btn-brand-text);
+      border-radius: 6px;
+      font-family: var(--font-secondary);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      padding: 6px 14px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.14s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.14s ease;
+    }
+
+    .top-nav-store-btn:hover {
+      background: var(--btn-brand-hover);
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0px #000000;
+    }
+
+    .top-nav-store-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px #000000;
+    }
+
+    .nav-store-icon {
+      font-size: 0.75rem;
     }
 
     .top-nav-epk-btn {
@@ -426,6 +470,46 @@ const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.e
   .nav-brutal-btn:focus-visible {
     outline: 3px solid var(--accent-neon-yellow);
     outline-offset: 2px;
+  }
+
+  /* Coming Soon Diagonal Ribbon on Bell Button */
+  .top-subscribe-soon-btn {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bell-soon-diagonal-banner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: inherit;
+    z-index: 10;
+  }
+
+  .bell-soon-diagonal-banner span {
+    background: var(--btn-brand-primary, var(--accent-neon-yellow));
+    color: #000000;
+    border: 1.5px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    font-family: var(--font-secondary, sans-serif);
+    font-size: 0.44rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 1px 10px;
+    white-space: nowrap;
+    transform: rotate(-35deg);
+    text-align: center;
+    width: 140%;
+  }
+
+  :global([data-theme="dark"]) .bell-soon-diagonal-banner span {
+    background: var(--brand-accent-primary, #d4af37);
+    color: #000000;
   }
 
   /* Subscribed Bell State */

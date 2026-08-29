@@ -1,0 +1,106 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { functionalityConfig } from '../settings/functionality.config';
+import { storeConfig } from '../settings/store.config';
+
+// Store Components
+import StoreNav from '../components/store/StoreNav.astro';
+import StoreHero from '../components/store/StoreHero.astro';
+import StoreFilterBar from '../components/store/StoreFilterBar.astro';
+import StoreProductGrid from '../components/store/StoreProductGrid.astro';
+import StoreIdeaTrigger from '../components/store/StoreIdeaTrigger.astro';
+import StoreCartDrawer from '../components/store/StoreCartDrawer.astro';
+import ProductQuickViewModal from '../components/store/ProductQuickViewModal.astro';
+import StoreWaitlistModal from '../components/store/StoreWaitlistModal.astro';
+import MerchIdeaModal from '../components/store/MerchIdeaModal.astro';
+
+// Shared Global Components
+import SiteFooter from '../components/navigation/SiteFooter.astro';
+import ToastContainer from '../components/ui/ToastContainer.astro';
+import ShareModal from '../components/modals/ShareModal.astro';
+import FeedbackModal from '../components/modals/FeedbackModal.astro';
+import LegalModal from '../components/modals/LegalModal.astro';
+
+const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
+const baseUrl = import.meta.env.BASE_URL || '/';
+
+if (!isStoreEnabled) {
+  return Astro.redirect(baseUrl);
+}
+---
+
+<BaseLayout
+  title={`${storeConfig.storeName} | ${storeConfig.tagline}`}
+  description="Official Kins Band Merch Store. Shop limited edition vinyl, 450GSM heavyweight hoodies, vintage acid-washed tour tees, and exclusive collector accessories."
+>
+  <div class="store-app-wrapper">
+    <StoreNav />
+    
+    <main class="store-main-content" id="storeMainContent">
+      <StoreHero />
+      <StoreFilterBar />
+      <StoreProductGrid />
+      <StoreIdeaTrigger />
+      <SiteFooter />
+    </main>
+  </div>
+
+  <!-- Drawers & Modals -->
+  <StoreCartDrawer />
+  <ProductQuickViewModal />
+  <StoreWaitlistModal />
+  <MerchIdeaModal />
+  <ShareModal />
+  <FeedbackModal />
+  <LegalModal />
+  <ToastContainer />
+</BaseLayout>
+
+<style>
+  .store-app-wrapper {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+    background-color: var(--surface-canvas);
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 70%),
+      radial-gradient(circle at 100% 100%, rgba(242, 253, 67, 0.03) 0%, transparent 60%);
+  }
+
+  .store-main-content {
+    width: 100%;
+    max-width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding-bottom: 40px;
+  }
+
+  :global(body.store-drawer-locked) {
+    overflow: hidden !important;
+    touch-action: none;
+  }
+</style>
+
+<script>
+  import { initTheme } from '../scripts/controllers/themeController.js';
+  import { initStoreController, teardownStoreController } from '../scripts/controllers/store/storeController.js';
+
+  // Initialize theme & store controllers
+  initTheme();
+  initStoreController();
+
+  document.addEventListener('astro:page-load', () => {
+    initStoreController();
+  });
+
+  document.addEventListener('astro:before-swap', () => {
+    teardownStoreController();
+  });
+</script>

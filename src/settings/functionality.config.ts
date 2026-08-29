@@ -6,13 +6,13 @@ export const functionalityConfig = {
   enableAudioPlayer: true,
   enableCoversSearch: true,
   enableInspirationVault: true,
-  enableMerchStore: true,
+  enableMerchStore: false,
   enableNewsletter: true,
   enableFollowerCounter: true,
   audioAutoPlay: false,
   enableLivePage: true,
   enableEpkPage: false,
-  enableKinsTools: false,
+  enableKinsTools: true,
   enableTheoryPage: false,
 };
 

@@ -11,5 +11,6 @@ export * from './gigs.config';
 export * from './rehearsal.config';
 export * from './metronome.config';
 export * from './tuner.config';
+export * from './store.config';
 
 

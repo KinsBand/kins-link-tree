@@ -83,6 +83,9 @@ export function createMetroEngine() {
   /* Hardware adaptation */
   let hardwareSampleRate = 48000;
   let backgroundSilenceEl = null;
+  /* Bumped on stop() and on every hardware rebuild so an in-flight context
+     rebuild can never resurrect playback the user already stopped */
+  let rebuildGeneration = 0;
 
   /* Scheduler health stats (?metrodebug=1 reads these) */
   let tickCount = 0;
@@ -158,6 +161,14 @@ export function createMetroEngine() {
         try { metroWorker.terminate(); } catch (e2) {}
         metroWorker = null;
         workerAvailable = false;
+        /* Worker died (404 offline / script error) AFTER ensureSchedulerTimer
+           already took the worker branch — without this the legacy scheduler
+           would silently lose its only clock and playback would go mute.
+           Re-run the timer selection so the main-thread interval takes over. */
+        if (runRef.playing && !usingWorklet) {
+          ensureSchedulerTimer();
+          schedulerTick();
+        }
       };
       try { metroWorker.postMessage({ interval: METRO_TIMING.schedulerIntervalMs }); } catch (e) {}
       workerAvailable = true;
@@ -167,6 +178,7 @@ export function createMetroEngine() {
     }
   }
 
+  let unlockHandler = null;
   function setupUnlockProtocol() {
     const unlockEvents = ['touchstart', 'touchend', 'mousedown', 'keydown'];
     const unlock = async () => {
@@ -191,6 +203,7 @@ export function createMetroEngine() {
       unlockEvents.forEach(evt => document.removeEventListener(evt, unlock, true));
     };
     unlockEvents.forEach(evt => document.addEventListener(evt, unlock, true));
+    unlockHandler = { events: unlockEvents, fn: unlock };
     // Also attempt immediate resume if already gesture-unlocked
     if (ctx && ctx.state === 'suspended') {
       // No-op until gesture; handler will fire.
@@ -238,13 +251,13 @@ export function createMetroEngine() {
         // If currently playing, attempt immediate recovery within 250ms
         if (runRef.playing) {
           const saved = { bpm: runRef.bpm, perBeat: runPerBeat, beatsPerBar: runBeatsPerBar, accentFirst: runAccentFirst, tiers: [...runBeatTiers] };
-          const wasPlaying = true;
+          const gen = ++rebuildGeneration;
           try { if (workletNode) workletNode.disconnect(); } catch (e) {}
           try { if (hpFilter) hpFilter.disconnect(); } catch (e) {}
           try { if (compressor) compressor.disconnect(); } catch (e) {}
           try { if (softClipper) softClipper.disconnect(); } catch (e) {}
           try { if (masterGain) masterGain.disconnect(); } catch (e) {}
-          try { ctx.close(); } catch (e) {}
+          try { const p = ctx.close(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
           ctx = null;
           masterGain = null;
           compressor = null;
@@ -253,23 +266,29 @@ export function createMetroEngine() {
           workletNode = null;
           usingWorklet = false;
           hardwareSampleRate = currentRate;
-          // Re-instantiate quickly
+          // Re-instantiate quickly (generation-guarded: a stop() during the
+          // await must leave the metronome stopped, never ghost-playing)
           ensureContext().then(() => {
-            if (wasPlaying && ctx) {
-              // Reload sample tables is not needed (synth only), re-post config
-              if (usingWorklet) {
-                postToWorklet({ type: 'sounds', sounds: METRO_SOUNDS.map(s => ({ id: s.id, type: s.type, freq: s.freq, accentFreq: s.accentFreq, decay: s.decay, gain: s.gain })) });
-                postToWorklet({ type: 'sound', id: getSound().id });
-                postToWorklet({ type: 'start', bpm: saved.bpm, perBeat: saved.perBeat, beatsPerBar: saved.beatsPerBar, accentFirst: saved.accentFirst, tiers: saved.tiers });
-                try {
-                  const isPlaying = workletNode.parameters.get('isPlaying');
-                  isPlaying.setValueAtTime(1, ctx.currentTime);
-                } catch (e) {}
-              } else {
-                nextClickTime = ctx.currentTime + METRO_TIMING.startOffsetSec;
-                ensureSchedulerTimer();
-                schedulerTick();
-              }
+            if (gen !== rebuildGeneration || !runRef.playing || !ctx) return;
+            // Reload sample tables is not needed (synth only), re-post config
+            if (usingWorklet) {
+              postToWorklet({ type: 'sounds', sounds: METRO_SOUNDS.map(s => ({ id: s.id, type: s.type, freq: s.freq, accentFreq: s.accentFreq, decay: s.decay, gain: s.gain })) });
+              postToWorklet({ type: 'sound', id: getSound().id });
+              postToWorklet({ type: 'start', bpm: saved.bpm, perBeat: saved.perBeat, beatsPerBar: saved.beatsPerBar, accentFirst: saved.accentFirst, tiers: saved.tiers });
+              try {
+                const now = ctx.currentTime;
+                const isPlaying = workletNode.parameters.get('isPlaying');
+                isPlaying.setValueAtTime(1, now);
+                // Fresh node defaults to raw sub gain — re-apply the
+                // equal-power subdivision attenuation
+                if (workletNode.parameters.has('subGain')) {
+                  workletNode.parameters.get('subGain').setValueAtTime(METRO_GAIN.sub * getSubdivisionScale(saved.perBeat), now);
+                }
+              } catch (e) {}
+            } else {
+              nextClickTime = ctx.currentTime + METRO_TIMING.startOffsetSec;
+              ensureSchedulerTimer();
+              schedulerTick();
             }
           });
         }
@@ -355,10 +374,15 @@ export function createMetroEngine() {
         }
         if (nodeCreated && workletNode) {
           workletNode.port.onmessage = onWorkletMessage;
+          /* Worklet path: connect DIRECTLY to masterGain, bypassing the
+             HPF → Compressor → WaveShaper chain. The worklet already has
+             its own tanh soft-limiter at 0.8 knee; the external compressor
+             (-6dB threshold, 6:1 ratio, 1ms attack) was crushing transient
+             punch and causing the muffled/distorted sound. The compression
+             chain is kept wired for the legacy oscillator fallback path. */
           try {
-            if (hpFilter) workletNode.connect(hpFilter);
-            else workletNode.connect(compressor);
-          } catch (e) { try { workletNode.connect(masterGain); } catch (e2) {} }
+            workletNode.connect(masterGain);
+          } catch (e) { try { workletNode.connect(ctx.destination); } catch (e2) {} }
           // Send sound tables
           postToWorklet({
             type: 'sounds',
@@ -561,8 +585,25 @@ export function createMetroEngine() {
       ? METRO_TIMING.hiddenScheduleAheadSec
       : METRO_TIMING.scheduleAheadSec;
     const clickDur = 60 / runRef.bpm / runPerBeat;
+    let missedSteps = 0;
     while (nextClickTime < ctx.currentTime + aheadSec) {
       if (nextClickTime < ctx.currentTime - METRO_TIMING.resyncGraceSec) {
+        /* Behind the horizon (long tab freeze / OS suspension). Step
+           per-click so bar phase stays exact, but bail to a
+           phase-preserving bulk jump once the backlog is huge — a
+           multi-hour sleep would otherwise loop 100k+ times on the
+           first tick after resume. */
+        if (++missedSteps > (METRO_TIMING.maxCatchupSteps || 256)) {
+          const target = ctx.currentTime + aheadSec;
+          const steps = Math.ceil((target - nextClickTime) / clickDur);
+          if (steps > 0 && Number.isFinite(steps)) {
+            const rpb = Math.max(1, runPerBeat);
+            beatCounter += Math.floor((clickCounter + steps - 1) / rpb) - Math.floor((clickCounter - 1) / rpb);
+            clickCounter += steps;
+            nextClickTime += steps * clickDur;
+          }
+          break;
+        }
         skipMissedClick(clickDur);
         continue;
       }
@@ -738,6 +779,9 @@ export function createMetroEngine() {
   function stop() {
     runRef.playing = false;
     interruptedPending = false;
+    /* Invalidate any in-flight hardware-context rebuild so it cannot
+       resurrect playback after the user stopped */
+    rebuildGeneration++;
     pauseBackgroundSilence();
     clearSchedulerTimer();
     if (usingWorklet && workletNode && ctx) {
@@ -956,6 +1000,55 @@ export function createMetroEngine() {
     };
   }
 
+  /* Full teardown — releases every hardware/system resource this engine
+     owns. Browsers cap live AudioContexts (~6); without closing the ctx,
+     repeated init/teardown cycles eventually make `new AudioContext()`
+     throw and the metronome dies permanently. */
+  function destroy() {
+    rebuildGeneration++;
+    try { stop(); } catch (e) {}
+    if (hardwareCheckId !== null) {
+      clearInterval(hardwareCheckId);
+      hardwareCheckId = null;
+    }
+    if (metroWorker) {
+      try { metroWorker.terminate(); } catch (e) {}
+      metroWorker = null;
+    }
+    workerAvailable = false;
+    if (masterRestoreTimeout) {
+      clearTimeout(masterRestoreTimeout);
+      masterRestoreTimeout = null;
+    }
+    if (unlockHandler) {
+      try {
+        unlockHandler.events.forEach((evt) => document.removeEventListener(evt, unlockHandler.fn, true));
+      } catch (e) {}
+      unlockHandler = null;
+    }
+    if (backgroundSilenceEl) {
+      try { backgroundSilenceEl.pause(); } catch (e) {}
+      try { backgroundSilenceEl.removeAttribute('src'); } catch (e) {}
+      try { backgroundSilenceEl.remove(); } catch (e) {}
+      backgroundSilenceEl = null;
+    }
+    if (ctx && ctx.state !== 'closed') {
+      try {
+        const p = ctx.close();
+        if (p && p.catch) p.catch(() => {});
+      } catch (e) {}
+    }
+    ctx = null;
+    masterGain = null;
+    compressor = null;
+    softClipper = null;
+    hpFilter = null;
+    workletNode = null;
+    usingWorklet = false;
+    pendingSources.length = 0;
+    visualQueue.length = 0;
+  }
+
   return {
     start,
     stop,
@@ -968,6 +1061,7 @@ export function createMetroEngine() {
     suspend,
     resume,
     sync,
+    destroy,
     getDebugState,
     get playing() { return runRef.playing; },
     get mode() { return usingWorklet ? 'worklet' : 'legacy'; }

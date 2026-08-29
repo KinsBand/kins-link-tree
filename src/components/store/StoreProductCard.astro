@@ -1,0 +1,272 @@
+---
+import type { StoreProduct } from '../../settings/store.config';
+
+interface Props {
+  product: StoreProduct;
+  index: number;
+}
+
+const { product, index } = Astro.props;
+const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
+const isSoldOut = product.status === 'sold_out';
+---
+
+<article
+  class="store-product-card brutal-card"
+  data-product-id={product.id}
+  data-category={product.category}
+  data-title={product.title}
+  data-desc={product.description}
+  data-tags={`${product.badge || ''} ${product.category} ${product.subtitle}`}
+  data-price={product.price}
+  data-featured={product.featured ? 'true' : 'false'}
+  data-index={index}
+  data-track-container={`store:product_${product.id}`}
+>
+  <!-- Tape Badge -->
+  {product.badge && (
+    <div class={`card-tape-badge ${isSoldOut ? 'badge-sold-out' : ''}`}>
+      {product.badge}
+    </div>
+  )}
+
+  <!-- Product Image Showcase -->
+  <div class="product-card-img-wrap btn-quick-view" role="button" tabindex="0" aria-label={`View ${product.title}`}>
+    <img
+      src={product.images.primary}
+      alt={product.images.alt || product.title}
+      class="product-card-img primary-img"
+      loading={index < 4 ? 'eager' : 'lazy'}
+      decoding="async"
+    />
+    {product.images.secondary && (
+      <img
+        src={product.images.secondary}
+        alt={`${product.title} Alternate`}
+        class="product-card-img secondary-img"
+        loading="lazy"
+        decoding="async"
+      />
+    )}
+  </div>
+
+  <!-- Product Info -->
+  <div class="product-card-info">
+    <div class="product-category-tag">{product.category.toUpperCase()}</div>
+    <h3 class="product-card-title">{product.title}</h3>
+
+    <div class="product-card-bottom-row">
+      <div class="product-card-price-row">
+        <span class="product-price-current">${product.price.toFixed(2)}</span>
+        {hasDiscount && (
+          <span class="product-price-compare">${product.compareAtPrice?.toFixed(2)}</span>
+        )}
+      </div>
+
+      <button
+        type="button"
+        class={`btn-add-to-cart green-link-btn brutal-press ${isSoldOut ? 'btn-sold-out' : ''}`}
+        aria-label={isSoldOut ? `Join waitlist for ${product.title}` : `Add ${product.title} to bag`}
+      >
+        <span class="btn-add-label">{isSoldOut ? 'ALERT' : '+ BAG'}</span>
+        <i class={isSoldOut ? 'fa-solid fa-bell' : 'fa-solid fa-bag-shopping'}></i>
+      </button>
+    </div>
+  </div>
+</article>
+
+<style>
+  .store-product-card {
+    background: var(--surface-card);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-xs);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: transform 0.14s var(--ease-tactile), box-shadow 0.14s ease;
+  }
+
+  .store-product-card:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  /* Tape Badge */
+  .card-tape-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    font-family: var(--font-heading);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    padding: 2px 6px;
+    border: 1px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    border-radius: 2px;
+    z-index: 5;
+  }
+
+  .card-tape-badge.badge-sold-out {
+    background: var(--status-danger);
+    color: #ffffff;
+  }
+
+  /* Image Wrap */
+  .product-card-img-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #141418;
+    border-bottom: 1.5px solid #000000;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .product-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.2s ease, transform 0.2s var(--ease-snappy);
+  }
+
+  .secondary-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .product-card-img-wrap:hover .primary-img {
+    opacity: 0;
+  }
+
+  .product-card-img-wrap:hover .secondary-img {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+
+  /* Info */
+  .product-card-info {
+    padding: 10px 10px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 4px;
+    box-sizing: border-box;
+  }
+
+  .product-category-tag {
+    font-family: var(--font-heading);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: var(--brand-accent-primary);
+  }
+
+  .product-card-title {
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--text-on-dark);
+    margin: 0;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2rem;
+  }
+
+  .product-card-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 6px;
+  }
+
+  .product-card-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .product-price-current {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: var(--text-on-dark);
+  }
+
+  .product-price-compare {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  .btn-add-to-cart {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 0.72rem;
+    font-weight: 900;
+    border-radius: var(--radius-xs);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    transition: transform 0.14s var(--ease-tactile), background-color 0.14s ease;
+  }
+
+  .btn-add-to-cart:hover {
+    background: var(--btn-brand-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 2.5px 2.5px 0px #000000;
+  }
+
+  .btn-add-to-cart.btn-added {
+    background: #53fc18 !important;
+    color: #000000 !important;
+  }
+
+  .btn-add-to-cart.btn-sold-out {
+    background: var(--surface-elevated);
+    color: var(--text-on-dark);
+  }
+
+  .btn-add-to-cart i {
+    font-size: 0.7rem;
+  }
+
+  @media (min-width: 768px) {
+    .product-card-info {
+      padding: 12px 14px;
+      gap: 6px;
+    }
+
+    .product-card-title {
+      font-size: 0.9rem;
+    }
+
+    .btn-add-to-cart {
+      height: 36px;
+      padding: 0 14px;
+      font-size: 0.76rem;
+    }
+  }
+</style>

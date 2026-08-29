@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kins-link-bio-v32';
+const CACHE_NAME = 'kins-link-bio-v33';
 
 // Small, stable shell assets only. Heavy media (new.png) is NOT precached —
 // it competes with first-load bandwidth and is runtime-cached on first view.
@@ -19,8 +19,10 @@ const PRECACHE_ASSETS = [
 // /api/ is deliberately excluded so authenticated responses are never cached.
 // /tuner-worklet.js and /worklets/click-worklet.js make the tuner and
 // metronome fully offline-capable (all audio DSP runs locally; the pages
-// themselves cache via the network-first HTML handler).
-const RUNTIME_CACHEABLE_PREFIXES = ['/_astro/', '/icons/', '/noise-tile.png', '/tuner-worklet.js', '/worklets/click-worklet.js'];
+// themselves cache via the network-first HTML handler). /worklets/metro-worker.js
+// is the metronome's legacy-path scheduler ticker — if it 404s offline the
+// Worker errors after 'start' was posted and playback goes silently mute.
+const RUNTIME_CACHEABLE_PREFIXES = ['/_astro/', '/icons/', '/noise-tile.png', '/tuner-worklet.js', '/worklets/click-worklet.js', '/worklets/metro-worker.js'];
 
 // Versioned third-party CDNs safe to cache-first (URLs change when versions bump).
 const CDN_CACHE_RULES = [

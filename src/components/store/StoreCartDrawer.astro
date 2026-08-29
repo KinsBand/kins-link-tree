@@ -1,0 +1,450 @@
+---
+import { storeConfig } from '../../settings/store.config';
+---
+
+<!-- Drawer Backdrop Overlay -->
+<div class="cart-backdrop-overlay" id="cartBackdropOverlay" aria-hidden="true"></div>
+
+<!-- Slide-Over Brutalist Cart Drawer -->
+<aside
+  class="store-cart-drawer"
+  id="storeCartDrawer"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-labelledby="cartDrawerTitle"
+  data-track-container="store:cart_drawer"
+>
+  <!-- Drawer Header -->
+  <div class="cart-drawer-header">
+    <div class="cart-header-title-row">
+      <i class="fa-solid fa-bag-shopping cart-header-icon"></i>
+      <h3 class="cart-drawer-title" id="cartDrawerTitle">
+        YOUR BAG <span class="cart-header-count" id="cartItemCountHeader">(0)</span>
+      </h3>
+    </div>
+
+    <button
+      type="button"
+      class="cart-drawer-close-btn brutal-press"
+      id="closeCartDrawerBtn"
+      aria-label="Close Shopping Bag"
+      title="Close Bag"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Free Shipping Meter -->
+  <div class="free-shipping-meter-box">
+    <div class="free-shipping-label" id="freeShippingProgressText">
+      Add <strong>${storeConfig.freeShippingThreshold.toFixed(2)}</strong> more for <strong>FREE SHIPPING</strong>
+    </div>
+    <div class="free-shipping-track">
+      <div class="free-shipping-fill" id="freeShippingProgressBar" style="width: 0%;"></div>
+    </div>
+  </div>
+
+  <!-- Scrollable Cart Content Area -->
+  <div class="cart-drawer-body">
+    <!-- Active Line Items List -->
+    <div class="cart-items-list" id="cartItemsList"></div>
+
+    <!-- Empty State -->
+    <div class="cart-drawer-empty-state" id="cartDrawerEmptyState">
+      <div class="cart-empty-icon-box">
+        <i class="fa-solid fa-cart-arrow-down"></i>
+      </div>
+      <h4 class="cart-empty-title">YOUR BAG IS EMPTY</h4>
+      <p class="cart-empty-desc">You haven't added any items to your bag yet. Explore the debut capsule drop!</p>
+      <button type="button" class="green-link-btn brutal-press cart-empty-cta-btn" id="continueShoppingBtn">
+        <span>CONTINUE SHOPPING</span>
+        <i class="fa-solid fa-arrow-right btn-arrow-slide" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Drawer Footer (Subtotal & Checkout) -->
+  <div class="cart-drawer-footer">
+    <!-- Promo Code Form -->
+    <form class="cart-promo-form" id="cartPromoForm">
+      <input
+        type="text"
+        id="cartPromoInput"
+        class="cart-promo-input"
+        placeholder="PROMO CODE (e.g. KINSVIP2026)"
+        aria-label="Enter promotional discount code"
+        autocomplete="off"
+      />
+      <button type="submit" class="cart-promo-submit-btn brutal-press" id="cartPromoSubmitBtn">
+        APPLY
+      </button>
+    </form>
+
+    <!-- Cost Breakdown -->
+    <div class="cart-cost-summary">
+      <div class="summary-row">
+        <span class="summary-label">Subtotal</span>
+        <span class="summary-value" id="cartSubtotalAmount">$0.00</span>
+      </div>
+
+      <div class="summary-row summary-discount-row" id="cartDiscountRow" style="display: none;">
+        <span class="summary-label">
+          Discount (<span id="cartDiscountLabel">PROMO</span>)
+          <button type="button" class="remove-promo-btn" id="removePromoBtn" title="Remove promo code">✕</button>
+        </span>
+        <span class="summary-value discount-val" id="cartDiscountAmount">-$0.00</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="summary-label">Estimated Shipping</span>
+        <span class="summary-value" id="cartShippingAmount">$0.00</span>
+      </div>
+
+      <div class="summary-divider"></div>
+
+      <div class="summary-row summary-total-row">
+        <span class="summary-label total-label">Estimated Total</span>
+        <span class="summary-value total-val" id="cartTotalAmount">$0.00</span>
+      </div>
+    </div>
+
+    <!-- Checkout CTA -->
+    <button type="button" class="cart-checkout-btn green-link-btn brutal-press" id="cartCheckoutBtn">
+      <span>PROCEED TO CHECKOUT</span>
+      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+    </button>
+
+    <div class="cart-trust-badges">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>Guaranteed Safe & Secure Checkout • Free Returns</span>
+    </div>
+  </div>
+</aside>
+
+<style>
+  /* Backdrop Overlay */
+  .cart-backdrop-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+  }
+
+  .cart-backdrop-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Slide-Over Drawer Container */
+  .store-cart-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    max-width: 440px;
+    height: 100vh;
+    background: var(--surface-card);
+    border-left: 3px solid #000000;
+    box-shadow: -4px 0px 0px #000000;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    transform: translateX(105%);
+    transition: transform 0.25s var(--ease-snappy);
+  }
+
+  .store-cart-drawer.is-open {
+    transform: translateX(0);
+  }
+
+  /* Header */
+  .cart-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--surface-base);
+    border-bottom: 2px solid #000000;
+    box-sizing: border-box;
+  }
+
+  .cart-header-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cart-header-icon {
+    color: var(--brand-accent-primary);
+    font-size: 1.1rem;
+  }
+
+  .cart-drawer-title {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--text-on-dark);
+    margin: 0;
+    letter-spacing: 0.04em;
+  }
+
+  .cart-header-count {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .cart-drawer-close-btn {
+    width: 36px;
+    height: 36px;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    border-radius: var(--radius-xs);
+    box-shadow: 1.5px 1.5px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.14s var(--ease-tactile), background-color 0.14s ease;
+  }
+
+  .cart-drawer-close-btn:hover {
+    background: var(--surface-card-panel-hover);
+  }
+
+  /* Free Shipping Meter */
+  .free-shipping-meter-box {
+    background: var(--surface-card-panel);
+    padding: 10px 20px;
+    border-bottom: 2px solid #000000;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .free-shipping-label {
+    font-family: var(--font-primary);
+    font-size: 0.76rem;
+    color: var(--text-card-primary);
+  }
+
+  .free-shipping-track {
+    width: 100%;
+    height: 8px;
+    background: var(--surface-input);
+    border: 1.5px solid #000000;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .free-shipping-fill {
+    height: 100%;
+    background: var(--brand-accent-primary);
+    border-radius: 2px;
+    transition: width 0.3s var(--ease-snappy);
+  }
+
+  .free-shipping-fill.is-unlocked {
+    background: #53fc18;
+  }
+
+  /* Scrollable Body */
+  .cart-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cart-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Empty State */
+  .cart-drawer-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 12px;
+    gap: 12px;
+    margin: auto 0;
+  }
+
+  .cart-empty-icon-box {
+    width: 56px;
+    height: 56px;
+    background: var(--surface-elevated);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--brand-accent-primary);
+  }
+
+  .cart-empty-title {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--text-on-dark);
+    margin: 0;
+  }
+
+  .cart-empty-desc {
+    font-family: var(--font-primary);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+    max-width: 260px;
+  }
+
+  .cart-empty-cta-btn {
+    height: 42px;
+    padding: 0 16px;
+    font-size: 0.78rem;
+    margin-top: 6px;
+    cursor: pointer;
+  }
+
+  /* Footer & Summary */
+  .cart-drawer-footer {
+    background: var(--surface-base);
+    border-top: 2px solid #000000;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  /* Promo Form */
+  .cart-promo-form {
+    display: flex;
+    gap: 6px;
+  }
+
+  .cart-promo-input {
+    flex: 1;
+    height: 38px;
+    background: var(--surface-input);
+    color: var(--text-card-primary);
+    border: var(--border-brutal-sm);
+    border-radius: var(--radius-xs);
+    padding: 0 10px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .cart-promo-submit-btn {
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs);
+    font-family: var(--font-heading);
+    font-size: 0.74rem;
+    font-weight: 900;
+    padding: 0 12px;
+    cursor: pointer;
+  }
+
+  /* Cost Breakdown */
+  .cart-cost-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-primary);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .summary-value {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--text-on-dark);
+  }
+
+  .summary-discount-row .discount-val {
+    color: #53fc18;
+  }
+
+  .remove-promo-btn {
+    background: transparent;
+    border: none;
+    color: var(--status-danger);
+    cursor: pointer;
+    font-size: 0.7rem;
+    margin-left: 4px;
+  }
+
+  .summary-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 4px 0;
+  }
+
+  .summary-total-row .total-label {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: var(--text-on-dark);
+  }
+
+  .summary-total-row .total-val {
+    font-family: var(--font-mono);
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--brand-accent-primary);
+  }
+
+  .cart-checkout-btn {
+    width: 100%;
+    height: 48px;
+    font-size: 0.86rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+
+  .cart-trust-badges {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: var(--font-primary);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+</style>

@@ -498,7 +498,9 @@ async function startActiveSongPlayback() {
   if (!metroState.playing) {
     await startMetronome();
   }
-  showToast(`Playing “${song.title}” (${initialBpm} BPM)`, 'success');
+  /* metroState.bpm is the clamped value — initialBpm may be undefined for
+     songs with no bpm and must never render as "undefined BPM" */
+  showToast(`Playing “${song.title}” (${metroState.bpm} BPM)`, 'success');
 }
 
 function applySectionParameters(sec, song) {
@@ -513,7 +515,7 @@ function applySectionParameters(sec, song) {
   }
   ui.renderTopbarPlayback();
   ui.renderSetlistDeck();
-  showToast(`Section: ${sec.name} (${targetBpm} BPM)`, 'info');
+  showToast(`Section: ${sec.name} (${metroState.bpm} BPM)`, 'info');
 }
 
 function onPrevSong() {
@@ -787,6 +789,36 @@ function onMidiSelect(id) {
   }
 }
 
+function onMidiTapEvent(e) {
+  const t = e.detail && e.detail.time ? e.detail.time : performance.now();
+  onPrimerTap(t);
+}
+
+function onVisibilityChange() {
+  if (document.hidden) {
+    /* PLAY IN BACKGROUND off (default): background tabs throttle timers
+       to ~1s which destroys the legacy lookahead schedule — stop
+       honestly instead of letting the click break up. stopEverything
+       also restores user volume, so an inner-clock MUTED phase can
+       never leak into the next run (mute-leak fix).
+       ON: keep running — the worklet path is immune to main-thread
+       stalls and the legacy path widens its lookahead while hidden. */
+    if (!metroState.backgroundPlay) stopEverything();
+  } else if (metroState.playing || engine.playing) {
+    /* Back in view: the context may have been suspended/interrupted by
+       the OS, and the schedule cursor may predate the gap. Resume,
+       re-seat the cursor, drop stale visual events, refresh media +
+       wake lock state. */
+    engine.resume();
+    engine.sync();
+    if (media) {
+      if (metroState.playing) media.activate(mediaSessionSnapshot());
+      else media.deactivate();
+    }
+    void reacquireWakeLock();
+  }
+}
+
 export function initMetronome() {
   if (initialized) return;
   initialized = true;
@@ -857,47 +889,45 @@ export function initMetronome() {
   });
   ui.init();
 
+  /* Named module-scope handlers so teardownMetronome can detach them —
+     document/window objects survive Astro view-transition swaps, so
+     anonymous listeners here would stack on every re-init. */
   window.addEventListener('pagehide', stopEverything);
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      /* PLAY IN BACKGROUND off (default): background tabs throttle timers
-         to ~1s which destroys the legacy lookahead schedule — stop
-         honestly instead of letting the click break up. stopEverything
-         also restores user volume, so an inner-clock MUTED phase can
-         never leak into the next run (mute-leak fix).
-         ON: keep running — the worklet path is immune to main-thread
-         stalls and the legacy path widens its lookahead while hidden. */
-      if (!metroState.backgroundPlay) stopEverything();
-    } else if (metroState.playing || engine.playing) {
-      /* Back in view: the context may have been suspended/interrupted by
-         the OS, and the schedule cursor may predate the gap. Resume,
-         re-seat the cursor, drop stale visual events, refresh media +
-         wake lock state. */
-      engine.resume();
-      engine.sync();
-      if (media) {
-        if (metroState.playing) media.activate(mediaSessionSnapshot());
-        else media.deactivate();
-      }
-      void reacquireWakeLock();
-    }
-  });
-  window.addEventListener('kins:midi-tap', (e) => {
-    const t = e.detail && e.detail.time ? e.detail.time : performance.now();
-    onPrimerTap(t);
-  });
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('kins:midi-tap', onMidiTapEvent);
+}
+
+/* bfcache-safe pause: pagehide fires for back/forward navigations too,
+   where the page (and this module's DOM wiring) will be restored intact.
+   Stop audible playback but keep the controller alive — a full teardown
+   here would double-bind every listener when the restored page re-inits. */
+export function suspendForPageHide() {
+  try { stopEverything(); } catch (e) {}
 }
 
 export function teardownMetronome() {
   stopEverything();
   disconnectMidi();
-  if (engine) {
-    try {
-      if (engine.ctx && engine.ctx.state !== 'closed') {
-        engine.ctx.close().catch(() => {});
-      }
-    } catch (e) {}
+  /* Detach global listeners registered by initMetronome + ui.init() —
+     document/window outlive view-transition swaps. */
+  window.removeEventListener('pagehide', stopEverything);
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  window.removeEventListener('kins:midi-tap', onMidiTapEvent);
+  if (ui && typeof ui.destroy === 'function') {
+    try { ui.destroy(); } catch (e) {}
   }
+  if (engine && typeof engine.destroy === 'function') {
+    try { engine.destroy(); } catch (e) {}
+  }
+  /* engine.ctx was never reachable on the old API, so this close() was
+     dead code and every init cycle leaked a full AudioContext (browsers
+     cap ~6 → metronome permanently dead). engine.destroy() now closes
+     the context, clears the hardware-check interval and terminates the
+     scheduler worker. */
+  engine = null;
+  ui = null;
+  coachEngine = null;
+  media = null;
   initialized = false;
 }
 

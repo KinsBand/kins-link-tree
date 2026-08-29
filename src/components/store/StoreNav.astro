@@ -1,0 +1,203 @@
+---
+import { Image } from 'astro:assets';
+import kinsLogoNew from '../../assets/new.png';
+
+const baseUrl = import.meta.env.BASE_URL || '/';
+---
+
+<header class="store-nav" id="storeNavHeader" data-track-container="nav:store_bar">
+  <!-- Brand Identity -->
+  <div class="store-nav-brand-col">
+    <a href={baseUrl} class="store-nav-brand-link" aria-label="Kins Band Homepage" title="KINS Official">
+      <Image src={kinsLogoNew} alt="KINS" class="store-nav-brand-logo" width={180} height={76} loading="eager" decoding="async" fetchpriority="high" />
+      <span class="store-nav-badge">✦ STORE</span>
+    </a>
+  </div>
+
+  <!-- Center Nav: Exactly 3 Links: [HOME] • [STORE] • [EPK] -->
+  <nav class="store-nav-links-cluster" aria-label="Store Main Navigation">
+    <a href={baseUrl} class="store-nav-link" data-track="store_nav:home">HOME</a>
+    <a href={`${baseUrl}store`} class="store-nav-link active" data-track="store_nav:store">STORE</a>
+    <a href={`${baseUrl}epk`} class="store-nav-link" data-track="store_nav:epk">EPK</a>
+  </nav>
+
+  <!-- Right Actions: [Shopping Bag Trigger] -->
+  <div class="store-nav-actions-col">
+    <button
+      type="button"
+      class="store-cart-trigger-btn brutal-press"
+      id="storeNavCartBtn"
+      data-action="open-cart"
+      aria-label="Open Shopping Bag"
+      title="View Shopping Bag"
+    >
+      <i class="fa-solid fa-bag-shopping store-cart-icon"></i>
+      <span class="store-cart-label">BAG</span>
+      <span class="cart-badge-count is-empty" id="storeNavBadgeCount" style="display: none;">0</span>
+    </button>
+  </div>
+</header>
+
+<style>
+  .store-nav {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 52px;
+    background: rgba(18, 18, 20, 0.96);
+    border-bottom: 2px solid #000000;
+    box-shadow: 0 3px 0px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 clamp(12px, 3vw, 28px);
+    gap: 12px;
+    z-index: 500;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    backdrop-filter: blur(8px);
+  }
+
+  .store-nav-brand-col {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .store-nav-brand-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .store-nav-brand-link:hover {
+    transform: translateY(-1px);
+  }
+
+  .store-nav-brand-logo {
+    height: 24px;
+    width: auto;
+    max-width: 90px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 6px rgba(242, 253, 67, 0.2));
+  }
+
+  .store-nav-badge {
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    font-family: var(--font-heading);
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: var(--radius-xs);
+    border: 1px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    white-space: nowrap;
+  }
+
+  /* Center Nav Cluster: [HOME] • [STORE] • [EPK] */
+  .store-nav-links-cluster {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .store-nav-link {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-xs);
+    font-family: var(--font-heading);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 5px 12px;
+    text-decoration: none;
+    transition: color 0.14s ease, background-color 0.14s ease;
+  }
+
+  .store-nav-link:hover {
+    color: var(--text-on-dark);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .store-nav-link.active {
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+  }
+
+  /* Right Actions */
+  .store-nav-actions-col {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .store-cart-trigger-btn {
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border: 2px solid #000000;
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-xs);
+    padding: 0 12px;
+    height: 36px;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: var(--font-heading);
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .store-cart-trigger-btn:hover {
+    background: var(--btn-brand-hover);
+    transform: translate(-1px, -1px);
+  }
+
+  .store-cart-icon {
+    font-size: 0.85rem;
+  }
+
+  .cart-badge-count {
+    background: #000000;
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 900;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media (max-width: 767px) {
+    .store-nav {
+      height: 48px;
+      padding: 0 10px;
+    }
+
+    .store-nav-links-cluster {
+      display: none;
+    }
+
+    .store-nav-brand-logo {
+      height: 22px;
+    }
+  }
+</style>

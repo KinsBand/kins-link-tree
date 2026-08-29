@@ -63,6 +63,14 @@ var WORKLET_RELEASE_SEC = 0.003;
 //  attack ramp, 2ms tail fade, soft-knee tanh ceiling, ~3ms release.
 // ======================================================================
 class KinsClickProcessor extends AudioWorkletProcessor {
+  static get parameterDescriptors() {
+    return [
+      { name: 'accentGain', defaultValue: 0.8, minValue: 0, maxValue: 1, automationRate: 'k-rate' },
+      { name: 'beatGain', defaultValue: 0.6, minValue: 0, maxValue: 1, automationRate: 'k-rate' },
+      { name: 'subGain', defaultValue: 0.4, minValue: 0, maxValue: 1, automationRate: 'k-rate' }
+    ];
+  }
+
   constructor() {
     super();
     this.playing = false;
@@ -158,7 +166,11 @@ class KinsClickProcessor extends AudioWorkletProcessor {
         this.totalFramesProcessed = Math.round(currentTime * sampleRate);
         this.nextTickFrame = this.totalFramesProcessed;
         this.nextClickTime = currentTime + 0.08; /* mirrors startOffsetSec */
-        this.releaseVoices();
+        /* Fresh run: hard-drop any stale release-ramp voices. A quick
+           stop→start inside the ~10ms tail otherwise keeps releaseFrame
+           armed and process() fades the FIRST new clicks to zero. */
+        this.active.length = 0;
+        this.releaseFrame = -1;
         this.playing = true;
         break;
       case 'stop':
@@ -225,6 +237,7 @@ class KinsClickProcessor extends AudioWorkletProcessor {
 
     var soundId = sound.id || 'click';
     var TWO_PI = 2 * Math.PI;
+    var phase = 0; /* local phase — never contaminates other buffers */
 
     for (var i = 0; i < n; i++) {
       var tSec = i / sampleRate;
@@ -262,17 +275,17 @@ class KinsClickProcessor extends AudioWorkletProcessor {
         mixA = 0.38; mixB = 0.62; harmMul = 1.52;
       }
 
-      this._phase += (TWO_PI * instFreq) / sampleRate;
-      if (this._phase > TWO_PI) this._phase -= TWO_PI;
-      var wave = mixA * Math.sin(this._phase) + mixB * Math.sin(harmMul * this._phase);
+      phase += (TWO_PI * instFreq) / sampleRate;
+      if (phase > TWO_PI) phase -= TWO_PI;
+      var wave = mixA * Math.sin(phase) + mixB * Math.sin(harmMul * phase);
 
       if (soundId !== 'click' && soundId !== 'classic-click' && soundId !== 'woodblock' && soundId !== 'beep' && soundId !== 'digital-beep' &&
           soundId !== 'rimshot' && soundId !== 'rim-click' && soundId !== 'cowbell' && soundId !== 'voice-count' && soundId !== 'tick' &&
           soundId !== 'synth-pluck' && soundId !== 'synthpluck' && soundId !== 'bell' && soundId !== 'claves' && soundId !== 'kick' &&
           soundId !== 'hihat' && soundId !== 'hi-hat') {
-        if (sound.type === 'sine') wave = Math.sin(this._phase);
-        else if (sound.type === 'triangle') wave = (2 / Math.PI) * Math.asin(Math.sin(this._phase));
-        else wave = 0.8 * Math.sin(this._phase) + 0.2 * Math.sin(3 * this._phase);
+        if (sound.type === 'sine') wave = Math.sin(phase);
+        else if (sound.type === 'triangle') wave = (2 / Math.PI) * Math.asin(Math.sin(phase));
+        else wave = 0.8 * Math.sin(phase) + 0.2 * Math.sin(3 * phase);
       }
 
       var env = 0;
@@ -286,7 +299,6 @@ class KinsClickProcessor extends AudioWorkletProcessor {
 
       buf[i] = wave * peak * env;
     }
-    this._phase = 0;
 
     for (var j = 0; j < fadeN; j++) {
       var fadeGain = 0.5 * (1 + Math.cos((Math.PI * j) / fadeN));
@@ -311,7 +323,8 @@ class KinsClickProcessor extends AudioWorkletProcessor {
       if (tier !== 'mute' && !isVoice) {
         var buf = this.getBuffer(curSound, isAccent, tier);
         if (this.active.length < MAX_ACTIVE_VOICES) {
-          this.active.push({ frame: this.nextClickTime * sampleRate, buf: buf });
+          var role = isAccent ? 'accent' : (startsABeat ? 'beat' : 'sub');
+          this.active.push({ frame: this.nextClickTime * sampleRate, buf: buf, role: role });
         }
       }
 
@@ -339,13 +352,18 @@ class KinsClickProcessor extends AudioWorkletProcessor {
     }
   }
 
-  process(inputs, outputs) {
+  process(inputs, outputs, parameters) {
     var out = outputs[0][0];
     if (!out) return true;
     if (this.playing) this.schedule();
     out.fill(0);
 
     if (this.active.length) {
+      /* Read role gains from AudioParams (k-rate: one value per 128-frame block) */
+      var accentG = parameters.accentGain ? parameters.accentGain[0] : 0.8;
+      var beatG   = parameters.beatGain   ? parameters.beatGain[0]   : 0.6;
+      var subG    = parameters.subGain    ? parameters.subGain[0]    : 0.4;
+
       var blockStart = currentTime * sampleRate;
       var relStart = this.releaseFrame;
       var relN = this.releaseFrames;
@@ -358,15 +376,19 @@ class KinsClickProcessor extends AudioWorkletProcessor {
         var srcStart = offset < 0 ? -offset : 0;
         var dstStart = offset > 0 ? offset : 0;
         var n = Math.min(a.buf.length - srcStart, out.length - dstStart);
+
+        /* Per-voice role gain: accent/beat/sub from AudioParams */
+        var roleG = a.role === 'accent' ? accentG : (a.role === 'beat' ? beatG : subG);
+
         if (relStart >= 0) {
           for (var j = 0; j < n; j++) {
             var df = blockStart + dstStart + j - relStart;
             if (df >= relN) break;
             var g = df < 0 ? 1 : 1 - df / relN;
-            out[dstStart + j] += a.buf[srcStart + j] * g;
+            out[dstStart + j] += a.buf[srcStart + j] * g * roleG;
           }
         } else {
-          for (var k = 0; k < n; k++) out[dstStart + k] += a.buf[srcStart + k];
+          for (var k = 0; k < n; k++) out[dstStart + k] += a.buf[srcStart + k] * roleG;
         }
         if (srcStart + n >= a.buf.length) this.active.splice(i, 1);
       }
@@ -436,6 +458,7 @@ class MetronomeProcessor extends AudioWorkletProcessor {
     this._legacyBpm = 120;
     this._legacyPerBeat = 1;
     this.beatCounter = 0;
+    this.scheduledTotal = 0;
     this._phase = 0;
 
     this.port.onmessage = (event) => {
@@ -452,7 +475,14 @@ class MetronomeProcessor extends AudioWorkletProcessor {
         this.beatsPerBar = (payload.beatsPerBar || (payload.data && payload.data.beatsPerBar)) || 4;
       } else if (type === 'RESET_PHASE') {
         this.subdivisionCounter = 0;
+        this.scheduledTotal = 0;
         this.nextTickFrame = this.totalFramesProcessed;
+        /* Drop stale voices so a restart never resumes clicks mid-decay
+           (isPlaying gating alone does not clear the voice pool) */
+        for (let vi = 0; vi < this.voices.length; vi++) {
+          this.voices[vi].active = false;
+          this.voices[vi].buffer = null;
+        }
       } else if (type === 'sounds' || type === 'sound' || type === 'start' || type === 'stop' || type === 'bpm' || type === 'opts' || type === 'tiers' || type === 'sync') {
         // Forward to also handle via same logic if needed for testing
         if (type === 'bpm' && typeof payload.bpm === 'number') this._legacyBpm = payload.bpm;
@@ -470,6 +500,7 @@ class MetronomeProcessor extends AudioWorkletProcessor {
     voice.active = true;
     voice.elapsedSeconds = 0;
     voice.playbackIndex = 0;
+    voice.role = role; /* Store semantic role for gain lookup */
 
     const isAccent = (this.subdivisionCounter === 0);
     const isPrimaryBeat = (this.subdivisionCounter % Math.max(1, Math.floor(subdivision)) === 0);
@@ -526,14 +557,20 @@ class MetronomeProcessor extends AudioWorkletProcessor {
       const currentFrame = this.totalFramesProcessed + i;
 
       if (currentFrame >= this.nextTickFrame) {
-        const isAccent = (this.subdivisionCounter === 0);
-        const isPrimaryBeat = (this.subdivisionCounter % subdivision === 0);
+        /* Compute from the PRE-increment counter: the old code read the
+           post-increment value, shifting every reported beat position by
+           one click and cycling `n` (modulo) instead of a running total. */
+        const preCounter = this.subdivisionCounter;
+        const isAccent = (preCounter === 0);
+        const isPrimaryBeat = (preCounter % subdivision === 0);
         const role = isAccent ? 'accent' : (isPrimaryBeat ? 'beat' : 'sub');
+        const beatInBar = Math.floor(preCounter / subdivision) % this.beatsPerBar;
 
         this.triggerVoice(role, bpm, subdivision);
 
-        this.subdivisionCounter = (this.subdivisionCounter + 1) % (this.beatsPerBar * subdivision);
+        this.subdivisionCounter = (preCounter + 1) % (this.beatsPerBar * subdivision);
         this.nextTickFrame += framesPerSubdivision;
+        this.scheduledTotal++;
 
         this.port.postMessage({
           type: 'TICK_EVENT',
@@ -543,8 +580,8 @@ class MetronomeProcessor extends AudioWorkletProcessor {
         this.port.postMessage({
           type: 'beat',
           time: currentFrame / sampleRate,
-          n: this.subdivisionCounter,
-          beatInBar: Math.floor(this.subdivisionCounter / subdivision) % this.beatsPerBar,
+          n: this.scheduledTotal,
+          beatInBar: beatInBar,
           isAccent: isAccent,
           tier: isAccent ? 'high' : (isPrimaryBeat ? 'mid' : 'low'),
           isBeatStart: isPrimaryBeat
@@ -581,14 +618,13 @@ class MetronomeProcessor extends AudioWorkletProcessor {
           }
         }
 
-        const roleGain = (voice.frequency === 1200) ? accentGain : ((voice.frequency === 800) ? beatGain : subGain);
+        const roleGain = voice.role === 'accent' ? accentGain : (voice.role === 'beat' ? beatGain : subGain);
         sampleSum += sample * roleGain;
       }
 
-      // Summed sub-mix bus headroom -3.01 dB (0.707)
-      sampleSum *= 0.707;
-
-      // Soft-knee limiting inside worklet to prevent DAC clipping
+      /* Soft-knee limiting catches the rare multi-voice sum that exceeds
+         the knee; the fixed 0.707 bus penalty is removed since per-voice
+         AudioParam gains already provide proper headroom. */
       if (sampleSum > WORKLET_LIMIT_KNEE || sampleSum < -WORKLET_LIMIT_KNEE) {
         var over = Math.abs(sampleSum) - WORKLET_LIMIT_KNEE;
         var shaped = WORKLET_LIMIT_KNEE + (1 - WORKLET_LIMIT_KNEE) * Math.tanh(over / (1 - WORKLET_LIMIT_KNEE));

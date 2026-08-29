@@ -4,6 +4,7 @@ import { functionalityConfig } from '../../settings/functionality.config';
 
 const baseUrl = import.meta.env.BASE_URL;
 const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.enabled ?? true);
+const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
 ---
 
 <footer class="site-footer">
@@ -52,8 +53,21 @@ const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.e
       </span>
     </div>
 
-    <!-- Compact Single-Row Navigation: [EPK] • [FEEDBACK] • [LEGAL] -->
+    <!-- Compact Single-Row Navigation: [STORE] • [EPK] • [FEEDBACK] • [LEGAL] -->
     <nav class="footer-nav-row" aria-label="Site Links and Legal Navigation">
+      {isStoreEnabled && (
+        <>
+          <a
+            href={`${baseUrl}store`}
+            class="footer-nav-item footer-nav-link"
+            data-track="footer:nav_store"
+          >
+            STORE
+          </a>
+          <span class="footer-nav-dot" aria-hidden="true">•</span>
+        </>
+      )}
+
       {isEpkEnabled && (
         <>
           <a

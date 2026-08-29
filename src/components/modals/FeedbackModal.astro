@@ -281,19 +281,41 @@ import ToolIcon from '../ui/ToolIcon.astro';
   }
 
   .feedback-modal-enhanced {
+    position: relative;
     width: 100%;
     max-width: 490px;
     max-height: 85vh;
     max-height: 85dvh;
     overflow-y: auto;
     overscroll-behavior: contain;
-    background: var(--surface-card-light);
+    background: #0e0e12;
     border: 3px solid #000000;
     border-radius: 12px;
     box-shadow: 6px 6px 0px #000000;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    color: #f5f5f7;
+  }
+
+  /* Chalkboard fine grain noise texture overlay */
+  .feedback-modal-enhanced::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/noise-tile.webp");
+    background-repeat: repeat;
+    background-size: 64px 64px;
+    image-rendering: pixelated;
+    opacity: 0.055;
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  .feedback-modal-enhanced > * {
+    position: relative;
+    z-index: 1;
   }
 
   @keyframes modalPopIn {
@@ -333,7 +355,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    background: var(--surface-card-panel, #f5f4ef);
+    background: #ffffff;
     border: 2.5px solid #000000;
     box-shadow: 3px 3px 0px #000000;
     border-radius: 9999px;
@@ -350,24 +372,18 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.88rem;
     font-weight: 900;
-    color: var(--text-card-primary);
+    color: #000000;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
   .sheet-pill-title i {
     font-size: 0.85rem;
-    color: var(--brand-accent-primary, #f2fd43);
-    filter: drop-shadow(0 0 1px #000000);
-    transition: color 0.16s ease;
-  }
-
-  :global([data-theme="dark"]) .sheet-pill-title i {
-    color: var(--brand-accent-primary, #d4af37);
+    color: #000000;
   }
 
   .sheet-pill-close-btn {
-    background: var(--btn-brand-primary, #f2fd43);
+    background: #ffffff;
     color: #000000;
     border: 2px solid #000000;
     box-shadow: 1.5px 1.5px 0px #000000;
@@ -391,7 +407,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   }
 
   .sheet-pill-close-btn:hover {
-    background: var(--btn-brand-hover, #ffffff);
+    background: #f5f4ef;
     transform: scale(1.05);
   }
 
@@ -408,7 +424,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   .sheet-drag-pill {
     width: 42px;
     height: 5px;
-    background: #000000;
+    background: #ffffff;
     border-radius: 999px;
     opacity: 0.35;
     pointer-events: none;
@@ -450,7 +466,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-card-primary);
+    color: #ffffff;
   }
 
   .dynamic-details-label {
@@ -461,7 +477,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     text-transform: none;
     letter-spacing: 0;
     font-weight: 700;
-    color: var(--text-card-primary);
+    color: #ffffff;
   }
 
   .category-selected-label {
@@ -469,7 +485,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-size: 0.72rem;
     font-weight: 800;
     color: #000000;
-    background: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow, #f2fd43);
     border: 1px solid #000000;
     padding: 1px 6px;
     border-radius: 3px;
@@ -479,7 +495,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   .optional-tag {
     font-weight: normal;
     text-transform: none;
-    color: var(--text-card-muted);
+    color: #a1a1aa;
     font-size: 0.7rem;
   }
 
@@ -491,10 +507,10 @@ import ToolIcon from '../ui/ToolIcon.astro';
   }
 
   .type-pill-btn {
-    background: var(--surface-input);
+    background: #ffffff;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
-    color: var(--text-card-primary);
+    color: #000000;
     padding: 8px 6px;
     min-height: 48px;
     border-radius: 6px;
@@ -513,7 +529,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   }
 
   .type-pill-btn span {
-    color: var(--text-card-primary);
+    color: #000000;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -522,19 +538,19 @@ import ToolIcon from '../ui/ToolIcon.astro';
   }
 
   .type-pill-btn i {
-    color: var(--text-card-primary);
+    color: #000000;
     font-size: 0.9rem;
     line-height: 1;
   }
 
   .type-pill-btn:hover {
-    background: var(--surface-card-light-hover);
+    background: #f5f4ef;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
 
   .type-pill-btn.active {
-    background: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow, #f2fd43);
     border-color: #000000;
     color: #000000;
     font-weight: 900;
@@ -590,15 +606,15 @@ import ToolIcon from '../ui/ToolIcon.astro';
     right: 0;
     bottom: 4px;
     width: 28px;
-    background: linear-gradient(90deg, transparent, var(--surface-card-light));
+    background: linear-gradient(90deg, transparent, #0e0e12);
     pointer-events: none;
   }
 
   .category-chip {
-    background: var(--surface-input);
+    background: #ffffff;
     border: 1.5px solid #000000;
     box-shadow: 1.5px 1.5px 0px #000000;
-    color: var(--text-card-primary);
+    color: #000000;
     padding: 0 12px;
     height: 32px;
     border-radius: 6px;
@@ -621,11 +637,11 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-size: 0.74rem;
     width: 13px;
     height: 13px;
-    color: var(--text-card-primary);
+    color: #000000;
   }
 
   .category-chip:hover {
-    background: var(--accent-neon-yellow);
+    background: #f5f4ef;
     color: #000000;
     transform: translateY(-1px);
   }
@@ -636,7 +652,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   }
 
   .category-chip.active {
-    background: #ffffff;
+    background: var(--accent-neon-yellow, #f2fd43);
     color: #000000;
     border-color: #000000;
     font-weight: 900;
@@ -650,12 +666,12 @@ import ToolIcon from '../ui/ToolIcon.astro';
   /* Textarea & Inputs */
   .textarea-wrapper textarea {
     width: 100%;
-    background: var(--surface-input);
+    background: #ffffff;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
     padding: 10px 12px;
-    color: var(--text-card-primary);
+    color: #000000;
     font-family: var(--font-secondary, system-ui);
     font-size: 0.82rem;
     font-weight: 600;
@@ -672,13 +688,13 @@ import ToolIcon from '../ui/ToolIcon.astro';
   }
 
   .textarea-wrapper textarea::placeholder {
-    color: var(--text-card-muted);
+    color: #71717a;
   }
 
   .char-counter {
     font-family: var(--font-secondary, system-ui);
     font-size: clamp(0.66rem, 2.3vw, 0.72rem);
-    color: var(--text-card-muted);
+    color: #a1a1aa;
     white-space: nowrap;
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
@@ -733,7 +749,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   .image-upload-skeleton {
     width: 100%;
     min-height: 62px;
-    background: var(--surface-input);
+    background: #ffffff;
     border: 2px dashed #000000;
     border-radius: 6px;
     box-shadow: 2px 2px 0px #000000;
@@ -753,7 +769,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
 
   .image-upload-skeleton:hover,
   .image-upload-skeleton:focus-visible {
-    background: var(--surface-card-light-hover);
+    background: #f5f4ef;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
@@ -761,7 +777,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   .image-upload-skeleton.drag-over {
     border-color: #000000;
     border-style: solid;
-    background: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow, #f2fd43);
     box-shadow: 3px 3px 0px #000000;
     transform: scale(1.01);
   }
@@ -779,7 +795,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     width: 36px;
     height: 36px;
     border-radius: 6px;
-    background: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow, #f2fd43);
     border: 1.5px solid #000000;
     color: #000000;
     display: flex;
@@ -802,7 +818,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-family: var(--font-secondary, system-ui);
     font-size: 0.78rem;
     font-weight: 800;
-    color: var(--text-card-primary);
+    color: #000000;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -813,16 +829,16 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-family: var(--font-secondary, system-ui);
     font-size: 0.68rem;
     font-weight: 600;
-    color: var(--text-card-secondary);
+    color: #52525b;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .browse-btn-pill {
-    background: var(--surface-card-light-hover);
+    background: #f5f4ef;
     border: 1.5px solid #000000;
-    color: var(--text-card-primary);
+    color: #000000;
     font-family: var(--font-secondary, system-ui);
     font-size: 0.72rem;
     font-weight: 800;
@@ -840,7 +856,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   .image-preview-container {
     width: 100%;
     min-height: 62px;
-    background: var(--surface-input);
+    background: #ffffff;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
@@ -910,7 +926,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-family: var(--font-secondary, system-ui);
     font-size: 0.77rem;
     font-weight: 800;
-    color: var(--text-card-primary);
+    color: #000000;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -928,7 +944,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-size: 0.64rem;
     font-weight: 800;
     color: #000000;
-    background: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow, #f2fd43);
     border: 1px solid #000000;
     padding: 1px 5px;
     border-radius: 3px;
@@ -942,12 +958,12 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-family: var(--font-secondary, system-ui);
     font-size: 0.68rem;
     font-weight: 600;
-    color: var(--text-card-secondary);
+    color: #52525b;
     white-space: nowrap;
   }
 
   .remove-image-btn {
-    background: var(--surface-input);
+    background: #ffffff;
     border: 1.5px solid #000000;
     box-shadow: 1px 1px 0px #000000;
     color: #ef4444;
@@ -1010,19 +1026,19 @@ import ToolIcon from '../ui/ToolIcon.astro';
   .input-left-icon {
     position: absolute;
     left: 12px;
-    color: var(--text-card-primary);
+    color: #000000;
     font-size: 0.82rem;
     pointer-events: none;
   }
 
   .input-with-icon input {
     width: 100%;
-    background: var(--surface-input);
+    background: #ffffff;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
     padding: 10px 12px 10px 34px;
-    color: var(--text-card-primary);
+    color: #000000;
     font-family: var(--font-secondary, system-ui);
     font-size: 0.82rem;
     font-weight: 600;
@@ -1037,7 +1053,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   }
 
   .input-with-icon input::placeholder {
-    color: var(--text-card-muted);
+    color: #71717a;
   }
 
   /* Submit Button */
@@ -1135,7 +1151,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-family: var(--font-heading, system-ui);
     font-size: 1.3rem;
     font-weight: 900;
-    color: var(--text-card-primary);
+    color: #ffffff;
     text-transform: uppercase;
     letter-spacing: -0.01em;
     margin: 0;
@@ -1145,7 +1161,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
     font-family: var(--font-secondary, system-ui);
     font-size: 0.86rem;
     font-weight: 600;
-    color: var(--text-card-secondary);
+    color: #d4d4d8;
     line-height: 1.45;
     margin: 0;
     max-width: 380px;
@@ -1209,10 +1225,10 @@ import ToolIcon from '../ui/ToolIcon.astro';
 
   .reset-feedback-btn {
     flex: 1;
-    background: var(--surface-input);
+    background: #ffffff;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
-    color: var(--text-card-primary);
+    color: #000000;
     font-family: var(--font-secondary, system-ui);
     font-size: 0.8rem;
     font-weight: 800;
@@ -1227,7 +1243,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
   }
 
   .reset-feedback-btn:hover {
-    background: var(--accent-neon-yellow);
+    background: #f5f4ef;
     color: #000000;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
@@ -1235,7 +1251,7 @@ import ToolIcon from '../ui/ToolIcon.astro';
 
   .close-done-btn {
     flex: 1;
-    background: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow, #f2fd43);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     color: #000000;

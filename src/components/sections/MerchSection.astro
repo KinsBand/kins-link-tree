@@ -1,135 +1,252 @@
 ---
+import { storeConfig } from '../../settings/store.config';
+import { functionalityConfig } from '../../settings/functionality.config';
+
+const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
+const baseUrl = import.meta.env.BASE_URL || '/';
+const featuredProducts = storeConfig.products.filter((p) => p.featured).slice(0, 3);
 ---
 
-<section class="merch-section" id="merch-section" data-track-container="main:merch">
-  <div class="members-section-header">
-    <h3 class="members-section-title"><i class="fa-solid fa-shirt"></i> Official Merch</h3>
-    <span class="scroll-hint-pill merch-status-pill">
-      <i class="fa-solid fa-clock"></i> Stay Tuned
-    </span>
-  </div>
+{isStoreEnabled && (
+  <section class="merch-section" id="merch-section" data-track-container="main:merch">
+    <div class="merch-section-header">
+      <h3 class="merch-section-title"><i class="fa-solid fa-shirt"></i> Official Merch</h3>
+      <a href={`${baseUrl}store`} class="scroll-hint-pill merch-status-pill" data-track="merch_section:view_all">
+        <span>STORE</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
 
-  <div class="merch-coming-soon-card">
-    <div class="merch-cs-icon-box">
-      <i class="fa-solid fa-box-open"></i>
+    <!-- Featured Merch Cards Horizontal Reel / Grid -->
+    <div class="merch-preview-grid">
+      {featuredProducts.map((product) => (
+        <a href={`${baseUrl}store?category=${product.category}`} class="merch-preview-card brutal-card brutal-press" data-track={`merch_preview:${product.id}`}>
+          {product.badge && <span class="tape-badge preview-tape-badge">{product.badge}</span>}
+          
+          <div class="merch-preview-img-box">
+            <img src={product.images.primary} alt={product.title} class="merch-preview-img" loading="lazy" />
+          </div>
+
+          <div class="merch-preview-info">
+            <h4 class="merch-preview-title">{product.title}</h4>
+            <div class="merch-preview-price-row">
+              <span class="merch-preview-price">${product.price.toFixed(2)}</span>
+              <span class="merch-preview-cta">VIEW →</span>
+            </div>
+          </div>
+        </a>
+      ))}
     </div>
-    <div class="merch-cs-content">
-      <span class="merch-cs-badge">COMING SOON</span>
-      <h4 class="merch-cs-title">Official Kins Store Drop</h4>
-      <p class="merch-cs-desc">Exclusive apparel, vinyl & limited accessories dropping soon. Stay tuned for release announcements.</p>
+
+    <div class="merch-footer-action">
+      <a href={`${baseUrl}store`} class="merch-full-store-btn green-link-btn brutal-press" data-track="merch_section:full_store_btn">
+        <span>EXPLORE OFFICIAL STORE ({storeConfig.products.length} ITEMS)</span>
+        <i class="fa-solid fa-arrow-right btn-arrow-slide" aria-hidden="true"></i>
+      </a>
     </div>
-  </div>
-</section>
+  </section>
+)}
 
 <style>
   .merch-section {
-    display: none !important;
     width: 100%;
     margin-top: 14px;
     margin-bottom: 10px;
     content-visibility: auto;
-    contain-intrinsic-size: 0 160px;
+    contain-intrinsic-size: 0 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
-  .members-section-header {
+  .merch-section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
     padding: 0 2px;
   }
 
-  .members-section-title {
+  .merch-section-title {
     font-family: var(--font-heading);
     font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--text-white);
+    color: var(--text-on-dark);
     display: flex;
     align-items: center;
     gap: 8px;
+    margin: 0;
   }
 
-  .members-section-title i {
-    color: var(--text-muted);
+  .merch-section-title i {
+    color: var(--brand-accent-primary);
     font-size: 0.85rem;
   }
 
-  .scroll-hint-pill {
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
-    font-weight: 700;
+  .merch-status-pill {
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-card-primary);
+    background: var(--btn-brand-primary);
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
     padding: 4px 10px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs);
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    text-decoration: none;
+    transition: transform 0.14s var(--ease-tactile);
   }
 
-  .merch-coming-soon-card {
-    background: rgba(18, 18, 20, 0.85);
-    border: 1px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
-    padding: 18px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    backdrop-filter: blur(12px);
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+  .merch-status-pill:hover {
+    transform: translateY(-1px);
   }
 
-  .merch-coming-soon-card:hover {
-    border-color: rgba(255, 255, 255, 0.35);
-    background: rgba(24, 24, 28, 0.9);
+  .merch-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
   }
 
-  .merch-cs-icon-box {
-    font-size: 1.6rem;
-    color: var(--text-white);
-    width: 48px;
-    height: 48px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .merch-cs-content {
+  .merch-preview-card {
+    background: var(--surface-card);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-xs);
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
   }
 
-  .merch-cs-badge {
-    font-family: var(--font-secondary);
-    font-size: 0.62rem;
+  .merch-preview-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .preview-tape-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    font-family: var(--font-heading);
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    padding: 2px 6px;
+    border: 1px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    border-radius: 2px;
+    z-index: 5;
+  }
+
+  .merch-preview-img-box {
+    width: 100%;
+    aspect-ratio: 1.2 / 1;
+    background: #141418;
+    border-bottom: 1.5px solid #000000;
+    overflow: hidden;
+  }
+
+  .merch-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s var(--ease-snappy);
+  }
+
+  .merch-preview-card:hover .merch-preview-img {
+    transform: scale(1.04);
+  }
+
+  .merch-preview-info {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .merch-preview-title {
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--text-on-dark);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .merch-preview-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2px;
+  }
+
+  .merch-preview-price {
+    font-family: var(--font-mono);
+    font-size: 0.92rem;
+    font-weight: 900;
+    color: var(--brand-accent-primary);
+  }
+
+  .merch-preview-cta {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
     font-weight: 800;
     color: var(--text-muted);
-    letter-spacing: 0.08em;
+  }
+
+  .merch-preview-card:hover .merch-preview-cta {
+    color: var(--text-on-dark);
+  }
+
+  .merch-footer-action {
+    margin-top: 4px;
+  }
+
+  .merch-full-store-btn {
+    width: 100%;
+    height: 44px;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: var(--btn-brand-text, #000000);
+    font-family: var(--font-heading, 'Syne', sans-serif);
+    font-size: 0.82rem;
+    font-weight: 900;
     text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: var(--border-brutal-sm, 2px solid #000000);
+    box-shadow: var(--shadow-brutal-black, 3px 3px 0px #000000);
+    border-radius: var(--radius-xs, 6px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
   }
 
-  .merch-cs-title {
-    font-family: var(--font-heading);
-    font-size: 0.98rem;
-    font-weight: 700;
-    color: var(--text-white);
-    letter-spacing: -0.01em;
+  .merch-full-store-btn:hover {
+    background: var(--btn-brand-hover, #faff60);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
   }
 
-  .merch-cs-desc {
-    font-family: var(--font-secondary);
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    line-height: 1.35;
+  @media (max-width: 600px) {
+    .merch-preview-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

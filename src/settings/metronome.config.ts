@@ -255,6 +255,10 @@ export const METRO_TIMING = {
      advance to keep bar position) instead of being scheduled in the past
      where they'd all fire at once as a distorted burst. */
   resyncGraceSec: 0.1,
+  /* Hard cap on per-click catch-up steps before the legacy scheduler
+     switches to a phase-preserving bulk jump (multi-hour suspension
+     protection — avoids a 100k+ iteration loop on the first tick). */
+  maxCatchupSteps: 256,
   /* Visual-drain staleness + burst caps: events staler than this are
      dropped silently, and at most this many fire per frame, so returning
      from a stall/background period never bursts UI + haptics. */

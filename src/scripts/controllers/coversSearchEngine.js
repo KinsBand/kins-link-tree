@@ -30,7 +30,13 @@ export async function fetchLiveArtistSuggestions(songTitle) {
   }
 
   try {
-    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanTitle)}&entity=song&limit=8`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanTitle)}&media=music&entity=song&limit=6&country=US`, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(timeoutId);
     const data = await res.json();
 
     if (data.results && data.results.length > 0) {

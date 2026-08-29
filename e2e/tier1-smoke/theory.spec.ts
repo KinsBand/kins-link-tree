@@ -1,13 +1,17 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('tier1 smoke — theory (hidden)', () => {
-  test('homepage does not render KINS TOOLS section when disabled', async ({ page }) => {
+test.describe('tier1 smoke — theory gating & KINS TOOLS', () => {
+  test('KINS TOOLS section renders with the metronome only', async ({ page }) => {
     await page.goto('/');
     const toolsSection = page.locator('#rehearsalUtilitiesSection');
-    await expect(toolsSection).toBeHidden();
+    await expect(toolsSection).toBeVisible();
 
-    const theoryCardBtn = page.locator('a[data-track="utilities:theory"]');
-    await expect(theoryCardBtn).toBeHidden();
+    const metroCardBtn = page.locator('a[data-track="utilities:metronome"]');
+    await expect(metroCardBtn).toBeVisible();
+    await expect(metroCardBtn).toHaveAttribute('href', '/metronome');
+
+    await expect(page.locator('a[data-track="utilities:tuner"]')).toHaveCount(0);
+    await expect(page.locator('a[data-track="utilities:theory"]')).toHaveCount(0);
   });
 
   test('direct navigation to /theory redirects away to homepage', async ({ page }) => {
@@ -16,4 +20,3 @@ test.describe('tier1 smoke — theory (hidden)', () => {
     await expect(page).toHaveURL(/\/$/);
   });
 });
-

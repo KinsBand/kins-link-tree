@@ -1,0 +1,224 @@
+---
+import { storeConfig } from '../../settings/store.config';
+---
+
+<div class="store-filter-bar-wrapper" id="storeCatalogSection" data-track-container="store:filter_bar">
+  <div class="store-filter-bar-container">
+    <!-- Category Pills Scroll Row -->
+    <div class="store-category-scroll-strip" role="tablist" aria-label="Filter products by category">
+      {storeConfig.categories.map((cat, idx) => (
+        <button
+          type="button"
+          class={`store-category-pill brutal-press ${idx === 0 ? 'active' : ''}`}
+          data-category={cat.id}
+          role="tab"
+          aria-selected={idx === 0 ? 'true' : 'false'}
+          data-track={`store_filter:cat_${cat.id}`}
+        >
+          <i class={cat.icon} aria-hidden="true"></i>
+          <span>{cat.name}</span>
+        </button>
+      ))}
+    </div>
+
+    <!-- Search & Sort Row -->
+    <div class="store-search-sort-strip">
+      <div class="store-search-box">
+        <i class="fa-solid fa-magnifying-glass store-search-icon" aria-hidden="true"></i>
+        <input
+          type="text"
+          id="storeSearchInput"
+          class="store-search-input"
+          placeholder="Search merch, vinyl, tabs..."
+          aria-label="Search store catalog"
+          autocomplete="off"
+        />
+        <button
+          type="button"
+          id="storeSearchClearBtn"
+          class="store-search-clear-btn"
+          aria-label="Clear search"
+          style="display: none;"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="store-sort-box">
+        <select id="storeSortSelect" class="store-sort-select" aria-label="Sort products">
+          <option value="featured">Featured</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="newest">Newest</option>
+        </select>
+        <span class="store-count-badge" id="storeVisibleCount">{storeConfig.products.length}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .store-filter-bar-wrapper {
+    width: 100%;
+    max-width: 1240px;
+    margin: 8px auto 0;
+    padding: 0 12px;
+    box-sizing: border-box;
+    position: sticky;
+    top: 52px;
+    z-index: 400;
+  }
+
+  .store-filter-bar-container {
+    background: rgba(20, 20, 24, 0.94);
+    border: var(--border-brutal-sm);
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+    backdrop-filter: blur(8px);
+  }
+
+  /* Horizontal Category Strip */
+  .store-category-scroll-strip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .store-category-scroll-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .store-category-pill {
+    background: var(--surface-card);
+    color: var(--text-muted);
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: var(--radius-pill);
+    padding: 4px 10px;
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    transition: transform 0.14s var(--ease-tactile), background-color 0.14s ease, color 0.14s ease;
+  }
+
+  .store-category-pill:hover {
+    background: var(--surface-card-panel-hover);
+    color: var(--text-card-primary);
+  }
+
+  .store-category-pill.active {
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+  }
+
+  .store-category-pill i {
+    font-size: 0.65rem;
+  }
+
+  /* Search & Sort Strip */
+  .store-search-sort-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .store-search-box {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .store-search-icon {
+    position: absolute;
+    left: 10px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    pointer-events: none;
+  }
+
+  .store-search-input {
+    width: 100%;
+    height: 32px;
+    background: var(--surface-input);
+    color: var(--text-card-primary);
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-xs);
+    padding: 0 28px 0 28px;
+    font-family: var(--font-primary);
+    font-size: 0.76rem;
+    font-weight: 500;
+    box-sizing: border-box;
+  }
+
+  .store-search-input:focus {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 1px;
+  }
+
+  .store-search-clear-btn {
+    position: absolute;
+    right: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px;
+    font-size: 0.75rem;
+  }
+
+  .store-sort-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .store-sort-select {
+    height: 32px;
+    background: var(--surface-input);
+    color: var(--text-card-primary);
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-xs);
+    padding: 0 6px;
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .store-count-badge {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px 6px;
+    border-radius: var(--radius-xs);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  @media (max-width: 767px) {
+    .store-filter-bar-wrapper {
+      top: 48px;
+      padding: 0 8px;
+    }
+  }
+</style>

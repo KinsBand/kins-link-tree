@@ -30,6 +30,27 @@ test.describe('tier1 smoke — home hub', () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
+  test('store is hidden and direct navigation redirects to homepage when disabled', async ({ page }) => {
+    await page.goto('/');
+    
+    // Top nav Store button should not exist
+    const storeTopNavBtn = page.locator('.top-nav-store-btn');
+    await expect(storeTopNavBtn).toBeHidden();
+
+    // Footer nav Store link should not exist
+    const storeFooterLink = page.locator('a[data-track="footer:nav_store"]');
+    await expect(storeFooterLink).toBeHidden();
+
+    // Merch Section on homepage should not exist
+    const merchSection = page.locator('#merch-section');
+    await expect(merchSection).toBeHidden();
+
+    // Direct navigation to /store redirects away to homepage
+    await page.goto('/store');
+    await expect(page).not.toHaveURL(/\/store/);
+    await expect(page).toHaveURL(/\/$/);
+  });
+
   test('live page resolves (offline or live mode, never 404)', async ({ page }) => {
     const res = await page.goto('/live');
     expect(res?.status() ?? 200).toBeLessThan(400);

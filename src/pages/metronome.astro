@@ -2345,6 +2345,27 @@ import LegalModal from '../components/modals/LegalModal.astro';
     outline: none;
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
     box-sizing: border-box;
+    position: fixed;
+  }
+
+  /* Chalkboard fine grain noise texture overlay on metronome sheet */
+  .metro-sheet::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/noise-tile.webp");
+    background-repeat: repeat;
+    background-size: 64px 64px;
+    image-rendering: pixelated;
+    opacity: 0.055;
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  .metro-sheet > * {
+    position: relative;
+    z-index: 1;
   }
 
   .metro-sheet.open {
@@ -6550,21 +6571,22 @@ import LegalModal from '../components/modals/LegalModal.astro';
     background: #000000;
   }
   html[data-theme="standard"] .metro-sheet {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: #141418;
+    color: #f5f5f7;
   }
   html[data-theme="standard"] .metro-sheet-title {
     background: #ffffff;
-    color: #0a0a0c;
+    color: #000000;
+    border-color: #000000;
   }
   html[data-theme="standard"] .metro-sheet-handle::before {
-    background: #d4d4d8;
+    background: #52525b;
   }
   html[data-theme="standard"] .metro-display-box,
   html[data-theme="standard"] .metro-info-btn,
   html[data-theme="standard"] .metro-info-spacer {
-    background: #f5f4ef;
-    color: #0a0a0c;
+    background: #ffffff;
+    color: #000000;
     border-color: #000000;
   }
   html[data-theme="standard"] :global(.metro-chip),
@@ -6572,41 +6594,120 @@ import LegalModal from '../components/modals/LegalModal.astro';
   html[data-theme="standard"] .metro-beatstyle-chip,
   html[data-theme="standard"] .metro-settoggle,
   html[data-theme="standard"] .metro-sound-row :global(.metro-chip) {
-    background: #f5f4ef;
-    color: #0a0a0c;
+    background: #ffffff;
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .metro-settoggle i,
+  html[data-theme="standard"] .metro-settoggle span {
+    color: #000000;
   }
   html[data-theme="standard"] :global(.metro-chip:hover),
   html[data-theme="standard"] :global(.metro-sub-chip:hover),
   html[data-theme="standard"] .metro-beatstyle-chip:hover,
   html[data-theme="standard"] .metro-settoggle:hover {
-    background: #ffffff;
+    background: #f5f4ef;
+    color: #000000;
   }
   html[data-theme="standard"] :global(.metro-chip.active),
   html[data-theme="standard"] :global(.metro-sub-chip.active),
   html[data-theme="standard"] .metro-beatstyle-chip.active,
   html[data-theme="standard"] .metro-settoggle[aria-pressed="true"] {
-    background: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .metro-settoggle[aria-pressed="true"] i,
+  html[data-theme="standard"] .metro-settoggle[aria-pressed="true"] span {
     color: #000000;
   }
   html[data-theme="standard"] .metro-settings-scroll {
     background: transparent;
   }
-  html[data-theme="standard"] .metro-settings-fixed-footer {
+  html[data-theme="standard"] .metro-settings-label {
+    color: #f5f5f7;
+    font-weight: 800;
+  }
+  html[data-theme="standard"] .metro-settings-info-btn {
     background: #ffffff;
-    border-top-color: rgba(0, 0, 0, 0.08);
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .metro-volume-wrap {
+    background: #ffffff;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .metro-volume-value {
+    color: #000000;
+    font-weight: 800;
+  }
+  html[data-theme="standard"] .metro-color-row {
+    background: #ffffff;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .metro-color-tier-label {
+    color: #000000;
+    font-weight: 800;
+  }
+  html[data-theme="standard"] .metro-color-hex {
+    color: #52525b;
+    font-weight: 700;
+  }
+  html[data-theme="standard"] .metro-reset-pitch-btn,
+  html[data-theme="standard"] .metro-reset-colors-btn {
+    background: #ffffff;
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .metro-reset-pitch-btn:hover,
+  html[data-theme="standard"] .metro-reset-colors-btn:hover {
+    background: #f5f4ef;
+  }
+  html[data-theme="standard"] .metro-settings-fixed-footer {
+    background: #141418;
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+  html[data-theme="standard"] .metro-copy-link-card {
+    background: #ffffff;
+    border-color: #000000;
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-copy-link-text {
+    color: #000000;
+    font-weight: 800;
+  }
+  html[data-theme="standard"] .metro-sheet-footer-card {
+    background: #ffffff;
+    border-color: #000000;
+    color: #000000;
+  }
+  html[data-theme="standard"] .theme-current-title,
+  html[data-theme="standard"] .theme-mode-label {
+    color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-content-area,
   html[data-theme="standard"] .metro-subview-header {
+    background: transparent;
+  }
+  html[data-theme="standard"] .metro-subview-title {
+    color: #ffffff;
+    font-weight: 900;
+  }
+  html[data-theme="standard"] .metro-nav-back-btn,
+  html[data-theme="standard"] .metro-subview-action-btn {
     background: #ffffff;
+    color: #000000;
+    border-color: #000000;
   }
   html[data-theme="standard"] .metro-menu-nav-btn {
-    background: #f5f4ef;
+    background: #ffffff;
     color: #52525b;
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-menu-nav-btn.active {
-    background: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow, #f2fd43);
     color: #000000;
+    font-weight: 900;
   }
   html[data-theme="standard"] .metro-bottom-search-pill,
   html[data-theme="standard"] .metro-custom-input,
@@ -6614,8 +6715,19 @@ import LegalModal from '../components/modals/LegalModal.astro';
   html[data-theme="standard"] .metro-picker-search-input,
   html[data-theme="standard"] .metro-bottom-search-input {
     background: #ffffff;
-    color: #0a0a0c;
+    color: #000000;
     border-color: #000000;
+  }
+  html[data-theme="standard"] .metro-bottom-search-input::placeholder,
+  html[data-theme="standard"] .metro-picker-search-input::placeholder {
+    color: #71717a;
+  }
+  html[data-theme="standard"] .metro-bottom-search-toggle-btn {
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-bottom-fixed-dock {
+    background: #141418;
+    border-top-color: rgba(255, 255, 255, 0.1);
   }
   html[data-theme="standard"] .metro-bottom-add-btn,
   html[data-theme="standard"] .metro-custom-submit,
@@ -6623,31 +6735,33 @@ import LegalModal from '../components/modals/LegalModal.astro';
   html[data-theme="standard"] .metro-tap-btn,
   html[data-theme="standard"] .metro-play-btn,
   html[data-theme="standard"] .metro-coach-btn {
-    /* keep accent buttons but ensure text contrast */
     color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-filter {
     background: #ffffff;
-    color: #52525b;
+    color: #000000;
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-filter:hover {
     background: #f5f4ef;
-    color: #0a0a0c;
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-setlist-filter.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-sort-chip {
     background: #ffffff;
-    color: #52525b;
-    border-color: rgba(0, 0, 0, 0.12);
+    color: #000000;
+    border-color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-sort-chip:hover {
     background: #f5f4ef;
-    color: #0a0a0c;
-    border-color: rgba(0, 0, 0, 0.25);
+    color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-sort-chip.active {
     background: #000000;
-    color: var(--accent-neon-yellow);
+    color: var(--accent-neon-yellow, #f2fd43);
     border-color: #000000;
   }
   html[data-theme="standard"] :global(.metro-setlist-row),
@@ -6655,52 +6769,68 @@ import LegalModal from '../components/modals/LegalModal.astro';
   html[data-theme="standard"] :global(.metro-setlist-song-row) {
     background: #ffffff;
     color: #000000;
-    border-color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
   }
   html[data-theme="standard"] :global(.metro-setlist-row:hover),
   html[data-theme="standard"] :global(.metro-setlist-card:hover),
   html[data-theme="standard"] :global(.metro-setlist-song-row:hover) {
     background: #f5f4ef;
   }
+  html[data-theme="standard"] :global(.metro-setlist-card-title),
+  html[data-theme="standard"] :global(.metro-setlist-title),
+  html[data-theme="standard"] :global(.metro-setlist-song-title) {
+    color: #000000;
+    font-weight: 800;
+  }
   html[data-theme="standard"] :global(.metro-setlist-bpm) {
     background: #000000;
-    color: var(--accent-neon-yellow);
-    border-color: #000000;
+    color: var(--accent-neon-yellow, #f2fd43);
+    border: 1px solid #000000;
   }
   html[data-theme="standard"] :global(.metro-setlist-card-badge) {
     background: #000000;
-    color: var(--accent-neon-yellow);
-    border-color: #000000;
+    color: var(--accent-neon-yellow, #f2fd43);
+    border: 1px solid #000000;
   }
   html[data-theme="standard"] :global(.metro-setlist-song-num) {
     color: #000000;
   }
-  html[data-theme="standard"] :global(.metro-setlist-song-sub) {
+  html[data-theme="standard"] :global(.metro-setlist-song-sub),
+  html[data-theme="standard"] :global(.metro-setlist-meta) {
     color: #52525b;
   }
-  html[data-theme="standard"] .metro-setlist-detail-count,
-  html[data-theme="standard"] .metro-setlist-detail-edit-name-btn {
-    color: #71717a;
+  html[data-theme="standard"] .metro-setlist-detail-count {
+    color: #a1a1aa;
   }
   html[data-theme="standard"] .metro-setlist-detail-edit-name-btn {
     background: #ffffff;
-    color: #0a0a0c;
+    color: #000000;
     border-color: #000000;
   }
   html[data-theme="standard"] :global(.metro-setlist-empty) {
-    background: #f5f4ef;
-    border-color: rgba(0, 0, 0, 0.12);
-    color: #71717a;
+    background: #ffffff;
+    border-color: #000000;
+    color: #52525b;
   }
   html[data-theme="standard"] :global(.metro-setlist-empty-title) {
-    color: #0a0a0c;
+    color: #000000;
   }
   html[data-theme="standard"] .metro-custom-label {
-    color: #52525b;
+    color: #f5f5f7;
+    font-weight: 800;
+  }
+  html[data-theme="standard"] .metro-checkbox-label {
+    color: #f5f5f7;
+  }
+  html[data-theme="standard"] .metro-custom-cancel {
+    background: #ffffff;
+    color: #000000;
+    border-color: #000000;
   }
   html[data-theme="standard"] .metro-custom-input:focus,
   html[data-theme="standard"] .metro-custom-select:focus {
-    border-color: var(--accent-neon-yellow);
+    border-color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-add-tab {
     background: #ffffff;
@@ -6708,26 +6838,65 @@ import LegalModal from '../components/modals/LegalModal.astro';
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-add-tab.active {
-    background: var(--accent-neon-yellow);
+    background: var(--accent-neon-yellow, #f2fd43);
     color: #000000;
+    font-weight: 900;
   }
   html[data-theme="standard"] .metro-picker-card {
     background: #ffffff;
-    color: #0a0a0c;
+    color: #000000;
+    border: 3px solid #000000;
+  }
+  html[data-theme="standard"] .metro-picker-title {
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-picker-close {
+    background: #ffffff;
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-picker-selected-count {
+    color: #52525b;
+  }
+  html[data-theme="standard"] .metro-picker-confirm-btn {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] :global(.metro-picker-item) {
+    background: #f5f4ef;
+    color: #000000;
+    border: 1.5px solid #000000;
+  }
+  html[data-theme="standard"] :global(.metro-picker-item-title) {
+    color: #000000;
+  }
+  html[data-theme="standard"] :global(.metro-picker-item-sub) {
+    color: #52525b;
   }
   html[data-theme="standard"] .metro-midi-card {
     background: #ffffff;
-    color: #0a0a0c;
+    color: #000000;
+    border-color: #000000;
   }
   html[data-theme="standard"] .metro-midi-status-text {
-    color: #0a0a0c;
+    color: #000000;
+    font-weight: 800;
   }
   html[data-theme="standard"] .metro-midi-device-name {
-    color: #71717a;
+    color: #52525b;
   }
   html[data-theme="standard"] .metro-midi-select {
     background: #ffffff;
-    color: #0a0a0c;
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .metro-midi-btn {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    border-color: #000000;
+  }
+  html[data-theme="standard"] .metro-midi-hint {
+    color: #52525b;
   }
 </style>
 
@@ -7620,6 +7789,153 @@ import LegalModal from '../components/modals/LegalModal.astro';
   .kins-sig-popover-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .kins-sig-popover-row .metro-chip { padding: 10px 8px; font-size: 0.78rem; }
 
+  /* Coach Deck Light Mode (Standard Theme) overrides */
+  html[data-theme="standard"] .metro-coach-card {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+  html[data-theme="standard"] .metro-coach-card--dark {
+    background: #f5f4ef;
+  }
+  html[data-theme="standard"] .metro-coach-card-title {
+    color: #000000;
+    font-weight: 900;
+  }
+  html[data-theme="standard"] .metro-coach-card-blurb {
+    color: #52525b;
+  }
+  html[data-theme="standard"] .metro-coach-field-label,
+  html[data-theme="standard"] .metro-coach-field-label span {
+    color: #000000;
+    font-weight: 800;
+  }
+  html[data-theme="standard"] .metro-coach-field-label strong {
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-cycle {
+    background: #f5f4ef;
+    border: 2px solid #000000;
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-cycle strong {
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-slider-wrap {
+    background: #f5f4ef;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] .metro-coach-step-btn {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] .metro-coach-step-btn:hover {
+    background: #f5f4ef;
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-unit-toggle {
+    background: #f5f4ef;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] .metro-unit-btn {
+    color: #52525b;
+  }
+  html[data-theme="standard"] .metro-unit-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    font-weight: 900;
+  }
+  html[data-theme="standard"] .metro-coach-toggle-btn {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] .metro-coach-toggle-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-mini-chip {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] .metro-coach-mini-chip.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-diff-btn {
+    background: #ffffff;
+    color: #52525b;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] .metro-coach-diff-btn-title {
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-diff-btn.active {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-target-card {
+    background: #ffffff;
+    border: 2px solid #000000;
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-target-label {
+    color: #52525b;
+  }
+  html[data-theme="standard"] .metro-coach-target-bpm {
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-live-card {
+    background: #ffffff;
+    border: 2px solid #000000;
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-live-phase {
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-live-sub {
+    color: #52525b;
+  }
+  html[data-theme="standard"] .metro-coach-tab {
+    background: #ffffff;
+    color: #52525b;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] .metro-coach-tab.active,
+  html[data-theme="standard"] .metro-coach-tab[aria-selected="true"] {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+    font-weight: 900;
+  }
+  html[data-theme="standard"] .metro-coach-suggest-btn {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+  html[data-theme="standard"] .metro-coach-pill-bar {
+    background: #ffffff;
+    border: 3px solid #000000;
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-pill-tag {
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-pill-bold {
+    color: #000000;
+  }
+  html[data-theme="standard"] .metro-coach-pill-sub {
+    color: #52525b;
+  }
+  html[data-theme="standard"] .metro-coach-pill-retry,
+  html[data-theme="standard"] .metro-coach-pill-expand {
+    background: #ffffff;
+    color: #000000;
+    border-color: #000000;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .kins-sig-popover,
     .footer-brand-badge,
@@ -7700,6 +8016,17 @@ import LegalModal from '../components/modals/LegalModal.astro';
       .catch(() => {});
   }
 
+  /* pagehide also fires for bfcache back/forward navigations where the DOM
+     is restored intact — only stop playback there. Full teardown (which
+     detaches document/window listeners and closes the AudioContext) is
+     reserved for astro:before-swap, where the DOM is genuinely replaced. */
+  function suspend() {
+    if (!initialized) return;
+    loadController()
+      .then((mod) => { if (mod.suspendForPageHide) mod.suspendForPageHide(); })
+      .catch(() => {});
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start, { once: true });
   } else {
@@ -7708,7 +8035,7 @@ import LegalModal from '../components/modals/LegalModal.astro';
 
   document.addEventListener('astro:page-load', start);
   document.addEventListener('astro:before-swap', teardown);
-  window.addEventListener('pagehide', teardown);
+  window.addEventListener('pagehide', suspend);
 
   document.addEventListener(
     'click',

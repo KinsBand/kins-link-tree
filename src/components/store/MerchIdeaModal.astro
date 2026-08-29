@@ -1,0 +1,541 @@
+---
+---
+
+<div class="modal-backdrop hidden" id="merchIdeaModal" role="dialog" aria-modal="true" aria-labelledby="merchIdeaPillTitle" data-track-container="modal:merch_idea">
+  <div class="idea-sheet-wrapper" id="merchIdeaSheetWrapper">
+
+    <!-- Floating Pill Header -->
+    <div class="sheet-floating-pill-header" id="merchIdeaFloatingPillHeader">
+      <div class="sheet-pill-title" id="merchIdeaPillTitle">
+        <i class="fa-solid fa-lightbulb" id="merchIdeaPillIcon"></i>
+        <span>MERCH LAB</span>
+      </div>
+      <button class="sheet-pill-close-btn brutal-press" id="closeMerchIdeaModalBtn" aria-label="Close Merch Idea Modal" data-track="merch_idea:close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Main Sheet Content -->
+    <div class="modal-content idea-modal-enhanced" id="merchIdeaModalContent">
+      <!-- Mobile Drag Handle -->
+      <div class="sheet-drag-handle" aria-hidden="true">
+        <span class="sheet-drag-pill"></span>
+      </div>
+
+      <div class="modal-body idea-modal-body">
+        <!-- Form View -->
+        <form id="merchIdeaModalForm" class="idea-modal-form">
+          <div class="idea-modal-intro">
+            <h4 class="idea-modal-headline">PROPOSE A BAND MERCH CONCEPT</h4>
+            <p class="idea-modal-subtext">Have an idea for a tour shirt, 7" vinyl colorway, pin set, or custom accessory? Submit your vision directly to the band vault. Community favorites get produced.</p>
+          </div>
+
+          <!-- Category Selector -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <label class="form-label">CATEGORY</label>
+              <span class="category-selected-badge" id="modalSelectedCategoryLabel">Apparel / Tees</span>
+            </div>
+            <div class="category-scroll-wrapper">
+              <div class="category-chips-grid brutal-scroll-x" id="modalCategoryChipsGrid">
+                <button type="button" class="category-chip active brutal-press" data-category="Apparel / Tees">
+                  <i class="fa-solid fa-shirt"></i> Apparel / Tees
+                </button>
+                <button type="button" class="category-chip brutal-press" data-category="Hoodies & Knitwear">
+                  <i class="fa-solid fa-vest-patches"></i> Hoodies & Knits
+                </button>
+                <button type="button" class="category-chip brutal-press" data-category="Vinyl & Analog Media">
+                  <i class="fa-solid fa-compact-disc"></i> Vinyl & Cassettes
+                </button>
+                <button type="button" class="category-chip brutal-press" data-category="Small Swag & Pins">
+                  <i class="fa-solid fa-tags"></i> Pins & Small Swag
+                </button>
+                <button type="button" class="category-chip brutal-press" data-category="Tour Collectible">
+                  <i class="fa-solid fa-ticket"></i> Tour Collectible
+                </button>
+                <button type="button" class="category-chip brutal-press" data-category="Art & Posters">
+                  <i class="fa-solid fa-palette"></i> Art & Posters
+                </button>
+                <button type="button" class="category-chip brutal-press" data-category="Other Concept">
+                  <i class="fa-solid fa-plus"></i> Other
+                </button>
+              </div>
+              <div class="scroll-fade-edge-right"></div>
+            </div>
+            <input type="hidden" name="category" id="modalCategoryInput" value="Apparel / Tees" />
+          </div>
+
+          <!-- Idea Title -->
+          <div class="form-group">
+            <label for="modalIdeaTitle" class="form-label">CONCEPT / ITEM TITLE</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-pen-nib input-left-icon"></i>
+              <input
+                type="text"
+                id="modalIdeaTitle"
+                name="title"
+                placeholder="e.g. Acid-Washed Tour Hoodie with Tracklist Backprint"
+                required
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <!-- Concept Details -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <label for="modalIdeaDesc" class="form-label">DESIGN DETAILS & NOTES</label>
+              <span class="char-counter" id="modalCharCounter">0 / 600</span>
+            </div>
+            <textarea
+              id="modalIdeaDesc"
+              name="description"
+              rows="3"
+              maxlength="600"
+              placeholder="Describe colors, artwork style, fabric weights, typography, or why fans would love this..."
+              required
+            ></textarea>
+          </div>
+
+          <!-- Reference Link with Paste Helper -->
+          <div class="form-group">
+            <label for="modalIdeaLink" class="form-label">
+              MOCKUP / REFERENCE LINK <span class="optional-tag">(Optional)</span>
+            </label>
+            <div class="input-with-paste-row">
+              <div class="input-with-icon flex-1">
+                <i class="fa-solid fa-link input-left-icon"></i>
+                <input
+                  type="url"
+                  id="modalIdeaLink"
+                  name="link"
+                  placeholder="https://imgur.com/..., Pinterest, or Drive link"
+                  autocomplete="off"
+                />
+              </div>
+              <button type="button" class="paste-url-btn brutal-press" id="modalPasteLinkBtn" title="Paste link from clipboard">
+                <i class="fa-solid fa-paste"></i>
+                <span>Paste</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Submitter Handle / Contact -->
+          <div class="form-group">
+            <label for="modalIdeaContact" class="form-label">YOUR SOCIAL HANDLE OR EMAIL</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-at input-left-icon"></i>
+              <input
+                type="text"
+                id="modalIdeaContact"
+                name="contact"
+                placeholder="e.g. @yourhandle or name@email.com"
+                required
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <!-- Submit CTA -->
+          <div class="form-actions">
+            <button type="submit" class="submit-concept-btn green-link-btn brutal-press" id="modalSubmitConceptBtn">
+              <span>SUBMIT CONCEPT TO BAND</span>
+              <i class="fa-solid fa-paper-plane btn-arrow-slide" aria-hidden="true"></i>
+            </button>
+          </div>
+        </form>
+
+        <!-- Success Confirmation View -->
+        <div class="idea-modal-success hidden" id="modalIdeaSuccessView">
+          <div class="success-icon-badge">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <h4 class="success-headline">CONCEPT LOGGED IN THE VAULT</h4>
+          <p class="success-subtext">Thank you for submitting your merch concept! The band reviews all community designs for upcoming limited runs and capsule drops.</p>
+          <div class="success-btn-row">
+            <button type="button" class="reset-idea-btn card-action-btn brutal-press" id="modalSubmitAnotherBtn">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>SUBMIT ANOTHER</span>
+            </button>
+            <button type="button" class="done-idea-btn green-link-btn brutal-press" id="modalDoneBtn">
+              <span>DONE</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    box-sizing: border-box;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+  }
+
+  .modal-backdrop.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .idea-sheet-wrapper {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  /* Floating Pill Header */
+  .sheet-floating-pill-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #141418;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    margin-bottom: 10px;
+    z-index: 10;
+    box-sizing: border-box;
+    width: auto;
+    min-width: 220px;
+  }
+
+  .sheet-pill-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: var(--brand-accent-primary);
+    text-transform: uppercase;
+  }
+
+  .sheet-pill-close-btn {
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
+    border: 1.5px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0;
+    transition: transform 0.14s var(--ease-tactile), background-color 0.14s ease;
+  }
+
+  .sheet-pill-close-btn:hover {
+    background: var(--btn-brand-primary);
+    color: #000000;
+  }
+
+  /* Modal Content Body */
+  .idea-modal-enhanced {
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--surface-card);
+    border: var(--border-brutal);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-brutal-black-lg);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  .sheet-drag-handle {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 2px 0;
+  }
+
+  .sheet-drag-pill {
+    width: 38px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+
+  .idea-modal-body {
+    padding: 16px 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-sizing: border-box;
+  }
+
+  .idea-modal-intro {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+  }
+
+  .idea-modal-headline {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--text-on-dark);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .idea-modal-subtext {
+    font-family: var(--font-primary);
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  /* Form */
+  .idea-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .form-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .form-label {
+    font-family: var(--font-heading);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .category-selected-badge {
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    font-family: var(--font-heading);
+    font-size: 0.62rem;
+    font-weight: 900;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid #000000;
+  }
+
+  .char-counter {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: var(--text-muted);
+  }
+
+  .category-scroll-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .category-chips-grid {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .category-chips-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-chip {
+    background: var(--surface-input);
+    color: var(--text-card-primary);
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: var(--radius-xs);
+    padding: 4px 10px;
+    font-family: var(--font-heading);
+    font-size: 0.68rem;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    transition: transform 0.14s var(--ease-tactile), background-color 0.14s ease;
+  }
+
+  .category-chip.active {
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+  }
+
+  .input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-left-icon {
+    position: absolute;
+    left: 10px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    pointer-events: none;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    background: var(--surface-input);
+    color: var(--text-card-primary);
+    border: var(--border-brutal-sm);
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: var(--radius-xs);
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    box-sizing: border-box;
+  }
+
+  .form-group input {
+    height: 36px;
+    padding: 0 10px 0 30px;
+  }
+
+  .form-group textarea {
+    padding: 8px 10px;
+    line-height: 1.35;
+    resize: vertical;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 1px;
+  }
+
+  .input-with-paste-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .flex-1 {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .paste-url-btn {
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
+    border: var(--border-brutal-sm);
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: var(--radius-xs);
+    padding: 0 10px;
+    height: 36px;
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .paste-url-btn:hover {
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+  }
+
+  .submit-concept-btn {
+    width: 100%;
+    height: 42px;
+  }
+
+  /* Success Confirmation */
+  .idea-modal-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px 12px 12px;
+    gap: 12px;
+  }
+
+  .success-icon-badge {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #53fc18;
+    color: #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+  }
+
+  .success-headline {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--text-on-dark);
+    margin: 0;
+  }
+
+  .success-subtext {
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    max-width: 380px;
+    margin: 0;
+  }
+
+  .success-btn-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .reset-idea-btn,
+  .done-idea-btn {
+    flex: 1;
+    height: 38px;
+  }
+</style>

@@ -3,7 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
 import { functionalityConfig } from '../settings/functionality.config';
 
-if (!functionalityConfig.enableTheoryPage && !functionalityConfig.enableKinsTools) {
+// Theory page is gated independently of the KINS TOOLS section flag — the
+// section currently links to the metronome only, so /theory must keep
+// redirecting home unless explicitly re-enabled here.
+if (!functionalityConfig.enableTheoryPage) {
   return Astro.redirect('/');
 }
 

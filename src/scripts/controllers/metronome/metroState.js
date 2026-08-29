@@ -58,7 +58,12 @@ function storageSet(key, value) {
 }
 
 export function clampBpm(value) {
-  return Math.min(METRO_BPM.max, Math.max(METRO_BPM.min, Math.round(value)));
+  /* NaN/undefined (e.g. a setlist song with a missing bpm) must fall back
+     to the default — a NaN would poison metroState.bpm, persist "NaN" to
+     localStorage and stall the legacy scheduler loop (clickDur = NaN). */
+  const num = Number(value);
+  if (!Number.isFinite(num)) return METRO_BPM.default;
+  return Math.min(METRO_BPM.max, Math.max(METRO_BPM.min, Math.round(num)));
 }
 
 export function getTimeSignature() {

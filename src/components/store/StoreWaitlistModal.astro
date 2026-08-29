@@ -1,0 +1,234 @@
+---
+---
+
+<!-- Modal Backdrop -->
+<div class="waitlist-backdrop" id="waitlistBackdrop" aria-hidden="true"></div>
+
+<!-- Waitlist Modal Dialog -->
+<div
+  class="store-waitlist-modal"
+  id="storeWaitlistModal"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-labelledby="waitlistModalTitle"
+  data-track-container="store:waitlist_modal"
+>
+  <div class="waitlist-card brutal-card">
+    <button
+      type="button"
+      class="waitlist-close-btn brutal-press"
+      id="closeWaitlistBtn"
+      aria-label="Close waitlist dialog"
+      title="Close"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <div class="waitlist-content">
+      <div class="waitlist-icon-badge">
+        <i class="fa-solid fa-bell"></i>
+      </div>
+
+      <h3 class="waitlist-title" id="waitlistModalTitle">GET DROP ALERTS</h3>
+      <p class="waitlist-desc">
+        Sign up for instant restock and launch notifications <span id="waitlistProductName">for the upcoming Merch Drop</span>. Never miss a limited pressing.
+      </p>
+
+      <form class="store-waitlist-form" id="storeWaitlistForm">
+        <input type="hidden" id="waitlistProductInput" name="productTitle" value="2026 Debut Capsule Drop" />
+
+        <div class="form-input-wrap">
+          <i class="fa-solid fa-envelope form-icon" aria-hidden="true"></i>
+          <input
+            type="email"
+            id="waitlistEmailInput"
+            name="email"
+            class="waitlist-email-input"
+            placeholder="enter your email address..."
+            required
+            autocomplete="email"
+          />
+        </div>
+
+        <button type="submit" class="waitlist-submit-btn green-link-btn brutal-press" id="waitlistSubmitBtn">
+          <span>NOTIFY ME</span>
+          <i class="fa-solid fa-arrow-right btn-arrow-slide" aria-hidden="true"></i>
+        </button>
+
+        <span class="waitlist-privacy-note">
+          <i class="fa-solid fa-shield-check"></i> Zero spam. Unsubscribe at any time.
+        </span>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .waitlist-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 994;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .store-waitlist-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 995;
+    box-sizing: border-box;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .store-waitlist-modal.is-open,
+  .store-waitlist-modal.is-open + .waitlist-backdrop,
+  .waitlist-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .waitlist-card {
+    background: var(--surface-card);
+    border: var(--border-brutal);
+    box-shadow: var(--shadow-brutal-black-lg);
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 480px;
+    padding: 32px 24px;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  .waitlist-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .waitlist-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .waitlist-icon-badge {
+    width: 52px;
+    height: 52px;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+  }
+
+  .waitlist-title {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--text-on-dark);
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+
+  .waitlist-desc {
+    font-family: var(--font-primary);
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .store-waitlist-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .form-input-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .form-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+
+  .waitlist-email-input {
+    width: 100%;
+    height: 46px;
+    background: var(--surface-input);
+    color: var(--text-card-primary);
+    border: var(--border-brutal-sm);
+    border-radius: var(--radius-xs);
+    padding: 0 14px 0 38px;
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    box-sizing: border-box;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .waitlist-email-input:focus {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 1px;
+  }
+
+  .waitlist-submit-btn {
+    width: 100%;
+    height: 48px;
+    font-size: 0.86rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+
+  .waitlist-privacy-note {
+    font-family: var(--font-primary);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+</style>

@@ -215,6 +215,38 @@ Paths are prefixed with `@` so you can drop them straight into chat/agent contex
 
 ---
 
+## `/store` — Official Band Merch Store
+
+**Page:** @src/pages/store.astro
+
+**Components:**
+- @src/components/store/StoreNav.astro
+- @src/components/store/StoreHero.astro
+- @src/components/store/StoreFilterBar.astro
+- @src/components/store/StoreProductGrid.astro
+- @src/components/store/StoreProductCard.astro
+- @src/components/store/StoreCartDrawer.astro
+- @src/components/store/ProductQuickViewModal.astro
+- @src/components/store/StoreWaitlistModal.astro
+- @src/components/navigation/SiteFooter.astro
+- @src/components/ui/ToastContainer.astro
+- @src/components/modals/ShareModal.astro
+- @src/components/modals/FeedbackModal.astro
+- @src/components/modals/LegalModal.astro
+
+**Controllers (@src/scripts/controllers/store/):**
+- @src/scripts/controllers/store/storeController.js — master lifecycle coordinator
+- @src/scripts/controllers/store/cartStore.js — local-first reactive cart with safeStorage
+- @src/scripts/controllers/store/storeFilterController.js — category filter, instant search & sorting
+
+**API routes used from here:**
+- @src/pages/api/store-waitlist.ts — restock alert / waitlist submission with Discord notification
+
+**Settings:**
+- @src/settings/store.config.ts · functionality.config.ts
+
+---
+
 ## `/404` — Not found
 
 **Page:** @src/pages/404.astro (BaseLayout + brutalist 404 message)
@@ -241,6 +273,7 @@ All API routes run in SSR/serverless mode on Vercel Node 24. All user inputs are
 | `/api/fan-wall` | @src/pages/api/fan-wall.ts | Live fan photo & comment wall fetch/post |
 | `/api/fan-upload` | @src/pages/api/fan-upload.ts | Direct fan photo/media upload handler |
 | `/api/song-bpm` | @src/pages/api/song-bpm.ts | iTunes / MusicBrainz BPM metadata query proxy |
+| `/api/store-waitlist` | @src/pages/api/store-waitlist.ts | Merch drop & restock notification waitlist handler |
 
 ---
 

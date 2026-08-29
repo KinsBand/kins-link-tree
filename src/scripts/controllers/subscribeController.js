@@ -111,30 +111,11 @@ export function initSubscribeBell() {
 
     topSubscribeBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const isSubscribed = getSubscriptionState();
-
-      if (!isSubscribed) {
-        // Normal State -> Click to Subscribe: Scroll to form to complete subscription
-        const subscribeFormSection = document.getElementById('subscribeFormSection');
-        const emailInput = document.getElementById('emailInput');
-        
-        if (subscribeFormSection) {
-          subscribeFormSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        
-        if (emailInput) {
-          setTimeout(() => emailInput.focus(), 500);
-        }
-
-        showToast("Fan club subscription is coming soon! Stay tuned.", 'info');
-      } else {
-        // Active State (Subscribed) -> Scroll to section; user must press the Unsubscribe button to opt out
-        const subscribeFormSection = document.getElementById('subscribeFormSection');
-        if (subscribeFormSection) {
-          subscribeFormSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        showToast("You are already subscribed to Kins! You'll receive drops straight to your inbox.");
+      const subscribeFormSection = document.getElementById('subscribeFormSection');
+      if (subscribeFormSection) {
+        subscribeFormSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+      showToast("Fan club & notifications are coming soon! Stay tuned.", 'info');
     });
   }
 

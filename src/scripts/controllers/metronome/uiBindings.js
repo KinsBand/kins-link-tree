@@ -84,6 +84,22 @@ export function createUi(callbacks) {
 
   const NS = 'http://www.w3.org/2000/svg';
 
+  /* Registry of persistent document/window-level listeners so a re-init
+     (bfcache restore / view-transition swap) can fully detach the previous
+     instance's handlers instead of stacking duplicates. Element-scoped
+     listeners are intentionally not tracked — they die with their DOM. */
+  const globalListeners = [];
+  function trackGlobal(target, type, fn, opts) {
+    target.addEventListener(type, fn, opts);
+    globalListeners.push({ target, type, fn, opts });
+  }
+  function releaseGlobalListeners() {
+    while (globalListeners.length) {
+      const l = globalListeners.pop();
+      try { l.target.removeEventListener(l.type, l.fn, l.opts); } catch (e) {}
+    }
+  }
+
   function storageGet(key) {
     try { return localStorage.getItem(key); } catch (e) { return null; }
   }
@@ -2009,7 +2025,7 @@ export function createUi(callbacks) {
         }
       });
 
-      document.addEventListener('click', (e) => {
+      trackGlobal(document, 'click', (e) => {
         if (!dock || !dock.classList.contains('is-search-expanded')) return;
         if (pill.contains(e.target)) return;
         if (!input.value.trim()) {
@@ -3877,24 +3893,22 @@ export function createUi(callbacks) {
     }
   }
 
+  function onMidiStateEvent(e) {
+    const detail = e.detail || {};
+    renderMidiState(detail);
+    renderCoachPrimer();
+    // also update tap badge
+    if (coachLiveRunning && coachLiveTab==='tempo-primer') {
+      // re-render live to show midi ready
+    }
+  }
+
   function bindMidiEvents() {
-    window.addEventListener('kins:midi-state', (e)=>{
-      const detail = e.detail || {};
-      renderMidiState(detail);
-      renderCoachPrimer();
-      // also update tap badge
-      if (coachLiveRunning && coachLiveTab==='tempo-primer') {
-        // re-render live to show midi ready
-      }
-    });
-    window.addEventListener('kins:midi-tap', (e)=>{
-      if (coachLiveRunning && coachLiveTab==='tempo-primer' && callbacks.onPrimerTap) {
-        callbacks.onPrimerTap(e.detail && e.detail.time ? e.detail.time : performance.now());
-      } else if (!coachLiveRunning && coachTab==='tempo-primer' && callbacks.onPrimerTap) {
-        // allow tap even when not live? treat as primer tap during editor
-        callbacks.onPrimerTap(e.detail && e.detail.time ? e.detail.time : performance.now());
-      }
-    });
+    /* kins:midi-tap is handled ONCE by index.js (canonical gate inside
+       onPrimerTap). Binding it here too double-counted every pad hit —
+       each tap pushed two timestamps into the primer, poisoning the
+       recalled BPM (≈3× too fast, grade always "TRY AGAIN"). */
+    trackGlobal(window, 'kins:midi-state', onMidiStateEvent);
   }
 
   function renderMidiState(detail) {
@@ -3970,7 +3984,7 @@ export function createUi(callbacks) {
 
     if (els.backdrop) els.backdrop.addEventListener('click', () => closeSheet());
     if (els.handle) els.handle.addEventListener('click', () => closeSheet());
-    document.addEventListener('keydown', onKeydown);
+    trackGlobal(document, 'keydown', onKeydown);
 
     if (els.tsInfoBeats) els.tsInfoBeats.addEventListener('click', () => callbacks.onInfoHelp('infoTsBeats'));
     if (els.tsInfoUnit) els.tsInfoUnit.addEventListener('click', () => callbacks.onInfoHelp('infoTsUnit'));
@@ -4122,12 +4136,14 @@ export function createUi(callbacks) {
     }
   }
 
+  function onDocPointerDownBpmEdit(e) {
+    if (!bpmEditing) return;
+    if (els.bpmNum && els.bpmNum.contains(e.target)) return;
+    if (els.bpmInput && els.bpmInput.contains(e.target)) return;
+  }
+
   function attachBpmEdit() {
-    document.addEventListener('pointerdown', (e) => {
-      if (!bpmEditing) return;
-      if (els.bpmNum && els.bpmNum.contains(e.target)) return;
-      if (els.bpmInput && els.bpmInput.contains(e.target)) return;
-    });
+    trackGlobal(document, 'pointerdown', onDocPointerDownBpmEdit);
   }
 
   function attachStepperHold() {
@@ -4157,8 +4173,8 @@ export function createUi(callbacks) {
     };
     bindHold(els.bpmMinus, -1);
     bindHold(els.bpmPlus, 1);
-    window.addEventListener('pointerup', clearRepeat, { passive: true });
-    window.addEventListener('pointercancel', clearRepeat, { passive: true });
+    trackGlobal(window, 'pointerup', clearRepeat, { passive: true });
+    trackGlobal(window, 'pointercancel', clearRepeat, { passive: true });
   }
 
   function handleTsEditTop() {
@@ -4835,6 +4851,9 @@ export function createUi(callbacks) {
     get setlistDeck() { return els.setlistDeck; },
     get topbarCenter() { return els.topbarCenter; },
     get isSheetOpen() { return sheetOpen; },
-    get coachLiveRunning() { return coachLiveRunning; }
+    get coachLiveRunning() { return coachLiveRunning; },
+    destroy: () => {
+      releaseGlobalListeners();
+    }
   };
 }

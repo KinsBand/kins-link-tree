@@ -7,64 +7,76 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
 
 <section class="subscribe-section" id="subscribeFormSection">
   <div class="subscribe-card">
-    <!-- Form State -->
-    <div id="subscribeFormContainer" class="subscribe-form-container">
-      <div class="subscribe-header">
-        <div class="subscribe-title-row">
-          <h3>Subscribe to Kins!</h3>
-          <span class="est-time-pill coming-soon-pill"><i class="fa-regular fa-clock" aria-hidden="true"></i> Coming Soon</span>
+    <!-- Newsletter / Subscribe Card Container (Masked with Coming Soon) -->
+    <div class="subscribe-soon-wrapper" id="subscribeSoonWrapper" role="region" aria-label="Fan Club Subscription (Coming Soon)">
+      <!-- Form State -->
+      <div id="subscribeFormContainer" class="subscribe-form-container is-coming-soon">
+        <div class="subscribe-header">
+          <div class="subscribe-title-row">
+            <h3>Subscribe to Kins!</h3>
+            <span class="est-time-pill coming-soon-pill"><i class="fa-solid fa-wrench" aria-hidden="true"></i> Under Works</span>
+          </div>
+          <p class="subscribe-subtext">Fan club drops & newsletter engine currently under works. Stay tuned!</p>
         </div>
-        <p class="subscribe-subtext">Fan club & newsletter drops launching soon. Stay tuned!</p>
-      </div>
 
-      <!-- 1-Tap Social Auth Row -->
-      <div class="social-auth-row">
-        <button type="button" class="social-auth-btn google-auth-btn" id="googleAuthBtn" aria-label="Subscribe with Google (Coming Soon)">
-          <div class="google-btn-left">
-            <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-            </svg>
-            <span class="google-btn-title">Google</span>
-          </div>
-          <div class="google-btn-details" aria-label="Coming Soon">
-            <span class="google-detail-tag coming-soon-tag"><i class="fa-regular fa-clock" aria-hidden="true"></i>Coming Soon</span>
-          </div>
-        </button>
-      </div>
-
-      <!-- Divider -->
-      <div class="auth-divider">
-        <span class="divider-line"></span>
-        <span class="divider-text">OR WITH EMAIL</span>
-        <span class="divider-line"></span>
-      </div>
-
-      <!-- Unified Inline Email Form -->
-      <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
-        <div class="unified-input-container">
-          <input
-            type="text"
-            name="email"
-            id="emailInput"
-            placeholder="Fan club drops launching soon..."
-            autocomplete="email"
-            inputmode="email"
-            autocapitalize="none"
-            spellcheck="false"
-          />
-          <button type="submit" id="subscribeSubmitBtn" class="unified-join-btn" aria-label="Join Kins Fan Club (Coming Soon)">
-            <span>SOON ➔</span>
+        <!-- 1-Tap Social Auth Row -->
+        <div class="social-auth-row">
+          <button type="button" class="social-auth-btn google-auth-btn" id="googleAuthBtn" aria-label="Subscribe with Google (Coming Soon)">
+            <div class="google-btn-left">
+              <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span class="google-btn-title">Google</span>
+            </div>
+            <div class="google-btn-details" aria-label="Coming Soon">
+              <span class="google-detail-tag coming-soon-tag"><i class="fa-solid fa-wrench" aria-hidden="true"></i>Coming Soon</span>
+            </div>
           </button>
         </div>
 
-        <!-- Quick Domain Autocomplete Suggestions -->
-        <div class="email-suggestions-wrap hidden" id="emailSuggestionsWrap" role="listbox" aria-label="Email domain suggestions">
-          <div class="email-suggestions-list" id="emailSuggestionsList"></div>
+        <!-- Divider -->
+        <div class="auth-divider">
+          <span class="divider-line"></span>
+          <span class="divider-text">OR WITH EMAIL</span>
+          <span class="divider-line"></span>
         </div>
-      </form>
+
+        <!-- Unified Inline Email Form -->
+        <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
+          <div class="unified-input-container">
+            <input
+              type="text"
+              name="email"
+              id="emailInput"
+              placeholder="Fan club drops launching soon..."
+              autocomplete="email"
+              inputmode="email"
+              autocapitalize="none"
+              spellcheck="false"
+              tabindex="-1"
+            />
+            <button type="submit" id="subscribeSubmitBtn" class="unified-join-btn" aria-label="Join Kins Fan Club (Coming Soon)">
+              <span>SOON ➔</span>
+            </button>
+          </div>
+
+          <!-- Quick Domain Autocomplete Suggestions -->
+          <div class="email-suggestions-wrap hidden" id="emailSuggestionsWrap" role="listbox" aria-label="Email domain suggestions">
+            <div class="email-suggestions-list" id="emailSuggestionsList"></div>
+          </div>
+        </form>
+      </div>
+
+      <!-- High Contrast Diagonal Ribbon Mask spanning across Subscribe Box (matching Gig Map ribbon style) -->
+      <div class="subscribe-soon-diagonal-banner" aria-hidden="true">
+        <span>COMING SOON • UNDER WORKS</span>
+      </div>
+
+      <!-- Full-card Click Interceptor Overlay -->
+      <div class="subscribe-soon-interceptor" id="subscribeSoonInterceptor" role="button" tabindex="0" aria-label="Fan club subscription coming soon. Tap for more info."></div>
     </div>
 
     <!-- Subscribed State -->
@@ -175,6 +187,97 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     flex-direction: column;
     gap: 20px;
     box-sizing: border-box;
+  }
+
+  /* Newsletter / Subscribe Coming Soon Mask & Diagonal Ribbon */
+  .subscribe-soon-wrapper {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.02);
+    border: 2px dashed rgba(0, 0, 0, 0.25);
+    padding: 16px 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+  }
+
+  :global([data-theme="dark"]) .subscribe-soon-wrapper {
+    background: rgba(255, 255, 255, 0.02);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+  }
+
+  .subscribe-form-container.is-coming-soon {
+    opacity: 0.65;
+    filter: grayscale(20%);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .subscribe-soon-diagonal-banner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 10;
+  }
+
+  .subscribe-soon-diagonal-banner span {
+    background: var(--btn-brand-primary, var(--accent-neon-yellow));
+    color: #000000;
+    border: 2.5px solid #000000;
+    box-shadow: 2.5px 2.5px 0px #000000;
+    font-family: var(--font-heading, sans-serif);
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 36px;
+    white-space: nowrap;
+    transform: rotate(-10deg);
+    text-align: center;
+    width: 140%;
+    max-width: 580px;
+  }
+
+  :global([data-theme="dark"]) .subscribe-soon-diagonal-banner span {
+    background: var(--brand-accent-primary, #d4af37);
+    color: #000000;
+  }
+
+  .subscribe-soon-interceptor {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    cursor: pointer;
+    background: transparent;
+  }
+
+  .subscribe-soon-interceptor:focus-visible {
+    outline: 2px solid var(--accent-neon-yellow);
+    outline-offset: -2px;
+  }
+
+  .subscribe-soon-wrapper:hover {
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .subscribe-soon-wrapper:hover {
+    border-color: var(--brand-accent-primary, #d4af37);
+  }
+
+  @media (max-width: 480px) {
+    .subscribe-soon-diagonal-banner span {
+      font-size: 0.68rem;
+      padding: 5px 20px;
+      letter-spacing: 0.08em;
+      transform: rotate(-12deg);
+    }
+    .subscribe-soon-wrapper {
+      padding: 12px 8px;
+    }
   }
 
   .subscribe-form-container {
@@ -1403,16 +1506,28 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     suggestionsList.addEventListener('wheel', handleSuggestionsWheel, { passive: false });
   }
 
+  const subscribeSoonInterceptor = document.getElementById('subscribeSoonInterceptor');
+  subscribeSoonInterceptor?.addEventListener('click', (e) => {
+    e.preventDefault();
+    showToast('Fan club & newsletter subscription is coming soon! Stay tuned.', 'info');
+  });
+  subscribeSoonInterceptor?.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      showToast('Fan club & newsletter subscription is coming soon! Stay tuned.', 'info');
+    }
+  });
+
   const googleAuthBtn = document.getElementById('googleAuthBtn');
   googleAuthBtn?.addEventListener('click', (e) => {
     e.preventDefault();
-    showToast('Fan club subscription is launching soon! Follow our socials for updates.', 'info');
+    showToast('Fan club & newsletter subscription is coming soon! Stay tuned.', 'info');
   });
 
   if (subscribeForm) {
     subscribeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      showToast('Fan club subscription is launching soon! Follow our socials for updates.', 'info');
+      showToast('Fan club & newsletter subscription is coming soon! Stay tuned.', 'info');
     });
   }
 
