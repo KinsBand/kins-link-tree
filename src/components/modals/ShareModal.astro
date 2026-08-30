@@ -411,14 +411,54 @@ import kinsLogoImg from '../../assets/new.png';
     justify-content: center;
     padding: 20px;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.25s var(--ease-snappy);
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.24s;
   }
 
-  .modal-backdrop:not(.hidden),
-  .modal-backdrop:global(.active) {
+  /* Sub-modal stacking z-index */
+  .modal-backdrop#qrFullscreenModal,
+  .modal-backdrop#qrDownloadFormatModal,
+  .modal-backdrop#logoDownloadFormatModal,
+  .modal-backdrop#iosInstallGuideModal {
+    z-index: 1050;
+  }
+
+  .modal-backdrop.active,
+  .modal-backdrop:not(.hidden):not(.is-closing) {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
+  }
+
+  .modal-backdrop.is-closing {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s ease, visibility 0.2s !important;
+  }
+
+  /* Keyframe Animations for Desktop */
+  @keyframes modalPopIn {
+    from {
+      transform: scale(0.94) translateY(12px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes modalPopOut {
+    from {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: scale(0.95) translateY(10px);
+      opacity: 0;
+    }
   }
 
   /* Desktop Default: Centered Brutalist Cards */
@@ -437,7 +477,6 @@ import kinsLogoImg from '../../assets/new.png';
     box-sizing: border-box;
     position: relative;
     overscroll-behavior: contain;
-    transition: transform 0.24s var(--ease-snappy), opacity 0.2s ease;
   }
 
   /* Chalkboard fine grain noise texture overlay on modal/sheet surfaces */
@@ -524,6 +563,16 @@ import kinsLogoImg from '../../assets/new.png';
     gap: 12px;
     position: relative;
     z-index: 10;
+    animation: modalPopIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+  }
+
+  .share-sheet-wrapper.is-closing,
+  .qr-fullscreen-sheet-wrapper.is-closing,
+  .qr-download-sheet-wrapper.is-closing,
+  .logo-download-sheet-wrapper.is-closing,
+  .ios-guide-sheet-wrapper.is-closing {
+    animation: modalPopOut 0.18s ease forwards !important;
   }
 
   .qr-fullscreen-sheet-wrapper {
@@ -1562,6 +1611,29 @@ import kinsLogoImg from '../../assets/new.png';
     font-size: 0.88rem;
   }
 
+  /* Keyframe Animations for Mobile Bottom Sheets */
+  @keyframes sheetSlideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sheetSlideDown {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
   /* ==========================================================================
      MOBILE VIEWPORT: ALL SHARE & DOWNLOAD MENUS AS NATIVE BOTTOM SHEETS (<= 640px)
      ========================================================================== */
@@ -1584,21 +1656,16 @@ import kinsLogoImg from '../../assets/new.png';
       width: 100%;
       gap: 10px;
       padding: 0 0 max(10px, env(safe-area-inset-bottom)) 0;
-      transform: translateY(100%);
-      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: sheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      will-change: transform, opacity;
     }
 
-    .modal-backdrop#shareModal:not(.hidden) .share-sheet-wrapper,
-    .modal-backdrop#shareModal:global(.active) .share-sheet-wrapper,
-    .modal-backdrop#qrFullscreenModal:not(.hidden) .qr-fullscreen-sheet-wrapper,
-    .modal-backdrop#qrFullscreenModal:global(.active) .qr-fullscreen-sheet-wrapper,
-    .modal-backdrop#qrDownloadFormatModal:not(.hidden) .qr-download-sheet-wrapper,
-    .modal-backdrop#qrDownloadFormatModal:global(.active) .qr-download-sheet-wrapper,
-    .modal-backdrop#logoDownloadFormatModal:not(.hidden) .logo-download-sheet-wrapper,
-    .modal-backdrop#logoDownloadFormatModal:global(.active) .logo-download-sheet-wrapper,
-    .modal-backdrop#iosInstallGuideModal:not(.hidden) .ios-guide-sheet-wrapper,
-    .modal-backdrop#iosInstallGuideModal:global(.active) .ios-guide-sheet-wrapper {
-      transform: translateY(0);
+    .share-sheet-wrapper.is-closing,
+    .qr-fullscreen-sheet-wrapper.is-closing,
+    .qr-download-sheet-wrapper.is-closing,
+    .logo-download-sheet-wrapper.is-closing,
+    .ios-guide-sheet-wrapper.is-closing {
+      animation: sheetSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }
 
     .sheet-floating-pill-header {

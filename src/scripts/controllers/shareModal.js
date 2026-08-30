@@ -294,7 +294,7 @@ function setupBottomSheetGestures(modalBackdrop, sheetWrapper, dragHandle, float
     sheetWrapper.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
 
     if (deltaY > 80) {
-      closeSheetSmoothly(modalBackdrop, sheetWrapper);
+      closeModal(modalBackdrop, sheetWrapper);
     } else {
       sheetWrapper.style.transform = '';
     }
@@ -317,17 +317,42 @@ function setupBottomSheetGestures(modalBackdrop, sheetWrapper, dragHandle, float
   sheetWrapper.addEventListener('touchend', onTouchEnd, { passive: true });
 }
 
-function closeSheetSmoothly(modalBackdrop, modalContent, onClosed) {
+export function openModal(modalBackdrop, sheetWrapper, onOpened) {
   if (!modalBackdrop) return;
-  if (modalContent) {
-    modalContent.style.transform = 'translateY(100%)';
+  modalBackdrop.classList.remove('is-closing');
+  modalBackdrop.classList.remove('hidden');
+  if (sheetWrapper) {
+    sheetWrapper.classList.remove('is-closing');
+    sheetWrapper.style.transform = '';
+    sheetWrapper.style.animation = '';
+  }
+  // Force a reflow so the browser paints the initial keyframe before adding .active
+  void modalBackdrop.offsetWidth;
+  modalBackdrop.classList.add('active');
+  if (onOpened) onOpened();
+}
+
+export function closeModal(modalBackdrop, sheetWrapper, onClosed) {
+  if (!modalBackdrop || (modalBackdrop.classList.contains('hidden') && !modalBackdrop.classList.contains('active'))) return;
+  modalBackdrop.classList.add('is-closing');
+  if (sheetWrapper) {
+    sheetWrapper.classList.add('is-closing');
   }
   setTimeout(() => {
     modalBackdrop.classList.remove('active');
+    modalBackdrop.classList.remove('is-closing');
     modalBackdrop.classList.add('hidden');
-    if (modalContent) modalContent.style.transform = '';
+    if (sheetWrapper) {
+      sheetWrapper.classList.remove('is-closing');
+      sheetWrapper.style.transform = '';
+      sheetWrapper.style.animation = '';
+    }
     if (onClosed) onClosed();
-  }, 220);
+  }, 200);
+}
+
+export function closeSheetSmoothly(modalBackdrop, modalContent, onClosed) {
+  closeModal(modalBackdrop, modalContent, onClosed);
 }
 
 // Real-time PWA Installation State Engine
@@ -405,24 +430,24 @@ export function initShareModal() {
   }
 
   // Setup Bottom Sheet Gestures on all dialogs on mobile with accidental scroll protection
-  setupBottomSheetGestures(shareModal, shareSheetWrapper || shareModalContent, sheetDragHandle, shareFloatingPill, shareModalContent);
-  setupBottomSheetGestures(qrFullscreenModal, qrFullscreenSheetWrapper || qrFullscreenContent, qrFullscreenDragHandle, qrFullscreenFloatingPill, qrFullscreenContent);
-  setupBottomSheetGestures(qrDownloadFormatModal, qrDownloadSheetWrapper || qrDownloadFormatContent, qrFormatDragHandle, qrDownloadFloatingPill, qrDownloadFormatContent);
-  setupBottomSheetGestures(logoDownloadFormatModal, logoDownloadSheetWrapper || logoDownloadFormatContent, logoFormatDragHandle, logoDownloadFloatingPill, logoDownloadFormatContent);
-  setupBottomSheetGestures(iosInstallGuideModal, iosGuideSheetWrapper || iosGuideModalContent, iosGuideDragHandle, iosGuideFloatingPill, iosGuideModalContent);
+  setupBottomSheetGestures(shareModal, shareSheetWrapper, sheetDragHandle, shareFloatingPill, shareModalContent);
+  setupBottomSheetGestures(qrFullscreenModal, qrFullscreenSheetWrapper, qrFullscreenDragHandle, qrFullscreenFloatingPill, qrFullscreenContent);
+  setupBottomSheetGestures(qrDownloadFormatModal, qrDownloadSheetWrapper, qrFormatDragHandle, qrDownloadFloatingPill, qrDownloadFormatContent);
+  setupBottomSheetGestures(logoDownloadFormatModal, logoDownloadSheetWrapper, logoFormatDragHandle, logoDownloadFloatingPill, logoDownloadFormatContent);
+  setupBottomSheetGestures(iosInstallGuideModal, iosGuideSheetWrapper, iosGuideDragHandle, iosGuideFloatingPill, iosGuideModalContent);
 
   // Close handlers for iOS Guide Modal
   closeIosGuideModalBtn?.addEventListener('click', () => {
-    closeSheetSmoothly(iosInstallGuideModal, iosGuideSheetWrapper || iosGuideModalContent);
+    closeModal(iosInstallGuideModal, iosGuideSheetWrapper);
   });
 
   iosGuideGotItBtn?.addEventListener('click', () => {
-    closeSheetSmoothly(iosInstallGuideModal, iosGuideSheetWrapper || iosGuideModalContent);
+    closeModal(iosInstallGuideModal, iosGuideSheetWrapper);
   });
 
   iosInstallGuideModal?.addEventListener('click', (e) => {
     if (e.target === iosInstallGuideModal) {
-      closeSheetSmoothly(iosInstallGuideModal, iosGuideSheetWrapper || iosGuideModalContent);
+      closeModal(iosInstallGuideModal, iosGuideSheetWrapper);
     }
   });
 
@@ -680,10 +705,7 @@ export function initShareModal() {
       // 2. If on iOS Safari:
       if (isIOS() && !isRunningAsPWA()) {
         if (iosInstallGuideModal) {
-          iosInstallGuideModal.classList.remove('hidden');
-          iosInstallGuideModal.classList.add('active');
-          if (iosGuideSheetWrapper) iosGuideSheetWrapper.style.transform = 'translateY(0)';
-          else if (iosGuideModalContent) iosGuideModalContent.style.transform = 'translateY(0)';
+          openModal(iosInstallGuideModal, iosGuideSheetWrapper);
         }
         // Pre-cache offline bundle in the background
         cacheCoreAssets(({ percent }) => {
@@ -744,22 +766,20 @@ export function initShareModal() {
   // 7. Open / Close Share Modal
   if (shareBtn && shareModal && closeShareModal) {
     shareBtn.addEventListener('click', () => {
-      shareModal.classList.remove('hidden');
-      shareModal.classList.add('active');
-      if (shareSheetWrapper) shareSheetWrapper.style.transform = 'translateY(0)';
-      else if (shareModalContent) shareModalContent.style.transform = 'translateY(0)';
-      lockScroll();
-      renderQrCode('qrcodeCanvas', 100);
-      syncAppInstalledStatus();
+      openModal(shareModal, shareSheetWrapper, () => {
+        lockScroll();
+        renderQrCode('qrcodeCanvas', 100);
+        syncAppInstalledStatus();
+      });
     });
 
     closeShareModal.addEventListener('click', () => {
-      closeSheetSmoothly(shareModal, shareSheetWrapper || shareModalContent, unlockScroll);
+      closeModal(shareModal, shareSheetWrapper, unlockScroll);
     });
 
     shareModal.addEventListener('click', (e) => {
       if (e.target === shareModal) {
-        closeSheetSmoothly(shareModal, shareSheetWrapper || shareModalContent, unlockScroll);
+        closeModal(shareModal, shareSheetWrapper, unlockScroll);
       }
     });
   }
@@ -767,19 +787,18 @@ export function initShareModal() {
   // 8. QR Code Fullscreen Lightbox & 1-Click Fast Vector/HD Export
   if (qrcodeCanvasWrapper && qrFullscreenModal) {
     qrcodeCanvasWrapper.addEventListener('click', () => {
-      qrFullscreenModal.classList.remove('hidden');
-      if (qrFullscreenSheetWrapper) qrFullscreenSheetWrapper.style.transform = 'translateY(0)';
-      else if (qrFullscreenContent) qrFullscreenContent.style.transform = 'translateY(0)';
-      renderQrCode('qrcodeFullscreenCanvas', 260);
+      openModal(qrFullscreenModal, qrFullscreenSheetWrapper, () => {
+        renderQrCode('qrcodeFullscreenCanvas', 260);
+      });
     });
 
     closeQrFullscreenBtn?.addEventListener('click', () => {
-      closeSheetSmoothly(qrFullscreenModal, qrFullscreenSheetWrapper || qrFullscreenContent);
+      closeModal(qrFullscreenModal, qrFullscreenSheetWrapper);
     });
 
     qrFullscreenModal.addEventListener('click', (e) => {
       if (e.target === qrFullscreenModal) {
-        closeSheetSmoothly(qrFullscreenModal, qrFullscreenSheetWrapper || qrFullscreenContent);
+        closeModal(qrFullscreenModal, qrFullscreenSheetWrapper);
       }
     });
 
@@ -815,18 +834,16 @@ export function initShareModal() {
   // 9. QR Format Download Modal
   if (openQrDownloadModalBtn && qrDownloadFormatModal) {
     openQrDownloadModalBtn.addEventListener('click', () => {
-      qrDownloadFormatModal.classList.remove('hidden');
-      if (qrDownloadSheetWrapper) qrDownloadSheetWrapper.style.transform = 'translateY(0)';
-      else if (qrDownloadFormatContent) qrDownloadFormatContent.style.transform = 'translateY(0)';
+      openModal(qrDownloadFormatModal, qrDownloadSheetWrapper);
     });
 
     closeQrFormatModalBtn?.addEventListener('click', () => {
-      closeSheetSmoothly(qrDownloadFormatModal, qrDownloadSheetWrapper || qrDownloadFormatContent);
+      closeModal(qrDownloadFormatModal, qrDownloadSheetWrapper);
     });
 
     qrDownloadFormatModal.addEventListener('click', (e) => {
       if (e.target === qrDownloadFormatModal) {
-        closeSheetSmoothly(qrDownloadFormatModal, qrDownloadSheetWrapper || qrDownloadFormatContent);
+        closeModal(qrDownloadFormatModal, qrDownloadSheetWrapper);
       }
     });
   }
@@ -835,7 +852,7 @@ export function initShareModal() {
   formatCards.forEach(card => {
     card.addEventListener('click', () => {
       const format = card.getAttribute('data-format') || 'png';
-      closeSheetSmoothly(qrDownloadFormatModal, qrDownloadSheetWrapper || qrDownloadFormatContent);
+      closeModal(qrDownloadFormatModal, qrDownloadSheetWrapper);
 
       showToast(`Preparing ${format.toUpperCase()} export...`);
 
@@ -870,21 +887,19 @@ export function initShareModal() {
   // 10. Band Logo Format Download Modal
   if (logoDownloadFormatModal) {
     const openLogoModal = () => {
-      logoDownloadFormatModal.classList.remove('hidden');
-      if (logoDownloadSheetWrapper) logoDownloadSheetWrapper.style.transform = 'translateY(0)';
-      else if (logoDownloadFormatContent) logoDownloadFormatContent.style.transform = 'translateY(0)';
+      openModal(logoDownloadFormatModal, logoDownloadSheetWrapper);
     };
 
     openLogoDownloadModalBtn?.addEventListener('click', openLogoModal);
     openLogoDownloadModalBox?.addEventListener('click', openLogoModal);
 
     closeLogoFormatModalBtn?.addEventListener('click', () => {
-      closeSheetSmoothly(logoDownloadFormatModal, logoDownloadSheetWrapper || logoDownloadFormatContent);
+      closeModal(logoDownloadFormatModal, logoDownloadSheetWrapper);
     });
 
     logoDownloadFormatModal.addEventListener('click', (e) => {
       if (e.target === logoDownloadFormatModal) {
-        closeSheetSmoothly(logoDownloadFormatModal, logoDownloadSheetWrapper || logoDownloadFormatContent);
+        closeModal(logoDownloadFormatModal, logoDownloadSheetWrapper);
       }
     });
   }
@@ -893,7 +908,7 @@ export function initShareModal() {
   logoFormatCards.forEach(card => {
     card.addEventListener('click', () => {
       const format = card.getAttribute('data-logo-format') || 'png';
-      closeSheetSmoothly(logoDownloadFormatModal, logoDownloadSheetWrapper || logoDownloadFormatContent);
+      closeModal(logoDownloadFormatModal, logoDownloadSheetWrapper);
 
       showToast(`Preparing Band Logo (${format.toUpperCase()})...`);
       const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
@@ -947,14 +962,16 @@ export function initShareModal() {
   // 11. Keyboard Shortcuts (ESC to close modals)
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (logoDownloadFormatModal && !logoDownloadFormatModal.classList.contains('hidden')) {
-        closeSheetSmoothly(logoDownloadFormatModal, logoDownloadFormatContent);
-      } else if (qrDownloadFormatModal && !qrDownloadFormatModal.classList.contains('hidden')) {
-        closeSheetSmoothly(qrDownloadFormatModal, qrDownloadFormatContent);
-      } else if (qrFullscreenModal && !qrFullscreenModal.classList.contains('hidden')) {
-        closeSheetSmoothly(qrFullscreenModal, qrFullscreenContent);
-      } else if (shareModal && shareModal.classList.contains('active')) {
-        closeSheetSmoothly(shareModal, shareSheetWrapper || shareModalContent, unlockScroll);
+      if (logoDownloadFormatModal && !logoDownloadFormatModal.classList.contains('hidden') && !logoDownloadFormatModal.classList.contains('is-closing')) {
+        closeModal(logoDownloadFormatModal, logoDownloadSheetWrapper);
+      } else if (qrDownloadFormatModal && !qrDownloadFormatModal.classList.contains('hidden') && !qrDownloadFormatModal.classList.contains('is-closing')) {
+        closeModal(qrDownloadFormatModal, qrDownloadSheetWrapper);
+      } else if (qrFullscreenModal && !qrFullscreenModal.classList.contains('hidden') && !qrFullscreenModal.classList.contains('is-closing')) {
+        closeModal(qrFullscreenModal, qrFullscreenSheetWrapper);
+      } else if (iosInstallGuideModal && !iosInstallGuideModal.classList.contains('hidden') && !iosInstallGuideModal.classList.contains('is-closing')) {
+        closeModal(iosInstallGuideModal, iosGuideSheetWrapper);
+      } else if (shareModal && shareModal.classList.contains('active') && !shareModal.classList.contains('is-closing')) {
+        closeModal(shareModal, shareSheetWrapper, unlockScroll);
       }
     }
   });
