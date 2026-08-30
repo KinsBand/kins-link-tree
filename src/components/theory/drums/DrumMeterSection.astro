@@ -1,0 +1,35 @@
+---
+import { drumCategories, type MeterItem } from '../../../settings/theory.config';
+
+const meterCategory = drumCategories.find((c) => c.id === 'drum-meter');
+const meterItems = (meterCategory?.items || []) as MeterItem[];
+---
+
+<article class="theory-category-card" data-category-id="drum-meter" data-chip="meter">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box"><i class="fa-solid fa-stopwatch" aria-hidden="true"></i></div>
+      <div>
+        <h2 class="category-title">Time & Meter</h2>
+        <p class="category-subtitle">Time signatures & pulse grouping.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="category-items-list">
+    {meterItems.map((item) => (
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.sig} ${item.feel}`}>
+        <div class="item-name-col">
+          <div class="item-title-row">
+            <strong class="item-name">{item.name}</strong>
+            <span class="item-type-tag">{item.grouping}</span>
+          </div>
+          <span class="item-notes">{item.feel} • Pattern: {item.accents}</span>
+        </div>
+        <div class="item-actions-col">
+          <code class="item-formula">{item.sig}</code>
+        </div>
+      </div>
+    ))}
+  </div>
+</article>

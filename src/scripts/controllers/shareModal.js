@@ -1,5 +1,6 @@
 import { showToast } from './toast.js';
 import { animateCopySuccess } from './clipboard.js';
+import { isRunningAsPWA, isIOS, detectActualInstalledState, getDetailedInstallState, installPwa, cacheCoreAssets, CACHE_NAME } from './pwaInstall.js';
 
 function lockScroll() {
   document.body.classList.add('modal-open');
@@ -330,33 +331,7 @@ function closeSheetSmoothly(modalBackdrop, modalContent, onClosed) {
 }
 
 // Real-time PWA Installation State Engine
-let deferredInstallPrompt = (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt) || null;
 let isAppInstalledOnDevice = false;
-
-async function detectActualInstalledState() {
-  if (typeof window === 'undefined') return false;
-
-  // 1. Standalone display mode check
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                       window.navigator.standalone === true ||
-                       (typeof document !== 'undefined' && document.referrer.includes('android-app://'));
-
-  if (isStandalone) {
-    return true;
-  }
-
-  // 2. Native getInstalledRelatedApps() API check (Chrome/Android/Desktop PWA)
-  if (typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) {
-    try {
-      const related = await navigator.getInstalledRelatedApps();
-      if (related && related.length > 0) {
-        return true;
-      }
-    } catch (e) {}
-  }
-
-  return false;
-}
 
 export function initShareModal() {
   const shareBtn = document.getElementById('shareBtn');
@@ -403,6 +378,16 @@ export function initShareModal() {
   const closeLogoFormatModalBtn = document.getElementById('closeLogoFormatModalBtn');
   const shareFloatingPill = document.getElementById('shareFloatingPillHeader');
 
+  // iOS Safari Installation Guide Modal elements
+  const iosInstallGuideModal = document.getElementById('iosInstallGuideModal');
+  const iosGuideSheetWrapper = document.getElementById('iosGuideSheetWrapper');
+  const iosGuideFloatingPill = document.getElementById('iosGuideFloatingPillHeader');
+  const iosGuideModalContent = document.getElementById('iosGuideModalContent');
+  const iosGuideDragHandle = document.getElementById('iosGuideDragHandle');
+  const closeIosGuideModalBtn = document.getElementById('closeIosGuideModalBtn');
+  const iosGuideGotItBtn = document.getElementById('iosGuideGotItBtn');
+  const pwaSyncLabel = document.getElementById('pwaSyncLabel');
+
   // Production domain & dynamic UTM attribution matrix
   const baseDomain = 'https://kinsband-hub.vercel.app/';
   const directLinkUrl = baseDomain + '?utm_source=direct_link&utm_medium=share_modal&utm_campaign=fan_share';
@@ -424,68 +409,109 @@ export function initShareModal() {
   setupBottomSheetGestures(qrFullscreenModal, qrFullscreenSheetWrapper || qrFullscreenContent, qrFullscreenDragHandle, qrFullscreenFloatingPill, qrFullscreenContent);
   setupBottomSheetGestures(qrDownloadFormatModal, qrDownloadSheetWrapper || qrDownloadFormatContent, qrFormatDragHandle, qrDownloadFloatingPill, qrDownloadFormatContent);
   setupBottomSheetGestures(logoDownloadFormatModal, logoDownloadSheetWrapper || logoDownloadFormatContent, logoFormatDragHandle, logoDownloadFloatingPill, logoDownloadFormatContent);
+  setupBottomSheetGestures(iosInstallGuideModal, iosGuideSheetWrapper || iosGuideModalContent, iosGuideDragHandle, iosGuideFloatingPill, iosGuideModalContent);
 
-  // Helper to set Download Button Stage 1 (Installable / Uninstalled)
+  // Close handlers for iOS Guide Modal
+  closeIosGuideModalBtn?.addEventListener('click', () => {
+    closeSheetSmoothly(iosInstallGuideModal, iosGuideSheetWrapper || iosGuideModalContent);
+  });
+
+  iosGuideGotItBtn?.addEventListener('click', () => {
+    closeSheetSmoothly(iosInstallGuideModal, iosGuideSheetWrapper || iosGuideModalContent);
+  });
+
+  iosInstallGuideModal?.addEventListener('click', (e) => {
+    if (e.target === iosInstallGuideModal) {
+      closeSheetSmoothly(iosInstallGuideModal, iosGuideSheetWrapper || iosGuideModalContent);
+    }
+  });
+
+  // Helper: Set State 1 (Installable / Uninstalled)
   function setInstallableStage() {
     isAppInstalledOnDevice = false;
     if (!downloadPwaCtaBtn) return;
     const pwaBtnIcon = document.getElementById('pwaBtnIcon');
     const pwaBtnLabel = document.getElementById('pwaBtnLabel');
-    const pwaBtnSub = document.getElementById('pwaBtnSub');
     const pwaProgressBar = document.getElementById('pwaProgressBar');
     const pwaProgressStatus = document.getElementById('pwaProgressStatus');
 
-    downloadPwaCtaBtn.classList.remove('downloading', 'download-complete');
-    if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-download';
-    if (pwaBtnLabel) pwaBtnLabel.textContent = 'Download Kins App';
-    if (pwaBtnSub) pwaBtnSub.textContent = 'Install to home screen • Offline ready';
+    downloadPwaCtaBtn.classList.remove('downloading', 'download-complete', 'installed-mode', 'ios-mode');
+    downloadPwaCtaBtn.classList.add('install-ready');
+    if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-download pwa-btn-icon';
+    if (pwaBtnLabel) pwaBtnLabel.textContent = 'Install App';
     if (pwaProgressBar) pwaProgressBar.style.width = '0%';
-    if (pwaProgressStatus) pwaProgressStatus.textContent = 'INSTALL';
+    if (pwaProgressStatus) pwaProgressStatus.textContent = 'FREE';
   }
 
-  // Helper to set Download Button Stage 2 (Actually Installed / Downloaded)
+  // Helper: Set State 2 (In-Progress Downloading & Pre-Caching)
+  function setDownloadingStage(percent = 0) {
+    if (!downloadPwaCtaBtn) return;
+    const pwaBtnIcon = document.getElementById('pwaBtnIcon');
+    const pwaBtnLabel = document.getElementById('pwaBtnLabel');
+    const pwaProgressBar = document.getElementById('pwaProgressBar');
+    const pwaProgressStatus = document.getElementById('pwaProgressStatus');
+
+    downloadPwaCtaBtn.classList.add('downloading');
+    downloadPwaCtaBtn.classList.remove('download-complete', 'installed-mode', 'install-ready', 'ios-mode');
+
+    const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+    if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-spinner fa-spin pwa-btn-icon';
+    if (pwaBtnLabel) pwaBtnLabel.textContent = 'Downloading...';
+    if (pwaProgressBar) pwaProgressBar.style.width = `${clamped}%`;
+    if (pwaProgressStatus) pwaProgressStatus.textContent = `${clamped}%`;
+  }
+
+  // Helper: Set State 3 (Actually Installed / Standalone Running)
   function setDownloadedStage() {
     isAppInstalledOnDevice = true;
     if (!downloadPwaCtaBtn) return;
     const pwaBtnIcon = document.getElementById('pwaBtnIcon');
     const pwaBtnLabel = document.getElementById('pwaBtnLabel');
-    const pwaBtnSub = document.getElementById('pwaBtnSub');
     const pwaProgressBar = document.getElementById('pwaProgressBar');
     const pwaProgressStatus = document.getElementById('pwaProgressStatus');
 
-    downloadPwaCtaBtn.classList.remove('downloading');
-    downloadPwaCtaBtn.classList.add('download-complete');
+    downloadPwaCtaBtn.classList.remove('downloading', 'install-ready', 'ios-mode');
+    downloadPwaCtaBtn.classList.add('download-complete', 'installed-mode');
 
-    if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-circle-check';
-    if (pwaBtnLabel) pwaBtnLabel.textContent = 'App Downloaded & Ready';
-    if (pwaBtnSub) pwaBtnSub.textContent = '✓ Offline enabled on this device';
+    if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-circle-check pwa-btn-icon';
+    if (pwaBtnLabel) pwaBtnLabel.textContent = 'App Installed';
     if (pwaProgressBar) pwaProgressBar.style.width = '100%';
-    if (pwaProgressStatus) pwaProgressStatus.textContent = 'READY ✓';
+    if (pwaProgressStatus) pwaProgressStatus.textContent = 'INSTALLED ✓';
   }
 
-  // Real-time Installation State Synchronization
-  async function syncAppInstalledStatus() {
-    const actuallyInstalled = await detectActualInstalledState();
-    if (actuallyInstalled) {
-      setDownloadedStage();
-      try { localStorage.setItem('kins_pwa_downloaded', 'true'); } catch (e) {}
-    } else {
-      // Check if previously recorded in localStorage and if cache still exists
-      let hasCache = false;
-      try {
-        if ('caches' in window) {
-          hasCache = await caches.has('kins-link-bio-v32');
-        }
-      } catch (e) {}
+  // Helper: Set State 4 (iOS Safari Guidance Mode)
+  function setIosGuideStage() {
+    isAppInstalledOnDevice = false;
+    if (!downloadPwaCtaBtn) return;
+    const pwaBtnIcon = document.getElementById('pwaBtnIcon');
+    const pwaBtnLabel = document.getElementById('pwaBtnLabel');
+    const pwaProgressBar = document.getElementById('pwaProgressBar');
+    const pwaProgressStatus = document.getElementById('pwaProgressStatus');
 
-      try {
-        const stored = localStorage.getItem('kins_pwa_downloaded');
-        if (stored === 'true' && hasCache && !deferredInstallPrompt) {
-          setDownloadedStage();
-        } else {
-          setInstallableStage();
-        }
-      } catch (e) {
+    downloadPwaCtaBtn.classList.remove('downloading', 'download-complete', 'installed-mode', 'install-ready');
+    downloadPwaCtaBtn.classList.add('ios-mode');
+
+    if (pwaBtnIcon) pwaBtnIcon.className = 'fa-brands fa-apple pwa-btn-icon';
+    if (pwaBtnLabel) pwaBtnLabel.textContent = 'Add to Home Screen';
+    if (pwaProgressBar) pwaProgressBar.style.width = '0%';
+    if (pwaProgressStatus) pwaProgressStatus.textContent = 'IOS GUIDE';
+  }
+
+  // Real-time Installation State Synchronization across all detection layers
+  async function syncAppInstalledStatus() {
+    try {
+      const detail = await getDetailedInstallState();
+      if (detail.isInstalled || detail.isStandalone) {
+        setDownloadedStage();
+      } else if (detail.isIOS) {
+        setIosGuideStage();
+      } else {
+        setInstallableStage();
+      }
+    } catch {
+      if (isIOS()) {
+        setIosGuideStage();
+      } else {
         setInstallableStage();
       }
     }
@@ -493,34 +519,30 @@ export function initShareModal() {
 
   syncAppInstalledStatus();
 
-  // Listen to beforeinstallprompt: browser fires this when app is NOT installed
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-    window.__kinsDeferredInstallPrompt = e;
-    // App is currently NOT installed -> reset to Stage 1
-    setInstallableStage();
-  });
-
-  // Listen to appinstalled: fires immediately when user installs app
-  window.addEventListener('appinstalled', () => {
-    deferredInstallPrompt = null;
-    if (typeof window !== 'undefined') window.__kinsDeferredInstallPrompt = null;
-    setDownloadedStage();
-    try { localStorage.setItem('kins_pwa_downloaded', 'true'); } catch (e) {}
-    showToast('🎉 Kins App installed successfully!', 'success');
-  });
-
-  // Listen to standalone mode changes (e.g. desktop PWA window opens/closes)
-  try {
-    window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
-      if (e.matches) {
-        setDownloadedStage();
+  // Listen to global PWA events from pwaInstall.js
+  window.addEventListener('kins:pwa-available', () => {
+    if (!isRunningAsPWA()) {
+      if (isIOS()) {
+        setIosGuideStage();
       } else {
-        syncAppInstalledStatus();
+        setInstallableStage();
       }
-    });
-  } catch (e) {}
+    }
+  });
+
+  window.addEventListener('kins:pwa-installed', () => {
+    setDownloadedStage();
+  });
+
+  window.addEventListener('kins:pwa-progress', (e) => {
+    if (e.detail && typeof e.detail.percent === 'number') {
+      if (e.detail.percent < 100) {
+        setDownloadingStage(e.detail.percent);
+      } else {
+        setDownloadedStage();
+      }
+    }
+  });
 
   // Generic Clipboard Copy Helper with Inline Tick Micro-Interaction
   async function performCopy(textToCopy, iconElement) {
@@ -636,112 +658,65 @@ export function initShareModal() {
     nativeShareCtaBtn.addEventListener('click', triggerNativeShare);
   }
 
-  // 5. Two-Stage Download / Install App CTA Handler
+  // 5. Multi-Platform PWA Installation CTA Handler
   if (downloadPwaCtaBtn) {
     let isDownloading = false;
 
     downloadPwaCtaBtn.addEventListener('click', async () => {
-      // If already in Stage 2 & installed:
-      if (downloadPwaCtaBtn.classList.contains('download-complete')) {
-        showToast('✓ Kins App is installed on this device & ready offline!', 'success');
-        return;
-      }
-
-      if (isDownloading) return;
-
-      const actuallyInstalled = await detectActualInstalledState();
-      if (actuallyInstalled) {
-        setDownloadedStage();
-        try { localStorage.setItem('kins_pwa_downloaded', 'true'); } catch (e) {}
+      // 1. If currently showing installed state:
+      if (downloadPwaCtaBtn.classList.contains('download-complete') || downloadPwaCtaBtn.classList.contains('installed-mode') || isRunningAsPWA()) {
+        const actuallyInstalled = await detectActualInstalledState();
+        if (!actuallyInstalled && !isRunningAsPWA()) {
+          // The user uninstalled the app or cleared cache data!
+          await syncAppInstalledStatus();
+          showToast('App is not installed on this device.', 'info');
+          return;
+        }
         showToast('✓ Kins App is installed & offline ready!', 'success');
+        setDownloadedStage();
         return;
       }
 
-      // STAGE 1: Request to Download & In-Progress Caching
-      const pwaBtnIcon = document.getElementById('pwaBtnIcon');
-      const pwaBtnLabel = document.getElementById('pwaBtnLabel');
-      const pwaBtnSub = document.getElementById('pwaBtnSub');
-      const pwaProgressBar = document.getElementById('pwaProgressBar');
-      const pwaProgressStatus = document.getElementById('pwaProgressStatus');
+      // 2. If on iOS Safari:
+      if (isIOS() && !isRunningAsPWA()) {
+        if (iosInstallGuideModal) {
+          iosInstallGuideModal.classList.remove('hidden');
+          iosInstallGuideModal.classList.add('active');
+          if (iosGuideSheetWrapper) iosGuideSheetWrapper.style.transform = 'translateY(0)';
+          else if (iosGuideModalContent) iosGuideModalContent.style.transform = 'translateY(0)';
+        }
+        // Pre-cache offline bundle in the background
+        cacheCoreAssets(({ percent }) => {
+          const pwaProgressBar = document.getElementById('pwaProgressBar');
+          if (pwaProgressBar) pwaProgressBar.style.width = `${percent}%`;
+        }).catch(() => {});
+        return;
+      }
 
+      // 3. Standard PWA install & pre-cache flow:
+      if (isDownloading) return;
       isDownloading = true;
-      downloadPwaCtaBtn.classList.add('downloading');
-      if (pwaBtnIcon) pwaBtnIcon.className = 'fa-solid fa-spinner fa-spin';
-      if (pwaBtnLabel) pwaBtnLabel.textContent = 'Downloading & Caching...';
-      if (pwaBtnSub) pwaBtnSub.textContent = 'Preparing offline app storage';
-      if (pwaProgressBar) pwaProgressBar.style.width = '12%';
-      if (pwaProgressStatus) pwaProgressStatus.textContent = '12%';
+      setDownloadingStage(5);
 
-      // Trigger native install prompt if available
-      const promptEvent = deferredInstallPrompt || (typeof window !== 'undefined' && window.__kinsDeferredInstallPrompt);
-      if (promptEvent) {
-        try {
-          promptEvent.prompt();
-          promptEvent.userChoice.then((choice) => {
-            if (choice && choice.outcome === 'accepted') {
-              showToast('🎉 Kins App installed to your device!', 'success');
-              deferredInstallPrompt = null;
-              if (typeof window !== 'undefined') window.__kinsDeferredInstallPrompt = null;
-            }
-          }).catch(() => {});
-        } catch (err) {}
-      }
-
-      // Cache core assets
-      const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
-      const assetUrls = [
-        `${baseUrl}/`,
-        `${baseUrl}/manifest.json`,
-        `${baseUrl}/new.png`,
-        `${baseUrl}/followers.json`
-      ];
-
-      document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
-        const src = el.href || el.src;
-        if (src && !assetUrls.includes(src) && !src.startsWith('chrome-extension')) {
-          assetUrls.push(src);
-        }
-      });
-
-      let cacheStorage = null;
       try {
-        if ('caches' in window) {
-          cacheStorage = await caches.open('kins-link-bio-v32');
+        const result = await installPwa({
+          onProgress: ({ percent }) => {
+            setDownloadingStage(percent);
+          },
+        });
+
+        if (result && (result.status === 'already-installed' || result.status === 'installed' || result.status === 'cached' || result.status === 'dismissed' || result.status === 'ios-manual')) {
+          setDownloadedStage();
+        } else {
+          syncAppInstalledStatus();
         }
-      } catch (e) {}
-
-      let completedItems = 0;
-      for (const url of assetUrls) {
-        try {
-          const response = await fetch(url, { cache: 'no-cache' });
-          if (response && response.ok && cacheStorage) {
-            await cacheStorage.put(url, response.clone()).catch(() => {});
-          }
-        } catch (err) {}
-
-        completedItems += 1;
-        const percent = Math.min(96, Math.round((completedItems / assetUrls.length) * 100));
-        if (pwaProgressBar) pwaProgressBar.style.width = `${percent}%`;
-        if (pwaProgressStatus) pwaProgressStatus.textContent = `${percent}%`;
+      } catch (err) {
+        console.warn('[PWA] Download failed:', err);
+        showToast('Download failed — please try again.', 'error');
+        syncAppInstalledStatus();
+      } finally {
+        isDownloading = false;
       }
-
-      if (pwaProgressBar) pwaProgressBar.style.width = '100%';
-      if (pwaProgressStatus) pwaProgressStatus.textContent = '100%';
-
-      await new Promise(r => setTimeout(r, 200));
-
-      // STAGE 2: Transition to Completed & Verified State
-      setDownloadedStage();
-      try { localStorage.setItem('kins_pwa_downloaded', 'true'); } catch (e) {}
-
-      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      if (isIos) {
-        showToast("📱 Ready! Tap Safari Share (↑) → 'Add to Home Screen' (+)", 'success');
-      } else {
-        showToast('✓ Kins App is downloaded and ready for offline use!', 'success');
-      }
-
-      isDownloading = false;
     });
   }
 

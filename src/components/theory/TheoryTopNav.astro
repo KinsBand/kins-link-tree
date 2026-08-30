@@ -1,0 +1,86 @@
+---
+// Theory Top Navigation Bar
+---
+
+<header class="theory-topbar" id="theoryTopbar">
+  <!-- Branded Back Button -->
+  <a
+    href="/"
+    class="theory-back-btn brutal-press"
+    aria-label="Back to KINS home"
+    title="Back to KINS home"
+    data-track="theory:back_home"
+  >
+    <svg class="back-icon" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M12.5 3.5L6 10l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="back-label">KINS!</span>
+  </a>
+
+  <!-- Dual Selector Tabs (Connected Pill UI) -->
+  <div class="theory-pill-wrap" id="theoryPillWrap">
+    <div class="theory-segmented-pill" role="tablist" aria-label="Instrument Theory Selection">
+      <button
+        type="button"
+        class="theory-tab-btn active brutal-press"
+        role="tab"
+        id="guitarTabBtn"
+        aria-selected="true"
+        aria-controls="guitarPanel"
+        data-instrument="guitar"
+        data-track="theory:tab_guitar"
+      >
+        <span class="tab-emoji" aria-hidden="true">🎸</span>
+        <span class="tab-label">GUITAR</span>
+      </button>
+      <button
+        type="button"
+        class="theory-tab-btn brutal-press"
+        role="tab"
+        id="drumsTabBtn"
+        aria-selected="false"
+        aria-controls="drumsPanel"
+        data-instrument="drums"
+        data-track="theory:tab_drums"
+      >
+        <span class="tab-emoji" aria-hidden="true">🥁</span>
+        <span class="tab-label">DRUMS</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Actions (Expandable Search) -->
+  <div class="theory-topbar-actions" id="theoryTopbarActions">
+    <!-- Expandable Search Controller -->
+    <div class="theory-search-container" id="theorySearchContainer">
+      <div class="theory-search-expandable" id="theorySearchExpandable">
+        <input
+          type="search"
+          class="theory-search-input"
+          id="theorySearchInput"
+          placeholder="Search scales, chords, rudiments... (Press '/' to focus)"
+          aria-label="Search theory topics"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+      <button
+        type="button"
+        class="theory-icon-btn theory-search-toggle brutal-press"
+        id="theorySearchToggleBtn"
+        aria-label="Open search"
+        aria-expanded="false"
+        title="Search theory topics (/)"
+        data-track="theory:search_toggle"
+      >
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="8.5" cy="8.5" r="5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M12.5 12.5L16.5 16.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        <svg class="close-icon" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>

@@ -143,24 +143,30 @@ import kinsLogoImg from '../../assets/new.png';
         </div>
       </div>
 
-      <!-- 6. Real-time Two-Stage Download / Install App CTA -->
-      <button type="button" class="download-pwa-primary-btn brutal-press" id="downloadPwaCtaBtn" data-track="share:download_pwa" title="Install / Download Kins App for instant offline access">
-        <span class="pwa-progress-track" id="pwaProgressTrack">
-          <span class="pwa-progress-bar" id="pwaProgressBar"></span>
-        </span>
-        <div class="pwa-btn-content" id="pwaBtnContent">
-          <div class="pwa-btn-icon-wrap" id="pwaBtnIconWrap">
-            <i class="fa-solid fa-download" id="pwaBtnIcon"></i>
+      <!-- 6. Minimalist PWA App CTA Button -->
+      <div class="share-field-group pwa-install-group" id="pwaInstallFieldGroup">
+        <button
+          type="button"
+          class="download-pwa-primary-btn brutal-press"
+          id="downloadPwaCtaBtn"
+          data-track="share:download_pwa"
+          aria-label="Install Kins Official App"
+          title="Install Kins App for offline access"
+        >
+          <span class="pwa-progress-track" id="pwaProgressTrack" aria-hidden="true">
+            <span class="pwa-progress-bar" id="pwaProgressBar"></span>
+          </span>
+          <div class="pwa-btn-content" id="pwaBtnContent">
+            <div class="pwa-btn-left">
+              <i class="fa-solid fa-download pwa-btn-icon" id="pwaBtnIcon" aria-hidden="true"></i>
+              <span class="pwa-btn-title" id="pwaBtnLabel">Install App</span>
+            </div>
+            <div class="pwa-status-pill-wrap">
+              <span class="pwa-status-badge" id="pwaProgressStatus">FREE</span>
+            </div>
           </div>
-          <div class="pwa-btn-text-stack">
-            <span class="pwa-btn-title" id="pwaBtnLabel">Download Kins App</span>
-            <span class="pwa-btn-subtitle" id="pwaBtnSub">Install to home screen • Offline ready</span>
-          </div>
-          <div class="pwa-status-pill-wrap">
-            <span class="pwa-status-badge" id="pwaProgressStatus">INSTALL</span>
-          </div>
-        </div>
-      </button>
+        </button>
+      </div>
 
     </div>
   </div>
@@ -325,6 +331,73 @@ import kinsLogoImg from '../../assets/new.png';
   </div>
 </div>
 
+<!-- 10. iOS Safari Step-by-Step Installation Modal / Bottom Sheet -->
+<div class="modal-backdrop hidden" id="iosInstallGuideModal" role="dialog" aria-modal="true" aria-label="Add Kins to iOS Home Screen">
+  <div class="ios-guide-sheet-wrapper" id="iosGuideSheetWrapper">
+    <!-- Floating Pill Header -->
+    <div class="sheet-floating-pill-header" id="iosGuideFloatingPillHeader">
+      <div class="sheet-pill-title">
+        <i class="fa-brands fa-apple"></i>
+        <span>IOS INSTALL</span>
+      </div>
+      <button class="sheet-pill-close-btn brutal-press" id="closeIosGuideModalBtn" aria-label="Close iOS guide">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Main Sheet / Modal Content -->
+    <div class="ios-guide-modal-content" id="iosGuideModalContent">
+      <div class="sheet-drag-handle" id="iosGuideDragHandle" aria-hidden="true">
+        <span class="sheet-drag-pill"></span>
+      </div>
+      
+      <div class="ios-guide-header">
+        <div class="ios-guide-app-badge">
+          <Image src={kinsLogoImg} alt="Kins Band App" class="ios-app-icon-img" width={48} height={48} />
+          <div class="ios-app-meta">
+            <h4 class="ios-guide-title">Install Kins on iOS</h4>
+            <p class="ios-guide-sub">Add to your iPhone / iPad Home Screen</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ios-steps-list">
+        <div class="ios-step-item">
+          <div class="ios-step-num">1</div>
+          <div class="ios-step-body">
+            <div class="ios-step-text">
+              Tap the <strong>Share button</strong> <span class="ios-icon-inline"><i class="fa-solid fa-arrow-up-from-bracket"></i></span> in Safari's bottom toolbar.
+            </div>
+          </div>
+        </div>
+
+        <div class="ios-step-item">
+          <div class="ios-step-num">2</div>
+          <div class="ios-step-body">
+            <div class="ios-step-text">
+              Scroll down and tap <strong>'Add to Home Screen'</strong> <span class="ios-icon-inline"><i class="fa-regular fa-square-plus"></i></span>.
+            </div>
+          </div>
+        </div>
+
+        <div class="ios-step-item">
+          <div class="ios-step-num">3</div>
+          <div class="ios-step-body">
+            <div class="ios-step-text">
+              Tap <strong>Add</strong> in the top right corner. You're ready to rock offline!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="native-share-primary-btn brutal-press ios-guide-done-btn" id="iosGuideGotItBtn">
+        <span>Got It</span>
+        <i class="fa-solid fa-check" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
 <style>
   .modal-backdrop {
     position: fixed;
@@ -351,7 +424,8 @@ import kinsLogoImg from '../../assets/new.png';
   /* Desktop Default: Centered Brutalist Cards */
   .share-modal-enhanced,
   .qr-fullscreen-content,
-  .qr-format-modal-content {
+  .qr-format-modal-content,
+  .ios-guide-modal-content {
     background: var(--surface-card-light);
     border: 3px solid #000000;
     box-shadow: 6px 6px 0px #000000;
@@ -369,7 +443,8 @@ import kinsLogoImg from '../../assets/new.png';
   /* Chalkboard fine grain noise texture overlay on modal/sheet surfaces */
   .share-modal-enhanced::before,
   .qr-fullscreen-content::before,
-  .qr-format-modal-content::before {
+  .qr-format-modal-content::before,
+  .ios-guide-modal-content::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -385,7 +460,8 @@ import kinsLogoImg from '../../assets/new.png';
 
   .share-modal-enhanced > *,
   .qr-fullscreen-content > *,
-  .qr-format-modal-content > * {
+  .qr-format-modal-content > *,
+  .ios-guide-modal-content > * {
     position: relative;
     z-index: 1;
   }
@@ -438,7 +514,8 @@ import kinsLogoImg from '../../assets/new.png';
   .share-sheet-wrapper,
   .qr-fullscreen-sheet-wrapper,
   .qr-download-sheet-wrapper,
-  .logo-download-sheet-wrapper {
+  .logo-download-sheet-wrapper,
+  .ios-guide-sheet-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -960,31 +1037,48 @@ import kinsLogoImg from '../../assets/new.png';
     opacity: 1;
   }
 
-  /* Two-Stage Download / Install App CTA */
+  /* ==========================================================================
+     Minimalist PWA CTA Button
+     ========================================================================== */
+  .pwa-install-group {
+    margin-top: 4px;
+  }
+
   .download-pwa-primary-btn {
     position: relative;
     overflow: hidden;
-    background: var(--btn-green);
-    color: #000000;
-    border: 2.5px solid #000000;
-    box-shadow: 3px 3px 0px #000000;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: var(--btn-brand-text, #000000);
+    border: var(--border-brutal, 3px solid #000000);
+    box-shadow: var(--shadow-brutal-black, 3px 3px 0px #000000);
     padding: 0;
-    border-radius: 8px;
+    border-radius: var(--radius-sm, 8px);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 52px;
+    min-height: 48px;
+    height: 48px;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   }
 
   .download-pwa-primary-btn:hover {
-    background: #6af736;
+    background: var(--btn-brand-hover, #faff60);
     transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0px #000000;
+    box-shadow: var(--shadow-brutal-black-lg, 4px 4px 0px #000000);
+  }
+
+  .download-pwa-primary-btn:active {
+    transform: translate(2px, 2px) scale(0.985);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  .download-pwa-primary-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary, #f2fd43);
+    outline-offset: 2px;
   }
 
   .pwa-progress-track {
@@ -1003,10 +1097,11 @@ import kinsLogoImg from '../../assets/new.png';
     left: 0;
     height: 100%;
     width: 0%;
-    background: rgba(0, 0, 0, 0.18);
-    border-right: 2px solid #000000;
-    transition: width 0.1s linear;
+    background: rgba(16, 185, 129, 0.35);
+    border-right: 2.5px solid #000000;
+    transition: width 0.12s linear;
     pointer-events: none;
+    will-change: width;
   }
 
   .pwa-btn-content {
@@ -1015,55 +1110,38 @@ import kinsLogoImg from '../../assets/new.png';
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
-    padding: 8px 12px;
+    padding: 0 14px;
     box-sizing: border-box;
   }
 
-  .pwa-btn-icon-wrap {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    background: #000000;
-    color: var(--accent-neon-yellow);
-    border-radius: 6px;
+  .pwa-btn-left {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 0.95rem;
-    flex-shrink: 0;
-    transition: background-color 0.16s ease, color 0.16s ease;
+    gap: 10px;
+    min-width: 0;
   }
 
-  .pwa-btn-text-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1px;
-    flex: 1;
-    min-width: 0;
-    text-align: left;
+  .pwa-btn-icon {
+    font-size: 1.05rem;
+    color: #000000;
+    flex-shrink: 0;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .download-pwa-primary-btn:hover .pwa-btn-icon {
+    transform: scale(1.1);
   }
 
   .pwa-btn-title {
-    font-family: var(--font-secondary);
+    font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.88rem;
     font-weight: 900;
     color: #000000;
-    letter-spacing: 0.02em;
-    line-height: 1.15;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .pwa-btn-subtitle {
-    font-family: var(--font-secondary);
-    font-size: 0.64rem;
-    font-weight: 700;
-    color: rgba(0, 0, 0, 0.7);
-    line-height: 1.15;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    line-height: 1.1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1074,31 +1152,265 @@ import kinsLogoImg from '../../assets/new.png';
   }
 
   .pwa-status-badge {
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
+    font-family: var(--font-primary, var(--font-secondary));
+    font-size: 0.66rem;
     font-weight: 900;
     color: #000000;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.95);
     border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
     padding: 3px 8px;
-    border-radius: 6px;
-    letter-spacing: 0.03em;
+    border-radius: var(--radius-pill, 9999px);
+    letter-spacing: 0.04em;
     white-space: nowrap;
+    transition: background-color 0.16s ease, color 0.16s ease;
   }
 
+  /* State 2: Downloading in progress */
   .download-pwa-primary-btn.downloading {
     cursor: wait;
-    background: var(--surface-input);
+    background: var(--surface-input, #ffffff);
   }
 
-  .download-pwa-primary-btn.download-complete {
-    background: var(--accent-neon-yellow);
+  .download-pwa-primary-btn.downloading .pwa-btn-title {
+    color: var(--text-card-primary, #000000);
+  }
+
+  .download-pwa-primary-btn.downloading .pwa-btn-icon {
+    color: var(--text-card-primary, #000000);
+  }
+
+  .download-pwa-primary-btn.downloading .pwa-status-badge {
+    background: #000000;
+    color: var(--brand-accent-primary, #f2fd43);
+  }
+
+  /* State 3: Already Installed */
+  .download-pwa-primary-btn.download-complete,
+  .download-pwa-primary-btn.installed-mode {
+    background: #10b981;
     color: #000000;
   }
 
-  .download-pwa-primary-btn.download-complete .pwa-btn-icon-wrap {
+  .download-pwa-primary-btn.download-complete:hover,
+  .download-pwa-primary-btn.installed-mode:hover {
+    background: #34d399;
+  }
+
+  .download-pwa-primary-btn.download-complete .pwa-btn-icon,
+  .download-pwa-primary-btn.installed-mode .pwa-btn-icon {
+    color: #000000;
+  }
+
+  .download-pwa-primary-btn.download-complete .pwa-btn-title,
+  .download-pwa-primary-btn.installed-mode .pwa-btn-title {
+    color: #000000;
+  }
+
+  .download-pwa-primary-btn.download-complete .pwa-status-badge,
+  .download-pwa-primary-btn.installed-mode .pwa-status-badge {
     background: #000000;
     color: #53FC18;
+  }
+
+  /* State 4: iOS Safari Guidance Mode */
+  .download-pwa-primary-btn.ios-mode .pwa-status-badge {
+    background: #000000;
+    color: var(--brand-accent-primary, #f2fd43);
+  }
+
+  /* Dark Mode 1:1 Theme Parity Matrix for PWA Button */
+  :global([data-theme="dark"]) .download-pwa-primary-btn {
+    background: var(--btn-brand-primary, #d4af37);
+    color: #000000;
+    border-color: #000000;
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn:hover {
+    background: var(--btn-brand-hover, #e5c07b);
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn .pwa-btn-icon {
+    color: #000000;
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn .pwa-btn-title {
+    color: #000000;
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn .pwa-status-badge {
+    background: #000000;
+    color: var(--brand-accent-primary, #d4af37);
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn.downloading {
+    background: var(--surface-elevated, #1e1e24);
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn.downloading .pwa-btn-title,
+  :global([data-theme="dark"]) .download-pwa-primary-btn.downloading .pwa-btn-icon {
+    color: var(--text-on-dark, #f5f5f7);
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn.downloading .pwa-progress-bar {
+    background: rgba(212, 175, 55, 0.35);
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn.download-complete,
+  :global([data-theme="dark"]) .download-pwa-primary-btn.installed-mode {
+    background: #059669;
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn.download-complete:hover,
+  :global([data-theme="dark"]) .download-pwa-primary-btn.installed-mode:hover {
+    background: #10b981;
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn.download-complete .pwa-btn-title,
+  :global([data-theme="dark"]) .download-pwa-primary-btn.installed-mode .pwa-btn-title,
+  :global([data-theme="dark"]) .download-pwa-primary-btn.download-complete .pwa-btn-icon,
+  :global([data-theme="dark"]) .download-pwa-primary-btn.installed-mode .pwa-btn-icon {
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) .download-pwa-primary-btn.download-complete .pwa-status-badge,
+  :global([data-theme="dark"]) .download-pwa-primary-btn.installed-mode .pwa-status-badge {
+    background: #000000;
+    color: #53FC18;
+  }
+
+  /* ==========================================================================
+     iOS Safari Step-by-Step Guidance Modal Styles
+     ========================================================================== */
+  .ios-guide-modal-content {
+    max-width: 400px;
+    gap: 16px;
+  }
+
+  .ios-guide-header {
+    width: 100%;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #000000;
+  }
+
+  .ios-guide-app-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ios-app-icon-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    background: #000000;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .ios-app-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+  }
+
+  .ios-guide-title {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+
+  .ios-guide-sub {
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-card-secondary);
+    margin: 0;
+  }
+
+  .ios-steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .ios-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+  }
+
+  .ios-step-num {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
+    border: 1.5px solid #000000;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+
+  :global([data-theme="dark"]) .ios-step-num {
+    background: var(--btn-brand-primary, #d4af37);
+  }
+
+  .ios-step-body {
+    flex: 1;
+    text-align: left;
+  }
+
+  .ios-step-text {
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: var(--text-card-primary);
+  }
+
+  .ios-step-text strong {
+    font-weight: 800;
+  }
+
+  .ios-icon-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: var(--surface-card-panel, #f5f4ef);
+    border: 1px solid #000000;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    vertical-align: middle;
+    margin: 0 2px;
+  }
+
+  .ios-guide-done-btn {
+    width: 100%;
+    margin-top: 4px;
   }
 
   /* Fullscreen QR Lightbox Modal */
@@ -1257,7 +1569,8 @@ import kinsLogoImg from '../../assets/new.png';
     .modal-backdrop#shareModal,
     .modal-backdrop#qrFullscreenModal,
     .modal-backdrop#qrDownloadFormatModal,
-    .modal-backdrop#logoDownloadFormatModal {
+    .modal-backdrop#logoDownloadFormatModal,
+    .modal-backdrop#iosInstallGuideModal {
       align-items: flex-end;
       padding: 0;
     }
@@ -1265,7 +1578,8 @@ import kinsLogoImg from '../../assets/new.png';
     .share-sheet-wrapper,
     .qr-fullscreen-sheet-wrapper,
     .qr-download-sheet-wrapper,
-    .logo-download-sheet-wrapper {
+    .logo-download-sheet-wrapper,
+    .ios-guide-sheet-wrapper {
       max-width: 100%;
       width: 100%;
       gap: 10px;
@@ -1281,7 +1595,9 @@ import kinsLogoImg from '../../assets/new.png';
     .modal-backdrop#qrDownloadFormatModal:not(.hidden) .qr-download-sheet-wrapper,
     .modal-backdrop#qrDownloadFormatModal:global(.active) .qr-download-sheet-wrapper,
     .modal-backdrop#logoDownloadFormatModal:not(.hidden) .logo-download-sheet-wrapper,
-    .modal-backdrop#logoDownloadFormatModal:global(.active) .logo-download-sheet-wrapper {
+    .modal-backdrop#logoDownloadFormatModal:global(.active) .logo-download-sheet-wrapper,
+    .modal-backdrop#iosInstallGuideModal:not(.hidden) .ios-guide-sheet-wrapper,
+    .modal-backdrop#iosInstallGuideModal:global(.active) .ios-guide-sheet-wrapper {
       transform: translateY(0);
     }
 
@@ -1305,7 +1621,8 @@ import kinsLogoImg from '../../assets/new.png';
     }
 
     .qr-fullscreen-content,
-    .qr-format-modal-content {
+    .qr-format-modal-content,
+    .ios-guide-modal-content {
       max-width: 100%;
       width: 100%;
       border-radius: 20px 20px 0 0;

@@ -1,0 +1,48 @@
+---
+import { guitarCategories, type IntervalItem } from '../../../settings/theory.config';
+
+const intervalsCategory = guitarCategories.find((c) => c.id === 'guitar-intervals');
+const intervalItems = (intervalsCategory?.items || []) as IntervalItem[];
+---
+
+<article class="theory-category-card" data-category-id="guitar-intervals" data-chip="intervals">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box"><i class="fa-solid fa-circle-nodes" aria-hidden="true"></i></div>
+      <div>
+        <h2 class="category-title">Intervals & Circle of 5ths</h2>
+        <p class="category-subtitle">Semitone distances & harmonic keys.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Circle of Fifths Key Map -->
+  <div class="circle-fifths-container">
+    <div class="circle-fifths-header">
+      <span class="circle-title"><i class="fa-solid fa-rotate" aria-hidden="true"></i> CIRCLE OF FIFTHS</span>
+      <span class="circle-hint">Tap any key to inspect notes</span>
+    </div>
+    <div class="circle-keys-grid" id="circleKeysGrid">
+      <!-- Dynamically populated via JS -->
+    </div>
+    <div class="circle-detail-card" id="circleDetailCard">
+      <span class="circle-detail-key" id="circleDetailKey">Key of C Major</span>
+      <span class="circle-detail-minor" id="circleDetailMinor">Relative Minor: A Minor</span>
+      <span class="circle-detail-acc" id="circleDetailAcc">0 Sharps / 0 Flats</span>
+    </div>
+  </div>
+
+  <div class="category-items-list">
+    {intervalItems.map((item) => (
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+        <div class="item-name-col">
+          <strong class="item-name">{item.name}</strong>
+          <span class="item-notes">{item.notes}</span>
+        </div>
+        <div class="item-actions-col">
+          <code class="item-formula">{item.formula}</code>
+        </div>
+      </div>
+    ))}
+  </div>
+</article>

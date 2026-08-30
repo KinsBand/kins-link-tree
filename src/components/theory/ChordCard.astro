@@ -1,0 +1,622 @@
+---
+export interface ChordData {
+  id: string;
+  name: string;
+  shortName: string;
+  type: 'power' | 'open' | 'barre' | '7ths';
+  formula: string;
+  notes: string;
+  baseFret: number;
+  frets: (number | '✕')[];
+  fingers: (number | string | null)[];
+  barre?: { fret: number; fromString: number; toString: number; finger?: number };
+  mutePattern: string;
+}
+
+interface Props {
+  chord: ChordData;
+}
+
+const { chord } = Astro.props;
+
+// 6 String X coordinates (Low E / str 6 at index 0 -> High E / str 1 at index 5)
+const stringX = [22, 42, 62, 82, 102, 122];
+const stringGauges = [2.4, 2.0, 1.7, 1.4, 1.2, 1.0];
+const fretY = [36, 60, 84, 108, 132]; // Nut/Fret0, Fret1, Fret2, Fret3, Fret4
+const baseFret = chord.baseFret || 1;
+const isNut = baseFret === 1;
+
+// Calculate finger badge positions
+const fingerBadges = chord.frets.map((fretVal, strIdx) => {
+  if (typeof fretVal === 'number' && fretVal > 0) {
+    const relFret = fretVal - baseFret + 1;
+    if (relFret >= 1 && relFret <= 4) {
+      const x = stringX[strIdx];
+      const y = fretY[relFret - 1] + 12;
+      const finger = chord.fingers[strIdx];
+      return {
+        x,
+        y,
+        fingerText: finger !== null && finger !== undefined ? String(finger) : '',
+      };
+    }
+  }
+  return null;
+}).filter(Boolean);
+
+// Calculate barre positioning if applicable
+let barreRect = null;
+if (chord.barre) {
+  const b = chord.barre;
+  const relFret = b.fret - baseFret + 1;
+  if (relFret >= 1 && relFret <= 4) {
+    const y = fretY[relFret - 1] + 12;
+    const strFromIdx = 6 - b.fromString; // 6 -> 0, 5 -> 1, etc.
+    const strToIdx = 6 - b.toString;     // 1 -> 5, 2 -> 4, etc.
+    const x1 = stringX[Math.min(strFromIdx, strToIdx)];
+    const x2 = stringX[Math.max(strFromIdx, strToIdx)];
+    barreRect = {
+      x: x1 - 6,
+      y: y - 7.5,
+      width: (x2 - x1) + 12,
+      height: 15,
+      fingerText: b.finger ? String(b.finger) : '1',
+    };
+  }
+}
+---
+
+<article
+  class="theory-chord-card brutal-press"
+  data-subfilter-type={chord.type}
+  data-search-target={`${chord.name} ${chord.shortName} ${chord.formula} ${chord.notes} ${chord.mutePattern}`}
+  data-chord-id={chord.id}
+>
+  <!-- Skewed / Pill Header with Name and Chord Type -->
+  <header class="chord-card-header">
+    <span class="chord-card-title">{chord.shortName}</span>
+    <span class={`chord-type-pill pill-${chord.type}`}>
+      {chord.type === '7ths' ? '7TH' : chord.type.toUpperCase()}
+    </span>
+  </header>
+
+  <!-- Interactive SVG Chord Box Diagram -->
+  <div
+    class="chord-diagram-wrap"
+    data-play-chord={chord.id}
+    role="button"
+    tabindex="0"
+    title={`Tap to strum ${chord.shortName}`}
+    aria-label={`Visual chord diagram for ${chord.name}. Tap to hear.`}
+  >
+    <svg
+      class="chord-svg"
+      viewBox="0 0 150 148"
+      width="150"
+      height="148"
+      aria-hidden="true"
+    >
+      <!-- Mute (✕) & Open (◯) Nut Indicators (y = 20) -->
+      {chord.frets.map((fretVal, i) => {
+        const x = stringX[i];
+        if (fretVal === '✕' || fretVal === 'x') {
+          return (
+            <text x={x} y="23" text-anchor="middle" class="chord-svg-mute">✕</text>
+          );
+        }
+        if (fretVal === 0) {
+          return (
+            <circle cx={x} cy="18" r="4.5" class="chord-svg-open" />
+          );
+        }
+        return null;
+      })}
+
+      <!-- Nut Bar or Top Fret Line (y = 36) -->
+      {isNut ? (
+        <line x1="21" y1="36" x2="123" y2="36" class="chord-svg-nut-bar" stroke-width="4.5" />
+      ) : (
+        <>
+          <line x1="21" y1="36" x2="123" y2="36" class="chord-svg-fret-line" stroke-width="1.8" />
+          <text x="133" y="52" class="chord-svg-fret-badge">{baseFret}fr</text>
+        </>
+      )}
+
+      <!-- 4 Fret Lines (Frets 1, 2, 3, 4) -->
+      <line x1="22" y1="60" x2="122" y2="60" class="chord-svg-fret-line" stroke-width="1.4" />
+      <line x1="22" y1="84" x2="122" y2="84" class="chord-svg-fret-line" stroke-width="1.4" />
+      <line x1="22" y1="108" x2="122" y2="108" class="chord-svg-fret-line" stroke-width="1.4" />
+      <line x1="22" y1="132" x2="122" y2="132" class="chord-svg-fret-line" stroke-width="1.4" />
+
+      <!-- 6 Vertical Strings (Gauged thicknesses) -->
+      {stringX.map((x, i) => (
+        <line
+          x1={x}
+          y1="36"
+          x2={x}
+          y2="132"
+          class="chord-svg-string"
+          stroke-width={stringGauges[i]}
+        />
+      ))}
+
+      <!-- Barre Pill Indicator (if chord has a barre) -->
+      {barreRect && (
+        <g class="chord-svg-barre-group">
+          <rect
+            x={barreRect.x}
+            y={barreRect.y}
+            width={barreRect.width}
+            height={barreRect.height}
+            rx="4"
+            class="chord-svg-barre-rect"
+          />
+        </g>
+      )}
+
+      <!-- Finger Placement Badges (Tactile Brutalist Squares) -->
+      {fingerBadges.map((badge) => badge && (
+        <g class="chord-svg-finger-badge">
+          <rect
+            x={badge.x - 8.5}
+            y={badge.y - 8.5}
+            width="17"
+            height="17"
+            rx="3.5"
+            class="chord-svg-badge-box"
+          />
+          <text
+            x={badge.x}
+            y={badge.y + 4.5}
+            text-anchor="middle"
+            class="chord-svg-badge-text"
+          >
+            {badge.fingerText}
+          </text>
+        </g>
+      ))}
+    </svg>
+
+    <!-- Tap to Strum Overlay Hint -->
+    <div class="chord-tap-hint">
+      <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+      <span>STRUM</span>
+    </div>
+  </div>
+
+  <!-- Chord Details / Formula -->
+  <div class="chord-card-meta">
+    <div class="chord-name-sub">{chord.name}</div>
+    <div class="chord-formula-badge">{chord.formula}</div>
+  </div>
+
+  <!-- Card Action Buttons Row -->
+  <footer class="chord-card-actions">
+    <button
+      type="button"
+      class="chord-action-btn chord-btn-strum brutal-press"
+      data-play-chord={chord.id}
+      title={`Strum ${chord.shortName} sound`}
+      aria-label={`Strum ${chord.name}`}
+    >
+      <i class="fa-solid fa-play" aria-hidden="true"></i>
+      <span>Strum</span>
+    </button>
+    <button
+      type="button"
+      class="chord-action-btn chord-btn-neck brutal-press"
+      data-load-chord={chord.id}
+      title="View chord fingering on visual neck"
+      aria-label={`View ${chord.name} on neck`}
+    >
+      <i class="fa-solid fa-eye" aria-hidden="true"></i>
+      <span>Neck</span>
+    </button>
+    <button
+      type="button"
+      class="chord-action-icon-btn brutal-press"
+      data-copy-text={`${chord.name} Fingering: ${chord.mutePattern}`}
+      title="Copy fingering to clipboard"
+      aria-label={`Copy ${chord.name} fingering`}
+    >
+      <i class="fa-solid fa-copy" aria-hidden="true"></i>
+    </button>
+  </footer>
+</article>
+
+<style>
+  /* ==========================================================================
+     Tactile Brutalist Chord Card
+     ========================================================================== */
+  .theory-chord-card {
+    background: #ffffff;
+    border: 2px solid #000000;
+    box-shadow: 2.5px 2.5px 0px #000000;
+    border-radius: var(--radius-sm, 8px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 10px 10px;
+    gap: 10px;
+    position: relative;
+    user-select: none;
+    transition: transform 0.14s var(--ease-tactile), box-shadow 0.14s ease, background-color 0.14s ease, border-color 0.14s ease;
+  }
+
+  .theory-chord-card:hover {
+    transform: translate(-1.5px, -1.5px);
+    box-shadow: 3.5px 3.5px 0px #000000;
+  }
+
+  .theory-chord-card[hidden] {
+    display: none !important;
+  }
+
+  /* Header */
+  .chord-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    border-bottom: 1.5px solid #000000;
+    padding-bottom: 6px;
+  }
+
+  .chord-card-title {
+    font-family: var(--font-heading, sans-serif);
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: #000000;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .chord-type-pill {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.64rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border: 1.5px solid #000000;
+    border-radius: var(--radius-pill, 9999px);
+    background: #f4f4f5;
+    color: #18181b;
+    white-space: nowrap;
+  }
+
+  .chord-type-pill.pill-power {
+    background: var(--accent-neon-yellow, #f2fd43);
+    color: #000000;
+  }
+
+  .chord-type-pill.pill-open {
+    background: #e4e4e7;
+    color: #000000;
+  }
+
+  .chord-type-pill.pill-barre {
+    background: #fed7aa;
+    color: #7c2d12;
+  }
+
+  .chord-type-pill.pill-7ths {
+    background: #e9d5ff;
+    color: #581c87;
+  }
+
+  /* SVG Diagram Wrap */
+  .chord-diagram-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #faf8f5;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    padding: 8px 4px 6px;
+    cursor: pointer;
+    position: relative;
+    box-sizing: border-box;
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+  }
+
+  .chord-diagram-wrap:hover {
+    background: #f4f4f5;
+  }
+
+  .chord-diagram-wrap:focus-visible {
+    outline: 2px solid var(--accent-neon-yellow, #f2fd43);
+    outline-offset: 2px;
+  }
+
+  .chord-svg {
+    display: block;
+    width: 100%;
+    max-width: 140px;
+    height: auto;
+  }
+
+  /* SVG Internal Styling */
+  .chord-svg-mute {
+    font-family: var(--font-secondary, monospace);
+    font-size: 11px;
+    font-weight: 900;
+    fill: #ef4444;
+  }
+
+  .chord-svg-open {
+    fill: none;
+    stroke: #22c55e;
+    stroke-width: 1.6;
+  }
+
+  .chord-svg-nut-bar {
+    stroke: #000000;
+    stroke-linecap: round;
+  }
+
+  .chord-svg-fret-line {
+    stroke: #71717a;
+    stroke-linecap: square;
+  }
+
+  .chord-svg-string {
+    stroke: #000000;
+    stroke-linecap: square;
+  }
+
+  .chord-svg-fret-badge {
+    font-family: var(--font-secondary, monospace);
+    font-size: 10.5px;
+    font-weight: 900;
+    fill: #000000;
+  }
+
+  .chord-svg-barre-rect {
+    fill: #18181b;
+    stroke: #000000;
+    stroke-width: 1.5;
+  }
+
+  .chord-svg-badge-box {
+    fill: #000000;
+    stroke: #000000;
+    stroke-width: 1.5;
+    filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.4));
+  }
+
+  .chord-svg-badge-text {
+    font-family: var(--font-secondary, monospace);
+    font-size: 9.5px;
+    font-weight: 900;
+    fill: #ffffff;
+  }
+
+  .chord-tap-hint {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #71717a;
+    margin-top: 2px;
+  }
+
+  .chord-diagram-wrap:hover .chord-tap-hint {
+    color: #000000;
+  }
+
+  /* Meta Subtitles */
+  .chord-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .chord-name-sub {
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #3f3f46;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chord-formula-badge {
+    display: inline-block;
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.70rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    background: #f4f4f5;
+    color: #18181b;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Action Buttons */
+  .chord-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+
+  .chord-action-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px 6px;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: var(--radius-xs, 6px);
+    font-family: var(--font-secondary, monospace);
+    font-size: 0.70rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: transform 0.1s var(--ease-tactile), background-color 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  .chord-btn-strum {
+    background: var(--btn-brand-primary, #f2fd43);
+    color: var(--btn-brand-text, #000000);
+  }
+
+  .chord-btn-strum:hover {
+    background: var(--btn-brand-hover, #faff60);
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .chord-btn-neck {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .chord-btn-neck:hover {
+    background: #f4f4f5;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .chord-action-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    min-height: 26px;
+    padding: 0;
+    background: #ffffff;
+    color: #000000;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    border-radius: var(--radius-xs, 6px);
+    font-size: 0.70rem;
+    cursor: pointer;
+    transition: transform 0.1s var(--ease-tactile), background-color 0.1s ease;
+  }
+
+  .chord-action-icon-btn:hover {
+    background: var(--btn-brand-primary, #f2fd43);
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  /* ==========================================================================
+     Dark Mode Adjustments
+     ========================================================================== */
+  :global([data-theme="dark"]) .theory-chord-card {
+    background: var(--surface-card, #18181c);
+    border-color: #000000;
+    box-shadow: 2.5px 2.5px 0px rgba(0, 0, 0, 0.9);
+  }
+
+  :global([data-theme="dark"]) .theory-chord-card:hover {
+    box-shadow: 3.5px 3.5px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .chord-card-header {
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+
+  :global([data-theme="dark"]) .chord-card-title {
+    color: var(--text-on-dark, #f5f5f7);
+  }
+
+  :global([data-theme="dark"]) .chord-diagram-wrap {
+    background: #121216;
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .chord-diagram-wrap:hover {
+    background: #18181e;
+  }
+
+  :global([data-theme="dark"]) .chord-svg-nut-bar {
+    stroke: var(--btn-brand-primary, #d4af37);
+  }
+
+  :global([data-theme="dark"]) .chord-svg-fret-line {
+    stroke: #4b4b58;
+  }
+
+  :global([data-theme="dark"]) .chord-svg-string {
+    stroke: #8e8e98;
+  }
+
+  :global([data-theme="dark"]) .chord-svg-fret-badge {
+    fill: var(--btn-brand-primary, #d4af37);
+  }
+
+  :global([data-theme="dark"]) .chord-svg-barre-rect {
+    fill: #2d2d38;
+    stroke: #000000;
+  }
+
+  :global([data-theme="dark"]) .chord-svg-badge-box {
+    fill: var(--btn-brand-primary, #d4af37);
+    stroke: #000000;
+  }
+
+  :global([data-theme="dark"]) .chord-svg-badge-text {
+    fill: #000000;
+    font-weight: 900;
+  }
+
+  :global([data-theme="dark"]) .chord-tap-hint {
+    color: #a1a1aa;
+  }
+
+  :global([data-theme="dark"]) .chord-diagram-wrap:hover .chord-tap-hint {
+    color: var(--btn-brand-primary, #d4af37);
+  }
+
+  :global([data-theme="dark"]) .chord-name-sub {
+    color: #d4d4d8;
+  }
+
+  :global([data-theme="dark"]) .chord-formula-badge {
+    background: #18181c;
+    color: var(--btn-brand-primary, #d4af37);
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .chord-btn-strum {
+    background: var(--btn-brand-primary, #d4af37);
+    color: #000000;
+  }
+
+  :global([data-theme="dark"]) .chord-btn-strum:hover {
+    background: var(--btn-brand-hover, #e5c07b);
+  }
+
+  :global([data-theme="dark"]) .chord-btn-neck,
+  :global([data-theme="dark"]) .chord-action-icon-btn {
+    background: #27272a;
+    color: var(--text-on-dark, #f5f5f7);
+    border-color: #000000;
+  }
+
+  :global([data-theme="dark"]) .chord-btn-neck:hover {
+    background: #383840;
+  }
+
+  :global([data-theme="dark"]) .chord-action-icon-btn:hover {
+    background: var(--btn-brand-primary, #d4af37);
+    color: #000000;
+  }
+</style>

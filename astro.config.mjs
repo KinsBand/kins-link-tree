@@ -11,6 +11,11 @@ export default defineConfig({
     inlineStylesheets: 'auto'
   },
   vite: {
+    server: {
+      watch: {
+        ignored: ['**/.vercel/**', '**/.git/**', '**/dist/**']
+      }
+    },
     build: {
       cssMinify: true,
       chunkSizeWarningLimit: 500,

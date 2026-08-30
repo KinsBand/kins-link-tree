@@ -7,10 +7,10 @@ test.describe('tier1 smoke — home hub', () => {
     await expect(page.locator('.members-scroll-container .member-card').first()).toBeVisible();
   });
 
-  test('tuner page loads with instrument tabs', async ({ page }) => {
+  test('tuner is hidden and direct navigation redirects to homepage when disabled', async ({ page }) => {
     await page.goto('/tuner');
-    await expect(page.locator('#tunerReadoutPanel')).toBeVisible();
-    await expect(page.locator('#tunerMicBtn')).toBeVisible();
+    await expect(page).not.toHaveURL(/\/tuner/);
+    await expect(page).toHaveURL(/\/$/);
   });
 
   test('epk is hidden and direct navigation redirects to homepage when disabled', async ({ page }) => {
@@ -309,6 +309,36 @@ test.describe('tier1 smoke — home hub', () => {
     const substackCard = communityTab.locator('a[data-name="Substack"]');
     await expect(redditCard).toHaveClass(/is-recommended/);
     await expect(substackCard).toHaveClass(/is-recommended/);
+  });
+
+  test('share modal PWA button renders minimalist CTA and transitions to installed state', async ({ page }) => {
+    await page.goto('/');
+
+    const shareBtn = page.locator('#shareBtn');
+    await shareBtn.click();
+
+    const shareModal = page.locator('#shareModal');
+    await expect(shareModal).toBeVisible();
+
+    // Verify PWA installation group
+    const pwaGroup = page.locator('#pwaInstallFieldGroup');
+    await expect(pwaGroup).toBeVisible();
+
+    const pwaBtn = page.locator('#downloadPwaCtaBtn');
+    await expect(pwaBtn).toBeVisible();
+    await expect(pwaBtn.locator('#pwaBtnLabel')).toHaveText('Install App');
+    await expect(pwaBtn.locator('#pwaProgressStatus')).toBeVisible();
+
+    // Trigger mock global install event to verify reactive state transition
+    await page.evaluate(() => {
+      window.dispatchEvent(new CustomEvent('kins:pwa-installed', { detail: { stage: 2 } }));
+    });
+
+    // Verify button updates to installed state
+    await expect(pwaBtn).toHaveClass(/download-complete/);
+    await expect(pwaBtn.locator('#pwaBtnLabel')).toHaveText('App Installed');
+    await expect(pwaBtn.locator('#pwaProgressStatus')).toHaveText('INSTALLED ✓');
+    await expect(pwaBtn.locator('#pwaBtnIcon')).toHaveClass(/fa-circle-check/);
   });
 });
 

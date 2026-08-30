@@ -3,7 +3,9 @@ const CACHE_NAME = 'kins-link-bio-v33';
 // Small, stable shell assets only. Heavy media (new.png) is NOT precached —
 // it competes with first-load bandwidth and is runtime-cached on first view.
 const PRECACHE_ASSETS = [
+  './',
   './manifest.json',
+  './offline.html',
   './icon-192x192.png',
   './icon-512x512.png',
   './icon-maskable-192x192.png',
@@ -12,16 +14,17 @@ const PRECACHE_ASSETS = [
   './favicon-32x32.png',
   './favicon-16x16.png',
   './favicon.ico',
-  './followers.json'
+  './followers.json',
+  './noise-tile.png',
+  './tuner-worklet.js',
+  './worklets/click-worklet.js',
+  './worklets/metro-worker.js'
 ];
+
+const CRITICAL_ASSETS = new Set(['./', './manifest.json', './offline.html']);
 
 // Same-origin path prefixes eligible for runtime caching.
 // /api/ is deliberately excluded so authenticated responses are never cached.
-// /tuner-worklet.js and /worklets/click-worklet.js make the tuner and
-// metronome fully offline-capable (all audio DSP runs locally; the pages
-// themselves cache via the network-first HTML handler). /worklets/metro-worker.js
-// is the metronome's legacy-path scheduler ticker — if it 404s offline the
-// Worker errors after 'start' was posted and playback goes silently mute.
 const RUNTIME_CACHEABLE_PREFIXES = ['/_astro/', '/icons/', '/noise-tile.png', '/tuner-worklet.js', '/worklets/click-worklet.js', '/worklets/metro-worker.js'];
 
 // Versioned third-party CDNs safe to cache-first (URLs change when versions bump).
@@ -31,29 +34,134 @@ const CDN_CACHE_RULES = [
   { host: 'cdnjs.cloudflare.com', cacheName: 'kins-cdn-cdnjs-v1' }
 ];
 
+const pwaChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('pwa-cache-channel') : null;
+let lastProgress = { completed: 0, total: PRECACHE_ASSETS.length, percent: 0, version: CACHE_NAME };
+
+function broadcastProgress(data) {
+  if (data && typeof data.percent === 'number') {
+    lastProgress = {
+      completed: data.completed ?? 0,
+      total: data.total ?? PRECACHE_ASSETS.length,
+      percent: data.percent,
+      version: CACHE_NAME
+    };
+  }
+  if (pwaChannel) {
+    try {
+      pwaChannel.postMessage(data);
+    } catch (e) {}
+  }
+  // Also post back to active client windows including uncontrolled first-load clients
+  self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+    clients.forEach((client) => {
+      try {
+        client.postMessage(data);
+      } catch (e) {}
+    });
+  }).catch(() => {});
+}
+
+async function precacheWithProgress(customList = null) {
+  const cache = await caches.open(CACHE_NAME);
+  const assetsToCache = Array.isArray(customList) && customList.length > 0
+    ? Array.from(new Set([...PRECACHE_ASSETS, ...customList]))
+    : PRECACHE_ASSETS;
+
+  const total = assetsToCache.length;
+  const failures = [];
+  let completed = 0;
+  let lastPost = 0;
+
+  const post = (force = false, extra = {}) => {
+    const now = Date.now();
+    if (!force && now - lastPost < 90) return;
+    lastPost = now;
+    const percent = Math.min(100, Math.round((completed / total) * 100));
+    broadcastProgress({
+      type: 'DOWNLOAD_PROGRESS',
+      completed,
+      total,
+      percent,
+      stage: 1,
+      version: CACHE_NAME,
+      ...extra
+    });
+  };
+
+  post(true, { percent: 5 });
+
+  for (const url of assetsToCache) {
+    try {
+      // cache: 'reload' bypasses the HTTP cache — never store a stale 304.
+      const req = new Request(url, { cache: 'reload' });
+      const res = await fetch(req);
+      if (res && (res.ok || res.type === 'opaque')) {
+        await cache.put(url, res.clone());
+      } else if (CRITICAL_ASSETS.has(url)) {
+        throw new Error(`Failed HTTP ${res ? res.status : 'network'} for critical asset ${url}`);
+      }
+    } catch (error) {
+      failures.push(url);
+      console.warn(`[SW] Precache non-fatal/fatal for ${url}:`, error);
+      if (CRITICAL_ASSETS.has(url)) {
+        broadcastProgress({ type: 'DOWNLOAD_ERROR', url, error: String(error), stage: 1 });
+      }
+    }
+    completed += 1;
+    post();
+  }
+
+  post(true, { percent: 100 });
+  broadcastProgress({
+    type: 'DOWNLOAD_COMPLETE',
+    total,
+    failures,
+    percent: 100,
+    stage: 1,
+    version: CACHE_NAME
+  });
+}
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        PRECACHE_ASSETS.map((asset) =>
-          fetch(asset, { cache: 'no-cache' }).then((response) => {
-            if (response.ok) {
-              return cache.put(asset, response);
-            }
-          }).catch(() => {})
-        )
-      );
-    })
-  );
+  event.waitUntil(precacheWithProgress());
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE_NAME && !k.startsWith('kins-cdn-')).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    ).then(() => self.clients.claim()).then(() => {
+      broadcastProgress({ type: 'SW_ACTIVATED', version: CACHE_NAME });
+    })
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (!event.data) return;
+  const msgType = event.data.type || event.data;
+
+  switch (msgType) {
+    case 'SKIP_WAITING':
+      self.skipWaiting();
+      break;
+
+    case 'GET_CACHE_STATUS':
+      if (event.ports && event.ports[0]) {
+        event.ports[0].postMessage({
+          type: 'CACHE_STATUS',
+          ...lastProgress,
+          version: CACHE_NAME
+        });
+      }
+      break;
+
+    case 'TRIGGER_ASSET_CACHE':
+      precacheWithProgress(event.data.assets).catch((err) => {
+        console.warn('[SW] Manual asset cache trigger error:', err);
+      });
+      break;
+  }
 });
 
 function isRuntimeCacheable(url) {
@@ -114,7 +222,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-First for HTML navigation requests to always show live edits
+  // Network-First for HTML navigation requests to always show live edits with offline fallback
   if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(request)
@@ -125,7 +233,16 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match(request))
+        .catch(async () => {
+          const cache = await caches.open(CACHE_NAME);
+          return (
+            (await cache.match(request)) ||
+            (await cache.match('./')) ||
+            (await cache.match('./index.html')) ||
+            (await cache.match('./offline.html')) ||
+            new Response('Offline - Kins Official', { status: 503, headers: { 'Content-Type': 'text/plain' } })
+          );
+        })
     );
     return;
   }

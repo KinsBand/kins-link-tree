@@ -155,44 +155,56 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools } = rehearsalConfig;
       pwaBtn.setAttribute('title', 'Download for offline use');
     }
 
-    function isStandalone() {
-      return (
-        window.matchMedia('(display-mode: standalone)').matches ||
-        window.navigator.standalone === true ||
-        (typeof document !== 'undefined' && document.referrer.includes('android-app://'))
-      );
+    async function syncInstallState() {
+      try {
+        const { isRunningAsPWA, detectActualInstalledState, CACHE_NAME } = await import('../../scripts/controllers/pwaInstall.js');
+        const isInstalled = isRunningAsPWA() || (await detectActualInstalledState());
+        let hasCache = false;
+        if ('caches' in window) {
+          hasCache = await caches.has(CACHE_NAME);
+        }
+        if (isInstalled || (localStorage.getItem('kins_pwa_downloaded') === 'true' && hasCache)) {
+          markComplete();
+        }
+      } catch {
+        if (localStorage.getItem('kins_pwa_downloaded') === 'true') {
+          markComplete();
+        }
+      }
     }
 
-    // Initial state: already installed or previously cached
-    try {
-      if (isStandalone() || localStorage.getItem('kins_pwa_downloaded') === 'true') {
-        markComplete();
-      }
-    } catch {}
+    syncInstallState();
 
-    // React to system install event
+    // React to system and global PWA events
     window.addEventListener('kins:pwa-installed', markComplete);
     window.addEventListener('appinstalled', markComplete);
+    window.addEventListener('kins:pwa-progress', (e) => {
+      if (e.detail && typeof e.detail.percent === 'number') {
+        if (e.detail.percent < 100) {
+          markDownloading();
+          setProgress(e.detail.percent);
+        } else {
+          markComplete();
+        }
+      }
+    });
 
     pwaBtn.addEventListener('click', async () => {
       if (isDownloading) return;
 
-      if (isStandalone()) {
-        try {
-          const { showToast } = await import('../../scripts/controllers/toast.js');
-          showToast('✓ Kins App is already installed & offline ready!', 'success');
-        } catch {}
-        markComplete();
-        return;
-      }
-
-      // If already marked complete but not standalone, allow re-trigger
-      isDownloading = true;
-      markDownloading();
-      pwaBtn.disabled = true;
-
       try {
-        const { installPwa } = await import('../../scripts/controllers/pwaInstall.js');
+        const { isRunningAsPWA, installPwa } = await import('../../scripts/controllers/pwaInstall.js');
+        if (isRunningAsPWA() || pwaBtn.classList.contains('download-complete')) {
+          const { showToast } = await import('../../scripts/controllers/toast.js');
+          showToast('✓ Kins App is installed & offline ready!', 'success');
+          markComplete();
+          return;
+        }
+
+        isDownloading = true;
+        markDownloading();
+        pwaBtn.disabled = true;
+
         const result = await installPwa({
           onProgress: ({ percent, eta }) => {
             setProgress(percent);
@@ -535,18 +547,18 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools } = rehearsalConfig;
     min-width: 36px;
     min-height: 36px;
     padding: 0;
-    background: #ffffff;
-    color: #000000;
-    border: 2px solid #000000;
+    background: var(--surface-input, #ffffff);
+    color: var(--text-card-primary, #000000);
+    border: var(--border-brutal-sm, 2px solid #000000);
     box-shadow: 2px 2px 0px #000000;
-    border-radius: var(--radius-xs);
+    border-radius: var(--radius-xs, 6px);
     cursor: pointer;
     box-sizing: border-box;
     transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
   }
 
   .kins-tools-pwa-btn:hover {
-    background: var(--accent-neon-yellow);
+    background: var(--btn-brand-primary, #f2fd43);
     color: #000000;
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
@@ -555,6 +567,11 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools } = rehearsalConfig;
   .kins-tools-pwa-btn:active {
     transform: translate(1px, 1px);
     box-shadow: 1px 1px 0px #000000;
+  }
+
+  .kins-tools-pwa-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary, #f2fd43);
+    outline-offset: 2px;
   }
 
   .kins-tools-pwa-btn:disabled {
@@ -698,25 +715,25 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools } = rehearsalConfig;
   }
 
   :global([data-theme="dark"]) .kins-tools-pwa-btn {
-    background: #27272a;
+    background: #222228;
     color: var(--text-white, #f5f5f7);
     border-color: #000000;
     box-shadow: 2px 2px 0px #000000;
   }
 
   :global([data-theme="dark"]) .kins-tools-pwa-btn:hover {
-    background: var(--accent-neon-yellow, #f2fd43);
+    background: var(--btn-brand-primary, #d4af37);
     color: #000000;
   }
 
   :global([data-theme="dark"]) .kins-tools-pwa-btn.downloading {
-    background: #27272a;
+    background: #1e1e24;
     color: var(--text-white, #f5f5f7);
   }
 
   :global([data-theme="dark"]) .kins-tools-pwa-btn.download-complete {
-    background: #53c678;
-    color: #000000;
+    background: #2ea043;
+    color: #ffffff;
   }
 
   /* ==========================================================================

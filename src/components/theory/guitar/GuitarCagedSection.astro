@@ -1,0 +1,40 @@
+---
+import { guitarCategories, type CagedItem } from '../../../settings/theory.config';
+
+const cagedCategory = guitarCategories.find((c) => c.id === 'guitar-caged');
+const cagedItems = (cagedCategory?.items || []) as CagedItem[];
+---
+
+<article class="theory-category-card" data-category-id="guitar-caged" data-chip="caged">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box"><i class="fa-solid fa-shapes" aria-hidden="true"></i></div>
+      <div>
+        <h2 class="category-title">CAGED System</h2>
+        <p class="category-subtitle">5 interlocking fretboard shapes.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="category-items-list">
+    {cagedItems.map((item) => (
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.rootStrings} ${item.voicing}`}>
+        <div class="item-name-col">
+          <div class="item-title-row">
+            <strong class="item-name">{item.name}</strong>
+            <span class="item-type-tag">{item.rootStrings}</span>
+          </div>
+          <span class="item-notes">{item.voicing}</span>
+          <span class="item-fret-hint"><i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i> Next Shape: {item.transition}</span>
+        </div>
+        <div class="item-actions-col">
+          <div class="item-action-btns">
+            <button type="button" class="item-quick-btn brutal-press" data-load-caged={item.id} title="Load shape in fretboard">
+              <i class="fa-solid fa-eye" aria-hidden="true"></i> View Shape
+            </button>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</article>

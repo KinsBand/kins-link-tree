@@ -1,0 +1,35 @@
+---
+import { drumCategories, type SubdivisionItem } from '../../../settings/theory.config';
+
+const subsCategory = drumCategories.find((c) => c.id === 'drum-subdivisions');
+const subItems = (subsCategory?.items || []) as SubdivisionItem[];
+---
+
+<article class="theory-category-card" data-category-id="drum-subdivisions" data-chip="subdivisions">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box"><i class="fa-solid fa-water" aria-hidden="true"></i></div>
+      <div>
+        <h2 class="category-title">Subdivisions</h2>
+        <p class="category-subtitle">Note values & accent flows.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="category-items-list">
+    {subItems.map((item) => (
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.counting} ${item.accentRule}`}>
+        <div class="item-name-col">
+          <div class="item-title-row">
+            <strong class="item-name">{item.name}</strong>
+            <span class="item-type-tag">Count: {item.counting}</span>
+          </div>
+          <span class="item-notes">{item.accentRule}</span>
+        </div>
+        <div class="item-actions-col">
+          <code class="item-formula">{item.visualBars}</code>
+        </div>
+      </div>
+    ))}
+  </div>
+</article>

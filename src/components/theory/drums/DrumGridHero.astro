@@ -1,0 +1,146 @@
+---
+// Interactive 16-Step Beat Grid, Drum Kit Stage, and Sticking Sandbox Hero
+---
+
+<article class="theory-category-card hero-visual-card" data-category-id="drum-grid-hero" data-chip="drum-grid">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box">
+        <i class="fa-solid fa-drum" aria-hidden="true"></i>
+      </div>
+      <div>
+        <h2 class="category-title">Beat Grid</h2>
+        <p class="category-subtitle">16-step sequencer & rudiments.</p>
+      </div>
+    </div>
+    <div class="header-action-group">
+      <button type="button" class="audio-action-btn brutal-press" id="drumPlayToggleBtn" aria-label="Start or stop drum groove playback">
+        <i class="fa-solid fa-play" id="drumPlayIcon" aria-hidden="true"></i>
+        <span id="drumPlayText">PLAY</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Drum Mode Selector -->
+  <div class="fretboard-mode-bar">
+    <span class="fret-control-label">VIEW:</span>
+    <div class="segmented-sub-pills" id="drumModeSelector">
+      <button type="button" class="sub-pill-btn active brutal-press" data-drum-mode="grid">16-Step Grid</button>
+      <button type="button" class="sub-pill-btn brutal-press" data-drum-mode="sticking">Sticking</button>
+      <button type="button" class="sub-pill-btn brutal-press" data-drum-mode="polyrhythm">Polyrhythm</button>
+    </div>
+
+    <!-- BPM Tempo Selector -->
+    <div class="drum-tempo-bar" id="drumTempoBar">
+      <span class="fret-control-label">TEMPO:</span>
+      <div class="drum-tempo-controls">
+        <button type="button" class="tempo-step-btn brutal-press" id="drumBpmMinus" aria-label="Decrease tempo">-5</button>
+        <span class="drum-bpm-val" id="drumBpmDisplay">110 BPM</span>
+        <button type="button" class="tempo-step-btn brutal-press" id="drumBpmPlus" aria-label="Increase tempo">+5</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Drum Kit Stage & Real-Time Audio Spectrum Scope -->
+  <div class="drum-stage-wrapper" id="drumStageWrapper">
+    <!-- Tier 1: Interactive Animated Drum Kit Stage -->
+    <div class="drum-kit-stage" id="drumKitStage" aria-label="Interactive Drum Kit Stage (Tap pieces to play)">
+      <!-- Hi-Hat Cymbal Pad -->
+      <button type="button" class="drum-pad-piece drum-pad-hihat brutal-press" data-drum-piece="hihat" title="Hi-Hat Cymbal (Tap to strike)">
+        <div class="pad-art-shell cymbal-disc-art">
+          <span class="cymbal-bell"></span>
+        </div>
+        <div class="pad-label-col">
+          <span class="pad-name">HI-HAT</span>
+          <span class="pad-role-tag">Cymbal</span>
+        </div>
+        <div class="pad-shockwave" aria-hidden="true"></div>
+      </button>
+
+      <!-- Snare Drum Pad -->
+      <button type="button" class="drum-pad-piece drum-pad-snare brutal-press" data-drum-piece="snare" title="Snare Drum (Tap to strike)">
+        <div class="pad-art-shell snare-drum-art">
+          <span class="snare-crosshairs"></span>
+        </div>
+        <div class="pad-label-col">
+          <span class="pad-name">SNARE</span>
+          <span class="pad-role-tag">Backbeat</span>
+        </div>
+        <div class="pad-shockwave" aria-hidden="true"></div>
+      </button>
+
+      <!-- Kick Drum Pad (Center Main) -->
+      <button type="button" class="drum-pad-piece drum-pad-kick brutal-press" data-drum-piece="kick" title="Bass Kick Drum (Tap to strike)">
+        <div class="pad-art-shell kick-drum-art">
+          <span class="kick-beater-point"></span>
+        </div>
+        <div class="pad-label-col">
+          <span class="pad-name">BASS KICK</span>
+          <span class="pad-role-tag">Downbeat</span>
+        </div>
+        <div class="pad-shockwave" aria-hidden="true"></div>
+      </button>
+
+      <!-- Ghost Snare Pad -->
+      <button type="button" class="drum-pad-piece drum-pad-ghost brutal-press" data-drum-piece="ghost" title="Ghost Note Snare (Tap to strike)">
+        <div class="pad-art-shell ghost-drum-art">
+          <span class="snare-crosshairs"></span>
+        </div>
+        <div class="pad-label-col">
+          <span class="pad-name">GHOST SD</span>
+          <span class="pad-role-tag">Soft Tap</span>
+        </div>
+        <div class="pad-shockwave" aria-hidden="true"></div>
+      </button>
+
+      <!-- Ride Cymbal Pad -->
+      <button type="button" class="drum-pad-piece drum-pad-ride brutal-press" data-drum-piece="ride" title="Ride Cymbal (Tap to strike)">
+        <div class="pad-art-shell cymbal-disc-art">
+          <span class="cymbal-bell"></span>
+        </div>
+        <div class="pad-label-col">
+          <span class="pad-name">RIDE</span>
+          <span class="pad-role-tag">Cymbal</span>
+        </div>
+        <div class="pad-shockwave" aria-hidden="true"></div>
+      </button>
+    </div>
+
+    <!-- Tier 2: Real-time Audio Spectrum & Oscilloscope Waveform Canvas -->
+    <div class="drum-scope-card">
+      <div class="drum-scope-header">
+        <span class="drum-scope-tag"><i class="fa-solid fa-wave-square" aria-hidden="true"></i> AUDIO SPECTRUM</span>
+        <span class="drum-scope-status" id="drumScopeStatus">READY</span>
+      </div>
+      <canvas class="drum-audio-scope-canvas" id="drumAudioScope" width="680" height="52" aria-label="Real-time audio frequency visualizer"></canvas>
+    </div>
+  </div>
+
+  <!-- Groove Style / Rudiment Selector Pills -->
+  <div class="fretboard-controls-row">
+    <div class="fret-control-group">
+      <span class="fret-control-label" id="drumPresetLabel">GROOVE:</span>
+      <div class="fret-pills-wrap" id="drumPresetPills">
+        <!-- Dynamically injected -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Drum Visualizer Canvas / Grid -->
+  <div class="fretboard-visual-wrapper drum-visual-wrapper">
+    <div class="fretboard-scroll-area">
+      <div class="drum-canvas-container" id="drumVisualCanvas" role="region" aria-label="Visual Drum Sequencer Matrix & Visualizer">
+        <!-- Rendered dynamically by script -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Drum Legend Bar -->
+  <footer class="fretboard-legend-bar" id="drumLegendBar">
+    <div class="legend-item"><span class="drum-step-active"></span> Primary Hit</div>
+    <div class="legend-item"><span class="drum-step-ghost"></span> Ghost Note / Accent</div>
+    <div class="legend-item"><span class="legend-dot root-dot">R</span> Right</div>
+    <div class="legend-item"><span class="legend-dot note-dot">L</span> Left</div>
+    <div class="legend-summary" id="drumSummaryText">Standard 8th Rock • Hi-Hat 8ths, Snare on 2 & 4, Kick on 1 & 3</div>
+  </footer>
+</article>

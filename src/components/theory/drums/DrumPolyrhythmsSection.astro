@@ -1,0 +1,85 @@
+---
+import { drumCategories, type PolyrhythmItem } from '../../../settings/theory.config';
+
+const polyCategory = drumCategories.find((c) => c.id === 'drum-polyrhythms');
+const polyItems = (polyCategory?.items || []) as PolyrhythmItem[];
+---
+
+<article class="theory-category-card" data-category-id="drum-polyrhythms" data-chip="polyrhythms">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box"><i class="fa-solid fa-code-fork" aria-hidden="true"></i></div>
+      <div>
+        <h2 class="category-title">Polyrhythms</h2>
+        <p class="category-subtitle">Cross-rhythms & independence.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Polyrhythm Orbital Visualizer Stage -->
+  <div class="polyrhythm-radar-container">
+    <div class="poly-radar-stage">
+      <div class="radar-orbital-rings">
+        <div class="radar-orbital-ring outer-orbit" style="--total-nodes: 3;">
+          <span class="orbit-badge">3 Pulses (Voice A)</span>
+          <span class="orbit-node node-outer" style="--node-idx: 0;">1</span>
+          <span class="orbit-node node-outer" style="--node-idx: 1;">2</span>
+          <span class="orbit-node node-outer" style="--node-idx: 2;">3</span>
+        </div>
+        <div class="radar-orbital-ring inner-orbit" style="--total-nodes: 2;">
+          <span class="orbit-badge" style="top: auto; bottom: -10px;">2 Pulses (Voice B)</span>
+          <span class="orbit-node node-inner" style="--node-idx: 0;">1</span>
+          <span class="orbit-node node-inner" style="--node-idx: 1;">2</span>
+        </div>
+        <div class="radar-center-hub"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i></div>
+      </div>
+    </div>
+
+    <!-- 3:2 Pulse Interlock Visual Grid -->
+    <div class="poly-interlock-timeline">
+      <div class="poly-pulse-row">
+        <span class="poly-voice-name">Triplet (3)</span>
+        <div class="poly-ticks-bar">
+          <div class="poly-tick is-pulse-a"></div>
+          <div class="poly-tick"></div>
+          <div class="poly-tick is-pulse-a"></div>
+          <div class="poly-tick"></div>
+          <div class="poly-tick is-pulse-a"></div>
+          <div class="poly-tick"></div>
+        </div>
+      </div>
+      <div class="poly-pulse-row">
+        <span class="poly-voice-name">Duplet (2)</span>
+        <div class="poly-ticks-bar">
+          <div class="poly-tick is-pulse-b"></div>
+          <div class="poly-tick"></div>
+          <div class="poly-tick"></div>
+          <div class="poly-tick is-pulse-b"></div>
+          <div class="poly-tick"></div>
+          <div class="poly-tick"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="poly-mnemonic-footer">
+      <strong>Mnemonic:</strong> "Not Dif-fi-cult" • (Together - Right - Left - Right)
+    </footer>
+  </div>
+
+  <div class="category-items-list">
+    {polyItems.map((item) => (
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.ratio} ${item.mnemonic}`}>
+        <div class="item-name-col">
+          <div class="item-title-row">
+            <strong class="item-name">{item.name}</strong>
+            <span class="item-type-tag">{item.feel}</span>
+          </div>
+          <span class="item-notes">"{item.mnemonic}" • LCM: {item.subdivisions} subdivisions</span>
+        </div>
+        <div class="item-actions-col">
+          <code class="item-formula">{item.ratio}</code>
+        </div>
+      </div>
+    ))}
+  </div>
+</article>

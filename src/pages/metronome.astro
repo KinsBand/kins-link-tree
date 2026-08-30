@@ -3,6 +3,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
 import FeedbackModal from '../components/modals/FeedbackModal.astro';
 import LegalModal from '../components/modals/LegalModal.astro';
+import { functionalityConfig } from '../settings/functionality.config';
+
+const isMetronomeEnabled = functionalityConfig.enableMetronomePage ?? false;
+if (!isMetronomeEnabled) {
+  return Astro.redirect('/');
+}
 ---
 
 <BaseLayout

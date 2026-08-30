@@ -14,7 +14,7 @@ Paths are prefixed with `@` so you can drop them straight into chat/agent contex
 - @src/styles/tokens/animations.css — keyframe definitions & timing tokens
 - @src/styles/base/layout.css — base layout and responsive resets
 - @src/components/ui/ToastContainer.astro — toast notification host (all pages)
-- @public/sw.js — service worker (keep `CACHE_NAME` in sync with `shareModal.js`)
+- @public/sw.js — service worker (keep `CACHE_NAME` in sync with `pwaInstall.js`)
 - @public/manifest.json — Web app manifest
 - @public/robots.txt — crawler rules and sitemap pointer
 - @public/sitemap.xml — canonical pages XML sitemap
@@ -179,12 +179,38 @@ Paths are prefixed with `@` so you can drop them straight into chat/agent contex
 
 ## `/theory` — Music Theory Cheat Sheets (Guitar & Drums)
 
-**Page:** @src/pages/theory.astro (markup + topbar, dual pill tabs, expandable search & all theory CSS inline)
+**Page:** @src/pages/theory.astro
 
-**Modals & UI Components:**
-- @src/components/ui/ToastContainer.astro
+**Components (in import / render order):**
+- @src/components/theory/TheoryTopNav.astro — branded back link, dual instrument tabs, theme toggle & expandable search
+- @src/components/theory/TheoryChipBar.astro — sticky category filter chips (Guitar & Drums)
+- @src/components/theory/guitar/GuitarFretboardHero.astro — interactive visual fretboard sandbox, root key selector & sound synthesis
+- @src/components/theory/guitar/GuitarScalesSection.astro — scales & modes category card with subfilters
+- @src/components/theory/guitar/GuitarChordsSection.astro — chord construction charts with subfilters
+- @src/components/theory/guitar/GuitarCagedSection.astro — CAGED system neck positions & octaves
+- @src/components/theory/guitar/GuitarIntervalsSection.astro — intervals & Circle of Fifths Explorer
+- @src/components/theory/guitar/GuitarTuningsSection.astro — alternate tunings & reference tone generator
+- @src/components/theory/drums/DrumGridHero.astro — 16-step beat grid, drum kit pads, audio spectrum scope & sequencer
+- @src/components/theory/drums/DrumRudimentsSection.astro — snare rudiments, sticking flows & subfilters
+- @src/components/theory/drums/DrumMeterSection.astro — time signatures & meter
+- @src/components/theory/drums/DrumPolyrhythmsSection.astro — polyrhythms & 4-way limb independence
+- @src/components/theory/drums/DrumGroovesSection.astro — groove templates & pocket feels
+- @src/components/theory/drums/DrumSubdivisionsSection.astro — rhythm subdivisions & dynamics
+- @src/components/theory/TheoryEmptyState.astro — dynamic empty search results card
+- @src/components/theory/ChordCard.astro — tactile brutalist SVG chord diagram card
+- @src/components/ui/ToastContainer.astro — toast notification host
+
+**Controllers (@src/scripts/controllers/theory/):**
+- @src/scripts/controllers/theory/index.ts — main orchestrator, tab switching, search filter, Circle of Fifths & lifecycle hooks
+- @src/scripts/controllers/theory/fretboardController.ts — visual fretboard engine, chord/scale maps, string vibration & degree toggle
+- @src/scripts/controllers/theory/drumVisualizerController.ts — 16-step drum sequencer, rudiment sticking visualizer, polyrhythm radar & audio scope
+- @src/scripts/controllers/theory/theoryAudio.ts — Web Audio synthesis for guitar plucks, drum hits & polyrhythm beeps
+
+**Styles:**
+- @src/styles/theory/theory.css — comprehensive theory brutalist styling, animations, and dark mode tokens
 
 **Settings:**
+- @src/settings/theory.config.ts — guitar categories, drum categories, scales, chords, rudiments, meters, grooves, Circle of Fifths data
 - @src/settings/rehearsal.config.ts — tools list entry
 
 ---

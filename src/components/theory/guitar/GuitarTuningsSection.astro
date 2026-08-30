@@ -1,0 +1,40 @@
+---
+import { guitarCategories, type TuningItem } from '../../../settings/theory.config';
+
+const tuningsCategory = guitarCategories.find((c) => c.id === 'guitar-tunings');
+const tuningItems = (tuningsCategory?.items || []) as TuningItem[];
+---
+
+<article class="theory-category-card" data-category-id="guitar-tunings" data-chip="tunings">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box"><i class="fa-solid fa-sliders" aria-hidden="true"></i></div>
+      <div>
+        <h2 class="category-title">Tunings</h2>
+        <p class="category-subtitle">Standard, drop & open tunings.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="category-items-list">
+    {tuningItems.map((item) => (
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.notes} ${item.offsets}`}>
+        <div class="item-name-col">
+          <div class="item-title-row">
+            <strong class="item-name">{item.name}</strong>
+            <span class="item-type-tag">{item.genre}</span>
+          </div>
+          <span class="item-notes">{item.notes}</span>
+          <span class="item-fret-hint"><i class="fa-solid fa-arrows-up-down" aria-hidden="true"></i> Shift: {item.offsets}</span>
+        </div>
+        <div class="item-actions-col">
+          <div class="item-action-btns">
+            <button type="button" class="item-quick-btn brutal-press" data-play-tuning={item.notes} title="Play tuning notes">
+              <i class="fa-solid fa-volume-high" aria-hidden="true"></i> Play Tones
+            </button>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</article>

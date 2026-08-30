@@ -243,7 +243,7 @@ import { generalEmail } from '../../settings/contact.config';
 
   .legal-modal-container {
     position: relative;
-    background: #0e0e12;
+    background: var(--surface-card, #18181c);
     border: 3px solid #000000;
     border-radius: 12px;
     box-shadow: 6px 6px 0px #000000;
@@ -254,7 +254,7 @@ import { generalEmail } from '../../settings/contact.config';
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    color: #f5f5f7;
+    color: var(--text-on-dark, #f5f5f7);
   }
 
   /* Chalkboard fine grain noise texture overlay */
@@ -314,7 +314,7 @@ import { generalEmail } from '../../settings/contact.config';
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    background: #ffffff;
+    background: var(--surface-card-panel, #f5f4ef);
     border: 2.5px solid #000000;
     box-shadow: 3px 3px 0px #000000;
     border-radius: 9999px;
@@ -331,19 +331,23 @@ import { generalEmail } from '../../settings/contact.config';
     font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.88rem;
     font-weight: 900;
-    color: #000000;
+    color: var(--text-card-primary, #000000);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
   .sheet-pill-title i {
     font-size: 0.85rem;
-    color: #000000;
+    color: var(--brand-accent-primary, #f2fd43);
+  }
+
+  :global([data-theme="dark"]) .sheet-pill-title i {
+    color: var(--brand-accent-primary, #d4af37);
   }
 
   .sheet-pill-close-btn {
-    background: #ffffff;
-    color: #000000;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: var(--btn-brand-text, #000000);
     border: 2px solid #000000;
     box-shadow: 1.5px 1.5px 0px #000000;
     width: 32px;
@@ -366,7 +370,7 @@ import { generalEmail } from '../../settings/contact.config';
   }
 
   .sheet-pill-close-btn:hover {
-    background: #f5f4ef;
+    background: var(--btn-brand-hover, #ffffff);
     transform: scale(1.05);
   }
 
@@ -412,11 +416,11 @@ import { generalEmail } from '../../settings/contact.config';
     align-items: center;
     justify-content: center;
     gap: 7px;
-    background: #ffffff;
+    background: var(--surface-card-panel, #f5f4ef);
     border: 1.5px solid #000000;
     box-shadow: 1.5px 1.5px 0px #000000;
     border-radius: 6px;
-    color: #52525b;
+    color: var(--text-card-secondary, #52525b);
     font-family: var(--font-secondary);
     font-size: 0.76rem;
     font-weight: 800;
@@ -429,15 +433,15 @@ import { generalEmail } from '../../settings/contact.config';
   }
 
   .legal-tab-btn:hover {
-    color: #000000;
-    background: #f5f4ef;
+    color: var(--text-card-primary, #000000);
+    background: var(--surface-card-panel-hover, #ffffff);
     transform: translate(-1px, -1px);
     box-shadow: 2px 2px 0px #000000;
   }
 
   .legal-tab-btn.active {
-    background: var(--accent-neon-yellow, #f2fd43);
-    color: #000000;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: var(--btn-brand-text, #000000);
     border-color: #000000;
     box-shadow: 1.5px 1.5px 0px #000000;
     font-weight: 900;
@@ -455,7 +459,7 @@ import { generalEmail } from '../../settings/contact.config';
     display: flex;
     flex-direction: column;
     gap: 14px;
-    color: #52525b;
+    color: var(--text-card-secondary, #52525b);
     font-family: var(--font-secondary);
     font-size: 0.82rem;
     line-height: 1.5;
@@ -473,7 +477,7 @@ import { generalEmail } from '../../settings/contact.config';
   }
 
   .legal-highlight-card {
-    background: #ffffff;
+    background: var(--surface-card-panel, #f5f4ef);
     border: 2px solid #000000;
     box-shadow: 3px 3px 0px #000000;
     border-radius: 8px;
@@ -484,13 +488,13 @@ import { generalEmail } from '../../settings/contact.config';
   }
 
   .legal-highlight-card.accent-border {
-    border-left: 5px solid var(--accent-neon-yellow, #f2fd43);
+    border-left: 5px solid var(--brand-accent-primary, #f2fd43);
   }
 
   .legal-highlight-meta {
     font-size: 0.68rem;
     font-weight: 800;
-    color: #71717a;
+    color: var(--text-card-muted, #71717a);
     letter-spacing: 0.05em;
     text-transform: uppercase;
     display: flex;
@@ -499,23 +503,23 @@ import { generalEmail } from '../../settings/contact.config';
   }
 
   .legal-highlight-meta i {
-    color: #000000;
+    color: var(--brand-accent-primary, #f2fd43);
   }
 
   .legal-intro-text {
-    color: #52525b;
+    color: var(--text-card-secondary, #52525b);
     margin: 0;
     font-size: 0.82rem;
     line-height: 1.45;
   }
 
   .legal-intro-text strong {
-    color: #000000;
+    color: var(--text-card-primary, #000000);
     font-weight: 800;
   }
 
   .legal-content-section {
-    background: #ffffff;
+    background: var(--surface-card-panel, #f5f4ef);
     border: 2px solid #000000;
     box-shadow: 3px 3px 0px #000000;
     border-radius: 8px;
@@ -529,7 +533,7 @@ import { generalEmail } from '../../settings/contact.config';
     font-family: var(--font-heading);
     font-size: 0.86rem;
     font-weight: 900;
-    color: #000000;
+    color: var(--text-card-primary, #000000);
     text-transform: uppercase;
     letter-spacing: 0.03em;
     margin: 0;
@@ -537,7 +541,7 @@ import { generalEmail } from '../../settings/contact.config';
 
   .legal-body-text {
     margin: 0;
-    color: #52525b;
+    color: var(--text-card-secondary, #52525b);
     font-size: 0.8rem;
     line-height: 1.45;
   }
@@ -550,7 +554,7 @@ import { generalEmail } from '../../settings/contact.config';
   }
 
   .bullet-item {
-    background: #f5f4ef;
+    background: var(--surface-elevated, #ffffff);
     border: 1.5px solid #000000;
     border-radius: 6px;
     padding: 8px 12px;
@@ -563,8 +567,8 @@ import { generalEmail } from '../../settings/contact.config';
     align-self: flex-start;
     font-size: 0.58rem;
     font-weight: 900;
-    color: #000000;
-    background: var(--accent-neon-yellow, #f2fd43);
+    color: var(--btn-brand-text, #000000);
+    background: var(--btn-brand-primary, #f2fd43);
     border: 1px solid #000000;
     padding: 1px 5px;
     border-radius: 3px;
@@ -573,7 +577,7 @@ import { generalEmail } from '../../settings/contact.config';
 
   .bullet-item p {
     margin: 0;
-    color: #52525b;
+    color: var(--text-card-secondary, #52525b);
     font-size: 0.79rem;
     line-height: 1.4;
   }
@@ -582,25 +586,25 @@ import { generalEmail } from '../../settings/contact.config';
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #ffffff;
+    background: var(--surface-elevated, #ffffff);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     padding: 7px 12px;
     border-radius: 6px;
     width: fit-content;
-    color: #000000;
+    color: var(--text-card-primary, #000000);
     margin-top: 2px;
   }
 
   .legal-link {
-    color: #000000;
+    color: var(--text-card-primary, #000000);
     font-weight: 800;
     text-decoration: underline;
     transition: color 0.16s ease;
   }
 
   .legal-link:hover {
-    color: var(--accent-neon-yellow, #f2fd43);
+    color: var(--brand-accent-primary, #f2fd43);
   }
 
   @media (max-width: 480px) {

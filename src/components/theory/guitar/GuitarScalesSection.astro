@@ -1,0 +1,53 @@
+---
+import { guitarCategories, type ScaleItem } from '../../../settings/theory.config';
+
+const scalesCategory = guitarCategories.find((c) => c.id === 'guitar-scales');
+const scales = (scalesCategory?.items || []) as ScaleItem[];
+---
+
+<article class="theory-category-card" data-category-id="guitar-scales" data-chip="scales">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box"><i class="fa-solid fa-music" aria-hidden="true"></i></div>
+      <div>
+        <h2 class="category-title">Scales & Modes</h2>
+        <p class="category-subtitle">Formulas, intervals & fret positions.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- In-Section Sub-Filters -->
+  <div class="section-subfilters-row" data-target-list="scales-list">
+    <button type="button" class="subfilter-btn active brutal-press" data-type="all">All Scales</button>
+    <button type="button" class="subfilter-btn brutal-press" data-type="pentatonic">Pentatonic</button>
+    <button type="button" class="subfilter-btn brutal-press" data-type="blues">Blues Scale</button>
+    <button type="button" class="subfilter-btn brutal-press" data-type="modes">Diatonic Modes</button>
+    <button type="button" class="subfilter-btn brutal-press" data-type="major-minor">Major / Minor</button>
+  </div>
+
+  <div class="category-items-list" id="scales-list">
+    {scales.map((item) => (
+      <div class="theory-item-row" data-subfilter-type={item.type} data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
+        <div class="item-name-col">
+          <div class="item-title-row">
+            <strong class="item-name">{item.name}</strong>
+            <span class="item-type-tag">{item.type}</span>
+          </div>
+          <span class="item-notes">{item.notes}</span>
+          <span class="item-fret-hint"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> {item.fretPattern}</span>
+        </div>
+        <div class="item-actions-col">
+          <code class="item-formula">{item.formula}</code>
+          <div class="item-action-btns">
+            <button type="button" class="item-quick-btn brutal-press" data-load-scale={item.id} title="Load into visual fretboard">
+              <i class="fa-solid fa-eye" aria-hidden="true"></i> View on Neck
+            </button>
+            <button type="button" class="item-icon-quick-btn brutal-press" data-copy-text={item.formula} title="Copy formula to clipboard">
+              <i class="fa-solid fa-copy" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</article>

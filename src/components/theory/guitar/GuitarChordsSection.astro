@@ -1,0 +1,34 @@
+---
+import ChordCard from '../ChordCard.astro';
+import { guitarCategories, type ChordData } from '../../../settings/theory.config';
+
+const chordsCategory = guitarCategories.find((c) => c.id === 'guitar-chords');
+const chords = (chordsCategory?.items || []) as ChordData[];
+---
+
+<article class="theory-category-card" data-category-id="guitar-chords" data-chip="chords">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></div>
+      <div>
+        <h2 class="category-title">Chord Charts</h2>
+        <p class="category-subtitle">Open voicings, barre & power chords.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- In-Section Sub-Filters -->
+  <div class="section-subfilters-row" data-target-list="chords-list">
+    <button type="button" class="subfilter-btn active brutal-press" data-type="all">All Chords</button>
+    <button type="button" class="subfilter-btn brutal-press" data-type="open">Open Chords</button>
+    <button type="button" class="subfilter-btn brutal-press" data-type="barre">Barre Chords</button>
+    <button type="button" class="subfilter-btn brutal-press" data-type="7ths">7th Chords</button>
+    <button type="button" class="subfilter-btn brutal-press" data-type="power">Power Chords</button>
+  </div>
+
+  <div class="chords-grid-list" id="chords-list">
+    {chords.map((item) => (
+      <ChordCard chord={item} />
+    ))}
+  </div>
+</article>

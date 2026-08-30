@@ -1,0 +1,40 @@
+---
+import { drumCategories, type GrooveItem } from '../../../settings/theory.config';
+
+const groovesCategory = drumCategories.find((c) => c.id === 'drum-grooves');
+const grooves = (groovesCategory?.items || []) as GrooveItem[];
+---
+
+<article class="theory-category-card" data-category-id="drum-grooves" data-chip="grooves">
+  <header class="category-header">
+    <div class="category-title-wrap">
+      <div class="category-icon-box"><i class="fa-solid fa-compact-disc" aria-hidden="true"></i></div>
+      <div>
+        <h2 class="category-title">Groove Templates</h2>
+        <p class="category-subtitle">Genre patterns & pocket feels.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="category-items-list">
+    {grooves.map((item) => (
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.genre} ${item.bpm}`}>
+        <div class="item-name-col">
+          <div class="item-title-row">
+            <strong class="item-name">{item.name}</strong>
+            <span class="item-type-tag">{item.genre}</span>
+          </div>
+          <span class="item-notes">{item.gridPattern}</span>
+        </div>
+        <div class="item-actions-col">
+          <code class="item-formula">{item.bpm}</code>
+          <div class="item-action-btns">
+            <button type="button" class="item-quick-btn brutal-press" data-load-groove={item.id} title="Load into beat grid">
+              <i class="fa-solid fa-play" aria-hidden="true"></i> Load
+            </button>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</article>
