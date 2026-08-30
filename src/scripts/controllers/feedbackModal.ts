@@ -338,10 +338,6 @@ export function initFeedbackModal() {
 
     modal.classList.remove('hidden');
     document.body.classList.add('modal-open');
-
-    setTimeout(() => {
-      detailsInput?.focus();
-    }, 120);
   };
 
   // Delegated click listener for any footer/page triggers
