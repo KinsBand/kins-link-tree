@@ -1,44 +1,75 @@
 ---
-import { 
-  primaryStreams, 
-  secondaryStreams, 
-  primarySocials, 
-  secondarySocials, 
-  primaryCommunity, 
-  secondaryCommunity 
-} from '../../settings/links.config';
+import { platformsData } from '../../settings/platformsData';
+import { computePlatformMetrics } from '../../scripts/utils/metricsFormatter';
+
+const { formattedCategoryCounts } = computePlatformMetrics(platformsData);
+
+const primaryStreams = platformsData.filter(p => p.category === 'streams' && p.isPrimary !== false);
+const secondaryStreams = platformsData.filter(p => p.category === 'streams' && p.isPrimary === false);
+
+const primarySocials = platformsData.filter(p => p.category === 'socials' && p.isPrimary !== false);
+const secondarySocials = platformsData.filter(p => p.category === 'socials' && p.isPrimary === false);
+
+const primaryCommunity = platformsData.filter(p => p.category === 'community' && p.isPrimary !== false);
+const secondaryCommunity = platformsData.filter(p => p.category === 'community' && p.isPrimary === false);
 
 const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <section class="tabbed-links-section" data-track-container="main:tabs">
   <!-- Neo-Brutalist Segmented Tabs: 1) STREAMS, 2) SOCIALS (Default Open), 3) COMMUNITY -->
-  <div class="brutal-tab-switcher">
-    <button class="brutal-tab-btn" id="tabStreamsBtn" data-target="streamsTab" data-track="tab-btn-streams" data-track-container="main:tabs">
+  <div class="brutal-tab-switcher" role="tablist">
+    <button 
+      class="brutal-tab-btn" 
+      id="tabStreamsBtn" 
+      data-target="streamsTab" 
+      data-category="streams"
+      data-track="tab-btn-streams" 
+      data-track-container="main:tabs"
+      role="tab"
+      aria-selected="false"
+    >
       STREAMS
     </button>
-    <button class="brutal-tab-btn active" id="tabSocialsBtn" data-target="socialsTab" data-track="tab-btn-socials" data-track-container="main:tabs">
+
+    <button 
+      class="brutal-tab-btn active" 
+      id="tabSocialsBtn" 
+      data-target="socialsTab" 
+      data-category="socials"
+      data-track="tab-btn-socials" 
+      data-track-container="main:tabs"
+      role="tab"
+      aria-selected="true"
+    >
       SOCIALS
     </button>
-    <button class="brutal-tab-btn" id="tabCommunityBtn" data-target="communityTab" data-track="tab-btn-community" data-track-container="main:tabs">
+
+    <button 
+      class="brutal-tab-btn" 
+      id="tabCommunityBtn" 
+      data-target="communityTab" 
+      data-category="community"
+      data-track="tab-btn-community" 
+      data-track-container="main:tabs"
+      role="tab"
+      aria-selected="false"
+    >
       COMMUNITY
     </button>
   </div>
 
   <!-- STREAMS Tab Content -->
-  <div class="tab-content" id="streamsTab">
+  <div class="tab-content" id="streamsTab" role="tabpanel">
     <div class="buttons-list">
       {primaryStreams.map((link) => (
-        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform} data-name={link.name} data-track={`stream-btn-${link.platform}`} data-track-container="main:streams_tab">
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.id} data-name={link.name} data-track={`stream-btn-${link.id}`} data-track-container="main:streams_tab">
           <div class="link-left-group">
             <div class="link-icon-box">
               <i class={link.icon}></i>
               <span class="rec-star-badge" aria-label="Recommended" title="Recommended for you">★</span>
             </div>
             <span class="link-title-text">{link.name}</span>
-          </div>
-          <div class="link-arrow-block">
-            <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
           </div>
         </a>
       ))}
@@ -49,15 +80,12 @@ const baseUrl = import.meta.env.BASE_URL;
       <div class="more-socials-container" id="moreStreamsContainer">
         <div class="buttons-list more-socials-list">
           {secondaryStreams.map((link) => (
-            <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.platform} data-name={link.name} data-track={`secondary-stream-${link.platform}`} data-track-container="main:streams_drawer">
+            <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.id} data-name={link.name} data-track={`secondary-stream-${link.id}`} data-track-container="main:streams_drawer">
               <div class="link-left-group">
                 <div class="link-icon-box">
                   <i class={link.icon}></i>
                 </div>
                 <span class="link-title-text">{link.name}</span>
-              </div>
-              <div class="link-arrow-block">
-                <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
               </div>
             </a>
           ))}
@@ -79,19 +107,16 @@ const baseUrl = import.meta.env.BASE_URL;
   </div>
 
   <!-- SOCIALS Tab Content (Default Open) -->
-  <div class="tab-content active" id="socialsTab">
+  <div class="tab-content active" id="socialsTab" role="tabpanel">
     <div class="buttons-list">
       {primarySocials.map((link) => (
-        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-name={link.name} data-track={`social-btn-${link.platform}`} data-track-container="main:socials_tab">
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.id} data-name={link.name} data-track={`social-btn-${link.id}`} data-track-container="main:socials_tab">
           <div class="link-left-group">
             <div class="link-icon-box">
               <i class={link.icon}></i>
               <span class="rec-star-badge" aria-label="Recommended" title="Recommended for you">★</span>
             </div>
             <span class="link-title-text">{link.name}</span>
-          </div>
-          <div class="link-arrow-block">
-            <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
           </div>
         </a>
       ))}
@@ -102,15 +127,12 @@ const baseUrl = import.meta.env.BASE_URL;
       <div class="more-socials-container" id="moreSocialsContainer">
         <div class="buttons-list more-socials-list">
           {secondarySocials.map((link) => (
-            <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-name={link.name} data-track={`secondary-social-${link.platform}`} data-track-container="main:socials_drawer">
+            <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.id} data-name={link.name} data-track={`secondary-social-${link.id}`} data-track-container="main:socials_drawer">
               <div class="link-left-group">
                 <div class="link-icon-box">
                   <i class={link.icon}></i>
                 </div>
                 <span class="link-title-text">{link.name}</span>
-              </div>
-              <div class="link-arrow-block">
-                <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
               </div>
             </a>
           ))}
@@ -132,19 +154,16 @@ const baseUrl = import.meta.env.BASE_URL;
   </div>
 
   <!-- COMMUNITY Tab Content -->
-  <div class="tab-content" id="communityTab">
+  <div class="tab-content" id="communityTab" role="tabpanel">
     <div class="buttons-list">
       {primaryCommunity.map((link) => (
-        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-name={link.name} data-track={`community-btn-${link.platform}`} data-track-container="main:community_tab">
+        <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.id} data-name={link.name} data-track={`community-btn-${link.id}`} data-track-container="main:community_tab">
           <div class="link-left-group">
             <div class="link-icon-box">
               <i class={link.icon}></i>
               <span class="rec-star-badge" aria-label="Recommended" title="Recommended for you">★</span>
             </div>
             <span class="link-title-text">{link.name}</span>
-          </div>
-          <div class="link-arrow-block">
-            <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
           </div>
         </a>
       ))}
@@ -155,15 +174,12 @@ const baseUrl = import.meta.env.BASE_URL;
       <div class="more-socials-container" id="moreCommunityContainer">
         <div class="buttons-list more-socials-list">
           {secondaryCommunity.map((link) => (
-            <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.platform} data-name={link.name} data-track={`secondary-community-${link.platform}`} data-track-container="main:community_drawer">
+            <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.id} data-name={link.name} data-track={`secondary-community-${link.id}`} data-track-container="main:community_drawer">
               <div class="link-left-group">
                 <div class="link-icon-box">
                   <i class={link.icon}></i>
                 </div>
                 <span class="link-title-text">{link.name}</span>
-              </div>
-              <div class="link-arrow-block">
-                <i class="fa-solid fa-arrow-up-right-from-square arrow-glyph"></i>
               </div>
             </a>
           ))}
@@ -208,7 +224,7 @@ const baseUrl = import.meta.env.BASE_URL;
     height: 44px;
     padding: 0 6px;
     font-family: var(--font-secondary);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 900;
     letter-spacing: 0.03em;
     text-transform: uppercase;
@@ -218,7 +234,8 @@ const baseUrl = import.meta.env.BASE_URL;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--surface-card-light);
+    gap: 4px;
+    background: var(--surface-card-light, var(--surface-card-panel));
     color: var(--text-card-primary);
     border: 3px solid #000000;
     box-shadow: 2px 2px 0px #000000;
@@ -230,16 +247,16 @@ const baseUrl = import.meta.env.BASE_URL;
   }
 
   .brutal-tab-btn:hover {
-    background: var(--surface-card-light-hover);
+    background: var(--surface-card-light-hover, var(--surface-card-panel-hover));
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
 
   .brutal-tab-btn.active {
     background: #141416 !important;
-    color: var(--accent-neon-yellow) !important;
-    border: 3px solid var(--accent-neon-yellow) !important;
-    box-shadow: 2px 2px 0px #000000, 0 0 12px var(--accent-neon-yellow-glow) !important;
+    color: var(--accent-neon-yellow, var(--brand-accent-primary)) !important;
+    border: 3px solid var(--accent-neon-yellow, var(--brand-accent-primary)) !important;
+    box-shadow: 2px 2px 0px #000000, 0 0 12px var(--accent-neon-yellow-glow, var(--brand-accent-glow)) !important;
   }
 
   .tab-content {
@@ -263,19 +280,18 @@ const baseUrl = import.meta.env.BASE_URL;
     gap: 8px;
   }
 
-  /* Neo-Brutalist Link Card */
+  /* Neo-Brutalist Link Card (Clean & Minimalist, Arrow Removed) */
   .brutal-link-card {
-    background: var(--surface-card-light);
+    background: var(--surface-card-light, var(--surface-card-panel));
     border: 2.5px solid #000000;
-    box-shadow: 2.5px 2.5px 0px var(--accent-neon-yellow), 2.5px 2.5px 0px 1px #000000;
+    box-shadow: 2.5px 2.5px 0px var(--accent-neon-yellow, var(--brand-accent-primary)), 2.5px 2.5px 0px 1px #000000;
     border-radius: 6px;
-    padding: 0;
+    padding: 0 10px;
     min-height: 48px;
     height: 48px;
     text-decoration: none;
     display: flex;
-    align-items: stretch;
-    justify-content: space-between;
+    align-items: center;
     position: relative;
     cursor: pointer;
     overflow: hidden;
@@ -285,9 +301,9 @@ const baseUrl = import.meta.env.BASE_URL;
   }
 
   .brutal-link-card:hover {
-    background: var(--surface-card-light-hover);
+    background: var(--surface-card-light-hover, var(--surface-card-panel-hover));
     transform: translate(-1.5px, -1.5px);
-    box-shadow: 4px 4px 0px var(--accent-neon-yellow), 4px 4px 0px 1px #000000;
+    box-shadow: 4px 4px 0px var(--accent-neon-yellow, var(--brand-accent-primary)), 4px 4px 0px 1px #000000;
   }
 
   .brutal-link-card:active {
@@ -298,15 +314,14 @@ const baseUrl = import.meta.env.BASE_URL;
   /* Highlighted / Recommended Card Styling */
   .brutal-link-card.is-recommended {
     border: 2.5px solid #000000;
-    box-shadow: 3px 3px 0px var(--accent-neon-yellow), 3px 3px 0px 1px #000000;
+    box-shadow: 3px 3px 0px var(--accent-neon-yellow, var(--brand-accent-primary)), 3px 3px 0px 1px #000000;
   }
 
   .link-left-group {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
-    flex: 1;
+    gap: 10px;
+    width: 100%;
     min-width: 0;
   }
 
@@ -332,7 +347,7 @@ const baseUrl = import.meta.env.BASE_URL;
 
   .link-title-text {
     font-family: var(--font-secondary);
-    font-size: 0.82rem;
+    font-size: 0.84rem;
     font-weight: 800;
     letter-spacing: -0.01em;
     color: var(--text-card-primary);
@@ -342,7 +357,7 @@ const baseUrl = import.meta.env.BASE_URL;
     flex: 1;
   }
 
-  /* Minimalist Star Recommendation Pin (Non-intrusive pin on icon box) */
+  /* Minimalist Star Recommendation Pin */
   .rec-star-badge {
     display: none;
     position: absolute;
@@ -350,7 +365,7 @@ const baseUrl = import.meta.env.BASE_URL;
     right: -4px;
     width: 14px;
     height: 14px;
-    background: var(--brand-accent-primary);
+    background: var(--brand-accent-primary, #f2fd43);
     color: #000000;
     font-size: 0.52rem;
     font-weight: 900;
@@ -375,29 +390,6 @@ const baseUrl = import.meta.env.BASE_URL;
     to { opacity: 1; transform: scale(1); }
   }
 
-  .link-arrow-block {
-    width: 30px;
-    min-width: 30px;
-    background: #111114;
-    border-left: 2px solid #000000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent-neon-yellow);
-    flex-shrink: 0;
-    transition: background-color 0.18s ease;
-  }
-
-  .arrow-glyph {
-    font-size: 0.72rem;
-    color: var(--accent-neon-yellow);
-    transition: transform 0.18s var(--ease-spring);
-  }
-
-  .brutal-link-card:hover .arrow-glyph {
-    transform: translate(1.5px, -1.5px);
-  }
-
   /* Expandable Secondary Drawers */
   .more-socials-container {
     max-height: 0;
@@ -417,7 +409,7 @@ const baseUrl = import.meta.env.BASE_URL;
   .toggle-more-socials-btn {
     width: 100%;
     margin-top: 10px;
-    background: var(--surface-card-light);
+    background: var(--surface-card-light, var(--surface-card-panel));
     border: 2.5px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: 6px;
@@ -437,7 +429,7 @@ const baseUrl = import.meta.env.BASE_URL;
   }
 
   .toggle-more-socials-btn:hover {
-    background: var(--surface-card-light-hover);
+    background: var(--surface-card-light-hover, var(--surface-card-panel-hover));
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
@@ -521,6 +513,7 @@ const baseUrl = import.meta.env.BASE_URL;
     if (targetBtn && targetContent) {
       document.querySelectorAll('.tabbed-links-section .brutal-tab-btn').forEach((btn) => {
         btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
       });
       document.querySelectorAll('.tabbed-links-section .tab-content').forEach((content) => {
         content.classList.remove('active');
@@ -528,6 +521,7 @@ const baseUrl = import.meta.env.BASE_URL;
       });
 
       targetBtn.classList.add('active');
+      targetBtn.setAttribute('aria-selected', 'true');
       targetContent.classList.add('active');
       targetContent.style.display = 'block';
     }
@@ -615,6 +609,3 @@ const baseUrl = import.meta.env.BASE_URL;
   }
   document.addEventListener('astro:page-load', initTabbedLinks);
 </script>
-
-
-

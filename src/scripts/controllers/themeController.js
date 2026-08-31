@@ -7,14 +7,11 @@ export function getPreferredTheme() {
   if (saved === 'dark' || saved === 'standard') {
     return saved;
   }
-  if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    return 'dark';
-  }
-  return 'standard';
+  return 'dark';
 }
 
 export function getCurrentTheme() {
-  return document.documentElement.getAttribute('data-theme') || 'standard';
+  return document.documentElement.getAttribute('data-theme') || 'dark';
 }
 
 export function updateThemeButtonUI(theme) {

@@ -585,13 +585,13 @@ if (!isMetronomeEnabled) {
 
           <div class="metro-sheet-footer-card">
             <div class="footer-theme-toggle-wrap">
-              <div class="footer-theme-toggle-btn" id="metroThemeToggleBtn" role="group" aria-label="Toggle Display Theme" data-track="metronome:theme_toggle">
-                <span class="theme-current-title" id="metroThemeCurrentTitle">Light</span>
+              <div class="footer-theme-toggle-btn" id="metroThemeToggleBtn" role="group" aria-label="Toggle Display Theme" data-track="metronome:theme_toggle" data-current-theme="dark" aria-pressed="true">
+                <span class="theme-current-title" id="metroThemeCurrentTitle">Dark</span>
                 <div class="theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
-                  <button type="button" class="theme-pill-btn active theme-pill-light" id="metroThemePillLightBtn" data-theme-target="standard" aria-label="Light Mode" title="Switch to Light Mode">
+                  <button type="button" class="theme-pill-btn theme-pill-light" id="metroThemePillLightBtn" data-theme-target="standard" aria-label="Light Mode" aria-pressed="false" title="Switch to Light Mode">
                     <i class="fa-solid fa-sun" aria-hidden="true"></i>
                   </button>
-                  <button type="button" class="theme-pill-btn theme-pill-dark" id="metroThemePillDarkBtn" data-theme-target="dark" aria-label="Dark Mode" title="Switch to Dark Mode">
+                  <button type="button" class="theme-pill-btn active theme-pill-dark" id="metroThemePillDarkBtn" data-theme-target="dark" aria-label="Dark Mode" aria-pressed="true" title="Switch to Dark Mode">
                     <i class="fa-solid fa-moon" aria-hidden="true"></i>
                   </button>
                 </div>

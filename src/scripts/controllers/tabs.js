@@ -47,9 +47,13 @@ export function setupSegmentedSwitcher(tabSelector, contentSelector) {
 
       if (parentContainer) {
         const siblingTabs = parentContainer.querySelectorAll(tabSelector);
-        siblingTabs.forEach(t => t.classList.remove('active'));
+        siblingTabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
       }
       tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
 
       if (parentContainer && parentContainer.classList.contains('segmented-switcher-box')) {
         const pill = parentContainer.querySelector('.switcher-active-pill');

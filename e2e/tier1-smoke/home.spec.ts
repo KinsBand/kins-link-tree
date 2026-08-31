@@ -65,13 +65,16 @@ test.describe('tier1 smoke — home hub', () => {
     const firstChild = footer.locator('> *:first-child');
     await expect(firstChild).toHaveClass(/footer-theme-toggle-wrap/);
 
+    // Verify initial default theme is dark
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
     // Test Theme Switcher
     const darkBtn = footer.locator('#themePillDarkBtn');
     const lightBtn = footer.locator('#themePillLightBtn');
-    await darkBtn.click();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await lightBtn.click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'standard');
+    await darkBtn.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   });
 
   test('share modal opens with bottom sheet layout, interactive copy rows, dual asset deck, and fast export', async ({ page }) => {
@@ -201,11 +204,11 @@ test.describe('tier1 smoke — home hub', () => {
 
     // Verify all 3 tab buttons are present and ordered
     await expect(streamsBtn).toBeVisible();
-    await expect(streamsBtn).toHaveText('STREAMS');
+    await expect(streamsBtn).toContainText('STREAMS');
     await expect(socialsBtn).toBeVisible();
-    await expect(socialsBtn).toHaveText('SOCIALS');
+    await expect(socialsBtn).toContainText('SOCIALS');
     await expect(communityBtn).toBeVisible();
-    await expect(communityBtn).toHaveText('COMMUNITY');
+    await expect(communityBtn).toContainText('COMMUNITY');
 
     // Verify Socials is the default active tab
     await expect(socialsBtn).toHaveClass(/active/);

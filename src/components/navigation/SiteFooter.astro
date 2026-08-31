@@ -17,25 +17,29 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
         role="group"
         aria-label="Toggle Display Theme"
         data-track="footer:theme_toggle"
+        data-current-theme="dark"
+        aria-pressed="true"
       >
-        <span class="theme-current-title" id="themeCurrentTitle">Light</span>
+        <span class="theme-current-title" id="themeCurrentTitle">Dark</span>
         <div class="theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
           <button
             type="button"
-            class="theme-pill-btn active theme-pill-light"
+            class="theme-pill-btn theme-pill-light"
             id="themePillLightBtn"
             data-theme-target="standard"
             aria-label="Light Mode"
+            aria-pressed="false"
             title="Switch to Light Mode"
           >
             <i class="fa-solid fa-sun" aria-hidden="true"></i>
           </button>
           <button
             type="button"
-            class="theme-pill-btn theme-pill-dark"
+            class="theme-pill-btn active theme-pill-dark"
             id="themePillDarkBtn"
             data-theme-target="dark"
             aria-label="Dark Mode"
+            aria-pressed="true"
             title="Switch to Dark Mode"
           >
             <i class="fa-solid fa-moon" aria-hidden="true"></i>

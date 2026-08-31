@@ -14,6 +14,7 @@ import { generalEmail } from '../../settings/contact.config';
 
     <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
     <div class="sheet-floating-pill-header" id="legalFloatingPillHeader">
+      <div class="header-spacer" aria-hidden="true"></div>
       <div class="sheet-pill-title" id="legalPillTitle">
         <i class="fa-solid fa-scale-balanced"></i>
         <span>LEGAL</span>
@@ -310,24 +311,40 @@ import { generalEmail } from '../../settings/contact.config';
 
   /* Floating Header Pill (Above Sheet / Modal) */
   .sheet-floating-pill-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    align-items: center;
+    justify-items: center;
+    width: 100%;
+    padding: 0 4px;
+    box-sizing: border-box;
+    z-index: 20;
+    user-select: none;
+    pointer-events: none;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .sheet-floating-pill-header > * {
+    pointer-events: auto;
+  }
+
+  .header-spacer {
+    width: 40px;
+    height: 40px;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .sheet-pill-title {
+    justify-self: center;
     display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 14px;
+    gap: 8px;
     background: var(--surface-card-panel, #f5f4ef);
     border: 2.5px solid #000000;
     box-shadow: 3px 3px 0px #000000;
     border-radius: 9999px;
-    padding: 6px 6px 6px 18px;
-    z-index: 20;
-    user-select: none;
-    transition: transform 0.16s var(--ease-tactile);
-  }
-
-  .sheet-pill-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    padding: 7px 20px;
     font-family: var(--font-heading, var(--font-secondary));
     font-size: 0.88rem;
     font-weight: 900;
@@ -346,32 +363,44 @@ import { generalEmail } from '../../settings/contact.config';
   }
 
   .sheet-pill-close-btn {
+    justify-self: end;
     background: var(--btn-brand-primary, #f2fd43);
     color: var(--btn-brand-text, #000000);
-    border: 2px solid #000000;
-    box-shadow: 1.5px 1.5px 0px #000000;
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    border-radius: 9999px;
-    display: flex;
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 10px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
   }
 
   .sheet-pill-close-btn i {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     pointer-events: none;
   }
 
   .sheet-pill-close-btn:hover {
-    background: var(--btn-brand-hover, #ffffff);
-    transform: scale(1.05);
+    background: var(--btn-brand-hover, #faff60);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .sheet-pill-close-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary, #f2fd43);
+    outline-offset: 2px;
+  }
+
+  .sheet-pill-close-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   /* Sheet Drag Handle (Hidden on Desktop, Visible on Mobile) */
@@ -634,7 +663,28 @@ import { generalEmail } from '../../settings/contact.config';
     }
 
     .sheet-floating-pill-header {
+      grid-template-columns: 38px 1fr 38px;
       margin-bottom: 2px;
+      padding: 0 8px;
+    }
+
+    .header-spacer {
+      width: 38px;
+      height: 38px;
+    }
+
+    .sheet-pill-title {
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      box-shadow: 2px 2px 0px #000000;
+    }
+
+    .sheet-pill-close-btn {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      min-height: 38px;
+      border-radius: 9px;
       box-shadow: 2px 2px 0px #000000;
     }
 
