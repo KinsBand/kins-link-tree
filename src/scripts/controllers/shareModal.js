@@ -570,7 +570,7 @@ export function initShareModal() {
   });
 
   // Generic Clipboard Copy Helper with Inline Tick Micro-Interaction
-  async function performCopy(textToCopy, iconElement) {
+  async function performCopy(textToCopy, targetElement, successMessage) {
     let success = false;
     try {
       if (navigator.clipboard && window.isSecureContext) {
@@ -597,8 +597,14 @@ export function initShareModal() {
       }
     }
 
-    if (success && iconElement) {
-      animateCopySuccess(iconElement.parentElement || iconElement);
+    if (success) {
+      const btn = targetElement?.closest('button, .icon-only-copy-btn, .share-app-pill-btn, .native-share-primary-btn') || targetElement?.parentElement || targetElement;
+      if (btn) {
+        animateCopySuccess(btn);
+      }
+      if (successMessage) {
+        showToast(successMessage);
+      }
     }
   }
 
@@ -606,8 +612,8 @@ export function initShareModal() {
   if (copyUrlRow) {
     const handleUrlCopyAction = (e) => {
       e.preventDefault();
-      const icon = document.getElementById('copyUrlIcon');
-      performCopy(directLinkUrl, icon);
+      const btn = copyUrlBtn || copyUrlRow.querySelector('.icon-only-copy-btn') || copyUrlRow;
+      performCopy(directLinkUrl, btn, 'Website link copied to clipboard!');
     };
 
     copyUrlRow.addEventListener('click', handleUrlCopyAction);
@@ -622,8 +628,8 @@ export function initShareModal() {
   if (copyHandleRow) {
     const handleHandleCopyAction = (e) => {
       e.preventDefault();
-      const icon = document.getElementById('copyHandleIcon');
-      performCopy('@KinsBandOfficial', icon);
+      const btn = handleCopyBtn || copyHandleRow.querySelector('.icon-only-copy-btn') || copyHandleRow;
+      performCopy('@KinsBandOfficial', btn, 'Copied @KinsBandOfficial to clipboard!');
     };
 
     copyHandleRow.addEventListener('click', handleHandleCopyAction);
@@ -764,12 +770,15 @@ export function initShareModal() {
   }
 
   // 7. Open / Close Share Modal
-  if (shareBtn && shareModal && closeShareModal) {
-    shareBtn.addEventListener('click', () => {
-      openModal(shareModal, shareSheetWrapper, () => {
-        lockScroll();
-        renderQrCode('qrcodeCanvas', 100);
-        syncAppInstalledStatus();
+  if (shareModal && closeShareModal) {
+    const allShareBtns = document.querySelectorAll('#shareBtn, #liveHeaderShareBtn, .share-modal-trigger');
+    allShareBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        openModal(shareModal, shareSheetWrapper, () => {
+          lockScroll();
+          renderQrCode('qrcodeCanvas', 100);
+          syncAppInstalledStatus();
+        });
       });
     });
 

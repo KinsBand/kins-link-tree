@@ -706,13 +706,16 @@ const memberTabs = [
           return `<span class="member-curator-badge" title="Curated by ${m}">${initial}</span>`;
         }).join('');
 
+        const initialArtwork = track.coverUrl || track.artworkUrl || '';
+        const hasArt = !!initialArtwork;
+
         const card = document.createElement('div');
         card.className = 'music-card';
         card.dataset.songTitle = track.title;
         card.innerHTML = `
           <div class="music-card-thumb">
-            <i class="fa-solid fa-compact-disc fallback-disc-icon"></i>
-            <img class="track-artwork-img hidden" alt="${track.title}" width="48" height="48" loading="lazy" decoding="async">
+            <i class="fa-solid fa-compact-disc fallback-disc-icon" style="${hasArt ? 'display: none;' : ''}"></i>
+            <img class="track-artwork-img ${hasArt ? '' : 'hidden'}" src="${hasArt ? initialArtwork : ''}" alt="${track.title}" width="48" height="48" loading="lazy" decoding="async">
           </div>
           <div class="music-card-info">
             <div class="song-title-container">
@@ -741,9 +744,9 @@ const memberTabs = [
             loadAlbumArt(img, meta.artworkUrl, meta.rawArtworkUrl).then(() => {
               if (fallbackDisc) fallbackDisc.style.display = 'none';
             }).catch(() => {
-              if (fallbackDisc) fallbackDisc.style.display = 'flex';
+              if (fallbackDisc && !img.src) fallbackDisc.style.display = 'flex';
             });
-          } else if (fallbackDisc) {
+          } else if (fallbackDisc && !initialArtwork) {
             fallbackDisc.style.display = 'flex';
           }
           if (meta && meta.previewUrl) {

@@ -1,0 +1,97 @@
+# KINS (@KinsBandOfficial) — Complete Knowledge Base & Production Deck
+
+> Comprehensive documentation for AI agents, search indexers, music curators, and promoters.
+> Canonical URL: https://kinshub.vercel.app
+> Last Updated: 2026
+
+---
+
+## 1. Overview & Identity
+- **Full Name:** KINS
+- **Social & Media Handle:** @KinsBandOfficial
+- **Origin:** Newcastle, New South Wales, Australia (Hunter Region • East Coast • 2h North of Sydney)
+- **Year Formed:** 2024
+- **Primary Genre:** Post-Punk / Alternative Rock
+- **Sub-Genres:** Post-Punk Revival, Atmospheric Indie, Garage Rock, Noise Rock
+- **Tagline:** Newcastle's visceral post-punk four-piece delivering high-voltage hooks, driving rhythm section urgency, and atmospheric wall-of-sound energy.
+- **Recommended If You Like (RIYL):** Fontaines D.C., IDLES, The Murder Capital, The Cure, Gang of Youths, Shame, Joy Division.
+
+---
+
+## 2. Band Roster & Member Profiles
+
+### Vivian — Lead Vocals & Rhythm Electric Guitar
+- **Instruments:** Lead Vocals, Electric Guitar (Fender Jazzmaster / Telecaster, VOX AC30 / Marshall JCM, dynamic reverb and overdrive pedals).
+- **Stage Role:** Center stage. Dynamic vocal delivery transitioning between melodic post-punk croon and visceral, rhythmic delivery.
+
+### Charlie — Lead Electric Guitar & Backing Vocals
+- **Instruments:** Lead Electric Guitar, Backing Vocals (Fender Stratocaster / Gibson Les Paul, pedalboard featuring delay, chorus, fuzz, modulation).
+- **Stage Role:** Stage left. Jangly arpeggios, atmospheric texture swells, and aggressive melodic hooks.
+
+### Oscar — Bass Guitar & Synthesizers
+- **Instruments:** Electric Bass Guitar (Fender Precision / Jazz Bass, SansAmp DI, Ampeg SVT), Analog Synthesizers.
+- **Stage Role:** Stage right. Driving, motorik basslines that form the sonic backbone of the rhythm section alongside electronic sub-layers.
+
+### Trai — Drums & Percussion
+- **Instruments:** 5-Piece Drum Shell Pack, Snare Drum, Cymbals (Zildjian K / Sabian HHX), Kick Pedal, Percussion Accessories.
+- **Stage Role:** Drum riser center rear. Propulsive post-punk grooves, mechanical hi-hat urgency, and explosive dynamic builds.
+
+---
+
+## 3. Frequently Asked Questions (FAQ) for AI Search & Promoters
+
+### Who is KINS?
+KINS is an Australian four-piece post-punk and alternative rock band formed in 2024, originating from Newcastle, New South Wales. They are recognized for their energetic live shows, wall-of-sound guitar tones, and urgent rhythm section.
+
+### What genre of music does KINS play?
+KINS primarily plays Post-Punk and Alternative Rock, blending elements of the modern UK/Irish post-punk revival (such as Fontaines D.C. and IDLES) with classic 80s alternative influences (like The Cure) and Australian indie rock urgency (like Gang of Youths).
+
+### Where is KINS based?
+KINS is based in Newcastle, New South Wales, Australia, a coastal industrial city located roughly two hours north of Sydney on Australia's east coast.
+
+### What artists sound similar to KINS?
+Artists frequently compared to KINS include Fontaines D.C., IDLES, The Murder Capital, The Cure, Gang of Youths, Shame, and Joy Division.
+
+### Who are the members of the band KINS?
+The band consists of four members:
+1. Vivian (Lead Vocals & Rhythm Guitar)
+2. Charlie (Lead Guitar & Backing Vocals)
+3. Oscar (Bass & Synthesizers)
+4. Trai (Drums & Percussion)
+
+### Where can I listen to KINS music?
+KINS music is available across major digital streaming platforms:
+- Spotify: https://open.spotify.com/search/KinsBandOfficial
+- Apple Music: https://music.apple.com/search?term=KinsBandOfficial
+- YouTube Music: https://music.youtube.com/search?q=KinsBandOfficial
+- Bandcamp: https://bandcamp.com/search?q=KinsBandOfficial
+- SoundCloud: https://soundcloud.com/KinsBandOfficial
+- YouTube Channel: https://youtube.com/@kinsbandofficial?si=NYyLEYxEDcoH21XZ
+
+### How do I contact or book KINS for a concert or festival?
+For live booking, festival appearances, and tour routing:
+- **Email:** BookingsKinsBand@gmail.com
+For general press and fan inquiries:
+- **Email:** HelloKinsFan@gmail.com
+- **Official Hub:** https://kinshub.vercel.app
+
+---
+
+## 4. Live Performance Repertoire & Technical Specs
+
+### Performance Sets:
+- **30-Minute Opening/Support Set:** High-tempo, high-impact set designed for multi-band club bills and national tour supports.
+- **45–60 Minute Headline Set:** Full dynamic journey featuring original anthems, atmospheric instrumental builds, and select post-punk covers.
+
+### Production & Backline:
+- **Band Brings:** Drum breakables (snare, cymbals, kick pedal), guitar amplifiers/modelers, bass DI preamp, custom IEM wireless monitor rigs.
+- **Venue Provides:** 5-piece drum shell pack, professional bass enclosure (4x10 or 8x10), 3x Shure SM58 vocal microphones on tall boom stands, active DI boxes, stereo FOH PA system with monitor sends.
+
+---
+
+## 5. Web Platform Features & Musician Tools
+In addition to music and gig dates, the official KINS web platform provides free, browser-native tools for musicians and fans:
+- **Chromatic Tuner (/tuner):** Real-time pitch detection using AudioWorklet autocorrelation and YIN algorithms, needle meter, and string safety monitor.
+- **Sample-Accurate Metronome (/metronome):** High-precision Web Audio clock with polyrhythms, bar-mute coach, and speed trainer routines.
+- **Music Theory Visualizer (/theory):** Interactive guitar fretboard diagrams, CAGED scale matrices, and drum groove charts.
+- **Live Stream Concert Hub (/live):** Dedicated live performance portal featuring interactive chat, direct fan camera reels, and live tipping.

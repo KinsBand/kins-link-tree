@@ -41,8 +41,8 @@ const ENFORCED_HEADERS: Record<string, string> = {
   'Origin-Agent-Cluster': '?1'
 };
 
-export const onRequest = defineMiddleware((context, next) => {
-  const response = next();
+export const onRequest = defineMiddleware(async (context, next) => {
+  const response = await next();
 
   if (!(response instanceof Response)) return response;
 

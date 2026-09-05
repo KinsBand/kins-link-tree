@@ -510,8 +510,19 @@ svg .beat-arc.is-muted.active {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
 }
 
+[data-theme="dark"] .copied-animating {
+  background: var(--btn-brand-primary, #d4af37) !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
 .text-check-success {
   color: #0b1f18 !important;
+  font-weight: 900 !important;
+}
+
+[data-theme="dark"] .text-check-success {
+  color: #000000 !important;
   font-weight: 900 !important;
 }
 
@@ -1940,35 +1951,59 @@ html.low-power-mode .sheet-container {
 }
 
 .theme-pill-btn {
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
-  border-radius: 50%;
-  border: 1.5px solid transparent;
-  background: transparent;
-  color: var(--text-card-muted);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: var(--radius-sm, 6px);
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  background: var(--surface-card-panel, #f5f4ef);
+  color: var(--text-card-secondary, #4b4b4b);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  box-sizing: border-box;
   transition: transform 0.16s var(--ease-tactile), background-color 0.18s ease, color 0.18s ease, box-shadow 0.16s ease;
 }
 
 .theme-pill-btn:hover {
-  color: var(--text-card-primary);
-  transform: scale(1.1);
+  color: var(--text-card-primary, #000000);
+  background: var(--surface-card-panel-hover, #ffffff);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.theme-pill-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
 }
 
 .theme-pill-btn.active {
-  background: var(--accent-neon-yellow);
-  color: #000000;
+  background: var(--btn-brand-primary, #f2fd43);
+  color: var(--btn-brand-text, #000000);
   border-color: #000000;
-  box-shadow: 1px 1px 0px #000000;
-  transform: scale(1.06);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+[data-theme="dark"] .theme-pill-btn {
+  background: #18181b;
+  color: var(--text-muted, #a1a1aa);
+}
+
+[data-theme="dark"] .theme-pill-btn:hover {
+  background: #27272a;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .theme-pill-btn.active {
+  background: var(--btn-brand-primary, #d4af37);
+  color: var(--btn-brand-text, #000000);
+  border-color: #000000;
 }
 
 .theme-mode-label {

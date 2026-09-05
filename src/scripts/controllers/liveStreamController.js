@@ -398,3 +398,14 @@ export function initLiveStreamController() {
     }, 4500);
   }
 }
+
+export function teardownLiveStreamController() {
+  if (audienceJitterIntervalId !== null) {
+    clearInterval(audienceJitterIntervalId);
+    audienceJitterIntervalId = null;
+  }
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('astro:before-swap', teardownLiveStreamController);
+}

@@ -1,0 +1,46 @@
+# KINS (@KinsBandOfficial)
+
+> Official website and knowledge base for Australian post-punk and alternative rock band KINS.
+
+## Identity & Sound
+- **Artist:** KINS (also known as @KinsBandOfficial, Kins Band)
+- **Genre:** Post-Punk / Alternative Rock / Indie Rock
+- **Origin:** Newcastle, New South Wales, Australia (East Coast, north of Sydney)
+- **Formed:** 2024
+- **Sound Profile:** High-voltage hooks, driving rhythm section urgency, atmospheric wall-of-sound guitars, visceral live energy.
+- **Recommended If You Like (RIYL):** Fontaines D.C., IDLES, The Murder Capital, The Cure, Gang of Youths.
+
+## Members & Stage Roles
+- **Vivian:** Lead Vocals & Rhythm Electric Guitar
+- **Charlie:** Lead Electric Guitar & Backing Vocals
+- **Oscar:** Bass Guitar & Synthesizers
+- **Trai:** Drums & Percussion
+
+## Official Streaming & Discography
+- [Spotify](https://open.spotify.com/search/KinsBandOfficial)
+- [Apple Music](https://music.apple.com/search?term=KinsBandOfficial)
+- [YouTube Music](https://music.youtube.com/search?q=KinsBandOfficial)
+- [Bandcamp](https://bandcamp.com/search?q=KinsBandOfficial)
+- [SoundCloud](https://soundcloud.com/KinsBandOfficial)
+- [Amazon Music](https://music.amazon.com/search/KinsBandOfficial)
+
+## Official Socials & Community
+- [YouTube Channel](https://youtube.com/@kinsbandofficial?si=NYyLEYxEDcoH21XZ)
+- [Instagram](https://www.instagram.com/kinsbandofficial?igsi=M21ycDZuemZ0bDIx)
+- [TikTok](https://www.tiktok.com/@kinsbandofficial?_r=1&_t=ZS-995ASSdnVsQ)
+- [Discord Community](https://discord.gg/Yu2npHUrH)
+- [Reddit](https://www.reddit.com/u/KinsBandOfficial/s/m8JXFDETij)
+- [Substack](https://substack.com/@kinsbandoffical?utm_source=share&utm_medium=android&r=8uyitn)
+- [X / Twitter](https://x.com/KinsBandOfficial)
+- [Facebook](https://www.facebook.com/share/1LU7GTyCBW/)
+
+## Booking & Production Inquiries
+- **Booking & Live Routing:** BookingsKinsBand@gmail.com
+- **General Inquiries:** HelloKinsFan@gmail.com
+- **Canonical Website:** https://kinshub.vercel.app
+
+## Musician Utilities Hosted on Platform
+- **Chromatic Tuner:** High-precision Web Audio / AudioWorklet instrument tuner (/tuner).
+- **Sample-Accurate Metronome:** Metronome clock with speed trainer, bar-mute practice routines, and polyrhythm subdivisions (/metronome).
+- **Music Theory Charts:** Guitar fretboard diagrams, CAGED system matrix, and drum rudiment notation (/theory).
+- **Live Stream Hub:** Live concert streaming portal with real-time fan interactions (/live).

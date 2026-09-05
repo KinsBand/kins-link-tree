@@ -2322,3 +2322,14 @@ export function initGigMapModule() {
   });
 }
 
+export function teardownGigMap() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('astro:before-swap', teardownGigMap);
+}
+

@@ -40,7 +40,8 @@ const RequestSongSchema = z.object({
   artist: z.string().min(1).max(120),
   reason: z.string().max(1000).nullable().optional(),
   email: z.string().max(254).nullable().optional(),
-  isSubscribed: z.boolean().nullable().optional()
+  isSubscribed: z.boolean().nullable().optional(),
+  requestType: z.enum(['video', 'setlist']).optional().default('video')
 }).passthrough();
 
 function jsonResponse(data: Record<string, unknown>, status: number): Response {
@@ -74,6 +75,8 @@ export const POST: APIRoute = async ({ request }) => {
     const reason = sanitizeText(body.reason || '', 500) || 'None provided';
     const email = sanitizeText(body.email || '', 200) || 'Not provided';
     const isSubscribed = body.isSubscribed === true;
+    const requestType = body.requestType === 'setlist' ? 'setlist' : 'video';
+    const isSetlist = requestType === 'setlist';
 
     const notifyConfig = getNotifyConfig();
 
@@ -85,7 +88,9 @@ export const POST: APIRoute = async ({ request }) => {
         const { error: dbError } = await supabase.from('cover_requests').insert({
           song_title: songTitle,
           artist,
-          reason: reason === 'None provided' ? null : reason,
+          reason: reason === 'None provided' 
+            ? (isSetlist ? '[Type: Live Setlist]' : null) 
+            : (isSetlist ? `[Live Setlist] ${reason}` : reason),
           email: email === 'Not provided' ? null : email,
           is_subscribed: isSubscribed
         });
@@ -122,11 +127,16 @@ export const POST: APIRoute = async ({ request }) => {
       console.info('[request-song] Resend sandbox mode active (from:', notifyConfig.fromEmail, ') — if HelloKinsFan@gmail.com is not the Resend owner, delivery will 403 until a verified domain is added at https://resend.com/domains');
     }
 
-    const subject = `[Cover Request] ${songTitle} - ${artist}`;
+    const subject = isSetlist
+      ? `[Live Setlist Request] ${songTitle} - ${artist}`
+      : `[Cover Request] ${songTitle} - ${artist}`;
+
+    const typeLabel = isSetlist ? '⚡ Live Gig Performance' : '🎬 Cover Video Release';
 
     const fields: BrutalistField[] = [
       { label: 'Song Title', value: songTitle },
       { label: 'Original Artist', value: artist },
+      { label: 'Request Type', value: typeLabel },
       {
         label: 'Fan Status',
         value: isSubscribed ? 'Subscribed Fan (Substack)' : 'Guest / Unsubscribed'
@@ -139,9 +149,9 @@ export const POST: APIRoute = async ({ request }) => {
     ];
 
     const html = generateBrutalistEmailHtml({
-      title: `🎵 Cover Request: ${songTitle}`,
-      badge: isSubscribed ? 'VIP SUBSCRIBER REQUEST' : 'FAN COVER REQUEST',
-      badgeBg: isSubscribed ? '#f2fd43' : '#e9e9eb',
+      title: isSetlist ? `⚡ Live Setlist Request: ${songTitle}` : `🎵 Cover Request: ${songTitle}`,
+      badge: isSetlist ? 'LIVE SETLIST REQUEST' : (isSubscribed ? 'VIP SUBSCRIBER REQUEST' : 'FAN COVER REQUEST'),
+      badgeBg: isSetlist ? '#ff9f1c' : (isSubscribed ? '#f2fd43' : '#e9e9eb'),
       badgeColor: '#000000',
       description: reason,
       fields,
@@ -156,7 +166,7 @@ export const POST: APIRoute = async ({ request }) => {
       const emailResult = await sendNotifyEmail({
         subject,
         html,
-        text: `[Cover Request] ${songTitle} - ${artist}\n\nFan Status: ${isSubscribed ? 'Subscribed' : 'Guest'}\nContact: ${email}\n\nWhy should Kins cover this?\n${reason}`,
+        text: `${subject}\n\nType: ${typeLabel}\nFan Status: ${isSubscribed ? 'Subscribed' : 'Guest'}\nContact: ${email}\n\n${isSetlist ? 'Why should Kins play this live?' : 'Why should Kins cover this?'}\n${reason}`,
         replyTo: isContactEmail ? email : undefined
       });
 
@@ -178,11 +188,12 @@ export const POST: APIRoute = async ({ request }) => {
           avatar_url: AVATAR_URL,
           embeds: [
             {
-              title: '🎵 New Cover Song Request',
-              color: isSubscribed ? 0xf2fd43 : 0x5865f2,
+              title: isSetlist ? '⚡ New Live Setlist Request' : '🎵 New Cover Song Request',
+              color: isSetlist ? 0xff9f1c : (isSubscribed ? 0xf2fd43 : 0x5865f2),
               fields: [
                 { name: 'Song Title', value: `**${songTitle}**`, inline: true },
                 { name: 'Original Artist', value: `**${artist}**`, inline: true },
+                { name: 'Request Type', value: `**${typeLabel}**`, inline: true },
                 {
                   name: 'Fan Status',
                   value: isSubscribed
@@ -190,7 +201,7 @@ export const POST: APIRoute = async ({ request }) => {
                     : '👤 Guest / Unsubscribed',
                   inline: true
                 },
-                { name: 'Why should Kins cover this?', value: reason, inline: false },
+                { name: isSetlist ? 'Why should Kins play this live?' : 'Why should Kins cover this?', value: reason, inline: false },
                 { name: 'Contact Email', value: email === 'Not provided' ? 'Not provided' : `\`${email}\``, inline: false }
               ],
               footer: {

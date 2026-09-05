@@ -112,3 +112,7 @@ export function destroyLiveReactionsController() {
     spontaneousIntervalId = null;
   }
 }
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('astro:before-swap', destroyLiveReactionsController);
+}

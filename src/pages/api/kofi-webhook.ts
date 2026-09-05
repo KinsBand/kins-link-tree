@@ -22,6 +22,7 @@ function getEnv(key: string): string {
 }
 
 const KofiDataSchema = z.object({
+  verification_token: z.string().optional(),
   message_id: z.string().min(1).max(120),
   type: z.string().max(50).optional(),
   from_name: z.string().max(100).optional(),
@@ -70,6 +71,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const expectedToken = getEnv('KOFI_VERIFICATION_TOKEN');
     const providedToken =
+      (typeof parsed.verification_token === 'string' ? parsed.verification_token.trim() : '') ||
       request.headers.get('x-kofi-token') ||
       new URL(request.url).searchParams.get('token') ||
       '';

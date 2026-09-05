@@ -10,6 +10,8 @@ const platformStats = {
   spotify: 0
 };
 
+let pollIntervalId = null;
+
 function formatShortNumber(num) {
   if (!num || num <= 0) return '0+';
   if (num >= 1000000) {
@@ -54,6 +56,8 @@ function animateCount(el, target, duration = 900) {
 }
 
 export function initFollowersTracker() {
+  teardownFollowers();
+
   const totalFollowersCountEl = document.getElementById('totalFollowersCount');
   const lastUpdatedEl = document.getElementById('followersLastUpdated');
   const totalFollowersCard = document.querySelector('.total-followers-card');
@@ -125,8 +129,6 @@ export function initFollowersTracker() {
     }
   }
 
-  let pollIntervalId = null;
-
   function startPolling() {
     if (pollIntervalId) return;
     pollIntervalId = setInterval(() => {
@@ -154,4 +156,15 @@ export function initFollowersTracker() {
 
   fetchFollowersData();
   startPolling();
+}
+
+export function teardownFollowers() {
+  if (pollIntervalId) {
+    clearInterval(pollIntervalId);
+    pollIntervalId = null;
+  }
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('astro:before-swap', teardownFollowers);
 }

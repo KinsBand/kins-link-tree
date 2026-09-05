@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { functionalityConfig } from '../../src/settings/functionality.config';
 
 test.describe('tier1 smoke — KINS THEORY & KINS TOOLS', () => {
+  test.skip(!functionalityConfig.enableTheoryPage, 'Theory page is currently gated');
   test('KINS TOOLS section renders both METRONOME and THEORY tools', async ({ page }) => {
     await page.goto('/');
     const toolsSection = page.locator('#rehearsalUtilitiesSection');

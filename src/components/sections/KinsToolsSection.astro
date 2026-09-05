@@ -1,8 +1,17 @@
 ---
 import { rehearsalConfig } from '../../settings/rehearsal.config';
+import { functionalityConfig } from '../../settings/functionality.config';
 import ToolIcon from '../ui/ToolIcon.astro';
 
 const { title, icon, desktopSubtitle, mobileSubtitle, tools } = rehearsalConfig;
+
+const toolGating: Record<string, boolean> = {
+  metronome: functionalityConfig.enableMetronomePage ?? true,
+  tuner: functionalityConfig.enableTunerPage ?? false,
+  theory: functionalityConfig.enableTheoryPage ?? false,
+};
+
+const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
 ---
 
 <section class="rehearsal-utilities-section" id="rehearsalUtilitiesSection" data-anim-gated>
@@ -34,7 +43,7 @@ const { title, icon, desktopSubtitle, mobileSubtitle, tools } = rehearsalConfig;
 
     <!-- Desktop 3-Column Grid / Mobile Stacked Cards -->
     <div class="tools-grid">
-      {tools.map((tool) => (
+      {visibleTools.map((tool) => (
         <article class={`tool-card tool-card-${tool.id}`}>
           <div class="tool-card-inner">
             <!-- Tool Header -->

@@ -106,13 +106,22 @@ export function createMetroEngine() {
     return Math.min(1.0, 1.0 / Math.sqrt(n));
   }
 
-  /* Generate tanh soft-clipper curve k=1.2 per spec */
-  function generateTanhCurve(samples, k = 1.2) {
+  /* Generate transparent soft-knee limiter curve:
+     Linear pass-through (|x| <= knee) with zero harmonic distortion;
+     smooth asymptotic tanh compression (|x| > knee) up to 1.0. */
+  function generateSoftKneeCurve(samples, knee = 0.8) {
     const curve = new Float32Array(samples);
-    const tanhK = Math.tanh(k);
+    const denom = samples - 1;
     for (let i = 0; i < samples; ++i) {
-      const x = (i * 2) / samples - 1;
-      curve[i] = Math.tanh(k * x) / tanhK;
+      const x = (i * 2) / denom - 1;
+      const absX = Math.abs(x);
+      if (absX <= knee) {
+        curve[i] = x;
+      } else {
+        const over = absX - knee;
+        const shaped = knee + (1 - knee) * Math.tanh(over / (1 - knee));
+        curve[i] = x < 0 ? -shaped : shaped;
+      }
     }
     return curve;
   }
@@ -127,24 +136,17 @@ export function createMetroEngine() {
     } catch (e) {
       hpFilter = null;
     }
-    // 1. Fast-Attack Dynamics Compressor for Macro Leveling (-6dB, 1ms attack, 50ms release)
-    compressor = ctx.createDynamicsCompressor();
-    try {
-      compressor.threshold.setValueAtTime(-6.0, ctx.currentTime);
-      compressor.knee.setValueAtTime(3.0, ctx.currentTime);
-      compressor.ratio.setValueAtTime(6.0, ctx.currentTime);
-      compressor.attack.setValueAtTime(0.001, ctx.currentTime);
-      compressor.release.setValueAtTime(0.05, ctx.currentTime);
-    } catch (e) {}
-    // 2. 4x Oversampled Hyperbolic Tangent Soft Clipper knee -1.5dBFS
+    // 1. Transparent 4x Oversampled Soft-Knee Peak Limiter (linear below 0.80)
+    // Replaces the aggressive 1ms compressor which was crushing transients and causing distortion
+    compressor = null;
     try {
       softClipper = ctx.createWaveShaper();
-      softClipper.curve = generateTanhCurve(1024, 1.2);
+      softClipper.curve = generateSoftKneeCurve(1024, 0.8);
       softClipper.oversample = '4x';
     } catch (e) {
       softClipper = null;
     }
-    // 3. Master Linear Gain 0.90 (-0.92 dBFS true peak safety)
+    // 2. Master Linear Gain 0.90 (-0.92 dBFS true peak safety)
     masterGain = ctx.createGain();
     try { masterGain.gain.setValueAtTime(METRO_GAIN.master, ctx.currentTime); } catch (e) { masterGain.gain.value = METRO_GAIN.master; }
   }
@@ -335,18 +337,19 @@ export function createMetroEngine() {
     setupBackgroundSilence();
     initMetroWorker();
 
-    // Wire: hpFilter -> compressor -> softClipper -> masterGain -> destination
+    // Wire: hpFilter -> softClipper -> masterGain -> destination
     try {
-      if (hpFilter) hpFilter.connect(compressor);
-      if (softClipper) {
-        compressor.connect(softClipper);
+      if (hpFilter && softClipper) {
+        hpFilter.connect(softClipper);
         softClipper.connect(masterGain);
-      } else {
-        compressor.connect(masterGain);
+      } else if (hpFilter) {
+        hpFilter.connect(masterGain);
+      } else if (softClipper) {
+        softClipper.connect(masterGain);
       }
       masterGain.connect(ctx.destination);
     } catch (e) {
-      try { compressor.connect(ctx.destination); } catch (e2) { masterGain.connect(ctx.destination); }
+      try { masterGain.connect(ctx.destination); } catch (e2) {}
     }
 
     /* Prefer the AudioWorklet path; fall back silently to the hardened
@@ -486,17 +489,17 @@ export function createMetroEngine() {
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = sound.type;
+    osc.type = sound.type === 'square' ? 'triangle' : sound.type;
     osc.frequency.setValueAtTime(freq, t);
 
     const epsilon = METRO_GAIN.epsilon;
     gain.gain.setValueAtTime(epsilon, t);
-    gain.gain.exponentialRampToValueAtTime(peakGain, t + 0.0008);
+    gain.gain.exponentialRampToValueAtTime(peakGain, t + 0.001);
     gain.gain.exponentialRampToValueAtTime(epsilon, t + sound.decay);
     osc.connect(gain);
     try {
       if (hpFilter) gain.connect(hpFilter);
-      else if (compressor) gain.connect(compressor);
+      else if (softClipper) gain.connect(softClipper);
       else gain.connect(masterGain);
     } catch (e) { gain.connect(masterGain); }
     osc.start(t);
@@ -521,7 +524,7 @@ export function createMetroEngine() {
       } catch (e) {
         try { entry.gain.gain.cancelScheduledValues(now); } catch (e2) {}
       }
-      const held = entry.gain.gain.value;
+      const held = Math.max(0.0001, entry.gain.gain.value);
       entry.gain.gain.setValueAtTime(held, now);
       entry.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.003);
       entry.osc.stop(now + 0.005);
@@ -798,7 +801,7 @@ export function createMetroEngine() {
         const now = ctx.currentTime;
         const g = masterGain.gain;
         try { g.cancelAndHoldAtTime(now); } catch (e) { try { g.cancelScheduledValues(now); } catch (e2) {} }
-        const held = g.value;
+        const held = Math.max(METRO_GAIN.epsilon, g.value);
         g.setValueAtTime(held, now);
         g.exponentialRampToValueAtTime(METRO_GAIN.epsilon, now + 0.003);
         if (masterRestoreTimeout) clearTimeout(masterRestoreTimeout);
@@ -922,22 +925,29 @@ export function createMetroEngine() {
       try { await ctx.resume(); } catch (e) {}
     }
     if (ctx.state !== 'running') return;
+
+    // Use worklet directly when available for 100% identical clean sound synthesis
+    if (usingWorklet && workletNode) {
+      postToWorklet({ type: 'preview', soundId: sound.id, tier: tierId || 'mid' });
+      return;
+    }
+
     const t = tierId || 'mid';
     const ratio = t === 'low' ? 0.75 : (t === 'high' ? 1.5 : 1);
     const freq = sound.freq * ratio;
     const peakGain = Math.max(METRO_GAIN.epsilon, Math.min(0.6, 0.50 * (Math.max(METRO_GAIN.epsilon, sound.gain) / 0.5)));
-    const time = ctx.currentTime + 0.01;
+    const time = ctx.currentTime + 0.005;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = sound.type;
+    osc.type = sound.type === 'square' ? 'triangle' : sound.type;
     osc.frequency.setValueAtTime(freq, time);
     gain.gain.setValueAtTime(METRO_GAIN.epsilon, time);
-    gain.gain.exponentialRampToValueAtTime(peakGain, time + 0.0008);
+    gain.gain.exponentialRampToValueAtTime(peakGain, time + 0.001);
     gain.gain.exponentialRampToValueAtTime(METRO_GAIN.epsilon, time + sound.decay);
     osc.connect(gain);
     try {
       if (hpFilter) gain.connect(hpFilter);
-      else if (compressor) gain.connect(compressor);
+      else if (softClipper) gain.connect(softClipper);
       else gain.connect(masterGain);
     } catch (e) { gain.connect(masterGain); }
     osc.start(time);

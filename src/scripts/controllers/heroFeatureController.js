@@ -46,7 +46,15 @@ function storageRemove(key) {
   try { localStorage.removeItem(key); } catch (e) {}
 }
 
+let heroCountdownIntervalId = null;
+let previewTimer = null;
+let previewAudioEl = null;
+let isHeroVideoPlaying = false;
+let heroVideoStarted = false;
+
 export function initHeroFeatureController() {
+  teardownHeroFeatureController();
+
   const card = document.getElementById('heroFeatureCard');
   if (!card) return;
 
@@ -133,21 +141,210 @@ export function initHeroFeatureController() {
   // Initial state setup from config
   applyStateAndSubvar(currentState, currentSubvar);
 
-  // --- ACTIONS: VIDEO MODAL TRIGGERS ---
+  // --- ACTIONS: IN-PLACE HERO VIDEO PLAYER CONTROLS ---
+  const heroVideoWrapper = document.getElementById('heroVideoWrapper');
+  const heroIframe = document.getElementById('heroCoverVideoIframe');
+  const heroOverlay = document.getElementById('heroVideoControlsOverlay');
+  const heroPlayPauseBtn = document.getElementById('heroVideoPlayPauseBtn');
+  const heroPlayPauseIcon = document.getElementById('heroVideoPlayPauseIcon');
+  const heroFullscreenBtn = document.getElementById('heroVideoFullscreenBtn');
+  const heroFullscreenIcon = document.getElementById('heroVideoFullscreenIcon');
+  const heroQualityBtn = document.getElementById('heroVideoQualityBtn');
+  const heroQualityDropdown = document.getElementById('heroVideoQualityDropdown');
+  const heroQualityOptions = heroVideoWrapper?.querySelectorAll('.quality-opt-btn') || [];
+
+  function postHeroYTCommand(func, args = []) {
+    if (heroIframe && heroIframe.contentWindow) {
+      heroIframe.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: func,
+        args: args
+      }), '*');
+    }
+  }
+
+  function startOrToggleHeroVideo() {
+    if (!heroVideoStarted) {
+      heroVideoStarted = true;
+      isHeroVideoPlaying = true;
+      if (heroIframe) {
+        const embedBase = heroIframe.getAttribute('data-embed') || 'https://www.youtube.com/embed/n3nPiBaiZrg';
+        const baseClean = embedBase.split('?')[0];
+        heroIframe.src = `${baseClean}?autoplay=1&controls=0&modestbranding=1&rel=0&fs=0&iv_load_policy=3&playsinline=1&enablejsapi=1`;
+      }
+      if (heroVideoWrapper) {
+        heroVideoWrapper.classList.add('is-playing');
+        heroVideoWrapper.classList.remove('is-paused');
+      }
+      if (heroPlayPauseBtn) {
+        heroPlayPauseBtn.setAttribute('aria-label', 'Pause video');
+        heroPlayPauseBtn.setAttribute('title', 'Pause');
+      }
+      showToast('▶ Playing "Just Like Heaven"');
+    } else {
+      if (isHeroVideoPlaying) {
+        postHeroYTCommand('pauseVideo');
+        isHeroVideoPlaying = false;
+        if (heroVideoWrapper) {
+          heroVideoWrapper.classList.add('is-paused');
+        }
+        if (heroPlayPauseBtn) {
+          heroPlayPauseBtn.setAttribute('aria-label', 'Play video');
+          heroPlayPauseBtn.setAttribute('title', 'Play');
+        }
+        showToast('⏸ Video Paused');
+      } else {
+        postHeroYTCommand('playVideo');
+        isHeroVideoPlaying = true;
+        if (heroVideoWrapper) {
+          heroVideoWrapper.classList.remove('is-paused');
+        }
+        if (heroPlayPauseBtn) {
+          heroPlayPauseBtn.setAttribute('aria-label', 'Pause video');
+          heroPlayPauseBtn.setAttribute('title', 'Pause');
+        }
+        showToast('▶ Video Resumed');
+      }
+    }
+  }
+
   document.querySelectorAll('.release-play-trigger').forEach(btn => {
-    btn.addEventListener('click', () => {
-      openCoverVideoModal({
-        title: "Just Like Heaven",
-        originalArtist: "The Cure",
-        embedUrl: "https://www.youtube.com/embed/n3nPiBaiZrg?autoplay=1",
-        watchUrl: "https://www.youtube.com/watch?v=n3nPiBaiZrg",
-        commentUrl: "https://www.youtube.com/watch?v=n3nPiBaiZrg",
-        followUrl: "https://www.youtube.com/channel/UC57aKk67k5L7iL13C0d7g5Y",
-        commentCount: 42,
-        platformLabel: "YouTube"
-      });
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startOrToggleHeroVideo();
     });
   });
+
+  if (heroOverlay) {
+    heroOverlay.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('.video-quality-dropdown') || e.target.closest('a')) {
+        return;
+      }
+      const isHidden = heroOverlay.classList.toggle('controls-hidden');
+      if (heroVideoWrapper) {
+        heroVideoWrapper.classList.toggle('controls-hidden', isHidden);
+      }
+      if (heroQualityDropdown) heroQualityDropdown.classList.add('hidden');
+    });
+  }
+
+  if (heroQualityBtn) {
+    heroQualityBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (heroQualityDropdown) {
+        heroQualityDropdown.classList.toggle('hidden');
+      }
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (heroQualityDropdown && !heroQualityDropdown.classList.contains('hidden')) {
+      if (!e.target.closest('.video-overlay-quality-wrapper')) {
+        heroQualityDropdown.classList.add('hidden');
+      }
+    }
+  });
+
+  heroQualityOptions.forEach(opt => {
+    opt.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const q = opt.getAttribute('data-quality') || '1080p';
+      heroQualityOptions.forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      if (heroQualityBtn) {
+        heroQualityBtn.setAttribute('title', `Video Quality: ${q}`);
+        heroQualityBtn.setAttribute('aria-label', `Video quality: ${q}`);
+      }
+      if (heroQualityDropdown) heroQualityDropdown.classList.add('hidden');
+
+      const ytQuality = q === 'Auto' ? 'default' : q === '1080p' ? 'hd1080' : 'hd720';
+      postHeroYTCommand('setPlaybackQuality', [ytQuality]);
+      showToast(`⚙️ Video Quality: ${q}`);
+    });
+  });
+
+  async function toggleHeroFullscreen() {
+    const doc = document;
+    const isFull = !!(doc.fullscreenElement || doc.webkitFullscreenElement);
+    const isSimulated = heroVideoWrapper?.classList.contains('is-mobile-landscape');
+
+    if (!isFull && !isSimulated) {
+      let nativeSuccess = false;
+      if (heroVideoWrapper) {
+        try {
+          if (heroVideoWrapper.requestFullscreen) {
+            await heroVideoWrapper.requestFullscreen();
+            nativeSuccess = true;
+          } else if (heroVideoWrapper.webkitRequestFullscreen) {
+            await heroVideoWrapper.webkitRequestFullscreen();
+            nativeSuccess = true;
+          }
+        } catch (err) {}
+      }
+
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock('landscape');
+        }
+      } catch (err) {}
+
+      if (!nativeSuccess || window.innerWidth < 768) {
+        if (heroVideoWrapper) heroVideoWrapper.classList.add('is-mobile-landscape');
+      }
+
+      if (heroFullscreenIcon) heroFullscreenIcon.className = 'fa-solid fa-compress';
+      if (heroFullscreenBtn) {
+        heroFullscreenBtn.setAttribute('title', 'Exit Fullscreen / Landscape');
+        heroFullscreenBtn.setAttribute('aria-label', 'Exit fullscreen and landscape mode');
+      }
+      showToast('⛶ Landscape Mode');
+    } else {
+      if (isFull) {
+        try {
+          if (doc.exitFullscreen) {
+            await doc.exitFullscreen();
+          } else if (doc.webkitExitFullscreen) {
+            await doc.webkitExitFullscreen();
+          }
+        } catch (err) {}
+      }
+
+      try {
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      } catch (err) {}
+
+      if (heroVideoWrapper) heroVideoWrapper.classList.remove('is-mobile-landscape');
+      if (heroFullscreenIcon) heroFullscreenIcon.className = 'fa-solid fa-expand';
+      if (heroFullscreenBtn) {
+        heroFullscreenBtn.setAttribute('title', 'Fullscreen / Landscape');
+        heroFullscreenBtn.setAttribute('aria-label', 'Fullscreen and landscape mode');
+      }
+      showToast('Exit Landscape');
+    }
+  }
+
+  if (heroFullscreenBtn) {
+    heroFullscreenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleHeroFullscreen();
+    });
+  }
+
+  function onHeroFullscreenStateChange() {
+    const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    if (!isFull && !heroVideoWrapper?.classList.contains('is-mobile-landscape')) {
+      if (heroFullscreenIcon) heroFullscreenIcon.className = 'fa-solid fa-expand';
+      if (heroFullscreenBtn) {
+        heroFullscreenBtn.setAttribute('title', 'Fullscreen / Landscape');
+        heroFullscreenBtn.setAttribute('aria-label', 'Fullscreen and landscape mode');
+      }
+    }
+  }
+
+  document.addEventListener('fullscreenchange', onHeroFullscreenStateChange);
+  document.addEventListener('webkitfullscreenchange', onHeroFullscreenStateChange);
 
   document.querySelectorAll('.single-stream-trigger').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -167,10 +364,15 @@ export function initHeroFeatureController() {
   });
 
   document.querySelectorAll('.hero-share-trigger').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const shareBtn = document.getElementById('shareBtn');
       const shareModal = document.getElementById('shareModal');
-      if (shareModal) {
+      if (shareBtn && typeof shareBtn.click === 'function') {
+        shareBtn.click();
+      } else if (shareModal) {
         shareModal.classList.remove('hidden');
+        shareModal.classList.add('active');
       } else if (navigator.share) {
         navigator.share({
           title: 'Kins - Official Band Link in Bio',
@@ -318,7 +520,6 @@ export function initHeroFeatureController() {
   const cdMins = document.getElementById('heroCdMins') || document.getElementById('mysteryCdMins');
   const cdSecs = document.getElementById('heroCdSecs') || document.getElementById('mysteryCdSecs');
   const gigTargetTime = venueLocalTimeToMs(heroConfig?.poll?.setlist_song?.targetDate);
-  let heroCountdownIntervalId = null;
 
   function updateCountdown() {
     const diff = gigTargetTime - Date.now();
@@ -356,10 +557,8 @@ export function initHeroFeatureController() {
   const previewProgressFill = document.getElementById('previewProgressFill');
   const previewTimeCurrent = document.getElementById('previewTimeCurrent');
   let isPreviewPlaying = false;
-  let previewTimer = null;
   let previewSeconds = 0;
   const previewAudioUrl = heroConfig?.preview?.inspired_demo?.audioUrl || '';
-  let previewAudioEl = null;
 
   if (!previewAudioUrl) {
     // No real demo audio configured yet — hide the fake player controls
@@ -470,4 +669,44 @@ export function initHeroFeatureController() {
 
   // Real upload submission (POST /api/fan-upload). Replaces the old fake-success handler.
   initLiveFanUploadForm();
+}
+
+export function teardownHeroFeatureController() {
+  if (heroCountdownIntervalId !== null) {
+    clearInterval(heroCountdownIntervalId);
+    heroCountdownIntervalId = null;
+  }
+  if (previewTimer !== null) {
+    clearInterval(previewTimer);
+    previewTimer = null;
+  }
+  if (previewAudioEl) {
+    try {
+      previewAudioEl.pause();
+      previewAudioEl.currentTime = 0;
+    } catch (_) {}
+    previewAudioEl = null;
+  }
+
+  const heroIframe = document.getElementById('heroCoverVideoIframe');
+  const heroVideoWrapper = document.getElementById('heroVideoWrapper');
+  const heroPlayPauseIcon = document.getElementById('heroVideoPlayPauseIcon');
+
+  if (heroIframe) heroIframe.src = '';
+  if (heroVideoWrapper) {
+    heroVideoWrapper.classList.remove('is-playing', 'is-paused', 'controls-hidden', 'is-mobile-landscape');
+  }
+  const heroOverlay = document.getElementById('heroVideoControlsOverlay');
+  if (heroOverlay) {
+    heroOverlay.classList.remove('controls-hidden');
+  }
+  if (heroPlayPauseIcon) heroPlayPauseIcon.className = 'fa-solid fa-play icon-play';
+
+  isHeroVideoPlaying = false;
+  heroVideoStarted = false;
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('astro:page-load', initHeroFeatureController);
+  document.addEventListener('astro:before-swap', teardownHeroFeatureController);
 }

@@ -2,13 +2,19 @@
 ---
 
 <div class="bottom-floating-controls-wrapper" id="bottomFloatingControls">
+  <!-- Screen Reader Accessible Live Announcement Region -->
+  <div class="sr-only" aria-live="polite" id="audioPlayerAnnouncer"></div>
+
   <!-- Full-Width Streaming Drawer Panel -->
   <div class="stream-drawer-panel hidden" id="streamDrawerPanel" data-track-container="drawer:stream_platforms">
     <div class="stream-drawer-header">
       <span class="stream-drawer-title">
         <i class="fa-solid fa-compact-disc"></i> Stream on
       </span>
-      <span class="stream-drawer-song" id="streamDrawerSongName"></span>
+      <button type="button" class="stream-drawer-song-btn brutal-press" id="streamDrawerSongBtn" title="Click to copy song and band name" aria-label="Copy song title and band name">
+        <span class="stream-drawer-song" id="streamDrawerSongName"></span>
+        <i class="fa-regular fa-copy copy-hint-icon" id="streamDrawerCopyIcon" aria-hidden="true"></i>
+      </button>
     </div>
     <div class="stream-platforms-row">
       <a href="https://open.spotify.com/search/KinsBandOfficial" target="_blank" rel="noopener noreferrer" class="stream-platform-btn spotify" id="streamLinkSpotify" title="Spotify" aria-label="Spotify" data-track="stream:spotify" data-platform="spotify">
@@ -31,25 +37,9 @@
         <i class="fa-brands fa-soundcloud" aria-hidden="true"></i>
         <span class="sr-only">Stream on SoundCloud</span>
       </a>
-      <a href="https://www.deezer.com/search/KinsBandOfficial" target="_blank" rel="noopener noreferrer" class="stream-platform-btn deezer" id="streamLinkDeezer" title="Deezer" aria-label="Deezer" data-track="stream:deezer" data-platform="deezer">
-        <i class="fa-brands fa-deezer" aria-hidden="true"></i>
-        <span class="sr-only">Stream on Deezer</span>
-      </a>
-      <a href="https://listen.tidal.com/search?q=KinsBandOfficial" target="_blank" rel="noopener noreferrer" class="stream-platform-btn tidal" id="streamLinkTidal" title="Tidal" aria-label="Tidal" data-track="stream:tidal" data-platform="tidal">
-        <i class="fa-solid fa-water" aria-hidden="true"></i>
-        <span class="sr-only">Stream on Tidal</span>
-      </a>
       <a href="https://bandcamp.com/search?q=KinsBandOfficial" target="_blank" rel="noopener noreferrer" class="stream-platform-btn bandcamp" id="streamLinkBandcamp" title="Bandcamp" aria-label="Bandcamp" data-track="stream:bandcamp" data-platform="bandcamp">
         <i class="fa-brands fa-bandcamp" aria-hidden="true"></i>
         <span class="sr-only">Stream on Bandcamp</span>
-      </a>
-      <a href="https://audiomack.com/search?q=KinsBandOfficial" target="_blank" rel="noopener noreferrer" class="stream-platform-btn audiomack" id="streamLinkAudiomack" title="Audiomack" aria-label="Audiomack" data-track="stream:audiomack" data-platform="audiomack">
-        <i class="fa-solid fa-headphones" aria-hidden="true"></i>
-        <span class="sr-only">Stream on Audiomack</span>
-      </a>
-      <a href="https://www.qobuz.com/search?q=KinsBandOfficial" target="_blank" rel="noopener noreferrer" class="stream-platform-btn qobuz" id="streamLinkQobuz" title="Qobuz" aria-label="Qobuz" data-track="stream:qobuz" data-platform="qobuz">
-        <i class="fa-solid fa-compact-disc" aria-hidden="true"></i>
-        <span class="sr-only">Stream on Qobuz</span>
       </a>
     </div>
   </div>
@@ -63,8 +53,13 @@
       <!-- Folder Tab Sticking Up From Top Left -->
       <div class="card-folder-tab tab-player">INSPIRATION</div>
 
+      <!-- Tactile Neo-Brutalist Timeline Groove Rail along top border -->
+      <div class="deck-timeline-groove" id="deckTimelineGroove" role="slider" aria-label="Audio playback progress" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" aria-valuetext="0:00 of 0:30">
+        <div class="groove-rail-track" id="grooveRailTrack"></div>
+      </div>
+
       <!-- Minimalist Turntable Stylus Indicator at Top Edge -->
-      <div class="vinyl-stylus-wrapper" id="vinylStylusWrapper">
+      <div class="vinyl-stylus-wrapper" id="vinylStylusWrapper" aria-hidden="true">
         <svg class="stylus-turntable-svg" viewBox="0 0 22 18" width="22" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g class="stylus-head-group" id="stylusTonearmWand">
             <!-- Turntable Cartridge Mount Body -->
@@ -89,16 +84,16 @@
       <div class="deck-idle-view" id="deckIdleView">
         <div class="stacked-album-covers" id="stackedAlbumCovers">
           <div class="cover-stack-item item-1">
-            <img class="stack-cover-img hidden" id="stackCover1" alt="Album cover 1" width="36" height="36" loading="lazy" decoding="async">
-            <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
+            <img class="stack-cover-img" id="stackCover1" src="https://is1-ssl.mzstatic.com/image/thumb/Music/y2004/m11/d24/h19/s06.lkkhqoax.jpg/100x100bb.jpg" alt="The Cure - Just Like Heaven" width="36" height="36" loading="eager" decoding="async">
+            <i class="fa-solid fa-compact-disc stack-fallback-icon" style="display: none;"></i>
           </div>
           <div class="cover-stack-item item-2">
-            <img class="stack-cover-img hidden" id="stackCover2" alt="Album cover 2" width="36" height="36" loading="lazy" decoding="async">
-            <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
+            <img class="stack-cover-img" id="stackCover2" src="https://is1-ssl.mzstatic.com/image/thumb/Music49/v4/5a/c0/24/5ac024bc-160e-e4bf-7982-80b8069de71a/075679912770.jpg/100x100bb.jpg" alt="Weezer - Do You Wanna Get High?" width="36" height="36" loading="eager" decoding="async">
+            <i class="fa-solid fa-compact-disc stack-fallback-icon" style="display: none;"></i>
           </div>
           <div class="cover-stack-item item-3">
-            <img class="stack-cover-img hidden" id="stackCover3" alt="Album cover 3" width="36" height="36" loading="lazy" decoding="async">
-            <i class="fa-solid fa-compact-disc stack-fallback-icon"></i>
+            <img class="stack-cover-img" id="stackCover3" src="https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/21/f2/85/21f2856c-b6b9-9855-ede0-57b68427e268/00044006351322.rgb.jpg/100x100bb.jpg" alt="Pulp - Common People" width="36" height="36" loading="eager" decoding="async">
+            <i class="fa-solid fa-compact-disc stack-fallback-icon" style="display: none;"></i>
           </div>
         </div>
 
@@ -275,6 +270,62 @@
     gap: 6px;
   }
 
+  .stream-drawer-song-btn {
+    background: transparent;
+    border: 1px dashed transparent;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-card-primary);
+    text-align: right;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s var(--ease-tactile);
+  }
+
+  .stream-drawer-song-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.25);
+  }
+
+  :global([data-theme="dark"]) .stream-drawer-song-btn:hover,
+  :global(body[data-theme="dark"]) .stream-drawer-song-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .stream-drawer-song-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 1px;
+  }
+
+  .stream-drawer-song-btn .copy-hint-icon {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    opacity: 0.8;
+    transition: color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .stream-drawer-song-btn:hover .copy-hint-icon {
+    color: var(--brand-accent-primary);
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  .stream-drawer-song-btn.is-copied {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: rgba(16, 185, 129, 0.5) !important;
+  }
+
+  .stream-drawer-song-btn.is-copied .copy-hint-icon {
+    color: #10b981 !important;
+    opacity: 1 !important;
+    transform: scale(1.15);
+  }
+
   .stream-drawer-song {
     font-family: var(--font-heading);
     font-size: 0.72rem;
@@ -399,10 +450,38 @@
     box-shadow: 4px 4px 0px #000000;
   }
 
+  /* Tactile Neo-Brutalist Timeline Groove Rail */
+  .deck-timeline-groove {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3.5px;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 12;
+    pointer-events: none;
+    border-bottom: 1.5px solid rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    border-radius: 0 5px 0 0;
+  }
+
+  .groove-rail-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: var(--brand-accent-primary, #f2fd43);
+    transform: scaleX(0);
+    transform-origin: left center;
+    will-change: transform;
+    opacity: 0.9;
+  }
+
   /* Minimalist Stylus Needle Indicator - Top Edge Accent */
   .vinyl-stylus-wrapper {
     position: absolute;
-    top: -16px;
+    top: -15.5px;
     left: 0;
     transform: translateX(-11px);
     pointer-events: none;
@@ -421,7 +500,10 @@
   :global(.is-scrubbing) .vinyl-stylus-wrapper,
   .brutal-bottom-dock.is-scrubbing .audio-bar-timeline-progress,
   .brutal-player-card.is-scrubbing .audio-bar-timeline-progress,
-  :global(.is-scrubbing) .audio-bar-timeline-progress {
+  :global(.is-scrubbing) .audio-bar-timeline-progress,
+  .brutal-bottom-dock.is-scrubbing .groove-rail-track,
+  .brutal-player-card.is-scrubbing .groove-rail-track,
+  :global(.is-scrubbing) .groove-rail-track {
     transition: none !important;
   }
 
@@ -437,9 +519,9 @@
   }
 
   .stylus-head-group {
-    transform-origin: 11px 4px;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform: translateY(-4px) rotate(-8deg);
+    transform-origin: 11px 17.5px; /* Pivot directly at needle tip contact point */
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateY(-5px) rotate(-6deg);
     will-change: transform;
   }
 
@@ -449,7 +531,7 @@
   }
 
   .vinyl-stylus-wrapper.is-paused .stylus-head-group {
-    transform: translateY(-4px) rotate(-8deg);
+    transform: translateY(-5px) rotate(-6deg);
   }
 
   .vinyl-stylus-wrapper.needle-drop-bounce .stylus-head-group {
@@ -458,13 +540,13 @@
 
   @keyframes needleDropBounce {
     0% {
-      transform: translateY(-6px) rotate(-12deg);
+      transform: translateY(-7px) rotate(-8deg);
     }
     40% {
-      transform: translateY(2px) rotate(2deg);
+      transform: translateY(1px) rotate(1deg);
     }
     70% {
-      transform: translateY(-1px) rotate(-1deg);
+      transform: translateY(-0.5px) rotate(-0.5deg);
     }
     100% {
       transform: translateY(0px) rotate(0deg);
@@ -947,8 +1029,27 @@
 </style>
 
 <script>
+  // Eager proxy stub: allows instant clicks on album cards before audioPlayer.js finishes idle hydration
+  (function() {
+    const w = window as any;
+    w._pendingTrackToPlay = null;
+    if (!w.playTrackPreview) {
+      w.playTrackPreview = function(trackObj: any) {
+        w._pendingTrackToPlay = trackObj;
+        import('../../scripts/controllers/audioPlayer.js').then((m) => {
+          m.initAudioPlayer();
+          if (w.playTrackPreview && w._pendingTrackToPlay) {
+            const t = w._pendingTrackToPlay;
+            w._pendingTrackToPlay = null;
+            w.playTrackPreview(t);
+          }
+        });
+      };
+    }
+  })();
+
   // Idle-loaded: the audio deck enhances the page — it must not compete with first paint
-  const scheduleIdle = (cb) => {
+  const scheduleIdle = (cb: () => void) => {
     if (typeof window.requestIdleCallback === 'function') {
       window.requestIdleCallback(cb, { timeout: 2000 });
     } else {

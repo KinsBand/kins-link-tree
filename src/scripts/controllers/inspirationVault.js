@@ -1,8 +1,82 @@
 import { showToast } from './toast.js';
+import { safeGet, safeSet } from '../utils/safeStorage.js';
 
 export const ITUNES_CACHE = new Map();
 export const ITUNES_INFLIGHT_PROMISES = new Map();
+export const ITUNES_TRANSIENT_FAILS = new Map();
+const TRANSIENT_FAIL_TTL_MS = 15000;
+const STORAGE_KEY = 'kins_itunes_cache_v2';
+
 export const IMAGE_PRELOAD_CACHE = new Map();
+
+/**
+ * STATIC_PRELOADED_TRACKS: Curated showcase tracks (e.g. idle dock covers)
+ * pre-seeded with verified CDN audio previews and high-res artwork to guarantee 0ms retrieval.
+ */
+export const STATIC_PRELOADED_TRACKS = [
+  {
+    artist: 'The Cure',
+    title: 'Just Like Heaven',
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/86/96/49/8696498e-c448-fd66-7d3f-b02fe43ea12d/mzaf_6925694512417375942.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music/y2004/m11/d24/h19/s06.lkkhqoax.jpg/600x600bb.jpg',
+    rawArtworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music/y2004/m11/d24/h19/s06.lkkhqoax.jpg/100x100bb.jpg'
+  },
+  {
+    artist: 'Weezer',
+    title: 'Do You Wanna Get High?',
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/d8/24/72/d8247233-43f0-ad05-1ac4-2ae05e9c31e1/mzaf_389068680687214809.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music49/v4/5a/c0/24/5ac024bc-160e-e4bf-7982-80b8069de71a/075679912770.jpg/600x600bb.jpg',
+    rawArtworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music49/v4/5a/c0/24/5ac024bc-160e-e4bf-7982-80b8069de71a/075679912770.jpg/100x100bb.jpg'
+  },
+  {
+    artist: 'Pulp',
+    title: 'Common People',
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/91/0d/98/910d982e-1d98-a551-0cd7-f340f1125d67/mzaf_10421007834642375895.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/21/f2/85/21f2856c-b6b9-9855-ede0-57b68427e268/00044006351322.rgb.jpg/600x600bb.jpg',
+    rawArtworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/21/f2/85/21f2856c-b6b9-9855-ede0-57b68427e268/00044006351322.rgb.jpg/100x100bb.jpg'
+  }
+];
+
+function hydrateCacheFromStorage() {
+  try {
+    const raw = safeGet(STORAGE_KEY, null);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        Object.entries(parsed).forEach(([k, v]) => {
+          if (v && v.artworkUrl) {
+            ITUNES_CACHE.set(k, v);
+          }
+        });
+      }
+    }
+  } catch (e) {}
+}
+
+// Initial storage hydration
+hydrateCacheFromStorage();
+
+let saveStorageTimeout = null;
+export function persistCacheToStorage() {
+  if (saveStorageTimeout) clearTimeout(saveStorageTimeout);
+  saveStorageTimeout = setTimeout(() => {
+    try {
+      const exportObj = {};
+      ITUNES_CACHE.forEach((val, key) => {
+        if (val && val.artworkUrl) {
+          exportObj[key] = {
+            artworkUrl: val.artworkUrl,
+            rawArtworkUrl: val.rawArtworkUrl,
+            highResArtworkUrl: val.highResArtworkUrl,
+            previewUrl: val.previewUrl,
+            isHighResAvailable: val.isHighResAvailable
+          };
+        }
+      });
+      safeSet(STORAGE_KEY, JSON.stringify(exportObj));
+    } catch (e) {}
+  }, 120);
+}
 
 /**
  * Format Apple mzstatic artwork URLs for specific dimensions and modern formats (WebP).
@@ -127,7 +201,18 @@ export async function prefetchTrackArtwork(tracks) {
 
 export async function getITunesTrackData(artist, title) {
   const cacheKey = `${artist} - ${title}`.toLowerCase().trim();
-  if (ITUNES_CACHE.has(cacheKey)) return ITUNES_CACHE.get(cacheKey);
+  const cached = ITUNES_CACHE.get(cacheKey);
+  if (cached && cached.artworkUrl) return cached;
+
+  const now = Date.now();
+  if (ITUNES_TRANSIENT_FAILS.has(cacheKey)) {
+    const lastFail = ITUNES_TRANSIENT_FAILS.get(cacheKey);
+    if (now - lastFail < TRANSIENT_FAIL_TTL_MS) {
+      return { artworkUrl: null, rawArtworkUrl: null, highResArtworkUrl: null, previewUrl: null, isHighResAvailable: false };
+    }
+    ITUNES_TRANSIENT_FAILS.delete(cacheKey);
+  }
+
   if (ITUNES_INFLIGHT_PROMISES.has(cacheKey)) return ITUNES_INFLIGHT_PROMISES.get(cacheKey);
   
   const fetchPromise = (async () => {
@@ -139,7 +224,7 @@ export async function getITunesTrackData(artist, title) {
       const query = encodeURIComponent(`${cleanArtist} ${cleanTitle}`.trim());
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
       
       // Highly scoped query: media=music, entity=song, limit=1, country=US for deterministic low-latency indexing
       let res = await fetch(`https://itunes.apple.com/search?term=${query}&media=music&entity=song&limit=1&country=US`, {
@@ -152,7 +237,7 @@ export async function getITunesTrackData(artist, title) {
       if (!data.results || data.results.length === 0) {
         const fallbackQuery = encodeURIComponent(cleanTitle);
         const fallbackController = new AbortController();
-        const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 3000);
+        const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 2000);
         
         res = await fetch(`https://itunes.apple.com/search?term=${fallbackQuery}&media=music&entity=song&limit=1&country=US`, {
           signal: fallbackController.signal,
@@ -177,13 +262,15 @@ export async function getITunesTrackData(artist, title) {
           isHighResAvailable: !!(webpUrl || highResUrl)
         };
         ITUNES_CACHE.set(cacheKey, result);
+        ITUNES_TRANSIENT_FAILS.delete(cacheKey);
+        persistCacheToStorage();
         return result;
       }
     } catch (e) {
       console.warn('iTunes API fetch error:', e);
     }
     const fallback = { artworkUrl: null, rawArtworkUrl: null, highResArtworkUrl: null, previewUrl: null, isHighResAvailable: false };
-    ITUNES_CACHE.set(cacheKey, fallback);
+    ITUNES_TRANSIENT_FAILS.set(cacheKey, Date.now());
     return fallback;
   })().finally(() => {
     ITUNES_INFLIGHT_PROMISES.delete(cacheKey);
@@ -408,60 +495,73 @@ export const INSPIRATION_TRACKS = [
     coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/a4/00/2b/a4002b01-6c8d-2d34-fae8-0b9b7861361e/810075110593.jpg/600x600bb.jpg'
   },
   {
-    id: 'disorder',
-    title: 'Disorder',
-    artist: 'Joy Division',
-    genre: 'Post-Punk',
-    duration: '3:32',
-    quote: 'Driving melodic bassline & anxious post-punk pulse',
-    icon: 'fa-sliders',
+    id: 'once-in-a-lifetime',
+    title: 'Once in a Lifetime',
+    artist: 'Talking Heads',
+    genre: 'New Wave',
+    duration: '4:19',
+    quote: 'Hypnotic funk polyrhythms, slap bass pulse & Eno synth swirls',
+    icon: 'fa-water',
     curatedBy: ['Oscar'],
-    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/80/7e/61/807e61ef-5ba8-b13c-6232-a5f22e84ec15/mzaf_16238659616091000720.plus.aac.p.m4a',
-    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/37/1a/07/371a0701-d9a9-fa53-dfdf-1e82713f0190/0825646183906.jpg/600x600bb.jpg',
-    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/37/1a/07/371a0701-d9a9-fa53-dfdf-1e82713f0190/0825646183906.jpg/600x600bb.jpg'
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/c2/d8/e2/c2d8e26c-01b8-0d59-39d5-867086338e43/mzaf_4814700109397140137.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/48/9c/21/489c217b-d228-59a3-296d-6fa1d90776b7/dj.bpkztuma.jpg/600x600bb.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/48/9c/21/489c217b-d228-59a3-296d-6fa1d90776b7/dj.bpkztuma.jpg/600x600bb.jpg'
   },
   {
-    id: 'age-of-consent',
-    title: 'Age of Consent',
-    artist: 'New Order',
-    genre: 'Post-Punk',
-    duration: '5:16',
-    quote: 'Pioneering hybrid of high-register bass & dance synth hooks',
-    icon: 'fa-bolt',
+    id: 'ocean-man',
+    title: 'Ocean Man',
+    artist: 'Ween',
+    genre: 'Neo-Psychedelia',
+    duration: '2:06',
+    quote: 'Bouncy sea-shanty bass bounce, pitch-shifted vocals & sun-soaked psych',
+    icon: 'fa-fish',
     curatedBy: ['Oscar'],
-    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/44/92/75/449275cb-bce6-3843-f61b-90f6eb96ff85/mzaf_10332857508734267499.plus.aac.p.m4a',
-    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/eb/b1/ee/ebb1ee98-d218-472e-c5ae-4933a3ea5f6e/0825646183869.jpg/600x600bb.jpg',
-    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/eb/b1/ee/ebb1ee98-d218-472e-c5ae-4933a3ea5f6e/0825646183869.jpg/600x600bb.jpg'
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/75/1c/75/751c75d8-ec2d-b389-a5df-907a837070c1/mzaf_5945938862777566785.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/3b/1a/c5/3b1ac592-9c7b-a968-a064-af79f0e9d68c/mzi.sigmlzuh.jpg/600x600bb.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/3b/1a/c5/3b1ac592-9c7b-a968-a064-af79f0e9d68c/mzi.sigmlzuh.jpg/600x600bb.jpg'
   },
   {
-    id: 'fascination-street',
-    title: 'Fascination Street',
-    artist: 'The Cure',
+    id: 'london-calling',
+    title: 'London Calling',
+    artist: 'The Clash',
     genre: 'Post-Punk',
-    duration: '5:16',
-    quote: 'Massive chorused bass riff with lush atmospheric textures',
-    icon: 'fa-moon',
+    duration: '3:19',
+    quote: 'Paul Simonon’s thunderous reggae-punk bassline & apocalyptic brass',
+    icon: 'fa-tower-broadcast',
     curatedBy: ['Oscar'],
-    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/1c/64/0a/1c640a45-e62f-ae2a-9e8c-851f087265a7/mzaf_12411985956795415783.plus.aac.p.m4a',
-    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/80/f4/bc/80f4bcc9-03b9-115f-d232-15f1fbe2445b/0825646067756.jpg/600x600bb.jpg',
-    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/80/f4/bc/80f4bcc9-03b9-115f-d232-15f1fbe2445b/0825646067756.jpg/600x600bb.jpg'
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/0f/43/69/0f4369ad-dbc9-b0a1-dd89-a07b3085c45b/mzaf_13600915992817971714.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/45/d7/17/45d71740-b204-de23-3f9e-f2f823296f1d/886443520721.jpg/600x600bb.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/45/d7/17/45d71740-b204-de23-3f9e-f2f823296f1d/886443520721.jpg/600x600bb.jpg'
   },
   {
-    id: 'colossus',
-    title: 'Colossus',
-    artist: 'IDLES',
-    genre: 'Post-Punk',
-    duration: '5:39',
-    quote: 'Heavy rhythmic build and raw dynamic tension',
-    icon: 'fa-fire',
+    id: 'starman',
+    title: 'Starman',
+    artist: 'David Bowie',
+    genre: 'Art Rock',
+    duration: '4:14',
+    quote: 'Cosmic acoustic strumming, soaring strings & iconic melody',
+    icon: 'fa-star',
     curatedBy: ['Oscar'],
-    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/37/bc/7b/37bc7b80-f655-6677-44df-9e2c41c7bce1/mzaf_13506161427503882772.plus.aac.p.m4a',
-    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/7d/5a/0c/7d5a0c32-261f-9988-82df-cf571ef99ea5/720841215714.jpg/600x600bb.jpg',
-    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/7d/5a/0c/7d5a0c32-261f-9988-82df-cf571ef99ea5/720841215714.jpg/600x600bb.jpg'
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/af/22/a3/af22a300-39a6-71fd-2933-b09ab5b896cb/mzaf_1685297233127594181.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/5f/fa/56/5ffa56c2-ea1f-7a17-6bad-192ff9b6476d/825646124206.jpg/600x600bb.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/5f/fa/56/5ffa56c2-ea1f-7a17-6bad-192ff9b6476d/825646124206.jpg/600x600bb.jpg'
+  },
+  {
+    id: 'baby-come-back',
+    title: 'Baby Come Back',
+    artist: 'Player',
+    genre: 'Groove Rock',
+    duration: '4:15',
+    quote: 'Silky 70s bass groove, Rhodes chords & timeless soul hooks',
+    icon: 'fa-record-vinyl',
+    curatedBy: ['Oscar'],
+    previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/65/df/ec/65dfec64-6997-c518-6700-461bf49b41e0/mzaf_15777928770580253326.plus.aac.p.m4a',
+    artworkUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/b8/53/c1/b853c1bc-aa35-1868-181c-6cd24ec9c5b1/00602577245428.rgb.jpg/600x600bb.jpg',
+    coverUrl: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/b8/53/c1/b853c1bc-aa35-1868-181c-6cd24ec9c5b1/00602577245428.rgb.jpg/600x600bb.jpg'
   }
 ];
 
-// Pre-seed iTunes cache with verified inspiration tracks for instantaneous synchronous lookup
+// Pre-seed iTunes cache with verified inspiration tracks and static showcase tracks for instantaneous synchronous lookup
 INSPIRATION_TRACKS.forEach((track) => {
   if (track.previewUrl && track.artworkUrl) {
     const key = `${track.artist} - ${track.title}`.toLowerCase().trim();
@@ -471,6 +571,20 @@ INSPIRATION_TRACKS.forEach((track) => {
       previewUrl: track.previewUrl,
       isHighResAvailable: true
     });
+  }
+});
+
+STATIC_PRELOADED_TRACKS.forEach((track) => {
+  if (track.previewUrl && track.artworkUrl) {
+    const key = `${track.artist} - ${track.title}`.toLowerCase().trim();
+    if (!ITUNES_CACHE.has(key)) {
+      ITUNES_CACHE.set(key, {
+        artworkUrl: track.artworkUrl,
+        rawArtworkUrl: track.rawArtworkUrl || track.artworkUrl.replace(/600x600bb\./, '100x100bb.').replace(/600x600/, '100x100'),
+        previewUrl: track.previewUrl,
+        isHighResAvailable: true
+      });
+    }
   }
 });
 

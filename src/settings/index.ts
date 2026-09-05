@@ -13,4 +13,5 @@ export * from './metronome.config';
 export * from './tuner.config';
 export * from './store.config';
 export * from './theory.config';
+export * from './covers.config';
 export * from './platformsData';

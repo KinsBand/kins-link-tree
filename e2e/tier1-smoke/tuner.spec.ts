@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { functionalityConfig } from '../../src/settings/functionality.config';
 
 /* Tuner smoke flows with Chromium's fake microphone: no real audio device or
    permission prompt needed. Pitch-value assertions are deliberately avoided
@@ -18,6 +19,7 @@ async function openTuner(page: Page) {
 }
 
 test.describe('tier1 smoke — tuner', () => {
+  test.skip(!functionalityConfig.enableTunerPage, 'Tuner page is currently gated');
   test('mic starts and stops from the CTA', async ({ page }) => {
     await openTuner(page);
     const cta = page.locator('#tunerMicToggleBtn');

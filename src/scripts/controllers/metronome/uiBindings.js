@@ -3984,6 +3984,11 @@ export function createUi(callbacks) {
 
     if (els.backdrop) els.backdrop.addEventListener('click', () => closeSheet());
     if (els.handle) els.handle.addEventListener('click', () => closeSheet());
+    if (els.sheet) {
+      els.sheet.querySelectorAll('.sheet-pill-close-btn').forEach((btn) => {
+        btn.addEventListener('click', () => closeSheet());
+      });
+    }
     trackGlobal(document, 'keydown', onKeydown);
 
     if (els.tsInfoBeats) els.tsInfoBeats.addEventListener('click', () => callbacks.onInfoHelp('infoTsBeats'));

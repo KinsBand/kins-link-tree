@@ -6,7 +6,7 @@ import { Image } from 'astro:assets';
 import kinsLogoNew from '../../assets/new.png';
 
 const baseUrl = import.meta.env.BASE_URL;
-const isLive = liveConfig.status === 'live';
+const isLive = (functionalityConfig.enableLivePage ?? true) && (liveConfig.enabled ?? true) && liveConfig.status === 'live';
 const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.enabled ?? true);
 const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
 ---

@@ -89,8 +89,18 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
     <div class:list={['hero-card-state', 'state-release', { hidden: activeState !== 'release' }]} id="stateRelease">
       <!-- Sub-Var 1A: Cover Video Release -->
       <div class:list={['sub-var-panel', 'var-release-cover_video', { hidden: activeState !== 'release' || activeSubvar !== 'cover_video' }]} id="varReleaseCoverVideo">
-        <div class="hero-card-media-bg">
+        <div class="hero-card-media-bg" id="heroVideoWrapper">
           <div class="hero-media-overlay"></div>
+          
+          <iframe
+            id="heroCoverVideoIframe"
+            src=""
+            data-embed={release.cover_video.embedUrl}
+            title={release.cover_video.title}
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowfullscreen
+          ></iframe>
+
           <div class="hero-card-header">
             <div class="hero-header-text">
               <h3 class="hero-release-title">{release.cover_video.title}</h3>
@@ -99,28 +109,52 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
                 <span class="hero-genre-badge">{release.cover_video.badge}</span>
               </div>
             </div>
-            <button type="button" class="hero-platform-btn release-play-trigger" aria-label="Play cover video">
-              <i class={`fa-brands ${release.cover_video.platformIcon}`}></i>
-            </button>
+            <div class="hero-header-actions">
+              <!-- Quality Settings in Header -->
+              <div class="video-overlay-quality-wrapper">
+                <button type="button" class="video-overlay-icon-btn brutal-press" id="heroVideoQualityBtn" aria-label="Video quality settings" title="Video Quality">
+                  <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                </button>
+                <div class="video-quality-dropdown hidden" id="heroVideoQualityDropdown">
+                  <button type="button" class="quality-opt-btn active" data-quality="1080p">1080p HD</button>
+                  <button type="button" class="quality-opt-btn" data-quality="720p">720p</button>
+                  <button type="button" class="quality-opt-btn" data-quality="Auto">Auto</button>
+                </div>
+              </div>
+
+              <!-- Icon-Only Share Button -->
+              <button type="button" class="hero-icon-share-btn hero-share-trigger share-modal-trigger brutal-press" aria-label="Share cover release" title="Share">
+                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
 
-          <button type="button" class="hero-center-play-btn release-play-trigger" aria-label="Play cover video">
-            <i class="fa-solid fa-play"></i>
-          </button>
+          <!-- Video Controls Overlay covering the full card screen -->
+          <div class="video-controls-overlay" id="heroVideoControlsOverlay">
+            <!-- Center Play/Pause Big Button -->
+            <button type="button" class="video-overlay-center-play release-play-trigger" id="heroVideoPlayPauseBtn" aria-label="Play or pause video" title="Play or pause">
+              <span class="play-pause-icon-box" id="heroVideoPlayPauseIconBox">
+                <i class="fa-solid fa-play icon-play" id="heroVideoPlayPauseIcon" aria-hidden="true"></i>
+                <i class="fa-solid fa-pause icon-pause" id="heroVideoPauseIcon" aria-hidden="true"></i>
+              </span>
+            </button>
 
-          <div class="hero-action-buttons-row">
-            <button type="button" class="hero-btn-primary release-play-trigger">
-              <i class="fa-solid fa-play"></i>
-              <span>PLAY NOW</span>
-              <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
-            </button>
-            <button type="button" class="hero-btn-secondary hero-share-trigger">
-              <i class="fa-solid fa-share-nodes"></i>
-              <span>SHARE</span>
-            </button>
+            <!-- Bottom Controls (Hint on bottom-left, Fullscreen on bottom-right) -->
+            <div class="video-overlay-bottom-bar">
+              <div class="video-overlay-hint">
+                <span>Tap to toggle controls</span>
+              </div>
+
+              <button type="button" class="video-overlay-icon-btn brutal-press" id="heroVideoFullscreenBtn" aria-label="Fullscreen and landscape mode" title="Fullscreen / Landscape">
+                <i class="fa-solid fa-expand" id="heroVideoFullscreenIcon" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
         </div>
-        <div class="hero-card-footer">
+        <div class="hero-card-footer hero-cover-footer">
+          <a href={release.cover_video.watchUrl} target="_blank" rel="noopener noreferrer" class="hero-footer-yt-btn brutal-press" aria-label="Watch on YouTube" title="Watch on YouTube">
+            <i class={`fa-brands ${release.cover_video.platformIcon}`} aria-hidden="true"></i>
+          </a>
           <span class="hero-footer-text">{release.cover_video.footerText}</span>
         </div>
       </div>
@@ -514,18 +548,25 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
       <!-- Sub-Var 6A: Pre-Show -->
       <div class="sub-var-panel var-livestream-preshow" id="varLivestreamPreshow">
         <div class="livestream-card-content preshow-theme">
-          <div class="live-status-line-badge preshow-badge">
-            <span class="status-indicator-dot yellow-dot"></span>
-            <span class="status-line-text">{livestream.preshow.statusLine}</span>
+          <div class="hero-live-badge-row">
+            <span class="hero-live-tape-badge preshow-badge"><i class="fa-solid fa-clock"></i> DOORS OPENING</span>
+            <span class="hero-live-audience-pill"><i class="fa-solid fa-calendar-day"></i> TONIGHT</span>
           </div>
-          <h3 class="livestream-title">{livestream.preshow.title}</h3>
-          <p class="livestream-subtitle">{livestream.preshow.subtitle}</p>
+          <div class="hero-live-feed-card">
+            <div class="hero-live-track-info">
+              <span class="hero-live-track-label">{livestream.preshow.statusLine}</span>
+              <h3 class="hero-live-track-title">{livestream.preshow.title}</h3>
+              <p class="hero-live-venue-desc"><i class="fa-solid fa-location-dot"></i> {livestream.preshow.subtitle}</p>
+            </div>
+          </div>
           <div class="hero-action-buttons-row">
             <a href={livestream.preshow.ticketsUrl} target="_blank" rel="noopener noreferrer" class="hero-btn-primary">
+              <i class="fa-solid fa-ticket"></i>
               <span>{livestream.preshow.leftCta}</span>
               <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
             </a>
             <button type="button" class="hero-btn-secondary" id="heroLiveNotifyBtn">
+              <i class="fa-solid fa-bell"></i>
               <span>{livestream.preshow.rightCta}</span>
             </button>
           </div>
@@ -535,18 +576,35 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
       <!-- Sub-Var 6B: Showtime (Live Now) -->
       <div class="sub-var-panel var-livestream-live_now" id="varLivestreamLiveNow">
         <div class="livestream-card-content live-theme">
-          <div class="live-status-line-badge live-badge">
-            <span class="status-indicator-dot red-pulse-dot"></span>
-            <span class="status-line-text">{livestream.live_now.statusLine}</span>
+          <div class="hero-live-badge-row">
+            <span class="hero-live-tape-badge live-tape"><i class="fa-solid fa-tower-broadcast"></i> LIVE BROADCAST</span>
+            <span class="hero-live-audience-pill"><i class="fa-solid fa-users"></i> {livestream.live_now.viewerCount}</span>
           </div>
-          <h3 class="livestream-title">{livestream.live_now.title}</h3>
-          <p class="livestream-subtitle">{livestream.live_now.subtitle}</p>
+          <div class="hero-live-feed-card active-live-feed">
+            <div class="hero-live-track-info">
+              <div class="track-header-meta">
+                <span class="hero-live-track-label">NOW PLAYING</span>
+                <span class="soundboard-pill">SOUNDBOARD FEED</span>
+              </div>
+              <h3 class="hero-live-track-title">{livestream.live_now.statusLine}</h3>
+              <p class="hero-live-venue-desc"><i class="fa-solid fa-location-dot"></i> {livestream.live_now.subtitle}</p>
+            </div>
+            <div class="hero-live-wave-visualizer" aria-hidden="true">
+              <span class="wave-bar bar-1"></span>
+              <span class="wave-bar bar-2"></span>
+              <span class="wave-bar bar-3"></span>
+              <span class="wave-bar bar-4"></span>
+              <span class="wave-bar bar-5"></span>
+            </div>
+          </div>
           <div class="hero-action-buttons-row">
-            <a href={`${baseUrl}live`} class="hero-btn-primary enter-live-btn">
+            <a href={`${baseUrl}live`} class="hero-btn-primary enter-live-btn brutal-press">
+              <i class="fa-solid fa-bolt"></i>
               <span>{livestream.live_now.leftCta}</span>
               <i class="fa-solid fa-arrow-right hero-launch-icon"></i>
             </a>
-            <button type="button" class="hero-btn-secondary hero-community-upload-btn" id="heroLiveUploadBtn">
+            <button type="button" class="hero-btn-secondary hero-community-upload-btn brutal-press" id="heroLiveUploadBtn">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
               <span>{livestream.live_now.rightCta}</span>
             </button>
           </div>
@@ -556,18 +614,25 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
       <!-- Sub-Var 6C: Post-Show -->
       <div class="sub-var-panel var-livestream-postshow" id="varLivestreamPostshow">
         <div class="livestream-card-content postshow-theme">
-          <div class="live-status-line-badge postshow-badge">
-            <span class="status-indicator-dot check-dot">🏁</span>
-            <span class="status-line-text">{livestream.postshow.statusLine}</span>
+          <div class="hero-live-badge-row">
+            <span class="hero-live-tape-badge postshow-badge"><i class="fa-solid fa-flag-checkered"></i> SHOW COMPLETED</span>
+            <span class="hero-live-audience-pill"><i class="fa-solid fa-film"></i> FULL REPLAY</span>
           </div>
-          <h3 class="livestream-title">{livestream.postshow.title}</h3>
-          <p class="livestream-subtitle">{livestream.postshow.subtitle}</p>
+          <div class="hero-live-feed-card">
+            <div class="hero-live-track-info">
+              <span class="hero-live-track-label">{livestream.postshow.statusLine}</span>
+              <h3 class="hero-live-track-title">{livestream.postshow.title}</h3>
+              <p class="hero-live-venue-desc"><i class="fa-solid fa-location-dot"></i> {livestream.postshow.subtitle}</p>
+            </div>
+          </div>
           <div class="hero-action-buttons-row">
             <a href={`${baseUrl}live`} class="hero-btn-primary">
+              <i class="fa-solid fa-play"></i>
               <span>{livestream.postshow.leftCta}</span>
               <i class="fa-solid fa-arrow-up-right-from-square hero-launch-icon"></i>
             </a>
             <button type="button" class="hero-btn-secondary hero-community-upload-btn" id="heroPostShowUploadBtn">
+              <i class="fa-solid fa-camera"></i>
               <span>{livestream.postshow.rightCta}</span>
             </button>
           </div>
@@ -1034,6 +1099,403 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
     color: var(--text-card-primary);
   }
 
+  .hero-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 25;
+    pointer-events: auto;
+    transition: opacity 0.22s ease, transform 0.22s var(--ease-snappy);
+  }
+
+  .hero-icon-share-btn {
+    position: relative;
+    z-index: 25;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    line-height: 1;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .hero-icon-share-btn i {
+    font-size: 0.85rem;
+  }
+
+  .hero-icon-share-btn:hover {
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .hero-icon-share-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  /* Dark Theme Parity for Share Button */
+  :global([data-theme="dark"]) .hero-icon-share-btn {
+    background: #1c1c22;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .hero-icon-share-btn:hover {
+    background: var(--btn-brand-primary, #d4af37);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  /* Embedded In-Place Video Player on Main Featured Card (Single Big Screen) */
+  .hero-card-media-bg {
+    position: relative;
+    width: 100%;
+    min-height: 250px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    background-image: url('/new.png');
+    background-size: cover;
+    background-position: center 30%;
+    overflow: hidden;
+  }
+
+  .hero-card-media-bg iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .hero-card-media-bg.is-playing iframe {
+    opacity: 1;
+  }
+
+  .hero-card-media-bg.is-playing .hero-media-overlay {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .hero-card-media-bg.is-mobile-landscape {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99999;
+    border-radius: 0;
+    border: none;
+    background: #000000;
+    margin: 0;
+    padding: 16px;
+  }
+
+  .hero-card-media-bg:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    border-radius: 0;
+  }
+
+  /* Video Controls Overlay covering the full card screen */
+  .hero-card-media-bg .hero-card-header {
+    position: relative;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .hero-card-media-bg .hero-header-text {
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s var(--ease-snappy);
+  }
+
+  /* Video Controls Overlay covering the full card screen */
+  .hero-card-media-bg .video-controls-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.22s ease;
+    z-index: 10;
+  }
+
+  .hero-card-media-bg.is-playing .video-controls-overlay {
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .hero-card-media-bg .video-controls-overlay.controls-hidden {
+    background: transparent;
+  }
+
+  /* Quality Settings in Header */
+  .hero-card-media-bg .video-overlay-quality-wrapper {
+    position: relative;
+    z-index: 25;
+  }
+
+  .hero-card-media-bg .video-overlay-icon-btn {
+    background: #ffffff;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: #000000;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .hero-card-media-bg .video-overlay-icon-btn i {
+    font-size: 0.85rem;
+  }
+
+  .hero-card-media-bg .video-overlay-icon-btn:hover {
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .hero-card-media-bg .video-overlay-icon-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  /* Dark Theme Parity for Quality Icon Button */
+  :global([data-theme="dark"]) .hero-card-media-bg .video-overlay-icon-btn {
+    background: #1c1c22;
+    color: #f5f5f7;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .hero-card-media-bg .video-overlay-icon-btn:hover {
+    background: var(--btn-brand-primary, #d4af37);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .hero-card-media-bg .video-quality-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    background: #18181c;
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 35;
+    min-width: 90px;
+  }
+
+  .hero-card-media-bg .video-quality-dropdown.hidden {
+    display: none !important;
+  }
+
+  .hero-card-media-bg .quality-opt-btn {
+    background: transparent;
+    border: none;
+    color: #f5f5f7;
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 7px 10px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.14s ease, color 0.14s ease;
+  }
+
+  .hero-card-media-bg .quality-opt-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+
+  .hero-card-media-bg .quality-opt-btn.active {
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
+    font-weight: 800;
+  }
+
+  :global([data-theme="dark"]) .hero-card-media-bg .quality-opt-btn.active {
+    background: var(--btn-brand-primary, #d4af37);
+  }
+
+  /* Center Play/Pause Button - Locked to True Center, Never Displaced */
+  .hero-card-media-bg .video-overlay-center-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.2s var(--ease-snappy), background-color 0.2s ease, box-shadow 0.2s ease, opacity 0.22s ease;
+    z-index: 15;
+  }
+
+  .hero-card-media-bg .video-overlay-center-play:hover {
+    transform: translate(-50%, -50%) scale(1.08);
+    background: var(--btn-brand-hover, #faff60);
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .hero-card-media-bg .video-overlay-center-play:active {
+    transform: translate(-50%, -50%) scale(0.95);
+    box-shadow: 1.5px 1.5px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .hero-card-media-bg .video-overlay-center-play {
+    background: var(--btn-brand-primary, #d4af37);
+    color: #000000;
+  }
+
+  :global([data-theme="dark"]) .hero-card-media-bg .video-overlay-center-play:hover {
+    background: var(--btn-brand-hover, #e5c07b);
+  }
+
+  /* Play/Pause Icon Animation Box: Dual Icon Morph */
+  .hero-card-media-bg .play-pause-icon-box {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .hero-card-media-bg .play-pause-icon-box i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 1.35rem;
+    line-height: 1;
+    transition: opacity 0.24s cubic-bezier(0.4, 0, 0.2, 1), transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center center;
+  }
+
+  /* Paused / Initial state: Play icon visible, Pause icon scaled down & rotated */
+  .hero-card-media-bg .play-pause-icon-box .icon-play {
+    transform: translate(calc(-50% + 1.5px), -50%) scale(1) rotate(0deg);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .hero-card-media-bg .play-pause-icon-box .icon-pause {
+    transform: translate(-50%, -50%) scale(0.4) rotate(-90deg);
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  /* Playing state: Play icon scales down & rotates out, Pause icon scales up & rotates in */
+  .hero-card-media-bg.is-playing:not(.is-paused) .play-pause-icon-box .icon-play {
+    transform: translate(calc(-50% + 1.5px), -50%) scale(0.4) rotate(90deg);
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .hero-card-media-bg.is-playing:not(.is-paused) .play-pause-icon-box .icon-pause {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Bottom Controls (Hint on bottom-left, Fullscreen on bottom-right) */
+  .hero-card-media-bg .video-overlay-bottom-bar {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transition: opacity 0.22s ease, transform 0.22s var(--ease-snappy);
+    z-index: 15;
+    pointer-events: none;
+  }
+
+  .hero-card-media-bg .video-overlay-bottom-bar > * {
+    pointer-events: auto;
+  }
+
+  .hero-card-media-bg .video-overlay-hint {
+    background: rgba(0, 0, 0, 0.7);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+    user-select: none;
+  }
+
+  /* Synchronized appearance & disappearance for controls overlay elements */
+  .hero-card-media-bg.controls-hidden .hero-header-actions,
+  .hero-card-media-bg.controls-hidden .hero-header-text,
+  .hero-card-media-bg.controls-hidden .hero-card-header,
+  .hero-card-media-bg .video-controls-overlay.controls-hidden ~ .hero-card-header .hero-header-actions {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.92);
+  }
+
+  .hero-card-media-bg.controls-hidden .video-overlay-center-play,
+  .hero-card-media-bg .video-controls-overlay.controls-hidden .video-overlay-center-play {
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+
+  .hero-card-media-bg.controls-hidden .video-overlay-bottom-bar,
+  .hero-card-media-bg .video-controls-overlay.controls-hidden .video-overlay-bottom-bar {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px) scale(0.92);
+  }
+
   .hero-center-play-btn {
     position: relative;
     z-index: 2;
@@ -1145,6 +1607,64 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
     font-size: 0.68rem;
     color: var(--text-muted);
     letter-spacing: 0.04em;
+  }
+
+  .hero-cover-footer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    min-height: 40px;
+    box-sizing: border-box;
+  }
+
+  .hero-cover-footer .hero-footer-yt-btn {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #ff0000;
+    border: 2px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    text-decoration: none;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+    z-index: 2;
+  }
+
+  .hero-cover-footer .hero-footer-yt-btn:hover {
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
+    transform: translateY(-50%) translate(-1px, -1px);
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .hero-cover-footer .hero-footer-yt-btn:active {
+    transform: translateY(-50%) translate(1px, 1px);
+    box-shadow: 0.5px 0.5px 0px #000000;
+  }
+
+  /* Dark Theme Parity for YouTube Footer Button */
+  :global([data-theme="dark"]) .hero-cover-footer .hero-footer-yt-btn:hover {
+    background: var(--btn-brand-primary, #d4af37);
+  }
+
+  .hero-cover-footer .hero-footer-text {
+    width: 100%;
+    text-align: center;
+    padding: 0 34px;
+    margin: 0 auto;
   }
 
   /* STATE 2: POLLS */
@@ -1820,101 +2340,184 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
     color: var(--btn-green);
   }
 
-  /* STATE 6: LIVESTREAM (Pre-Show, Live Showtime, Post-Show) */
-  .live-status-line-badge {
-    display: inline-flex;
+  /* STATE 6: LIVESTREAM (Revamped Authentic Rock Aesthetic) */
+  .hero-live-badge-row {
+    display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 3px 10px;
-    border-radius: 9999px;
-    border: 1.5px solid #000000;
-    box-shadow: 1.5px 1.5px 0px #000000;
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    user-select: none;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
   }
 
-  .preshow-badge {
+  .hero-live-tape-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    background: var(--status-danger, #ef4444);
+    color: #ffffff;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 4px;
+    font-family: var(--font-heading);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .hero-live-tape-badge.preshow-badge {
     background: #f59e0b;
     color: #000000;
   }
 
-  .live-badge {
-    background: #ef4444;
-    color: #ffffff;
-  }
-
-  .postshow-badge {
-    background: #1c1c24;
+  .hero-live-tape-badge.postshow-badge {
+    background: #27272a;
     color: #f4f4f5;
-    border-color: #000000;
   }
 
-  .status-indicator-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    display: inline-block;
-  }
-
-  .yellow-dot {
-    background: #000000;
-  }
-
-  .red-pulse-dot {
-    background: #ffffff;
-    box-shadow: 0 0 6px #ffffff;
-    animation: liveDotPulse 1.2s ease-in-out infinite;
-  }
-
-  @keyframes liveDotPulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.35); opacity: 0.7; }
-  }
-
-  .check-dot {
-    font-size: 0.75rem;
-    line-height: 1;
-    width: auto;
-    height: auto;
-  }
-
-  .status-line-text {
+  .hero-live-audience-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    background: rgba(0, 0, 0, 0.4);
+    color: #f4f4f5;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
     font-weight: 800;
-  }
-
-  .livestream-title {
-    font-family: var(--font-heading);
-    font-size: 1.12rem;
-    font-weight: 900;
-    color: var(--text-white);
-    margin: 2px 0 0 0;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
-  .livestream-subtitle {
+  .hero-live-feed-card {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10, 10, 12, 0.85);
+    border: 2px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    gap: 12px;
+  }
+
+  .hero-live-feed-card.active-live-feed {
+    border-color: #000000;
+    background: linear-gradient(135deg, rgba(20, 20, 24, 0.95) 0%, rgba(30, 15, 18, 0.9) 100%);
+    box-shadow: 3px 3px 0px #000000, 0 0 16px rgba(239, 68, 68, 0.2);
+  }
+
+  .hero-live-track-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1 1 auto;
+    text-align: left;
+  }
+
+  .track-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-live-track-label {
     font-family: var(--font-secondary);
-    font-size: 0.76rem;
+    font-size: 0.62rem;
+    font-weight: 900;
+    color: var(--status-danger, #ef4444);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .soundboard-pill {
+    font-family: var(--font-secondary);
+    font-size: 0.55rem;
+    font-weight: 800;
+    color: var(--accent-neon-yellow);
+    background: rgba(242, 253, 67, 0.12);
+    border: 1px solid rgba(242, 253, 67, 0.3);
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .hero-live-track-title {
+    font-family: var(--font-heading);
+    font-size: 1.18rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hero-live-venue-desc {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 600;
     color: var(--text-muted);
     margin: 0;
-    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Soundboard Wave Visualizer */
+  .hero-live-wave-visualizer {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 24px;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  .wave-bar {
+    width: 3.5px;
+    background: var(--status-danger, #ef4444);
+    border-radius: 2px;
+    animation: soundWaveAnim 1s ease-in-out infinite alternate;
+  }
+
+  .wave-bar.bar-1 { height: 35%; animation-delay: 0.1s; }
+  .wave-bar.bar-2 { height: 85%; animation-delay: 0.35s; }
+  .wave-bar.bar-3 { height: 100%; animation-delay: 0.2s; }
+  .wave-bar.bar-4 { height: 60%; animation-delay: 0.45s; }
+  .wave-bar.bar-5 { height: 40%; animation-delay: 0.15s; }
+
+  @keyframes soundWaveAnim {
+    0% { transform: scaleY(0.3); }
+    100% { transform: scaleY(1); }
   }
 
   .enter-live-btn {
-    background: var(--accent-neon-yellow) !important;
+    background: var(--btn-brand-primary, #f2fd43) !important;
     color: #000000 !important;
-    border: 2px solid #000000 !important;
-    box-shadow: 2px 2px 0px #000000 !important;
+    border: 3px solid #000000 !important;
+    box-shadow: 3px 3px 0px #000000 !important;
     font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  :global([data-theme="dark"]) .enter-live-btn {
+    background: var(--brand-accent-primary, #d4af37) !important;
   }
 
   .enter-live-btn:hover {
-    background: #ffffff !important;
+    background: var(--btn-brand-hover, #faff60) !important;
     transform: translate(-1px, -1px) !important;
-    box-shadow: 3px 3px 0px #000000 !important;
+    box-shadow: 4px 4px 0px #000000 !important;
   }
 
   /* STATE 7: SPOTLIGHT */

@@ -1,0 +1,835 @@
+---
+---
+
+<div
+  class="modal-backdrop request-song-modal-backdrop hidden"
+  id="requestSongModal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="requestSongPillTitle"
+  data-track-container="modal:request_song"
+>
+  <div class="request-song-sheet-wrapper" id="requestSongSheetWrapper">
+
+    <!-- Floating Pill Header (Above Bottom Sheet on Mobile / Centered on Desktop) -->
+    <div class="sheet-floating-pill-header" id="requestSongFloatingPillHeader">
+      <div class="header-spacer" aria-hidden="true"></div>
+      <div class="sheet-pill-title" id="requestSongPillTitle">
+        <i class="fa-solid fa-microphone-lines" aria-hidden="true"></i>
+        <span>Request a Cover!</span>
+      </div>
+      <button
+        type="button"
+        class="sheet-pill-close-btn brutal-press"
+        id="closeRequestSongModalBtn"
+        aria-label="Close request a cover modal"
+        data-track="request_song:close_btn"
+      >
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- Main Sheet / Modal Content -->
+    <div class="modal-content request-song-modal-enhanced" id="requestSongModalContent">
+      <!-- Mobile Drag Handle Bar -->
+      <div class="sheet-drag-handle" id="requestSongDragHandle" aria-hidden="true">
+        <span class="sheet-drag-pill"></span>
+      </div>
+
+      <div class="modal-body request-song-modal-body">
+        <!-- Form View -->
+        <div id="requestSongFormView" class="request-song-view-container">
+          <div class="request-intro-header">
+            <div class="request-intro-text">
+              <h3 class="request-headline">What should Kins cover next?</h3>
+              <p class="request-subheadline" id="requestSubheadline">Vote for tracks for upcoming gigs & sessions.</p>
+            </div>
+          </div>
+
+          <!-- Request Type Segmented Toggle: Cover Video vs Live Setlist -->
+          <div class="request-type-segmented-control" role="group" aria-label="Request Type">
+            <button
+              type="button"
+              class="request-type-tab-btn active brutal-press"
+              id="reqTypeVideoBtn"
+              data-type="video"
+              aria-pressed="true"
+            >
+              <span>Cover Video</span>
+            </button>
+            <button
+              type="button"
+              class="request-type-tab-btn brutal-press"
+              id="reqTypeSetlistBtn"
+              data-type="setlist"
+              aria-pressed="false"
+            >
+              <span>Request as Setlist</span>
+            </button>
+          </div>
+
+          <form id="requestSongModalForm" class="request-cover-form">
+            <input type="hidden" id="modalReqType" name="requestType" value="video" />
+
+            <div class="form-group">
+              <label for="modalReqSongTitle" class="form-label">Song Title <span class="req-star">*</span></label>
+              <input
+                type="text"
+                id="modalReqSongTitle"
+                name="songTitle"
+                placeholder="e.g. Disorder"
+                required
+                autocomplete="off"
+                class="brutal-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="modalReqArtist" class="form-label">Original Artist <span class="req-star">*</span></label>
+              <input
+                type="text"
+                id="modalReqArtist"
+                name="artist"
+                placeholder="e.g. Joy Division"
+                required
+                autocomplete="off"
+                class="brutal-input"
+              />
+
+              <!-- Live iTunes Artist Match Suggestions -->
+              <div class="artist-suggestions-box" id="modalArtistSuggestionsBox">
+                <div class="artist-pills-scroll-row brutal-scroll-x" id="modalArtistPillsScrollRow"></div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="modalReqReason" class="form-label">
+                <span id="modalReqReasonLabel">Why should Kins cover this?</span>
+                <span class="optional-tag">(optional)</span>
+              </label>
+              <textarea
+                id="modalReqReason"
+                name="reason"
+                rows="2"
+                placeholder="e.g. Your rhythm section style would sound unreal on this track!"
+                class="brutal-textarea"
+              ></textarea>
+            </div>
+
+            <!-- Email Notification Section (Dynamic based on subscriber status) -->
+            <div class="form-group" id="modalRequestEmailSection">
+              <label for="modalReqEmail" class="form-label">Email Address <span class="optional-tag">(optional, for release update)</span></label>
+              <input
+                type="email"
+                id="modalReqEmail"
+                name="email"
+                placeholder="fan@example.com"
+                autocomplete="email"
+                class="brutal-input"
+              />
+            </div>
+
+            <div class="request-form-actions">
+              <button type="submit" class="submit-request-btn brutal-press" id="modalSubmitRequestBtn" data-track="request_song:submit">
+                <i class="fa-solid fa-paper-plane" id="modalSubmitIcon"></i>
+                <span id="modalSubmitText">Submit Cover Request</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Success View -->
+        <div id="requestSongSuccessView" class="request-song-success-view hidden">
+          <div class="success-icon-box" id="modalSuccessIconBox">
+            <i class="fa-solid fa-circle-check" id="modalSuccessIcon"></i>
+          </div>
+          <h4 class="success-title" id="modalSuccessTitle">Cover Request Locked In!</h4>
+          <p class="success-desc" id="modalSuccessDesc">
+            Rock on! Kins added your song to the official rehearsal setlist wishlist.
+          </p>
+          <div class="success-meta-note" id="modalSuccessMetaNote">
+            <i class="fa-solid fa-envelope" id="modalSuccessMetaIcon"></i>
+            <span id="modalSuccessMetaText">You'll receive release updates when Kins records or covers this track.</span>
+          </div>
+          <div class="success-actions">
+            <button type="button" class="request-another-btn brutal-press" id="modalRequestAnotherBtn">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Request Another</span>
+            </button>
+            <button type="button" class="done-close-btn brutal-press" id="modalDoneCloseBtn">
+              <span>Back to Covers</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .request-song-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s var(--ease-snappy);
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+
+  .request-song-modal-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .request-song-modal-backdrop.hidden {
+    display: none !important;
+  }
+
+  .request-song-sheet-wrapper {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: auto;
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    animation: modalPopIn 0.25s var(--ease-snappy);
+  }
+
+  @keyframes modalPopIn {
+    from {
+      transform: scale(0.96) translateY(8px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sheetSlideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  /* Floating Header Pill */
+  .sheet-floating-pill-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    align-items: center;
+    justify-items: center;
+    width: 100%;
+    padding: 0 4px;
+    box-sizing: border-box;
+    z-index: 20;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .sheet-floating-pill-header > * {
+    pointer-events: auto;
+  }
+
+  .header-spacer {
+    width: 40px;
+    height: 40px;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .sheet-pill-title {
+    justify-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-card-panel);
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 9999px;
+    padding: 7px 20px;
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  .sheet-pill-title i {
+    color: var(--brand-accent-primary, #f2fd43);
+    font-size: 0.88rem;
+  }
+
+  [data-theme="light"] .sheet-pill-title i {
+    color: #000000;
+  }
+
+  .sheet-pill-close-btn {
+    justify-self: end;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .sheet-pill-close-btn:hover {
+    background: var(--btn-brand-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .sheet-pill-close-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 2px;
+  }
+
+  /* Main Sheet Content */
+  .request-song-modal-enhanced {
+    width: 100%;
+    background: #141416;
+    border: 3px solid #000000;
+    border-radius: 12px;
+    box-shadow: 6px 6px 0px #000000;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* Mobile Drag Handle */
+  .sheet-drag-handle {
+    display: none;
+    width: 100%;
+    padding: 10px 0 4px 0;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .sheet-drag-pill {
+    width: 44px;
+    height: 5px;
+    background: #ffffff;
+    border-radius: 999px;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  .request-song-modal-body {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-sizing: border-box;
+  }
+
+  .request-song-view-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .request-intro-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .request-intro-text {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .request-headline {
+    font-family: var(--font-heading);
+    font-size: clamp(0.92rem, 3.8vw, 1.15rem);
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0 0 2px 0;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+  }
+
+  .request-subheadline {
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  /* Segmented Toggle: Cover Video vs Request as Setlist (Side-by-side in Full View) */
+  .request-type-segmented-control {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    gap: 6px;
+    background: #0e0e10;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 3px;
+    box-shadow: 2px 2px 0px #000000;
+    box-sizing: border-box;
+    margin: 0;
+  }
+
+  .request-type-tab-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 8px;
+    border-radius: 6px;
+    border: 1.5px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-primary), sans-serif;
+    font-size: clamp(0.78rem, 2.9vw, 0.86rem);
+    font-weight: 700;
+    letter-spacing: normal;
+    text-transform: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, transform 0.16s var(--ease-tactile);
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .request-type-tab-btn#reqTypeSetlistBtn {
+    flex: 1.2 1 0;
+  }
+
+  .request-type-tab-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .request-type-tab-btn.active {
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border: 1.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    font-weight: 900;
+  }
+
+  .request-type-tab-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 2px;
+  }
+
+  .request-cover-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .form-label {
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .req-star {
+    color: var(--status-danger);
+    font-weight: 900;
+  }
+
+  .optional-tag {
+    font-weight: 600;
+    text-transform: none;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+  }
+
+  .brutal-input,
+  .brutal-textarea {
+    width: 100%;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-card-primary);
+    box-sizing: border-box;
+    outline: none;
+    transition: box-shadow 0.16s ease, border-color 0.16s ease;
+  }
+
+  .brutal-input:focus,
+  .brutal-textarea:focus {
+    box-shadow: 3px 3px 0px var(--brand-accent-primary);
+    border-color: #000000;
+  }
+
+  .brutal-textarea {
+    resize: vertical;
+    min-height: 56px;
+    line-height: 1.4;
+  }
+
+  /* Artist Match Pills */
+  .artist-suggestions-box {
+    margin-top: 4px;
+    min-height: 24px;
+  }
+
+  .artist-pills-scroll-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 0;
+  }
+
+  .artist-pills-scroll-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .artist-pills-scroll-row :global(.artist-suggestion-pill) {
+    background: var(--surface-card-panel);
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    color: var(--text-card-primary);
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    touch-action: manipulation;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .artist-pills-scroll-row :global(.artist-suggestion-pill:hover) {
+    background: var(--surface-card-panel-hover);
+    transform: translateY(-1px);
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .artist-pills-scroll-row :global(.artist-suggestion-pill.active) {
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border-color: #000000;
+    font-weight: 900;
+  }
+
+  /* Subscribed Notice Badge */
+  .subscribed-email-notice-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-card-panel);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 8px 12px;
+  }
+
+  .sub-badge-left {
+    color: #22c55e;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .sub-badge-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sub-badge-status {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: var(--text-card-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .sub-badge-text {
+    font-family: var(--font-secondary);
+    font-size: 0.72rem;
+    color: var(--text-card-secondary);
+    margin: 1px 0 0 0;
+    line-height: 1.3;
+  }
+
+  .request-form-actions {
+    margin-top: 6px;
+  }
+
+  .submit-request-btn {
+    width: 100%;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    padding: 11px 18px;
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .submit-request-btn:hover {
+    background: var(--btn-brand-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .submit-request-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Success View */
+  .request-song-success-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 16px 8px;
+  }
+
+  .request-song-success-view.hidden {
+    display: none !important;
+  }
+
+  .success-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #22c55e;
+    color: #ffffff;
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .success-title {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .success-desc {
+    font-family: var(--font-secondary);
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin: 0;
+    max-width: 360px;
+  }
+
+  .success-meta-note {
+    background: var(--surface-card-panel);
+    border: 2px solid #000000;
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text-card-secondary);
+    box-shadow: 1.5px 1.5px 0px #000000;
+  }
+
+  .success-meta-note i {
+    color: var(--text-card-primary);
+    font-size: 0.9rem;
+  }
+
+  .success-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .request-another-btn {
+    flex: 1;
+    background: var(--surface-card-panel);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--text-card-primary);
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .request-another-btn:hover {
+    background: var(--surface-card-panel-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .done-close-btn {
+    flex: 1;
+    background: var(--btn-brand-primary);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: var(--btn-brand-text);
+    font-family: var(--font-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
+  }
+
+  .done-close-btn:hover {
+    background: var(--btn-brand-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  /* Responsive: Mobile Bottom Sheet */
+  @media (max-width: 640px) {
+    .request-song-modal-backdrop {
+      align-items: flex-end;
+      padding: 0;
+    }
+
+    .request-song-sheet-wrapper {
+      max-width: 100%;
+      width: 100%;
+      margin: 0;
+      gap: 8px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      animation: sheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sheet-floating-pill-header {
+      grid-template-columns: 38px 1fr 38px;
+      padding: 0 8px;
+    }
+
+    .header-spacer {
+      width: 38px;
+      height: 38px;
+    }
+
+    .sheet-pill-title {
+      padding: 6px 16px;
+      font-size: 0.82rem;
+    }
+
+    .sheet-pill-close-btn {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      min-height: 38px;
+    }
+
+    .request-song-modal-enhanced {
+      border-radius: 14px 14px 0 0;
+      border-bottom: none;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .sheet-drag-handle {
+      display: flex;
+    }
+
+    .request-song-modal-body {
+      padding: 14px 16px 18px 16px;
+    }
+  }
+</style>
+
+<script>
+  import { initRequestSongModalController } from '../../scripts/controllers/requestSongController.js';
+  initRequestSongModalController();
+</script>

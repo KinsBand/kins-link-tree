@@ -195,6 +195,7 @@ export const METRO_COACH_TABS: readonly CoachDeckTab[] = [
 ];
 
 export type CoachSpeedUnit = 'bars' | 'beats' | 'seconds';
+export type CoachDifficulty = 'easy' | 'medium' | 'hard';
 
 export const COACH_DEFAULTS = {
   innerClock: { audibleBars: 2, mutedBars: 2, random: false },

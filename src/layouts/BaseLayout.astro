@@ -1,10 +1,13 @@
 ---
 import '../styles/global.css';
 import PagePreloader from '../components/ui/PagePreloader.astro';
+import LiveViewportFrame from '../components/live/LiveViewportFrame.astro';
 import { siteConfig } from '../settings/site.config';
 import { bandMembers } from '../settings/members.config';
 import { epkConfig } from '../settings/epk.config';
 import { bookingEmail } from '../settings/contact.config';
+
+import { primaryStreams, primarySocials, primaryCommunity } from '../settings/links.config';
 
 interface Props {
   title?: string;
@@ -24,18 +27,47 @@ const baseUrl = import.meta.env.BASE_URL;
 const siteOrigin = siteConfig.siteUrl.endsWith('/') ? siteConfig.siteUrl : `${siteConfig.siteUrl}/`;
 // Canonical: prefer explicit url prop, otherwise derive from Astro.url (correct per-page URL), fallback to siteUrl for 404/static edge cases
 const rawUrl = urlProp ?? (Astro.url ? Astro.url.href : siteConfig.siteUrl);
+const isLivePage = Astro.url ? Astro.url.pathname.endsWith('/live') || Astro.url.pathname.endsWith('/live/') : false;
 const canonicalUrl = rawUrl.startsWith('http') ? rawUrl : new URL(rawUrl.replace(/^\//, ''), siteOrigin).href;
 const absoluteImage = image.startsWith('http') ? image : new URL(image.replace(/^\//, ''), siteOrigin).href;
 
-const musicGroupSchema = {
-  '@context': 'https://schema.org',
+const sameAsUrls = [
+  ...primaryStreams.map((s) => s.url),
+  ...primarySocials.map((s) => s.url),
+  ...primaryCommunity.map((c) => c.url)
+].filter((u) => typeof u === 'string' && u.startsWith('http'));
+
+const musicGroupEntity = {
   '@type': 'MusicGroup',
+  '@id': `${siteOrigin}#kins`,
   name: epkConfig.bandName,
-  alternateName: epkConfig.handle,
-  genre: epkConfig.genreMain,
-  foundingLocation: epkConfig.origin,
-  url: canonicalUrl,
+  alternateName: [epkConfig.handle, 'Kins Band', 'KINS Newcastle', 'KINS Australia'],
+  url: siteOrigin,
   image: absoluteImage,
+  logo: absoluteImage,
+  description: epkConfig.tagline,
+  genre: [epkConfig.genreMain, ...(epkConfig.subGenres || [])],
+  foundingDate: epkConfig.yearFormed,
+  foundingLocation: {
+    '@type': 'Place',
+    name: 'Newcastle, NSW, Australia',
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Newcastle',
+      addressRegion: 'NSW',
+      addressCountry: 'AU'
+    }
+  },
+  knowsAbout: [
+    'Post-Punk',
+    'Alternative Rock',
+    'Post-Punk Revival',
+    'Indie Rock',
+    'Australian Indie Rock',
+    'Newcastle Music Scene',
+    'Live Band Performance'
+  ],
+  sameAs: sameAsUrls,
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'booking',
@@ -44,8 +76,79 @@ const musicGroupSchema = {
   member: bandMembers.map((m) => ({
     '@type': 'Person',
     name: m.name,
-    role: m.role
+    roleName: m.role,
+    knowsAbout: m.instruments
   }))
+};
+
+const webSiteEntity = {
+  '@type': 'WebSite',
+  '@id': `${siteOrigin}#website`,
+  url: siteOrigin,
+  name: 'KINS Official Hub',
+  description: siteConfig.description,
+  publisher: { '@id': `${siteOrigin}#kins` },
+  inLanguage: 'en-AU'
+};
+
+const faqEntity = {
+  '@type': 'FAQPage',
+  '@id': `${canonicalUrl}#faq`,
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Who is KINS?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'KINS is an Australian four-piece post-punk and alternative rock band from Newcastle, New South Wales, formed in 2024.'
+      }
+    },
+    {
+      '@type': 'Question',
+      name: 'What genre does KINS play?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'KINS plays Post-Punk and Alternative Rock, featuring driving rhythm urgency, wall-of-sound guitar tones, and visceral live performance energy.'
+      }
+    },
+    {
+      '@type': 'Question',
+      name: 'What artists sound like KINS?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'KINS is recommended if you like Fontaines D.C., IDLES, The Murder Capital, The Cure, and Gang of Youths.'
+      }
+    },
+    {
+      '@type': 'Question',
+      name: 'Who are the band members of KINS?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'The members of KINS are Vivian (Lead Vocals & Rhythm Guitar), Charlie (Lead Guitar & Backing Vocals), Oscar (Bass Guitar & Synthesizers), and Trai (Drums & Percussion).'
+      }
+    },
+    {
+      '@type': 'Question',
+      name: 'Where is KINS based?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'KINS is based in Newcastle, New South Wales, Australia.'
+      }
+    },
+    {
+      '@type': 'Question',
+      name: 'Where can I stream KINS music?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'You can stream KINS on Spotify, Apple Music, YouTube Music, Bandcamp, and SoundCloud.'
+      }
+    }
+  ]
+};
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [musicGroupEntity, webSiteEntity, faqEntity]
 };
 ---
 
@@ -56,11 +159,12 @@ const musicGroupSchema = {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
   <meta name="description" content={description}>
+  <meta name="keywords" content="KINS, Kins Band, KinsBandOfficial, Newcastle band, Australian post punk, alternative rock, Fontaines DC, IDLES, The Murder Capital, Gang of Youths, Newcastle music">
   <link rel="canonical" href={canonicalUrl}>
   <link rel="alternate" hreflang="en" href={canonicalUrl} />
   <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
 
-  <script type="application/ld+json" set:html={JSON.stringify(musicGroupSchema)}></script>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)}></script>
 
   <!-- Open Graph / Facebook Meta Tags -->
   <meta property="og:type" content="website">
@@ -119,6 +223,14 @@ const musicGroupSchema = {
   <script is:inline>
     (function() {
       try {
+        var savedTheme = null;
+        try { savedTheme = localStorage.getItem('kins-theme'); } catch (_) {}
+        if (savedTheme === 'standard') {
+          document.documentElement.setAttribute('data-theme', 'standard');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
         var isLowCpu = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
         var isLowRam = navigator.deviceMemory && navigator.deviceMemory <= 4;
         var isSaveData = navigator.connection && navigator.connection.saveData;
@@ -127,18 +239,13 @@ const musicGroupSchema = {
           document.documentElement.classList.add('low-power-mode');
         }
 
-        var savedTheme = localStorage.getItem('kins-theme');
-        if (savedTheme === 'standard') {
-          document.documentElement.setAttribute('data-theme', 'standard');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        }
-
         window.addEventListener('beforeinstallprompt', function(e) {
           e.preventDefault();
           window.__kinsDeferredInstallPrompt = e;
         });
-      } catch (e) {}
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
     })();
   </script>
   <!-- Vercel Web Analytics (cookieless, DNT-respecting) — script only exists when deployed -->
@@ -148,6 +255,7 @@ const musicGroupSchema = {
 </head>
 <body>
   <PagePreloader />
+  {!isLivePage && <LiveViewportFrame />}
   <slot />
 
   <script define:vars={{ baseUrl }}>

@@ -134,7 +134,23 @@ if (!isMetronomeEnabled) {
       <div class="metro-sheet-handle" id="metroSheetHandle" aria-hidden="true"></div>
 
       <section class="metro-sheet-panel" id="metroPanelTs" hidden aria-label="Time signature">
-        <p class="metro-sheet-title">TIME SIGNATURE</p>
+        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
+        <div class="sheet-floating-pill-header" id="metroTsFloatingPillHeader">
+          <div class="header-spacer" aria-hidden="true"></div>
+          <div class="sheet-pill-title" id="metroTsPillTitle">
+            <i class="fa-solid fa-clock" aria-hidden="true"></i>
+            <span>TIME SIGNATURE</span>
+          </div>
+          <button
+            type="button"
+            class="sheet-pill-close-btn brutal-press"
+            id="closeMetroTsSheetBtn"
+            aria-label="Close time signature menu"
+            data-track="metronome:ts_close"
+          >
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
         <header class="metro-sheet-head">
           <button type="button" class="metro-info-btn brutal-press" id="metroTsInfoBeats" aria-label="What do beats per bar mean?">
             <i class="fa-solid fa-info" aria-hidden="true"></i>
@@ -152,7 +168,23 @@ if (!isMetronomeEnabled) {
       </section>
 
       <section class="metro-sheet-panel" id="metroPanelSub" hidden aria-label="Subdivision">
-        <p class="metro-sheet-title">SUBDIVISION</p>
+        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
+        <div class="sheet-floating-pill-header" id="metroSubFloatingPillHeader">
+          <div class="header-spacer" aria-hidden="true"></div>
+          <div class="sheet-pill-title" id="metroSubPillTitle">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            <span>SUBDIVISION</span>
+          </div>
+          <button
+            type="button"
+            class="sheet-pill-close-btn brutal-press"
+            id="closeMetroSubSheetBtn"
+            aria-label="Close subdivision menu"
+            data-track="metronome:sub_close"
+          >
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
         <header class="metro-sheet-head">
           <button type="button" class="metro-info-btn brutal-press" id="metroSubInfo" aria-label="What are subdivisions?">
             <i class="fa-solid fa-info" aria-hidden="true"></i>
@@ -168,7 +200,23 @@ if (!isMetronomeEnabled) {
       </section>
 
       <section class="metro-sheet-panel metro-panel--setlist" id="metroPanelSetlist" hidden aria-label="Setlists and Songs">
-        <p class="metro-sheet-title" id="metroSetlistSheetMainTitle">SETLIST & SONGS</p>
+        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
+        <div class="sheet-floating-pill-header" id="metroSetlistFloatingPillHeader">
+          <div class="header-spacer" aria-hidden="true"></div>
+          <div class="sheet-pill-title" id="metroSetlistPillTitle">
+            <i class="fa-solid fa-music" aria-hidden="true"></i>
+            <span id="metroSetlistSheetMainTitle">SETLIST & SONGS</span>
+          </div>
+          <button
+            type="button"
+            class="sheet-pill-close-btn brutal-press"
+            id="closeMetroSetlistSheetBtn"
+            aria-label="Close setlist and songs menu"
+            data-track="metronome:setlist_close"
+          >
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
 
         <!-- Top 50/50 Navigation Selectors (Req 3) -->
         <div class="metro-menu-nav" id="metroMenuNav" role="tablist" aria-label="Setlist and song navigation">
@@ -466,7 +514,23 @@ if (!isMetronomeEnabled) {
       </section>
 
       <section class="metro-sheet-panel metro-panel--settings" id="metroPanelSettings" hidden aria-label="Settings">
-        <p class="metro-sheet-title">SETTINGS</p>
+        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
+        <div class="sheet-floating-pill-header" id="metroSettingsFloatingPillHeader">
+          <div class="header-spacer" aria-hidden="true"></div>
+          <div class="sheet-pill-title" id="metroSettingsPillTitle">
+            <i class="fa-solid fa-gear" aria-hidden="true"></i>
+            <span>SETTINGS</span>
+          </div>
+          <button
+            type="button"
+            class="sheet-pill-close-btn brutal-press"
+            id="closeMetroSettingsSheetBtn"
+            aria-label="Close settings menu"
+            data-track="metronome:settings_close"
+          >
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
         <div class="metro-settings-scroll" id="metroSettingsScroll">
           <p class="metro-settings-label">CLICK SOUND</p>
           <div class="metro-sound-row" id="metroSoundRow"></div>
@@ -584,26 +648,19 @@ if (!isMetronomeEnabled) {
           </div>
 
           <div class="metro-sheet-footer-card">
-            <div class="footer-theme-toggle-wrap">
-              <div class="footer-theme-toggle-btn" id="metroThemeToggleBtn" role="group" aria-label="Toggle Display Theme" data-track="metronome:theme_toggle" data-current-theme="dark" aria-pressed="true">
-                <span class="theme-current-title" id="metroThemeCurrentTitle">Dark</span>
-                <div class="theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
-                  <button type="button" class="theme-pill-btn theme-pill-light" id="metroThemePillLightBtn" data-theme-target="standard" aria-label="Light Mode" aria-pressed="false" title="Switch to Light Mode">
-                    <i class="fa-solid fa-sun" aria-hidden="true"></i>
-                  </button>
-                  <button type="button" class="theme-pill-btn active theme-pill-dark" id="metroThemePillDarkBtn" data-theme-target="dark" aria-label="Dark Mode" aria-pressed="true" title="Switch to Dark Mode">
-                    <i class="fa-solid fa-moon" aria-hidden="true"></i>
-                  </button>
-                </div>
-                <span class="theme-mode-label">Mode</span>
-              </div>
-            </div>
+            <div class="footer-theme-toggle-wrap footer-badge-row">
+              <button type="button" class="theme-pill-btn theme-pill-light brutal-press" id="metroThemePillLightBtn" data-theme-target="standard" aria-label="Light Mode" aria-pressed="false" title="Switch to Light Mode" data-track="metronome:theme_light">
+                <i class="fa-solid fa-sun" aria-hidden="true"></i>
+              </button>
 
-            <div class="footer-badge-row">
               <span class="footer-brand-badge">
                 <i class="fa-solid fa-compact-disc footer-brand-icon"></i>
                 <span class="footer-copyright-text">@<span id="metroCopyrightYear">2026</span> KINS.</span>
               </span>
+
+              <button type="button" class="theme-pill-btn active theme-pill-dark brutal-press" id="metroThemePillDarkBtn" data-theme-target="dark" aria-label="Dark Mode" aria-pressed="true" title="Switch to Dark Mode" data-track="metronome:theme_dark">
+                <i class="fa-solid fa-moon" aria-hidden="true"></i>
+              </button>
             </div>
 
             <nav class="footer-legal-links" aria-label="Legal & Feedback Links">
@@ -618,7 +675,23 @@ if (!isMetronomeEnabled) {
       </section>
 
       <section class="metro-sheet-panel metro-panel--coach" id="metroPanelCoach" hidden aria-label="Coach deck">
-        <p class="metro-sheet-title">COACH DECK</p>
+        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
+        <div class="sheet-floating-pill-header" id="metroCoachFloatingPillHeader">
+          <div class="header-spacer" aria-hidden="true"></div>
+          <div class="sheet-pill-title" id="metroCoachPillTitle">
+            <i class="fa-solid fa-dumbbell" aria-hidden="true"></i>
+            <span>COACH DECK</span>
+          </div>
+          <button
+            type="button"
+            class="sheet-pill-close-btn brutal-press"
+            id="closeMetroCoachSheetBtn"
+            aria-label="Close coach deck menu"
+            data-track="metronome:coach_close"
+          >
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
         <div class="metro-coach-tablist" id="metroCoachTablist" role="tablist" aria-label="Coach deck modules"></div>
         <div class="metro-coach-panels" id="metroCoachPanels"></div>
         <div class="metro-coach-live" id="metroCoachLive" hidden></div>
@@ -2480,31 +2553,164 @@ if (!isMetronomeEnabled) {
     gap: 10px;
   }
 
-  .metro-sheet-title {
+  /* Floating Header Pill (Above Sheet / Modal) */
+  .sheet-floating-pill-header {
     position: absolute;
-    bottom: calc(100% + 10px);
+    bottom: calc(100% + 12px);
     left: 50%;
     transform: translateX(-50%);
-    margin: 0;
-    font-family: var(--font-secondary);
-    font-size: 0.74rem;
-    font-weight: 900;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    text-align: center;
-    color: #f5f5f7;
-    line-height: 1;
-    z-index: 10;
+    width: 100%;
+    max-width: 520px;
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    align-items: center;
+    justify-items: center;
+    padding: 0 4px;
+    box-sizing: border-box;
+    z-index: 20;
+    user-select: none;
     pointer-events: none;
+    transition: transform 0.16s var(--ease-tactile);
+  }
+
+  .sheet-floating-pill-header > * {
+    pointer-events: auto;
+  }
+
+  .header-spacer {
+    width: 40px;
+    height: 40px;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .sheet-pill-title {
+    justify-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-card-panel, #f5f4ef);
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 9999px;
+    padding: 7px 20px;
+    font-family: var(--font-heading, var(--font-secondary));
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--text-card-primary, #000000);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     white-space: nowrap;
-    background: #141418;
-    border: 2px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    border-radius: var(--radius-pill);
-    padding: 6px 14px;
+    line-height: 1;
+  }
+
+  .sheet-pill-title i {
+    font-size: 0.85rem;
+    color: var(--brand-accent-primary, #f2fd43);
+  }
+
+  :global([data-theme="dark"]) .sheet-pill-title i,
+  .metro-page .sheet-pill-title i {
+    color: var(--brand-accent-primary, #f2fd43);
+  }
+
+  html[data-theme="dark"] .sheet-pill-title i,
+  :global([data-theme="dark"]) .sheet-pill-title i {
+    color: var(--brand-accent-primary, #d4af37);
+  }
+
+  .sheet-pill-close-btn {
+    justify-self: end;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: var(--btn-brand-text, #000000);
+    border: 2.5px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .sheet-pill-close-btn i {
+    font-size: 0.95rem;
+    pointer-events: none;
+  }
+
+  .sheet-pill-close-btn:hover {
+    background: var(--btn-brand-hover, #faff60);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .sheet-pill-close-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary, #f2fd43);
+    outline-offset: 2px;
+  }
+
+  .sheet-pill-close-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 640px) {
+    .sheet-floating-pill-header {
+      grid-template-columns: 38px 1fr 38px;
+      padding: 0 8px;
+    }
+
+    .header-spacer {
+      width: 38px;
+      height: 38px;
+    }
+
+    .sheet-pill-title {
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      box-shadow: 2px 2px 0px #000000;
+    }
+
+    .sheet-pill-close-btn {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      min-height: 38px;
+      border-radius: 9px;
+      box-shadow: 2px 2px 0px #000000;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .sheet-floating-pill-header {
+      grid-template-columns: 34px 1fr 34px;
+      padding: 0 6px;
+    }
+
+    .header-spacer {
+      width: 34px;
+      height: 34px;
+    }
+
+    .sheet-pill-title {
+      padding: 5px 12px;
+      font-size: 0.76rem;
+      gap: 6px;
+    }
+
+    .sheet-pill-close-btn {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      min-height: 34px;
+      border-radius: 8px;
+    }
   }
 
   .metro-sheet-subtitle {
@@ -5585,104 +5791,93 @@ if (!isMetronomeEnabled) {
     }
   }
 
-  .footer-theme-toggle-wrap {
+  /* Unified Brand Badge & Flanking Theme Icon Buttons */
+  .footer-theme-toggle-wrap,
+  .footer-badge-row {
     width: 100%;
-  }
-
-  .footer-theme-toggle-btn {
-    width: 100%;
-    min-height: 48px;
-    background: var(--surface-card-light);
-    color: var(--text-card-primary);
-    border: 3px solid #000000;
-    box-shadow: 3px 3px 0px #000000;
-    border-radius: 8px;
-    padding: 6px 16px;
-    cursor: pointer;
+    margin-top: 0;
+    margin-bottom: 2px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    user-select: none;
-    box-sizing: border-box;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
-  }
-
-  .footer-theme-toggle-btn:hover {
-    background: var(--surface-card-light-hover);
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0px #000000;
-  }
-
-  .footer-theme-toggle-btn:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px #000000;
-  }
-
-  .theme-current-title {
-    font-family: var(--font-heading, var(--font-secondary));
-    font-size: 0.92rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--text-card-primary);
-    flex: 1 1 0;
-    text-align: left;
-  }
-
-  .theme-pill-segmented {
-    display: inline-flex;
-    align-items: center;
-    background: var(--surface-input);
-    border: 2px solid #000000;
-    border-radius: 20px;
-    padding: 3px;
-    gap: 3px;
-    box-shadow: 1.5px 1.5px 0px #000000;
-    flex: 0 0 auto;
+    justify-content: center;
+    gap: 10px;
   }
 
   .theme-pill-btn {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    min-height: 30px;
-    border-radius: 50%;
-    border: 1.5px solid transparent;
-    background: transparent;
-    color: var(--text-card-muted);
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: var(--radius-sm, 6px);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    background: var(--surface-card-panel, #f5f4ef);
+    color: var(--text-card-secondary, #4b4b4b);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     padding: 0;
     margin: 0;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
+    box-sizing: border-box;
     transition: transform 0.16s var(--ease-tactile), background-color 0.18s ease, color 0.18s ease, box-shadow 0.16s ease;
   }
 
   .theme-pill-btn:hover {
-    color: var(--text-card-primary);
-    transform: scale(1.1);
+    color: var(--text-card-primary, #000000);
+    background: var(--surface-card-panel-hover, #ffffff);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .theme-pill-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   .theme-pill-btn.active {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: var(--btn-brand-text, #000000);
     border-color: #000000;
-    box-shadow: 1px 1px 0px #000000;
-    transform: scale(1.06);
+    box-shadow: 2px 2px 0px #000000;
   }
 
-  .theme-mode-label {
-    font-family: var(--font-heading, var(--font-secondary));
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--text-card-secondary);
-    flex: 1 1 0;
-    text-align: right;
+  :global([data-theme="dark"]) .theme-pill-btn {
+    background: #18181b;
+    color: var(--text-muted, #a1a1aa);
+  }
+
+  :global([data-theme="dark"]) .theme-pill-btn:hover {
+    background: #27272a;
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) .theme-pill-btn.active {
+    background: var(--btn-brand-primary, #d4af37);
+    color: var(--btn-brand-text, #000000);
+    border-color: #000000;
+  }
+
+  .footer-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: #18181b;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 0 14px;
+    height: 32px;
+    border-radius: 6px;
+    user-select: none;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   /* ---------- pitch map section inside settings ---------- */
@@ -6580,9 +6775,9 @@ if (!isMetronomeEnabled) {
     background: #141418;
     color: #f5f5f7;
   }
-  html[data-theme="standard"] .metro-sheet-title {
-    background: #ffffff;
-    color: #000000;
+  html[data-theme="standard"] .sheet-pill-title {
+    background: var(--surface-card-panel, #f5f4ef);
+    color: var(--text-card-primary, #000000);
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-sheet-handle::before {

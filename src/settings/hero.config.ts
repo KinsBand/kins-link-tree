@@ -11,9 +11,29 @@ export interface PollOption {
   icon?: string;
 }
 
+export type HeroStateName = 'upcoming' | 'release' | 'poll' | 'preview' | 'tour' | 'milestones' | 'livestream' | 'spotlight' | 'collab';
+
+export interface HeroSlideItem {
+  id: string;
+  state: HeroStateName;
+  subvar: string;
+  label: string;
+}
+
+export interface HeroCarouselConfig {
+  enabled: boolean;
+  autoPlayIntervalMs: number;
+  pauseOnHover: boolean;
+  enableSwipe: boolean;
+  slides: HeroSlideItem[];
+}
+
 export interface HeroConfig {
   // 1. ACTIVE MAIN STATE & SUB-VARIATIONS
-  activeState: 'upcoming' | 'release' | 'poll' | 'preview' | 'tour' | 'milestones' | 'livestream' | 'spotlight' | 'collab';
+  activeState: HeroStateName;
+  
+  // Carousel Configuration for Multi-Layer Featured Card
+  carousel: HeroCarouselConfig;
   
   activeUpcomingVar: 'minimal_teaser' | 'mystery_countdown';
   activeReleaseVar: 'cover_video' | 'original_single' | 'ep_preorder';
@@ -97,6 +117,7 @@ export interface HeroConfig {
       artist: string;
       durationSeconds: number;
       coverImg: string;
+      audioUrl?: string;
     };
     studio_bts: {
       title: string;
@@ -234,6 +255,43 @@ export const heroConfig: HeroConfig = {
   // ⚡ QUICK CONTROLS: CHANGE ACTIVE STATE & SUB-VARIATION HERE
   // --------------------------------------------------------------------------
   activeState: 'upcoming',
+
+  // --------------------------------------------------------------------------
+  // 🎠 MULTI-LAYER FEATURED CAROUSEL CONFIGURATION
+  // Automatic rotation, dot indicators & swipe switching across featured states
+  // --------------------------------------------------------------------------
+  carousel: {
+    enabled: false,
+    autoPlayIntervalMs: 5000,
+    pauseOnHover: true,
+    enableSwipe: true,
+    slides: [
+      {
+        id: 'cover_release',
+        state: 'release',
+        subvar: 'cover_video',
+        label: 'Cover Release'
+      },
+      {
+        id: 'next_show',
+        state: 'tour',
+        subvar: 'next_show',
+        label: 'Next Gig'
+      },
+      {
+        id: 'merch_vote',
+        state: 'poll',
+        subvar: 'merch_design',
+        label: 'Merch Vote'
+      },
+      {
+        id: 'inspired_demo',
+        state: 'preview',
+        subvar: 'inspired_demo',
+        label: 'Demo Preview'
+      }
+    ]
+  },
 
   activeUpcomingVar: 'minimal_teaser',
   activeReleaseVar: 'cover_video',
@@ -391,33 +449,33 @@ export const heroConfig: HeroConfig = {
 
   livestream: {
     preshow: {
-      statusLine: "🟡 Doors Open 7:30 PM • Set at 9:00 PM",
-      title: "KINS at The Cambridge Hotel",
+      statusLine: "Doors Open 7:30 PM • Stage Time 9:00 PM",
+      title: "The Cambridge Hotel",
       subtitle: "Headline Tour • Newcastle, NSW",
-      leftCta: "🎟️ GET TICKETS / INFO",
-      rightCta: "🔔 NOTIFY ME",
+      leftCta: "GET TICKETS",
+      rightCta: "NOTIFY ME",
       ticketsUrl: "https://www.bandsintown.com"
     },
     live_now: {
-      statusLine: "🔴 Now Playing: Midnight Electricity",
+      statusLine: "Midnight Electricity",
       title: "KINS LIVE BROADCAST",
-      subtitle: "Master Band Feed & Pit Fan-Cams",
-      leftCta: "⚡ ENTER LIVE",
-      rightCta: "📤 UPLOAD VIDEO",
+      subtitle: "The Cambridge Hotel • Soundboard Stream",
+      leftCta: "WATCH MASTER STREAM",
+      rightCta: "UPLOAD FAN-CAM",
       streamUrl: "/live",
       viewerCount: "342 watching"
     },
     postshow: {
-      statusLine: "🏁 Show Concluded • Thanks for coming!",
-      title: "Relive KINS Live in Newcastle",
-      subtitle: "Full Concert Master Replay & Fan Wall",
-      leftCta: "▶️ RELIVE SHOW (REPLAY)",
-      rightCta: "📸 UPLOAD FOOTAGE",
+      statusLine: "Show Concluded • Newcastle Encore",
+      title: "Concert Master Replay",
+      subtitle: "Full Soundboard Set & Pit Fan-Cams",
+      leftCta: "WATCH REPLAY",
+      rightCta: "FAN WALL",
       replayUrl: "/live"
     },
     upcoming_stream: {
       badge: "UPCOMING LIVESTREAM",
-      title: "Live Q&A & Unreleased Song Teaser",
+      title: "Studio Q&A & Unreleased Track Premiere",
       scheduledTime: "Tonight • 8:00 PM AEST",
       targetDate: "2026-03-01T20:00:00"
     },

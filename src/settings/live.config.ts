@@ -1,7 +1,7 @@
-﻿import type { LiveShowConfig } from '../types/live';
+import type { LiveShowConfig } from '../types/live';
 
 export const liveConfig: LiveShowConfig = {
-  enabled: true,
+  enabled: false,
   // 'offline' = honest standby page (no fabricated show).
   // Flip to 'live' + fill streamSources/setlist on gig night.
   mode: 'offline',

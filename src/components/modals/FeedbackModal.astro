@@ -91,12 +91,16 @@ const isToolsEnabled = functionalityConfig.enableKinsTools ?? false;
               </button>
               {isToolsEnabled && (
                 <>
-                  <button type="button" class="category-chip" data-category="Tuner">
-                    <ToolIcon name="tuner" size={13} /> Tuner
-                  </button>
-                  <button type="button" class="category-chip" data-category="Metronome">
-                    <ToolIcon name="metronome" size={13} /> Metronome
-                  </button>
+                  {functionalityConfig.enableTunerPage && (
+                    <button type="button" class="category-chip" data-category="Tuner">
+                      <ToolIcon name="tuner" size={13} /> Tuner
+                    </button>
+                  )}
+                  {functionalityConfig.enableMetronomePage && (
+                    <button type="button" class="category-chip" data-category="Metronome">
+                      <ToolIcon name="metronome" size={13} /> Metronome
+                    </button>
+                  )}
                 </>
               )}
             </div>

@@ -228,7 +228,7 @@ function generateWelcomeEmailHtml(email: string): string {
         <a href="https://youtube.com/@kinsbandofficial?si=NYyLEYxEDcoH21XZ" target="_blank">YouTube</a> •
         <a href="https://www.instagram.com/kinsbandofficial?igsi=M21ycDZuemZ0bDIx" target="_blank">Instagram</a> •
         <a href="https://www.tiktok.com/@kinsbandofficial?_r=1&_t=ZS-995ASSdnVsQ" target="_blank">TikTok</a> •
-        <a href="https://x.com/KinsBandOfficia" target="_blank">X</a>
+        <a href="https://x.com/KinsBandOfficial" target="_blank">X</a>
       </div>
     </div>
     <div class="email-footer">

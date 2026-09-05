@@ -20,8 +20,12 @@ const SIMULATED_CROWD_MESSAGES = [
 
 // Module-level so repeated init never stacks duplicate intervals
 let crowdChatterIntervalId = null;
+let tipsPollIntervalId = null;
+let liveChatChannel = null;
 
 export function initLiveChatController() {
+  teardownLiveChat();
+
   const chatMessagesList = document.getElementById('liveChatMessagesList');
   const chatInput = document.getElementById('liveChatInput');
   const chatSendBtn = document.getElementById('liveChatSendBtn');
@@ -201,7 +205,7 @@ export function initLiveChatController() {
   const supabaseRealtime = getSupabaseBrowserClient();
   if (supabaseRealtime) {
     try {
-      supabaseRealtime
+      liveChatChannel = supabaseRealtime
         .channel('public:live_chat')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat' }, (payload) => {
           if (payload && payload.new) {
@@ -235,8 +239,7 @@ export function initLiveChatController() {
 
   // Confirmed tip superchats — the ONLY tip source. Tips render after the
   // Ko-fi payment webhook confirms them server-side (never optimistically).
-  let tipsPollIntervalId = null;
-  let tipsCursorIso = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  tipsCursorIso = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
   function renderConfirmedTip(tip) {
     appendChatMessage({
@@ -281,4 +284,28 @@ export function initLiveChatController() {
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+export function teardownLiveChat() {
+  if (crowdChatterIntervalId !== null) {
+    clearInterval(crowdChatterIntervalId);
+    crowdChatterIntervalId = null;
+  }
+  if (tipsPollIntervalId !== null) {
+    clearInterval(tipsPollIntervalId);
+    tipsPollIntervalId = null;
+  }
+  if (liveChatChannel) {
+    try {
+      const supabase = getSupabaseBrowserClient();
+      if (supabase) {
+        supabase.removeChannel(liveChatChannel);
+      }
+    } catch (_) {}
+    liveChatChannel = null;
+  }
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('astro:before-swap', teardownLiveChat);
 }

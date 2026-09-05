@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { functionalityConfig } from '../../src/settings/functionality.config';
 
 test.describe('tier1 smoke — store page', () => {
+  test.skip(!functionalityConfig.enableMerchStore, 'Store page is currently gated');
   test('store renders navigation with HOME STORE EPK, ticker, filter bar, and product cards', async ({ page }) => {
     await page.goto('/store');
     

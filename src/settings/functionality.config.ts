@@ -10,11 +10,11 @@ export const functionalityConfig = {
   enableNewsletter: true,
   enableFollowerCounter: true,
   audioAutoPlay: false,
-  enableLivePage: true,
+  enableLivePage: false,
   enableEpkPage: false,
-  enableKinsTools: false,
+  enableKinsTools: true,
   enableTheoryPage: false,
-  enableMetronomePage: false,
+  enableMetronomePage: true,
   enableTunerPage: false,
 };
 

@@ -1,395 +1,10 @@
 import { showToast } from './toast.js';
 import { getITunesTrackData, loadAlbumArt, INSPIRED_ARTISTS_DATA, INSPIRATION_TRACKS, prefetchTrackArtwork, ITUNES_CACHE } from './inspirationVault.js';
+import { VinylGrooveEngine } from './vinylGrooveEngine.js';
 
 let isPlayingAudio = false;
 let currentPlayingTrack = null;
 let hasTransitionedToActive = false;
-
-// Realistic Web Audio API Vinyl Scratch Synthesizer
-class VinylScratchSynthesizer {
-  constructor() {
-    this.ctx = null;
-    this.noiseBuffer = null;
-    this.noiseNode = null;
-    this.filterNode = null;
-    this.oscNode = null;
-    this.gainNode = null;
-    this.isPlaying = false;
-  }
-
-  init() {
-    if (this.ctx) return;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    this.ctx = new AudioCtx();
-
-    const sampleRate = this.ctx.sampleRate;
-    const bufferSize = sampleRate * 2;
-    const noiseBuffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      const white = Math.random() * 2 - 1;
-      const crackle = Math.random() > 0.994 ? (Math.random() * 1.8 - 0.9) : 0;
-      output[i] = white * 0.12 + crackle;
-    }
-    this.noiseBuffer = noiseBuffer;
-  }
-
-  playNeedleDrop() {
-    this.playVinylNeedleSpinUp();
-  }
-
-  playVinylNeedleSpinUp() {
-    try {
-      this.init();
-      if (!this.ctx) return;
-      if (this.ctx.state === 'suspended') this.ctx.resume();
-
-      const now = this.ctx.currentTime;
-
-      // 1. Mechanical stylus contact thump (needle physically landing on vinyl groove)
-      const thumpOsc = this.ctx.createOscillator();
-      const thumpGain = this.ctx.createGain();
-      thumpOsc.type = 'triangle';
-      thumpOsc.frequency.setValueAtTime(190, now);
-      thumpOsc.frequency.exponentialRampToValueAtTime(26, now + 0.08);
-
-      thumpGain.gain.setValueAtTime(0.22, now);
-      thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
-
-      thumpOsc.connect(thumpGain);
-      thumpGain.connect(this.ctx.destination);
-      thumpOsc.start(now);
-      thumpOsc.stop(now + 0.09);
-
-      // 2. Diamond stylus micro-click impact
-      const clickOsc = this.ctx.createOscillator();
-      const clickGain = this.ctx.createGain();
-      clickOsc.type = 'sawtooth';
-      clickOsc.frequency.setValueAtTime(3600, now);
-      clickOsc.frequency.exponentialRampToValueAtTime(500, now + 0.02);
-
-      clickGain.gain.setValueAtTime(0.12, now);
-      clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
-
-      clickOsc.connect(clickGain);
-      clickGain.connect(this.ctx.destination);
-      clickOsc.start(now);
-      clickOsc.stop(now + 0.03);
-
-      // 3. Vinyl groove surface friction & rising acceleration whoosh (from 0 to 33 RPM)
-      if (this.noiseBuffer) {
-        const noiseSrc = this.ctx.createBufferSource();
-        noiseSrc.buffer = this.noiseBuffer;
-
-        const spinFilter = this.ctx.createBiquadFilter();
-        spinFilter.type = 'bandpass';
-        spinFilter.frequency.setValueAtTime(280, now);
-        spinFilter.frequency.exponentialRampToValueAtTime(3400, now + 0.7);
-        spinFilter.Q.setValueAtTime(2.8, now);
-
-        const noiseGain = this.ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.001, now);
-        noiseGain.gain.linearRampToValueAtTime(0.14, now + 0.06);
-        noiseGain.gain.setValueAtTime(0.10, now + 0.45);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
-
-        noiseSrc.connect(spinFilter);
-        spinFilter.connect(noiseGain);
-        noiseGain.connect(this.ctx.destination);
-
-        noiseSrc.start(now);
-        noiseSrc.stop(now + 0.9);
-      }
-
-      // 4. Turntable motor torque low-frequency whirr acceleration
-      const motorOsc = this.ctx.createOscillator();
-      const motorGain = this.ctx.createGain();
-      motorOsc.type = 'sawtooth';
-      motorOsc.frequency.setValueAtTime(42, now);
-      motorOsc.frequency.exponentialRampToValueAtTime(130, now + 0.65);
-
-      const motorFilter = this.ctx.createBiquadFilter();
-      motorFilter.type = 'lowpass';
-      motorFilter.frequency.setValueAtTime(160, now);
-
-      motorGain.gain.setValueAtTime(0.001, now);
-      motorGain.gain.linearRampToValueAtTime(0.05, now + 0.1);
-      motorGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
-
-      motorOsc.connect(motorFilter);
-      motorFilter.connect(motorGain);
-      motorGain.connect(this.ctx.destination);
-      motorOsc.start(now);
-      motorOsc.stop(now + 0.8);
-    } catch (e) {
-      console.warn('Vinyl spin-up audio error:', e);
-    }
-  }
-
-  playVinylNeedleSpinDown(durationMs = 600) {
-    try {
-      this.init();
-      if (!this.ctx) return;
-      if (this.ctx.state === 'suspended') this.ctx.resume();
-
-      const now = this.ctx.currentTime;
-      const durationSec = durationMs / 1000;
-
-      // 1. Stylus needle lift pop / friction unstick sound right as pausing begins
-      const liftPopOsc = this.ctx.createOscillator();
-      const liftPopGain = this.ctx.createGain();
-      liftPopOsc.type = 'triangle';
-      liftPopOsc.frequency.setValueAtTime(260, now);
-      liftPopOsc.frequency.exponentialRampToValueAtTime(40, now + 0.055);
-
-      liftPopGain.gain.setValueAtTime(0.18, now);
-      liftPopGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-
-      liftPopOsc.connect(liftPopGain);
-      liftPopGain.connect(this.ctx.destination);
-      liftPopOsc.start(now);
-      liftPopOsc.stop(now + 0.065);
-
-      // 2. Vinyl groove friction decelerating downward in frequency & speed
-      if (this.noiseBuffer) {
-        const noiseSrc = this.ctx.createBufferSource();
-        noiseSrc.buffer = this.noiseBuffer;
-
-        const brakeFilter = this.ctx.createBiquadFilter();
-        brakeFilter.type = 'bandpass';
-        brakeFilter.frequency.setValueAtTime(2900, now);
-        brakeFilter.frequency.exponentialRampToValueAtTime(140, now + durationSec);
-        brakeFilter.Q.setValueAtTime(2.6, now);
-
-        const noiseGain = this.ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.14, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + durationSec);
-
-        noiseSrc.connect(brakeFilter);
-        brakeFilter.connect(noiseGain);
-        noiseGain.connect(this.ctx.destination);
-
-        noiseSrc.start(now);
-        noiseSrc.stop(now + durationSec + 0.05);
-      }
-
-      // 3. Motor spin-down deceleration hum
-      const motorOsc = this.ctx.createOscillator();
-      const motorGain = this.ctx.createGain();
-      motorOsc.type = 'sawtooth';
-      motorOsc.frequency.setValueAtTime(115, now);
-      motorOsc.frequency.exponentialRampToValueAtTime(22, now + durationSec);
-
-      const motorFilter = this.ctx.createBiquadFilter();
-      motorFilter.type = 'lowpass';
-      motorFilter.frequency.setValueAtTime(140, now);
-
-      motorGain.gain.setValueAtTime(0.04, now);
-      motorGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
-
-      motorOsc.connect(motorFilter);
-      motorFilter.connect(motorGain);
-      motorGain.connect(this.ctx.destination);
-      motorOsc.start(now);
-      motorOsc.stop(now + durationSec + 0.05);
-
-      // 4. Subtle diamond stylus disengage click at standstill
-      setTimeout(() => {
-        try {
-          if (!this.ctx) return;
-          const stopNow = this.ctx.currentTime;
-          const clickOsc = this.ctx.createOscillator();
-          const clickGain = this.ctx.createGain();
-          clickOsc.type = 'triangle';
-          clickOsc.frequency.setValueAtTime(110, stopNow);
-          clickOsc.frequency.exponentialRampToValueAtTime(30, stopNow + 0.04);
-
-          clickGain.gain.setValueAtTime(0.10, stopNow);
-          clickGain.gain.exponentialRampToValueAtTime(0.001, stopNow + 0.04);
-
-          clickOsc.connect(clickGain);
-          clickGain.connect(this.ctx.destination);
-          clickOsc.start(stopNow);
-          clickOsc.stop(stopNow + 0.05);
-        } catch (e) {}
-      }, Math.max(0, durationMs - 40));
-    } catch (e) {
-      console.warn('Vinyl spin-down audio error:', e);
-    }
-  }
-
-  startScratch() {
-    try {
-      this.init();
-      if (!this.ctx) return;
-      if (this.ctx.state === 'suspended') this.ctx.resume();
-      if (this.isPlaying) return;
-
-      const now = this.ctx.currentTime;
-
-      // Master Scratch Output Bus
-      this.gainNode = this.ctx.createGain();
-      this.gainNode.gain.setValueAtTime(0.001, now);
-
-      // Resonant Turntable Platter Bandpass Filter (Formant character)
-      this.filterNode = this.ctx.createBiquadFilter();
-      this.filterNode.type = 'bandpass';
-      this.filterNode.frequency.setValueAtTime(1400, now);
-      this.filterNode.Q.setValueAtTime(4.8, now);
-
-      // Vinyl Surface Crackle & Friction Noise Node
-      this.noiseNode = this.ctx.createBufferSource();
-      this.noiseNode.buffer = this.noiseBuffer;
-      this.noiseNode.loop = true;
-      this.noiseNode.connect(this.filterNode);
-
-      // Primary DJ Scratch Carrier Oscillator
-      this.oscNode = this.ctx.createOscillator();
-      this.oscNode.type = 'sawtooth';
-      this.oscNode.frequency.setValueAtTime(260, now);
-
-      // Sub-harmonic FM Modulator (Adds gritty vinyl friction texture)
-      this.modNode = this.ctx.createOscillator();
-      this.modNode.type = 'triangle';
-      this.modNode.frequency.setValueAtTime(45, now);
-
-      this.modGain = this.ctx.createGain();
-      this.modGain.gain.setValueAtTime(35, now);
-      this.modNode.connect(this.modGain);
-      this.modGain.connect(this.oscNode.frequency);
-
-      const oscGain = this.ctx.createGain();
-      oscGain.gain.setValueAtTime(0.35, now);
-      this.oscNode.connect(oscGain);
-      oscGain.connect(this.filterNode);
-
-      this.filterNode.connect(this.gainNode);
-      this.gainNode.connect(this.ctx.destination);
-
-      this.noiseNode.start(now);
-      this.oscNode.start(now);
-      this.modNode.start(now);
-      this.isPlaying = true;
-      this.lastVelocity = 0;
-    } catch (e) {
-      console.warn('Start scratch error:', e);
-    }
-  }
-
-  updateScratch(velocity) {
-    if (!this.isPlaying || !this.ctx) return;
-    const now = this.ctx.currentTime;
-    const speed = Math.abs(velocity);
-    const direction = velocity >= 0 ? 1 : -1;
-    const isHardScratch = speed > 0.25;
-
-    // Detect sudden direction reversal for classic DJ "wicka" chirp pop
-    if (this.lastVelocity && Math.sign(velocity) !== Math.sign(this.lastVelocity) && speed > 0.18) {
-      this.playScratchChirp(direction);
-    }
-    this.lastVelocity = velocity;
-
-    // Dynamic output gain based on velocity
-    const targetGain = isHardScratch
-      ? Math.min(0.65, 0.15 + speed * 0.45)
-      : Math.min(0.28, Math.max(0.02, speed * 0.22));
-
-    this.gainNode.gain.cancelScheduledValues(now);
-    this.gainNode.gain.setTargetAtTime(targetGain, now, 0.012);
-
-    // DJ formant frequency sweep based on scrubbing speed & direction
-    let targetFreq = direction > 0
-      ? (320 + Math.pow(speed, 0.9) * 1100)
-      : (190 + Math.pow(speed, 0.9) * 750);
-    targetFreq = Math.min(3800, Math.max(80, targetFreq));
-
-    this.oscNode.frequency.cancelScheduledValues(now);
-    this.oscNode.frequency.setTargetAtTime(targetFreq, now, 0.012);
-
-    // Dynamic bandpass filter center sweep
-    const filterFreq = Math.min(6800, Math.max(600, 1100 + speed * 2400));
-    this.filterNode.frequency.cancelScheduledValues(now);
-    this.filterNode.frequency.setTargetAtTime(filterFreq, now, 0.012);
-    this.filterNode.Q.setTargetAtTime(isHardScratch ? 6.2 : 3.5, now, 0.02);
-
-    if (this.modGain) {
-      this.modGain.gain.setTargetAtTime(Math.min(120, 20 + speed * 80), now, 0.015);
-    }
-
-    if (this.noiseNode && this.noiseNode.playbackRate) {
-      const rate = Math.min(3.5, Math.max(0.3, speed * 1.2));
-      this.noiseNode.playbackRate.setTargetAtTime(rate, now, 0.012);
-    }
-  }
-
-  playScratchChirp(direction = 1) {
-    try {
-      if (!this.ctx) return;
-      const now = this.ctx.currentTime;
-      const chirpOsc = this.ctx.createOscillator();
-      const chirpGain = this.ctx.createGain();
-      const chirpFilter = this.ctx.createBiquadFilter();
-
-      chirpOsc.type = 'sawtooth';
-      chirpFilter.type = 'bandpass';
-      chirpFilter.Q.setValueAtTime(5.5, now);
-
-      if (direction > 0) {
-        chirpOsc.frequency.setValueAtTime(450, now);
-        chirpOsc.frequency.exponentialRampToValueAtTime(1400, now + 0.045);
-        chirpFilter.frequency.setValueAtTime(900, now);
-        chirpFilter.frequency.exponentialRampToValueAtTime(2800, now + 0.045);
-      } else {
-        chirpOsc.frequency.setValueAtTime(1200, now);
-        chirpOsc.frequency.exponentialRampToValueAtTime(320, now + 0.045);
-        chirpFilter.frequency.setValueAtTime(2600, now);
-        chirpFilter.frequency.exponentialRampToValueAtTime(800, now + 0.045);
-      }
-
-      chirpGain.gain.setValueAtTime(0.35, now);
-      chirpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
-
-      chirpOsc.connect(chirpFilter);
-      chirpFilter.connect(chirpGain);
-      chirpGain.connect(this.ctx.destination);
-
-      chirpOsc.start(now);
-      chirpOsc.stop(now + 0.05);
-    } catch (e) {}
-  }
-
-  stopScratch() {
-    if (!this.isPlaying || !this.ctx) return;
-    try {
-      const now = this.ctx.currentTime;
-      if (this.gainNode) {
-        this.gainNode.gain.cancelScheduledValues(now);
-        this.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
-      }
-      setTimeout(() => {
-        if (this.noiseNode) {
-          try { this.noiseNode.stop(); } catch (e) {}
-          this.noiseNode.disconnect();
-          this.noiseNode = null;
-        }
-        if (this.oscNode) {
-          try { this.oscNode.stop(); } catch (e) {}
-          this.oscNode.disconnect();
-          this.oscNode = null;
-        }
-        if (this.modNode) {
-          try { this.modNode.stop(); } catch (e) {}
-          this.modNode.disconnect();
-          this.modNode = null;
-        }
-        this.isPlaying = false;
-      }, 80);
-    } catch (e) {
-      this.isPlaying = false;
-    }
-  }
-}
 
 // --- Unified 60/120 FPS Vinyl Dynamics & Multi-Instance Sync Engine ---
 let globalVinylAngle = 0;
@@ -637,23 +252,43 @@ export function initAudioPlayer() {
   const vaultAudioPlayer = document.getElementById('vaultAudioPlayer');
 
   const audioBarTimelineProgress = document.getElementById('audioBarTimelineProgress');
+  const grooveRailTrack = document.getElementById('grooveRailTrack');
+  const deckTimelineGroove = document.getElementById('deckTimelineGroove');
+  const audioPlayerAnnouncer = document.getElementById('audioPlayerAnnouncer');
   const vinylStylusWrapper = document.getElementById('vinylStylusWrapper');
   const audioBarTime = document.getElementById('audioBarTime');
 
   const streamDrawerPanel = document.getElementById('streamDrawerPanel');
   const streamDrawerSongName = document.getElementById('streamDrawerSongName');
+  const streamDrawerSongBtn = document.getElementById('streamDrawerSongBtn');
+  const streamDrawerCopyIcon = document.getElementById('streamDrawerCopyIcon');
   const streamLinkSpotify = document.getElementById('streamLinkSpotify');
   const streamLinkApple = document.getElementById('streamLinkApple');
   const streamLinkYoutube = document.getElementById('streamLinkYoutube');
   const streamLinkAmazon = document.getElementById('streamLinkAmazon');
   const streamLinkSoundcloud = document.getElementById('streamLinkSoundcloud');
-  const streamLinkDeezer = document.getElementById('streamLinkDeezer');
-  const streamLinkTidal = document.getElementById('streamLinkTidal');
   const streamLinkBandcamp = document.getElementById('streamLinkBandcamp');
-  const streamLinkAudiomack = document.getElementById('streamLinkAudiomack');
-  const streamLinkQobuz = document.getElementById('streamLinkQobuz');
 
-  const vinylScratchSynth = new VinylScratchSynthesizer();
+  // Tactile Mobile Haptic Feedback calibrated to song groove density
+  function triggerHaptic(type = 'click') {
+    if (typeof navigator === 'undefined' || !navigator.vibrate) return;
+    const hapticStyle = vinylGrooveEngine?.currentProfile?.hapticType || 'medium';
+    try {
+      if (type === 'click') {
+        navigator.vibrate(12);
+      } else if (type === 'needle') {
+        if (hapticStyle === 'heavy') navigator.vibrate([18, 25, 12]);
+        else if (hapticStyle === 'light') navigator.vibrate([8, 10, 6]);
+        else navigator.vibrate([14, 18, 10]);
+      } else if (type === 'scrub') {
+        if (hapticStyle === 'heavy') navigator.vibrate(8);
+        else if (hapticStyle === 'light') navigator.vibrate(3);
+        else navigator.vibrate(5);
+      }
+    } catch (e) {}
+  }
+
+  const vinylGrooveEngine = new VinylGrooveEngine();
   let isScrubbing = false;
   let lastX = 0;
   let lastTime = 0;
@@ -673,14 +308,22 @@ export function initAudioPlayer() {
 
     const elements = [cover1, cover2, cover3];
 
+    elements.forEach((imgEl) => {
+      if (!imgEl) return;
+      const fallback = imgEl.parentElement ? imgEl.parentElement.querySelector('.stack-fallback-icon') : null;
+      if (imgEl.src && !imgEl.classList.contains('hidden')) {
+        if (fallback) fallback.style.display = 'none';
+      }
+    });
+
     featured.forEach(async (item, index) => {
       const imgEl = elements[index];
       if (!imgEl) return;
+      const fallback = imgEl.parentElement ? imgEl.parentElement.querySelector('.stack-fallback-icon') : null;
       try {
         const meta = await getITunesTrackData(item.artist, item.title);
         if (meta && meta.artworkUrl) {
           await loadAlbumArt(imgEl, meta.artworkUrl, meta.rawArtworkUrl);
-          const fallback = imgEl.parentElement ? imgEl.parentElement.querySelector('.stack-fallback-icon') : null;
           if (fallback) fallback.style.display = 'none';
         }
       } catch (err) {
@@ -765,24 +408,34 @@ export function initAudioPlayer() {
     const pct = Math.min(100, Math.max(0, (currentTime / duration) * 100));
 
     if (audioBarTimelineProgress) audioBarTimelineProgress.style.transform = `scaleX(${pct / 100})`;
+    if (grooveRailTrack) grooveRailTrack.style.transform = `scaleX(${pct / 100})`;
     setStylusPosition(pct);
     if (audioBarTime) {
       audioBarTime.textContent = `${formatTime(currentTime)} / 0:30`;
     }
   }
 
-  // Stylus slides via compositor-friendly translateX (px derived from the cached section rect)
+  // Stylus slides via compositor-friendly translateX (px derived strictly from inner clientWidth)
   function setStylusPosition(pct) {
     if (!vinylStylusWrapper) return;
-    let rect = cachedMusicSectionRect;
-    if (!rect || rect.width === 0) {
-      const musicSection = document.getElementById('deckMusicSection');
-      if (!musicSection) return;
-      rect = musicSection.getBoundingClientRect();
-      cachedMusicSectionRect = rect;
+    const musicSection = document.getElementById('deckMusicSection');
+    if (!musicSection) return;
+
+    // clientWidth is the exact inner width between borders (where left: 0 is anchored)
+    const trackWidth = musicSection.clientWidth;
+    if (!trackWidth || trackWidth <= 0) return;
+
+    const clampedPct = Math.min(100, Math.max(0, pct));
+    const needleX = trackWidth * (clampedPct / 100);
+
+    // Exactly centers the 22px stylus needle (offset 11px) on needleX
+    vinylStylusWrapper.style.transform = `translateX(${needleX - 11}px)`;
+
+    if (deckTimelineGroove) {
+      const curSec = Math.round((clampedPct / 100) * 30);
+      deckTimelineGroove.setAttribute('aria-valuenow', curSec.toString());
+      deckTimelineGroove.setAttribute('aria-valuetext', `${formatTime(curSec)} of 0:30`);
     }
-    const x = rect.width * (Math.min(100, Math.max(0, pct)) / 100);
-    vinylStylusWrapper.style.transform = `translateX(${x - 11}px)`;
   }
 
   function runVinylPhysicsStep(now) {
@@ -838,10 +491,16 @@ export function initAudioPlayer() {
 
   function seekToPosition(clientX) {
     if (!vaultAudioPlayer) return;
-    const rect = cachedMusicSectionRect;
-    if (!rect || rect.width === 0) return;
+    const musicSection = document.getElementById('deckMusicSection');
+    if (!musicSection) return;
 
-    const pctRatio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const rect = musicSection.getBoundingClientRect();
+    const borderLeft = musicSection.clientLeft || 3;
+    const trackWidth = musicSection.clientWidth || (rect.width - 6);
+    if (!trackWidth || trackWidth <= 0) return;
+
+    const innerX = clientX - (rect.left + borderLeft);
+    const pctRatio = Math.max(0, Math.min(1, innerX / trackWidth));
     const pct = pctRatio * 100;
     const duration = 30;
     const newTime = pctRatio * duration;
@@ -851,6 +510,7 @@ export function initAudioPlayer() {
     }
 
     if (audioBarTimelineProgress) audioBarTimelineProgress.style.transform = `scaleX(${pctRatio})`;
+    if (grooveRailTrack) grooveRailTrack.style.transform = `scaleX(${pctRatio})`;
     setStylusPosition(pct);
     if (audioBarTime) {
       audioBarTime.textContent = `${formatTime(newTime)} / 0:30`;
@@ -876,8 +536,11 @@ export function initAudioPlayer() {
     lastTime = performance.now();
     lastVinylFrameTime = performance.now();
 
-    vinylScratchSynth.playNeedleDrop();
-    vinylScratchSynth.startScratch();
+    vinylGrooveEngine.playNeedleDrop();
+    const curTime = vaultAudioPlayer ? (vaultAudioPlayer.currentTime || 0) : 0;
+    const normPos = Math.max(0, Math.min(1, curTime / 30));
+    vinylGrooveEngine.startScratch(curTime, normPos);
+    triggerHaptic('needle');
     seekToPosition(clientX);
     return true;
   }
@@ -909,8 +572,11 @@ export function initAudioPlayer() {
       }
     }
 
-    // Dynamic turntablist DJ scratch audio synthesis
-    vinylScratchSynth.updateScratch(velocity);
+    // Dynamic dual-layer song-specific groove scratch & inner groove distortion
+    const curTime = vaultAudioPlayer ? (vaultAudioPlayer.currentTime || 0) : 0;
+    const normPos = Math.max(0, Math.min(1, curTime / 30));
+    vinylGrooveEngine.updateScratch(velocity, curTime, normPos);
+    triggerHaptic('scrub');
 
     seekToPosition(clientX);
   }
@@ -926,7 +592,7 @@ export function initAudioPlayer() {
       vinylStylusWrapper.classList.remove('tilt-forward', 'tilt-backward');
     }
 
-    vinylScratchSynth.stopScratch();
+    vinylGrooveEngine.stopScratch();
 
     if (vaultAudioPlayer) {
       vaultAudioPlayer.playbackRate = 1.0;
@@ -1038,9 +704,18 @@ export function initAudioPlayer() {
     }, { passive: true });
   }
 
+  function cleanSearchQuery(artist, title) {
+    const cleanTitle = (title || '')
+      .replace(/\s*[\(\[](?:(?:\d{4}\s+)?(?:re)?master(?:ed)?|live|deluxe|bonus|mono|stereo|anniversary|expanded|edition|version)[^\)\]]*[\)\]]/gi, '')
+      .replace(/\s*-\s*(?:(?:\d{4}\s+)?(?:re)?master(?:ed)?|live|mono|stereo).*/gi, '')
+      .trim();
+    const cleanArtist = (artist || 'Kins').trim();
+    return encodeURIComponent(`${cleanArtist} ${cleanTitle}`);
+  }
+
   function updateStreamLinks(trackObj) {
     if (!trackObj) return;
-    const query = encodeURIComponent(`${trackObj.artist || 'Kins'} ${trackObj.title}`);
+    const query = cleanSearchQuery(trackObj.artist, trackObj.title);
     if (streamDrawerSongName) streamDrawerSongName.textContent = `"${trackObj.title}"`;
 
     if (streamLinkSpotify) streamLinkSpotify.href = `https://open.spotify.com/search/${query}`;
@@ -1048,11 +723,104 @@ export function initAudioPlayer() {
     if (streamLinkYoutube) streamLinkYoutube.href = `https://music.youtube.com/search?q=${query}`;
     if (streamLinkAmazon) streamLinkAmazon.href = `https://music.amazon.com/search/${query}`;
     if (streamLinkSoundcloud) streamLinkSoundcloud.href = `https://soundcloud.com/search?q=${query}`;
-    if (streamLinkDeezer) streamLinkDeezer.href = `https://www.deezer.com/search/${query}`;
-    if (streamLinkTidal) streamLinkTidal.href = `https://listen.tidal.com/search?q=${query}`;
     if (streamLinkBandcamp) streamLinkBandcamp.href = `https://bandcamp.com/search?q=${query}`;
-    if (streamLinkAudiomack) streamLinkAudiomack.href = `https://audiomack.com/search?q=${query}`;
-    if (streamLinkQobuz) streamLinkQobuz.href = `https://www.qobuz.com/search?q=${query}`;
+  }
+
+  async function copySongInfoToClipboard() {
+    const rawSong = streamDrawerSongName?.textContent?.replace(/^["']|["']$/g, '').trim();
+    const artistName = (currentPlayingTrack && currentPlayingTrack.artist) ? currentPlayingTrack.artist.trim() : 'Kins';
+    const songTitle = (currentPlayingTrack && currentPlayingTrack.title) ? currentPlayingTrack.title.trim() : (rawSong || 'Track');
+
+    const copyText = `${songTitle} by ${artistName}`;
+
+    let copied = false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(copyText);
+        copied = true;
+      } catch (err) {}
+    }
+
+    if (!copied) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = copyText;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (err) {}
+    }
+
+    triggerHaptic('click');
+
+    if (streamDrawerSongBtn) {
+      streamDrawerSongBtn.classList.add('is-copied');
+      if (streamDrawerCopyIcon) {
+        streamDrawerCopyIcon.className = 'fa-solid fa-check copy-hint-icon';
+      }
+      setTimeout(() => {
+        if (streamDrawerSongBtn) streamDrawerSongBtn.classList.remove('is-copied');
+        if (streamDrawerCopyIcon) streamDrawerCopyIcon.className = 'fa-regular fa-copy copy-hint-icon';
+      }, 1800);
+    }
+
+    showToast(`Copied: "${songTitle}" by ${artistName}`);
+  }
+
+  if (streamDrawerSongBtn) {
+    streamDrawerSongBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      copySongInfoToClipboard();
+    });
+  }
+
+  function updateMediaSession(trackObj, coverUrl) {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !trackObj) return;
+    try {
+      const artwork = [];
+      if (coverUrl) {
+        artwork.push({ src: coverUrl, sizes: '300x300', type: 'image/webp' });
+        artwork.push({ src: coverUrl, sizes: '512x512', type: 'image/webp' });
+      }
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: trackObj.title,
+        artist: `${trackObj.artist || 'Kins'} (KINS Inspiration)`,
+        album: 'KINS Studio Inspiration Vault',
+        artwork: artwork.length > 0 ? artwork : undefined
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (audioBarToggleBtn) audioBarToggleBtn.click();
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (audioBarToggleBtn) audioBarToggleBtn.click();
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        playNextMixSong();
+      });
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        playNextMixSong();
+      });
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (vaultAudioPlayer && details.seekTime !== undefined) {
+          vaultAudioPlayer.currentTime = Math.min(30, Math.max(0, details.seekTime));
+          updateTimelineUI();
+        }
+      });
+      navigator.mediaSession.playbackState = 'playing';
+    } catch (e) {}
+  }
+
+  function updateMediaSessionState(playing) {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+    } catch (e) {}
   }
 
   function toggleStreamDrawer(forceOpen) {
@@ -1117,6 +885,7 @@ export function initAudioPlayer() {
       stopVinylSpinSmoothly(audioBarIconBox, playing);
     }
 
+    updateMediaSessionState(playing);
     notifyPlaybackState();
   }
 
@@ -1141,51 +910,87 @@ export function initAudioPlayer() {
   let mixQueue = [];
   let autoMixTimeout = null;
 
+  let currentFadeRaf = null;
+
   function cancelFade() {
     if (currentFadeInterval) {
       clearInterval(currentFadeInterval);
       currentFadeInterval = null;
     }
+    if (currentFadeRaf !== null) {
+      cancelAnimationFrame(currentFadeRaf);
+      currentFadeRaf = null;
+    }
+    isFadingOut = false;
   }
 
-  function fadeAudioVolume(startVol, targetVol, durationMs) {
+  function fadeAudioVolume(startVol, targetVol, durationMs, expectedStopGeneration = null) {
     return new Promise((resolve) => {
       if (!vaultAudioPlayer) return resolve();
       cancelFade();
 
-      vaultAudioPlayer.volume = Math.max(0, Math.min(1, startVol));
-      if (durationMs <= 0 || startVol === targetVol) {
-        vaultAudioPlayer.volume = Math.max(0, Math.min(1, targetVol));
+      try {
+        vaultAudioPlayer.volume = Math.max(0, Math.min(1, startVol));
+      } catch (e) {
         return resolve();
       }
 
-      const stepMs = 40;
-      const totalSteps = Math.max(1, Math.floor(durationMs / stepMs));
-      const delta = (targetVol - startVol) / totalSteps;
-      let currentStep = 0;
+      if (durationMs <= 0 || startVol === targetVol) {
+        try {
+          vaultAudioPlayer.volume = Math.max(0, Math.min(1, targetVol));
+        } catch (e) {}
+        return resolve();
+      }
 
-      currentFadeInterval = setInterval(() => {
-        currentStep++;
-        const newVol = startVol + (delta * currentStep);
-        if (currentStep >= totalSteps) {
-          if (vaultAudioPlayer) vaultAudioPlayer.volume = Math.max(0, Math.min(1, targetVol));
+      const startTime = performance.now();
+
+      function step(now) {
+        if (expectedStopGeneration !== null && expectedStopGeneration !== vinylStopGeneration) {
           cancelFade();
-          resolve();
-        } else {
-          if (vaultAudioPlayer) vaultAudioPlayer.volume = Math.max(0, Math.min(1, newVol));
+          return resolve();
         }
-      }, stepMs);
+
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / durationMs);
+        // Smooth sine ease curve for natural acoustic volume roll-off
+        const ease = Math.sin((progress * Math.PI) / 2);
+        const newVol = startVol + (targetVol - startVol) * ease;
+
+        try {
+          if (vaultAudioPlayer) {
+            vaultAudioPlayer.volume = Math.max(0, Math.min(1, newVol));
+          }
+        } catch (e) {}
+
+        if (progress < 1) {
+          currentFadeRaf = requestAnimationFrame(step);
+        } else {
+          try {
+            if (vaultAudioPlayer) {
+              vaultAudioPlayer.volume = Math.max(0, Math.min(1, targetVol));
+            }
+          } catch (e) {}
+          currentFadeRaf = null;
+          isFadingOut = false;
+          resolve();
+        }
+      }
+
+      currentFadeRaf = requestAnimationFrame(step);
     });
   }
 
-  function fadeOutAudio(durationMs = 2200) {
+  function fadeOutAudio(durationMs = 450, expectedStopGen = null) {
     if (!vaultAudioPlayer || vaultAudioPlayer.paused) return Promise.resolve();
     isFadingOut = true;
-    const currentVol = vaultAudioPlayer.volume;
-    return fadeAudioVolume(currentVol, 0, durationMs);
+    let currentVol = 1.0;
+    try {
+      currentVol = typeof vaultAudioPlayer.volume === 'number' ? vaultAudioPlayer.volume : 1.0;
+    } catch (e) {}
+    return fadeAudioVolume(currentVol, 0, durationMs, expectedStopGen);
   }
 
-  function fadeInAudio(durationMs = 1800, targetVol = 1.0) {
+  function fadeInAudio(durationMs = 1200, targetVol = 1.0) {
     if (!vaultAudioPlayer) return Promise.resolve();
     isFadingOut = false;
     isEndingSong = false;
@@ -1329,83 +1134,41 @@ export function initAudioPlayer() {
       clearInterval(vinylSpeedInterval);
       vinylSpeedInterval = null;
     }
-  }
-
-  function rampVinylSpeedUp(durationMs = 580, startRate = 0.35) {
-    if (!vaultAudioPlayer) return;
-    cancelVinylSpeedRamp();
-
-    try {
-      vaultAudioPlayer.preservesPitch = false;
-      if (vaultAudioPlayer.mozPreservesPitch !== undefined) vaultAudioPlayer.mozPreservesPitch = false;
-      if (vaultAudioPlayer.webkitPreservesPitch !== undefined) vaultAudioPlayer.webkitPreservesPitch = false;
-    } catch (e) {}
-
-    vaultAudioPlayer.playbackRate = startRate;
-    const startTime = performance.now();
-    const stepMs = 25;
-
-    vinylSpeedInterval = setInterval(() => {
-      const elapsed = performance.now() - startTime;
-      const progress = Math.min(1, elapsed / durationMs);
-      // Realistic turntable torque spin-up curve
-      const currentRate = startRate + (1.0 - startRate) * Math.pow(progress, 1.35);
-
-      if (vaultAudioPlayer) {
-        vaultAudioPlayer.playbackRate = Math.min(1.0, parseFloat(currentRate.toFixed(3)));
-      }
-
-      if (progress >= 1) {
-        cancelVinylSpeedRamp();
-        if (vaultAudioPlayer) {
-          vaultAudioPlayer.playbackRate = 1.0;
-        }
-      }
-    }, stepMs);
-  }
-
-  function rampVinylSpeedDown(durationMs = 550, endRate = 0.12) {
-    return new Promise((resolve) => {
-      if (!vaultAudioPlayer) return resolve();
-      cancelVinylSpeedRamp();
-
+    if (vaultAudioPlayer) {
+      vaultAudioPlayer.playbackRate = 1.0;
       try {
-        vaultAudioPlayer.preservesPitch = false;
-        if (vaultAudioPlayer.mozPreservesPitch !== undefined) vaultAudioPlayer.mozPreservesPitch = false;
-        if (vaultAudioPlayer.webkitPreservesPitch !== undefined) vaultAudioPlayer.webkitPreservesPitch = false;
+        vaultAudioPlayer.preservesPitch = true;
+        if (vaultAudioPlayer.mozPreservesPitch !== undefined) vaultAudioPlayer.mozPreservesPitch = true;
+        if (vaultAudioPlayer.webkitPreservesPitch !== undefined) vaultAudioPlayer.webkitPreservesPitch = true;
       } catch (e) {}
+    }
+  }
 
-      const startRate = vaultAudioPlayer.playbackRate || 1.0;
-      const startTime = performance.now();
-      const stepMs = 25;
+  // Strictly preserve 1.0x playback rate for audio while visual rotation accelerates smoothly
+  function rampVinylSpeedUp() {
+    cancelVinylSpeedRamp();
+  }
 
-      vinylSpeedInterval = setInterval(() => {
-        const elapsed = performance.now() - startTime;
-        const progress = Math.min(1, elapsed / durationMs);
-        // Realistic turntable motor brake deceleration curve
-        const currentRate = startRate - (startRate - endRate) * Math.pow(progress, 1.25);
-
-        if (vaultAudioPlayer) {
-          vaultAudioPlayer.playbackRate = Math.max(endRate, parseFloat(currentRate.toFixed(3)));
-        }
-
-        if (progress >= 1) {
-          cancelVinylSpeedRamp();
-          if (vaultAudioPlayer) {
-            vaultAudioPlayer.playbackRate = endRate;
-          }
-          resolve();
-        }
-      }, stepMs);
-    });
+  function rampVinylSpeedDown() {
+    cancelVinylSpeedRamp();
+    return Promise.resolve();
   }
 
   function triggerNeedleDropAndSpinUp(isResume = false) {
-    if (vinylScratchSynth) {
-      vinylScratchSynth.playVinylNeedleSpinUp();
+    if (vinylGrooveEngine) {
+      vinylGrooveEngine.playVinylNeedleSpinUp();
     }
     startVinylSpin(isResume ? 0.45 : 0.25);
-    rampVinylSpeedUp(isResume ? 480 : 580, isResume ? 0.48 : 0.35);
+    cancelVinylSpeedRamp();
+
+    if (vaultAudioPlayer) {
+      vaultAudioPlayer.playbackRate = 1.0;
+      try {
+        vaultAudioPlayer.preservesPitch = true;
+        if (vaultAudioPlayer.mozPreservesPitch !== undefined) vaultAudioPlayer.mozPreservesPitch = true;
+        if (vaultAudioPlayer.webkitPreservesPitch !== undefined) vaultAudioPlayer.webkitPreservesPitch = true;
+      } catch (e) {}
+    }
 
     if (vinylStylusWrapper) {
       vinylStylusWrapper.classList.remove('needle-drop-bounce');
@@ -1426,9 +1189,9 @@ export function initAudioPlayer() {
     if (!vaultAudioPlayer || vaultAudioPlayer.paused) return;
     const stopGeneration = ++vinylStopGeneration;
 
-    // 1. Play vinyl surface deceleration & brake noise
-    if (vinylScratchSynth) {
-      vinylScratchSynth.playVinylNeedleSpinDown(durationMs);
+    // 1. Play procedural vinyl surface deceleration & brake noise
+    if (vinylGrooveEngine) {
+      vinylGrooveEngine.playVinylNeedleSpinDown(durationMs);
     }
 
     // 2. Animate stylus tonearm disengage lift
@@ -1443,23 +1206,28 @@ export function initAudioPlayer() {
       stopVinylSpin(true, durationMs);
     }
 
-    // 3. Audio pitch wind-down and volume fade-out simultaneously
-    const speedPromise = rampVinylSpeedDown(durationMs, 0.12);
-    const fadePromise = fadeOutAudio(durationMs);
+    // 3. Silky smooth, stutter-free volume fade-out:
+    // Strictly preserve playbackRate = 1.0 so WebKit/Blink resamplers NEVER stutter or glitch.
+    // Smoothly ramp volume down to 0 via requestAnimationFrame over durationMs.
+    cancelVinylSpeedRamp();
 
-    await Promise.all([speedPromise, fadePromise]);
+    await fadeOutAudio(durationMs, stopGeneration);
 
     // Superseded by a resume/newer transition — leave playback alone
     if (stopGeneration !== vinylStopGeneration) return;
 
     if (vaultAudioPlayer) {
       vaultAudioPlayer.pause();
-      vaultAudioPlayer.playbackRate = 1.0;
+      try {
+        vaultAudioPlayer.volume = 1.0;
+        vaultAudioPlayer.playbackRate = 1.0;
+      } catch (e) {}
     }
 
     if (morphToSquare) {
       isPlayingAudio = false;
       stopTimelineAnimation();
+      updateMediaSessionState(false);
     }
   }
 
@@ -1492,10 +1260,10 @@ export function initAudioPlayer() {
     const transitionId = ++currentTransitionId;
 
     // 0. Synchronously unlock Web Audio API context on mobile touch/click
-    if (vinylScratchSynth) {
-      vinylScratchSynth.init();
-      if (vinylScratchSynth.ctx && vinylScratchSynth.ctx.state === 'suspended') {
-        vinylScratchSynth.ctx.resume().catch(() => {});
+    if (vinylGrooveEngine) {
+      vinylGrooveEngine.init();
+      if (vinylGrooveEngine.ctx && vinylGrooveEngine.ctx.state === 'suspended') {
+        vinylGrooveEngine.ctx.resume().catch(() => {});
       }
     }
 
@@ -1507,6 +1275,7 @@ export function initAudioPlayer() {
         vinylStopGeneration++;
         cancelFade();
         cancelVinylSpeedRamp();
+        triggerHaptic('click');
         updateToggleBtnState(true);
         triggerNeedleDropAndSpinUp(true);
         if (vaultAudioPlayer) {
@@ -1519,6 +1288,7 @@ export function initAudioPlayer() {
         }
         showToast(`Resumed: "${trackObj.title}"`);
       } else {
+        triggerHaptic('click');
         updateToggleBtnState(false);
         showToast(`Paused: "${trackObj.title}"`);
         await triggerVinylSpinDownAndStop(450, true);
@@ -1558,6 +1328,9 @@ export function initAudioPlayer() {
 
       currentPlayingTrack = trackObj;
       updateStreamLinks(currentPlayingTrack);
+      if (vinylGrooveEngine) {
+        vinylGrooveEngine.loadTrack(currentPlayingTrack);
+      }
 
       if (audioBarTitle) {
         audioBarTitle.textContent = trackObj.title;
@@ -1578,6 +1351,10 @@ export function initAudioPlayer() {
       if (audioBarTimelineProgress) {
         audioBarTimelineProgress.style.transition = '';
         audioBarTimelineProgress.style.transform = 'scaleX(0)';
+      }
+      if (grooveRailTrack) {
+        grooveRailTrack.style.transition = '';
+        grooveRailTrack.style.transform = 'scaleX(0)';
       }
       if (vinylStylusWrapper) {
         vinylStylusWrapper.style.transition = '';
@@ -1611,6 +1388,10 @@ export function initAudioPlayer() {
             isPlayingAudio = true;
             startTimelineAnimation();
             updateToggleBtnState(true);
+            updateMediaSession(trackObj, cUrl);
+            if (audioPlayerAnnouncer) {
+              audioPlayerAnnouncer.textContent = `Now playing: ${trackObj.title} by ${trackObj.artist || 'Kins'}`;
+            }
             showToast(`Now Playing: "${trackObj.title}" by ${trackObj.artist}`);
             const upcoming = peekNextTrack();
             if (upcoming) {
@@ -1712,6 +1493,7 @@ export function initAudioPlayer() {
   if (audioBarToggleBtn) {
     audioBarToggleBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
+      triggerHaptic('click');
       if (!currentPlayingTrack) {
         startAutoMix();
         return;
@@ -1771,6 +1553,7 @@ export function initAudioPlayer() {
   function pauseAudioCleanly() {
     if (!isPlayingAudio) return;
     cancelVinylSpeedRamp();
+    if (vinylGrooveEngine) vinylGrooveEngine.stopScratch();
     isPlayingAudio = false;
     updateToggleBtnState(false);
     if (vaultAudioPlayer) {
@@ -1786,8 +1569,18 @@ export function initAudioPlayer() {
 
   // 1. Smooth fade-out audio when leaving website, switching tabs, minimizing browser, or locking screen
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && isPlayingAudio) {
-      fadeOutAndPauseCleanly(600);
+    if (document.hidden) {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      if (isPlayingAudio) {
+        fadeOutAndPauseCleanly(600);
+      }
+    } else {
+      if (isPlayingAudio) {
+        startTimelineAnimation();
+      }
     }
   });
 
@@ -1809,6 +1602,55 @@ export function initAudioPlayer() {
     }
   });
 
+  // Desktop Keyboard Shortcuts (Space to play/pause, Arrows to seek, N for next song, M for mute, S for streaming)
+  function initKeyboardShortcuts() {
+    window.addEventListener('keydown', (e) => {
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
+        return;
+      }
+      if (document.body.classList.contains('modal-open')) {
+        return;
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (audioBarToggleBtn) {
+          audioBarToggleBtn.click();
+        }
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        if (vaultAudioPlayer && currentPlayingTrack) {
+          vaultAudioPlayer.currentTime = Math.max(0, (vaultAudioPlayer.currentTime || 0) - 5);
+          updateTimelineUI();
+          triggerHaptic('scrub');
+        }
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        if (vaultAudioPlayer && currentPlayingTrack) {
+          vaultAudioPlayer.currentTime = Math.min(30, (vaultAudioPlayer.currentTime || 0) + 5);
+          updateTimelineUI();
+          triggerHaptic('scrub');
+        }
+      } else if (e.code === 'KeyN') {
+        e.preventDefault();
+        playNextMixSong();
+        triggerHaptic('click');
+      } else if (e.code === 'KeyS') {
+        e.preventDefault();
+        toggleStreamDrawer();
+      } else if (e.code === 'KeyM') {
+        e.preventDefault();
+        if (vaultAudioPlayer) {
+          vaultAudioPlayer.muted = !vaultAudioPlayer.muted;
+          showToast(vaultAudioPlayer.muted ? 'Audio Muted' : 'Audio Unmuted', 'music');
+        }
+      }
+    });
+  }
+
+  initKeyboardShortcuts();
+
   // 2. Smooth fade-out audio when clicking external links (e.g. Spotify, Apple Music, social channels)
   document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
@@ -1826,11 +1668,11 @@ export function initAudioPlayer() {
   // 3. One-time gesture listener to unlock Web Audio API & HTML5 Audio on mobile
   function initAudioUnlock() {
     const unlock = () => {
-      if (vinylScratchSynth) {
+      if (vinylGrooveEngine) {
         try {
-          vinylScratchSynth.init();
-          if (vinylScratchSynth.ctx && vinylScratchSynth.ctx.state === 'suspended') {
-            vinylScratchSynth.ctx.resume().catch(() => {});
+          vinylGrooveEngine.init();
+          if (vinylGrooveEngine.ctx && vinylGrooveEngine.ctx.state === 'suspended') {
+            vinylGrooveEngine.ctx.resume().catch(() => {});
           }
         } catch (e) {}
       }

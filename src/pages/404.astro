@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout
@@ -10,7 +11,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <span class="nf-badge">ERROR 404</span>
     <h1 class="nf-title">DEAD AIR</h1>
     <p class="nf-subtext">This page never made it to setlist. The show you're looking for is back at the hub.</p>
-    <a href="/" class="nf-home-btn brutal-press">
+    <a href={baseUrl} class="nf-home-btn brutal-press">
       <i class="fa-solid fa-house"></i>
       <span>BACK TO KINS</span>
     </a>

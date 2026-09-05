@@ -2,6 +2,12 @@
 import { epkConfig } from '../../settings/epk.config';
 import { functionalityConfig } from '../../settings/functionality.config';
 
+interface Props {
+  isLivePage?: boolean;
+}
+
+const { isLivePage = false } = Astro.props;
+
 const baseUrl = import.meta.env.BASE_URL;
 const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.enabled ?? true);
 const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
@@ -9,56 +15,57 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
 
 <footer class="site-footer">
   <div class="footer-inner-card">
-    <!-- Theme Selector Segmented Control -->
-    <div class="footer-theme-toggle-wrap">
-      <div
-        class="footer-theme-toggle-btn"
-        id="themeToggleBtn"
-        role="group"
-        aria-label="Toggle Display Theme"
-        data-track="footer:theme_toggle"
-        data-current-theme="dark"
-        aria-pressed="true"
+    <!-- Unified Brand Badge & Flanking Theme Icon Buttons -->
+    <div class="footer-theme-toggle-wrap footer-badge-row">
+      <button
+        type="button"
+        class="theme-pill-btn theme-pill-light brutal-press"
+        id="themePillLightBtn"
+        data-theme-target="standard"
+        aria-label="Light Mode"
+        aria-pressed="false"
+        title="Switch to Light Mode"
+        data-track="footer:theme_light"
       >
-        <span class="theme-current-title" id="themeCurrentTitle">Dark</span>
-        <div class="theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
-          <button
-            type="button"
-            class="theme-pill-btn theme-pill-light"
-            id="themePillLightBtn"
-            data-theme-target="standard"
-            aria-label="Light Mode"
-            aria-pressed="false"
-            title="Switch to Light Mode"
-          >
-            <i class="fa-solid fa-sun" aria-hidden="true"></i>
-          </button>
-          <button
-            type="button"
-            class="theme-pill-btn active theme-pill-dark"
-            id="themePillDarkBtn"
-            data-theme-target="dark"
-            aria-label="Dark Mode"
-            aria-pressed="true"
-            title="Switch to Dark Mode"
-          >
-            <i class="fa-solid fa-moon" aria-hidden="true"></i>
-          </button>
-        </div>
-        <span class="theme-mode-label">Mode</span>
-      </div>
-    </div>
+        <i class="fa-solid fa-sun" aria-hidden="true"></i>
+      </button>
 
-    <!-- Official Brand Badge -->
-    <div class="footer-badge-row">
       <span class="footer-brand-badge">
         <i class="fa-solid fa-compact-disc footer-brand-icon" aria-hidden="true"></i>
         <span class="footer-copyright-text">@<span id="copyrightYear">2026</span> KINS.</span>
       </span>
+
+      <button
+        type="button"
+        class="theme-pill-btn active theme-pill-dark brutal-press"
+        id="themePillDarkBtn"
+        data-theme-target="dark"
+        aria-label="Dark Mode"
+        aria-pressed="true"
+        title="Switch to Dark Mode"
+        data-track="footer:theme_dark"
+      >
+        <i class="fa-solid fa-moon" aria-hidden="true"></i>
+      </button>
     </div>
 
-    <!-- Compact Single-Row Navigation: [STORE] • [EPK] • [FEEDBACK] • [LEGAL] -->
+    <!-- Compact Single-Row Navigation: [HOME] • [STORE] • [EPK] • [FEEDBACK] • [LEGAL] -->
     <nav class="footer-nav-row" aria-label="Site Links and Legal Navigation">
+      {isLivePage && (
+        <>
+          <a
+            href={baseUrl}
+            class="footer-nav-item footer-nav-link footer-home-pill"
+            data-track="footer:nav_home"
+            title="Back to Kins Main Hub"
+          >
+            <i class="fa-solid fa-house" style="margin-right: 4px; font-size: 0.65rem;"></i>
+            HOME
+          </a>
+          <span class="footer-nav-dot" aria-hidden="true">•</span>
+        </>
+      )}
+
       {isStoreEnabled && (
         <>
           <a
@@ -106,7 +113,144 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
         LEGAL
       </button>
     </nav>
+
+    <!-- ========================================================================= -->
+    <!-- Interactive Footer FAQ Accordion (Option 2: Centered Half-Width Pill)    -->
+    <!-- ========================================================================= -->
+    <div class="footer-faq-wrap" id="footerFaqWrap">
+      <div class="footer-faq-card" id="footerFaqCard">
+        <!-- Adaptive Header Button: Serves as standalone pill or dropdown top bar -->
+        <button
+          type="button"
+          id="footerFaqToggleBtn"
+          class="footer-faq-btn brutal-press"
+          aria-expanded="false"
+          aria-controls="footerFaqTray"
+          data-track="footer:faq_toggle"
+          title="Explore Frequently Asked Questions about KINS"
+        >
+          <span class="faq-btn-left">
+            <i class="fa-solid fa-circle-question faq-icon" aria-hidden="true"></i>
+            <span class="faq-title">BAND FAQ</span>
+          </span>
+          <span class="faq-btn-right">
+            <i class="fa-solid fa-chevron-down faq-chevron" id="footerFaqChevron" aria-hidden="true"></i>
+          </span>
+        </button>
+
+        <!-- Expandable Dropdown Tray (Integrated directly under the header) -->
+        <div
+          id="footerFaqTray"
+          class="footer-faq-tray hidden"
+          role="region"
+          aria-labelledby="footerFaqToggleBtn"
+        >
+          <div class="footer-faq-tray-inner">
+            <!-- Scrollable questions container -->
+            <div class="faq-scroll-container" id="faqScrollContainer" role="region" aria-label="Questions list">
+            <details class="faq-accordion-item">
+              <summary class="faq-accordion-summary brutal-press">
+                <span class="faq-summary-left">
+                  <i class="fa-solid fa-circle-info faq-item-icon" aria-hidden="true"></i>
+                  <span class="faq-question-text">Who is KINS?</span>
+                </span>
+                <i class="fa-solid fa-chevron-down faq-item-chevron" aria-hidden="true"></i>
+              </summary>
+              <div class="faq-answer-content">
+                <p class="faq-answer-text">
+                  KINS is an Australian four-piece post-punk and alternative rock band hailing from Newcastle, New South Wales, formed in 2024.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-accordion-item">
+              <summary class="faq-accordion-summary brutal-press">
+                <span class="faq-summary-left">
+                  <i class="fa-solid fa-guitar faq-item-icon" aria-hidden="true"></i>
+                  <span class="faq-question-text">What genre does KINS play?</span>
+                </span>
+                <i class="fa-solid fa-chevron-down faq-item-chevron" aria-hidden="true"></i>
+              </summary>
+              <div class="faq-answer-content">
+                <p class="faq-answer-text">
+                  KINS plays Post-Punk and Alternative Rock, featuring driving rhythm section urgency, atmospheric wall-of-sound guitar textures, and visceral live performance energy.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-accordion-item">
+              <summary class="faq-accordion-summary brutal-press">
+                <span class="faq-summary-left">
+                  <i class="fa-solid fa-music faq-item-icon" aria-hidden="true"></i>
+                  <span class="faq-question-text">What artists sound similar to KINS?</span>
+                </span>
+                <i class="fa-solid fa-chevron-down faq-item-chevron" aria-hidden="true"></i>
+              </summary>
+              <div class="faq-answer-content">
+                <p class="faq-answer-text">
+                  Recommended If You Like (RIYL): <strong>Fontaines D.C., IDLES, The Murder Capital, The Cure, and Gang of Youths</strong>.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-accordion-item">
+              <summary class="faq-accordion-summary brutal-press">
+                <span class="faq-summary-left">
+                  <i class="fa-solid fa-users faq-item-icon" aria-hidden="true"></i>
+                  <span class="faq-question-text">Who are the band members of KINS?</span>
+                </span>
+                <i class="fa-solid fa-chevron-down faq-item-chevron" aria-hidden="true"></i>
+              </summary>
+              <div class="faq-answer-content">
+                <p class="faq-answer-text">
+                  Vivian (Lead Vocals & Rhythm Guitar), Charlie (Lead Guitar & Backing Vocals), Oscar (Bass Guitar & Synthesizers), and Trai (Drums & Percussion).
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-accordion-item">
+              <summary class="faq-accordion-summary brutal-press">
+                <span class="faq-summary-left">
+                  <i class="fa-solid fa-location-dot faq-item-icon" aria-hidden="true"></i>
+                  <span class="faq-question-text">Where is KINS based?</span>
+                </span>
+                <i class="fa-solid fa-chevron-down faq-item-chevron" aria-hidden="true"></i>
+              </summary>
+              <div class="faq-answer-content">
+                <p class="faq-answer-text">
+                  Newcastle, New South Wales, Australia (Hunter Region • East Coast • roughly 2 hours north of Sydney).
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-accordion-item">
+              <summary class="faq-accordion-summary brutal-press">
+                <span class="faq-summary-left">
+                  <i class="fa-solid fa-calendar-check faq-item-icon" aria-hidden="true"></i>
+                  <span class="faq-question-text">How can venues and promoters book KINS?</span>
+                </span>
+                <i class="fa-solid fa-chevron-down faq-item-chevron" aria-hidden="true"></i>
+              </summary>
+              <div class="faq-answer-content">
+                <p class="faq-answer-text">
+                  For live booking, festival appearances, and tour routing, email <strong>BookingsKinsBand@gmail.com</strong>.
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <!-- Tray Footer -->
+          <div class="faq-tray-footer">
+            <button type="button" id="closeFooterFaqBtn" class="faq-close-trigger brutal-press">
+              <span>Close</span>
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 </footer>
 
 <style>
@@ -145,116 +289,75 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
     text-align: center;
   }
 
-  /* Full-Width Theme Toggle Button & Segmented Pill Control */
-  .footer-theme-toggle-wrap {
+  /* Unified Brand Badge & Flanking Theme Icon Buttons */
+  .footer-theme-toggle-wrap,
+  .footer-badge-row {
     width: 100%;
     margin-top: 0;
     margin-bottom: 2px;
-  }
-
-  .footer-theme-toggle-btn {
-    width: 100%;
-    min-height: 48px;
-    background: var(--surface-card-light);
-    color: var(--text-card-primary);
-    border: 3px solid #000000;
-    box-shadow: 3px 3px 0px #000000;
-    border-radius: 8px;
-    padding: 6px 16px;
-    cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    user-select: none;
-    box-sizing: border-box;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
-  }
-
-  .footer-theme-toggle-btn:hover {
-    background: var(--surface-card-light-hover);
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0px #000000;
-  }
-
-  .footer-theme-toggle-btn:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px #000000;
-  }
-
-  .theme-current-title {
-    font-family: var(--font-heading, var(--font-secondary));
-    font-size: 0.92rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--text-card-primary);
-    flex: 1 1 0;
-    text-align: left;
-  }
-
-  .theme-pill-segmented {
-    display: inline-flex;
-    align-items: center;
-    background: var(--surface-input);
-    border: 2px solid #000000;
-    border-radius: 20px;
-    padding: 3px;
-    gap: 3px;
-    box-shadow: 1.5px 1.5px 0px #000000;
-    flex: 0 0 auto;
+    justify-content: center;
+    gap: 10px;
   }
 
   .theme-pill-btn {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    min-height: 30px;
-    border-radius: 50%;
-    border: 1.5px solid transparent;
-    background: transparent;
-    color: var(--text-card-muted);
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: var(--radius-sm, 6px);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    background: var(--surface-card-panel, #f5f4ef);
+    color: var(--text-card-secondary, #4b4b4b);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     padding: 0;
     margin: 0;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
+    box-sizing: border-box;
     transition: transform 0.16s var(--ease-tactile), background-color 0.18s ease, color 0.18s ease, box-shadow 0.16s ease;
   }
 
   .theme-pill-btn:hover {
-    color: var(--text-card-primary);
-    transform: scale(1.1);
+    color: var(--text-card-primary, #000000);
+    background: var(--surface-card-panel-hover, #ffffff);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .theme-pill-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   .theme-pill-btn.active {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: var(--btn-brand-text, #000000);
     border-color: #000000;
-    box-shadow: 1px 1px 0px #000000;
-    transform: scale(1.06);
+    box-shadow: 2px 2px 0px #000000;
   }
 
-  .theme-mode-label {
-    font-family: var(--font-heading, var(--font-secondary));
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--text-card-secondary);
-    flex: 1 1 0;
-    text-align: right;
+  :global([data-theme="dark"]) .theme-pill-btn {
+    background: #18181b;
+    color: var(--text-muted, #a1a1aa);
+  }
+
+  :global([data-theme="dark"]) .theme-pill-btn:hover {
+    background: #27272a;
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) .theme-pill-btn.active {
+    background: var(--btn-brand-primary, #d4af37);
+    color: var(--btn-brand-text, #000000);
+    border-color: #000000;
   }
 
   /* Official Brand Badge */
-  .footer-badge-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   .footer-brand-badge {
     display: inline-flex;
     align-items: center;
@@ -268,9 +371,11 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
     font-size: 0.78rem;
     font-weight: 900;
     letter-spacing: 0.08em;
-    padding: 5px 14px;
+    padding: 0 14px;
+    height: 32px;
     border-radius: 6px;
     user-select: none;
+    box-sizing: border-box;
     transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
@@ -348,4 +453,398 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
       letter-spacing: 0.06em;
     }
   }
+
+  /* ==========================================================================
+     Footer FAQ Accordion Styles (Option 2: Centered Brutalist Pill)
+     ========================================================================== */
+
+  .footer-faq-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 14px;
+    position: relative;
+    z-index: 5;
+  }
+
+  /* Trigger Button & Adaptive Card */
+  .footer-faq-card {
+    width: 100%;
+    max-width: 340px;
+    background: var(--surface-card-panel);
+    border: var(--border-brutal-sm);
+    box-shadow: var(--shadow-brutal-black);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: max-width 0.22s var(--ease-snappy), box-shadow 0.2s ease, transform 0.16s var(--ease-tactile);
+  }
+
+  .footer-faq-card:not(.is-open):hover {
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .footer-faq-card.is-open {
+    max-width: 480px;
+    box-shadow: var(--shadow-brutal-black-lg, 4px 4px 0px #000000);
+  }
+
+  /* Trigger Button: Top header of the dropdown */
+  .footer-faq-btn {
+    width: 100% !important;
+    min-height: 44px;
+    background: transparent;
+    color: var(--text-card-primary);
+    border: none;
+    padding: 10px 18px !important;
+    cursor: pointer;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    user-select: none;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    position: relative;
+    transition: background-color 0.16s ease;
+  }
+
+  .footer-faq-btn:hover {
+    background: var(--surface-card-panel-hover);
+  }
+
+  .footer-faq-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: -2px;
+  }
+
+  /* When open: button forms the top bar with a clean divider */
+  .footer-faq-card.is-open .footer-faq-btn {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.14);
+    background: var(--surface-card-panel);
+  }
+
+  :global([data-theme="dark"]) .footer-faq-card.is-open .footer-faq-btn {
+    border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* Left container: Icon + Title locked in single horizontal row */
+  .faq-btn-left {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .faq-icon {
+    color: #000000;
+    font-size: 0.95rem;
+    flex-shrink: 0 !important;
+  }
+
+  :global([data-theme="dark"]) .faq-icon {
+    color: #d4af37;
+  }
+
+  .faq-title {
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-card-primary);
+    white-space: nowrap !important;
+    line-height: 1;
+    display: inline-block !important;
+  }
+
+  /* Right container: Chevron arrow toggle */
+  .faq-btn-right {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Chevron serves as top-right arrow toggle */
+  .faq-chevron {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 0.76rem !important;
+    line-height: 1 !important;
+    color: #000000;
+    flex-shrink: 0 !important;
+    transform-origin: center center !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  :global([data-theme="dark"]) .faq-chevron {
+    color: #d4af37;
+  }
+
+  /* Expandable Dropdown Tray with Fluid Accordion Animation */
+  .footer-faq-tray {
+    width: 100%;
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    box-sizing: border-box;
+    transition: grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0.28s;
+  }
+
+  .footer-faq-tray.is-open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .footer-faq-tray.hidden {
+    display: none;
+  }
+
+  .footer-faq-tray-inner {
+    overflow: hidden;
+    min-height: 0;
+    padding: 0 14px;
+    box-sizing: border-box;
+    transition: padding 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .footer-faq-tray.is-open .footer-faq-tray-inner {
+    padding: 12px 14px 14px;
+  }
+
+  /* Full-View Questions Container: Allows multiple open questions to be viewed simultaneously without inner scroll trapping */
+  .faq-scroll-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+  }
+
+  /* Collapsible Accordion Items */
+  .faq-accordion-item {
+    background: #ffffff;
+    border: 1.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: background-color 0.18s ease;
+  }
+
+  :global([data-theme="dark"]) .faq-accordion-item {
+    background: #141418;
+    border: 1.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .faq-accordion-summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    user-select: none;
+    background: transparent;
+    transition: background-color 0.16s ease;
+  }
+
+  .faq-accordion-summary::-webkit-details-marker,
+  .faq-accordion-summary::marker {
+    display: none;
+  }
+
+  .faq-accordion-summary:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  :global([data-theme="dark"]) .faq-accordion-summary:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .faq-accordion-item[open] > .faq-accordion-summary {
+    border-bottom: 1.5px solid #000000;
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  :global([data-theme="dark"]) .faq-accordion-item[open] > .faq-accordion-summary {
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .faq-summary-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .faq-item-icon {
+    color: #000000;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+  }
+
+  :global([data-theme="dark"]) .faq-item-icon {
+    color: #d4af37;
+  }
+
+  .faq-question-text {
+    font-family: var(--font-primary, 'Space Grotesk', sans-serif);
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #000000;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  :global([data-theme="dark"]) .faq-question-text {
+    color: #f4f4f6;
+  }
+
+  .faq-item-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    font-size: 0.72rem;
+    color: #000000;
+    flex-shrink: 0;
+    transform-origin: center center;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  :global([data-theme="dark"]) .faq-item-chevron {
+    color: #d4af37;
+  }
+
+  .faq-accordion-item[open] .faq-item-chevron {
+    transform: rotate(180deg);
+  }
+
+  .faq-answer-content {
+    padding: 12px 14px 14px;
+    background: rgba(0, 0, 0, 0.02);
+    animation: faqAnswerFadeIn 0.2s ease-out;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  :global([data-theme="dark"]) .faq-answer-content {
+    background: rgba(0, 0, 0, 0.28);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  @keyframes faqAnswerFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .faq-answer-text {
+    font-family: var(--font-primary, 'Space Grotesk', sans-serif);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: #222222;
+    margin: 0;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  :global([data-theme="dark"]) .faq-answer-text {
+    color: #d1d1d6;
+  }
+
+  .faq-answer-text strong {
+    color: #000000;
+    font-weight: 800;
+  }
+
+  :global([data-theme="dark"]) .faq-answer-text strong {
+    color: #ffffff;
+  }
+
+
+  /* Tray Footer */
+  .faq-tray-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  :global([data-theme="dark"]) .faq-tray-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .faq-close-trigger {
+    background: #ffffff;
+    border: 1.5px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #000000;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease;
+  }
+
+  .faq-close-trigger:hover {
+    color: #000000;
+    background: #f2fd43;
+    transform: translateY(-1px);
+  }
+
+  :global([data-theme="dark"]) .faq-close-trigger {
+    background: #141418;
+    color: #f4f4f6;
+    border: 1.5px solid #000000;
+  }
+
+  :global([data-theme="dark"]) .faq-close-trigger:hover {
+    background: #d4af37;
+    color: #000000;
+    transform: translateY(-1px);
+  }
 </style>
+
+<script>
+  import { initFooterFaq } from '../../scripts/controllers/footerFaq.js';
+  initFooterFaq();
+</script>

@@ -1,9 +1,10 @@
 import { openCoverVideoModal } from './videoModalController.js';
-import { handleSongRequestSubmit } from './requestSongController.js';
+import { handleSongRequestSubmit, openRequestSongModal } from './requestSongController.js';
 import { getITunesTrackData, loadAlbumArt, prefetchTrackArtwork } from './inspirationVault.js';
 import { getSubscriptionState, getSubscriberEmail } from './subscribeController.js';
 
-export const KINS_COVERS_DATA = [];
+import { KINS_COVERS_DATA, KINS_CURRENTLY_LEARNING } from '../../settings/covers.config';
+export { KINS_COVERS_DATA, KINS_CURRENTLY_LEARNING };
 
 let activeCategory = 'all';
 let searchDebounceTimeout = null;
@@ -64,18 +65,21 @@ function renderCoverCard(cover) {
   card.setAttribute('aria-label', `Play cover of ${cover.title} by ${cover.originalArtist}`);
 
   card.innerHTML = `
-    <div class="cover-card-thumb-wrap">
-      <img src="${escapeHtml(cover.thumbnail)}" alt="${escapeHtml(cover.title)}" class="cover-card-thumb" loading="lazy" decoding="async">
-      <div class="cover-card-play-overlay">
+    <div class="cover-card-thumb-box">
+      <img src="${escapeHtml(cover.thumbnail)}" alt="${escapeHtml(cover.title)}" class="cover-card-thumb-img" width="64" height="48" loading="lazy" decoding="async">
+      <div class="thumb-play-overlay">
         <i class="fa-solid fa-play"></i>
       </div>
-      <span class="cover-card-duration">${escapeHtml(cover.duration)}</span>
     </div>
     <div class="cover-card-info">
-      <span class="cover-card-category-badge">${escapeHtml(cover.category.toUpperCase())}</span>
+      <div class="cover-card-meta-row">
+        <span class="cover-card-category-badge">${escapeHtml((cover.categoryLabel || cover.category).toUpperCase())}</span>
+      </div>
       <h4 class="cover-card-title">${escapeHtml(cover.title)}</h4>
-      <p class="cover-card-artist">Orig. by <strong>${escapeHtml(cover.originalArtist)}</strong></p>
-      <span class="cover-card-views"><i class="fa-solid fa-fire"></i> ${escapeHtml(cover.views)}</span>
+      <p class="cover-card-sub">Cover of <span class="artist-highlight">${escapeHtml(cover.originalArtist)}</span></p>
+    </div>
+    <div class="cover-card-action-btn" aria-hidden="true">
+      <i class="${cover.platformIcon || 'fa-solid fa-play'}"></i>
     </div>
   `;
 
@@ -250,15 +254,99 @@ function renderRequestSongCard(rawQuery = '', isExplicitButton = false) {
   return container;
 }
 
+
+
+function renderEmptySearchCard(rawQuery = '') {
+  const container = document.createElement('div');
+  container.className = 'empty-covers-search-container';
+  const safeQuery = escapeHtml(rawQuery.trim());
+
+  container.innerHTML = `
+    <div class="empty-search-card">
+      <div class="empty-search-icon">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+      <h4 class="empty-search-title">${safeQuery ? `No covers found for "${safeQuery}"` : 'No released covers yet'}</h4>
+      <p class="empty-search-sub">
+        ${safeQuery 
+          ? `We haven't recorded "${safeQuery}" yet — request it below and Kins will add it to the rehearsal wishlist!` 
+          : 'Kins hasn\'t released any official covers yet. Check out what we\'re learning above or request a cover below!'}
+      </p>
+      <button type="button" class="empty-request-trigger-btn brutal-press" id="emptyRequestTriggerBtn">
+        <i class="fa-solid fa-microphone-lines"></i>
+        <span>Request a Cover!</span>
+      </button>
+    </div>
+  `;
+
+  container.querySelector('#emptyRequestTriggerBtn')?.addEventListener('click', () => {
+    openRequestSongModal(rawQuery.trim());
+  });
+
+  return container;
+}
+
+function renderLearningSpotlightCard(learningData) {
+  const container = document.getElementById('coversLearningSection');
+  if (!container || !learningData) return;
+
+  const songsterrQuery = encodeURIComponent(`${learningData.originalArtist} ${learningData.title}`);
+  const songsterrUrl = `https://www.songsterr.com/a/wa/search?pattern=${songsterrQuery}`;
+
+  container.innerHTML = `
+    <div class="learning-card" data-track-container="cover_learning_card">
+      <div class="learning-header-bar">
+        <div class="learning-badge">
+          <span class="learning-pulse-dot" aria-hidden="true"></span>
+          <span>CURRENTLY LEARNING</span>
+        </div>
+      </div>
+
+      <div class="learning-hero-thumb">
+        <img src="${escapeHtml(learningData.thumbnail || '/covers/just-like-heaven.jpg')}" alt="${escapeHtml(learningData.title)}" onerror="this.onerror=null;this.src='/covers/just-like-heaven.jpg'" loading="lazy" />
+      </div>
+
+      <div class="learning-info-block">
+        <h4 class="learning-song-title">${escapeHtml(learningData.title)}</h4>
+        <p class="learning-artist-line">Original by <strong>${escapeHtml(learningData.originalArtist)}</strong></p>
+      </div>
+
+      <div class="learning-actions-grid">
+        <a href="${songsterrUrl}" target="_blank" rel="noopener noreferrer" class="learning-action-btn learning-tabs-btn brutal-press" id="learningSongsterrBtn" aria-label="Learn tabs on Songsterr" data-track="learning:songsterr">
+          <i class="fa-solid fa-guitar" aria-hidden="true"></i>
+          <span>Tabs ↗</span>
+        </a>
+      </div>
+    </div>
+  `;
+
+  const songsterrLink = container.querySelector('#learningSongsterrBtn');
+  songsterrLink?.addEventListener('click', () => {
+    import('./toast.js').then(({ showToast }) => {
+      showToast(`🎸 Opening Songsterr tabs for "${learningData.title}"...`);
+    });
+  });
+}
+
 export function filterAndRenderCovers() {
   const overlayInput = document.getElementById('overlaySearchInput');
   const resultsContainer = document.getElementById('coversResultsList');
   const sectionTitleEl = document.getElementById('coversSectionTitle');
+  const learningSection = document.getElementById('coversLearningSection');
 
   if (!resultsContainer) return;
 
   const rawQuery = (overlayInput?.value || '').trim();
   const query = rawQuery.toLowerCase();
+
+  // Show Learning Spotlight on zero-state; hide during active search
+  if (learningSection) {
+    if (query) {
+      learningSection.classList.add('hidden');
+    } else {
+      learningSection.classList.remove('hidden');
+    }
+  }
 
   let filtered = KINS_COVERS_DATA;
 
@@ -273,13 +361,17 @@ export function filterAndRenderCovers() {
       item.originalArtist.toLowerCase().includes(query)
     );
   } else {
-    if (sectionTitleEl) sectionTitleEl.textContent = activeCategory === 'all' ? 'Latest Releases' : `${activeCategory.toUpperCase()} Covers`;
+    if (sectionTitleEl) sectionTitleEl.textContent = activeCategory === 'all' ? 'Latest Covers' : `${activeCategory.toUpperCase()} Covers`;
   }
 
   resultsContainer.innerHTML = '';
+  const scrollBody = document.getElementById('searchOverlayBody') || document.querySelector('.search-overlay-body');
+  if (scrollBody) {
+    scrollBody.scrollTop = 0;
+  }
 
   if (filtered.length === 0) {
-    resultsContainer.appendChild(renderRequestSongCard(rawQuery));
+    resultsContainer.appendChild(renderEmptySearchCard(rawQuery));
     return;
   }
 
@@ -292,16 +384,14 @@ export function filterAndRenderCovers() {
   const requestTriggerBox = document.createElement('div');
   requestTriggerBox.className = 'bottom-request-trigger-box';
   requestTriggerBox.innerHTML = `
-    <button class="bottom-request-pill-btn" id="bottomRequestPillBtn">
-      <i class="fa-solid fa-plus-circle"></i>
-      <span>Don't see your favorite song? Request a Cover</span>
+    <button class="bottom-request-pill-btn brutal-press" id="bottomRequestPillBtn">
+      <i class="fa-solid fa-microphone-lines"></i>
+      <span>Request a Cover!</span>
     </button>
   `;
 
   requestTriggerBox.querySelector('#bottomRequestPillBtn')?.addEventListener('click', () => {
-    resultsContainer.innerHTML = '';
-    resultsContainer.appendChild(renderRequestSongCard(rawQuery, true));
-    if (sectionTitleEl) sectionTitleEl.textContent = 'Request a Cover Song';
+    openRequestSongModal(rawQuery.trim());
   });
 
   resultsContainer.appendChild(requestTriggerBox);
@@ -349,9 +439,13 @@ export function initCoversSearchEngine() {
     if (overlayInput) {
       setTimeout(() => overlayInput.focus(), 150);
     }
+    renderLearningSpotlightCard(KINS_CURRENTLY_LEARNING);
     updateSearchUI();
     filterAndRenderCovers();
   }
+
+  // Initial render of learning spotlight card
+  renderLearningSpotlightCard(KINS_CURRENTLY_LEARNING);
 
   function closeOverlay() {
     if (!searchOverlay) return;

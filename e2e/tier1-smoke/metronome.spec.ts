@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { functionalityConfig } from '../../src/settings/functionality.config';
 
 /* Metronome smoke flows: no audio assertions (CI has no speakers) — these
    cover the play state machine, tap tempo, both picker sheets, the setlist
@@ -13,6 +14,7 @@ async function openMetro(page: Page) {
 }
 
 test.describe('tier1 smoke — metronome', () => {
+  test.skip(!functionalityConfig.enableMetronomePage, 'Metronome page is currently gated');
   test('play starts and stops from the CTA', async ({ page }) => {
     await openMetro(page);
     const play = page.locator('#metroPlayBtn');

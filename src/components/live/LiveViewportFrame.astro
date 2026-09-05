@@ -1,0 +1,404 @@
+---
+import { liveConfig } from '../../settings/live.config';
+import { heroConfig } from '../../settings/hero.config';
+import { functionalityConfig } from '../../settings/functionality.config';
+
+interface Props {
+  forceActive?: boolean;
+}
+
+const { forceActive = false } = Astro.props;
+
+const isLiveEnabled = (functionalityConfig.enableLivePage ?? true) && (liveConfig.enabled ?? true);
+const isLiveShow = isLiveEnabled && (liveConfig.status === 'live' || (heroConfig.activeState === 'livestream' && heroConfig.activeLivestreamVar === 'live_now') || forceActive);
+
+const baseUrl = import.meta.env.BASE_URL;
+
+// Extract clean song title (pure song title, without "Now Playing:" or raw emojis)
+const activeSong = liveConfig.setlist?.find((s) => s.status === 'active')?.title;
+const rawTitle = activeSong || heroConfig.livestream?.live_now?.statusLine || 'Midnight Electricity';
+const cleanTitle = rawTitle.replace(/^[🔴🟡🏁⚡]\s*/, '').replace(/^Now Playing:\s*/i, '').trim();
+
+// Extract clean venue/city
+const cleanVenue = liveConfig.venueName ? `${liveConfig.venueName} • ${liveConfig.city}` : 'The Cambridge Hotel • Newcastle, NSW';
+---
+
+{isLiveShow && (
+  <aside class="live-viewport-frame" id="liveViewportFrame" aria-label="Live Broadcast Sticky Banner and Viewport Frame" data-anim-gated>
+    <!-- Viewport Edge Outlines: Constant Screen-Framing Live Border -->
+    <div class="live-frame-edge live-frame-left" aria-hidden="true"></div>
+    <div class="live-frame-edge live-frame-right" aria-hidden="true"></div>
+    <div class="live-frame-edge live-frame-bottom" aria-hidden="true"></div>
+    <div class="live-frame-edge live-frame-top-left" aria-hidden="true"></div>
+    <div class="live-frame-edge live-frame-top-right" aria-hidden="true"></div>
+
+    <!-- Curved Fillet Connectors: Blends Top Screen Border into the Curved Center Tab -->
+    <div class="live-tab-fillet-wrapper" aria-hidden="true">
+      <svg class="live-tab-fillet-svg" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 0 H40 V24 C40 10.745 29.255 0 16 0 H0 Z" fill="var(--status-danger)" />
+        <path d="M0 3 H16 C27.598 3 37 12.402 37 24" stroke="#000000" stroke-width="3" fill="none" />
+      </svg>
+      <svg class="live-tab-fillet-svg fillet-right" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M40 0 H0 V24 C0 10.745 10.745 0 24 0 H40 Z" fill="var(--status-danger)" />
+        <path d="M40 3 H24 C12.402 3 3 12.402 3 24" stroke="#000000" stroke-width="3" fill="none" />
+      </svg>
+    </div>
+
+    <!-- Fixed Middle Top Curved Tab (Interactive Portal to /live) -->
+    <a
+      href={`${baseUrl}live`}
+      class="live-sticky-top-tab brutal-press"
+      id="liveStickyTopTab"
+      aria-label={`KINS Live: ${cleanTitle} at ${cleanVenue}. Tap to watch stream`}
+      title="Watch Live Stream Now"
+      data-track="nav:live_viewport_tab"
+    >
+      <div class="tab-content-cluster">
+        <!-- Live Dot & Pulse Tag -->
+        <div class="tab-badge-pill">
+          <span class="tab-pulse-dot" aria-hidden="true"></span>
+          <span class="tab-badge-text">LIVE</span>
+        </div>
+
+        <!-- Meta Stream Readout (Song title on top, location below) -->
+        <div class="tab-info-col">
+          <span class="tab-primary-heading">{cleanTitle}</span>
+          <span class="tab-secondary-sub">{cleanVenue}</span>
+        </div>
+
+        <!-- Tactile Action Arrow -->
+        <div class="tab-action-pill">
+          <span class="tab-action-label">WATCH</span>
+          <i class="fa-solid fa-arrow-right tab-action-icon" aria-hidden="true"></i>
+        </div>
+      </div>
+    </a>
+  </aside>
+)}
+
+<style>
+  /* ==========================================================================
+     Live Viewport Frame & Sticky Top Tab Styling
+     ========================================================================== */
+
+  .live-viewport-frame {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1200;
+    user-select: none;
+    -webkit-user-select: none;
+    isolation: isolate;
+  }
+
+  /* --------------------------------------------------------------------------
+     Perimeter Outlines: Screen-Framing Live Edge Glow
+     -------------------------------------------------------------------------- */
+  .live-frame-edge {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1201;
+    background-color: var(--status-danger, #ef4444);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.55), inset 0 0 4px rgba(255, 255, 255, 0.4);
+    transition: opacity 0.28s var(--ease-snappy), transform 0.28s var(--ease-snappy);
+    opacity: 0.7;
+  }
+
+  /* Edge Geometry */
+  .live-frame-left {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3.5px;
+    border-right: 1.5px solid #000000;
+  }
+
+  .live-frame-right {
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 3.5px;
+    border-left: 1.5px solid #000000;
+  }
+
+  .live-frame-bottom {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3.5px;
+    border-top: 1.5px solid #000000;
+  }
+
+  .live-frame-top-left {
+    top: 0;
+    left: 0;
+    right: calc(50% + clamp(140px, 20vw, 240px));
+    height: 3.5px;
+    border-bottom: 1.5px solid #000000;
+  }
+
+  .live-frame-top-right {
+    top: 0;
+    left: calc(50% + clamp(140px, 20vw, 240px));
+    right: 0;
+    height: 3.5px;
+    border-bottom: 1.5px solid #000000;
+  }
+
+  /* --------------------------------------------------------------------------
+     Curved Fillet Connectors (Flanking the Top Center Tab)
+     -------------------------------------------------------------------------- */
+  .live-tab-fillet-wrapper {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(clamp(280px, 40vw, 480px) + 40px);
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 1202;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+    opacity: 0;
+    transform: translate(-50%, -100%);
+  }
+
+  .live-tab-fillet-svg {
+    width: 20px;
+    height: 14px;
+    display: block;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4));
+  }
+
+  .live-tab-fillet-svg.fillet-right {
+    transform: scaleX(1);
+  }
+
+  /* --------------------------------------------------------------------------
+     Sticky Top-Center Tab
+     -------------------------------------------------------------------------- */
+  .live-sticky-top-tab {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    width: clamp(280px, 40vw, 480px);
+    min-height: 46px;
+    background: var(--status-danger, #ef4444);
+    border: 3px solid #000000;
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 4px 0px #000000, 0 0 16px rgba(239, 68, 68, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 14px 4px;
+    text-decoration: none;
+    color: #ffffff;
+    pointer-events: auto;
+    cursor: pointer;
+    z-index: 1205;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+    will-change: transform;
+    touch-action: manipulation;
+    box-sizing: border-box;
+  }
+
+  .live-sticky-top-tab:hover {
+    background: #dc2626;
+    box-shadow: 0 5px 0px #000000, 0 0 22px rgba(239, 68, 68, 0.65);
+  }
+
+  .live-sticky-top-tab:focus-visible {
+    outline: 3px solid var(--brand-accent-primary, #f2fd43);
+    outline-offset: 3px;
+  }
+
+  /* Active/Scrolled Past State (Reveals Sticky Tab and Intensifies Outline) */
+  .live-viewport-frame.is-scrolled-past .live-sticky-top-tab {
+    transform: translate(-50%, 0);
+  }
+
+  .live-viewport-frame.is-scrolled-past .live-tab-fillet-wrapper {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+
+  .live-viewport-frame.is-scrolled-past .live-frame-edge {
+    opacity: 1;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.8), inset 0 0 6px rgba(255, 255, 255, 0.5);
+  }
+
+  /* --------------------------------------------------------------------------
+     Tab Internal Content Cluster
+     -------------------------------------------------------------------------- */
+  .tab-content-cluster {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  /* Pulse Pill */
+  .tab-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #000000;
+    color: #ffffff;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    font-family: var(--font-heading, sans-serif);
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .tab-pulse-dot {
+    width: 6.5px;
+    height: 6.5px;
+    border-radius: 50%;
+    background: var(--status-danger, #ef4444);
+    box-shadow: 0 0 6px var(--status-danger, #ef4444);
+    animation: tabLivePulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes tabLivePulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.45); opacity: 0.65; }
+  }
+
+  /* Meta Info */
+  .tab-info-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    flex: 1 1 auto;
+    text-align: left;
+    gap: 1px;
+  }
+
+  .tab-primary-heading {
+    font-family: var(--font-heading, sans-serif);
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.6);
+    line-height: 1.2;
+  }
+
+  .tab-secondary-sub {
+    font-family: var(--font-primary, sans-serif);
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.15;
+  }
+
+  /* Action Pill */
+  .tab-action-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: #000000;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1.5px solid #000000;
+    box-shadow: 1.5px 1.5px 0px #000000;
+    font-family: var(--font-heading, sans-serif);
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    transition: transform 0.14s var(--ease-tactile);
+  }
+
+  :global([data-theme="dark"]) .tab-action-pill {
+    background: var(--brand-accent-primary, #d4af37);
+  }
+
+  .tab-action-icon {
+    font-size: 0.6rem;
+    transition: transform 0.16s ease;
+  }
+
+  .live-sticky-top-tab:hover .tab-action-icon {
+    transform: translateX(2px);
+  }
+
+  /* --------------------------------------------------------------------------
+     Mobile Responsiveness (< 640px)
+     -------------------------------------------------------------------------- */
+  @media (max-width: 639px) {
+    .live-sticky-top-tab {
+      width: calc(100vw - 28px);
+      max-width: 390px;
+      min-height: 46px;
+      padding: 3px 10px 4px;
+      border-radius: 0 0 14px 14px;
+    }
+
+    .live-tab-fillet-wrapper {
+      width: calc(100vw - 28px + 36px);
+      max-width: 426px;
+    }
+
+    .live-frame-top-left {
+      right: calc(50% + min(calc(50vw - 14px), 195px));
+    }
+
+    .live-frame-top-right {
+      left: calc(50% + min(calc(50vw - 14px), 195px));
+    }
+
+    .tab-info-col {
+      gap: 0;
+    }
+
+    .tab-primary-heading {
+      font-size: 0.74rem;
+      letter-spacing: 0.01em;
+    }
+
+    .tab-secondary-sub {
+      display: block !important;
+      font-size: 0.58rem;
+      opacity: 0.85;
+    }
+
+    .tab-action-pill {
+      padding: 3px 8px;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+     Prefers-Reduced-Motion Fallback
+     -------------------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .live-sticky-top-tab,
+    .live-tab-fillet-wrapper,
+    .live-frame-edge {
+      transition: none !important;
+    }
+    .tab-pulse-dot {
+      animation: none !important;
+    }
+  }
+</style>
+
+<script>
+  import { initLiveFrameController } from '../../scripts/controllers/liveFrameController.js';
+  initLiveFrameController();
+</script>

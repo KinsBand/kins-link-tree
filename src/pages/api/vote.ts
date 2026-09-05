@@ -7,7 +7,7 @@ import { getSupabaseServiceClient } from '../../lib/supabaseServer';
 
 export const prerender = false;
 
-const ALLOWED_SCOPES = /^hero-poll:[a-z0-9_]{1,40}$|^cover-request:[a-zA-Z0-9_-]{1,60}$/;
+const ALLOWED_SCOPES = /^hero-poll:[a-z0-9_]{1,40}$|^cover-request:[a-zA-Z0-9_-]{1,60}$|^learning-setlist:[a-zA-Z0-9_-]{1,60}$/;
 const MAX_CHOICE_LEN = 60;
 
 const VoteGetQuerySchema = z.object({

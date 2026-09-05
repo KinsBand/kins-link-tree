@@ -192,26 +192,19 @@ if (!isTunerEnabled) {
         </div>
 
         <div class="tuner-sheet-footer-card">
-          <div class="footer-theme-toggle-wrap">
-            <div class="footer-theme-toggle-btn" id="tunerThemeToggleBtn" role="group" aria-label="Toggle Display Theme" data-track="tuner:theme_toggle" data-current-theme="dark" aria-pressed="true">
-              <span class="theme-current-title" id="tunerThemeCurrentTitle">Dark</span>
-              <div class="theme-pill-segmented" role="radiogroup" aria-label="Select theme mode">
-                <button type="button" class="theme-pill-btn theme-pill-light" id="tunerThemePillLightBtn" data-theme-target="standard" aria-label="Light Mode" aria-pressed="false" title="Switch to Light Mode">
-                  <i class="fa-solid fa-sun" aria-hidden="true"></i>
-                </button>
-                <button type="button" class="theme-pill-btn active theme-pill-dark" id="tunerThemePillDarkBtn" data-theme-target="dark" aria-label="Dark Mode" aria-pressed="true" title="Switch to Dark Mode">
-                  <i class="fa-solid fa-moon" aria-hidden="true"></i>
-                </button>
-              </div>
-              <span class="theme-mode-label">Mode</span>
-            </div>
-          </div>
+          <div class="footer-theme-toggle-wrap footer-badge-row">
+            <button type="button" class="theme-pill-btn theme-pill-light brutal-press" id="tunerThemePillLightBtn" data-theme-target="standard" aria-label="Light Mode" aria-pressed="false" title="Switch to Light Mode" data-track="tuner:theme_light">
+              <i class="fa-solid fa-sun" aria-hidden="true"></i>
+            </button>
 
-          <div class="footer-badge-row">
             <span class="footer-brand-badge">
               <i class="fa-solid fa-compact-disc footer-brand-icon"></i>
               <span class="footer-copyright-text">@<span id="tunerCopyrightYear">2026</span> KINS.</span>
             </span>
+
+            <button type="button" class="theme-pill-btn active theme-pill-dark brutal-press" id="tunerThemePillDarkBtn" data-theme-target="dark" aria-label="Dark Mode" aria-pressed="true" title="Switch to Dark Mode" data-track="tuner:theme_dark">
+              <i class="fa-solid fa-moon" aria-hidden="true"></i>
+            </button>
           </div>
 
           <nav class="footer-legal-links" aria-label="Legal & Feedback Links">
@@ -1676,104 +1669,93 @@ if (!isTunerEnabled) {
     }
   }
 
-  .footer-theme-toggle-wrap {
+  /* Unified Brand Badge & Flanking Theme Icon Buttons */
+  .footer-theme-toggle-wrap,
+  .footer-badge-row {
     width: 100%;
-  }
-
-  .footer-theme-toggle-btn {
-    width: 100%;
-    min-height: 48px;
-    background: var(--surface-card-light);
-    color: var(--text-card-primary);
-    border: 3px solid #000000;
-    box-shadow: 3px 3px 0px #000000;
-    border-radius: 8px;
-    padding: 6px 16px;
-    cursor: pointer;
+    margin-top: 0;
+    margin-bottom: 2px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    user-select: none;
-    box-sizing: border-box;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease, background-color 0.18s ease;
-  }
-
-  .footer-theme-toggle-btn:hover {
-    background: var(--surface-card-light-hover);
-    transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0px #000000;
-  }
-
-  .footer-theme-toggle-btn:active {
-    transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px #000000;
-  }
-
-  .theme-current-title {
-    font-family: var(--font-heading, var(--font-secondary));
-    font-size: 0.92rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--text-card-primary);
-    flex: 1 1 0;
-    text-align: left;
-  }
-
-  .theme-pill-segmented {
-    display: inline-flex;
-    align-items: center;
-    background: var(--surface-input);
-    border: 2px solid #000000;
-    border-radius: 20px;
-    padding: 3px;
-    gap: 3px;
-    box-shadow: 1.5px 1.5px 0px #000000;
-    flex: 0 0 auto;
+    justify-content: center;
+    gap: 10px;
   }
 
   .theme-pill-btn {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    min-height: 30px;
-    border-radius: 50%;
-    border: 1.5px solid transparent;
-    background: transparent;
-    color: var(--text-card-muted);
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: var(--radius-sm, 6px);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    background: var(--surface-card-panel, #f5f4ef);
+    color: var(--text-card-secondary, #4b4b4b);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     padding: 0;
     margin: 0;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
+    box-sizing: border-box;
     transition: transform 0.16s var(--ease-tactile), background-color 0.18s ease, color 0.18s ease, box-shadow 0.16s ease;
   }
 
   .theme-pill-btn:hover {
-    color: var(--text-card-primary);
-    transform: scale(1.1);
+    color: var(--text-card-primary, #000000);
+    background: var(--surface-card-panel-hover, #ffffff);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .theme-pill-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   .theme-pill-btn.active {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary, #f2fd43);
+    color: var(--btn-brand-text, #000000);
     border-color: #000000;
-    box-shadow: 1px 1px 0px #000000;
-    transform: scale(1.06);
+    box-shadow: 2px 2px 0px #000000;
   }
 
-  .theme-mode-label {
-    font-family: var(--font-heading, var(--font-secondary));
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--text-card-secondary);
-    flex: 1 1 0;
-    text-align: right;
+  :global([data-theme="dark"]) .theme-pill-btn {
+    background: #18181b;
+    color: var(--text-muted, #a1a1aa);
+  }
+
+  :global([data-theme="dark"]) .theme-pill-btn:hover {
+    background: #27272a;
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) .theme-pill-btn.active {
+    background: var(--btn-brand-primary, #d4af37);
+    color: var(--btn-brand-text, #000000);
+    border-color: #000000;
+  }
+
+  .footer-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: #18181b;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 0 14px;
+    height: 32px;
+    border-radius: 6px;
+    user-select: none;
+    box-sizing: border-box;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease;
   }
 
   .tuner-sheet[hidden],

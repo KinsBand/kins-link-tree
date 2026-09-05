@@ -37,6 +37,21 @@ export const rehearsalConfig: RehearsalConfig = {
   mobileSubtitle: 'Offline-ready browser tools for musicians.',
   tools: [
     {
+      id: 'tuner',
+      icon: 'tuner',
+      title: 'TUNER',
+      shortTitle: 'TUNER',
+      desktopBullets: [
+        'Mic pitch detection',
+        'E2 → E4 / Bass (±50¢)',
+        'Drop D & DADGAD modes',
+      ],
+      mobileBlurb: 'Mic pitch detection · Standard/Drop D',
+      desktopBtn: 'Launch Tuner →',
+      mobileBtn: 'Open Tuner →',
+      url: '/tuner',
+    },
+    {
       id: 'metronome',
       icon: 'metronome',
       title: 'METRONOME',
