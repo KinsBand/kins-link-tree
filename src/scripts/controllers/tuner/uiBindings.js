@@ -3,20 +3,18 @@ import {
   TUNER_CATEGORY_LABELS,
   TUNER_CATEGORY_ORDER,
   MATERIAL_PROFILES,
-  A4_CALIBRATION,
   TUNER_COPY,
-  DETECT
-} from '../../../settings/tuner.config';
+  DETECT, noteToFreq
+} from '../../../settings/tuner.config.ts';
 import { showToast } from '../toast.js';
 import { NOTE_NAMES, noteLetter } from './notesUtil.js';
 import {
   state,
   getGroup,
   getPreset,
-  getProfile,
   materialOptions,
   stringCountOptions,
-  currentStringCount
+  currentStringCount, setTolerance
 } from './tunerState.js';
 import { getInstrumentArt } from './instrumentArt.js';
 
@@ -67,6 +65,30 @@ function setText(memo, el, value) {
 }
 
 export function createUi(callbacks) {
+  const eventLifetime = new AbortController();
+  const timers = new Set();
+  const frames = new Set();
+  let disposed = false;
+  let meterObserver = null;
+  function setTimeout(callback, delay) {
+    const id = window.setTimeout(() => { timers.delete(id); if (!disposed) callback(); }, delay);
+    timers.add(id); return id;
+  }
+  function clearTimeout(id) { timers.delete(id); window.clearTimeout(id); }
+  function requestAnimationFrame(callback) {
+    const id = window.requestAnimationFrame(time => { frames.delete(id); if (!disposed) callback(time); });
+    frames.add(id); return id;
+  }
+  function cancelAnimationFrame(id) { frames.delete(id); window.cancelAnimationFrame(id); }
+  function destroy() {
+    disposed = true; eventLifetime.abort();
+    meterObserver?.disconnect();
+    for (const id of timers) window.clearTimeout(id);
+    for (const id of frames) window.cancelAnimationFrame(id);
+    timers.clear(); frames.clear(); cleanupSheetDragListeners();
+    textMemo.clear();
+  }
+
   let els = null;
   let meterWidth = 0;
   let openMenuName = null;
@@ -77,7 +99,7 @@ export function createUi(callbacks) {
   let activeTargetEl = null;
   let activeFilter = 'all';
   const START_MIDI = 20;
-  const NOTE_SPACING_PX = 56;
+  let noteSpacing = 0;
   let railNotes = [];
   let activeRailMidi = null;
   let activeRailExact = false;
@@ -164,7 +186,8 @@ export function createUi(callbacks) {
 
   function invalidateMeterRect() {
     if (!els || !els.meter) return;
-    meterWidth = els.meter.offsetWidth || 0;
+    meterWidth = els.meter.clientWidth || 0;
+    layoutZones();
     if (state && state.mode === 'chromatic') {
       centerRailDefault();
     }
@@ -205,14 +228,24 @@ export function createUi(callbacks) {
     ) {
       trigger.focus();
     }
-    if (els.modeMenuSlot) els.modeMenuSlot.innerHTML = '';
-    if (els.stringsMenuSlot) els.stringsMenuSlot.innerHTML = '';
-    if (els.materialMenuSlot) els.materialMenuSlot.innerHTML = '';
-    if (els.instrumentMenuSlot) els.instrumentMenuSlot.innerHTML = '';
-    if (els.sheetStringsSlot) els.sheetStringsSlot.innerHTML = '';
-    if (els.sheetMaterialSlot) els.sheetMaterialSlot.innerHTML = '';
     if (els.sheetStringsBtn) els.sheetStringsBtn.setAttribute('aria-expanded', 'false');
     if (els.sheetMaterialBtnSheet) els.sheetMaterialBtnSheet.setAttribute('aria-expanded', 'false');
+
+    if (panel) {
+      panel.classList.add('is-closing');
+      setTimeout(() => {
+        if (panel.parentElement) {
+          panel.remove();
+        }
+      }, 150);
+    } else {
+      if (els.modeMenuSlot) els.modeMenuSlot.innerHTML = '';
+      if (els.stringsMenuSlot) els.stringsMenuSlot.innerHTML = '';
+      if (els.materialMenuSlot) els.materialMenuSlot.innerHTML = '';
+      if (els.instrumentMenuSlot) els.instrumentMenuSlot.innerHTML = '';
+      if (els.sheetStringsSlot) els.sheetStringsSlot.innerHTML = '';
+      if (els.sheetMaterialSlot) els.sheetMaterialSlot.innerHTML = '';
+    }
   }
 
   function toggleMenu(name, renderFn, btn) {
@@ -261,6 +294,8 @@ export function createUi(callbacks) {
     if (els.settingsBtn) els.settingsBtn.setAttribute('aria-expanded', sheetTrigger === els.settingsBtn ? 'true' : 'false');
     if (els.settingsBtnBottom) els.settingsBtnBottom.setAttribute('aria-expanded', sheetTrigger === els.settingsBtnBottom ? 'true' : 'false');
     renderSheetSettings();
+    els.sheet.classList.remove('is-closing');
+    els.sheetBackdrop.classList.remove('is-closing');
     els.sheet.hidden = false;
     els.sheetBackdrop.hidden = false;
     requestAnimationFrame(() => {
@@ -279,6 +314,8 @@ export function createUi(callbacks) {
     activeSheetPanel = null;
     els.sheet.classList.remove('open');
     els.sheetBackdrop.classList.remove('open');
+    els.sheet.classList.add('is-closing');
+    els.sheetBackdrop.classList.add('is-closing');
     els.sheet.style.transform = '';
     if (sheetTrigger) {
       sheetTrigger.setAttribute('aria-expanded', 'false');
@@ -293,6 +330,8 @@ export function createUi(callbacks) {
     }
     const done = () => {
       if (sheetOpen || !els.sheet || !els.sheetBackdrop) return;
+      els.sheet.classList.remove('is-closing');
+      els.sheetBackdrop.classList.remove('is-closing');
       els.sheet.hidden = true;
       els.sheetBackdrop.hidden = true;
     };
@@ -343,10 +382,10 @@ export function createUi(callbacks) {
         target,
         translateY: 0
       };
-      document.addEventListener('touchmove', onSheetDragMove, { passive: false });
-      document.addEventListener('touchend', onSheetDragEnd, { passive: true });
-      document.addEventListener('touchcancel', onSheetDragEnd, { passive: true });
-    }, { passive: true });
+      document.addEventListener('touchmove', onSheetDragMove, { ...({ passive: false }), signal: eventLifetime.signal });
+      document.addEventListener('touchend', onSheetDragEnd, { ...({ passive: true }), signal: eventLifetime.signal });
+      document.addEventListener('touchcancel', onSheetDragEnd, { ...({ passive: true }), signal: eventLifetime.signal });
+    }, { ...({ passive: true }), signal: eventLifetime.signal });
   }
 
   function onSheetDragMove(e) {
@@ -443,7 +482,7 @@ export function createUi(callbacks) {
         callbacks.onMaterialSelect(btn.getAttribute('data-sheet-material'));
         buildSheetMaterialRow();
         renderSheetSettings();
-      });
+      }, { signal: eventLifetime.signal });
     });
   }
 
@@ -464,7 +503,7 @@ export function createUi(callbacks) {
       btn.addEventListener('click', () => {
         closeMenus(false);
         callbacks.onInstrumentChange(btn.getAttribute('data-sheet-instrument'));
-      });
+      }, { signal: eventLifetime.signal });
     });
   }
 
@@ -473,13 +512,15 @@ export function createUi(callbacks) {
     const isGuided = state.mode === 'guided';
     els.sheetModeRow.innerHTML = `
       <button type="button" class="tuner-sheet-chip brutal-press${isGuided ? ' active' : ''}" role="radio" aria-checked="${isGuided}" data-sheet-mode="guided">GUIDED</button>
-      <button type="button" class="tuner-sheet-chip brutal-press${!isGuided ? ' active' : ''}" role="radio" aria-checked="${!isGuided}" data-sheet-mode="chromatic">FREE</button>
+      <button type="button" class="tuner-sheet-chip brutal-press${state.mode === 'chromatic' ? ' active' : ''}" role="radio" aria-checked="${state.mode === 'chromatic'}" data-sheet-mode="chromatic">FREE</button>
+      ${state.instrumentId !== 'drums' ? `<button type="button" class="tuner-sheet-chip tuner-ear-mode brutal-press${state.mode === 'ear' ? ' active' : ''}" role="radio" aria-checked="${state.mode === 'ear'}" data-sheet-mode="ear">EAR TRAINING<span>Tap a peg. Listen. Match by ear.</span></button>` : ''}
     `;
     els.sheetModeRow.querySelectorAll('[data-sheet-mode]').forEach((btn) => {
       btn.addEventListener('click', () => {
         closeMenus(false);
         callbacks.onModeSelect(btn.getAttribute('data-sheet-mode'));
-      });
+        els.sheetModeRow.querySelector(`[data-sheet-mode="${state.mode}"]`)?.focus({ preventScroll: true });
+      }, { signal: eventLifetime.signal });
     });
   }
 
@@ -500,6 +541,7 @@ export function createUi(callbacks) {
     if (els.sheetStringsLabelSheet) {
       els.sheetStringsLabelSheet.textContent = hasStrings ? currentStringCount() + ' STRINGS' : '—';
     }
+    syncStringStepper();
     const profile = state.materialId === 'off' ? null : MATERIAL_PROFILES[state.materialId];
     if (els.sheetMaterialLabelSheet) {
       els.sheetMaterialLabelSheet.textContent = hasMaterial ? (profile ? profile.shortLabel : 'OFF') : '—';
@@ -507,6 +549,15 @@ export function createUi(callbacks) {
     // legacy hidden tops still keep state sync
     if (els.stringsLabel) els.stringsLabel.textContent = hasStrings ? currentStringCount() + ' STRINGS' : '';
     if (els.materialLabel) els.materialLabel.textContent = profile ? profile.shortLabel : 'OFF';
+  }
+
+  function syncStringStepper() {
+    const input = document.getElementById('tunerStringCount');
+    if (!input) return;
+    input.value = String(currentStringCount());
+    input.disabled = state.instrumentId === 'drums';
+    document.getElementById('tunerStringsMinus').disabled = input.disabled || currentStringCount() <= 1;
+    document.getElementById('tunerStringsPlus').disabled = input.disabled || currentStringCount() >= 12;
   }
 
   function renderSheetSettings() {
@@ -517,8 +568,8 @@ export function createUi(callbacks) {
     // keep legacy hidden rows in sync for tests that might query them
     buildSheetMaterialRow();
     buildSheetA4Row();
-    if (els.sheetAutoAdvance) els.sheetAutoAdvance.checked = !!state.autoAdvance;
-    if (els.sheetAutoId) els.sheetAutoId.checked = !!state.autoIdentify;
+    if (els.sheetAutoAdvance) els.sheetAutoAdvance.setAttribute('aria-pressed', String(!!state.autoAdvance));
+    if (els.sheetAutoId) els.sheetAutoId.setAttribute('aria-pressed', String(!!state.autoIdentify));
     // disable material button when not guided/drums
     if (els.sheetMaterialBtnSheet) {
       const isGuided = state.mode === 'guided' && state.instrumentId !== 'drums';
@@ -626,7 +677,7 @@ export function createUi(callbacks) {
         callbacks.onAutoIdToggle(!state.autoIdentify);
         renderModeMenu();
       }
-    });
+    }, { signal: eventLifetime.signal });
   }
 
   function renderStringsMenu() {
@@ -680,7 +731,7 @@ export function createUi(callbacks) {
           <span class="tuner-menu-check" aria-hidden="true">${isCustomActive ? '&#10003;' : ''}</span>
         </button>
         <div class="tuner-custom-field" style="display:${isCustomActive ? 'flex' : 'none'}">
-          <input type="number" min="3" max="12" step="1" aria-label="Custom string count" class="tuner-custom-input" value="${isCustomActive ? current : ''}" placeholder="3-12" />
+          <input type="number" min="1" max="12" step="1" aria-label="Custom string count" class="tuner-custom-input" value="${isCustomActive ? current : ''}" placeholder="1-12" />
           <button type="button" class="tuner-custom-apply brutal-press">Apply</button>
         </div>`;
 
@@ -702,9 +753,9 @@ export function createUi(callbacks) {
       }
       if (e.target.closest('.tuner-custom-apply')) {
         const input = panel.querySelector('.tuner-custom-input');
-        const val = parseInt(input ? input.value : '', 10);
-        if (!Number.isInteger(val) || val < 3 || val > 12) {
-          showToast('Enter a string count between 3 and 12', 'warning');
+        const val = Number(input ? input.value : '');
+        if (!Number.isInteger(val) || val < 1 || val > 12) {
+          showToast('Enter a string count between 1 and 12', 'warning');
           return;
         }
         if (options.includes(val)) {
@@ -716,13 +767,13 @@ export function createUi(callbacks) {
         }
         closeMenus();
       }
-    });
+    }, { signal: eventLifetime.signal });
     panel.querySelector('.tuner-custom-input')?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         panel.querySelector('.tuner-custom-apply')?.click();
       }
-    });
+    }, { signal: eventLifetime.signal });
   }
 
   function renderMaterialMenu() {
@@ -760,7 +811,7 @@ export function createUi(callbacks) {
         callbacks.onMaterialSelect(row.getAttribute('data-material'));
         closeMenus();
       }
-    });
+    }, { signal: eventLifetime.signal });
   }
 
   function renderSheetStringsMenu() {
@@ -816,7 +867,7 @@ export function createUi(callbacks) {
           <span class="tuner-menu-check" aria-hidden="true">${isCustomActive ? '&#10003;' : ''}</span>
         </button>
         <div class="tuner-custom-field" style="display:${isCustomActive ? 'flex' : 'none'}">
-          <input type="number" min="3" max="12" step="1" aria-label="Custom string count" class="tuner-custom-input" value="${isCustomActive ? current : ''}" placeholder="3-12" />
+          <input type="number" min="1" max="12" step="1" aria-label="Custom string count" class="tuner-custom-input" value="${isCustomActive ? current : ''}" placeholder="1-12" />
           <button type="button" class="tuner-custom-apply brutal-press">Apply</button>
         </div>`;
     const panel = menuPanel(els.sheetStringsSlot, rows + customRow);
@@ -837,9 +888,9 @@ export function createUi(callbacks) {
       }
       if (e.target.closest('.tuner-custom-apply')) {
         const input = panel.querySelector('.tuner-custom-input');
-        const val = parseInt(input ? input.value : '', 10);
-        if (!Number.isInteger(val) || val < 3 || val > 12) {
-          showToast('Enter a string count between 3 and 12', 'warning');
+        const val = Number(input ? input.value : '');
+        if (!Number.isInteger(val) || val < 1 || val > 12) {
+          showToast('Enter a string count between 1 and 12', 'warning');
           return;
         }
         if (options.includes(val)) {
@@ -851,13 +902,13 @@ export function createUi(callbacks) {
         }
         closeMenus();
       }
-    });
+    }, { signal: eventLifetime.signal });
     panel.querySelector('.tuner-custom-input')?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         panel.querySelector('.tuner-custom-apply')?.click();
       }
-    });
+    }, { signal: eventLifetime.signal });
   }
 
   function renderSheetMaterialMenu() {
@@ -899,7 +950,7 @@ export function createUi(callbacks) {
         callbacks.onMaterialSelect(row.getAttribute('data-material'));
         closeMenus();
       }
-    });
+    }, { signal: eventLifetime.signal });
   }
 
   function renderInstrumentMenu() {
@@ -918,7 +969,7 @@ export function createUi(callbacks) {
         callbacks.onInstrumentChange(row.getAttribute('data-instrument-menu'));
         closeMenus();
       }
-    });
+    }, { signal: eventLifetime.signal });
   }
 
   function renderTopbar() {
@@ -949,7 +1000,21 @@ export function createUi(callbacks) {
     const profile = state.materialId === 'off' ? null : MATERIAL_PROFILES[state.materialId];
     if (els.materialLabel) els.materialLabel.textContent = profile ? profile.shortLabel : 'OFF';
 
-    els.tunerView.classList.toggle('mode-chromatic', state.mode === 'chromatic');
+    const drumsMode = state.instrumentId === 'drums';
+    els.tunerView.classList.toggle('mode-chromatic', state.mode === 'chromatic' && !drumsMode);
+    els.tunerView.classList.toggle('mode-drums', drumsMode);
+    const ear = state.mode === 'ear' && state.instrumentId !== 'drums';
+    els.tunerView.classList.toggle('mode-ear', ear);
+    els.readout.hidden = ear || drumsMode;
+    els.micCta.hidden = ear;
+    els.presetBtn.disabled = drumsMode;
+    if (drumsMode) els.presetLabel.textContent = 'My kit';
+    els.figure.hidden = drumsMode;
+    document.getElementById('drumWorkflow').hidden = !drumsMode;
+    for (const id of ['drumAdd', 'drumSave']) document.getElementById(id).hidden = !drumsMode;
+    if (els.modeLabel && ear) els.modeLabel.textContent = 'EAR TRAINING';
+    if (els.sheetAutoAdvance) els.sheetAutoAdvance.disabled = ear || state.instrumentId === 'drums';
+    if (els.sheetAutoId) els.sheetAutoId.disabled = ear || state.instrumentId === 'drums';
     if (els.chromRail) {
       els.chromRail.hidden = state.mode !== 'chromatic';
       if (state.mode === 'chromatic') {
@@ -1016,6 +1081,8 @@ export function createUi(callbacks) {
   }
 
   function renderFigure() {
+    const focusedIndex = els.figure.contains(document.activeElement) ? document.activeElement.getAttribute('data-string-index') : null;
+    renderA4();
     const preset = getPreset();
     const isDrums = state.instrumentId === 'drums';
     els.figure.classList.toggle('drums', isDrums);
@@ -1034,19 +1101,21 @@ export function createUi(callbacks) {
         }
         const label = peg.querySelector('.tuner-peg-label');
         const noteText = state.instrumentId === 'bass' ? str.note : noteLetter(str.note);
-        if (label) label.textContent = noteText;
-        peg.setAttribute('aria-label', 'Target string ' + str.note);
+        if (label) label.textContent = state.mode === 'ear' ? String(preset.strings.length - idx) : noteText;
+        peg.setAttribute('aria-label', state.mode === 'ear' ? 'Play reference for string ' + (preset.strings.length - idx) : 'Target string ' + str.note);
+        peg.setAttribute('aria-pressed', String(idx === state.stringIndex));
         peg.classList.toggle('is-active', idx === state.stringIndex);
         peg.classList.remove('is-in-tune');
       });
       activeTargetEl = els.figure.querySelector('.tuner-peg.is-active');
     }
+    if (focusedIndex !== null) els.figure.querySelector(`[data-string-index="${focusedIndex}"]`)?.focus({ preventScroll: true });
     if (!figureListenerBound) {
       figureListenerBound = true;
       els.figure.addEventListener('click', (e) => {
         const peg = e.target.closest('[data-string-index]');
         if (peg) callbacks.onStringSelect(parseInt(peg.getAttribute('data-string-index'), 10));
-      });
+      }, { signal: eventLifetime.signal });
       els.figure.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
         const peg = e.target.closest('[data-string-index]');
@@ -1054,12 +1123,23 @@ export function createUi(callbacks) {
           e.preventDefault();
           callbacks.onStringSelect(parseInt(peg.getAttribute('data-string-index'), 10));
         }
-      });
+      }, { signal: eventLifetime.signal });
     }
   }
 
   function renderA4() {
-    // A4 UI removed — fixed 440 Hz. Keep legacy containers empty but safe-guard for hidden elements.
+    const calibration = document.getElementById('tunerCalibration');
+    if (calibration) calibration.value = String(state.a4);
+    const target = getPreset().strings[state.stringIndex];
+    const label = document.getElementById('tunerTargetLabel');
+    if (label) {
+      const hz = target && noteToFreq(target.midi, state.a4);
+      const unsupported = hz < DETECT.MIN_DETECT_HZ || hz > DETECT.MAX_DETECT_HZ;
+      const caption = state.instrumentId === 'drums' ? 'Drum reference only' : state.mode === 'chromatic' ? 'Chromatic · ±' + state.tolerance + ' ct' : 'Target ' + (target?.note || '—') + (unsupported ? ' · reference only' : ' · ±' + state.tolerance + ' ct');
+      label.textContent = caption + ' · A4 = ' + state.a4 + ' Hz';
+    }
+
+    // Calibration lives in the accessible settings form; clear obsolete chips.
     if (els.a4Chips) els.a4Chips.replaceChildren();
     // keep sheet A4 in sync (legacy hidden row)
     buildSheetA4Row();
@@ -1117,7 +1197,7 @@ export function createUi(callbacks) {
       head.addEventListener('click', () => {
         const open = section.classList.toggle('open');
         head.setAttribute('aria-expanded', open ? 'true' : 'false');
-      });
+      }, { signal: eventLifetime.signal });
       const body = document.createElement('div');
       body.className = 'tuning-category-body';
       presets.forEach((preset) => {
@@ -1154,7 +1234,7 @@ export function createUi(callbacks) {
         card.addEventListener('click', () => {
           callbacks.onPresetSelect(group.presets.indexOf(preset));
           showTunerView();
-        });
+        }, { signal: eventLifetime.signal });
         body.appendChild(card);
       });
       section.append(head, body);
@@ -1175,18 +1255,16 @@ export function createUi(callbacks) {
     return els.searchInput ? els.searchInput.value : '';
   }
 
-  /* Meter scale: linear ±50¢ core, then log-compressed out to ±650¢ so the
-     material-profile warn/danger (breakage) and loose/dead thresholds are
-     visible as highlighted sections on the meter itself. */
+  /* Meter scale: a linear fine range and compressed outer range for large offsets. */
   function centsToPct(cents) {
     const fine = DETECT.METER_FINE_CENTS;
     const ext = DETECT.METER_MAX_CENTS;
     const core = DETECT.METER_CORE_SPLIT;
     const a = Math.abs(cents);
     const sg = cents < 0 ? -1 : 1;
-    if (a <= fine) return sg * (a / fine) * core * 50;
+    if (a <= fine) return sg * (a / fine) * core * 100;
     const t = Math.min(1, Math.log(a / fine) / Math.log(ext / fine));
-    return sg * (core + t * (1 - core)) * 50;
+    return sg * (core + t * (1 - core)) * 100;
   }
 
   function setNeedle(cents) {
@@ -1222,26 +1300,30 @@ export function createUi(callbacks) {
   }
 
   function layoutZones() {
-    const profile = state.mode === 'guided' && state.instrumentId !== 'drums' ? getProfile() : null;
-    const active = !!profile;
-    [els.zoneWarnUp, els.zoneDanger, els.zoneDead, els.zoneLoose].forEach((el) => {
-      if (el) el.hidden = !active;
-    });
-    if (!active) return;
-    // Sharp side: stretching -> snap risk (breakage)
-    posZoneRight(els.zoneWarnUp, profile.warnUp * 100, profile.dangerUp * 100);
-    posZoneRight(els.zoneDanger, profile.dangerUp * 100, null);
-    // Flat side: very loose -> dead slack
-    posZoneLeft(els.zoneLoose, profile.warnDown * 100, profile.deadDown * 100);
-    posZoneLeft(els.zoneDead, profile.deadDown * 100, null);
+    [els.zoneWarnUp, els.zoneDanger, els.zoneDead, els.zoneLoose].forEach(el => { if (el) el.hidden = true; });
+    const zone = els.meter.querySelector('.tuner-meter-zone');
+    if (zone && meterWidth) {
+      const travel = meterWidth / 2 - 18;
+      zone.style.width = (2 * Math.abs(centsToPct(state.tolerance)) * travel / 100) + 'px';
+    }
+  }
+
+  function setReferenceStatus(status) {
+    if (!els) return;
+    els.figure.setAttribute('aria-busy', String(status === 'loading'));
+    els.figure.classList.toggle('reference-loading', status === 'loading');
+    const announcement = document.getElementById('tunerAudioStatus');
+    if (announcement) announcement.textContent = status === 'loading' ? 'Loading recorded guitar sound.' : status === 'playing' ? 'Playing recorded reference.' : '';
   }
 
   /* ---------- Chromatic free-mode live scrolling note rail ---------- */
   function centerRailDefault() {
     if (!els || !els.chromTape || !meterWidth) return;
+    noteSpacing = railNotes[0]?.getBoundingClientRect().width || noteSpacing;
+    if (!noteSpacing) return;
     const defaultMidi = 69; // A4
     const fractionalIdx = defaultMidi - START_MIDI;
-    const tapeX = (meterWidth / 2) - ((fractionalIdx + 0.5) * NOTE_SPACING_PX);
+    const tapeX = (meterWidth / 2) - ((fractionalIdx + 0.5) * noteSpacing);
     els.chromTape.style.transform = 'translate3d(' + tapeX.toFixed(1) + 'px, 0, 0)';
   }
 
@@ -1287,11 +1369,11 @@ export function createUi(callbacks) {
     if (!railNotes.length) buildRail();
     const mf = 69 + 12 * Math.log2(freq / state.a4);
     const fractionalIdx = mf - START_MIDI;
-    const tapeX = (meterWidth / 2) - ((fractionalIdx + 0.5) * NOTE_SPACING_PX);
+    const tapeX = (meterWidth / 2) - ((fractionalIdx + 0.5) * noteSpacing);
     els.chromTape.style.transform = 'translate3d(' + tapeX.toFixed(1) + 'px, 0, 0)';
 
     const nearestMidi = Math.round(mf);
-    const isExact = Math.abs(cents) <= DETECT.IN_TUNE_CENTS;
+    const isExact = Math.abs(cents) <= state.tolerance;
 
     if (activeRailMidi !== nearestMidi || activeRailExact !== isExact) {
       if (activeRailNearEl) {
@@ -1317,19 +1399,25 @@ export function createUi(callbacks) {
     els.figure.classList.remove('safety-red', 'safety-red-soft', 'safety-green', 'safety-green-soft');
   }
 
-  function applySafetyClasses(color) {
-    if (!color || color === 'grey') return;
-    els.readout.classList.add('safety-' + color);
-    els.figure.classList.add('safety-' + color);
-  }
-
   function setInTuneHighlight(on) {
-    if (activeTargetEl) activeTargetEl.classList.toggle('is-in-tune', !!on);
+    if (activeTargetEl) {
+      const wasInTune = activeTargetEl.classList.contains('is-in-tune');
+      activeTargetEl.classList.toggle('is-in-tune', !!on);
+      if (on && !wasInTune) {
+        activeTargetEl.classList.remove('lock-pop-celebrate');
+        requestAnimationFrame(() => {
+          if (activeTargetEl) activeTargetEl.classList.add('lock-pop-celebrate');
+        });
+        setTimeout(() => {
+          if (activeTargetEl) activeTargetEl.classList.remove('lock-pop-celebrate');
+        }, 400);
+      }
+    }
   }
 
   function setPill(text, pillClass) {
-    // Hidden a11y live region — always sr-only
-    const base = 'tuner-status sr-only';
+    // Visible status also announces meaningful state changes to screen readers.
+    const base = 'tuner-status';
     const cls = base + (pillClass ? ' ' + pillClass : '');
     if (els.status) {
       setText(textMemo, els.status, text);
@@ -1346,18 +1434,8 @@ export function createUi(callbacks) {
   }
 
   function formatCentsDisplay(cents, locked) {
-    const abs = Math.abs(cents);
-    if (abs <= DETECT.IN_TUNE_CENTS) return '0 ct';
-    const sign = cents < 0 ? '-' : '+';
-    const val = locked && abs < DETECT.FINE_CENTS_RANGE ? abs.toFixed(1) : String(Math.round(abs));
-    return sign + val + ' ct';
-  }
-
-  /* Sub-cent display: one decimal while the detector is locked and inside
-     the fine range, whole cents otherwise (TomSchimansky-style precision). */
-  function formatCents(cents, fine) {
-    const abs = Math.abs(cents);
-    return fine && abs < DETECT.FINE_CENTS_RANGE ? abs.toFixed(1) : String(Math.round(abs));
+    const value = Math.abs(cents) < 0.05 ? 0 : cents;
+    return (value > 0 ? '+' : '') + (locked ? value.toFixed(1) : String(Math.round(value))) + ' ct';
   }
 
   function resetReadout() {
@@ -1384,12 +1462,13 @@ export function createUi(callbacks) {
     state.listening = listening;
     state.starting = starting;
     els.micBtn.classList.toggle('listening', listening);
+    els.micBtn.setAttribute('aria-label', listening ? 'Stop tuning' : starting ? 'Cancel microphone request' : 'Start tuning');
     els.micWarning.hidden = true;
     if (els.micCta) {
       const ctaText = els.micCta.querySelector('.tuner-mic-cta-text');
-      if (ctaText) ctaText.textContent = listening ? TUNER_COPY.stopTuner : starting ? TUNER_COPY.starting : TUNER_COPY.startTuner;
+      if (ctaText) ctaText.textContent = listening ? 'STOP' : starting ? 'CANCEL' : 'START';
       els.micCta.classList.toggle('listening', listening);
-      els.micCta.setAttribute('aria-label', listening ? 'Stop tuning' : 'Start tuning');
+      els.micCta.setAttribute('aria-label', listening ? 'Stop tuning' : starting ? 'Cancel microphone request' : 'Start tuning');
     }
     if (state.instrumentId === 'drums' && listening) {
       els.lowMicHint.textContent = TUNER_COPY.lowMicWarning;
@@ -1401,91 +1480,96 @@ export function createUi(callbacks) {
   }
 
   function showMicWarning(message) {
+    if (state.instrumentId === 'drums') { showToast(message, 'error'); return; }
     els.micWarning.textContent = message;
     els.micWarning.hidden = false;
   }
 
+  function updateProgress(progress, confirmed) {
+    const bar = document.getElementById('tunerConfirmation');
+    const fill = document.getElementById('tunerConfirmationFill');
+    const label = document.getElementById('tunerConfirmationLabel');
+    const percent = Math.round(Math.min(1, Math.max(0, progress)) * 100);
+    if (bar) bar.setAttribute('aria-valuenow', String(percent));
+    if (fill) fill.style.transform = 'scaleX(' + (percent / 100) + ')';
+    setText(textMemo, label, state.mode === 'chromatic' ? 'Play one note at a time.' : confirmed ? 'String checked' : percent ? 'Confirming tuning · ' + percent + '%' : 'Keep one string ringing to confirm its tuning.');
+  }
+
   function updateReading(reading) {
     const chromatic = state.mode === 'chromatic';
-
-    // Held frame: repeat of the last confident reading between plucks.
-    // Touch nothing except the held styling — this is what makes the note
-    // stay put instead of gathering and vanishing every gate dip.
-    if (reading.held) {
-      els.readout.classList.add('is-held');
-      return;
-    }
-    els.readout.classList.remove('is-held');
     clearSafetyClasses();
-
-    if (reading.status !== 'ok') {
-      setNeedle(0);
-      setInTuneHighlight(false);
-      clearRail();
-      setCents('--', '');
-      if (reading.status === 'polyphonic') {
-        setPill(TUNER_COPY.playOneString, 'pill-neutral');
-      } else if (reading.status === 'clipped') {
-        setPill(TUNER_COPY.tooLoud, 'pill-neutral');
-      } else {
-        setPill(TUNER_COPY.listening, 'pill-neutral');
-      }
-      setText(textMemo, els.note, '--');
-      setText(textMemo, els.noteOctave, '');
-      setText(textMemo, els.freq, '');
-      setText(textMemo, els.hint, '');
+    if (reading.held || reading.status !== 'ok') setInTuneHighlight(false);
+    els.readout.classList.toggle('is-held', !!reading.held);
+    els.readout.dataset.signal = reading.held ? 'held' : reading.status;
+    if (reading.held) {
+      setPill('LAST READING — PLAY AGAIN', 'pill-neutral');
+      setText(textMemo, els.hint, 'Last reading; no current pitch measurement.');
       return;
     }
-
-    const cents = reading.cents;
-    if (!chromatic) {
-      setNeedle(cents);
-    } else {
-      setNeedle(0);
+    if (reading.status !== 'ok') {
+      setNeedle(0); clearRail(); setCents('--', '');
+      const messages = { clipped: TUNER_COPY.tooLoud, uncertain: 'Play one clear note; pitch is uncertain.',
+        polyphonic: TUNER_COPY.playOneString, reference: 'Drum reference only', 'out-of-range': 'Target is outside the supported microphone range.' };
+      setPill(messages[reading.status] || TUNER_COPY.listening, 'pill-neutral');
+      setText(textMemo, els.note, '--'); setText(textMemo, els.noteOctave, '');
+      setText(textMemo, els.freq, ''); setText(textMemo, els.hint, '');
+      return;
     }
-    setText(textMemo, els.note, noteLetter(reading.detectedNote));
-    setText(textMemo, els.noteOctave, chromatic ? String(reading.detectedOctave) : '');
-    setText(textMemo, els.freq, reading.freq.toFixed(1) + ' Hz');
-
-    if (!chromatic) {
-      if (reading.zone === 'wrong-octave') {
-        setNeedle(0);
-        setInTuneHighlight(false);
-        setCents('--', '');
-        setPill('CHECK THE PEGS', 'pill-neutral');
-        setText(textMemo, els.hint, '');
-        return;
-      }
-      if (Math.abs(cents) <= DETECT.IN_TUNE_CENTS) {
-        setCents('0 ct', 'is-in-tune');
-        setPill(TUNER_COPY.inTune, 'pill-tuned');
-        setInTuneHighlight(true);
-        els.readout.classList.add('in-tune');
-        setText(textMemo, els.hint, '');
-      } else {
-        const dir = cents < 0 ? TUNER_COPY.tooFlat : TUNER_COPY.tooSharp;
-        setCents(formatCentsDisplay(cents, reading.locked), cents < 0 ? 'is-flat' : 'is-sharp');
-        setPill(dir + ' \u00B7 ' + formatCents(cents, reading.locked) + '\u00A2', 'pill-off');
-        setInTuneHighlight(false);
-        els.readout.classList.add('off-pitch');
-        setText(textMemo, els.hint, cents < 0 ? 'TIGHTEN \u2191' : 'LOOSEN \u2193');
-      }
-      applySafetyClasses(reading.color);
+    setNeedle(reading.cents);
+    setText(textMemo, els.note, reading.detectedNote);
+    setText(textMemo, els.noteOctave, String(reading.detectedOctave));
+    setText(textMemo, els.freq, reading.freq.toFixed(2) + ' Hz');
+    setCents(formatCentsDisplay(reading.cents, reading.locked), reading.inRange ? 'is-in-tune' : reading.cents < 0 ? 'is-flat' : 'is-sharp');
+    if (chromatic) updateRail(reading.freq, reading.rawCents, reading.locked);
+    els.readout.classList.toggle('in-tune', reading.inRange);
+    setInTuneHighlight(reading.confirmed);
+    if (reading.zone === 'wrong-octave') {
+      setPill('CHECK TARGET STRING AND OCTAVE', 'pill-neutral');
+      setText(textMemo, els.hint, 'Confirm the selected string before adjusting its peg.');
+    } else if (reading.inRange) {
+      setPill(chromatic ? 'IN RANGE' : reading.confirmed ? 'STRING CHECKED' : 'IN RANGE — CONFIRMING', 'pill-tuned');
+      setText(textMemo, els.hint, '');
     } else {
-      setInTuneHighlight(false);
-      updateRail(reading.freq, cents, reading.locked);
-      const isExact = Math.abs(cents) <= DETECT.IN_TUNE_CENTS;
-      els.readout.classList.toggle('in-tune', isExact);
-      const signed = (cents >= 0 ? '+' : '-') + formatCents(cents, reading.locked);
-      if (isExact) {
-        setCents('0 ct', 'is-in-tune');
-        setPill(reading.nearestName + ' \u00B7 IN TUNE', 'pill-tuned');
-      } else {
-        setCents(formatCentsDisplay(cents, reading.locked), cents < 0 ? 'is-flat' : 'is-sharp');
-        setPill(reading.nearestName + ' \u00B7 ' + signed + '\u00A2', 'pill-neutral');
-      }
-      setText(textMemo, els.hint, reading.nearestName + ' \u00B7 ' + signed + '\u00A2');
+      setPill(reading.rawCents < 0 ? TUNER_COPY.tooFlat : TUNER_COPY.tooSharp, 'pill-off');
+      setText(textMemo, els.hint, reading.rawCents < 0 ? 'Tighten gradually ↑' : 'Loosen gradually ↓');
     }
+  }
+
+  async function refreshInputs() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      if (disposed) return;
+      const select = document.getElementById('tunerInputDevice');
+      if (!select) return;
+      select.replaceChildren(new Option('System default', ''));
+      devices.filter(device => device.kind === 'audioinput').forEach((device, index) => {
+        select.add(new Option(device.label || 'Input ' + (index + 1), device.deviceId));
+      });
+      select.value = state.deviceId;
+    } catch { /* Keep system default available when enumeration is restricted. */ }
+  }
+
+  function bindQualitySettings() {
+    const calibration = document.getElementById('tunerCalibration');
+    calibration?.addEventListener('change', () => {
+      if (!calibration.checkValidity()) { calibration.reportValidity(); return; }
+      callbacks.onA4Select(calibration.value);
+    }, { signal: eventLifetime.signal });
+    document.getElementById('tunerCalibrationReset')?.addEventListener('click', () => callbacks.onA4Select(440), { signal: eventLifetime.signal });
+    const tolerance = document.getElementById('tunerTolerance');
+    if (tolerance) tolerance.value = String(state.tolerance);
+    tolerance?.addEventListener('change', () => { setTolerance(tolerance.value); callbacks.onA4Select(state.a4); layoutZones(); }, { signal: eventLifetime.signal });
+    document.getElementById('tunerInputDevice')?.addEventListener('change', event => { state.deviceId = event.target.value; callbacks.onInputChange(); }, { signal: eventLifetime.signal });
+    document.getElementById('tunerInputChannel')?.addEventListener('change', event => { state.inputChannel = Number(event.target.value); callbacks.onInputChange(); }, { signal: eventLifetime.signal });
+    navigator.mediaDevices?.addEventListener('devicechange', refreshInputs, { signal: eventLifetime.signal });
+    document.addEventListener('keydown', event => {
+      if (!sheetOpen || event.key !== 'Tab' || document.querySelector('.modal-backdrop:not(.hidden)')) return;
+      const controls = Array.from(els.sheet.querySelectorAll('button, input, select, a[href], [tabindex="0"]')).filter(el => !el.disabled && el.getClientRects().length);
+      const first = controls[0], last = controls[controls.length - 1];
+      if (!first) return;
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === els.sheet)) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || document.activeElement === els.sheet)) { event.preventDefault(); first.focus(); }
+    }, { signal: eventLifetime.signal });
   }
 
   /* Soft one-shot pop on the active peg after auto string identification —
@@ -1502,35 +1586,56 @@ export function createUi(callbacks) {
 
   function bindStaticEvents() {
     sheetReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    els.readout.addEventListener('click', () => callbacks.onMicToggle());
-    if (els.micCta) els.micCta.addEventListener('click', () => callbacks.onMicToggle());
+    els.micBtn.addEventListener('click', () => callbacks.onMicToggle(), { signal: eventLifetime.signal });
+    if (els.micCta) els.micCta.addEventListener('click', () => callbacks.onMicToggle(), { signal: eventLifetime.signal });
     Array.from(els.instrumentRow.querySelectorAll('[data-instrument]')).forEach((btn) => {
-      btn.addEventListener('click', () => callbacks.onInstrumentChange(btn.getAttribute('data-instrument')));
+      btn.addEventListener('click', () => callbacks.onInstrumentChange(btn.getAttribute('data-instrument')), { signal: eventLifetime.signal });
     });
-    if (els.presetBtn) els.presetBtn.addEventListener('click', showTuningView);
-    if (els.settingsBtn) els.settingsBtn.addEventListener('click', () => openSheet(els.panelSettings, els.settingsBtn));
-    if (els.settingsBtnBottom) els.settingsBtnBottom.addEventListener('click', () => openSheet(els.panelSettings, els.settingsBtnBottom));
-    if (els.sheetBackdrop) els.sheetBackdrop.addEventListener('click', () => closeSheet());
-    if (els.sheetHandle) els.sheetHandle.addEventListener('click', () => closeSheet());
-    if (els.sheetAutoAdvance) els.sheetAutoAdvance.addEventListener('change', () => {
-      callbacks.onAutoAdvanceToggle(els.sheetAutoAdvance.checked);
+    if (els.presetBtn) els.presetBtn.addEventListener('click', showTuningView, { signal: eventLifetime.signal });
+    if (els.settingsBtn) els.settingsBtn.addEventListener('click', () => openSheet(els.panelSettings, els.settingsBtn), { signal: eventLifetime.signal });
+    if (els.settingsBtnBottom) els.settingsBtnBottom.addEventListener('click', () => openSheet(els.panelSettings, els.settingsBtnBottom), { signal: eventLifetime.signal });
+    if (els.sheetBackdrop) els.sheetBackdrop.addEventListener('click', () => closeSheet(), { signal: eventLifetime.signal });
+    if (els.sheetHandle) els.sheetHandle.addEventListener('click', () => closeSheet(), { signal: eventLifetime.signal });
+    document.getElementById('tunerSheetClose')?.addEventListener('click', () => closeSheet(), { signal: eventLifetime.signal });
+    if (els.sheetAutoAdvance) els.sheetAutoAdvance.addEventListener('click', () => {
+      callbacks.onAutoAdvanceToggle(!state.autoAdvance);
       renderSheetSettings();
-    });
-    if (els.sheetAutoId) els.sheetAutoId.addEventListener('change', () => {
-      callbacks.onAutoIdToggle(els.sheetAutoId.checked);
+    }, { signal: eventLifetime.signal });
+    if (els.sheetAutoId) els.sheetAutoId.addEventListener('click', () => {
+      callbacks.onAutoIdToggle(!state.autoIdentify);
       renderSheetSettings();
-    });
-    if (els.copyLinkBtn) els.copyLinkBtn.addEventListener('click', copyTunerLink);
+    }, { signal: eventLifetime.signal });
+    const countInput = document.getElementById('tunerStringCount');
+    const commitCount = () => {
+      if (!countInput.value || !countInput.checkValidity()) {
+        showToast('Enter a whole string count between 1 and 12', 'warning');
+        syncStringStepper(); return;
+      }
+      if (Number(countInput.value) !== currentStringCount()) callbacks.onStringCountSelect(Number(countInput.value));
+      syncStringStepper();
+    };
+    countInput.addEventListener('focus', () => countInput.select(), { signal: eventLifetime.signal });
+    countInput.addEventListener('blur', commitCount, { signal: eventLifetime.signal });
+    countInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') { event.preventDefault(); countInput.blur(); }
+      if (event.key === 'Escape') { event.stopPropagation(); syncStringStepper(); countInput.blur(); }
+    }, { signal: eventLifetime.signal });
+    for (const [id, delta] of [['tunerStringsMinus', -1], ['tunerStringsPlus', 1]]) {
+      document.getElementById(id).addEventListener('click', () => {
+        callbacks.onStringCountSelect(currentStringCount() + delta); syncStringStepper();
+      }, { signal: eventLifetime.signal });
+    }
+    if (els.copyLinkBtn) els.copyLinkBtn.addEventListener('click', copyTunerLink, { signal: eventLifetime.signal });
     attachSheetDrag();
     // Legacy topbar pills (now hidden) — keep guarded for compat, not used in new UI
-    if (els.modeBtn) els.modeBtn.addEventListener('click', () => toggleMenu('mode', renderModeMenu, els.modeBtn));
-    if (els.stringsBtn) els.stringsBtn.addEventListener('click', () => toggleMenu('strings', renderStringsMenu, els.stringsBtn));
-    if (els.materialBtn) els.materialBtn.addEventListener('click', () => toggleMenu('material', renderMaterialMenu, els.materialBtn));
+    if (els.modeBtn) els.modeBtn.addEventListener('click', () => toggleMenu('mode', renderModeMenu, els.modeBtn), { signal: eventLifetime.signal });
+    if (els.stringsBtn) els.stringsBtn.addEventListener('click', () => toggleMenu('strings', renderStringsMenu, els.stringsBtn), { signal: eventLifetime.signal });
+    if (els.materialBtn) els.materialBtn.addEventListener('click', () => toggleMenu('material', renderMaterialMenu, els.materialBtn), { signal: eventLifetime.signal });
     // New sheet controls — strings/material open upward without closing sheet
-    if (els.sheetStringsBtn) els.sheetStringsBtn.addEventListener('click', () => toggleSheetMenu('sheetStrings', renderSheetStringsMenu, els.sheetStringsBtn));
-    if (els.sheetMaterialBtnSheet) els.sheetMaterialBtnSheet.addEventListener('click', () => toggleSheetMenu('sheetMaterial', renderSheetMaterialMenu, els.sheetMaterialBtnSheet));
-    if (els.instrumentBtn) els.instrumentBtn.addEventListener('click', () => toggleMenu('instrument', renderInstrumentMenu, els.instrumentBtn));
-    els.backToTunerBtn.addEventListener('click', showTunerView);
+    if (els.sheetStringsBtn) els.sheetStringsBtn.addEventListener('click', () => toggleSheetMenu('sheetStrings', renderSheetStringsMenu, els.sheetStringsBtn), { signal: eventLifetime.signal });
+    if (els.sheetMaterialBtnSheet) els.sheetMaterialBtnSheet.addEventListener('click', () => toggleSheetMenu('sheetMaterial', renderSheetMaterialMenu, els.sheetMaterialBtnSheet), { signal: eventLifetime.signal });
+    if (els.instrumentBtn) els.instrumentBtn.addEventListener('click', () => toggleMenu('instrument', renderInstrumentMenu, els.instrumentBtn), { signal: eventLifetime.signal });
+    els.backToTunerBtn.addEventListener('click', showTunerView, { signal: eventLifetime.signal });
 
     if (els.searchClearBtn) {
       els.searchClearBtn.addEventListener('click', () => {
@@ -1539,14 +1644,14 @@ export function createUi(callbacks) {
           renderTuningList('');
           els.searchInput.focus();
         }
-      });
+      }, { signal: eventLifetime.signal });
     }
 
     if (els.searchInput) {
       els.searchInput.addEventListener('input', () => {
         if (searchTimer) clearTimeout(searchTimer);
         searchTimer = setTimeout(() => renderTuningList(getSearchQuery()), SEARCH_DEBOUNCE_MS);
-      });
+      }, { signal: eventLifetime.signal });
     }
 
     els.filterChips.forEach((chip) => {
@@ -1554,7 +1659,7 @@ export function createUi(callbacks) {
         activeFilter = chip.getAttribute('data-filter') || 'all';
         els.filterChips.forEach((c) => c.classList.toggle('active', c === chip));
         renderTuningList(getSearchQuery());
-      });
+      }, { signal: eventLifetime.signal });
     });
 
     document.addEventListener('click', (e) => {
@@ -1562,7 +1667,7 @@ export function createUi(callbacks) {
       if (e.target.closest('.tuner-menu-panel')) return;
       if (e.target.closest('#tunerModeBtn, #tunerStringsBtn, #tunerMaterialBtn, #tunerInstrumentBtn, #tunerSheetStringsBtn, #tunerSheetMaterialBtn')) return;
       closeMenus(true);
-    });
+    }, { signal: eventLifetime.signal });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
@@ -1578,9 +1683,9 @@ export function createUi(callbacks) {
           showTunerView();
         }
       }
-    });
+    }, { signal: eventLifetime.signal });
 
-    window.addEventListener('resize', invalidateMeterRect, { passive: true });
+    window.addEventListener('resize', invalidateMeterRect, { ...({ passive: true }), signal: eventLifetime.signal });
   }
 
   function resetFilter() {
@@ -1598,16 +1703,24 @@ export function createUi(callbacks) {
   function init() {
     cache();
     bindStaticEvents();
+    bindQualitySettings();
     invalidateMeterRect();
     buildRail();
     renderTopbar();
     renderInstrumentRow();
     renderFigure();
     renderSheetSettings();
+    invalidateMeterRect();
+    if ('ResizeObserver' in window) {
+      meterObserver = new ResizeObserver(invalidateMeterRect);
+      meterObserver.observe(els.meter);
+    }
+    updateProgress(0, false);
     setMicState(false, false);
   }
 
   return {
+    destroy, updateProgress, refreshInputs, setReferenceStatus,
     init,
     renderTopbar,
     renderInstrumentRow,

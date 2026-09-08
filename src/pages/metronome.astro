@@ -98,7 +98,15 @@ if (!isMetronomeEnabled) {
               <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
           </div>
-          <button type="button" class="metro-tap-btn brutal-press" id="metroTapBtn" data-track="metronome:tap">TAP TEMPO</button>
+          <div class="metro-tap-wrap" id="metroTapWrap">
+            <div class="metro-primer-dots" id="metroPrimerDots" hidden role="status" aria-label="Tempo primer tap progress: 0 of 4 taps recorded">
+              <span class="metro-primer-dot" data-dot="0"></span>
+              <span class="metro-primer-dot" data-dot="1"></span>
+              <span class="metro-primer-dot" data-dot="2"></span>
+              <span class="metro-primer-dot" data-dot="3"></span>
+            </div>
+            <button type="button" class="metro-tap-btn brutal-press" id="metroTapBtn" data-track="metronome:tap">TAP TEMPO</button>
+          </div>
           <button type="button" class="metro-play-btn brutal-press" id="metroPlayBtn" aria-label="Start metronome" data-track="metronome:play">
             <span class="metro-play-icon icon-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
             <span class="metro-play-icon icon-stop" aria-hidden="true"><i class="fa-solid fa-stop"></i></span>
@@ -131,26 +139,26 @@ if (!isMetronomeEnabled) {
 
     <div class="metro-sheet-backdrop" id="metroSheetBackdrop" hidden></div>
     <div class="metro-sheet" id="metroSheet" role="dialog" aria-modal="true" tabindex="-1" hidden>
+      <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
+      <div class="sheet-floating-pill-header" id="metroSheetFloatingPillHeader">
+        <div class="header-spacer" aria-hidden="true"></div>
+        <div class="sheet-pill-title" id="metroSheetPillTitle">
+          <i class="fa-solid fa-clock" id="metroSheetPillIcon" aria-hidden="true"></i>
+          <span id="metroSetlistSheetMainTitle">TIME SIGNATURE</span>
+        </div>
+        <button
+          type="button"
+          class="sheet-pill-close-btn brutal-press"
+          id="closeMetroSheetBtn"
+          aria-label="Close menu"
+          data-track="metronome:sheet_close"
+        >
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
       <div class="metro-sheet-handle" id="metroSheetHandle" aria-hidden="true"></div>
 
       <section class="metro-sheet-panel" id="metroPanelTs" hidden aria-label="Time signature">
-        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
-        <div class="sheet-floating-pill-header" id="metroTsFloatingPillHeader">
-          <div class="header-spacer" aria-hidden="true"></div>
-          <div class="sheet-pill-title" id="metroTsPillTitle">
-            <i class="fa-solid fa-clock" aria-hidden="true"></i>
-            <span>TIME SIGNATURE</span>
-          </div>
-          <button
-            type="button"
-            class="sheet-pill-close-btn brutal-press"
-            id="closeMetroTsSheetBtn"
-            aria-label="Close time signature menu"
-            data-track="metronome:ts_close"
-          >
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-          </button>
-        </div>
         <header class="metro-sheet-head">
           <button type="button" class="metro-info-btn brutal-press" id="metroTsInfoBeats" aria-label="What do beats per bar mean?">
             <i class="fa-solid fa-info" aria-hidden="true"></i>
@@ -168,23 +176,6 @@ if (!isMetronomeEnabled) {
       </section>
 
       <section class="metro-sheet-panel" id="metroPanelSub" hidden aria-label="Subdivision">
-        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
-        <div class="sheet-floating-pill-header" id="metroSubFloatingPillHeader">
-          <div class="header-spacer" aria-hidden="true"></div>
-          <div class="sheet-pill-title" id="metroSubPillTitle">
-            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
-            <span>SUBDIVISION</span>
-          </div>
-          <button
-            type="button"
-            class="sheet-pill-close-btn brutal-press"
-            id="closeMetroSubSheetBtn"
-            aria-label="Close subdivision menu"
-            data-track="metronome:sub_close"
-          >
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-          </button>
-        </div>
         <header class="metro-sheet-head">
           <button type="button" class="metro-info-btn brutal-press" id="metroSubInfo" aria-label="What are subdivisions?">
             <i class="fa-solid fa-info" aria-hidden="true"></i>
@@ -200,24 +191,6 @@ if (!isMetronomeEnabled) {
       </section>
 
       <section class="metro-sheet-panel metro-panel--setlist" id="metroPanelSetlist" hidden aria-label="Setlists and Songs">
-        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
-        <div class="sheet-floating-pill-header" id="metroSetlistFloatingPillHeader">
-          <div class="header-spacer" aria-hidden="true"></div>
-          <div class="sheet-pill-title" id="metroSetlistPillTitle">
-            <i class="fa-solid fa-music" aria-hidden="true"></i>
-            <span id="metroSetlistSheetMainTitle">SETLIST & SONGS</span>
-          </div>
-          <button
-            type="button"
-            class="sheet-pill-close-btn brutal-press"
-            id="closeMetroSetlistSheetBtn"
-            aria-label="Close setlist and songs menu"
-            data-track="metronome:setlist_close"
-          >
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-          </button>
-        </div>
-
         <!-- Top 50/50 Navigation Selectors (Req 3) -->
         <div class="metro-menu-nav" id="metroMenuNav" role="tablist" aria-label="Setlist and song navigation">
           <button type="button" class="metro-menu-nav-btn brutal-press active" id="metroNavSetlists" data-nav="setlists" role="tab" aria-selected="true" aria-controls="metroSetlistsListView">
@@ -303,25 +276,18 @@ if (!isMetronomeEnabled) {
               </button>
             </div>
 
-            <div class="metro-song-edit-tabs" id="metroSongEditTabs" role="tablist" aria-label="Song edit modes">
-              <button type="button" class="metro-setlist-add-tab brutal-press active" id="metroSongEditTabDetails" data-add-mode="custom" role="tab" aria-selected="true">
-                <i class="fa-solid fa-sliders" aria-hidden="true"></i>
-                <span>SONG & STRUCTURE</span>
-              </button>
-              <button type="button" class="metro-setlist-add-tab brutal-press" id="metroSongEditTabStructure" data-add-mode="search" role="tab" aria-selected="false">
-                <i class="fa-solid fa-globe" aria-hidden="true"></i>
-                <span>WEB LOOKUP</span>
-              </button>
-            </div>
-
-            <!-- Tab A: Custom Form & Horizontal Structure Deck (Req 5 & 6 & 9) -->
+            <!-- Streamlined Song Details Form with Integrated Lookup & Collapsible Advanced Settings -->
             <div class="metro-song-edit-pane" id="metroSongEditPaneDetails">
               <form class="metro-custom-form" id="metroCustomForm" novalidate>
                 <input type="hidden" id="metroCustomEditId" value="" />
                 <input type="hidden" id="metroCustomFromSetlistId" value="" />
-                <div class="metro-custom-field">
+                <div class="metro-custom-field metro-custom-field--title">
                   <label class="metro-custom-label" for="metroCustomTitle">SONG TITLE *</label>
-                  <input class="metro-custom-input" id="metroCustomTitle" type="text" maxlength="120" placeholder="e.g. Supermarket" required autocomplete="off" />
+                  <div class="metro-title-lookup-wrap">
+                    <input class="metro-custom-input" id="metroCustomTitle" type="text" maxlength="120" placeholder="e.g. Supermarket" required autocomplete="off" />
+                    <span class="metro-title-lookup-spinner" id="metroTitleLookupSpinner" hidden aria-hidden="true"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                    <div class="metro-title-lookup-dropdown" id="metroTitleLookupDropdown" hidden role="listbox" aria-label="Online song search suggestions"></div>
+                  </div>
                   <span class="metro-custom-error" id="metroCustomTitleErr" hidden></span>
                 </div>
                 <div class="metro-custom-field">
@@ -358,47 +324,60 @@ if (!isMetronomeEnabled) {
                     <option value="9-8">9/8</option>
                   </select>
                 </div>
-                <div class="metro-custom-field">
-                  <label class="metro-custom-label" for="metroCustomNotes">NOTES / TUNING / KEY (OPTIONAL)</label>
-                  <input class="metro-custom-input" id="metroCustomNotes" type="text" maxlength="80" placeholder="e.g. Drop D, Key of Em" autocomplete="off" />
-                </div>
 
-                <!-- Count-in toggle (Req 9) -->
-                <div class="metro-custom-field metro-custom-field--checkbox">
-                  <label class="metro-checkbox-label">
-                    <input type="checkbox" id="metroCustomCountIn" class="metro-checkbox" />
-                    <span>COUNT-IN BEFORE PLAYBACK (1 BAR)</span>
-                  </label>
-                </div>
+                <!-- Advanced Settings Toggle Button -->
+                <button type="button" class="metro-song-advanced-btn brutal-press" id="metroSongAdvancedBtn" aria-expanded="false" aria-controls="metroSongAdvancedContent">
+                  <span class="metro-song-advanced-left">
+                    <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                    <span id="metroSongAdvancedLabel">ADVANCED SETTINGS</span>
+                  </span>
+                  <i class="fa-solid fa-chevron-down metro-advanced-chevron" aria-hidden="true"></i>
+                </button>
 
-                <!-- SONG STRUCTURE SECTION BUILDER (Req 6) -->
-                <div class="metro-structure-builder">
-                  <div class="metro-structure-builder-head">
-                    <div class="metro-structure-title-row">
-                      <label class="metro-custom-label">STRUCTURE</label>
-                      <span class="metro-structure-summary" id="metroStructureSummary">0 SECTIONS</span>
+                <!-- Collapsible Advanced Settings (Notes, Count-In, Structure Deck) -->
+                <div class="metro-song-advanced-content" id="metroSongAdvancedContent" hidden>
+                  <div class="metro-custom-field">
+                    <label class="metro-custom-label" for="metroCustomNotes">NOTES / TUNING / KEY (OPTIONAL)</label>
+                    <input class="metro-custom-input" id="metroCustomNotes" type="text" maxlength="80" placeholder="e.g. Drop D, Key of Em" autocomplete="off" />
+                  </div>
+
+                  <!-- Count-in toggle (Req 9) -->
+                  <div class="metro-custom-field metro-custom-field--checkbox">
+                    <label class="metro-checkbox-label">
+                      <input type="checkbox" id="metroCustomCountIn" class="metro-checkbox" />
+                      <span>COUNT-IN BEFORE PLAYBACK (1 BAR)</span>
+                    </label>
+                  </div>
+
+                  <!-- SONG STRUCTURE SECTION BUILDER (Req 6) -->
+                  <div class="metro-structure-builder">
+                    <div class="metro-structure-builder-head">
+                      <div class="metro-structure-title-row">
+                        <label class="metro-custom-label">STRUCTURE</label>
+                        <span class="metro-structure-summary" id="metroStructureSummary">0 SECTIONS</span>
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- Horizontal Structure Deck -->
-                  <div class="metro-structure-deck" id="metroStructureDeck"></div>
+                    <!-- Horizontal Structure Deck -->
+                    <div class="metro-structure-deck" id="metroStructureDeck"></div>
 
-                  <!-- Quick Add Preset Buttons -->
-                  <div class="metro-structure-quick-add">
-                    <span class="metro-structure-quick-label">ADD SECTION:</span>
-                    <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetIntro" data-preset="Intro">+ Intro</button>
-                    <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetVerse" data-preset="Verse">+ Verse</button>
-                    <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetChorus" data-preset="Chorus">+ Chorus</button>
-                    <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetBridge" data-preset="Bridge">+ Bridge</button>
-                    <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetSolo" data-preset="Solo">+ Solo</button>
-                    <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetOutro" data-preset="Outro">+ Outro</button>
-                    <button type="button" class="metro-structure-preset-btn metro-structure-preset-btn--custom brutal-press" id="metroPresetCustom" data-preset="Custom">+ Custom</button>
-                  </div>
+                    <!-- Quick Add Preset Buttons -->
+                    <div class="metro-structure-quick-add">
+                      <span class="metro-structure-quick-label">ADD SECTION:</span>
+                      <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetIntro" data-preset="Intro">+ Intro</button>
+                      <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetVerse" data-preset="Verse">+ Verse</button>
+                      <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetChorus" data-preset="Chorus">+ Chorus</button>
+                      <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetBridge" data-preset="Bridge">+ Bridge</button>
+                      <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetSolo" data-preset="Solo">+ Solo</button>
+                      <button type="button" class="metro-structure-preset-btn brutal-press" id="metroPresetOutro" data-preset="Outro">+ Outro</button>
+                      <button type="button" class="metro-structure-preset-btn metro-structure-preset-btn--custom brutal-press" id="metroPresetCustom" data-preset="Custom">+ Custom</button>
+                    </div>
 
-                  <!-- Sequence Preview -->
-                  <div class="metro-structure-preview" id="metroStructurePreview">
-                    <span class="metro-structure-preview-label">FLOW:</span>
-                    <div class="metro-structure-preview-flow" id="metroStructureFlow"></div>
+                    <!-- Sequence Preview -->
+                    <div class="metro-structure-preview" id="metroStructurePreview">
+                      <span class="metro-structure-preview-label">FLOW:</span>
+                      <div class="metro-structure-preview-flow" id="metroStructureFlow"></div>
+                    </div>
                   </div>
                 </div>
 
@@ -409,26 +388,6 @@ if (!isMetronomeEnabled) {
                   </button>
                 </div>
               </form>
-            </div>
-
-            <!-- Tab B: Web lookup pane -->
-            <div class="metro-song-edit-pane" id="metroSongEditPaneStructure" hidden>
-              <div class="metro-setlist-web-search-box">
-                <i class="fa-solid fa-magnifying-glass metro-setlist-web-search-icon" aria-hidden="true"></i>
-                <input
-                  type="search"
-                  id="metroSetlistWebSearchInput"
-                  class="metro-setlist-web-search-input"
-                  placeholder="Search any song or artist (e.g. Nirvana, Radiohead)…"
-                  autocomplete="off"
-                  spellcheck="false"
-                  aria-label="Search song for BPM lookup"
-                />
-                <button type="button" class="metro-setlist-search-clear brutal-press" id="metroSetlistWebSearchClear" aria-label="Clear web search" hidden>
-                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                </button>
-              </div>
-              <div class="metro-setlist-web-results" id="metroSetlistWebResults"></div>
             </div>
           </div>
 
@@ -514,23 +473,6 @@ if (!isMetronomeEnabled) {
       </section>
 
       <section class="metro-sheet-panel metro-panel--settings" id="metroPanelSettings" hidden aria-label="Settings">
-        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
-        <div class="sheet-floating-pill-header" id="metroSettingsFloatingPillHeader">
-          <div class="header-spacer" aria-hidden="true"></div>
-          <div class="sheet-pill-title" id="metroSettingsPillTitle">
-            <i class="fa-solid fa-gear" aria-hidden="true"></i>
-            <span>SETTINGS</span>
-          </div>
-          <button
-            type="button"
-            class="sheet-pill-close-btn brutal-press"
-            id="closeMetroSettingsSheetBtn"
-            aria-label="Close settings menu"
-            data-track="metronome:settings_close"
-          >
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-          </button>
-        </div>
         <div class="metro-settings-scroll" id="metroSettingsScroll">
           <p class="metro-settings-label">CLICK SOUND</p>
           <div class="metro-sound-row" id="metroSoundRow"></div>
@@ -675,23 +617,6 @@ if (!isMetronomeEnabled) {
       </section>
 
       <section class="metro-sheet-panel metro-panel--coach" id="metroPanelCoach" hidden aria-label="Coach deck">
-        <!-- Floating Pill Header (Above Bottom Sheet / Menu) -->
-        <div class="sheet-floating-pill-header" id="metroCoachFloatingPillHeader">
-          <div class="header-spacer" aria-hidden="true"></div>
-          <div class="sheet-pill-title" id="metroCoachPillTitle">
-            <i class="fa-solid fa-dumbbell" aria-hidden="true"></i>
-            <span>COACH DECK</span>
-          </div>
-          <button
-            type="button"
-            class="sheet-pill-close-btn brutal-press"
-            id="closeMetroCoachSheetBtn"
-            aria-label="Close coach deck menu"
-            data-track="metronome:coach_close"
-          >
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-          </button>
-        </div>
         <div class="metro-coach-tablist" id="metroCoachTablist" role="tablist" aria-label="Coach deck modules"></div>
         <div class="metro-coach-panels" id="metroCoachPanels"></div>
         <div class="metro-coach-live" id="metroCoachLive" hidden></div>
@@ -2120,6 +2045,69 @@ if (!isMetronomeEnabled) {
     box-shadow: 3px 3px 0px #000000;
     font-size: 1.25rem;
     flex-shrink: 0;
+  }
+
+  .metro-tap-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .metro-tap-wrap .metro-tap-btn {
+    width: 100%;
+  }
+
+  .metro-primer-dots {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 3px 10px;
+    background: var(--surface-card, #141418);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: var(--radius-pill);
+    z-index: 5;
+    pointer-events: none;
+    animation: primerDotsIn 0.2s var(--ease-snappy);
+  }
+
+  .metro-primer-dots[hidden] {
+    display: none !important;
+  }
+
+  @keyframes primerDotsIn {
+    from { opacity: 0; transform: translate(-50%, 4px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  .metro-primer-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1.5px solid #000000;
+    background: rgba(255, 255, 255, 0.25);
+    box-sizing: border-box;
+    transition: background-color 0.15s ease, transform 0.15s var(--ease-tactile), box-shadow 0.15s ease;
+  }
+
+  .metro-primer-dot.active {
+    background: var(--btn-brand-primary, #f2fd43);
+    box-shadow: 0 0 8px var(--brand-accent-glow, rgba(242, 253, 67, 0.4));
+    transform: scale(1.25);
+  }
+
+  .metro-primer-dot.completed {
+    background: var(--level-high, #53FC18);
+    box-shadow: 0 0 8px rgba(83, 252, 24, 0.5);
+    transform: scale(1.15);
   }
 
   .metro-tap-btn {
@@ -3956,56 +3944,172 @@ if (!isMetronomeEnabled) {
     border-color: var(--accent-neon-yellow);
   }
 
-  /* Song Edit Tabs */
-  .metro-song-edit-tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 12px;
+  /* Song Title Integrated Track Lookup */
+  .metro-custom-field--title {
+    position: relative;
   }
 
-  .metro-setlist-add-tab {
+  .metro-title-lookup-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .metro-title-lookup-spinner {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: var(--accent-neon-yellow);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .metro-title-lookup-spinner[hidden] {
+    display: none !important;
+  }
+
+  .metro-title-lookup-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    background: #141418;
+    border: 2px solid #000000;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: var(--radius-md);
+    z-index: 100;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+  }
+
+  .metro-title-lookup-dropdown[hidden] {
+    display: none !important;
+  }
+
+  .metro-title-lookup-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    background: transparent;
+    text-align: left;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: background-color 0.12s ease;
+  }
+
+  .metro-title-lookup-item:last-child {
+    border-bottom: none;
+  }
+
+  .metro-title-lookup-item:hover,
+  .metro-title-lookup-item:focus-visible {
+    background: #24242e;
+    outline: none;
+  }
+
+  .metro-title-lookup-name {
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .metro-title-lookup-artist {
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    color: var(--accent-neon-yellow);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .metro-title-lookup-meta {
+    font-family: var(--font-secondary);
+    font-size: 0.65rem;
+    color: #8e8e93;
+  }
+
+  /* Song Advanced Settings Toggle */
+  .metro-song-advanced-btn {
+    width: 100%;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 10px 12px;
-    background: #1e1e24;
-    color: #a1a1aa;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 11px 14px;
+    margin-top: 4px;
+    background: #18181e;
+    color: #f5f5f7;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     border-radius: var(--radius-md);
     font-family: var(--font-secondary);
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease;
   }
 
-  .metro-setlist-add-tab:hover {
-    background: #25252e;
-    color: #f5f5f7;
+  .metro-song-advanced-btn:hover {
+    background: #24242e;
+    color: var(--accent-neon-yellow);
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
 
-  .metro-setlist-add-tab.active {
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    border-color: #000000;
-    box-shadow: 2px 2px 0px #000000;
-  }
-
-  .metro-setlist-add-tab.active:hover {
-    background: var(--btn-green-hover);
-  }
-
-  .metro-setlist-add-tab:active {
+  .metro-song-advanced-btn:active {
     transform: translate(1px, 1px);
     box-shadow: 1px 1px 0px #000000;
+  }
+
+  .metro-song-advanced-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .metro-advanced-chevron {
+    font-size: 0.75rem;
+    color: var(--accent-neon-yellow);
+    transition: transform 0.2s var(--ease-snappy);
+  }
+
+  .metro-song-advanced-btn[aria-expanded="true"] .metro-advanced-chevron {
+    transform: rotate(180deg);
+  }
+
+  .metro-song-advanced-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+    animation: advancedSlideDown 0.2s var(--ease-snappy);
+  }
+
+  .metro-song-advanced-content[hidden] {
+    display: none !important;
+  }
+
+  @keyframes advancedSlideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .metro-song-edit-pane {
@@ -7689,11 +7793,17 @@ if (!isMetronomeEnabled) {
     white-space: nowrap;
   }
 
+  .metro-coach-pill-left,
   .metro-coach-pill-actions {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
+  }
+
+  .metro-coach-pill-bar.is-tempo-primer {
+    padding: 6px 10px;
+    gap: 8px;
   }
 
   .metro-coach-pill-stop {
@@ -7726,6 +7836,25 @@ if (!isMetronomeEnabled) {
     box-shadow: 1px 1px 0px #000000;
   }
 
+  .metro-coach-pill-stop.is-icon-only,
+  .metro-coach-pill-bar.is-tempo-primer .metro-coach-pill-stop {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
+    font-size: 0.85rem;
+  }
+
+  .metro-coach-pill-stop.is-icon-only span,
+  .metro-coach-pill-bar.is-tempo-primer .metro-coach-pill-stop span {
+    display: none !important;
+  }
+
   .metro-coach-pill-retry {
     display: inline-flex;
     align-items: center;
@@ -7748,6 +7877,25 @@ if (!isMetronomeEnabled) {
   .metro-coach-pill-retry:hover {
     background: #2a2a34;
     color: #ffffff;
+  }
+
+  .metro-coach-pill-retry.is-icon-only,
+  .metro-coach-pill-bar.is-tempo-primer .metro-coach-pill-retry {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
+    font-size: 0.85rem;
+  }
+
+  .metro-coach-pill-retry.is-icon-only span,
+  .metro-coach-pill-bar.is-tempo-primer .metro-coach-pill-retry span {
+    display: none !important;
   }
 
   .metro-coach-pill-expand {
@@ -7779,17 +7927,63 @@ if (!isMetronomeEnabled) {
 
   @media (max-width: 400px) {
     .metro-coach-pill-bar {
-      padding: 4px 4px 4px 10px;
+      padding: 4px 6px 4px 8px;
       gap: 6px;
     }
-    .metro-coach-pill-sub {
+    .metro-coach-pill-bar.is-tempo-primer {
+      padding: 4px 6px;
+      gap: 6px;
+    }
+    .metro-coach-pill-left {
+      gap: 4px;
+    }
+    .metro-coach-pill-stop.is-icon-only,
+    .metro-coach-pill-bar.is-tempo-primer .metro-coach-pill-stop,
+    .metro-coach-pill-retry.is-icon-only,
+    .metro-coach-pill-bar.is-tempo-primer .metro-coach-pill-retry,
+    .metro-coach-pill-expand {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      font-size: 0.78rem;
+    }
+    .metro-coach-pill-stop:not(.is-icon-only) span {
       display: none;
     }
-    .metro-coach-pill-stop span {
-      display: none;
+    .metro-coach-pill-stop:not(.is-icon-only) {
+      padding: 6px 10px;
     }
-    .metro-coach-pill-stop {
-      padding: 8px 10px;
+    .metro-coach-pill-tag {
+      font-size: 0.72rem;
+      gap: 4px;
+    }
+  }
+
+  @media (max-width: 340px) {
+    .metro-coach-pill-bar {
+      padding: 4px;
+      gap: 4px;
+    }
+    .metro-coach-pill-left {
+      gap: 3px;
+    }
+    .metro-coach-pill-stop.is-icon-only,
+    .metro-coach-pill-bar.is-tempo-primer .metro-coach-pill-stop,
+    .metro-coach-pill-retry.is-icon-only,
+    .metro-coach-pill-bar.is-tempo-primer .metro-coach-pill-retry,
+    .metro-coach-pill-expand {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      font-size: 0.72rem;
+    }
+    .metro-coach-pill-tag {
+      font-size: 0.68rem;
+      gap: 3px;
+    }
+    .metro-coach-grade-badge {
+      padding: 1px 5px;
+      font-size: 0.6rem;
     }
   }
   .metro-midi-card {

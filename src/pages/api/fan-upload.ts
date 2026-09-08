@@ -3,6 +3,7 @@ import { z } from 'astro/zod';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 import { sanitizeText } from '../../lib/sanitize';
 import { getSupabaseServiceClient } from '../../lib/supabaseServer';
+import { fanUploadConfig } from '../../settings/upload.config';
 import {
   getNotifyConfig,
   sendNotifyEmail,
@@ -12,18 +13,7 @@ import {
 
 export const prerender = false;
 
-const MIN_BYTES = 1024;
-const MAX_BYTES = 83886080; // 80 MB — mirrors fan_uploads.byte_size check + bucket limit
-const ALLOWED_MIME = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/heic',
-  'image/heif',
-  'video/mp4',
-  'video/quicktime',
-  'video/webm'
-]);
+const ALLOWED_MIME = new Set(fanUploadConfig.mimeTypes);
 const GIG_ID_RE = /^[a-zA-Z0-9_-]{1,60}$/;
 const AVATAR_URL = 'https://raw.githubusercontent.com/KinsBand/kins-link-tree/main/public/new.png';
 
@@ -66,6 +56,10 @@ export const POST: APIRoute = async ({ request }) => {
       return json({ status: 'error', message: 'Upload limit reached. Please try again in about 10 minutes.' }, 429);
     }
 
+    if (Number(request.headers.get('content-length')) > fanUploadConfig.maxRequestBytes) {
+      return json({ status: 'error', message: fanUploadConfig.sizeError }, 413);
+    }
+
     let form: FormData;
     try {
       form = await request.formData();
@@ -79,9 +73,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
     const file = rawFile as File;
 
-    if (file.size < MIN_BYTES || file.size > MAX_BYTES) {
+    if (file.size < fanUploadConfig.minBytes || file.size > fanUploadConfig.maxBytes) {
       return json(
-        { status: 'error', message: 'File must be between 1 KB and 80 MB.' },
+        { status: 'error', message: fanUploadConfig.sizeError },
         400
       );
     }

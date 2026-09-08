@@ -286,22 +286,38 @@ test.describe('tier1 smoke — metronome', () => {
     await expect(topbarTitle).toHaveText('INNER CLOCK');
     await expect(liveDock).toBeVisible();
     await expect(liveDock).toContainText('AUDIBLE');
-    await expect(liveDock.locator('.metro-coach-live-stop')).toBeVisible();
 
-    // Stop session via dynamic island STOP button
-    await liveDock.locator('.metro-coach-live-stop').click();
-    await expect(liveDock).toBeHidden();
-    await expect(topbarTitle).toBeHidden();
-    await expect(coachBtn).toBeVisible();
+    // Verify 3-part layout: Left (stop button), Middle (info), Right (expand up arrow)
+    const stopBtnEl = liveDock.locator('#metroCoachPillStop');
+    const infoEl = liveDock.locator('.metro-coach-pill-info');
+    const expandBtnEl = liveDock.locator('#metroCoachPillExpand');
+    await expect(stopBtnEl).toBeVisible();
+    await expect(infoEl).toBeVisible();
+    await expect(expandBtnEl).toBeVisible();
+
+    // Toggling the main Play/Stop button pauses audio but keeps the game mode active with PAUSED indicator
+    await playBtn.click(); // main stop / pause
     await expect(playBtn).not.toHaveClass(/playing/);
-
-    // Start session again and test stopping via main Play/Stop button
-    await coachBtn.click();
-    await page.locator('#metroCoachPanel-inner-clock .metro-coach-cta').click();
     await expect(liveDock).toBeVisible();
+    await expect(liveDock).toContainText('PAUSED');
     await expect(topbarTitle).toBeVisible();
     await expect(coachBtn).toBeHidden();
-    await playBtn.click(); // main stop
+
+    // Restarting metronome clears PAUSED and resumes coach live progression
+    await playBtn.click();
+    await expect(playBtn).toHaveClass(/playing/);
+    await expect(liveDock).toBeVisible();
+    await expect(liveDock).not.toContainText('PAUSED');
+
+    // Clicking the Up Arrow opens coach deck sheet focused on active tab
+    await expandBtnEl.click();
+    await expect(page.locator('#metroPanelCoach')).toBeVisible();
+    await expect(page.locator('#metroCoachTab-inner-clock')).toHaveAttribute('aria-selected', 'true');
+    await page.locator('#closeMetroSheetBtn').click();
+    await expect(page.locator('#metroSheet')).toBeHidden();
+
+    // Stop session via adaptive game mode STOP button on left
+    await liveDock.locator('.metro-coach-live-stop').click();
     await expect(liveDock).toBeHidden();
     await expect(topbarTitle).toBeHidden();
     await expect(coachBtn).toBeVisible();
@@ -454,11 +470,9 @@ test.describe('tier1 smoke — metronome', () => {
   });
 
   test('background play keeps the engine running across visibility changes', async ({ page }) => {
-    await openMetro(page);
     // opt into background play before the controller boots
-    await page.evaluate(() => localStorage.setItem('kins-metro-backgroundPlay', '1'));
-    await page.reload();
-    await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+    await page.addInitScript(() => localStorage.setItem('kins-metro-backgroundPlay', '1'));
+    await openMetro(page);
 
     const play = page.locator('#metroPlayBtn');
     await play.click();
@@ -477,11 +491,12 @@ test.describe('tier1 smoke — metronome', () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
     await expect(play).toHaveClass(/playing/);
+    await play.click();
+  });
 
-    // And with the toggle off it stops honestly again
-    await page.evaluate(() => localStorage.setItem('kins-metro-backgroundPlay', '0'));
-    await page.reload();
-    await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+  test('background play disabled stops the engine when the page is hidden', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('kins-metro-backgroundPlay', '0'));
+    await openMetro(page);
     const play2 = page.locator('#metroPlayBtn');
     await play2.click();
     await expect(play2).toHaveClass(/playing/);
@@ -512,7 +527,7 @@ test.describe('tier1 smoke — metronome', () => {
   async function openMetroDebug(page: Page) {
     await page.goto('/metronome?metrodebug=1');
     await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
-    const read = (): MetroDebug | null =>
+    const read = (): Promise<MetroDebug | null> =>
       page.evaluate(() => {
         const fn = (window as unknown as { __metroDebug?: () => MetroDebug }).__metroDebug;
         return fn ? fn() : null;

@@ -7,12 +7,14 @@ import {
   DEFAULT_STRING_COUNTS,
   A4_REFERENCE,
   noteToFreq
-} from '../../../settings/tuner.config';
+} from '../../../settings/tuner.config.ts';
 import { midiToNoteName } from './notesUtil.js';
 
 const KEYS = {
   instrument: 'kins-tuner-instrument',
   presetPrefix: 'kins-tuner-preset-',
+  presetIdPrefix: 'kins-tuner-preset-id-',
+  customPrefix: 'kins-tuner-custom-',
   stringsPrefix: 'kins-tuner-strings-',
   mode: 'kins-tuner-mode',
   autoAdvance: 'kins-tuner-auto-advance',
@@ -55,7 +57,7 @@ function generateStandardStrings(instrumentId, count, a4) {
     if (count === 5) return [23, ...BASS_BASE].map((m) => makeCustomString(m, a4)); // + B0
     // >5: alternate extra lows below B0 (F#0, C#0, ...) and highs above C3 (F3, ...)
     const lowExt = [23, 18, 13, 8];
-    const highExt = [48, 53, 58];
+    const highExt = [48, 53, 58, 63];
     const extras = count - BASS_BASE.length;
     const lows = lowExt.slice(0, Math.min(Math.ceil(extras / 2), lowExt.length)).reverse();
     const highs = highExt.slice(0, Math.max(0, Math.min(count - BASS_BASE.length - lows.length, highExt.length)));
@@ -82,6 +84,9 @@ function generateStandardStrings(instrumentId, count, a4) {
 }
 
 export const state = {
+  deviceId: '',
+  inputChannel: 0,
+  tolerance: 3,
   instrumentId: DEFAULT_INSTRUMENT,
   presetIndex: 0,
   stringIndex: 0,
@@ -153,7 +158,7 @@ export function currentStringCount() {
 
 export function isCustomCount(count) {
   const options = stringCountOptions();
-  return !options.includes(count) && Number.isInteger(count) && count >= 3 && count <= 12;
+  return !options.includes(count) && Number.isInteger(count) && count >= 1 && count <= 12;
 }
 
 export function setStringCount(count) {
@@ -162,12 +167,14 @@ export function setStringCount(count) {
     state.customPreset = null;
     state.stringCount = count;
     storageSet(KEYS.stringsPrefix + state.instrumentId, String(count));
+    storageSet(KEYS.customPrefix + state.instrumentId, '0');
     const group = getGroup();
     const matchingIdx = group.presets.findIndex((p) => p.strings.length === count);
     if (matchingIdx !== -1) {
       state.presetIndex = matchingIdx;
       state.stringIndex = 0;
       storageSet(KEYS.presetPrefix + state.instrumentId, String(state.presetIndex));
+      storageSet(KEYS.presetIdPrefix + state.instrumentId, group.presets[matchingIdx].id);
     }
     return true;
   }
@@ -179,13 +186,14 @@ export function setStringCount(count) {
 }
 
 export function setCustomStringCount(count) {
-  const parsed = parseInt(String(count), 10);
-  if (!Number.isInteger(parsed) || parsed < 3 || parsed > 12) return false;
-  // Allow any 3-12 as custom, even if in options (treat as custom if explicitly requested)
+  const parsed = Number(count);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 12) return false;
+  // Allow any 1-12 as custom, even if in options (treat as custom if explicitly requested)
   state.stringCount = parsed;
   state.stringIndex = 0;
   state.customPreset = createCustomPreset(parsed);
   storageSet(KEYS.stringsPrefix + state.instrumentId, String(parsed));
+  storageSet(KEYS.customPrefix + state.instrumentId, '1');
   // do not change presetIndex; customPreset takes precedence
   return true;
 }
@@ -196,8 +204,9 @@ export function setInstrument(id) {
   state.instrumentId = group.id;
 
   const validCounts = INSTRUMENT_STRING_COUNTS[group.id] || [];
-  const savedCount = parseInt(storageGet(KEYS.stringsPrefix + group.id) ?? '', 10);
-  const isSavedCustom = Number.isInteger(savedCount) && savedCount >= 3 && savedCount <= 12 && !validCounts.includes(savedCount);
+  const savedCount = Number(storageGet(KEYS.stringsPrefix + group.id));
+  const isSavedCustom = group.id !== 'drums' && Number.isInteger(savedCount) && savedCount >= 1 && savedCount <= 12 &&
+    (!validCounts.includes(savedCount) || storageGet(KEYS.customPrefix + group.id) === '1');
   if (isSavedCustom) {
     state.stringCount = savedCount;
     state.customPreset = createCustomPreset(savedCount);
@@ -206,8 +215,10 @@ export function setInstrument(id) {
   } else {
     state.customPreset = null;
     state.stringCount = validCounts.includes(savedCount) ? savedCount : (DEFAULT_STRING_COUNTS[group.id] || 6);
-    const savedPreset = parseInt(storageGet(KEYS.presetPrefix + group.id) ?? '', 10);
-    let presetIdx = Number.isFinite(savedPreset) ? clamp(savedPreset, 0, group.presets.length - 1) : 0;
+    const savedPreset = Number(storageGet(KEYS.presetPrefix + group.id));
+    const savedId = storageGet(KEYS.presetIdPrefix + group.id);
+    const stableIndex = group.presets.findIndex(preset => preset.id === savedId);
+    let presetIdx = stableIndex >= 0 ? stableIndex : Number.isInteger(savedPreset) ? clamp(savedPreset, 0, group.presets.length - 1) : 0;
     if (validCounts.length > 0 && group.presets[presetIdx] && group.presets[presetIdx].strings.length !== state.stringCount) {
       const alignedIdx = group.presets.findIndex((p) => p.strings.length === state.stringCount);
       if (alignedIdx !== -1) presetIdx = alignedIdx;
@@ -216,6 +227,7 @@ export function setInstrument(id) {
     state.stringIndex = 0;
     if (group.presets[state.presetIndex]) {
       state.stringCount = group.presets[state.presetIndex].strings.length;
+      storageSet(KEYS.presetIdPrefix + group.id, group.presets[state.presetIndex].id);
     }
   }
 
@@ -229,6 +241,7 @@ export function setInstrument(id) {
 }
 
 export function setPreset(index) {
+  if (!Number.isInteger(index)) return;
   const group = getGroup();
   state.presetIndex = clamp(index, 0, group.presets.length - 1);
   state.stringIndex = 0;
@@ -239,15 +252,18 @@ export function setPreset(index) {
     storageSet(KEYS.stringsPrefix + state.instrumentId, String(state.stringCount));
   }
   storageSet(KEYS.presetPrefix + state.instrumentId, String(state.presetIndex));
+  storageSet(KEYS.presetIdPrefix + state.instrumentId, preset.id);
+  storageSet(KEYS.customPrefix + state.instrumentId, '0');
 }
 
 export function setString(index) {
+  if (!Number.isInteger(index)) return;
   const preset = getPreset();
   state.stringIndex = clamp(index, 0, preset.strings.length - 1);
 }
 
 export function setMode(mode) {
-  state.mode = mode === 'chromatic' ? 'chromatic' : 'guided';
+  state.mode = ['chromatic', 'ear'].includes(mode) ? mode : 'guided';
   storageSet(KEYS.mode, state.mode);
 }
 
@@ -270,7 +286,7 @@ export function setMaterial(id) {
 
 export function setA4(hz) {
   const parsed = Number(hz);
-  state.a4 = parsed >= 410 && parsed <= 470 ? parsed : A4_REFERENCE;
+  state.a4 = Number.isFinite(parsed) && parsed >= 410 && parsed <= 470 ? Math.round(parsed * 10) / 10 : A4_REFERENCE;
   storageSet(KEYS.a4, String(state.a4));
   if (state.customPreset) {
     state.customPreset = createCustomPreset(state.stringCount);
@@ -278,6 +294,8 @@ export function setA4(hz) {
 }
 
 export function restore() {
+  setA4(storageGet(KEYS.a4) ?? A4_REFERENCE);
+  state.tolerance = storageGet('kins-tuner-tolerance') === '1' ? 1 : 3;
   const savedInstrument = storageGet(KEYS.instrument);
   if (TUNER_INSTRUMENTS.some((g) => g.id === savedInstrument)) {
     setInstrument(savedInstrument);
@@ -289,7 +307,11 @@ export function restore() {
   setAutoAdvance(storageGet(KEYS.autoAdvance) === '1');
   // Auto string identification defaults ON — only an explicit opt-out persists.
   state.autoIdentify = storageGet(KEYS.autoId) !== '0';
-  const savedA4 = parseInt(storageGet(KEYS.a4) ?? '', 10);
-  if (Number.isFinite(savedA4)) setA4(savedA4);
+
 }
 
+
+export function setTolerance(value) {
+  state.tolerance = Number(value) === 1 ? 1 : 3;
+  storageSet('kins-tuner-tolerance', String(state.tolerance));
+}

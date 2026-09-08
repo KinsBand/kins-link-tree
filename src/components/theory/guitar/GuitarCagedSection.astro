@@ -18,14 +18,13 @@ const cagedItems = (cagedCategory?.items || []) as CagedItem[];
 
   <div class="category-items-list">
     {cagedItems.map((item) => (
-      <div class="theory-item-row" data-search-target={`${item.name} ${item.rootStrings} ${item.voicing}`}>
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
         <div class="item-name-col">
           <div class="item-title-row">
             <strong class="item-name">{item.name}</strong>
-            <span class="item-type-tag">{item.rootStrings}</span>
+            <span class="item-type-tag">{item.formula}</span>
           </div>
-          <span class="item-notes">{item.voicing}</span>
-          <span class="item-fret-hint"><i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i> Next Shape: {item.transition}</span>
+          <span class="item-notes">{item.notes}</span>
         </div>
         <div class="item-actions-col">
           <div class="item-action-btns">

@@ -99,7 +99,7 @@ if (chord.barre) {
       <!-- Mute (✕) & Open (◯) Nut Indicators (y = 20) -->
       {chord.frets.map((fretVal, i) => {
         const x = stringX[i];
-        if (fretVal === '✕' || fretVal === 'x') {
+        if (fretVal === '✕') {
           return (
             <text x={x} y="23" text-anchor="middle" class="chord-svg-mute">✕</text>
           );

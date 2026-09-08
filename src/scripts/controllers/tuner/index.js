@@ -1,421 +1,175 @@
-import { TUNER_COPY, DETECT, noteToFreq } from '../../../settings/tuner.config';
+import { TUNER_COPY, DETECT, noteToFreq } from '../../../settings/tuner.config.ts';
 import { showToast } from '../toast.js';
 import { midiToPitchClass } from './notesUtil.js';
-import {
-  state,
-  getGroup,
-  getString,
-  getPreset,
-  getProfile,
-  setInstrument,
-  setPreset,
-  setString,
-  setStringCount,
-  setCustomStringCount,
-  setMode,
-  setAutoAdvance,
-  setAutoIdentify,
-  setMaterial,
-  setA4,
-  restore
-} from './tunerState.js';
+import { state, getString, getPreset, setInstrument, setPreset, setString, setStringCount,
+  setCustomStringCount, setMode, setAutoAdvance, setAutoIdentify, setMaterial, setA4, restore } from './tunerState.js';
 import { createAudioEngine } from './audioEngine.js';
-import {
-  createPitchDetector,
-  createCentsSmoother,
-  createNoteStabilizer
-} from './pitchDetector.js';
-import { createSafetyMonitor } from './safetyMonitor.js';
+import { createCentsSmoother, createNoteStabilizer } from './pitchDetector.js';
+import { createTuningConfirmation } from './confirmation.js';
 import { createUi } from './uiBindings.js';
+import { createReferenceTone } from './referenceTone.js';
+import { createDrumWorkflow } from './drumWorkflow.js';
 
-const WORK_WINDOW = DETECT.WORK_WINDOW;
+let initialized = false, engine = null, ui = null, worker = null, events = null;
+let drums = null;
+let sessionId = 0, revision = 0, busy = false, watchdog = null;
+let workBuf = new Float32Array(DETECT.WORK_WINDOW);
+let lastAnalysis = -Infinity, lastPacketAt = 0, lastGood = null, lastGoodAt = 0;
+let autoCandidate = null, autoSince = 0, pendingAdvance = null;
+let completed = new Set();
+const smoother = createCentsSmoother();
+const noteStab = createNoteStabilizer();
+const confirmation = createTuningConfirmation();
+const referenceTone = createReferenceTone(status => ui?.setReferenceStatus(status));
 
-let initialized = false;
-let engine = null;
-let detector = null;
-let smoother = null;
-let noteStab = null;
-let safety = null;
-let ui = null;
-let rafId = null;
-let lastTick = 0;
-let reducedMotion = false;
-let lowPower = false;
-let lockedSince = 0;
-/* Auto string identification hysteresis (guided mode): a locked reading
-   near ANOTHER string's target must persist before the selection follows. */
-let autoIdCandidate = null;
-let autoIdCandidateSince = 0;
-const workBuf = new Float32Array(WORK_WINDOW);
-
-function targetFreq(string) {
-  if (state.instrumentId === 'drums') return string.freq;
-  return noteToFreq(string.midi, state.a4);
-}
-
+function targetFreq(string) { return state.instrumentId === 'drums' ? string.freq : noteToFreq(string.midi, state.a4); }
 function resetPipeline() {
-  detector.reset();
-  smoother.reset();
-  noteStab.reset();
-  safety.reset();
-  lockedSince = 0;
-  autoIdCandidate = null;
-  autoIdCandidateSince = 0;
-  lastGood = null;
-  lastGoodAt = 0;
-  holdCandidateMidi = null;
-  holdCandidateSince = 0;
-  holdCandidateFrames = 0;
-  clipRun = 0;
-  polyRun = 0;
+  revision++; smoother.reset(); noteStab.reset(); confirmation.reset();
+  lastGood = null; lastGoodAt = 0; autoCandidate = null; pendingAdvance = null;
+  completed.clear();
+  ui?.updateProgress?.(0, false);
 }
-
-/* Pluck-and-follow: nearest string whose target sits within AUTO_ID_CENTS of
-   the confident reading. Only near-exact matches qualify, so an out-of-tune
-   pluck can never hijack the selection. */
-function findAutoIdString(freq) {
-  const strings = getPreset().strings;
-  let best = null;
-  let bestCents = Infinity;
-  for (let i = 0; i < strings.length; i++) {
-    const target = targetFreq(strings[i]);
-    if (!(target > 0)) continue;
-    const cents = Math.abs(1200 * Math.log2(freq / target));
-    if (cents < bestCents) {
-      bestCents = cents;
-      best = i;
-    }
-  }
-  return best !== null && bestCents <= DETECT.AUTO_ID_CENTS ? best : null;
+function holdReading(status = 'silent') {
+  confirmation.reset(); autoCandidate = null; pendingAdvance = null;
+  ui?.updateProgress?.(0, false);
+  if (lastGood && performance.now() - lastGoodAt < DETECT.STALE_CLEAR_MS && status === 'silent') {
+    ui.updateReading({ ...lastGood, held: true });
+  } else ui?.updateReading({ status });
 }
-
-function autoIdTick(freq, trusted, nowMs) {
-  if (!state.autoIdentify || state.mode !== 'guided' || state.instrumentId === 'drums') return;
-  // Only fully locked readings may steer string selection; weak/unlocked
-  // frames pause evaluation without cancelling confirmation progress.
-  if (!trusted) return;
-  const match = findAutoIdString(freq);
-  if (match === null || match === state.stringIndex) {
-    autoIdCandidate = null;
+function identifyString(freq, time) {
+  if (!state.autoIdentify || state.autoAdvance || state.mode !== 'guided') return;
+  const matches = getPreset().strings.map((string, index) => ({ index, distance: Math.abs(1200 * Math.log2(freq / targetFreq(string))) })).sort((a,b) => a.distance-b.distance);
+  const best = matches[0];
+  if (!best || best.distance > DETECT.AUTO_ID_CENTS || best.index === state.stringIndex || (matches[1] && matches[1].distance - best.distance < DETECT.AUTO_ID_SEPARATION_CENTS)) { autoCandidate = null; return; }
+  if (autoCandidate !== best.index) { autoCandidate = best.index; autoSince = time; return; }
+  if (time - autoSince < DETECT.AUTO_ID_HOLD_MS) return;
+  setString(best.index); autoCandidate = null; smoother.reset(); confirmation.reset();
+  lastGood = null; ui.renderFigure();
+}
+function handleReading(reading) {
+  if (state.instrumentId === 'drums') { drums?.update(reading); return; }
+  const time = reading.timestamp;
+  if (reading.status !== 'ok' || !reading.locked) {
+    holdReading(reading.status === 'clipped' || reading.status === 'uncertain' ? reading.status : 'silent');
     return;
   }
-  if (autoIdCandidate === match) {
-    if (nowMs - autoIdCandidateSince >= DETECT.AUTO_ID_HOLD_MS) {
-      autoIdCandidate = null;
-      autoIdCandidateSince = 0;
-      setString(match);
-      // Light pipeline refresh — keep detector lock, drop stale smoothing.
-      smoother.reset();
-      noteStab.reset();
-      safety.reset();
-      lockedSince = 0;
-      lastGood = null;
-      lastGoodAt = 0;
-      holdCandidateMidi = null;
-      holdCandidateSince = 0;
-      holdCandidateFrames = 0;
-      ui.renderFigure();
-      ui.pulseActivePeg();
-    }
-  } else {
-    autoIdCandidate = match;
-    autoIdCandidateSince = nowMs;
-  }
-}
-
-function getPresetInternal() {
-  const group = getGroup();
-  return group.presets[state.presetIndex] || group.presets[0];
-}
-
-function autoAdvanceTick(cents, locked, nowMs) {
-  if (!state.autoAdvance || state.mode !== 'guided') {
-    lockedSince = 0;
-    return;
-  }
-  if (Math.abs(cents) <= DETECT.IN_TUNE_CENTS && locked) {
-    if (!lockedSince) {
-      lockedSince = nowMs;
-    } else if (nowMs - lockedSince >= DETECT.AUTO_ADVANCE_LOCK_MS) {
-      const preset = getPresetInternal();
-      const next = (state.stringIndex + 1) % preset.strings.length;
-      setString(next);
-      resetPipeline();
-      ui.renderFigure();
-      showToast(TUNER_COPY.autoAdvanced(preset.strings[next].note), 'success');
-    }
-  } else {
-    lockedSince = 0;
-  }
-}
-
-/* Latched display state — the last confident reading is kept on screen
-   indefinitely (the "forever" hold requested) instead of blanking between
-   plucks. Silent / transient / low-confidence frames never overwrite it;
-   only a new *locked* pitch that proves itself over HOLD_MIN_MS +
-   HOLD_CONFIRM_FRAMES can replace it. This implements the "stay in the
-   spot ... backed by the next audio" contract and debounces sympathetic
-   resonance tails that otherwise flicker the note label. */
-let lastGood = null;
-let lastGoodAt = 0;
-let holdCandidateMidi = null;
-let holdCandidateSince = 0;
-let holdCandidateFrames = 0;
-let clipRun = 0;
-let polyRun = 0;
-
-function holdFrame() {
-  if (!lastGood) {
-    ui.updateReading({ status: 'silent' });
-    return;
-  }
-  ui.updateReading(Object.assign({}, lastGood, { held: true }));
-}
-
-function handleReading(r, nowMs) {
+  identifyString(reading.freq, time);
+  const midi = Math.round(69 + 12 * Math.log2(reading.freq / state.a4));
+  const stableMidi = noteStab.update(midi, time);
+  if (stableMidi !== midi) { holdReading(); return; }
   const chromatic = state.mode === 'chromatic';
-
-  // A fresh pluck after a gap: measure this attack clean, don't blend it
-  // with cents smoothed from the previous note's decaying resonance.
-  // Also clear the hold-candidate so the new pitch is evaluated from scratch.
-  if (r.onset) {
-    smoother.reset();
-    noteStab.reset();
-    autoIdCandidate = null;
-    holdCandidateMidi = null;
-    holdCandidateSince = 0;
-    holdCandidateFrames = 0;
-  }
-
-  if (r.status !== 'ok') {
-    // Transient/quiet frames: never blank — just keep showing where we were.
-    if (r.status === 'transient' || r.status === 'silent') {
-      holdFrame();
-      return;
-    }
-    // clipped / polyphonic are actionable messages but flicker badly when
-    // they alternate with good frames — require a short persistent run
-    // before swapping the readout over to them. While un-persisted we hold
-    // the latched note instead of blanking.
-    if (r.status === 'clipped') clipRun++; else clipRun = 0;
-    if (r.status === 'polyphonic') polyRun++; else polyRun = 0;
-    const persisted = Math.max(clipRun, polyRun) >= DETECT.MESSAGE_PERSIST_FRAMES;
-    if (!persisted && lastGood) {
-      ui.updateReading(Object.assign({}, lastGood, { held: true }));
-    } else if (persisted) {
-      // Persisted actionable message: show it, but do NOT clear lastGood
-      // so that when the message clears the previous note reappears.
-      // We keep lastGood intact for the hold.
-      ui.updateReading({ status: r.status });
-    } else {
-      holdFrame();
-    }
-    return;
-  }
-
-  clipRun = 0;
-  polyRun = 0;
-
-  // Quality gate 1: resonance-tail / noise guard — weak frames never
-  // overwrite the held value, they just keep the display latched.
-  if (r.conf < DETECT.UNRELIABLE_CONF) {
-    holdFrame();
-    return;
-  }
-
-  // Quality gate 2: "skip the start" — only *locked* pitches are trusted
-  // to replace the latched display. Unlocked estimates (attack residue,
-  // octave wobble before the detector stabilises) are discarded and the
-  // previous note stays put. This is the user-requested "proper identification"
-  // guarantee. The exception is the very first note after silence (lastGood
-  // null) where we still require lock to avoid showing the attack itself.
-  if (!r.locked) {
-    holdFrame();
-    return;
-  }
-
-  const midi = Math.round(69 + 12 * Math.log2(r.freq / state.a4));
-
-  // Stabilise the note label so boundary flicker (A <-> A#) doesn't jitter
-  // the readout or the free-mode rail. The stabiliser already enforces
-  // LABEL_HYSTERESIS_MS (160ms) before the label can swap.
-  const stableMidi = noteStab.update(midi, nowMs);
-
-  // Quality gate 3: latched note-change debounce. A newly stabilised MIDI
-  // that differs from the currently displayed note must prove itself over
-  // HOLD_MIN_MS and HOLD_CONFIRM_FRAMES consecutive locked frames before
-  // it overwrites the latched display. This prevents sympathetic resonance
-  // or a single noisy frame from hijacking the readout, and implements the
-  // "stay for a bit ... backed by the next audio" contract.
-  if (lastGood && typeof lastGood.midi === 'number' && stableMidi !== lastGood.midi) {
-    if (holdCandidateMidi !== stableMidi) {
-      holdCandidateMidi = stableMidi;
-      holdCandidateSince = nowMs;
-      holdCandidateFrames = 1;
-      holdFrame();
-      return;
-    }
-    holdCandidateFrames++;
-    const timeOk = nowMs - holdCandidateSince >= DETECT.HOLD_MIN_MS;
-    const framesOk = holdCandidateFrames >= DETECT.HOLD_CONFIRM_FRAMES;
-    if (!(timeOk && framesOk)) {
-      holdFrame();
-      return;
-    }
-    // Candidate confirmed — fall through to accept it and clear candidate.
-    holdCandidateMidi = null;
-    holdCandidateSince = 0;
-    holdCandidateFrames = 0;
-  } else if (lastGood && typeof lastGood.midi === 'number' && stableMidi === lastGood.midi) {
-    // Same note as currently held: clear any pending candidate and allow
-    // continuous cents tracking for tuning.
-    holdCandidateMidi = null;
-    holdCandidateSince = 0;
-    holdCandidateFrames = 0;
-  } else if (!lastGood) {
-    // First note after silence: no extra hold delay, but still required lock
-    // (already ensured above). Clear candidate.
-    holdCandidateMidi = null;
-  }
-
-  const reading = {
-    status: 'ok',
-    freq: 0,
-    cents: 0,
-    rawCents: 0,
-    color: null,
-    zone: null,
-    detectedNote: '--',
-    detectedOctave: 0,
-    nearestName: '',
-    target: null,
-    locked: r.locked,
-    held: false,
-    midi: stableMidi
-  };
-
-  reading.freq = r.freq;
-  reading.detectedNote = midiToPitchClass(stableMidi);
-  reading.detectedOctave = Math.floor(stableMidi / 12) - 1;
-
-  // Pluck-and-follow runs before the target is resolved so this same frame
-  // is already measured against the string it just identified.
-  autoIdTick(r.freq, r.locked, nowMs);
   const target = getString();
-  reading.target = target;
-
-  const rawCents = chromatic
-    ? Math.round(1200 * Math.log2(r.freq / noteToFreq(stableMidi, state.a4)))
-    : Math.round(1200 * Math.log2(r.freq / targetFreq(target)));
-  reading.rawCents = rawCents;
-
-  const smoothed = smoother.push(rawCents, r.locked);
-  reading.cents = smoothed.cents;
-
-  if (chromatic) {
-    reading.nearestName = reading.detectedNote + reading.detectedOctave;
-    lastGood = Object.assign({}, reading);
-    lastGoodAt = nowMs;
-    ui.updateReading(reading);
-    return;
+  const targetHz = chromatic ? noteToFreq(midi, state.a4) : targetFreq(target);
+  if (targetHz < DETECT.MIN_DETECT_HZ || targetHz > DETECT.MAX_DETECT_HZ) { holdReading('out-of-range'); return; }
+  const rawCents = 1200 * Math.log2(reading.freq / targetHz);
+  if (lastGood?.midi !== midi) smoother.reset();
+  const cents = smoother.push(rawCents, true, time).cents;
+  const dwell = confirmation.update({ time, cents: rawCents, tolerance: state.tolerance ?? 3, trusted: true, targetId: String(targetHz) });
+  const output = { status: 'ok', freq: reading.freq, cents, rawCents, locked: true, held: false,
+    detectedNote: midiToPitchClass(midi), detectedOctave: Math.floor(midi / 12) - 1,
+    nearestName: midiToPitchClass(midi) + (Math.floor(midi / 12) - 1), target, midi,
+    confirmed: !chromatic && dwell.confirmed, inRange: Math.abs(rawCents) <= (state.tolerance ?? 3), zone: Math.abs(rawCents) > 600 && !chromatic ? 'wrong-octave' : null };
+  lastGood = output; lastGoodAt = performance.now();
+  ui.updateReading(output); ui.updateProgress?.(chromatic ? 0 : dwell.progress, output.confirmed);
+  if (!dwell.confirmed) pendingAdvance = null;
+  if (!chromatic && dwell.confirmed) {
+    completed.add(state.stringIndex);
+    if (state.autoAdvance && !pendingAdvance) pendingAdvance = { index: state.stringIndex, at: time };
   }
-
-  const safetyResult = safety.update(smoothed.cents, rawCents, getProfile(), nowMs, r.locked);
-  reading.zone = safetyResult.zone;
-  reading.color = safetyResult.color;
-
-  lastGood = Object.assign({}, reading);
-  lastGoodAt = nowMs;
-
-  autoAdvanceTick(smoothed.cents, r.locked, nowMs);
-  ui.updateReading(reading);
+  if (pendingAdvance && state.autoAdvance && dwell.confirmed && time - pendingAdvance.at >= DETECT.AUTO_ADVANCE_DEBOUNCE_MS) {
+    const strings = getPreset().strings;
+    const next = strings.findIndex((_, index) => !completed.has(index));
+    pendingAdvance = null;
+    if (next < 0) { setAutoAdvance(false); showToast('All strings checked — play through once more.', 'success'); return; }
+    if (Math.abs(1200 * Math.log2(targetFreq(strings[next]) / targetHz)) < 1) {
+      setAutoAdvance(false); pendingAdvance = null;
+      showToast('Unison course: select and pluck the next string separately.', 'info');
+      return;
+    }
+    setString(next); confirmation.reset(); smoother.reset(); noteStab.reset(); lastGood = null;
+    ui.renderFigure(); ui.resetReadout(); ui.updateProgress?.(0, false);
+    showToast(TUNER_COPY.autoAdvanced(strings[next].note), 'success');
+  }
 }
-
-function detectionLoop(ts) {
-  if (!state.listening) {
-    rafId = null;
-    return;
-  }
-  rafId = requestAnimationFrame(detectionLoop);
-  const interval = reducedMotion || lowPower ? 100 : 50;
-  if (ts - lastTick < interval) return;
-  lastTick = ts;
-  if (document.hidden) return;
-  if (!engine.takeFresh()) return;
+function dispatchAnalysis() {
+  lastPacketAt = performance.now();
+  if (!state.listening || busy || !worker || engine.sampleTime - lastAnalysis < DETECT.ANALYSIS_HOP_MS) return;
   const size = engine.readLatest(workBuf);
-  if (size < 2048) return;
-  const r = detector.process(workBuf, size, engine.sampleRate, ts);
-  handleReading(r, ts);
+  if (size < Math.ceil(2 * engine.sampleRate / DETECT.MIN_DETECT_HZ) + 2) return;
+  lastAnalysis = engine.sampleTime; busy = true;
+  worker.postMessage({ samples: workBuf, size, rate: engine.sampleRate, time: lastAnalysis, epoch: engine.epoch, revision,
+    instrument: state.instrumentId, targetHz: drums?.target() }, [workBuf.buffer]);
 }
-
-async function micPermissionState() {
-  try {
-    if (navigator.permissions && navigator.permissions.query) {
-      const st = await navigator.permissions.query({ name: 'microphone' });
-      return st.state;
-    }
-  } catch (e) {}
-  return 'unknown';
-}
-
-async function onMicToggle() {
-  if (state.starting) return;
-  if (state.listening) {
-    stopMic();
-    return;
-  }
-  state.starting = true;
-  ui.setMicState(false, true);
-  try {
-    await engine.start();
-    resetPipeline();
-    state.starting = false;
-    ui.setMicState(true, false);
-    if (engine.bluetooth) showToast(TUNER_COPY.btMic, 'warning');
-    lastTick = 0;
-    rafId = requestAnimationFrame(detectionLoop);
-  } catch (err) {
-    state.starting = false;
-    ui.setMicState(false, false);
-    const name = err && err.name;
-    if (err && err.code === 'unsupported') {
-      ui.showMicWarning(TUNER_COPY.micUnsupported);
-    } else if (name === 'NotReadableError' || name === 'TrackStartError') {
-      ui.showMicWarning('Microphone is busy in another app. Close it and try again.');
-      showToast('Microphone is busy in another app.', 'warning');
-    } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError' || name === 'OverconstrainedError') {
-      showToast(TUNER_COPY.micNotFound, 'warning');
-    } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
-      // Default to site-level denial (user clicked "Block" or the padlock is set to deny).
-      // Only escalate to OS-blocked message if the Permissions API explicitly says 'granted'
-      // (meaning the browser allowed it but the OS intercepted it). Treat 'prompt', 'denied',
-      // and 'unknown' all as user-level denial — the padlock message is always actionable.
-      const permState = await micPermissionState();
-      const msg = permState === 'granted' ? TUNER_COPY.micSystemBlocked : TUNER_COPY.micDenied;
-      ui.showMicWarning(msg);
-      showToast(msg, 'warning');
-    } else {
-      ui.showMicWarning(TUNER_COPY.micSystemBlocked);
-      showToast(TUNER_COPY.micSystemBlocked, 'warning');
-    }
-  }
-}
-
 function stopMic() {
-  state.listening = false;
-  state.starting = false;
-  if (rafId !== null) {
-    cancelAnimationFrame(rafId);
-    rafId = null;
+  sessionId++; state.listening = false; state.starting = false;
+  engine?.stop(); worker?.terminate(); worker = null; busy = false;
+  if (watchdog !== null) clearInterval(watchdog); watchdog = null;
+  workBuf = new Float32Array(DETECT.WORK_WINDOW);
+  resetPipeline(); ui?.setMicState(false, false);
+  drums?.setListening(false);
+}
+async function onMicToggle() {
+  referenceTone.stop(); drums?.stopReference();
+  if (state.mode === 'ear' && state.instrumentId !== 'drums') return;
+  if (state.listening || state.starting) { stopMic(); return; }
+  const targetHz = targetFreq(getString());
+  if (state.instrumentId !== 'drums' && state.mode === 'guided' && (targetHz < DETECT.MIN_DETECT_HZ || targetHz > DETECT.MAX_DETECT_HZ)) {
+    ui.showMicWarning(`This target is reference only. Select a target between ${DETECT.MIN_DETECT_HZ} and ${DETECT.MAX_DETECT_HZ} Hz, or use Chromatic mode.`); return;
   }
-  engine.stop();
-  resetPipeline();
-  ui.setMicState(false, false);
+  const id = ++sessionId;
+  state.starting = true; ui.setMicState(false, true);
+  try {
+    worker = new Worker(new URL('./pitchWorker.js', import.meta.url), { type: 'module' });
+    worker.onmessage = ({ data }) => {
+      if (id !== sessionId) return;
+      busy = false; workBuf = data.samples;
+      if (data.revision !== revision || data.epoch !== engine.epoch) return;
+      if (engine.sampleTime - data.reading.timestamp > DETECT.RESULT_GAP_MS) { holdReading(); return; }
+      handleReading(data.reading);
+    };
+    worker.onerror = () => { if (id === sessionId) { stopMic(); ui.showMicWarning('Audio analysis stopped. Tap Start tuning to retry.'); } };
+    await engine.start({ deviceId: state.deviceId, channel: state.inputChannel });
+    if (id !== sessionId || !initialized) return;
+    resetPipeline(); lastAnalysis = -Infinity; lastPacketAt = performance.now();
+    ui.setMicState(true, false);
+    if (state.instrumentId === 'drums') drums?.setListening(true);
+    ui.refreshInputs?.();
+    watchdog = setInterval(() => {
+      if (!engine.running || performance.now() - lastPacketAt > DETECT.INTERRUPTED_MS) { stopMic(); ui.showMicWarning('Microphone interrupted — tap Start tuning to reconnect.'); }
+      else if (performance.now() - lastPacketAt > DETECT.RESULT_GAP_MS) holdReading();
+    }, DETECT.WATCHDOG_MS);
+  } catch (error) {
+    if (id !== sessionId || !initialized) return;
+    stopMic();
+    const message = error.name === 'NotAllowedError' ? TUNER_COPY.micDenied
+      : error.name === 'NotFoundError' ? TUNER_COPY.micNotFound
+      : error.name === 'NotReadableError' ? 'Microphone is busy in another app. Close it and retry.'
+      : error.code === 'worklet-unavailable' ? 'This browser could not start audio processing. Update your browser and retry.'
+      : error.code === 'unsupported' ? TUNER_COPY.micUnsupported
+      : 'Microphone could not start. Check your input and tap Start tuning to retry.';
+    ui.showMicWarning(message);
+  }
+}
+
+function strumSelection() {
+  if (state.instrumentId === 'drums') return;
+  if (state.listening || state.starting) stopMic();
+  const strings = getPreset().strings;
+  // Illustration coordinates remain available while the tuning picker is open.
+  const pegs = [...document.querySelectorAll('#tunerFigure .tuner-peg')].map(peg => {
+    const hit = peg.querySelector('.art-hit-target');
+    return { index: Number(peg.getAttribute('data-string-index')), x: Number(hit?.getAttribute('x')), y: Number(hit?.getAttribute('y')) };
+  }).sort((a, b) => a.y - b.y || a.x - b.x);
+  const notes = pegs.map(peg => strings[peg.index]?.midi).filter(Number.isFinite);
+  if (notes.length) referenceTone.playSequence(state.instrumentId, notes, state.a4).catch(() => showToast('Reference recordings could not play. Tap a string to retry.', 'error'));
 }
 
 function onInstrumentChange(id) {
+  referenceTone.stop();
+  if ((id === 'drums' || state.instrumentId === 'drums') && (state.listening || state.starting)) stopMic();
   setInstrument(id);
-  stopMic();
+  drums?.show(id === 'drums');
+  resetPipeline();
   ui.renderTopbar();
   ui.renderInstrumentRow();
   ui.renderFigure();
@@ -423,23 +177,31 @@ function onInstrumentChange(id) {
   if (ui.resetFilter) ui.resetFilter();
   if (ui.clearSearch) ui.clearSearch();
   ui.renderTuningList('');
+  strumSelection();
 }
 
 function onPresetSelect(index) {
+  referenceTone.stop();
   setPreset(index);
   resetPipeline();
   ui.renderTopbar();
   ui.renderFigure();
   ui.resetReadout();
+  strumSelection();
 }
 
 function onStringSelect(index) {
+  const playReference = state.instrumentId !== 'drums' && !state.listening && !state.starting;
+  setAutoIdentify(false);
+  setAutoAdvance(false);
   setString(index);
   resetPipeline();
   ui.renderFigure();
+  if (playReference) referenceTone.play(state.instrumentId, getString().midi, state.a4).catch(() => showToast('Recording could not load. Check your connection and tap the peg to retry.', 'error'));
 }
 
 function onStringCountSelect(count) {
+  referenceTone.stop();
   const ok = setStringCount(count);
   if (!ok) return;
   resetPipeline();
@@ -449,12 +211,14 @@ function onStringCountSelect(count) {
   if (ui.resetFilter) ui.resetFilter();
   if (ui.clearSearch) ui.clearSearch();
   ui.renderTuningList('');
+  strumSelection();
 }
 
 function onCustomStringCount(count) {
+  referenceTone.stop();
   const ok = setCustomStringCount(count);
   if (!ok) {
-    showToast('Enter a string count between 3 and 12', 'warning');
+    showToast('Enter a string count between 1 and 12', 'warning');
     return;
   }
   resetPipeline();
@@ -465,9 +229,12 @@ function onCustomStringCount(count) {
   if (ui.clearSearch) ui.clearSearch();
   ui.renderTuningList('');
   showToast(`Custom ${count}-string tuning active`, 'success');
+  strumSelection();
 }
 
 function onModeSelect(mode) {
+  referenceTone.stop();
+  if (mode === 'ear') stopMic();
   setMode(mode);
   // Mic stays alive across mode switches — only an instrument change
   // restarts capture (different profile/layout).
@@ -479,112 +246,54 @@ function onModeSelect(mode) {
 
 function onAutoAdvanceToggle(enabled) {
   setAutoAdvance(enabled);
-  lockedSince = 0;
+  resetPipeline();
 }
 
 function onAutoIdToggle(enabled) {
   setAutoIdentify(enabled);
-  autoIdCandidate = null;
+  autoCandidate = null;
 }
 
 function onMaterialSelect(id) {
   setMaterial(id);
-  safety.reset();
+  confirmation.reset();
   ui.renderTopbar();
   ui.resetReadout();
 }
 
 function onA4Select(hz) {
+  referenceTone.stop();
   setA4(hz);
   resetPipeline();
   ui.renderA4();
+  ui.renderFigure();
+  ui.resetReadout();
 }
 
-function stopEverything() {
-  if (state.listening || state.starting) stopMic();
-}
-
-function clearStaleMediaSession() {
-  try {
-    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-      try { navigator.mediaSession.metadata = null; } catch {}
-      try { navigator.mediaSession.playbackState = 'none'; } catch {}
-      try { navigator.mediaSession.setActionHandler('play', null); } catch {}
-      try { navigator.mediaSession.setActionHandler('pause', null); } catch {}
-      try { navigator.mediaSession.setActionHandler('stop', null); } catch {}
-    }
-  } catch {}
-}
 
 export function initTuner() {
-  if (initialized) return;
-  initialized = true;
-
-  // Tuner must not show a playback notification — clear any stale session
-  clearStaleMediaSession();
-
-  reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  lowPower = document.documentElement.classList.contains('low-power-mode');
-
-  restore();
+  if (initialized || !document.getElementById('tunerView')) return;
+  initialized = true; events = new AbortController(); restore();
   engine = createAudioEngine();
-  // Unplugged/OS-revoked mics fire MediaStreamTrack 'ended' — surface it as
-  // an actionable state instead of a stuck LISTENING readout.
-  engine.onMicLost(() => {
-    if (state.listening || state.starting) {
-      stopMic();
-      showToast(TUNER_COPY.micLost, 'warning');
-    }
-  });
-  detector = createPitchDetector();
-  smoother = createCentsSmoother();
-  noteStab = createNoteStabilizer();
-  safety = createSafetyMonitor();
-  ui = createUi({
-    onMicToggle,
-    onInstrumentChange,
-    onPresetSelect,
-    onStringSelect,
-    onStringCountSelect,
-    onCustomStringCount,
-    onModeSelect,
-    onAutoAdvanceToggle,
-    onAutoIdToggle,
-    onMaterialSelect,
-    onA4Select
-  });
+  engine.onSamples(dispatchAnalysis);
+  engine.onMicLost(() => { stopMic(); ui.showMicWarning(TUNER_COPY.micLost); });
+  ui = createUi({ onMicToggle, onInstrumentChange, onPresetSelect, onStringSelect, onStringCountSelect,
+    onCustomStringCount, onModeSelect, onAutoAdvanceToggle, onAutoIdToggle, onMaterialSelect, onA4Select,
+    onInputChange() { if (state.listening || state.starting) stopMic(); resetPipeline(); } });
   ui.init();
-
-  window.addEventListener('pagehide', stopEverything);
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      engine.suspend();
-      // Fully stop the rAF loop while hidden instead of spinning no-op ticks.
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
-    } else if (state.listening) {
-      engine.resume();
-      if (rafId === null) {
-        lastTick = 0;
-        rafId = requestAnimationFrame(detectionLoop);
-      }
-    }
+  drums = createDrumWorkflow(resetPipeline, () => {
+    if (state.listening || state.starting) stopMic();
   });
+  drums.show(state.instrumentId === 'drums');
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { referenceTone.stop(); drums?.stopReference(); }
+    if (document.hidden && (state.listening || state.starting)) { stopMic(); ui.showMicWarning('Tuning paused. Tap Start tuning when you return.'); }
+  }, { signal: events.signal });
+  window.addEventListener('pagehide', teardownTuner, { signal: events.signal });
 }
-
 export function teardownTuner() {
-  stopEverything();
-  if (rafId !== null) {
-    cancelAnimationFrame(rafId);
-    rafId = null;
-  }
-  if (engine) {
-    try {
-      engine.stop();
-    } catch (e) {}
-  }
-  initialized = false;
+  if (!initialized) return;
+  initialized = false; referenceTone.destroy(); stopMic(); events?.abort();
+  drums?.destroy(); drums = null;
+  ui?.destroy?.(); ui = null; engine = null;
 }
-

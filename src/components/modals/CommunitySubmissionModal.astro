@@ -171,6 +171,12 @@
     pointer-events: none;
   }
 
+  .modal-backdrop.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.18s ease-out !important;
+  }
+
   .community-modal-enhanced {
     width: 100%;
     max-width: 490px;
@@ -185,6 +191,10 @@
     flex-direction: column;
     box-sizing: border-box;
     animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .community-modal-enhanced.is-closing {
+    animation: modalPopOut 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
   }
 
   @keyframes modalPopIn {
@@ -826,10 +836,19 @@
     }
   });
 
-  // Close modal
+  // Close modal with out-animation
   function closeCommunityModal() {
-    modal?.classList.add('hidden');
-    document.body.classList.remove('modal-open');
+    if (!modal || modal.classList.contains('hidden') || modal.classList.contains('is-closing')) return;
+    const container = modal.querySelector('.community-modal-enhanced');
+    modal.classList.add('is-closing');
+    if (container) container.classList.add('is-closing');
+
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      modal.classList.remove('is-closing');
+      if (container) container.classList.remove('is-closing');
+      document.body.classList.remove('modal-open');
+    }, 180);
   }
 
   closeBtn?.addEventListener('click', closeCommunityModal);

@@ -238,13 +238,21 @@ export function closeRequestSongModal() {
   const searchOverlay = document.getElementById('coversSearchOverlay');
 
   if (modal) {
-    modal.classList.remove('active');
-    modal.classList.add('hidden');
-  }
+    if (modal.classList.contains('is-closing') || modal.classList.contains('hidden')) return;
+    const wrapper = modal.querySelector('.request-song-sheet-wrapper');
+    modal.classList.add('is-closing');
+    if (wrapper) wrapper.classList.add('is-closing');
 
-  // Only remove modal-open from body if covers search overlay is not open
-  if (!searchOverlay || !searchOverlay.classList.contains('active')) {
-    document.body.classList.remove('modal-open');
+    setTimeout(() => {
+      modal.classList.remove('active', 'is-closing');
+      if (wrapper) wrapper.classList.remove('is-closing');
+      modal.classList.add('hidden');
+
+      // Only remove modal-open from body if covers search overlay is not open
+      if (!searchOverlay || !searchOverlay.classList.contains('active')) {
+        document.body.classList.remove('modal-open');
+      }
+    }, 180);
   }
 }
 

@@ -5,11 +5,14 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
     "test": "playwright test",
+    "test:tuner": "node --test tests/tuner/*.test.mjs",
+    "test:tuner:browser": "playwright test --config playwright.tuner.config.ts",
+    "test:tuner:benchmark": "node tests/tuner/benchmark.mjs",
     "seo:verify": "node scripts/verify-seo-ai.js",
     "icons": "node scripts/generate_pwa_icons.js",
     "postinstall": "node scripts/patch-vercel.js"

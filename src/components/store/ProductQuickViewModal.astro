@@ -127,6 +127,22 @@
     position: relative;
     padding: clamp(20px, 3.5vw, 36px);
     box-sizing: border-box;
+    transform: scale(0.96);
+    transition: transform 0.22s var(--ease-snappy);
+  }
+
+  .product-quick-view-modal.is-open .quick-view-card {
+    transform: scale(1);
+  }
+
+  .product-quick-view-modal.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.18s ease-out !important;
+  }
+
+  .product-quick-view-modal.is-closing .quick-view-card {
+    animation: modalPopOut 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
   }
 
   .quick-view-close-btn {

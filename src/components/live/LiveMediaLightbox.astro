@@ -37,6 +37,12 @@
     display: none !important;
   }
 
+  .modal-backdrop.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.18s ease-out !important;
+  }
+
   .lightbox-dialog {
     position: relative;
     max-width: 90vw;
@@ -52,9 +58,18 @@
     animation: lightboxPopIn 0.2s var(--ease-snappy) forwards;
   }
 
+  .lightbox-dialog.is-closing {
+    animation: lightboxPopOut 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  }
+
   @keyframes lightboxPopIn {
     from { transform: scale(0.92); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes lightboxPopOut {
+    from { transform: scale(1); opacity: 1; }
+    to { transform: scale(0.92); opacity: 0; }
   }
 
   .close-lightbox-btn {

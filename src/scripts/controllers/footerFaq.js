@@ -98,6 +98,28 @@ export function initFooterFaq() {
     closeBtn.addEventListener('click', closeFaq);
   }
   document.addEventListener('keydown', handleKeydown);
+
+  const detailsList = tray.querySelectorAll('details.faq-accordion-item');
+  detailsList.forEach(detail => {
+    const summary = detail.querySelector('summary');
+    if (!summary || summary.dataset.animBound) return;
+    summary.dataset.animBound = 'true';
+    summary.addEventListener('click', (e) => {
+      if (detail.open) {
+        e.preventDefault();
+        const content = detail.querySelector('.faq-answer-content');
+        if (content) {
+          content.classList.add('is-closing');
+          setTimeout(() => {
+            detail.open = false;
+            content.classList.remove('is-closing');
+          }, 160);
+        } else {
+          detail.open = false;
+        }
+      }
+    });
+  });
 }
 
 export function teardownFooterFaq() {

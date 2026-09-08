@@ -1778,14 +1778,18 @@ export function initGigMapModule() {
     });
   }
 
+  function closeGigMapModalWithAnim() {
+    if (!gigMapModal || gigMapModal.classList.contains('is-closing')) return;
+    gigMapModal.classList.add('is-closing');
+    setTimeout(() => {
+      gigMapModal.classList.remove('active', 'is-closing');
+      unlockScroll();
+    }, 200);
+  }
+
   // Setup Close Sheet buttons across both Map and List views
   document.querySelectorAll('.list-close-sheet-btn, #closeGigMapSheet').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (gigMapModal) {
-        gigMapModal.classList.remove('active');
-        unlockScroll();
-      }
-    });
+    btn.addEventListener('click', closeGigMapModalWithAnim);
   });
 
   // Setup Horizontal Expanding Filter Toolbar
@@ -2181,8 +2185,7 @@ export function initGigMapModule() {
         e.preventDefault();
         setSnapState('peek');
       } else {
-        gigMapModal.classList.remove('active');
-        unlockScroll();
+        closeGigMapModalWithAnim();
       }
     }
   });
@@ -2200,15 +2203,11 @@ export function initGigMapModule() {
   }
 
   if (closeGigMapSheet && gigMapModal) {
-    closeGigMapSheet.addEventListener('click', () => {
-      gigMapModal.classList.remove('active');
-      unlockScroll();
-    });
+    closeGigMapSheet.addEventListener('click', closeGigMapModalWithAnim);
 
     gigMapModal.addEventListener('click', (e) => {
       if (e.target === gigMapModal) {
-        gigMapModal.classList.remove('active');
-        unlockScroll();
+        closeGigMapModalWithAnim();
       }
     });
   }

@@ -364,6 +364,13 @@ export function setCoachPrimer(patch, persist = true) {
   const cur = metroState.coachPrimer;
   if (patch.difficulty && ['easy', 'medium', 'hard', 'expert'].includes(patch.difficulty)) cur.difficulty = patch.difficulty;
   if (typeof patch.target === 'number') cur.target = clampBpm(patch.target);
+  if (typeof patch.minBpm === 'number') cur.minBpm = clampBpm(patch.minBpm);
+  if (typeof patch.maxBpm === 'number') cur.maxBpm = clampBpm(patch.maxBpm);
+  if (typeof cur.minBpm === 'number' && typeof cur.maxBpm === 'number' && cur.minBpm > cur.maxBpm) {
+    const tmp = cur.minBpm;
+    cur.minBpm = cur.maxBpm;
+    cur.maxBpm = tmp;
+  }
   if (persist) storageSet(COACH_STORAGE_KEYS.primer, JSON.stringify(cur));
   return true;
 }
@@ -530,6 +537,8 @@ export function restore() {
     if (primer && typeof primer === 'object') {
       if (['easy','medium','hard','expert'].includes(primer.difficulty)) metroState.coachPrimer.difficulty = primer.difficulty;
       if (typeof primer.target === 'number') metroState.coachPrimer.target = clampBpm(primer.target);
+      if (typeof primer.minBpm === 'number') metroState.coachPrimer.minBpm = clampBpm(primer.minBpm);
+      if (typeof primer.maxBpm === 'number') metroState.coachPrimer.maxBpm = clampBpm(primer.maxBpm);
     }
     const midiId = storageGet(COACH_STORAGE_KEYS.midiDevice);
     if (midiId) metroState.midiDeviceId = midiId;

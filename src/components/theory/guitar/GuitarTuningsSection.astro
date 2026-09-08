@@ -18,18 +18,17 @@ const tuningItems = (tuningsCategory?.items || []) as TuningItem[];
 
   <div class="category-items-list">
     {tuningItems.map((item) => (
-      <div class="theory-item-row" data-search-target={`${item.name} ${item.notes} ${item.offsets}`}>
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.notes} ${item.formula}`}>
         <div class="item-name-col">
           <div class="item-title-row">
             <strong class="item-name">{item.name}</strong>
-            <span class="item-type-tag">{item.genre}</span>
           </div>
           <span class="item-notes">{item.notes}</span>
-          <span class="item-fret-hint"><i class="fa-solid fa-arrows-up-down" aria-hidden="true"></i> Shift: {item.offsets}</span>
+          <span class="item-fret-hint">{item.formula}</span>
         </div>
         <div class="item-actions-col">
           <div class="item-action-btns">
-            <button type="button" class="item-quick-btn brutal-press" data-play-tuning={item.notes} title="Play tuning notes">
+            <button type="button" class="item-quick-btn brutal-press" data-play-tuning={JSON.stringify(item.pitches)} title="Play tuning notes">
               <i class="fa-solid fa-volume-high" aria-hidden="true"></i> Play Tones
             </button>
           </div>

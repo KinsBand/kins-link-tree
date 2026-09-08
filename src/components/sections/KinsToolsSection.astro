@@ -106,6 +106,7 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
 </section>
 
 <script>
+  import { safeGet } from '../../scripts/utils/safeStorage.js';
   function initUtilitiesSection() {
     const section = document.getElementById('rehearsalUtilitiesSection');
     if (!section) return;
@@ -121,7 +122,7 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
       });
     });
 
-    const pwaBtn = document.getElementById('kinsToolsPwaBtn');
+    const pwaBtn = document.querySelector<HTMLButtonElement>('#kinsToolsPwaBtn');
     const pwaIcon = document.getElementById('kinsToolsPwaIcon');
     const pwaLabel = document.getElementById('kinsToolsPwaLabel');
     const pwaProgress = document.getElementById('kinsToolsPwaProgress');
@@ -130,12 +131,12 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
 
     let isDownloading = false;
 
-    function setProgress(percent) {
+    const setProgress = (percent: number) => {
       const clamped = Math.max(0, Math.min(100, percent)) / 100;
       pwaProgress.style.transform = `scaleX(${clamped})`;
     }
 
-    function markComplete() {
+    const markComplete = () => {
       pwaBtn.classList.remove('downloading');
       pwaBtn.classList.add('download-complete');
       pwaIcon.className = 'fa-solid fa-circle-check';
@@ -145,7 +146,7 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
       pwaBtn.setAttribute('title', 'App downloaded and ready offline');
     }
 
-    function markDownloading() {
+    const markDownloading = () => {
       pwaBtn.classList.remove('download-complete');
       pwaBtn.classList.add('downloading');
       pwaIcon.className = 'fa-solid fa-spinner fa-spin';
@@ -155,7 +156,7 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
       pwaBtn.setAttribute('title', 'Downloading…');
     }
 
-    function resetIdle() {
+    const resetIdle = () => {
       pwaBtn.classList.remove('downloading', 'download-complete');
       pwaIcon.className = 'fa-solid fa-download';
       if (pwaLabel) pwaLabel.textContent = 'Download';
@@ -172,11 +173,11 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
         if ('caches' in window) {
           hasCache = await caches.has(CACHE_NAME);
         }
-        if (isInstalled || (localStorage.getItem('kins_pwa_downloaded') === 'true' && hasCache)) {
+        if (isInstalled || (safeGet('kins_pwa_downloaded') === 'true' && hasCache)) {
           markComplete();
         }
       } catch {
-        if (localStorage.getItem('kins_pwa_downloaded') === 'true') {
+        if (safeGet('kins_pwa_downloaded') === 'true') {
           markComplete();
         }
       }
@@ -188,10 +189,11 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
     window.addEventListener('kins:pwa-installed', markComplete);
     window.addEventListener('appinstalled', markComplete);
     window.addEventListener('kins:pwa-progress', (e) => {
-      if (e.detail && typeof e.detail.percent === 'number') {
-        if (e.detail.percent < 100) {
+      const detail = (e as CustomEvent<{ percent?: number }>).detail;
+      if (detail && typeof detail.percent === 'number') {
+        if (detail.percent < 100) {
           markDownloading();
-          setProgress(e.detail.percent);
+          setProgress(detail.percent);
         } else {
           markComplete();
         }
@@ -215,7 +217,7 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
         pwaBtn.disabled = true;
 
         const result = await installPwa({
-          onProgress: ({ percent, eta }) => {
+          onProgress: ({ percent, eta }: { percent: number; eta: number }) => {
             setProgress(percent);
             if (pwaLabel) {
               if (percent < 100) {

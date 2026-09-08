@@ -1,0 +1,137 @@
+/* Active tuner surfaces use the same semantic roles in both themes. */
+html[data-theme] .tuner-page {
+  background: var(--surface-card-panel);
+  color: var(--text-on-light);
+}
+html[data-theme] .tuner-page :is(.tuner-pill, .tuner-icon-btn, .tuner-meter-btn, .tuner-inst-card, .tuner-sheet-chip, .tuner-sheet-setup-btn, .tuner-sheet-title) {
+  background: var(--surface-card-panel);
+  color: var(--text-on-light);
+  border: var(--border-brutal-sm);
+  box-shadow: var(--shadow-brutal-black);
+}
+html[data-theme] .tuner-page :is(.tuner-pill, .tuner-icon-btn, .tuner-inst-card, .tuner-sheet-chip, .tuner-sheet-setup-btn):hover {
+  background: var(--surface-card-panel-hover);
+}
+html[data-theme] .tuner-page :is(.tuner-inst-card.active, .tuner-sheet-chip.active, .tuner-mic-cta, .pill-cta) {
+  background: var(--btn-brand-primary);
+  color: var(--btn-brand-text);
+}
+html[data-theme] .tuner-page :is(.tuner-mic-cta, .tuner-inst-card.active, .tuner-sheet-chip.active):hover {
+  background: var(--btn-brand-hover);
+}
+html[data-theme] .tuner-page :is(.tuner-settings-label, .tuner-sheet-setup-label, .tuner-pill-title, .tuner-hint) {
+  color: var(--text-card-secondary);
+}
+html[data-theme] .tuner-page :is(.tuner-sheet-setup-value, .tuner-pill-label, .tuner-note, .tuner-cents, .tuner-frequency) {
+  color: var(--text-on-light);
+}
+html[data-theme] .tuner-page .tuner-sheet {
+  background: var(--surface-card-panel);
+  color: var(--text-on-light);
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal-black-lg);
+}
+html[data-theme] .tuner-page .tuner-sheet-backdrop { background: var(--surface-overlay); }
+html[data-theme] .tuner-page .tuner-sheet-setup-cell[hidden] { display: none; }
+html[data-theme] .tuner-page .tuner-sheet-setup-row { grid-template-columns: minmax(0, 1fr); }
+html[data-theme] .tuner-page :is(button, input, select, a):focus-visible {
+  outline: var(--tuner-focus-width) solid var(--brand-accent-primary);
+  outline-offset: var(--tuner-focus-offset);
+}
+html[data-theme] .tuner-page :is(button, input, select):disabled { opacity: 0.5; cursor: not-allowed; }
+html[data-theme] .tuner-page .rail-note { box-sizing: border-box; flex-shrink: 0; }
+html[data-theme] .tuner-page .rail-note { color: var(--text-card-secondary); opacity: 1; }
+html[data-theme] .tuner-page .rail-note.is-exact { background: var(--btn-brand-primary); color: var(--btn-brand-text); }
+html[data-theme] .tuner-page :is(.tuner-icon-btn, .tuner-inst-card, .tuner-sheet-chip, .tuner-sheet-setup-btn, .tuner-input-settings input, .tuner-input-settings select) { border-color: var(--tuner-control-border); }
+html[data-theme] .tuner-page .tuner-sheet-floating-header {
+  position: absolute;
+  inset-block-end: calc(100% + var(--tuner-detail-gap));
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+html[data-theme] .tuner-page .tuner-sheet-close {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: calc(100% + var(--tuner-detail-gap));
+  transform: translateY(-50%);
+  z-index: 1;
+  width: var(--tuner-touch-target); height: var(--tuner-touch-target);
+  display: grid; place-items: center;
+  border: var(--border-brutal-sm); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-brutal-black);
+  background: var(--surface-card-panel); color: var(--text-on-light);
+  font: var(--tuner-close-font) var(--font-primary); cursor: pointer;
+  transition: transform var(--tuner-mode-duration) var(--ease-tactile), background-color var(--tuner-mode-duration) ease, box-shadow var(--tuner-mode-duration) ease;
+}
+html[data-theme] .tuner-page .tuner-sheet-close:hover { background: var(--surface-card-panel-hover); transform: translateY(-50%) translate(-1px, -1px); }
+html[data-theme] .tuner-page .tuner-sheet-close:active { transform: translateY(-50%) translate(1px, 1px); box-shadow: var(--shadow-brutal-black); }
+@media (min-width: 768px) {
+  html[data-theme] .tuner-page .tuner-sheet {
+    left: 50%; right: auto; top: 50%; bottom: auto;
+    width: min(var(--tuner-dialog-width), calc(100% - var(--tuner-dialog-gutter)));
+    max-height: 80dvh;
+    border-radius: var(--radius-md);
+    transform: translate(-50%, -46%);
+    opacity: 0;
+    transition: transform var(--tuner-dialog-duration) var(--ease-snappy), opacity var(--tuner-dialog-duration) ease;
+  }
+  html[data-theme] .tuner-page .tuner-sheet.open { transform: translate(-50%, -50%); opacity: 1; }
+  html[data-theme] .tuner-page .tuner-sheet.is-closing { transform: translate(-50%, -46%) !important; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tuner-page .tuner-sheet { transition: none !important; }
+}
+
+/* Compact settings and primary action controls. */
+html[data-theme] .tuner-page .tuner-sheet-floating-header .tuner-sheet-title { position: static; transform: none; }
+html[data-theme] .tuner-page .tuner-sheet-close { transition: transform var(--tuner-mode-duration) var(--ease-tactile); }
+.tuner-stepper-controls { display: grid; grid-template-columns: var(--tuner-touch-target) minmax(0, 1fr) var(--tuner-touch-target); gap: var(--tuner-detail-gap); align-items: center; }
+.tuner-string-stepper { max-width: 100%; }
+.tuner-count-edit { display: grid; justify-items: center; }
+html[data-theme] .tuner-page .tuner-count-edit input { width: 100%; min-width: 0; min-height: var(--tuner-touch-target); box-sizing: border-box; appearance: textfield; text-align: center; font: bold var(--tuner-close-font) var(--font-mono); color: var(--text-on-light); background: var(--surface-card-panel); border: none; border-radius: var(--radius-sm); }
+.tuner-count-edit input::-webkit-inner-spin-button, .tuner-count-edit input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.tuner-count-edit span { line-height: 0.5; color: var(--text-card-secondary); pointer-events: none; }
+.tuner-behavior-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page .tuner-mini-button { display: flex; align-items: center; justify-content: center; gap: var(--tuner-detail-gap); min-height: var(--tuner-touch-target); min-width: 0; padding: var(--tuner-detail-gap); border: var(--border-brutal-sm); border-color: var(--tuner-control-border); border-radius: var(--radius-sm); background: var(--surface-card-panel); color: var(--text-on-light); font: bold var(--tuner-detail-font) var(--font-heading); cursor: pointer; transition: transform var(--tuner-mode-duration) var(--ease-tactile); }
+html[data-theme] .tuner-page :is(.tuner-mini-button, .tuner-count-edit input):hover { background: var(--surface-card-panel-hover); }
+html[data-theme] .tuner-page .tuner-mini-button[aria-pressed="true"] { background: var(--btn-brand-primary); color: var(--btn-brand-text); }
+html[data-theme] .tuner-page .tuner-mini-button[aria-pressed="true"]:hover { background: var(--btn-brand-hover); }
+html[data-theme] .tuner-page .tuner-mini-button.brutal-press:active { transform: translate(var(--tuner-art-press), var(--tuner-art-press)) scale(0.985); }
+.tuner-auto-symbol { display: grid; place-items: center; border: var(--tuner-focus-width) solid currentColor; border-radius: var(--radius-pill); width: 1.5em; height: 1.5em; flex-shrink: 0; }
+.tuner-main-actions { display: flex; align-items: center; justify-content: center; width: 100%; gap: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page .mode-drums .tuner-main-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); }
+html[data-theme] .tuner-page .mode-drums .tuner-main-actions .tuner-mic-cta { width: 100%; min-width: 0; padding-inline: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page .tuner-mini-button[hidden] { display: none; }
+html[data-theme] .tuner-page:has(.mode-ear, .mode-drums) .tuner-behavior-buttons { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tuner-page :is(.tuner-mini-button, .tuner-sheet-close) { transition: none; }
+  html[data-theme] .tuner-page .tuner-mini-button:active { transform: none; }
+}
+
+html[data-theme] .tuner-page :is(.tuner-stepper-button, .drum-workflow .tuner-stepper-button) {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 100%; height: var(--tuner-touch-target); min-height: var(--tuner-touch-target);
+  padding: 0; flex-shrink: 0; border: var(--border-brutal-sm); border-color: var(--tuner-control-border);
+  border-radius: var(--radius-pill); box-shadow: var(--tuner-stepper-shadow);
+  background: var(--tuner-stepper-surface); color: var(--tuner-stepper-text);
+  font: bold 1rem var(--font-primary); cursor: pointer; touch-action: manipulation;
+  user-select: none; transition: transform var(--tuner-mode-duration) var(--ease-tactile);
+}
+html[data-theme] .tuner-page .tuner-stepper-button:hover:not(:disabled) {
+  background: var(--tuner-stepper-hover); transform: translate(calc(-1 * var(--tuner-stepper-shift)), calc(-1 * var(--tuner-stepper-shift)));
+  box-shadow: var(--shadow-brutal-black);
+}
+html[data-theme] .tuner-page .tuner-stepper-button.brutal-press:active:not(:disabled) {
+  transform: translate(var(--tuner-stepper-shift), var(--tuner-stepper-shift)) scale(0.97);
+  background: var(--btn-brand-primary); color: var(--btn-brand-text); box-shadow: var(--tuner-stepper-pressed-shadow);
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tuner-page .tuner-stepper-button { transition: none; }
+  html[data-theme] .tuner-page .tuner-stepper-button:is(:hover, :active) { transform: none; }
+}
+
+html[data-theme] .tuner-page .tuner-inst-card svg {
+  width: var(--tuner-instrument-icon-size); height: var(--tuner-instrument-icon-size);
+  min-width: 0; flex: 0 0 auto; display: block;
+}

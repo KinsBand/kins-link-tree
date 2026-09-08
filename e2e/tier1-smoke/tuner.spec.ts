@@ -57,16 +57,19 @@ test.describe('tier1 smoke — tuner', () => {
   test('auto string select defaults on and toggles', async ({ page }) => {
     await page.goto('/tuner');
     await page.locator('#tunerSettingsBtn').click();
+    await expect(page.locator('#tunerSheet')).toHaveClass(/open/);
     const autoToggle = page.locator('#tunerSheetAutoId');
+    const autoToggleControl = page.locator('.tuner-sheet-toggle').filter({ has: autoToggle });
+    await autoToggleControl.evaluate((element) => element.scrollIntoView({ block: 'center' }));
     await expect(autoToggle).toBeVisible();
     await expect(autoToggle).toBeChecked();
-    await autoToggle.click();
+    await autoToggleControl.click();
     await expect(autoToggle).not.toBeChecked();
-    await autoToggle.click();
+    await autoToggleControl.click();
     await expect(autoToggle).toBeChecked();
   });
 
-  test('settings sheet exposes instruments and strings/material', async ({ page }) => {
+  test('settings sheet exposes instruments, strings and qualified input controls', async ({ page }) => {
     await page.goto('/tuner');
     await page.locator('#tunerSettingsBtn').click();
     await expect(page.locator('#tunerSheetInstrumentRow')).toBeVisible();
@@ -74,15 +77,16 @@ test.describe('tier1 smoke — tuner', () => {
     await expect(page.locator('[data-sheet-instrument="drums"]')).toBeVisible();
     await expect(page.locator('#tunerSheetModeRow')).toBeVisible();
     await expect(page.locator('#tunerSheetStringsBtn')).toBeVisible();
-    await expect(page.locator('#tunerSheetMaterialBtn')).toBeVisible();
-    // Strings and material menus open upward
+    await expect(page.locator('#tunerSheetMaterialBtn')).toBeHidden();
+    // String options open inside the settings sheet.
     await page.locator('#tunerSheetStringsBtn').click();
     await expect(page.locator('#tunerSheetStringsSlot .tuner-menu-panel')).toBeVisible();
     await page.keyboard.press('Escape');
-    await page.locator('#tunerSheetMaterialBtn').click();
-    await expect(page.locator('#tunerSheetMaterialSlot .tuner-menu-panel')).toBeVisible();
-    await page.keyboard.press('Escape');
-    // A4 calibration removed
+    await expect(page.locator('#tunerCalibration')).toBeVisible();
+    await expect(page.locator('#tunerTolerance')).toBeVisible();
+    await expect(page.locator('#tunerInputDevice')).toBeVisible();
+    await expect(page.locator('#tunerInputChannel')).toBeVisible();
+    // Legacy chip controls remain hidden.
     await expect(page.locator('#tunerA4Chips')).toBeHidden();
     await expect(page.locator('#tunerSheetA4Row')).toBeHidden();
   });

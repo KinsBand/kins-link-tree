@@ -158,16 +158,25 @@ Paths are prefixed with `@` so you can drop them straight into chat/agent contex
 
 **Controllers (@src/scripts/controllers/tuner/):**
 - @src/scripts/controllers/tuner/index.js — entry (`initTuner`)
-- @src/scripts/controllers/tuner/uiBindings.js — needle animation, strobe, preset selector, settings sheet
+- @src/scripts/controllers/tuner/uiBindings.js — needle and chromatic rail, preset selector, accessible input/calibration settings, disposable UI listeners
 - @src/scripts/controllers/tuner/tunerState.js — tuner configuration and state management
-- @src/scripts/controllers/tuner/pitchDetector.js — autocorrelation & YIN pitch detection algorithm
-- @src/scripts/controllers/tuner/audioEngine.js — microphone input stream & Web Audio processing
-- @src/scripts/controllers/tuner/safetyMonitor.js — string tension / breakage safety warnings
+- @src/scripts/controllers/tuner/pitchDetector.js — pure fixed-window YIN and time-based display smoothing
+- @src/scripts/controllers/tuner/pitchWorker.js — transferable PCM analysis outside the UI/audio render threads
+- @src/scripts/controllers/tuner/confirmation.js — fresh-audio, two-second string confirmation
+- @src/scripts/controllers/tuner/audioEngine.js — session-owned microphone capture, packet continuity and resource cleanup
+- @src/scripts/controllers/tuner/safetyMonitor.js — legacy material heuristic; disconnected from the active tuner (no measured tension claim)
 - @src/scripts/controllers/tuner/instrumentArt.js — instrument headstock / peg visualizer
 - @src/scripts/controllers/tuner/notesUtil.js — note frequency calculations & cents deviation helpers
 
 **Worklets:**
-- @public/tuner-worklet.js — pitch detection AudioWorklet
+- @public/tuner-worklet.js — protocol-v2 PCM capture AudioWorklet with transferable buffer pool
+
+**Measurement UI and verification:**
+- @src/components/tuner/TunerQualityReadout.astro — visible target, calibration and confirmation progress
+- @src/components/tuner/TunerInputSettings.astro — precision, A4 reference and input controls
+- @src/styles/tuner-quality.css — theme parity, control contrast and responsive dialog styles
+- @tests/tuner/ — deterministic DSP, capture, lifecycle, persistence and confirmation regression tests
+- @e2e/tuner/audio.spec.ts + @playwright.tuner.config.ts — enabled-route browser verification using generated audio through the real processing pipeline
 
 **API routes used from here:**
 - @src/pages/api/feedback.ts — feedback submission

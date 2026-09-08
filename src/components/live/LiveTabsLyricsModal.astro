@@ -51,6 +51,12 @@
     display: none !important;
   }
 
+  .modal-backdrop.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.2s ease-out !important;
+  }
+
   .live-tabs-drawer {
     background: #181820;
     border-top: 3px solid #000000;
@@ -67,9 +73,18 @@
     animation: drawerSlideUp 0.26s var(--ease-snappy) forwards;
   }
 
+  .live-tabs-drawer.is-closing {
+    animation: drawerSlideDown 0.2s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  }
+
   @keyframes drawerSlideUp {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
+  }
+
+  @keyframes drawerSlideDown {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(100%); opacity: 0; }
   }
 
   .drawer-header {

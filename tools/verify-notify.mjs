@@ -94,7 +94,7 @@ for (const k of ['DISCORD_WEBHOOK_URL', 'DISCORD_FEEDBACK_WEBHOOK_IMPROVEMENT', 
 console.log('\n' + '='.repeat(50));
 if (!hasResendKey) {
   console.log('❌ PIPELINE DEGRADED: No RESEND_API_KEY → feedback & cover requests will be stored/logged only, NOT emailed.');
-  console.log('   Deploy health check: curl https://YOUR_DOMAIN/api/notify-health');
+  console.log('   Deploy health check: GET /api/notify-health with Authorization: Bearer <HEALTHCHECK_TOKEN> (see SETUP-CHECKLIST.md).');
 } else if (isSandbox) {
   console.log('⚠️ PIPELINE RISKY: Sandbox FROM may 403 to HelloKinsFan@gmail.com unless that address is the Resend owner.');
   console.log('   Verify domain for reliable delivery.');

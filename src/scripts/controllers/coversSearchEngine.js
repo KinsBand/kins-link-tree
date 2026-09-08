@@ -397,10 +397,26 @@ export function filterAndRenderCovers() {
   resultsContainer.appendChild(requestTriggerBox);
 }
 
+let cleanupCoversSearch = null;
+
+export function teardownCoversSearchEngine() {
+  cleanupCoversSearch?.();
+  cleanupCoversSearch = null;
+}
+
+document.addEventListener('astro:before-swap', teardownCoversSearchEngine);
+document.addEventListener('astro:page-load', initCoversSearchEngine);
+
 export function initCoversSearchEngine() {
   const topNav = document.querySelector('.top-nav');
   const searchPillBtn = document.getElementById('headerSearchPillBtn');
   const searchOverlay = document.getElementById('coversSearchOverlay');
+  if (!searchOverlay || searchOverlay.dataset.searchReady === 'true') return;
+  teardownCoversSearchEngine();
+  searchOverlay.dataset.searchReady = 'true';
+  const listeners = new AbortController();
+  const listen = (target, type, handler) => target?.addEventListener(type, handler, { signal: listeners.signal });
+  let returnFocus = null;
   const paletteContainer = document.getElementById('commandPaletteContainer');
   const closeSearchOverlayBtn = document.getElementById('closeSearchOverlayBtn');
   const overlayInput = document.getElementById('overlaySearchInput');
@@ -424,6 +440,7 @@ export function initCoversSearchEngine() {
 
   function openOverlay() {
     if (!searchOverlay) return;
+    if (!searchOverlay.classList.contains('active')) returnFocus = document.activeElement;
 
     if (searchPillBtn) {
       const rect = searchPillBtn.getBoundingClientRect();
@@ -432,12 +449,14 @@ export function initCoversSearchEngine() {
       searchOverlay.style.transformOrigin = `${originX}px ${originY}px`;
     }
 
+    searchOverlay.inert = false;
+    searchOverlay.removeAttribute('aria-hidden');
     searchOverlay.classList.add('active');
     if (topNav) topNav.classList.add('search-active');
     document.body.classList.add('modal-open');
 
     if (overlayInput) {
-      setTimeout(() => overlayInput.focus(), 150);
+      overlayInput.focus();
     }
     renderLearningSpotlightCard(KINS_CURRENTLY_LEARNING);
     updateSearchUI();
@@ -449,28 +468,48 @@ export function initCoversSearchEngine() {
 
   function closeOverlay() {
     if (!searchOverlay) return;
+    if (searchOverlay.contains(document.activeElement)) {
+      const opener = returnFocus instanceof HTMLElement && returnFocus.isConnected ? returnFocus : searchPillBtn;
+      opener?.focus();
+    }
+    searchOverlay.inert = true;
+    searchOverlay.setAttribute('aria-hidden', 'true');
     searchOverlay.classList.remove('active');
     if (topNav) topNav.classList.remove('search-active');
     document.body.classList.remove('modal-open');
   }
 
   if (searchPillBtn) {
-    searchPillBtn.addEventListener('click', openOverlay);
+    listen(searchPillBtn, 'click', openOverlay);
   }
 
   if (closeSearchOverlayBtn) {
-    closeSearchOverlayBtn.addEventListener('click', closeOverlay);
+    listen(closeSearchOverlayBtn, 'click', closeOverlay);
   }
 
   if (searchOverlay) {
-    searchOverlay.addEventListener('click', (e) => {
+    listen(searchOverlay, 'click', (e) => {
       if (e.target === searchOverlay) {
         closeOverlay();
       }
     });
   }
 
-  window.addEventListener('keydown', (e) => {
+  listen(window, 'keydown', (e) => {
+    // Nested video/request dialogs own their keyboard events while focused.
+    if (searchOverlay.classList.contains('active') && searchOverlay.contains(document.activeElement) && e.key === 'Tab') {
+      const focusable = Array.from(searchOverlay.querySelectorAll('button, input, a[href], [tabindex]'))
+        .filter((el) => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length > 0);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       if (searchOverlay?.classList.contains('active')) {
@@ -478,13 +517,13 @@ export function initCoversSearchEngine() {
       } else {
         openOverlay();
       }
-    } else if (e.key === 'Escape' && searchOverlay?.classList.contains('active')) {
+    } else if (e.key === 'Escape' && searchOverlay?.classList.contains('active') && searchOverlay.contains(document.activeElement)) {
       closeOverlay();
     }
   });
 
   if (clearSearchInputBtn && overlayInput) {
-    clearSearchInputBtn.addEventListener('click', () => {
+    listen(clearSearchInputBtn, 'click', () => {
       overlayInput.value = '';
       updateSearchUI();
       filterAndRenderCovers();
@@ -493,7 +532,7 @@ export function initCoversSearchEngine() {
   }
 
   if (overlayInput) {
-    overlayInput.addEventListener('input', () => {
+    listen(overlayInput, 'input', () => {
       updateSearchUI();
       clearTimeout(searchDebounceTimeout);
       searchDebounceTimeout = setTimeout(() => {
@@ -503,7 +542,7 @@ export function initCoversSearchEngine() {
   }
 
   suggestionBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    listen(btn, 'click', () => {
       const query = btn.getAttribute('data-search');
       if (query && overlayInput) {
         overlayInput.value = query;
@@ -515,7 +554,7 @@ export function initCoversSearchEngine() {
   });
 
   categoryBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    listen(btn, 'click', () => {
       categoryBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeCategory = btn.getAttribute('data-category') || 'all';
@@ -523,9 +562,15 @@ export function initCoversSearchEngine() {
     });
   });
 
-  window.addEventListener('kins:subscription-change', () => {
+  listen(window, 'kins:subscription-change', () => {
     if (searchOverlay?.classList.contains('active')) {
       filterAndRenderCovers();
     }
   });
+  cleanupCoversSearch = () => {
+    listeners.abort();
+    clearTimeout(searchDebounceTimeout);
+    closeOverlay();
+    delete searchOverlay.dataset.searchReady;
+  };
 }

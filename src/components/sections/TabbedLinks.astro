@@ -59,8 +59,10 @@ const baseUrl = import.meta.env.BASE_URL;
     </button>
   </div>
 
-  <!-- STREAMS Tab Content -->
-  <div class="tab-content" id="streamsTab" role="tabpanel">
+  <!-- Tab Panels Stacking Wrapper (Zero-Jump CSS Grid Area 1 / 1) -->
+  <div class="tab-panels-wrapper" id="tabPanelsWrapper">
+    <!-- STREAMS Tab Content -->
+    <div class="tab-content" id="streamsTab" role="tabpanel">
     <div class="buttons-list">
       {primaryStreams.map((link) => (
         <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.id} data-name={link.name} data-track={`stream-btn-${link.id}`} data-track-container="main:streams_tab">
@@ -198,6 +200,7 @@ const baseUrl = import.meta.env.BASE_URL;
         <i class="fa-solid fa-chevron-down toggle-chevron" id="toggleCommunityIcon"></i>
       </button>
     )}
+    </div>
   </div>
 </section>
 
@@ -259,19 +262,44 @@ const baseUrl = import.meta.env.BASE_URL;
     box-shadow: 2px 2px 0px #000000, 0 0 12px var(--accent-neon-yellow-glow, var(--brand-accent-glow)) !important;
   }
 
+  /* Zero-Jump Grid Stacking Container */
+  .tab-panels-wrapper {
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: 1fr;
+    position: relative;
+    width: 100%;
+    will-change: height;
+  }
+
   .tab-content {
+    grid-area: 1 / 1;
+    align-self: start;
     display: none;
+    width: 100%;
+  }
+
+  .tab-content.is-leaving {
+    display: block !important;
+    pointer-events: none;
+    animation: fadeOutTab 0.16s var(--ease-tactile) forwards;
   }
 
   .tab-content.active,
   :global(.tab-content.active) {
     display: block !important;
+    pointer-events: auto;
     animation: fadeInTab 0.2s var(--ease-snappy) forwards;
   }
 
   @keyframes fadeInTab {
-    from { opacity: 0; transform: translateY(3px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeOutTab {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-4px); }
   }
 
   .buttons-list {
@@ -390,19 +418,29 @@ const baseUrl = import.meta.env.BASE_URL;
     to { opacity: 1; transform: scale(1); }
   }
 
-  /* Expandable Secondary Drawers */
+  /* Expandable Secondary Drawers (Zero-Reflow CSS Grid) */
   .more-socials-container {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
+    display: grid;
+    grid-template-rows: 0fr;
     margin-top: 0;
-    transition: max-height 0.35s var(--ease-snappy), opacity 0.25s ease, margin-top 0.25s ease;
+    transition: grid-template-rows 0.28s var(--ease-snappy), margin-top 0.2s ease;
   }
 
   .more-socials-container.active-drawer {
-    max-height: 800px;
-    opacity: 1;
+    grid-template-rows: 1fr;
     margin-top: 10px;
+  }
+
+  .more-socials-container > .more-socials-list {
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.22s ease, transform 0.22s var(--ease-snappy);
+  }
+
+  .more-socials-container.active-drawer > .more-socials-list {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   /* Toggle More Button */
@@ -515,7 +553,7 @@ const baseUrl = import.meta.env.BASE_URL;
         btn.classList.remove('active');
         btn.setAttribute('aria-selected', 'false');
       });
-      document.querySelectorAll('.tabbed-links-section .tab-content').forEach((content) => {
+      document.querySelectorAll<HTMLElement>('.tabbed-links-section .tab-content').forEach((content) => {
         content.classList.remove('active');
         content.style.display = 'none';
       });
@@ -547,8 +585,8 @@ const baseUrl = import.meta.env.BASE_URL;
         if (!primaryList) return;
 
         const cards = Array.from(primaryList.querySelectorAll('.brutal-link-card'));
-        const recCards = [];
-        const otherCards = [];
+        const recCards: Element[] = [];
+        const otherCards: Element[] = [];
 
         cards.forEach((card) => {
           const name = (card.getAttribute('data-name') || '').toLowerCase();
@@ -574,7 +612,7 @@ const baseUrl = import.meta.env.BASE_URL;
     setupSegmentedSwitcher('.tabbed-links-section .brutal-tab-btn', '.tabbed-links-section .tab-content');
     applyReferralRouting();
 
-    const setupDrawer = (btnId, drawerId, textId) => {
+    const setupDrawer = (btnId: string, drawerId: string, textId: string) => {
       const btn = document.getElementById(btnId);
       const drawer = document.getElementById(drawerId);
       const textEl = document.getElementById(textId);

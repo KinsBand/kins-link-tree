@@ -10,9 +10,11 @@ import {
   METRO_COPY,
   METRO_STORAGE_KEYS,
   COACH_DEFAULTS,
+  COACH_PRIMER_MAELZEL,
   DEFAULT_BEAT_COLORS,
   getTempoMarking
 } from '../../../settings/metronome.config';
+import { quantizeBpmForDifficulty } from './coachEngine.js';
 import { showToast } from '../toast.js';
 import {
   metroState,
@@ -48,6 +50,7 @@ export function createUi(callbacks) {
   let dragRafId = null;
   let coachLiveRunning = false;
   let coachLiveTab = null;
+  let lastCoachSnapshot = null;
   let midiElsBound = false;
   let activeSetlistFilter = 'inspires';
   let activeSetlistSort = 'default';
@@ -246,6 +249,16 @@ export function createUi(callbacks) {
     els.songEditCancelBtn = q('metroSongEditCancelBtn') || q('metroCustomCancelBtn');
     els.songEditSaveBtn = q('metroSongEditSaveBtn') || q('metroCustomSubmitBtn');
 
+    // Advanced Song Creation & Integrated Title Lookup
+    els.songAdvancedBtn = q('metroSongAdvancedBtn');
+    els.songAdvancedContent = q('metroSongAdvancedContent');
+    els.titleLookupDropdown = q('metroTitleLookupDropdown');
+    els.titleLookupSpinner = q('metroTitleLookupSpinner');
+
+    // Primer Tap Indicator Dots
+    els.primerDotsWrap = q('metroPrimerDots');
+    els.primerDots = els.primerDotsWrap ? Array.from(els.primerDotsWrap.querySelectorAll('.metro-primer-dot')) : [];
+
     // Web Lookup Fields
     els.webSearchInput = q('metroSetlistWebSearchInput');
     els.webSearchClear = q('metroSetlistWebSearchClear');
@@ -271,8 +284,12 @@ export function createUi(callbacks) {
     els.setlistNameCancelBtn = q('metroSetlistNameCancelBtn');
     els.setlistNameSaveBtn = q('metroSetlistNameSaveBtn') || q('metroSetlistNameSubmitBtn');
 
-    // Setlist Main Floating Title
+    // Floating Pill Header Elements
+    els.sheetFloatingPillHeader = q('metroSheetFloatingPillHeader');
+    els.sheetPillTitle = q('metroSheetPillTitle');
+    els.sheetPillIcon = q('metroSheetPillIcon');
     els.setlistSheetMainTitle = q('metroSetlistSheetMainTitle');
+    els.closeMetroSheetBtn = q('closeMetroSheetBtn');
 
     // Fixed Bottom Dock (Add left, Search icon-only right — expands full width on demand)
     els.bottomFixedDock = q('metroBottomFixedDock');
@@ -587,6 +604,11 @@ export function createUi(callbacks) {
   // HIERARCHICAL SETLIST & SONG SYSTEM
   // ==========================================
 
+  function isCustomSong(entry) {
+    if (!entry) return false;
+    return Boolean(entry.isCustom || entry.category === 'custom');
+  }
+
   function getAllEntriesForSearch() {
     const base = [
       ...METRO_SETLIST_INSPIRES,
@@ -878,8 +900,23 @@ export function createUi(callbacks) {
       info.appendChild(title);
       info.appendChild(sub);
 
+      const isCustom = isCustomSong(song);
       const ctrls = document.createElement('div');
       ctrls.className = 'metro-setlist-song-ctrls';
+
+      if (isCustom) {
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'metro-setlist-song-remove-btn brutal-press';
+        editBtn.innerHTML = '<i class="fa-solid fa-pen" aria-hidden="true"></i>';
+        editBtn.setAttribute('aria-label', `Edit custom song ${song.title}`);
+        editBtn.title = 'Edit custom song';
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showSongEditView(song, { from: 'setlist-detail', setlistId: setlist.id, songIdx: idx });
+        });
+        ctrls.appendChild(editBtn);
+      }
 
       const dragHandle = document.createElement('button');
       dragHandle.type = 'button';
@@ -912,11 +949,18 @@ export function createUi(callbacks) {
       row.appendChild(info);
       row.appendChild(ctrls);
 
-      // Click to open song editor (suppressed if recent drag)
+      // Click to load song or open editor if custom
       row.addEventListener('click', () => {
         if (Date.now() < songDragSuppressClickUntil) return;
         if (songDragState && songDragState.isDragging) return;
-        showSongEditView(song, { from: 'setlist-detail', setlistId: setlist.id, songIdx: idx });
+        if (isCustom) {
+          showSongEditView(song, { from: 'setlist-detail', setlistId: setlist.id, songIdx: idx });
+        } else {
+          // Inspires, Covers, Originals are read-only: clicking loads song into metronome
+          if (callbacks.onSetlistSelect) {
+            callbacks.onSetlistSelect(song);
+          }
+        }
       });
 
       // Hold card or handle and drag to reorder — pointer events cover mouse + touch
@@ -1251,17 +1295,19 @@ export function createUi(callbacks) {
 
       rowWrapper.appendChild(row);
 
-      // Edit song button
-      const editBtn = document.createElement('button');
-      editBtn.type = 'button';
-      editBtn.className = 'metro-setlist-edit-btn brutal-press';
-      editBtn.title = `Edit ${entry.title}`;
-      editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
-      editBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showSongEditView(entry, { from: 'songs-browse' });
-      });
-      rowWrapper.appendChild(editBtn);
+      // Edit song button (Only available for custom songs; Inspires, Covers, Originals are read-only)
+      if (isCustomSong(entry)) {
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'metro-setlist-edit-btn brutal-press';
+        editBtn.title = `Edit ${entry.title}`;
+        editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showSongEditView(entry, { from: 'songs-browse' });
+        });
+        rowWrapper.appendChild(editBtn);
+      }
 
       els.setlistList.appendChild(rowWrapper);
     });
@@ -1269,6 +1315,10 @@ export function createUi(callbacks) {
 
   // --- LEVEL 3 / DIRECT: SONG DETAIL & STRUCTURE VIEW ---
   function showSongEditView(song, parentContext) {
+    if (song && !isCustomSong(song)) {
+      showToast('Inspires, Covers, and Originals cannot be edited.', 'info');
+      return;
+    }
     songEditParentContext = parentContext || { from: 'songs-browse' };
     currentEditingSong = song
       ? JSON.parse(JSON.stringify(song))
@@ -1313,6 +1363,44 @@ export function createUi(callbacks) {
     // Switch to details tab initially
     switchSongEditTab('details');
     renderStructureDeck();
+
+    // Configure Advanced Settings section
+    const hasAdvancedContent = !!(
+      (currentEditingSong.notes && currentEditingSong.notes.trim()) ||
+      currentEditingSong.countIn ||
+      (currentEditingSong.structure && currentEditingSong.structure.length > 0)
+    );
+    setSongAdvancedExpanded(hasAdvancedContent);
+  }
+
+  function setSongAdvancedExpanded(expanded) {
+    if (els.songAdvancedBtn) {
+      els.songAdvancedBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    }
+    if (els.songAdvancedContent) {
+      els.songAdvancedContent.hidden = !expanded;
+    }
+  }
+
+  function updatePrimerDots(count, isComplete) {
+    if (!els.primerDotsWrap) return;
+    els.primerDotsWrap.hidden = false;
+    els.primerDotsWrap.setAttribute('aria-label', `Tempo primer tap progress: ${count} of 4 taps recorded`);
+    const dots = els.primerDots || [];
+    dots.forEach((dot, idx) => {
+      const isFilled = idx < count;
+      dot.classList.toggle('active', isFilled && !isComplete);
+      dot.classList.toggle('completed', isFilled && isComplete);
+    });
+  }
+
+  function hidePrimerDots() {
+    if (!els.primerDotsWrap) return;
+    els.primerDotsWrap.hidden = true;
+    const dots = els.primerDots || [];
+    dots.forEach((dot) => {
+      dot.classList.remove('active', 'completed');
+    });
   }
 
   function switchSongEditTab(tab) {
@@ -1835,6 +1923,44 @@ export function createUi(callbacks) {
       });
     }
 
+    // Advanced Song Creation Toggle
+    if (els.songAdvancedBtn) {
+      els.songAdvancedBtn.addEventListener('click', () => {
+        const isExpanded = els.songAdvancedBtn.getAttribute('aria-expanded') === 'true';
+        setSongAdvancedExpanded(!isExpanded);
+      });
+    }
+
+    // Integrated Title Lookup
+    if (els.songFormTitle) {
+      els.songFormTitle.addEventListener('input', (e) => {
+        const query = (e.target.value || '').trim();
+        if (titleLookupDebounceTimer) clearTimeout(titleLookupDebounceTimer);
+        if (query.length < 2) {
+          if (els.titleLookupDropdown) els.titleLookupDropdown.hidden = true;
+          if (els.titleLookupSpinner) els.titleLookupSpinner.hidden = true;
+          return;
+        }
+        titleLookupDebounceTimer = setTimeout(() => {
+          performTitleTrackLookup(query);
+        }, 280);
+      });
+
+      els.songFormTitle.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (els.titleLookupDropdown) els.titleLookupDropdown.hidden = true;
+        }
+      });
+    }
+
+    trackGlobal(document, 'click', (e) => {
+      if (els.titleLookupDropdown && !els.titleLookupDropdown.hidden) {
+        if (!e.target.closest('.metro-title-lookup-wrap')) {
+          els.titleLookupDropdown.hidden = true;
+        }
+      }
+    });
+
     // Web Lookup Search
     if (els.webSearchInput) {
       els.webSearchInput.addEventListener('input', (e) => {
@@ -2076,6 +2202,74 @@ export function createUi(callbacks) {
     saveCustomEntries();
     renderSetlistList();
     showToast(`Removed “${entry.title}”`, 'info');
+  }
+
+  let titleLookupDebounceTimer = null;
+  async function performTitleTrackLookup(query) {
+    if (!els.titleLookupDropdown) return;
+    if (els.titleLookupSpinner) els.titleLookupSpinner.hidden = false;
+    try {
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=6`);
+      if (!res.ok) throw new Error('Search failed');
+      const data = await res.json();
+      const results = data.results || [];
+      els.titleLookupDropdown.textContent = '';
+      if (results.length === 0) {
+        els.titleLookupDropdown.hidden = true;
+        return;
+      }
+      results.forEach((item) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'metro-title-lookup-item brutal-press';
+
+        const name = document.createElement('span');
+        name.className = 'metro-title-lookup-name';
+        name.textContent = item.trackName || 'Untitled Track';
+
+        const artist = document.createElement('span');
+        artist.className = 'metro-title-lookup-artist';
+        artist.textContent = item.artistName || 'Unknown Artist';
+
+        const meta = document.createElement('span');
+        meta.className = 'metro-title-lookup-meta';
+        const year = item.releaseDate ? item.releaseDate.slice(0, 4) : '';
+        meta.textContent = `${item.primaryGenreName || 'Music'}${year ? ' • ' + year : ''}`;
+
+        btn.appendChild(name);
+        btn.appendChild(artist);
+        btn.appendChild(meta);
+
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (els.songFormTitle) els.songFormTitle.value = item.trackName || '';
+          if (els.songFormArtist) els.songFormArtist.value = item.artistName || '';
+          els.titleLookupDropdown.hidden = true;
+          showToast(`Selected “${item.trackName}”`, 'success');
+
+          // Try to look up BPM if currently default
+          if (els.songFormBpm && (!els.songFormBpm.value || els.songFormBpm.value === '120')) {
+            try {
+              const bpmRes = await fetch(`/api/song-bpm?title=${encodeURIComponent(item.trackName)}&artist=${encodeURIComponent(item.artistName || '')}`);
+              if (bpmRes.ok) {
+                const bpmData = await bpmRes.json();
+                if (bpmData && typeof bpmData.bpm === 'number' && bpmData.bpm >= 20 && bpmData.bpm <= 300) {
+                  els.songFormBpm.value = String(Math.round(bpmData.bpm));
+                }
+              }
+            } catch (err) {}
+          }
+        });
+
+        els.titleLookupDropdown.appendChild(btn);
+      });
+      els.titleLookupDropdown.hidden = false;
+    } catch (err) {
+      if (els.titleLookupDropdown) els.titleLookupDropdown.hidden = true;
+    } finally {
+      if (els.titleLookupSpinner) els.titleLookupSpinner.hidden = true;
+    }
   }
 
   async function performSongWebSearch(query) {
@@ -3414,24 +3608,113 @@ export function createUi(callbacks) {
       const sub=document.createElement('span'); sub.className='metro-coach-diff-btn-sub'; sub.textContent=d.sub;
       btn.appendChild(title); btn.appendChild(sub);
       btn.addEventListener('click', ()=>{
-        if (callbacks.onCoachPrimerChange) callbacks.onCoachPrimerChange({ difficulty: d.id });
+        const curP = metroState.coachPrimer;
+        const newMin = quantizeBpmForDifficulty(curP.minBpm || 60, d.id);
+        const newMax = quantizeBpmForDifficulty(curP.maxBpm || 180, d.id);
+        if (callbacks.onCoachPrimerChange) callbacks.onCoachPrimerChange({ difficulty: d.id, minBpm: newMin, maxBpm: newMax });
         diffGrid.querySelectorAll('.metro-coach-diff-btn').forEach(x=>x.classList.toggle('active', x.dataset.diff===d.id));
         renderCoachPrimer();
       });
       diffGrid.appendChild(btn);
     });
+
+    // Horizontal dual-range slider (min to max BPM) placed below the 4 grid cards
+    const rangeField = document.createElement('div');
+    rangeField.className = 'metro-coach-field';
+    rangeField.id = 'coachPrimerRangeField';
+    rangeField.style.width = '100%';
+    rangeField.style.boxSizing = 'border-box';
+    rangeField.style.marginTop = '6px';
+
+    const rangeLabelRow = document.createElement('div');
+    rangeLabelRow.className = 'metro-coach-field-label';
+    const initMin = metroState.coachPrimer.minBpm || 60;
+    const initMax = metroState.coachPrimer.maxBpm || 180;
+    rangeLabelRow.innerHTML = `<span>TEMPO RANGE</span><strong id="coachPrimerRangeVal">${initMin} – ${initMax} BPM</strong>`;
+    rangeField.appendChild(rangeLabelRow);
+
+    const dualWrap = document.createElement('div');
+    dualWrap.className = 'metro-dual-range';
+    dualWrap.id = 'coachPrimerDualRange';
+
+    const dualTrack = document.createElement('div');
+    dualTrack.className = 'metro-dual-track';
+    dualWrap.appendChild(dualTrack);
+
+    const dualFill = document.createElement('div');
+    dualFill.className = 'metro-dual-fill';
+    dualFill.id = 'coachPrimerDualFill';
+    dualWrap.appendChild(dualFill);
+
+    const step = getStepForDifficulty(metroState.coachPrimer.difficulty);
+
+    const minInput = document.createElement('input');
+    minInput.type = 'range';
+    minInput.id = 'coachPrimerMinRange';
+    minInput.min = '30';
+    minInput.max = '250';
+    minInput.step = String(step);
+    minInput.value = String(initMin);
+    minInput.setAttribute('aria-label', 'Minimum BPM');
+
+    const maxInput = document.createElement('input');
+    maxInput.type = 'range';
+    maxInput.id = 'coachPrimerMaxRange';
+    maxInput.min = '30';
+    maxInput.max = '250';
+    maxInput.step = String(step);
+    maxInput.value = String(initMax);
+    maxInput.setAttribute('aria-label', 'Maximum BPM');
+
+    minInput.addEventListener('pointerdown', () => { minInput.style.zIndex = '5'; maxInput.style.zIndex = '4'; });
+    maxInput.addEventListener('pointerdown', () => { maxInput.style.zIndex = '5'; minInput.style.zIndex = '4'; });
+    minInput.addEventListener('focus', () => { minInput.style.zIndex = '5'; maxInput.style.zIndex = '4'; });
+    maxInput.addEventListener('focus', () => { maxInput.style.zIndex = '5'; minInput.style.zIndex = '4'; });
+
+    const onMinChange = () => {
+      const diff = metroState.coachPrimer.difficulty;
+      let rawMin = Number(minInput.value);
+      let rawMax = Number(maxInput.value);
+      let minVal = quantizeBpmForDifficulty(rawMin, diff);
+      if (minVal > rawMax) {
+        rawMax = minVal;
+        maxInput.value = String(rawMax);
+      }
+      minInput.value = String(minVal);
+      if (callbacks.onCoachPrimerChange) callbacks.onCoachPrimerChange({ minBpm: minVal, maxBpm: rawMax });
+      renderCoachPrimer();
+    };
+
+    const onMaxChange = () => {
+      const diff = metroState.coachPrimer.difficulty;
+      let rawMin = Number(minInput.value);
+      let rawMax = Number(maxInput.value);
+      let maxVal = quantizeBpmForDifficulty(rawMax, diff);
+      if (maxVal < rawMin) {
+        rawMin = maxVal;
+        minInput.value = String(rawMin);
+      }
+      maxInput.value = String(maxVal);
+      if (callbacks.onCoachPrimerChange) callbacks.onCoachPrimerChange({ minBpm: rawMin, maxBpm: maxVal });
+      renderCoachPrimer();
+    };
+
+    minInput.addEventListener('input', onMinChange);
+    minInput.addEventListener('change', onMinChange);
+    maxInput.addEventListener('input', onMaxChange);
+    maxInput.addEventListener('change', onMaxChange);
+
+    dualWrap.appendChild(minInput);
+    dualWrap.appendChild(maxInput);
+    rangeField.appendChild(dualWrap);
+
+    const dualLabels = document.createElement('div');
+    dualLabels.className = 'metro-coach-dual-labels';
+    dualLabels.innerHTML = `<span>MIN: <strong id="coachPrimerMinLabel">${initMin}</strong> BPM</span><span>MAX: <strong id="coachPrimerMaxLabel">${initMax}</strong> BPM</span>`;
+    rangeField.appendChild(dualLabels);
+
     const diffBlurb=document.createElement('p'); diffBlurb.id='coachPrimerDiffBlurb'; diffBlurb.style.margin='0'; diffBlurb.style.fontFamily='var(--font-secondary)'; diffBlurb.style.fontSize='0.72rem'; diffBlurb.style.fontWeight='700'; diffBlurb.style.color='var(--accent-neon-yellow)'; diffBlurb.style.textAlign='center';
     diffBlurb.textContent='Builds foundational internal tempo memory';
-
-    const tapArea=document.createElement('button'); tapArea.type='button'; tapArea.className='metro-coach-tap-area brutal-press'; tapArea.id='coachPrimerTapArea';
-    const tapTitle=document.createElement('span'); tapTitle.className='metro-coach-tap-title'; tapTitle.textContent='TAP HERE OR HIT MIDI DRUM PAD';
-    const tapSub=document.createElement('span'); tapSub.className='metro-coach-tap-sub'; tapSub.id='coachPrimerTapSub'; tapSub.textContent=METRO_COPY.midiTapHint;
-    const midiBadge=document.createElement('span'); midiBadge.id='coachPrimerMidiBadge'; midiBadge.style.fontSize='0.62rem'; midiBadge.style.color='#a1a1aa'; midiBadge.style.display='none'; midiBadge.textContent='● MIDI connected';
-    tapArea.appendChild(tapTitle); tapArea.appendChild(tapSub); tapArea.appendChild(midiBadge);
-    tapArea.addEventListener('click', ()=> {
-      if (callbacks.onPrimerTap) callbacks.onPrimerTap(performance.now());
-    });
-    tapArea.addEventListener('pointerdown', (e)=>{ e.preventDefault(); });
 
     const cta=document.createElement('button'); cta.type='button'; cta.className='metro-coach-cta brutal-press'; cta.dataset.coachStart='tempo-primer'; cta.innerHTML='<i class="fa-solid fa-play"></i> ' + escHtml(METRO_COPY.coachStartSession);
     cta.addEventListener('click', () => {
@@ -3442,7 +3725,7 @@ export function createUi(callbacks) {
       }
     });
 
-    wrap.appendChild(head); wrap.appendChild(cycle); wrap.appendChild(diffGrid); wrap.appendChild(diffBlurb); wrap.appendChild(tapArea); wrap.appendChild(cta);
+    wrap.appendChild(head); wrap.appendChild(cycle); wrap.appendChild(diffGrid); wrap.appendChild(rangeField); wrap.appendChild(diffBlurb); wrap.appendChild(cta);
     return wrap;
   }
 
@@ -3631,12 +3914,19 @@ export function createUi(callbacks) {
     if (poly) poly.checked = !!cfg.poly;
   }
 
+  function getStepForDifficulty(diff) {
+    if (diff === 'easy') return 10;
+    if (diff === 'medium') return 5;
+    if (diff === 'hard') return 4;
+    return 1;
+  }
+
   function renderCoachPrimer() {
     const p = metroState.coachPrimer;
     const blurb = document.getElementById('coachPrimerDiffBlurb');
     const diffMap = {
-      easy: 'Builds foundational internal tempo memory',
-      medium: 'Tightens recall to 5-BPM granularity',
+      easy: 'Builds foundational internal tempo memory (10-BPM jumps)',
+      medium: 'Tightens recall to 5-BPM granularity (5-BPM jumps)',
       hard: 'Maelzel markings — classical tempo memory',
       expert: 'Exact 1-BPM recall — professional grade'
     };
@@ -3647,6 +3937,37 @@ export function createUi(callbacks) {
         x.classList.toggle('active', x.dataset.diff === p.difficulty);
       });
     }
+
+    const minInput = document.getElementById('coachPrimerMinRange');
+    const maxInput = document.getElementById('coachPrimerMaxRange');
+    const dualFill = document.getElementById('coachPrimerDualFill');
+    const rangeVal = document.getElementById('coachPrimerRangeVal');
+    const minLabel = document.getElementById('coachPrimerMinLabel');
+    const maxLabel = document.getElementById('coachPrimerMaxLabel');
+
+    const step = getStepForDifficulty(p.difficulty);
+    const minBpm = p.minBpm || 60;
+    const maxBpm = p.maxBpm || 180;
+
+    if (minInput) {
+      minInput.step = String(step);
+      if (document.activeElement !== minInput) minInput.value = String(minBpm);
+    }
+    if (maxInput) {
+      maxInput.step = String(step);
+      if (document.activeElement !== maxInput) maxInput.value = String(maxBpm);
+    }
+    if (rangeVal) rangeVal.textContent = `${minBpm} – ${maxBpm} BPM`;
+    if (minLabel) minLabel.textContent = String(minBpm);
+    if (maxLabel) maxLabel.textContent = String(maxBpm);
+
+    if (dualFill) {
+      const pctMin = Math.max(0, Math.min(100, ((minBpm - 30) / (250 - 30)) * 100));
+      const pctMax = Math.max(0, Math.min(100, ((maxBpm - 30) / (250 - 30)) * 100));
+      dualFill.style.left = `${pctMin}%`;
+      dualFill.style.width = `${Math.max(0, pctMax - pctMin)}%`;
+    }
+
     const badge = document.getElementById('coachPrimerMidiBadge');
     if (badge) {
       const isConnected = metroState.midiStatus === 'connected';
@@ -3675,6 +3996,11 @@ export function createUi(callbacks) {
   function enterCoachLive(tabId) {
     coachLiveRunning = true;
     coachLiveTab = tabId;
+    if (tabId === 'tempo-primer') {
+      updatePrimerDots(0, false);
+    } else {
+      hidePrimerDots();
+    }
     // hide the COACH DECK button, show live dock in its place, close sheet to reveal full page
     if (els.coachBtn) {
       els.coachBtn.hidden = true;
@@ -3700,6 +4026,8 @@ export function createUi(callbacks) {
   function exitCoachLive() {
     coachLiveRunning = false;
     coachLiveTab = null;
+    lastCoachSnapshot = null;
+    hidePrimerDots();
     clearTopbarModeTitle();
     if (els.coachLiveDock) { els.coachLiveDock.hidden = true; els.coachLiveDock.textContent = ''; }
     if (els.coachLive) { els.coachLive.hidden = true; els.coachLive.textContent = ''; }
@@ -3750,7 +4078,46 @@ export function createUi(callbacks) {
     prog.appendChild(progFill);
     pill.appendChild(prog);
 
-    // Left info block (pulsing red dot + rich live mode metrics)
+    // 1. Left actions: STOP button and RETRY button
+    const leftActions = document.createElement('div');
+    leftActions.className = 'metro-coach-pill-left';
+
+    const currentTab = coachLiveTab || coachTab;
+    const isPrimerInit = currentTab === 'tempo-primer';
+    if (isPrimerInit) pill.classList.add('is-tempo-primer');
+
+    const stopBtn = document.createElement('button');
+    stopBtn.type = 'button';
+    stopBtn.id = 'metroCoachPillStop';
+    stopBtn.className = 'metro-coach-pill-stop metro-coach-live-stop brutal-press' + (isPrimerInit ? ' is-icon-only' : '');
+    stopBtn.innerHTML = isPrimerInit
+      ? '<i class="fa-solid fa-stop" aria-hidden="true"></i>'
+      : '<i class="fa-solid fa-stop"></i> <span>STOP</span>';
+    stopBtn.setAttribute('aria-label', isPrimerInit ? 'Stop tempo primer' : 'Stop training session');
+    if (isPrimerInit) stopBtn.title = 'Stop tempo primer';
+    stopBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (callbacks.onCoachStop) callbacks.onCoachStop();
+    });
+    leftActions.appendChild(stopBtn);
+
+    const retryBtn = document.createElement('button');
+    retryBtn.type = 'button';
+    retryBtn.id = 'metroCoachPillRetry';
+    retryBtn.className = 'metro-coach-pill-retry brutal-press' + (isPrimerInit ? ' is-icon-only' : '');
+    retryBtn.innerHTML = '<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>';
+    retryBtn.setAttribute('aria-label', 'Retry tempo primer test');
+    retryBtn.title = 'Retry tempo primer test';
+    retryBtn.style.display = isPrimerInit ? 'inline-flex' : 'none';
+    retryBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (callbacks.onPrimerRetry) callbacks.onPrimerRetry();
+    });
+    leftActions.appendChild(retryBtn);
+
+    pill.appendChild(leftActions);
+
+    // 2. Middle info block (pulsing red dot + rich live mode metrics)
     const info = document.createElement('div');
     info.className = 'metro-coach-pill-info';
 
@@ -3766,35 +4133,7 @@ export function createUi(callbacks) {
     info.appendChild(tag);
     pill.appendChild(info);
 
-    // Right actions: STOP SESSION and Expand settings button
-    const actions = document.createElement('div');
-    actions.className = 'metro-coach-pill-actions';
-
-    const retryBtn = document.createElement('button');
-    retryBtn.type = 'button';
-    retryBtn.id = 'metroCoachPillRetry';
-    retryBtn.className = 'metro-coach-pill-retry brutal-press';
-    retryBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> <span>RETRY</span>';
-    retryBtn.setAttribute('aria-label', 'Retry tempo primer test');
-    retryBtn.style.display = 'none';
-    retryBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (callbacks.onPrimerRetry) callbacks.onPrimerRetry();
-    });
-    actions.appendChild(retryBtn);
-
-    const stopBtn = document.createElement('button');
-    stopBtn.type = 'button';
-    stopBtn.id = 'metroCoachPillStop';
-    stopBtn.className = 'metro-coach-pill-stop metro-coach-live-stop brutal-press';
-    stopBtn.innerHTML = '<i class="fa-solid fa-stop"></i> <span>STOP SESSION</span>';
-    stopBtn.setAttribute('aria-label', 'Stop training session');
-    stopBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (callbacks.onCoachStop) callbacks.onCoachStop();
-    });
-    actions.appendChild(stopBtn);
-
+    // 3. Right actions: Up arrow expand button
     const expandBtn = document.createElement('button');
     expandBtn.type = 'button';
     expandBtn.id = 'metroCoachPillExpand';
@@ -3806,14 +4145,19 @@ export function createUi(callbacks) {
       e.stopPropagation();
       if (callbacks.onCoachExpand) callbacks.onCoachExpand();
     });
-    actions.appendChild(expandBtn);
+    pill.appendChild(expandBtn);
 
-    pill.appendChild(actions);
     dock.appendChild(pill);
   }
 
   function renderCoachLive(snapshot) {
     if (!coachLiveRunning) return;
+    if (snapshot) {
+      lastCoachSnapshot = snapshot;
+    } else if (lastCoachSnapshot) {
+      snapshot = lastCoachSnapshot;
+    }
+
     const dock = els.coachLiveDock || els.coachLive;
     if (!dock) return;
     let pill = dock.querySelector('#metroCoachPillBar');
@@ -3825,14 +4169,46 @@ export function createUi(callbacks) {
 
     const progFill = pill.querySelector('#metroCoachPillProgFill');
     const tag = pill.querySelector('#metroCoachPillTag');
+    const stopBtn = pill.querySelector('#metroCoachPillStop');
     const retryBtn = pill.querySelector('#metroCoachPillRetry');
     if (!tag) return;
 
     const tabId = coachLiveTab || coachTab;
+    const isPrimer = tabId === 'tempo-primer';
+    pill.classList.toggle('is-tempo-primer', isPrimer);
+
+    if (stopBtn) {
+      if (isPrimer) {
+        stopBtn.classList.add('is-icon-only');
+        stopBtn.setAttribute('aria-label', 'Stop tempo primer');
+        stopBtn.title = 'Stop tempo primer';
+        stopBtn.innerHTML = '<i class="fa-solid fa-stop" aria-hidden="true"></i>';
+      } else {
+        stopBtn.classList.remove('is-icon-only');
+        stopBtn.setAttribute('aria-label', 'Stop training session');
+        stopBtn.removeAttribute('title');
+        stopBtn.innerHTML = '<i class="fa-solid fa-stop" aria-hidden="true"></i> <span>STOP</span>';
+      }
+    }
+
+    if (retryBtn) {
+      if (isPrimer) {
+        retryBtn.classList.add('is-icon-only');
+        retryBtn.setAttribute('aria-label', 'Retry tempo primer test');
+        retryBtn.title = 'Retry tempo primer test';
+        retryBtn.innerHTML = '<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>';
+        retryBtn.style.display = 'inline-flex';
+      } else {
+        retryBtn.classList.remove('is-icon-only');
+        retryBtn.style.display = 'none';
+      }
+    }
+
+    const isPaused = !metroState.playing && !isPrimer;
+    const pausedBadge = isPaused ? '<span class="metro-coach-phase-badge paused">PAUSED</span> ' : '';
     let pct = 0;
 
     if (tabId === 'inner-clock') {
-      if (retryBtn) retryBtn.style.display = 'none';
       const isMuted = snapshot ? snapshot.phase === 'muted' : false;
       const a = metroState.coachInner.audibleBars;
       const m = metroState.coachInner.mutedBars;
@@ -3843,13 +4219,12 @@ export function createUi(callbacks) {
       const remainingBars = Math.max(0, phaseTotal - phaseBar - 1);
       if (isMuted) {
         tag.classList.add('is-muted');
-        tag.innerHTML = `<span class="metro-coach-phase-badge muted">MUTED</span> <span class="metro-coach-pill-bold">Bar ${phaseBar + 1}/${m}</span> <span class="metro-coach-pill-sub">• Next: ${nextPhase} in ${remainingBars}b</span>`;
+        tag.innerHTML = `${pausedBadge}<span class="metro-coach-phase-badge muted">MUTED</span> <span class="metro-coach-pill-bold">Bar ${phaseBar + 1}/${m}</span> <span class="metro-coach-pill-sub">• Next: ${nextPhase} in ${remainingBars}b</span>`;
       } else {
         tag.classList.remove('is-muted');
-        tag.innerHTML = `<span class="metro-coach-phase-badge audible">AUDIBLE</span> <span class="metro-coach-pill-bold">Bar ${phaseBar + 1}/${a}</span> <span class="metro-coach-pill-sub">• Next: ${nextPhase} in ${remainingBars}b</span>`;
+        tag.innerHTML = `${pausedBadge}<span class="metro-coach-phase-badge audible">AUDIBLE</span> <span class="metro-coach-pill-bold">Bar ${phaseBar + 1}/${a}</span> <span class="metro-coach-pill-sub">• Next: ${nextPhase} in ${remainingBars}b</span>`;
       }
     } else if (tabId === 'speed-trainer') {
-      if (retryBtn) retryBtn.style.display = 'none';
       const s = metroState.coachSpeed;
       const cur = snapshot ? snapshot.currentBpm : s.start;
       const stepIdx = snapshot ? snapshot.speedStepIdx : 0;
@@ -3858,9 +4233,8 @@ export function createUi(callbacks) {
       let unitSuffix = 'b';
       if (s.unit === 'beats') unitSuffix = 'bt';
       else if (s.unit === 'seconds') unitSuffix = 's';
-      tag.innerHTML = `<span class="metro-coach-pill-bold">${cur} → ${s.target} BPM</span> <span class="metro-coach-pill-sub">• Step ${stepIdx}/${steps} (+${s.step}/${s.everyBars}${unitSuffix})</span>`;
+      tag.innerHTML = `${pausedBadge}<span class="metro-coach-pill-bold">${cur} → ${s.target} BPM</span> <span class="metro-coach-pill-sub">• Step ${stepIdx}/${steps} (+${s.step}/${s.everyBars}${unitSuffix})</span>`;
     } else if (tabId === 'rhythm-step') {
-      if (retryBtn) retryBtn.style.display = 'none';
       const pat = metroState.coachRhythm.pattern;
       const idx = snapshot ? snapshot.rhythmIdx : 0;
       const curId = pat[idx] || pat[0];
@@ -3871,20 +4245,20 @@ export function createUi(callbacks) {
       const nextIdx = (idx + 1) % pat.length;
       const nextSub = labels[pat[nextIdx]] || pat[nextIdx];
       const barsToNext = Math.max(0, every - barMod);
-      tag.innerHTML = `<span class="metro-coach-pill-bold">${labels[curId] || curId}</span> <span class="metro-coach-pill-sub">• Next: ${nextSub} in ${barsToNext}b</span>`;
+      tag.innerHTML = `${pausedBadge}<span class="metro-coach-pill-bold">${labels[curId] || curId}</span> <span class="metro-coach-pill-sub">• Next: ${nextSub} in ${barsToNext}b</span>`;
     } else if (tabId === 'tempo-primer') {
       if (snapshot && snapshot.primerResult) {
-        if (retryBtn) retryBtn.style.display = 'inline-flex';
         const res = snapshot.primerResult;
         const sign = res.delta > 0 ? '+' : '';
-        tag.innerHTML = `<span class="metro-coach-pill-bold">${res.recalled} BPM</span> <span class="metro-coach-grade-badge">${res.grade}</span> <span class="metro-coach-pill-sub">Δ ${sign}${res.delta}</span>`;
+        tag.innerHTML = `${pausedBadge}<span class="metro-coach-pill-bold">${res.recalled} BPM</span> <span class="metro-coach-grade-badge">${res.grade}</span> <span class="metro-coach-pill-sub">Δ ${sign}${res.delta}</span>`;
         pct = 1;
+        updatePrimerDots(4, true);
       } else {
-        if (retryBtn) retryBtn.style.display = 'none';
         const target = snapshot ? snapshot.primerTarget : metroState.coachPrimer.target;
         const tapCount = snapshot ? snapshot.primerTaps.length : 0;
         pct = tapCount / 4;
-        tag.innerHTML = `<span class="metro-coach-pill-bold">TARGET ${target} BPM</span> <span class="metro-coach-pill-sub">• ${tapCount < 4 ? `Tap ${tapCount}/4` : 'Scoring…'}</span>`;
+        tag.innerHTML = `${pausedBadge}<span class="metro-coach-pill-bold">TARGET ${target} BPM</span> <span class="metro-coach-pill-sub">• ${tapCount < 4 ? `Tap ${tapCount}/4` : 'Scoring…'}</span>`;
+        updatePrimerDots(tapCount, false);
       }
     }
 
@@ -4294,10 +4668,6 @@ export function createUi(callbacks) {
     if (e.key === 'Escape') {
       const modalOpen = document.querySelector('.modal-backdrop:not(.hidden)');
       if (modalOpen) return;
-      if (coachLiveRunning) {
-        if (callbacks.onCoachStop) callbacks.onCoachStop();
-        return;
-      }
       if (sheetOpen && els.songPickerModal && !els.songPickerModal.hidden) {
         closeSongPickerModal();
         e.stopPropagation();
@@ -4330,6 +4700,10 @@ export function createUi(callbacks) {
         closeSheet();
         return;
       }
+      if (coachLiveRunning) {
+        if (callbacks.onCoachStop) callbacks.onCoachStop();
+        return;
+      }
     }
     const tag = document.activeElement && document.activeElement.tagName;
     const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
@@ -4347,14 +4721,29 @@ export function createUi(callbacks) {
     }
   }
 
+  function updateSheetHeader(iconClass, titleText, closeLabel) {
+    if (els.sheetPillIcon) els.sheetPillIcon.className = `${iconClass}`;
+    if (els.setlistSheetMainTitle) els.setlistSheetMainTitle.textContent = titleText;
+    if (els.closeMetroSheetBtn && closeLabel) els.closeMetroSheetBtn.setAttribute('aria-label', closeLabel);
+  }
+
   function openSheet(panel, trigger) {
     if (sheetOpen && activePanel === panel) return;
     [els.panelTs, els.panelSub, els.panelSetlist, els.panelSettings, els.panelCoach].forEach((p) => {
       if (!p) return;
       p.hidden = p !== panel;
     });
-    if (panel === els.panelSetlist) {
+    if (panel === els.panelTs) {
+      updateSheetHeader('fa-solid fa-clock', 'TIME SIGNATURE', 'Close time signature menu');
+    } else if (panel === els.panelSub) {
+      updateSheetHeader('fa-solid fa-layer-group', 'SUBDIVISION', 'Close subdivision menu');
+    } else if (panel === els.panelSetlist) {
+      updateSheetHeader('fa-solid fa-music', activeMenuTab === 'setlists' ? 'SETLISTS' : 'SONGS', 'Close setlist and songs menu');
       switchMenuTab(activeMenuTab);
+    } else if (panel === els.panelSettings) {
+      updateSheetHeader('fa-solid fa-gear', 'SETTINGS', 'Close settings menu');
+    } else if (panel === els.panelCoach) {
+      updateSheetHeader('fa-solid fa-dumbbell', 'COACH DECK', 'Close coach deck menu');
     }
     if (sheetTrigger && sheetTrigger !== trigger) {
       sheetTrigger.setAttribute('aria-expanded', 'false');
@@ -4753,6 +5142,9 @@ export function createUi(callbacks) {
     if (!els.playBtn) return;
     els.playBtn.classList.toggle('playing', playing);
     els.playBtn.setAttribute('aria-label', playing ? METRO_COPY.startedLabel : METRO_COPY.stoppedLabel);
+    if (coachLiveRunning) {
+      renderCoachLive(lastCoachSnapshot);
+    }
   }
 
   function renderBeat(beatInBar) {
@@ -4827,6 +5219,8 @@ export function createUi(callbacks) {
     renderCoachRhythm,
     renderCoachPrimer,
     enterCoachLive,
+    updatePrimerDots,
+    hidePrimerDots,
     exitCoachLive,
     renderCoachLive,
     renderMidiState,

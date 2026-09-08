@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { z } from 'astro/zod';
-import { getSupabaseServiceClient } from '../../lib/supabaseServer';
+import { createSupabaseAuthClient, getSupabaseServiceClient } from '../../lib/supabaseServer';
 import { validateRealEmail } from '../../scripts/utils/emailValidator.js';
 import { assignSubscriberRoles, getDiscordConfig } from '../../lib/discord';
 import { getClientIp, isRateLimited } from '../../lib/rateLimit';
@@ -46,10 +46,10 @@ async function verifyGoogleCredential(
   credential: string,
   nonce?: string
 ): Promise<{ email?: string; name?: string; avatar?: string } | null> {
-  const admin = getSupabaseServiceClient();
-  if (!admin) return null;
+  const authClient = createSupabaseAuthClient();
+  if (!authClient) return null;
   try {
-    const { data, error } = await admin.auth.signInWithIdToken({
+    const { data, error } = await authClient.auth.signInWithIdToken({
       provider: 'google',
       token: credential,
       nonce: nonce || undefined
@@ -266,8 +266,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     // If a Google credential is presented, verify it properly via Supabase Auth
     // and let the VERIFIED claims override anything sent in the request body.
-    if (body.credential || body.id_token) {
-      const verified = await verifyGoogleCredential(body.credential || body.id_token, body.nonce);
+    const credential = body.credential || body.id_token;
+    if (credential) {
+      const verified = await verifyGoogleCredential(credential, body.nonce);
       if (!verified) {
         return new Response(
           JSON.stringify({ status: 'error', message: 'Google sign-in could not be verified. Please sign in again.' }),
@@ -279,7 +280,7 @@ export const POST: APIRoute = async ({ request }) => {
       if (verified.avatar) avatarUrl = verified.avatar;
     }
 
-    const validation = await validateRealEmail(email);
+    const validation = await validateRealEmail(email || '');
     if (!validation.valid) {
       return new Response(
         JSON.stringify({ status: 'error', message: validation.error || 'Please enter a valid, active email address.' }),

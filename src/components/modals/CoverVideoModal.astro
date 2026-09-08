@@ -128,6 +128,12 @@
     pointer-events: auto;
   }
 
+  .cover-video-modal-backdrop.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.18s ease !important;
+  }
+
   .cover-video-modal-container {
     background: #141418;
     border: 3px solid #000000;
@@ -145,6 +151,12 @@
 
   .cover-video-modal-backdrop:global(.active) .cover-video-modal-container {
     transform: scale(1);
+  }
+
+  .cover-video-modal-backdrop.is-closing .cover-video-modal-container {
+    transform: scale(0.95) translateY(8px) !important;
+    opacity: 0 !important;
+    transition: transform 0.18s var(--ease-tactile), opacity 0.16s ease !important;
   }
 
   .video-modal-top-bar {

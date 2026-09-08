@@ -1,0 +1,26 @@
+<div class="tuner-input-settings">
+  <label for="tunerCalibration">Reference A4 (Hz)</label>
+  <div class="tuner-calibration-row">
+    <input id="tunerCalibration" type="number" min="410" max="470" step="0.1" value="440" inputmode="decimal" />
+    <button type="button" id="tunerCalibrationReset" class="brutal-press">Reset 440</button>
+  </div>
+  <label for="tunerTolerance">In-tune tolerance</label>
+  <select id="tunerTolerance"><option value="3">Standard · ±3 cents</option><option value="1">Precision · ±1 cent</option></select>
+  <label for="tunerInputDevice">Microphone / audio interface</label>
+  <select id="tunerInputDevice"><option value="">System default</option></select>
+  <label for="tunerInputChannel">Input channel</label>
+  <select id="tunerInputChannel"><option value="0">Channel 1</option><option value="1">Channel 2</option></select>
+</div>
+
+<style>
+  .tuner-input-settings { display: grid; gap: var(--tuner-detail-gap); margin-block: var(--tuner-settings-gap); color: var(--text-on-light); font-family: var(--font-primary); }
+  .tuner-calibration-row { display: flex; gap: var(--tuner-detail-gap); }
+  .tuner-calibration-row input { min-width: 0; flex: 1; }
+  .tuner-input-settings :is(input, select, button) { min-height: var(--tuner-touch-target); max-width: 100%; padding-inline: var(--tuner-control-padding); border: var(--border-brutal-sm); border-radius: var(--radius-sm); background: var(--surface-input); color: var(--text-on-light); font: inherit; }
+  .tuner-input-settings button { background: var(--btn-brand-primary); color: var(--btn-brand-text); cursor: pointer; }
+  .tuner-input-settings button:hover { background: var(--btn-brand-hover); }
+  .tuner-input-settings :is(input, select):hover { border-color: var(--brand-accent-primary); }
+  .tuner-input-settings :is(input, select, button):focus-visible { outline: var(--tuner-focus-width) solid var(--brand-accent-primary); outline-offset: var(--tuner-focus-offset); }
+  .tuner-input-settings :is(input, select, button):disabled { opacity: 0.5; cursor: not-allowed; }
+  .tuner-input-settings p { font-size: var(--tuner-detail-font); margin: 0; }
+</style>

@@ -8,10 +8,14 @@ test.describe('tier1 smoke — home hub', () => {
     await expect(page.locator('.members-scroll-container .member-card').first()).toBeVisible();
   });
 
-  test('tuner is hidden and direct navigation redirects to homepage when disabled', async ({ page }) => {
-    await page.goto('/tuner');
-    await expect(page).not.toHaveURL(/\/tuner/);
-    await expect(page).toHaveURL(/\/$/);
+  test('KINS TOOLS exposes the tuner and direct navigation loads it', async ({ page }) => {
+    await page.goto('/');
+    const tunerLink = page.locator('a[data-track="utilities:tuner"]');
+    await expect(tunerLink).toBeVisible();
+    await expect(tunerLink).toHaveAttribute('href', '/tuner');
+    await tunerLink.click();
+    await expect(page).toHaveURL(/\/tuner/);
+    await expect(page.locator('#tunerView')).toBeVisible();
   });
 
   test('epk is hidden and direct navigation redirects to homepage when disabled', async ({ page }) => {
@@ -744,7 +748,8 @@ test.describe('tier1 smoke — home hub', () => {
 
     // Verify groove engine profiles can be loaded and evaluated in browser context
     const profiles = await page.evaluate(async () => {
-      const mod = await import('/src/scripts/controllers/vinylGrooveEngine.js');
+      const moduleUrl = '/src/scripts/controllers/vinylGrooveEngine.js';
+      const mod: typeof import('../../src/scripts/controllers/vinylGrooveEngine.js') = await import(moduleUrl);
       const cure = mod.deriveGrooveProfile('The Cure', 'Just Like Heaven');
       const sonic = mod.deriveGrooveProfile('Sonic Youth', 'Unmade Bed');
       const weezer = mod.deriveGrooveProfile('Weezer', 'Do You Wanna Get High');
@@ -791,5 +796,3 @@ test.describe('tier1 smoke — home hub', () => {
     }
   });
 });
-
-

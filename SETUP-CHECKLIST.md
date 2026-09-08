@@ -121,11 +121,12 @@ regressions have something to compare against.
 This is the #1 post-deploy issue. Diagnose in 30 s:
 
 ```powershell
-# 1. Redacted health (no secrets leak)
-curl https://kinshub.vercel.app/api/notify-health | jq
+# Configure HEALTHCHECK_TOKEN on the server and in your local shell first.
+# 1. Authenticated diagnostics (GET does not send mail)
+Invoke-RestMethod -Uri 'https://kinshub.vercel.app/api/notify-health' -Headers @{ Authorization = "Bearer $env:HEALTHCHECK_TOKEN" }
 
-# 2. Live probe (sends real test mail to NOTIFY_EMAIL) — requires ?token=HEALTHCHECK_TOKEN if set
-curl "https://kinshub.vercel.app/api/notify-health?check=send&token=YOUR_TOKEN"
+# 2. Live probe (sends real test mail to NOTIFY_EMAIL). Use mode full for three probes.
+Invoke-RestMethod -Method Post -Uri 'https://kinshub.vercel.app/api/notify-health' -Headers @{ Authorization = "Bearer $env:HEALTHCHECK_TOKEN" } -ContentType 'application/json' -Body '{"mode":"single"}'
 
 # Locally:
 node tools/verify-notify.mjs
@@ -145,7 +146,7 @@ node tools/verify-notify.mjs --send-test
 **Verify end-to-end:**
 - [ ] Submit feedback (with screenshot) → email arrives at `HelloKinsFan@gmail.com` within 60 s (check Spam) + row appears in `feedback_submissions`
 - [ ] Submit cover request → email arrives + row in `cover_requests`
-- [ ] `/api/notify-health?check=send` returns `200` and email arrives
+- [ ] Authenticated `POST /api/notify-health` returns `200` and email arrives
 
 ### If something else breaks after deploy
 

@@ -249,12 +249,16 @@ export function closeCoverVideoModal() {
   }
 
   if (modal) {
-    modal.classList.remove('active');
-    modal.classList.add('hidden');
-    document.body.classList.remove('modal-open');
-  }
-  if (iframe) {
-    iframe.src = '';
+    if (modal.classList.contains('is-closing')) return;
+    modal.classList.add('is-closing');
+    setTimeout(() => {
+      modal.classList.remove('active', 'is-closing');
+      modal.classList.add('hidden');
+      document.body.classList.remove('modal-open');
+      if (iframe) {
+        iframe.src = '';
+      }
+    }, 180);
   }
 }
 

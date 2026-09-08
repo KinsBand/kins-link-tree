@@ -37,7 +37,7 @@
             <span class="alert-title">🎵 Setlist Track Transitions</span>
             <span class="alert-desc">Live banner popups when new songs start on stage</span>
           </div>
-          <label class="switch-toggle" for="alertSetlistToggle" checked>
+          <label class="switch-toggle" for="alertSetlistToggle">
             <input type="checkbox" id="alertSetlistToggle" checked />
             <span class="switch-slider"></span>
           </label>
@@ -84,6 +84,12 @@
     display: none !important;
   }
 
+  .modal-backdrop.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.18s ease-out !important;
+  }
+
   .live-alerts-modal-content {
     background: #181820;
     border: 3px solid #000000;
@@ -97,9 +103,18 @@
     animation: modalScaleIn 0.22s var(--ease-snappy) forwards;
   }
 
+  .live-alerts-modal-content.is-closing {
+    animation: modalScaleOut 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  }
+
   @keyframes modalScaleIn {
     from { transform: scale(0.92) translateY(12px); opacity: 0; }
     to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  @keyframes modalScaleOut {
+    from { transform: scale(1) translateY(0); opacity: 1; }
+    to { transform: scale(0.92) translateY(12px); opacity: 0; }
   }
 
   .modal-header {

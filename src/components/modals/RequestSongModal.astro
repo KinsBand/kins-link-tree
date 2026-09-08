@@ -192,6 +192,12 @@
     pointer-events: auto;
   }
 
+  .request-song-modal-backdrop.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.18s ease-out !important;
+  }
+
   .request-song-modal-backdrop.hidden {
     display: none !important;
   }
@@ -209,6 +215,10 @@
     animation: modalPopIn 0.25s var(--ease-snappy);
   }
 
+  .request-song-sheet-wrapper.is-closing {
+    animation: modalPopOut 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  }
+
   @keyframes modalPopIn {
     from {
       transform: scale(0.96) translateY(8px);
@@ -220,12 +230,40 @@
     }
   }
 
+  @keyframes modalPopOut {
+    from {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: scale(0.96) translateY(8px);
+      opacity: 0;
+    }
+  }
+
   @keyframes sheetSlideUp {
     from {
       transform: translateY(100%);
     }
     to {
       transform: translateY(0);
+    }
+  }
+
+  @keyframes sheetSlideDown {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .request-song-sheet-wrapper.is-closing {
+      animation: sheetSlideDown 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
     }
   }
 

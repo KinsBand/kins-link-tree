@@ -71,3 +71,334 @@
   100% { transform: scale(1) translateY(0) rotate(0deg); }
 }
 
+/* ==========================================================================
+   Master 3-Phase State Lifecycle Keyframes (SSOT)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Phase 1: In-Animations (Mount / Reveal / Enter / Open)
+   -------------------------------------------------------------------------- */
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sheetSlideUp {
+  from {
+    opacity: 0.3;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drawerSlideInRight {
+  from {
+    opacity: 0.4;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInTab {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes navSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroLogoDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tapeSlamIn {
+  from {
+    opacity: 0;
+    transform: scale(1.15) rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(var(--tape-rot, -0.8deg));
+  }
+}
+
+@keyframes cardDealIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes celebrateSuccessPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes safetyAlertIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Phase 2: Active & Idle Animations (Continuous / Looping / State-Bound)
+   -------------------------------------------------------------------------- */
+@keyframes glowBreath {
+  0%, 100% {
+    opacity: 0.12;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.28;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes badgePulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 2px 2px 0px #000000;
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 2px 2px 0px 1px var(--brand-accent-primary, #f2fd43);
+  }
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.18) rotate(15deg);
+  }
+}
+
+@keyframes eqBarBounce {
+  0%, 100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes safetyDangerPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes needleLiftEase {
+  0% {
+    transform: translateY(0) rotate(18deg);
+  }
+  100% {
+    transform: translateY(-4px) rotate(0deg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Phase 3: Out-Animations (Dismiss / Exit / Close / Unmount)
+   -------------------------------------------------------------------------- */
+@keyframes modalPopOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+}
+
+@keyframes sheetSlideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes drawerSlideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0.4;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fadeOutTab {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes navSlideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes heroLogoFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes tapePeelOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-6px);
+  }
+}
+
+@keyframes cardDealOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+@keyframes safetyAlertOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* ==========================================================================
+   Universal Zero-Reflow Collapsible Drawer Engine (CSS Grid 0fr -> 1fr)
+   ========================================================================== */
+.collapsible-drawer-grid {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.24s var(--ease-snappy, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.collapsible-drawer-grid.is-expanded {
+  grid-template-rows: 1fr;
+}
+
+.collapsible-drawer-inner {
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s var(--ease-snappy, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.collapsible-drawer-grid.is-expanded > .collapsible-drawer-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Universal Modal / Sheet .is-closing Contract
+   ========================================================================== */
+.modal-backdrop.is-closing {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.18s ease-out !important;
+}
+
+.modal-dialog.is-closing,
+.modal-container.is-closing {
+  animation: modalPopOut 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+.bottom-sheet.is-closing,
+.bottom-sheet-container.is-closing {
+  animation: sheetSlideDown 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+

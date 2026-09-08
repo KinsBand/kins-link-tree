@@ -1,0 +1,14 @@
+<div class="tuner-quality-details">
+  <p id="tunerTargetLabel">Target E2 · A4 = 440 Hz</p>
+  <div class="tuner-confirmation" role="progressbar" aria-label="String tuning confirmation" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="tunerConfirmation">
+    <span id="tunerConfirmationFill"></span>
+  </div>
+</div>
+
+<style>
+  .tuner-quality-details { display: grid; gap: var(--tuner-detail-gap); color: var(--text-on-light); font: var(--tuner-detail-font) var(--font-primary); text-align: center; }
+  .tuner-quality-details p { margin: 0; }
+  .tuner-confirmation { overflow: hidden; height: var(--tuner-progress-height); background: var(--surface-elevated); border-radius: var(--radius-pill); }
+  .tuner-confirmation span { display: block; height: 100%; background: var(--tuner-dwell-progress); transform: scaleX(0); transform-origin: left; transition: transform var(--tuner-progress-duration) linear; }
+  @media (prefers-reduced-motion: reduce) { .tuner-confirmation span { transition: none; } }
+</style>

@@ -11,7 +11,7 @@
 import { showToast } from './toast.js';
 import { safeSet, safeGet } from '../utils/safeStorage.js';
 
-export const CACHE_NAME = 'kins-link-bio-v33';
+export const CACHE_NAME = 'kins-link-bio-v34';
 export const FLAG_KEY = 'app:pwa-installed';
 
 const MODE_QUERIES = [
@@ -371,7 +371,7 @@ export async function cacheCoreAssets(onProgress) {
     `${baseUrl}/kins-logo-new.png`,
     `${baseUrl}/followers.json`,
     `${baseUrl}/noise-tile.png`,
-    `${baseUrl}/tuner-worklet.js`,
+    `${baseUrl}/tuner-worklet.js?v=2`,
     `${baseUrl}/worklets/click-worklet.js`,
     `${baseUrl}/worklets/metro-worker.js`,
   ];

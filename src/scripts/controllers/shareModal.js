@@ -348,7 +348,7 @@ export function closeModal(modalBackdrop, sheetWrapper, onClosed) {
       sheetWrapper.style.animation = '';
     }
     if (onClosed) onClosed();
-  }, 200);
+  }, 220);
 }
 
 export function closeSheetSmoothly(modalBackdrop, modalContent, onClosed) {

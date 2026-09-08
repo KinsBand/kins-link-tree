@@ -109,6 +109,12 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     display: none !important;
   }
 
+  .modal-backdrop.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.18s ease-out !important;
+  }
+
   .live-tip-modal-content {
     background: #181820;
     border: 3px solid #000000;
@@ -122,9 +128,18 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     animation: modalScaleIn 0.22s var(--ease-snappy) forwards;
   }
 
+  .live-tip-modal-content.is-closing {
+    animation: modalScaleOut 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  }
+
   @keyframes modalScaleIn {
     from { transform: scale(0.92) translateY(12px); opacity: 0; }
     to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  @keyframes modalScaleOut {
+    from { transform: scale(1) translateY(0); opacity: 1; }
+    to { transform: scale(0.92) translateY(12px); opacity: 0; }
   }
 
   .modal-header {

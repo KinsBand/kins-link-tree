@@ -1,11 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import TunerQualityReadout from '../components/tuner/TunerQualityReadout.astro';
+import TunerInputSettings from '../components/tuner/TunerInputSettings.astro';
 import ToastContainer from '../components/ui/ToastContainer.astro';
 import FeedbackModal from '../components/modals/FeedbackModal.astro';
 import LegalModal from '../components/modals/LegalModal.astro';
 import { functionalityConfig } from '../settings/functionality.config';
+import '../styles/tuner-quality.css';
+import '../styles/tuner-modes.css';
+import DrumTuningPanel from '../components/tuner/DrumTuningPanel.astro';
+import TunerInstrumentIcon from '../components/tuner/TunerInstrumentIcon.astro';
+import { TUNER_SAMPLE_CREDITS } from '../settings/tunerSamples.config';
 
-const isTunerEnabled = functionalityConfig.enableTunerPage ?? false;
+const isTunerEnabled = functionalityConfig.enableTunerPage || process.env.TUNER_PREVIEW === 'true';
 if (!isTunerEnabled) {
   return Astro.redirect('/');
 }
@@ -13,7 +20,7 @@ if (!isTunerEnabled) {
 
 <BaseLayout
   title="KINS TUNER — Free Chromatic Tuner for Guitar, Bass & Drums"
-  description="Free browser chromatic tuner by KINS. Guided and chromatic modes, a full tuning library for acoustic, electric and bass, drum-kit references, string-safety warnings and a studio-grade mic pitch detector. Audio never leaves your device."
+  description="Free browser chromatic tuner by KINS. Guided and chromatic modes, adjustable calibration, a tuning library for acoustic, electric and bass, and on-device pitch detection. Audio never leaves your device."
 >
   <main class="tuner-page">
     <div class="tuner-view" id="tunerView">
@@ -76,45 +83,52 @@ if (!isTunerEnabled) {
         </button>
         <div class="tuner-badges">
           <span class="tuner-badge-side" id="tunerBadgeLow">TOO LOW</span>
-          <span class="tuner-cents" id="tunerCentsReadout" aria-live="polite" aria-atomic="true">--</span>
+          <span class="tuner-cents" id="tunerCentsReadout">--</span>
           <span class="tuner-badge-side" id="tunerBadgeHigh">TOO HIGH</span>
         </div>
-        <p class="tuner-status sr-only" id="tunerStatusLine" aria-live="polite">TAP TO START TUNING</p>
+        <p class="tuner-status" id="tunerStatusLine" aria-live="polite">TAP TO START TUNING</p>
         <div class="tuner-note-row">
           <span class="tuner-note" id="tunerDetectedNote">--</span>
           <span class="tuner-note-octave" id="tunerDetectedNoteOctave"></span>
           <span class="tuner-note-freq" id="tunerDetectedFreq"></span>
         </div>
-        <p class="tuner-hint" id="tunerDirectionHint" aria-live="polite"></p>
+        <p class="tuner-hint" id="tunerDirectionHint"></p>
+        <TunerQualityReadout />
         <p class="tuner-warning" id="tunerMicWarning" hidden></p>
         <p class="tuner-low-mic-hint" id="tunerLowMicHint" hidden></p>
       </section>
 
       <div class="tuner-middle-scroll">
+        <DrumTuningPanel />
         <section class="tuner-figure" id="tunerFigure" aria-label="String and drum targets"></section>
+        <span id="tunerAudioStatus" class="sr-only" role="status"></span>
       </div>
 
       <div class="tuner-footer-group">
+        <div class="tuner-main-actions">
+        <button type="button" class="tuner-mini-button brutal-press" id="drumAdd" hidden>Add</button>
         <button type="button" class="tuner-mic-cta brutal-press" id="tunerMicToggleBtn" data-track="tuner:mic_start" aria-label="Start tuning">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 1 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-          <span class="tuner-mic-cta-text">START TUNING</span>
+          <span class="tuner-mic-cta-text">START</span>
         </button>
+        <button type="button" class="tuner-mini-button brutal-press" id="drumSave" hidden>Save</button>
+        </div>
         <div class="tuner-instruments" id="tunerInstrumentRow" role="tablist" aria-label="Instrument">
           <button type="button" class="tuner-inst-card active brutal-press" role="tab" aria-selected="true" data-instrument="electric" data-track="tuner:tab_electric">
             <span class="tuner-inst-label">ELECTRIC</span>
-            <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M8 25c-3.5 0-5.5-2.6-5.5-5.4 0-2.4 1.6-3.8 3.2-5.1C7.4 13.1 8.6 11.8 8.6 10V4.5h4.8V10c0 1.8 1.2 3.1 2.9 4.5 1.6 1.3 3.2 2.7 3.2 5.1 0 2.8-2 5.4-5.5 5.4z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M11 2.5v4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            <TunerInstrumentIcon instrument="electric" />
           </button>
           <button type="button" class="tuner-inst-card brutal-press" role="tab" aria-selected="false" data-instrument="acoustic" data-track="tuner:tab_acoustic">
             <span class="tuner-inst-label">ACOUSTIC</span>
-            <svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="17" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="14" cy="17" r="3.2" fill="currentColor"/><path d="M11.5 9.5 L12.5 2.5 M16.5 9.5 L15.5 2.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            <TunerInstrumentIcon instrument="acoustic" />
           </button>
           <button type="button" class="tuner-inst-card brutal-press" role="tab" aria-selected="false" data-instrument="bass" data-track="tuner:tab_bass">
             <span class="tuner-inst-label">BASS</span>
-            <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M9 25.5c-3.2 0-5-2.4-5-5 0-2.2 1.4-3.4 2.9-4.6C8.4 14.7 9.5 13.5 9.5 12V6h4v6c0 1.5 1.1 2.7 2.6 3.9 1.5 1.2 2.9 2.4 2.9 4.6 0 2.6-1.8 5-5 5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M11.5 2.5V6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="13.5" cy="16.5" r="1.6" fill="currentColor"/></svg>
+            <TunerInstrumentIcon instrument="bass" />
           </button>
           <button type="button" class="tuner-inst-card brutal-press" role="tab" aria-selected="false" data-instrument="drums" data-track="tuner:tab_drums">
             <span class="tuner-inst-label">DRUMS</span>
-            <svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="17.5" r="7.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="6.5" cy="9" r="3.4" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M21.5 5.5 L15 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <TunerInstrumentIcon instrument="drums" />
           </button>
         </div>
 
@@ -129,30 +143,32 @@ if (!isTunerEnabled) {
     </div>
 
     <div class="tuner-sheet-backdrop" id="tunerSheetBackdrop" hidden></div>
-    <div class="tuner-sheet" id="tunerSheet" role="dialog" aria-modal="true" tabindex="-1" hidden>
+    <div class="tuner-sheet" id="tunerSheet" role="dialog" aria-modal="true" aria-label="Tuner settings" tabindex="-1" hidden>
       <div class="tuner-sheet-handle" id="tunerSheetHandle" aria-hidden="true"></div>
 
       <section class="tuner-sheet-panel" id="tunerPanelSettings" hidden aria-label="Settings">
-        <p class="tuner-sheet-title">SETTINGS</p>
+        <div class="tuner-sheet-floating-header"><p class="tuner-sheet-title">SETTINGS</p><button class="tuner-sheet-close brutal-press" id="tunerSheetClose" type="button" aria-label="Close tuner settings">×</button></div>
 
         <p class="tuner-settings-label">INSTRUMENT</p>
         <div class="tuner-sheet-instruments" id="tunerSheetInstrumentRow" role="radiogroup" aria-label="Instrument"></div>
 
-        <p class="tuner-settings-label">MODE</p>
+        <p class="tuner-settings-label" id="tunerModeHeading">MODE</p>
         <div class="tuner-sheet-mode-row" id="tunerSheetModeRow" role="radiogroup" aria-label="Mode"></div>
 
-        <p class="tuner-settings-label">SETUP</p>
+        <p class="tuner-settings-label" id="tunerSetupHeading">SETUP</p>
         <div class="tuner-sheet-setup-row">
           <div class="tuner-sheet-setup-cell">
-            <button type="button" class="tuner-sheet-setup-btn brutal-press" id="tunerSheetStringsBtn" aria-haspopup="true" aria-expanded="false">
+            <div class="tuner-string-stepper" role="group" aria-label="String count">
               <span class="tuner-sheet-setup-label">STRINGS</span>
-              <span class="tuner-sheet-setup-value" id="tunerSheetStringsLabel">6 STRINGS</span>
-              <svg class="tuner-btn-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </button>
-            <div id="tunerSheetStringsSlot" class="tuner-sheet-slot"></div>
+              <div class="tuner-stepper-controls">
+                <button type="button" class="tuner-stepper-button brutal-press" id="tunerStringsMinus" aria-label="Remove one string">−</button>
+                <label class="tuner-count-edit"><input id="tunerStringCount" class="brutal-press" type="number" min="1" max="12" step="1" inputmode="numeric" value="6" aria-label="String count" /><span aria-hidden="true">◦◦◦</span></label>
+                <button type="button" class="tuner-stepper-button brutal-press" id="tunerStringsPlus" aria-label="Add one string">+</button>
+              </div>
+            </div>
           </div>
-          <div class="tuner-sheet-setup-cell">
-            <button type="button" class="tuner-sheet-setup-btn brutal-press" id="tunerSheetMaterialBtn" aria-haspopup="true" aria-expanded="false">
+          <div class="tuner-sheet-setup-cell" hidden>
+            <button hidden type="button" class="tuner-sheet-setup-btn brutal-press" id="tunerSheetMaterialBtn" aria-haspopup="true" aria-expanded="false">
               <span class="tuner-sheet-setup-label">MATERIAL</span>
               <span class="tuner-sheet-setup-value" id="tunerSheetMaterialLabelSheet">STEEL</span>
               <svg class="tuner-btn-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -167,18 +183,12 @@ if (!isTunerEnabled) {
           <div class="tuner-a4-row" id="tunerSheetA4Row" role="radiogroup" aria-label="A4 calibration"></div>
         </div>
 
-        <p class="tuner-settings-label">TUNING BEHAVIOR</p>
-        <div class="tuner-toggle-row">
-          <label class="tuner-sheet-toggle">
-            <input type="checkbox" id="tunerSheetAutoAdvance" />
-            <span class="tuner-sheet-toggle-track" aria-hidden="true"><span class="tuner-sheet-toggle-knob"></span></span>
-            <span class="tuner-sheet-toggle-text">AUTO-ADVANCE NEXT STRING</span>
-          </label>
-          <label class="tuner-sheet-toggle">
-            <input type="checkbox" id="tunerSheetAutoId" />
-            <span class="tuner-sheet-toggle-track" aria-hidden="true"><span class="tuner-sheet-toggle-knob"></span></span>
-            <span class="tuner-sheet-toggle-text">AUTO STRING SELECT (FOLLOW PLUCK)</span>
-          </label>
+        <TunerInputSettings />
+        <p class="tuner-sample-credits">Recorded guitar sounds: <a href={TUNER_SAMPLE_CREDITS.source} target="_blank" rel="noopener noreferrer">tonejs-instruments · Nicholaus P. Brosowsky</a> (<a href={TUNER_SAMPLE_CREDITS.license} target="_blank" rel="noopener noreferrer">CC BY 3.0</a>). Acoustic: University of Iowa. Electric &amp; bass: Karoryfer. Pitch-adjusted for your tuning.</p>
+        <p class="tuner-settings-label" id="tunerBehaviorHeading">TUNING BEHAVIOR</p>
+        <div class="tuner-behavior-buttons">
+          <button type="button" id="tunerSheetAutoAdvance" class="tuner-mini-button brutal-press" aria-label="Auto advance next string" aria-pressed="false"><span class="tuner-auto-symbol" aria-hidden="true">A</span>Advance next</button>
+          <button type="button" id="tunerSheetAutoId" class="tuner-mini-button brutal-press" aria-label="Auto string select" aria-pressed="false"><span class="tuner-auto-symbol" aria-hidden="true">A</span>String select</button>
         </div>
 
         <div class="tuner-settings-copy-wrap">
@@ -607,9 +617,8 @@ if (!isTunerEnabled) {
     bottom: 0;
     width: 12%;
     transform: translateX(-50%);
-    background: rgba(242, 253, 67, 0.16);
-    border-left: 2px solid rgba(242, 253, 67, 0.5);
-    border-right: 2px solid rgba(242, 253, 67, 0.5);
+    background: var(--tuner-target-zone-fill);
+    border-inline: var(--tuner-focus-width) solid var(--tuner-target-zone-border);
   }
 
   /* Breakage (sharp side) and looseness (flat side) highlight sections.
@@ -655,6 +664,10 @@ if (!isTunerEnabled) {
     transform: translateX(0px);
     transition: transform 0.09s linear, background-color 0.16s ease, opacity 0.3s ease;
     will-change: transform;
+  }
+
+  .tuner-readout.safety-red {
+    animation: safetyAlertIn 0.25s var(--ease-snappy) forwards;
   }
 
   .tuner-readout.safety-red .tuner-needle,
@@ -1151,6 +1164,11 @@ if (!isTunerEnabled) {
     opacity: 1;
   }
 
+  .tuner-sheet-backdrop.is-closing {
+    opacity: 0 !important;
+    transition: opacity 0.22s ease !important;
+  }
+
   .tuner-sheet {
     position: fixed;
     left: 0;
@@ -1180,6 +1198,11 @@ if (!isTunerEnabled) {
 
   .tuner-sheet.open {
     transform: translateY(0);
+  }
+
+  .tuner-sheet.is-closing {
+    transform: translateY(102%) !important;
+    transition: transform 0.24s var(--ease-snappy) !important;
   }
 
   .tuner-sheet.dragging {
@@ -2113,7 +2136,6 @@ if (!isTunerEnabled) {
     }
   }
 
-  /* ---------- Runtime DOM: menus ---------- */
   :global(.tuner-menu-panel) {
     position: absolute;
     top: calc(100% + 8px);
@@ -2130,6 +2152,38 @@ if (!isTunerEnabled) {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    animation: tunerMenuIn 0.18s var(--ease-snappy) forwards;
+  }
+
+  :global(.tuner-menu-panel.is-closing) {
+    animation: tunerMenuOut 0.15s var(--ease-tactile) forwards !important;
+    pointer-events: none;
+  }
+
+  :global(.tuner-menu-panel.is-up) {
+    animation: tunerMenuUpIn 0.18s var(--ease-snappy) forwards;
+  }
+
+  :global(.tuner-menu-panel.is-up.is-closing) {
+    animation: tunerMenuUpOut 0.15s var(--ease-tactile) forwards !important;
+    pointer-events: none;
+  }
+
+  @keyframes tunerMenuIn {
+    0% { opacity: 0; transform: translateY(-6px) scale(0.97); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes tunerMenuOut {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  }
+  @keyframes tunerMenuUpIn {
+    0% { opacity: 0; transform: translateY(6px) scale(0.97); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes tunerMenuUpOut {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(6px) scale(0.97); }
   }
 
   :global(.tuner-menu-row) {
@@ -2294,9 +2348,15 @@ if (!isTunerEnabled) {
     fill: var(--btn-green);
   }
 
+  :global(.tuner-peg.is-in-tune.lock-pop-celebrate .tuner-peg-circle),
+  :global(.tuner-drum.is-in-tune.lock-pop-celebrate .tuner-drum-shape) {
+    animation: celebrateSuccessPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
   :global(.tuner-figure.safety-red .tuner-peg.is-active .tuner-peg-ring),
   :global(.tuner-figure.safety-red-soft .tuner-peg.is-active .tuner-peg-ring) {
     stroke: var(--accent-crimson);
+    animation: safetyDangerPulse 1.2s ease-in-out infinite;
   }
 
   :global(.tuner-figure.safety-green .tuner-peg.is-active .tuner-peg-ring),
@@ -3211,55 +3271,41 @@ if (!isTunerEnabled) {
   initTheme();
 
   let controllerPromise: Promise<any> | null = null;
+  let controller: any = null;
+  let generation = 0;
   let initialized = false;
-
-  async function loadController() {
-    if (!controllerPromise) controllerPromise = import('../scripts/controllers/tuner/index.js');
-    return controllerPromise;
-  }
-
   function start() {
-    if (initialized) return;
+    if (initialized || !document.getElementById('tunerView')) return;
     initialized = true;
-    loadController()
-      .then((mod) => mod.initTuner())
-      .catch((err) => console.error('KINS Tuner failed to load:', err));
+    const current = ++generation;
+    controllerPromise ??= import('../scripts/controllers/tuner/index.js');
+    controllerPromise.then((mod) => {
+      if (current !== generation || !document.getElementById('tunerView')) return;
+      controller = mod; mod.initTuner();
+    }).catch(() => {
+      if (current !== generation) return;
+      initialized = false; controllerPromise = null;
+      const warning = document.getElementById('tunerMicWarning');
+      if (warning) { warning.hidden = false; warning.textContent = 'Tuner could not load. Reload this page to retry.'; }
+    });
   }
-
-  function teardown() {
-    if (!initialized) return;
-    initialized = false;
-    loadController()
-      .then((mod) => mod.teardownTuner())
-      .catch(() => {});
+  function teardown() { generation++; initialized = false; controller?.teardownTuner(); }
+  const bootstrapEvents = new AbortController();
+  function beforeSwap() {
+    teardown();
+    bootstrapEvents.abort();
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, { once: true });
-  } else {
-    start();
-  }
-
-  document.addEventListener('astro:page-load', start);
-  document.addEventListener('astro:before-swap', teardown);
-  window.addEventListener('pagehide', teardown);
-
-  document.addEventListener(
-    'click',
-    (e) => {
-      if (initialized) return;
-      const target = e.target as HTMLElement | null;
-      const btn = target?.closest('button');
-      if (!btn || !btn.dataset.track?.startsWith('tuner:')) return;
-      start();
-    },
-    { passive: true }
-  );
+  start();
+  document.addEventListener('astro:page-load', start, { signal: bootstrapEvents.signal });
+  document.addEventListener('astro:before-swap', beforeSwap, { once: true, signal: bootstrapEvents.signal });
+  window.addEventListener('pagehide', teardown, { signal: bootstrapEvents.signal });
+  window.addEventListener('pageshow', start, { signal: bootstrapEvents.signal });
 </script>
 
 <script is:inline>
   (function initTunerFooterModalTriggers() {
     function handleFooterTriggerClick(e) {
+      if (!document.getElementById('tunerView')) return;
       var target = e.target;
       if (!target || !target.closest) return;
 
@@ -3300,7 +3346,11 @@ if (!isTunerEnabled) {
       }
     }
 
-    document.addEventListener('click', handleFooterTriggerClick, true);
+    window.__kinsTunerFooterAbort?.abort();
+    var footerEvents = new AbortController();
+    window.__kinsTunerFooterAbort = footerEvents;
+    document.addEventListener('click', handleFooterTriggerClick, { capture: true, signal: footerEvents.signal });
+    document.addEventListener('astro:before-swap', function() { footerEvents.abort(); }, { once: true, signal: footerEvents.signal });
 
     var yearEls = document.querySelectorAll('#copyrightYear, #tunerCopyrightYear, .footer-copyright-year');
     var curYear = new Date().getFullYear().toString();

@@ -110,9 +110,11 @@
       <!-- ACTIVE STATE: NOW PLAYING TRACK -->
       <div class="deck-active-view hidden" id="deckActiveView">
         <div class="audio-bar-left">
-          <div class="audio-bar-icon-box" id="audioBarIconBox">
-            <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover" width="36" height="36" loading="lazy" decoding="async">
-            <i class="fa-solid fa-compact-disc audio-icon-anim" id="audioBarFallbackIcon"></i>
+          <div class="audio-bar-icon-wrap" id="audioBarIconWrap">
+            <div class="audio-bar-icon-box" id="audioBarIconBox">
+              <img id="audioBarCoverImg" class="audio-bar-cover-img hidden" src="" alt="Album cover" width="36" height="36" loading="lazy" decoding="async">
+              <i class="fa-solid fa-compact-disc audio-icon-anim" id="audioBarFallbackIcon"></i>
+            </div>
           </div>
           <div class="audio-bar-details">
             <div class="audio-bar-title-container">
@@ -538,6 +540,10 @@
     animation: needleDropBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
+  .vinyl-stylus-wrapper.needle-lift-ease .stylus-head-group {
+    animation: needleLiftEase 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
   @keyframes needleDropBounce {
     0% {
       transform: translateY(-7px) rotate(-8deg);
@@ -550,6 +556,18 @@
     }
     100% {
       transform: translateY(0px) rotate(0deg);
+    }
+  }
+
+  @keyframes needleLiftEase {
+    0% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-7px) rotate(-8deg);
+    }
+    100% {
+      transform: translateY(-5px) rotate(-6deg);
     }
   }
 
@@ -582,19 +600,39 @@
 
   /* Idle View */
   .deck-idle-view {
+    position: absolute;
+    inset: 0;
     width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
     padding: 6px 10px;
     cursor: pointer;
-    position: relative;
     z-index: 5;
     box-sizing: border-box;
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
+    transition: opacity 0.2s var(--ease-snappy), transform 0.2s var(--ease-snappy);
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .deck-idle-view.is-leaving {
+    opacity: 0 !important;
+    transform: scale(0.96) !important;
+    pointer-events: none;
+  }
+
+  .deck-idle-view.is-entering {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  .deck-idle-view.hidden {
+    display: none !important;
   }
 
   .stacked-album-covers {
@@ -711,17 +749,37 @@
 
   /* Active View */
   .deck-active-view {
+    position: absolute;
+    inset: 0;
     width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 6px 10px;
-    position: relative;
     z-index: 5;
     box-sizing: border-box;
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
+    transition: opacity 0.2s var(--ease-snappy), transform 0.2s var(--ease-snappy);
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .deck-active-view.is-leaving {
+    opacity: 0 !important;
+    transform: scale(0.96) !important;
+    pointer-events: none;
+  }
+
+  .deck-active-view.is-entering {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  .deck-active-view.hidden {
+    display: none !important;
   }
 
   .audio-bar-left {
@@ -731,6 +789,18 @@
     flex: 1;
     min-width: 0;
     overflow: visible;
+  }
+
+  .audio-bar-icon-wrap {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
   }
 
   .audio-bar-icon-box {
@@ -865,13 +935,13 @@
   }
 
   /* Staggered Wave Ripple Cascade for Song Transitions */
-  .is-song-changing .audio-bar-icon-box {
+  .is-song-changing .audio-bar-icon-wrap {
     animation: coverWavePulse 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   @keyframes coverWavePulse {
     0% {
-      transform: scale(0.85);
+      transform: scale(0.88);
       filter: brightness(1.15);
     }
     45% {
@@ -885,29 +955,27 @@
   }
 
   .is-song-changing .audio-bar-title {
-    animation: titleWaveSlide 0.42s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+    animation: titleWaveSlide 0.36s var(--ease-snappy) 0.04s both;
   }
 
   @keyframes titleWaveSlide {
     0% {
-      transform: translateY(12px);
+      transform: translateY(6px);
       opacity: 0;
-      filter: blur(1.5px);
     }
     100% {
       transform: translateY(0px);
       opacity: 1;
-      filter: blur(0px);
     }
   }
 
   .is-song-changing .audio-bar-artist {
-    animation: artistWaveSlide 0.40s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+    animation: artistWaveSlide 0.34s var(--ease-snappy) 0.08s both;
   }
 
   @keyframes artistWaveSlide {
     0% {
-      transform: translateY(8px);
+      transform: translateY(4px);
       opacity: 0;
     }
     100% {
@@ -917,12 +985,12 @@
   }
 
   .is-song-changing .audio-bar-time {
-    animation: timeWaveSlide 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+    animation: timeWaveSlide 0.32s var(--ease-snappy) 0.12s both;
   }
 
   @keyframes timeWaveSlide {
     0% {
-      transform: translateY(6px);
+      transform: translateY(3px);
       opacity: 0;
     }
     100% {

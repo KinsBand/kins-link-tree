@@ -284,11 +284,21 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     display: flex;
     flex-direction: column;
     gap: 16px;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.22s var(--ease-snappy), transform 0.22s var(--ease-snappy);
+  }
+
+  .subscribe-form-container.is-leaving {
+    opacity: 0 !important;
+    transform: scale(0.96) !important;
+    pointer-events: none;
   }
 
   .subscribe-success-container {
     transition: opacity 0.25s ease;
+  }
+
+  .subscribe-success-container.is-entering {
+    animation: celebrateSuccessPop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
   .subscribe-header {
@@ -1197,24 +1207,43 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
   const successContainer = document.getElementById('subscribeSuccessContainer');
   const subscribeForm = document.getElementById('subscribeForm') as HTMLFormElement;
 
-  function setSubscribedState(isSubbed: boolean) {
+  function setSubscribedState(isSubbed: boolean, animate: boolean = false) {
+    if (!formContainer || !successContainer) return;
     if (isSubbed) {
-      formContainer?.classList.add('hidden');
-      successContainer?.classList.remove('hidden');
+      if (animate && !formContainer.classList.contains('hidden')) {
+        formContainer.classList.add('is-leaving');
+        setTimeout(() => {
+          formContainer.classList.add('hidden');
+          formContainer.classList.remove('is-leaving');
+          successContainer.classList.remove('hidden');
+          successContainer.classList.add('is-entering');
+          setTimeout(() => {
+            successContainer.classList.remove('is-entering');
+          }, 400);
+        }, 190);
+      } else {
+        formContainer.classList.add('hidden');
+        successContainer.classList.remove('hidden');
+      }
     } else {
-      formContainer?.classList.remove('hidden');
-      successContainer?.classList.add('hidden');
+      if (animate && !successContainer.classList.contains('hidden')) {
+        successContainer.classList.add('hidden');
+        formContainer.classList.remove('hidden');
+      } else {
+        formContainer.classList.remove('hidden');
+        successContainer.classList.add('hidden');
+      }
     }
   }
 
   const initialSubbed = getSubscriptionState();
-  setSubscribedState(initialSubbed);
+  setSubscribedState(initialSubbed, false);
 
   // Listen to global subscription events
   window.addEventListener('kins:subscription-change', (e: any) => {
     const isSubbed = e.detail?.isSubscribed;
     if (typeof isSubbed === 'boolean') {
-      setSubscribedState(isSubbed);
+      setSubscribedState(isSubbed, true);
     }
   });
 

@@ -235,7 +235,7 @@ const baseUrl = import.meta.env.BASE_URL;
         try {
           await navigator.share(shareData);
         } catch (err) {
-          if (err.name !== 'AbortError') {
+          if (!(err instanceof Error) || err.name !== 'AbortError') {
             copyUrlFallback();
           }
         }

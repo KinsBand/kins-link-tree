@@ -68,16 +68,15 @@ const polyItems = (polyCategory?.items || []) as PolyrhythmItem[];
 
   <div class="category-items-list">
     {polyItems.map((item) => (
-      <div class="theory-item-row" data-search-target={`${item.name} ${item.ratio} ${item.mnemonic}`}>
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
         <div class="item-name-col">
           <div class="item-title-row">
             <strong class="item-name">{item.name}</strong>
-            <span class="item-type-tag">{item.feel}</span>
           </div>
-          <span class="item-notes">"{item.mnemonic}" • LCM: {item.subdivisions} subdivisions</span>
+          <span class="item-notes">{item.notes}</span>
         </div>
         <div class="item-actions-col">
-          <code class="item-formula">{item.ratio}</code>
+          <code class="item-formula">{item.formula}</code>
         </div>
       </div>
     ))}

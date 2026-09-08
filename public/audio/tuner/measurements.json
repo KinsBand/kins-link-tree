@@ -1,0 +1,191 @@
+[
+  {
+    "file": "guitar-acoustic/A2.mp3",
+    "hz": 109.9642,
+    "duration": 11.546104166666666,
+    "count": 51,
+    "spreadCents": 3
+  },
+  {
+    "file": "guitar-acoustic/B3.mp3",
+    "hz": 246.7893,
+    "duration": 5.041625,
+    "count": 51,
+    "spreadCents": 4
+  },
+  {
+    "file": "guitar-acoustic/D2.mp3",
+    "hz": 73.2996,
+    "duration": 11.650604166666668,
+    "count": 51,
+    "spreadCents": 4
+  },
+  {
+    "file": "guitar-acoustic/D3.mp3",
+    "hz": 146.745,
+    "duration": 12.852229166666667,
+    "count": 51,
+    "spreadCents": 1
+  },
+  {
+    "file": "guitar-acoustic/E2.mp3",
+    "hz": 82.2991,
+    "duration": 10.8669375,
+    "count": 51,
+    "spreadCents": 2
+  },
+  {
+    "file": "guitar-acoustic/E4.mp3",
+    "hz": 329.8141,
+    "duration": 4.571416666666667,
+    "count": 51,
+    "spreadCents": 6
+  },
+  {
+    "file": "guitar-acoustic/G3.mp3",
+    "hz": 195.7348,
+    "duration": 5.7469375,
+    "count": 51,
+    "spreadCents": 7
+  },
+  {
+    "file": "guitar-electric/A2.mp3",
+    "hz": 110.0035,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 5
+  },
+  {
+    "file": "guitar-electric/A3.mp3",
+    "hz": 220.1726,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 7
+  },
+  {
+    "file": "guitar-electric/C3.mp3",
+    "hz": 130.8037,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 5
+  },
+  {
+    "file": "guitar-electric/C4.mp3",
+    "hz": 261.2179,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 3
+  },
+  {
+    "file": "guitar-electric/Cs2.mp3",
+    "hz": 69.2933,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 4
+  },
+  {
+    "file": "guitar-electric/Ds3.mp3",
+    "hz": 155.5732,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 6
+  },
+  {
+    "file": "guitar-electric/Ds4.mp3",
+    "hz": 311.0215,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 2
+  },
+  {
+    "file": "guitar-electric/E2.mp3",
+    "hz": 82.3846,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 5
+  },
+  {
+    "file": "guitar-electric/Fs2.mp3",
+    "hz": 92.497,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 5
+  },
+  {
+    "file": "guitar-electric/Fs3.mp3",
+    "hz": 184.8395,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 4
+  },
+  {
+    "file": "guitar-electric/Fs4.mp3",
+    "hz": 369.9339,
+    "duration": 4.2840625,
+    "count": 51,
+    "spreadCents": 3
+  },
+  {
+    "file": "bass-electric/As1.mp3",
+    "hz": 58.2408,
+    "duration": 16.927333333333333,
+    "count": 51,
+    "spreadCents": 3
+  },
+  {
+    "file": "bass-electric/As2.mp3",
+    "hz": 116.4972,
+    "duration": 13.191833333333333,
+    "count": 51,
+    "spreadCents": 2
+  },
+  {
+    "file": "bass-electric/Cs1.mp3",
+    "hz": 34.8013,
+    "duration": 18.808145833333334,
+    "count": 51,
+    "spreadCents": 25
+  },
+  {
+    "file": "bass-electric/Cs2.mp3",
+    "hz": 69.2988,
+    "duration": 15.072645833333333,
+    "count": 51,
+    "spreadCents": 2
+  },
+  {
+    "file": "bass-electric/Cs3.mp3",
+    "hz": 138.5644,
+    "duration": 13.191833333333333,
+    "count": 51,
+    "spreadCents": 2
+  },
+  {
+    "file": "bass-electric/E1.mp3",
+    "hz": 41.3065,
+    "duration": 18.808145833333334,
+    "count": 51,
+    "spreadCents": 6
+  },
+  {
+    "file": "bass-electric/E2.mp3",
+    "hz": 82.3541,
+    "duration": 13.191833333333333,
+    "count": 51,
+    "spreadCents": 3
+  },
+  {
+    "file": "bass-electric/G1.mp3",
+    "hz": 48.8824,
+    "duration": 17.86775,
+    "count": 51,
+    "spreadCents": 7
+  },
+  {
+    "file": "bass-electric/G2.mp3",
+    "hz": 97.9406,
+    "duration": 13.191833333333333,
+    "count": 51,
+    "spreadCents": 4
+  }
+]

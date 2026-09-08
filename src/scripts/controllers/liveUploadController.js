@@ -7,6 +7,7 @@
  */
 
 import { showToast } from './toast.js';
+import { fanUploadConfig } from '../../settings/upload.config';
 
 export function initLiveFanUploadForm() {
   const form = document.getElementById('liveMediaUploadForm');
@@ -23,6 +24,14 @@ export function initLiveFanUploadForm() {
     const file = fileInput && 'files' in fileInput ? fileInput.files?.[0] : null;
     if (!file) {
       showToast('Choose a photo or video first.', 'warning');
+      return;
+    }
+    if (file.size < fanUploadConfig.minBytes || file.size > fanUploadConfig.maxBytes) {
+      showToast(fanUploadConfig.sizeError, 'error');
+      return;
+    }
+    if (!fanUploadConfig.mimeTypes.includes(file.type.toLowerCase())) {
+      showToast('Choose a JPG, PNG, WEBP, HEIC, MP4, MOV or WEBM file.', 'error');
       return;
     }
 

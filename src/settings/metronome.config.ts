@@ -201,7 +201,7 @@ export const COACH_DEFAULTS = {
   innerClock: { audibleBars: 2, mutedBars: 2, random: false },
   speedTrainer: { start: 120, target: 180, step: 10, everyBars: 4, unit: 'bars' as CoachSpeedUnit, repeat: false, direction: 'asc' as const },
   rhythmStep: { pattern: ['1-4', '1-8', '1-16'] as string[], everyBars: 4, poly: false, polyRatio: '3:2' as const },
-  tempoPrimer: { difficulty: 'easy' as CoachDifficulty, target: 120 }
+  tempoPrimer: { difficulty: 'easy' as CoachDifficulty, target: 120, minBpm: 60, maxBpm: 180 }
 } as const;
 
 export type CoachSpeedDirection = 'asc' | 'desc';

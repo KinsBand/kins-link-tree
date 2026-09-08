@@ -22,6 +22,16 @@ const getEnv = (key: string): string => {
 
 let cachedClient: SupabaseClient | null = null;
 
+/** Request-local authentication client: never sign a user into the service client. */
+export function createSupabaseAuthClient(): SupabaseClient | null {
+  const url = getEnv('SUPABASE_URL') || getEnv('PUBLIC_SUPABASE_URL') || getEnv('NEXT_PUBLIC_SUPABASE_URL');
+  const key = getEnv('PUBLIC_SUPABASE_ANON_KEY') || getEnv('PUBLIC_SUPABASE_PUBLISHABLE_KEY') || getEnv('SUPABASE_ANON_KEY');
+  if (!url.startsWith('http') || !key) return null;
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+}
+
 export function getSupabaseServiceClient(): SupabaseClient | null {
   const supabaseUrl =
     getEnv('SUPABASE_URL') ||

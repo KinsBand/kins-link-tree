@@ -561,6 +561,65 @@ const BASS_PRESETS: TunerPreset[] = [
   ...BASS_6_PRESETS
 ];
 
+/** Expand existing musical voicings without inventing artist attributions.
+ * Native IDs/order stay stable; derived patterns are deduplicated by exact pitches.
+ * Low-first/high-first extensions use fourths within A0–C7. Short setups use
+ * contiguous subsets. Twelve-string guitars use octave/unison paired courses.
+ */
+function completeStringCatalog(native: TunerPreset[], sources: TunerPreset[], pairedGuitar: boolean): TunerPreset[] {
+  const result = [...native];
+  const signatures = new Set(native.map(p => p.strings.map(s => s.midi).join(',')));
+  const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  function add(source: TunerPreset, notes: number[], kind: string) {
+    if (notes.some(midi => midi < 21 || midi > 96)) return;
+    const signature = notes.join(',');
+    if (signatures.has(signature)) return;
+    signatures.add(signature);
+    result.push({
+      id: `adapted-${notes.length}-${source.id}-${kind}`,
+      name: `${source.name} · adapted (${kind.replaceAll('-', ' ')})`,
+      category: source.category,
+      strings: notes.map((midi, index) => ({
+        midi, note: names[midi % 12] + (Math.floor(midi / 12) - 1),
+        label: `String ${notes.length - index}`, freq: Math.round(noteToFreq(midi) * 100) / 100,
+      })),
+    });
+  }
+  for (let count = 1; count <= 12; count++) {
+    for (const source of sources) {
+      const base = source.strings.map(s => s.midi);
+      if (count <= base.length) {
+        for (let offset = 0; offset <= base.length - count; offset++) {
+          add(source, base.slice(offset, offset + count), count === base.length ? 'voicing' : `subset-${offset + 1}-to-${offset + count}`);
+        }
+      } else if (pairedGuitar && count === 12 && base.length === 6) {
+        add(source, base.flatMap((midi, index) => [midi, index < 4 ? midi + 12 : midi]), 'paired-courses');
+      } else {
+        for (const direction of ['low', 'high']) {
+          const notes = [...base];
+          while (notes.length < count) {
+            const low = Math.min(...notes) - 5, high = Math.max(...notes) + 5;
+            if (direction === 'low' && low >= 21 || high > 96) {
+              if (low < 21) break;
+              notes.unshift(low);
+            } else notes.push(high);
+          }
+          if (notes.length === count) add(source, notes, `${direction}-first-extension`);
+        }
+      }
+    }
+  }
+  return result;
+}
+const SHARED_GUITAR_NATIVE = [...new Map([...ELECTRIC_PRESETS, ...ACOUSTIC_PRESETS].map(p => [p.id, p])).values()];
+const SHARED_GUITAR_CATALOG = completeStringCatalog(SHARED_GUITAR_NATIVE, SHARED_GUITAR_NATIVE.filter(p => p.strings.length === 6), true);
+// Guitar-inspired bass voicings are explicitly identified and transposed an octave.
+const BASS_GUITAR_VOICINGS: TunerPreset[] = SHARED_GUITAR_NATIVE.filter(p => p.strings.length === 6).map(p => ({
+  ...p, id: `guitar-voicing-${p.id}`, name: `Guitar voicing: ${p.name}`,
+  strings: p.strings.map(s => ({ ...s, midi: s.midi - 12 })),
+}));
+const COMPLETE_BASS_CATALOG = completeStringCatalog(BASS_PRESETS, [...BASS_PRESETS, ...BASS_GUITAR_VOICINGS], false);
+
 const DRUM_KIT_PRESET: TunerPreset = {
   id: 'kit-reference',
   name: 'Standard Kit Reference',
@@ -574,13 +633,12 @@ const DRUM_KIT_PRESET: TunerPreset = {
 };
 
 export const INSTRUMENT_STRING_COUNTS: Record<TunerInstrumentId, number[]> = {
-  electric: [6, 7, 8, 9],
-  acoustic: [6, 12],
-  bass: [4, 5, 6],
+  electric: Array.from({ length: 12 }, (_, index) => index + 1),
+  acoustic: Array.from({ length: 12 }, (_, index) => index + 1),
+  bass: Array.from({ length: 12 }, (_, index) => index + 1),
   drums: []
 };
-// Custom string counts (10+ for electric, 7-9 for acoustic) handled via Custom field in tunerState
-// 5-string presets remain in library but are not primary string-range options
+// Every supported count has a selectable catalog, including unusual setups.
 
 export const DEFAULT_STRING_COUNTS: Record<TunerInstrumentId, number> = {
   electric: 6,
@@ -596,7 +654,7 @@ export const TUNER_INSTRUMENTS: InstrumentTuningGroup[] = [
     dropdownLabel: 'Electric',
     icon: 'electric',
     blurb: 'Solid-body electric. Light fretting-hand pressure — gripping the neck sharpens the reading.',
-    presets: ELECTRIC_PRESETS
+    presets: SHARED_GUITAR_CATALOG
   },
   {
     id: 'acoustic',
@@ -604,7 +662,7 @@ export const TUNER_INSTRUMENTS: InstrumentTuningGroup[] = [
     dropdownLabel: 'Acoustic',
     icon: 'acoustic',
     blurb: 'Steel-string acoustic. Tap a peg to pick a string, pluck it loud and let it ring.',
-    presets: ACOUSTIC_PRESETS
+    presets: SHARED_GUITAR_CATALOG
   },
   {
     id: 'bass',
@@ -612,7 +670,7 @@ export const TUNER_INSTRUMENTS: InstrumentTuningGroup[] = [
     dropdownLabel: 'Bass',
     icon: 'bass',
     blurb: 'Low strings need patience — let each note ring fully so the detector locks on the fundamental.',
-    presets: BASS_PRESETS
+    presets: COMPLETE_BASS_CATALOG
   },
   {
     id: 'drums',
@@ -701,88 +759,43 @@ export const INSTRUMENT_MATERIALS: Record<TunerInstrumentId, string[]> = {
 };
 
 /* --------------------------------------------------------------------------
-   Detection pipeline thresholds (YIN + HPS hybrid — see controller modules)
+   Fixed-window YIN, audio-time tracking and presentation thresholds
    -------------------------------------------------------------------------- */
 export const DETECT = {
-  MIN_DETECT_HZ: 28,
-  MAX_DETECT_HZ: 2100,
-  // Slightly higher gate thresholds: less sensitive to low-level room noise,
-  // still wakes reliably on a normal pluck at 15cm. Release is hysteretic.
+  ANALYSIS_HOP_MS: 25,
+  ANALYSIS_WINDOW_MS: 128,
+  ACQUIRE_MS: 75,
+  RESULT_GAP_MS: 150,
+  TRACK_JUMP_CENTS: 80,
+  SMOOTH_MS: 65,
+  STALE_CLEAR_MS: 1500,
+  MIN_DETECT_HZ: 26,
+  MAX_DETECT_HZ: 2160,
   RMS_WAKE: 0.008,
   RMS_RELEASE: 0.003,
-  // Longer attack freeze: pluck transients carry strong inharmonic noise
-  // for 90-130ms (pick click + string scrape). Skipping 140ms yields the
-  // first stable periodic segment and prevents octave/noise mis-identification.
-  ATTACK_FREEZE_MS: 140,
   CLIP_LEVEL: 0.98,
   CLIP_RATIO: 0.005,
-  /* Adaptive YIN (Tuneo-style): the CMNDF acceptance threshold relaxes as a
-     pluck decays toward the noise floor, so lock survives the ring-out
-     instead of collapsing into octave/noise errors. Base threshold applies
-     while the signal is healthy; fully relaxed at RMS_RELEASE. */
+  // CMNDF acceptance relaxes slightly for decaying single notes.
   YIN_THRESHOLD: 0.1,
   YIN_THRESH_MAX: 0.18,
   YIN_ADAPT_FULL_RMS: 0.03,
-  SUBHARMONIC_RATIO: 0.22,
-  POLYPHONY_PEAK_RATIO: 0.3,
-  POLYPHONY_MAX: 2,
-  // Smoother pipeline: larger median window + gentler EMA keeps the needle
-  // and cents reading visibly steady without adding perceptible latency.
-  MEDIAN_WINDOW: 7,
-  EMA_ALPHA: 0.18,
-  /* Fine precision mode: once locked, slower EMA keeps the needle steady
-     enough for sub-cent readings, displayed to one decimal inside ±FINE. */
-  EMA_ALPHA_FINE: 0.06,
-  FINE_CENTS_RANGE: 10,
-  OCTAVE_JUMP_CENTS: 600,
-  OCTAVE_JUMP_FRAMES: 3,
-  // Stricter lock (higher conf + more frames + tighter jitter) means the
-  // displayed note only updates after the pitch is truly stable — the core
-  // of the "skip the start" quality requirement. Unlock is slightly more
-  // permissive so the reading holds longer through natural decay.
   CONF_LOCK: 0.82,
-  CONF_LOCK_FRAMES: 6,
-  CONF_UNLOCK: 0.5,
-  CONF_SILENT_FRAMES: 10,
-  JITTER_CENTS: 2.8,
-  IN_TUNE_CENTS: 5,
-  AUTO_ADVANCE_LOCK_MS: 1500,
-  // Doubled hysteresis: A <-> A# boundary flicker (e.g. ±40¢ around 700c)
-  // must persist longer before the label swaps, preventing jitter on
-  // otherwise stable readings.
   LABEL_HYSTERESIS_MS: 160,
-  /* Hold behaviour: keep the last confident reading on screen instead of
-     blanking between plucks. Weak frames (resonance tails, noise) never
-     overwrite the held value. The latching is indefinite — the note stays
-     visible forever until a new *locked* confident pitch replaces it. */
-  ONSET_GAP_MS: 400,
-  UNRELIABLE_CONF: 0.4,
-  MESSAGE_PERSIST_FRAMES: 4,
-  // Latched display: a new note must be confident AND held for this long
-  // before it overwrites the previously displayed note. This debounces
-  // sympathetic resonance / noisy tails from hijacking the readout.
-  HOLD_MIN_MS: 320,
-  HOLD_CONFIRM_FRAMES: 3,
-  /* FFT harmonic/polyphony verification cadence: the full 4096-pt FFT runs
-     every Nth confident frame (and always on unlock or a >JUMP pitch move)
-     instead of every frame — measurable main-thread saving on low-end. */
-  HARMONIC_CHECK_EVERY: 3,
-  HARMONIC_CHECK_JUMP: 0.03,
-  /* Auto string identification (guided mode): a locked reading within this
-     many cents of a DIFFERENT string's target for HOLD_MS switches the
-     active string automatically — pluck and the tuner follows. */
-  AUTO_ID_CENTS: 40,
-  AUTO_ID_HOLD_MS: 300,
-  /* Chromatic rail: cents falloff used to light neighbouring note pills */
-  RAIL_RANGE_CENTS: 150,
-  /* Meter scale: central ±FINE_CENTS linear core, then log-compressed out to
-     MAX_CENTS so breakage/looseness thresholds fit visibly on the meter */
+  CONFIRM_MS: 2000,
+  CONFIRM_MAX_GAP_MS: 75,
+  AUTO_ADVANCE_DEBOUNCE_MS: 400,
+  AUTO_ID_CENTS: 150,
+  AUTO_ID_SEPARATION_CENTS: 50,
+  AUTO_ID_HOLD_MS: 150,
+  WATCHDOG_MS: 100,
+  INTERRUPTED_MS: 2000,
+  FINE_CENTS_RANGE: 10,
   METER_FINE_CENTS: 50,
   METER_MAX_CENTS: 650,
   METER_CORE_SPLIT: 0.68,
-  RING_SAMPLES: 8192,
-  WORK_WINDOW: 6144,
-  WORKLET_CHUNK: 1024
+  RING_SAMPLES: 32768,
+  WORK_WINDOW: 16384,
+  WORKLET_CHUNK: 512
 } as const;
 
 export const TUNER_COPY = {

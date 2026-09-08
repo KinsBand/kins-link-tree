@@ -15,6 +15,5 @@ export const functionalityConfig = {
   enableKinsTools: true,
   enableTheoryPage: false,
   enableMetronomePage: true,
-  enableTunerPage: false,
+  enableTunerPage: true,
 };
-

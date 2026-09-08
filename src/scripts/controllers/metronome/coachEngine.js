@@ -13,20 +13,72 @@ function subdivIdToPerBeat(id) {
   return hit ? hit.perBeat : 1;
 }
 
-function randomTargetForDifficulty(diff, current) {
+export function quantizeBpmForDifficulty(bpm, diff, minLimit = 30, maxLimit = 250) {
+  bpm = Math.max(minLimit, Math.min(maxLimit, bpm));
   if (diff === 'easy') {
-    const v = 40 + Math.floor(Math.random() * 17) * 10;
-    return clampBpm(v);
+    return Math.round(bpm / 10) * 10;
   }
   if (diff === 'medium') {
-    const v = 40 + Math.floor(Math.random() * 33) * 5;
-    return clampBpm(v);
+    return Math.round(bpm / 5) * 5;
   }
   if (diff === 'hard') {
-    return COACH_PRIMER_MAELZEL[Math.floor(Math.random() * COACH_PRIMER_MAELZEL.length)];
+    let closest = COACH_PRIMER_MAELZEL[0];
+    let minDiff = Math.abs(bpm - closest);
+    for (const m of COACH_PRIMER_MAELZEL) {
+      const d = Math.abs(bpm - m);
+      if (d < minDiff) {
+        minDiff = d;
+        closest = m;
+      }
+    }
+    return closest;
   }
-  // expert 40-208 1-bpm
-  return clampBpm(40 + Math.floor(Math.random() * 169));
+  return Math.round(bpm);
+}
+
+function randomTargetForDifficulty(diff, current, minBpm = 60, maxBpm = 180) {
+  const min = Math.min(minBpm, maxBpm);
+  const max = Math.max(minBpm, maxBpm);
+
+  if (diff === 'easy') {
+    const candidates = [];
+    const start = Math.ceil(min / 10) * 10;
+    for (let b = start; b <= max; b += 10) {
+      candidates.push(b);
+    }
+    if (candidates.length === 0) candidates.push(clampBpm(Math.round(min / 10) * 10));
+    const filtered = candidates.filter((c) => c !== current);
+    const pool = filtered.length > 0 ? filtered : candidates;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  if (diff === 'medium') {
+    const candidates = [];
+    const start = Math.ceil(min / 5) * 5;
+    for (let b = start; b <= max; b += 5) {
+      candidates.push(b);
+    }
+    if (candidates.length === 0) candidates.push(clampBpm(Math.round(min / 5) * 5));
+    const filtered = candidates.filter((c) => c !== current);
+    const pool = filtered.length > 0 ? filtered : candidates;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  if (diff === 'hard') {
+    const candidates = COACH_PRIMER_MAELZEL.filter((m) => m >= min && m <= max);
+    if (candidates.length === 0) candidates.push(quantizeBpmForDifficulty(min, 'hard'));
+    const filtered = candidates.filter((c) => c !== current);
+    const pool = filtered.length > 0 ? filtered : candidates;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // expert: exact 1-bpm in [min, max]
+  const candidates = [];
+  for (let b = min; b <= max; b++) candidates.push(b);
+  if (candidates.length === 0) candidates.push(clampBpm(min));
+  const filtered = candidates.filter((c) => c !== current);
+  const pool = filtered.length > 0 ? filtered : candidates;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 export function createCoachEngine(cbs) {
@@ -84,9 +136,13 @@ export function createCoachEngine(cbs) {
         if (callbacks.onCoachTick) callbacks.onCoachTick(getLiveSnapshot());
       } else if (tabId === 'tempo-primer') {
         const d = metroState.coachPrimer.difficulty;
-        // generate target if not set? keep existing unless zero
-        if (!live.primerTarget || live.primerTarget < 40) live.primerTarget = randomTargetForDifficulty(d);
+        const minB = metroState.coachPrimer.minBpm || 60;
+        const maxB = metroState.coachPrimer.maxBpm || 180;
+        live.primerTarget = randomTargetForDifficulty(d, metroState.coachPrimer.target, minB, maxB);
+        metroState.coachPrimer.target = live.primerTarget;
         live.primerTaps = [];
+        live.primerResult = null;
+        if (callbacks.applyBpm) callbacks.applyBpm(live.primerTarget, false);
         if (callbacks.onCoachTick) callbacks.onCoachTick(getLiveSnapshot());
       }
       return gen;
@@ -159,6 +215,16 @@ export function createCoachEngine(cbs) {
     handlePrimerTap(tapTime) {
       if (!live || !live.running || live.tabId !== 'tempo-primer') return;
       const now = tapTime || performance.now();
+      if (live.primerResult) {
+        const d = metroState.coachPrimer.difficulty;
+        const minB = metroState.coachPrimer.minBpm || 60;
+        const maxB = metroState.coachPrimer.maxBpm || 180;
+        live.primerTarget = randomTargetForDifficulty(d, live.primerTarget, minB, maxB);
+        metroState.coachPrimer.target = live.primerTarget;
+        live.primerTaps = [];
+        live.primerResult = null;
+        if (callbacks.applyBpm) callbacks.applyBpm(live.primerTarget, false);
+      }
       live.primerTaps.push(now);
       if (live.primerTaps.length > 4) live.primerTaps.shift();
       if (live.primerTaps.length === 4) {
@@ -183,19 +249,31 @@ export function createCoachEngine(cbs) {
     },
     primerRetry() {
       if (!live) return;
+      const hadResult = !!live.primerResult;
+      const hadTaps = live.primerTaps && live.primerTaps.length > 0;
       live.primerTaps = [];
       live.primerResult = null;
+      if (hadResult || !hadTaps) {
+        const d = metroState.coachPrimer.difficulty;
+        const minB = metroState.coachPrimer.minBpm || 60;
+        const maxB = metroState.coachPrimer.maxBpm || 180;
+        live.primerTarget = randomTargetForDifficulty(d, live.primerTarget, minB, maxB);
+        metroState.coachPrimer.target = live.primerTarget;
+        if (callbacks.applyBpm) callbacks.applyBpm(live.primerTarget, false);
+      }
       if (callbacks.onCoachTick) callbacks.onCoachTick(getLiveSnapshot());
     },
     primerNewTarget() {
       if (!live) return;
       const d = metroState.coachPrimer.difficulty;
-      let nt = randomTargetForDifficulty(d, live.primerTarget);
-      let tries = 0;
-      while (nt === live.primerTarget && tries < 10) { nt = randomTargetForDifficulty(d, live.primerTarget); tries++; }
+      const minB = metroState.coachPrimer.minBpm || 60;
+      const maxB = metroState.coachPrimer.maxBpm || 180;
+      const nt = randomTargetForDifficulty(d, live.primerTarget, minB, maxB);
       live.primerTarget = nt;
+      metroState.coachPrimer.target = nt;
       live.primerTaps = [];
       live.primerResult = null;
+      if (callbacks.applyBpm) callbacks.applyBpm(nt, false);
       if (callbacks.onCoachTick) callbacks.onCoachTick(getLiveSnapshot());
       return nt;
     }

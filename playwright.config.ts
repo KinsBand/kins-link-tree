@@ -2,7 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: 'e2e',
+  testIgnore: '**/e2e/tuner/**',
   timeout: 30_000,
+  // Audio tests share browser/OS media resources; serialize the smoke suite
+  // so the metronome and newly enabled tuner cannot contend for fake devices.
+  workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list']],
   use: {

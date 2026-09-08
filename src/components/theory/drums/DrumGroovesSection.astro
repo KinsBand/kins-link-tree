@@ -18,16 +18,15 @@ const grooves = (groovesCategory?.items || []) as GrooveItem[];
 
   <div class="category-items-list">
     {grooves.map((item) => (
-      <div class="theory-item-row" data-search-target={`${item.name} ${item.genre} ${item.bpm}`}>
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
         <div class="item-name-col">
           <div class="item-title-row">
             <strong class="item-name">{item.name}</strong>
-            <span class="item-type-tag">{item.genre}</span>
           </div>
-          <span class="item-notes">{item.gridPattern}</span>
+          <span class="item-notes">{item.notes}</span>
         </div>
         <div class="item-actions-col">
-          <code class="item-formula">{item.bpm}</code>
+          <code class="item-formula">{item.formula}</code>
           <div class="item-action-btns">
             <button type="button" class="item-quick-btn brutal-press" data-load-groove={item.id} title="Load into beat grid">
               <i class="fa-solid fa-play" aria-hidden="true"></i> Load

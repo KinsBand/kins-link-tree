@@ -113,6 +113,22 @@
     padding: 32px 24px;
     position: relative;
     box-sizing: border-box;
+    transform: scale(0.96);
+    transition: transform 0.22s var(--ease-snappy);
+  }
+
+  .store-waitlist-modal.is-open .waitlist-card {
+    transform: scale(1);
+  }
+
+  .store-waitlist-modal.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.18s ease-out !important;
+  }
+
+  .store-waitlist-modal.is-closing .waitlist-card {
+    animation: modalPopOut 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
   }
 
   .waitlist-close-btn {

@@ -811,7 +811,7 @@ if (!isLivePageEnabled) {
     return window.innerWidth > 900;
   }
 
-  function switchStageTab(activeTab) {
+  function switchStageTab(activeTab: string) {
     const tabBtnSetlist = document.getElementById('tabBtnSetlist');
     const tabBtnLyrics = document.getElementById('tabBtnLyrics');
     const tabBtnChat = document.getElementById('tabBtnChat');
@@ -937,7 +937,7 @@ if (!isLivePageEnabled) {
 
   // Direct click bindings for the 3 tab buttons
   function bindStageTabButtons() {
-    const tabBtns = document.querySelectorAll('.live-stage-tab-btn');
+    const tabBtns = document.querySelectorAll<HTMLButtonElement>('.live-stage-tab-btn');
     tabBtns.forEach(btn => {
       btn.onclick = (e) => {
         e.preventDefault();
@@ -950,7 +950,7 @@ if (!isLivePageEnabled) {
   // Delegated click listener on document for 100% touch & click reliability
   document.addEventListener('click', (e) => {
     const target = e.target;
-    if (!target) return;
+    if (!(target instanceof Element)) return;
     const tabBtn = target.closest('.live-stage-tab-btn');
     if (tabBtn) {
       e.preventDefault();
@@ -960,8 +960,8 @@ if (!isLivePageEnabled) {
   });
 
   // Responsive window resize listener (rAF-gated; mobile URL-bar show/hide fires resize storms)
-  let lastDesktopState = null;
-  let liveResizeRafId = null;
+  let lastDesktopState: boolean | null = null;
+  let liveResizeRafId: number | null = null;
   window.addEventListener('resize', () => {
     if (liveResizeRafId !== null) return;
     liveResizeRafId = requestAnimationFrame(() => {

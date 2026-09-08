@@ -255,11 +255,6 @@ function stopMetronome() {
   /* Invalidate any in-flight async start BEFORE anything else so a stop
      racing a resuming context can never resurrect the run */
   startGeneration++;
-  if (coachEngine && coachEngine.isRunning()) {
-    coachEngine.stop();
-    ui.exitCoachLive();
-    engine.setVolume(metroState.volume);
-  }
   if (!metroState.playing && !engine.playing) {
     metroState.playing = false;
     ui.renderPlayState(false);
@@ -303,6 +298,13 @@ function onBpmSet(value) {
 }
 
 function onTapTempo() {
+  if (coachEngine && coachEngine.isRunning()) {
+    const snap = coachEngine.getLive();
+    if (snap && snap.tabId === 'tempo-primer') {
+      onPrimerTap(performance.now());
+      return;
+    }
+  }
   const now = performance.now();
   if (tapTimes.length && now - tapTimes[tapTimes.length - 1] > TAP_WINDOW_MS) {
     tapTimes.length = 0;
@@ -654,24 +656,47 @@ function onCoachRhythmChange(patch) {
 function onCoachPrimerChange(patch) {
   setCoachPrimer(patch);
   ui.renderCoachPrimer();
+  if (coachEngine && coachEngine.isRunning()) {
+    const snap = coachEngine.getLive();
+    if (snap && snap.tabId === 'tempo-primer') {
+      const minB = metroState.coachPrimer.minBpm || 60;
+      const maxB = metroState.coachPrimer.maxBpm || 180;
+      if (snap.primerTarget < minB || snap.primerTarget > maxB) {
+        onPrimerNewTarget();
+      }
+    }
+  }
 }
 
 async function onCoachStart(tabId) {
   setCoachTab(tabId);
   ui.selectCoachTab(tabId);
-  // ensure metronome is playing for audible trainers; primer may be silent but still keep clock
-  if (!metroState.playing) {
-    const ok = await startMetronome();
-    if (!ok) {
-      showToast('Start failed — check audio permissions', 'error');
-      return;
+  if (tabId === 'tempo-primer') {
+    // In tempo primer mode, the metronome audio/clock should NOT turn on at all
+    if (metroState.playing) {
+      stopMetronome();
+    }
+  } else {
+    // ensure metronome is playing for audible trainers; primer is unassisted silent recall
+    if (!metroState.playing) {
+      const ok = await startMetronome();
+      if (!ok) {
+        showToast('Start failed — check audio permissions', 'error');
+        return;
+      }
     }
   }
   if (coachEngine) {
     coachEngine.start(tabId);
     ui.enterCoachLive(tabId);
     const snap = coachEngine.getLive();
-    if (snap) ui.renderCoachLive(snap);
+    if (snap) {
+      if (tabId === 'tempo-primer' && snap.primerTarget) {
+        applyCoachBpm(snap.primerTarget);
+        if (ui.updatePrimerDots) ui.updatePrimerDots(0);
+      }
+      ui.renderCoachLive(snap);
+    }
     showToast(`${tabId.replace('-',' ')} live — stay on pulse`, 'success');
   }
 }
@@ -725,16 +750,19 @@ function setCoachMuted(muted) {
 }
 
 function onPrimerTap(time) {
-  /* Taps only count inside a live tempo-primer session. The old implicit
-     auto-start here could silently spin up a session from a MIDI pad hit
-     with no UI feedback and no audio running — removed. */
+  /* Taps only count inside a live tempo-primer session. */
   const liveSnap = coachEngine ? coachEngine.getLive() : null;
   if (!coachEngine || !coachEngine.isRunning() || !liveSnap || liveSnap.tabId !== 'tempo-primer') {
     return;
   }
   const result = coachEngine.handlePrimerTap(time);
   const snap = coachEngine.getLive();
-  if (snap) ui.renderCoachLive(snap);
+  if (snap) {
+    ui.renderCoachLive(snap);
+    if (ui.updatePrimerDots) {
+      ui.updatePrimerDots(snap.primerTaps.length, !!result);
+    }
+  }
   if (result) {
     showToast(`${result.grade}: ${result.recalled} BPM (Δ ${result.delta>0?'+':''}${result.delta})`, result.grade==='PERFECT' || result.grade==='GREAT' ? 'success' : 'info');
   }
@@ -744,7 +772,11 @@ function onPrimerRetry() {
   if (coachEngine) {
     coachEngine.primerRetry();
     const snap = coachEngine.getLive();
+    if (snap && snap.primerTarget) {
+      applyCoachBpm(snap.primerTarget);
+    }
     ui.renderCoachLive(snap);
+    if (ui.updatePrimerDots) ui.updatePrimerDots(0);
   }
 }
 
@@ -754,8 +786,10 @@ function onPrimerNewTarget() {
     if (nt) {
       setCoachPrimer({ target: nt });
       ui.renderCoachPrimer();
+      applyCoachBpm(nt);
       const snap = coachEngine.getLive();
       ui.renderCoachLive(snap);
+      if (ui.updatePrimerDots) ui.updatePrimerDots(0);
       showToast(`New target: ${nt} BPM`, 'info');
     }
   }

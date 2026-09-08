@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 import { z } from 'astro/zod';
 import { getNotifyHealth, getNotifyConfig } from '../../lib/notifyEmail';
 import { getSupabaseServiceClient } from '../../lib/supabaseServer';
+import { timingSafeEqual } from 'node:crypto';
+import { getClientIp, isRateLimited } from '../../lib/rateLimit';
 
 export const prerender = false;
 
@@ -15,16 +17,54 @@ const getEnv = (key: string): string => {
   return val.replace(/^["']|["']$/g, '').trim();
 };
 
-/**
- * GET /api/notify-health — redacted diagnostics for email delivery.
- * - No secrets exposed (key is masked).
- * - Checks RESEND config, NOTIFY_EMAIL, Supabase persistence, and webhook presence.
- * - Useful after deploy to confirm HelloKinsFan@gmail.com will actually receive mail.
- *
- * Optional query: ?check=send  (requires ?token=<HEALTHCHECK_TOKEN> if set)
- *   — sends a test email via Resend to NOTIFY_EMAIL to verify end-to-end delivery.
- */
-export const GET: APIRoute = async ({ url }) => {
+const QuerySchema = z.object({}).strict();
+const SendSchema = z.object({ mode: z.enum(['single', 'full']).default('single') }).strict();
+
+function jsonError(message: string, status: number): Response {
+  return new Response(JSON.stringify({ status: 'error', message }), {
+    status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
+}
+
+function authorize(request: Request): Response | null {
+  if (isRateLimited(`notify-health:${getClientIp(request)}`, 5, 60_000)) {
+    return jsonError('Too many diagnostic requests. Try again in a minute.', 429);
+  }
+  const token = getEnv('HEALTHCHECK_TOKEN') || getEnv('NOTIFY_HEALTH_TOKEN');
+  if (!token) return jsonError('Health diagnostics are not configured.', 503);
+  const expected = Buffer.from(`Bearer ${token}`);
+  const provided = Buffer.from(request.headers.get('authorization') || '');
+  if (expected.length !== provided.length || !timingSafeEqual(expected, provided)) {
+    return jsonError('Unauthorized.', 401);
+  }
+  return null;
+}
+
+/** Both methods require Authorization: Bearer <HEALTHCHECK_TOKEN>. GET never sends. */
+export const GET: APIRoute = async ({ request, url }) => {
+  const rejected = authorize(request);
+  if (rejected) return rejected;
+  if (!QuerySchema.safeParse(Object.fromEntries(url.searchParams)).success) {
+    return jsonError('Query parameters are not supported. Use POST for a send probe.', 400);
+  }
+  return runHealthCheck(null);
+};
+
+/** POST JSON { "mode": "single" | "full" } to send authenticated diagnostic probes. */
+export const POST: APIRoute = async ({ request, url }) => {
+  const rejected = authorize(request);
+  if (rejected) return rejected;
+  if (!QuerySchema.safeParse(Object.fromEntries(url.searchParams)).success) {
+    return jsonError('Query parameters are not supported.', 400);
+  }
+  const parsed = SendSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return jsonError('Invalid diagnostic payload.', 400);
+  const response = await runHealthCheck(parsed.data.mode);
+  response.headers.set('Cache-Control', 'no-store');
+  return response;
+};
+
+async function runHealthCheck(mode: 'single' | 'full' | null): Promise<Response> {
   const notifyHealth = getNotifyHealth();
   const notifyConfig = getNotifyConfig();
 
@@ -66,19 +106,7 @@ export const GET: APIRoute = async ({ url }) => {
     timestamp: new Date().toISOString()
   };
 
-  // Optional live send test — guarded by optional HEALTHCHECK_TOKEN
-  // ?check=send            → single brutalist probe (feedback-style)
-  // ?check=send&mode=full  → 3 probes: minimal (welcome-style) + feedback + cover
-  const shouldSend = url.searchParams.get('check') === 'send';
-  if (shouldSend) {
-    const expectedToken = getEnv('HEALTHCHECK_TOKEN') || getEnv('NOTIFY_HEALTH_TOKEN');
-    const providedToken = url.searchParams.get('token') || '';
-    if (expectedToken && providedToken !== expectedToken) {
-      return new Response(
-        JSON.stringify({ status: 'error', message: 'Unauthorized health check token.', health }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+  if (mode !== null) {
     if (!notifyConfig.hasResendKey) {
       return new Response(
         JSON.stringify({ status: 'error', message: 'Cannot send test — RESEND_API_KEY missing.', health }),
@@ -86,7 +114,6 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    const mode = url.searchParams.get('mode') || 'single';
     try {
       const { sendNotifyEmail, generateBrutalistEmailHtml } = await import('../../lib/notifyEmail');
 
@@ -166,7 +193,7 @@ export const GET: APIRoute = async ({ url }) => {
           { label: 'Timestamp', value: new Date().toISOString(), isCode: true },
           { label: 'To', value: notifyConfig.notifyEmail, isCode: true },
           { label: 'From', value: notifyConfig.fromEmail, isCode: true },
-          { label: 'Endpoint', value: '/api/notify-health?check=send' }
+          { label: 'Endpoint', value: 'POST /api/notify-health' }
         ],
         description: 'If you received this, Resend is correctly delivering Feedback & Cover Request emails to HelloKinsFan@gmail.com',
         footerNote: 'Kins Notify Health Probe'
@@ -182,7 +209,7 @@ export const GET: APIRoute = async ({ url }) => {
           message: result.ok ? `Test email sent to ${notifyConfig.notifyEmail} (ID: ${result.id})` : `Test send failed: ${result.error}`,
           health,
           sendResult: result,
-          hint: 'If this fails but welcome emails work, compare directWelcome probe via ?check=send&mode=full — it uses the exact welcome payload.'
+          hint: 'If welcome emails work, compare the directWelcome probe by posting mode: full.'
         }),
         { status: result.ok ? 200 : 502, headers: { 'Content-Type': 'application/json' } }
       );

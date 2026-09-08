@@ -18,16 +18,15 @@ const subItems = (subsCategory?.items || []) as SubdivisionItem[];
 
   <div class="category-items-list">
     {subItems.map((item) => (
-      <div class="theory-item-row" data-search-target={`${item.name} ${item.counting} ${item.accentRule}`}>
+      <div class="theory-item-row" data-search-target={`${item.name} ${item.formula} ${item.notes}`}>
         <div class="item-name-col">
           <div class="item-title-row">
             <strong class="item-name">{item.name}</strong>
-            <span class="item-type-tag">Count: {item.counting}</span>
           </div>
-          <span class="item-notes">{item.accentRule}</span>
+          <span class="item-notes">{item.notes}</span>
         </div>
         <div class="item-actions-col">
-          <code class="item-formula">{item.visualBars}</code>
+          <code class="item-formula">{item.formula}</code>
         </div>
       </div>
     ))}

@@ -584,17 +584,21 @@ const memberTabs = [
         }, 350);
       }
 
+      const wasPlaying = card.classList.contains('is-playing');
+
       if (playingThis) {
         if (card._retireAnimId) {
           cancelAnimationFrame(card._retireAnimId);
           card._retireAnimId = null;
+        }
+        if (!wasPlaying) {
+          thumb.style.transform = 'rotate(0deg)';
         }
         card.classList.add('is-playing');
         card.classList.remove('is-decelerating');
         thumb.classList.remove('vinyl-spin-decelerate');
         thumb.classList.add('is-vinyl-disc');
       } else {
-        const wasPlaying = card.classList.contains('is-playing');
         const wasDecelerating = card.classList.contains('is-decelerating');
         card.classList.remove('is-playing');
 

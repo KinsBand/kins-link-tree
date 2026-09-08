@@ -291,7 +291,7 @@ export class GuitarFretboardController {
           const chord = CHORDS_DATA[this.currentChordKey];
           const chordFret = chord.frets[strIdx];
           const chordLabel = chord.labels[strIdx];
-          if (chordFret === f && chordFret !== '✕') {
+          if (chordFret === f) {
             const isRoot = chordLabel === 'R';
             const displayText = this.currentFretLabelMode === 'note' ? noteOnFret : chordLabel;
             dotHtml = `<button type="button" class="fret-note-dot ${isRoot ? 'is-root' : 'is-chord'} brutal-press" data-freq="${noteFreq.toFixed(2)}" data-str-idx="${strIdx}" title="${noteOnFret} (${chordLabel}) — Click to pluck">${displayText}</button>`;
@@ -300,7 +300,7 @@ export class GuitarFretboardController {
           const shape = CAGED_DATA[this.currentCagedKey];
           const shapeFret = shape.frets[strIdx];
           const shapeLabel = shape.labels[strIdx];
-          if (shapeFret === f && shapeFret !== '✕') {
+          if (shapeFret === f) {
             const isRoot = shapeLabel === 'R';
             const displayText = this.currentFretLabelMode === 'note' ? noteOnFret : shapeLabel;
             dotHtml = `<button type="button" class="fret-note-dot ${isRoot ? 'is-root' : 'is-chord'} brutal-press" data-freq="${noteFreq.toFixed(2)}" data-str-idx="${strIdx}" title="${noteOnFret} (${shapeLabel}) — Click to pluck">${displayText}</button>`;
@@ -361,7 +361,7 @@ export class GuitarFretboardController {
           strIdx: parseInt(d.getAttribute('data-str-idx') || '0', 10),
         }))
         .filter((n) => n.freq > 0);
-      const uniqueNotes = [];
+      const uniqueNotes: { freq: number; strIdx: number }[] = [];
       const seen = new Set();
       noteList
         .sort((a, b) => a.freq - b.freq)

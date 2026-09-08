@@ -44,7 +44,7 @@
   --text-card-primary: #000000;
   --text-card-secondary: #4b4b4b;
   --text-card-subtle: #555555;
-  --text-card-muted: #71717a;
+  --text-card-muted: #62626b;
 
   /* Legacy Typography Aliases */
   --text-dark: var(--text-on-light);
@@ -191,7 +191,7 @@ body[data-theme="dark"],
   --text-card-primary: #f4f4f6;
   --text-card-secondary: #a1a1aa;
   --text-card-subtle: #8e8e93;
-  --text-card-muted: #71717a;
+  --text-card-muted: #a1a1aa;
   --text-muted: #a1a1aa;
 
   /* Legacy Typography Aliases */
@@ -266,3 +266,86 @@ body[data-theme="dark"],
   --scrollbar-track: #101013;
 }
 
+/* Shared tuner illustration geometry and workflow spacing: explicit parity. */
+:root, [data-theme="dark"] {
+  --tuner-art-outline-width: 3;
+  --tuner-art-detail-width: 1.5;
+  --tuner-art-label-size: 17px;
+  --tuner-art-brand-size: 18px;
+  --tuner-art-press: 2px;
+  --tuner-art-min-height: 320px;
+  --tuner-art-ear-height: 540px;
+  --tuner-art-width: 440px;
+  --tuner-workflow-width: 720px;
+  --tuner-workflow-title-size: 1.3rem;
+  --tuner-drum-reading-size: 2.5rem;
+  --tuner-drum-diagram-width: 300px;
+  --tuner-drum-lug-size: 44px;
+  --tuner-mode-duration: 160ms;
+  --tuner-loading-duration: 600ms;
+  --tuner-art-body: var(--surface-base);
+  --tuner-art-edge: var(--tuner-control-border);
+  --tuner-art-hardware: var(--text-on-dark);
+  --tuner-art-hardware-text: var(--surface-canvas);
+  --tuner-art-fingerboard: var(--surface-canvas);
+}
+
+/* Tuner measurement and controls: explicit parity for both themes. */
+:root {
+  --tuner-dialog-width: 640px;
+  --tuner-control-border: #000000;
+  --tuner-close-font: 1.5rem;
+  --tuner-dialog-gutter: 48px;
+  --tuner-dialog-duration: 240ms;
+  --tuner-target-zone-fill: rgba(83, 252, 24, 0.2);
+  --tuner-target-zone-border: #53fc18;
+  --tuner-dwell-progress: #53fc18;
+  --tuner-detail-gap: 8px;
+  --tuner-detail-font: 0.8rem;
+  --tuner-progress-height: 6px;
+  --tuner-progress-duration: 80ms;
+  --tuner-settings-gap: 16px;
+  --tuner-touch-target: 44px;
+  --tuner-control-padding: 14px;
+  --tuner-focus-width: 2px;
+  --tuner-focus-offset: 2px;
+}
+[data-theme="dark"] {
+  --tuner-dialog-width: 640px;
+  --tuner-control-border: #8c8c96;
+  --tuner-close-font: 1.5rem;
+  --tuner-dialog-gutter: 48px;
+  --tuner-dialog-duration: 240ms;
+  --tuner-target-zone-fill: rgba(120, 201, 92, 0.2);
+  --tuner-target-zone-border: #78c95c;
+  --tuner-dwell-progress: #78c95c;
+  --tuner-detail-gap: 8px;
+  --tuner-detail-font: 0.8rem;
+  --tuner-progress-height: 6px;
+  --tuner-progress-duration: 80ms;
+  --tuner-settings-gap: 16px;
+  --tuner-touch-target: 44px;
+  --tuner-control-padding: 14px;
+  --tuner-focus-width: 2px;
+  --tuner-focus-offset: 2px;
+}
+
+/* Metronome-style tuner steppers. */
+:root {
+  --tuner-stepper-surface: var(--surface-input);
+  --tuner-stepper-text: var(--text-on-light);
+  --tuner-stepper-hover: var(--surface-card-panel-hover);
+  --tuner-stepper-shadow: 2px 2px 0 #000000;
+  --tuner-stepper-pressed-shadow: 1px 1px 0 #000000;
+  --tuner-stepper-shift: 1px;
+}
+[data-theme="dark"] {
+  --tuner-stepper-surface: var(--surface-base);
+  --tuner-stepper-text: var(--brand-accent-primary);
+  --tuner-stepper-hover: var(--surface-elevated);
+  --tuner-stepper-shadow: 2px 2px 0 #000000;
+  --tuner-stepper-pressed-shadow: 1px 1px 0 #000000;
+  --tuner-stepper-shift: 1px;
+}
+
+:root, [data-theme="dark"] { --tuner-instrument-icon-size: 18px; }

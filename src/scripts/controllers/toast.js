@@ -42,6 +42,10 @@ function stripEmojis(str) {
     .trim();
 }
 
+/**
+ * @param {string} message
+ * @param {'info' | 'success' | 'error' | 'warning' | 'music' | 'clipboard' | null} [explicitType]
+ */
 export function showToast(message, explicitType = null) {
   const toastContainer = document.getElementById('toastContainer');
   if (!toastContainer) return;

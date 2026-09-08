@@ -756,6 +756,11 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
+  .faq-answer-content.is-closing {
+    animation: faqAnswerFadeOut 0.16s var(--ease-tactile) forwards !important;
+    pointer-events: none;
+  }
+
   @keyframes faqAnswerFadeIn {
     from {
       opacity: 0;
@@ -764,6 +769,17 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  @keyframes faqAnswerFadeOut {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-4px);
     }
   }
 

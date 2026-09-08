@@ -351,8 +351,22 @@ export function initAudioPlayer() {
 
     const deckMusicSection = document.getElementById('deckMusicSection');
 
-    if (deckIdleView) deckIdleView.classList.add('hidden');
-    if (deckActiveView) deckActiveView.classList.remove('hidden');
+    if (deckIdleView) {
+      deckIdleView.classList.add('is-leaving');
+      setTimeout(() => {
+        deckIdleView.classList.add('hidden');
+        deckIdleView.classList.remove('is-leaving');
+      }, 190);
+    }
+    if (deckActiveView) {
+      deckActiveView.classList.remove('hidden');
+      deckActiveView.classList.add('is-entering');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          deckActiveView.classList.remove('is-entering');
+        });
+      });
+    }
 
     if (deckMusicSection) {
       deckMusicSection.classList.remove('is-transitioning');
@@ -375,8 +389,23 @@ export function initAudioPlayer() {
     hasTransitionedToActive = false;
     const deckMusicSection = document.getElementById('deckMusicSection');
     if (deckMusicSection) deckMusicSection.classList.remove('is-transitioning');
-    if (deckIdleView) deckIdleView.classList.remove('hidden');
-    if (deckActiveView) deckActiveView.classList.add('hidden');
+
+    if (deckActiveView) {
+      deckActiveView.classList.add('is-leaving');
+      setTimeout(() => {
+        deckActiveView.classList.add('hidden');
+        deckActiveView.classList.remove('is-leaving');
+      }, 190);
+    }
+    if (deckIdleView) {
+      deckIdleView.classList.remove('hidden');
+      deckIdleView.classList.add('is-entering');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          deckIdleView.classList.remove('is-entering');
+        });
+      });
+    }
     if (vinylStylusWrapper) vinylStylusWrapper.classList.remove('stylus-visible');
   }
 
@@ -868,10 +897,13 @@ export function initAudioPlayer() {
     if (vinylStylusWrapper) {
       if (playing) {
         vinylStylusWrapper.classList.add('is-playing');
-        vinylStylusWrapper.classList.remove('is-paused');
+        vinylStylusWrapper.classList.remove('is-paused', 'needle-lift-ease');
       } else {
         vinylStylusWrapper.classList.remove('is-playing');
-        vinylStylusWrapper.classList.add('is-paused');
+        vinylStylusWrapper.classList.add('is-paused', 'needle-lift-ease');
+        setTimeout(() => {
+          if (vinylStylusWrapper) vinylStylusWrapper.classList.remove('needle-lift-ease');
+        }, 350);
       }
     }
 
@@ -1296,6 +1328,13 @@ export function initAudioPlayer() {
       return;
     }
 
+    // Fast audio duck to eliminate harsh browser popping/clipping on src switch
+    if (isPlayingAudio && vaultAudioPlayer && !vaultAudioPlayer.paused) {
+      try {
+        await fadeAudioVolume(vaultAudioPlayer.volume, 0, 80);
+      } catch (e) {}
+    }
+
     // 2. Synchronously check if previewUrl and artwork are already available
     let previewUrl = trackObj.previewUrl;
     let coverUrl = trackObj.coverUrl || trackObj.artworkUrl;
@@ -1331,6 +1370,16 @@ export function initAudioPlayer() {
       if (vinylGrooveEngine) {
         vinylGrooveEngine.loadTrack(currentPlayingTrack);
       }
+
+      // Reset vinyl rotation to 0deg so the new song starts spinning upright cleanly
+      globalVinylAngle = 0;
+      vinylAngularVelocity = 0.25;
+      lastVinylFrameTime = performance.now();
+      if (audioBarIconBox) {
+        audioBarIconBox.style.transform = 'rotate(0deg)';
+      }
+      syncVinylInstances(0, true);
+      invalidateVinylThumbCache();
 
       if (audioBarTitle) {
         audioBarTitle.textContent = trackObj.title;

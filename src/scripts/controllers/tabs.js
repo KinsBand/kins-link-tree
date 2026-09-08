@@ -45,6 +45,8 @@ export function setupSegmentedSwitcher(tabSelector, contentSelector) {
       const targetId = tab.getAttribute('data-target');
       const parentContainer = tab.closest('.segmented-switcher-box') || tab.closest('.brutal-tab-switcher') || tab.parentElement;
 
+      if (tab.classList.contains('active')) return;
+
       if (parentContainer) {
         const siblingTabs = parentContainer.querySelectorAll(tabSelector);
         siblingTabs.forEach(t => {
@@ -65,15 +67,64 @@ export function setupSegmentedSwitcher(tabSelector, contentSelector) {
         }
       }
 
+      const wrapper = document.getElementById('tabPanelsWrapper') || (contents[0] && contents[0].parentElement);
+      let startHeight = 0;
+      if (wrapper) {
+        if (wrapper._heightAnimTimer) {
+          clearTimeout(wrapper._heightAnimTimer);
+          wrapper._heightAnimTimer = null;
+        }
+        startHeight = wrapper.offsetHeight;
+      }
+
       contents.forEach(content => {
+        if (content._tabLeaveTimeout) {
+          clearTimeout(content._tabLeaveTimeout);
+          content._tabLeaveTimeout = null;
+        }
+
         if (content.id === targetId) {
+          content.classList.remove('is-leaving');
           content.classList.add('active');
-          content.style.display = 'block';
-        } else {
+          content.style.display = '';
+        } else if (content.classList.contains('active')) {
           content.classList.remove('active');
-          content.style.display = 'none';
+          content.classList.add('is-leaving');
+          content.style.display = '';
+          content._tabLeaveTimeout = setTimeout(() => {
+            content.classList.remove('is-leaving');
+            content._tabLeaveTimeout = null;
+          }, 180);
+        } else {
+          content.classList.remove('active', 'is-leaving');
+          content.style.display = '';
         }
       });
+
+      if (wrapper) {
+        const targetContent = Array.from(contents).find(c => c.id === targetId);
+        if (targetContent) {
+          const targetHeight = targetContent.offsetHeight;
+          if (startHeight > 0 && targetHeight > 0 && Math.abs(startHeight - targetHeight) > 3) {
+            wrapper.style.height = `${startHeight}px`;
+            wrapper.style.overflow = 'hidden';
+            wrapper.style.transition = 'none';
+
+            // Force reflow
+            void wrapper.offsetHeight;
+
+            wrapper.style.transition = 'height 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+            wrapper.style.height = `${targetHeight}px`;
+
+            wrapper._heightAnimTimer = setTimeout(() => {
+              wrapper.style.height = '';
+              wrapper.style.transition = '';
+              wrapper.style.overflow = '';
+              wrapper._heightAnimTimer = null;
+            }, 240);
+          }
+        }
+      }
     });
   });
 }

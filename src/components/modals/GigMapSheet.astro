@@ -254,11 +254,25 @@
   }
 
   .bottom-sheet-backdrop.hidden,
-  .bottom-sheet-backdrop:not(:global(.active)) {
+  .bottom-sheet-backdrop:not(:global(.active)):not(.is-closing) {
     opacity: 0 !important;
     pointer-events: none !important;
     visibility: hidden !important;
     display: none !important;
+  }
+
+  .bottom-sheet-backdrop.is-closing {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: visible !important;
+    display: flex !important;
+    transition: opacity 0.2s var(--ease-tactile) !important;
+  }
+
+  .bottom-sheet-backdrop.is-closing .bottom-sheet-container {
+    transform: translateY(28px) scale(0.98) !important;
+    opacity: 0 !important;
+    transition: transform 0.2s var(--ease-tactile), opacity 0.18s ease !important;
   }
 
   .bottom-sheet-backdrop:global(.active) {
@@ -2704,7 +2718,7 @@
 
 <script>
   // Idle-loaded: gig map sheet is interaction-gated (and its data set is currently empty)
-  const scheduleIdle = (cb) => {
+  const scheduleIdle = (cb: () => void) => {
     if (typeof window.requestIdleCallback === 'function') {
       window.requestIdleCallback(cb, { timeout: 3000 });
     } else {
