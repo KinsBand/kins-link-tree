@@ -1,21 +1,21 @@
 ---
 import { Image } from 'astro:assets';
-import kinsLogoNew from '../../assets/new.png';
+import kinsLogoHero from '../../assets/kins-logo-hero.png';
 
 interface Props {
   image?: ImageMetadata | string;
 }
 
-const { image = kinsLogoNew } = Astro.props;
+const { image = kinsLogoHero } = Astro.props;
 ---
 
 <div class="hero-banner-container" id="heroBannerContainer" data-track-container="main:hero">
   <div class="hero-banner-glow"></div>
   {
     typeof image === 'string' ? (
-      <img src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" fetchpriority="high" width="600" height="140" />
+      <img src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" fetchpriority="high" width="409" height="372" />
     ) : (
-      <Image src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" loading="eager" fetchpriority="high" width={600} height={140} />
+      <Image src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" loading="eager" fetchpriority="high" width={409} height={372} />
     )
   }
 </div>
@@ -25,8 +25,8 @@ const { image = kinsLogoNew } = Astro.props;
     position: relative;
     width: 100%;
     max-width: 100%;
-    min-height: 120px;
-    height: 140px;
+    min-height: 140px;
+    height: auto;
     margin: 0 auto;
     z-index: 10;
     overflow: visible;
@@ -36,7 +36,7 @@ const { image = kinsLogoNew } = Astro.props;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 12px;
+    padding: 10px 12px;
     box-sizing: border-box;
   }
 
@@ -55,9 +55,10 @@ const { image = kinsLogoNew } = Astro.props;
 
   .hero-banner-img {
     width: 100%;
-    max-width: 360px;
-    height: 100%;
-    max-height: 125px;
+    max-width: 220px;
+    height: auto;
+    max-height: 175px;
+    aspect-ratio: 409 / 372;
     object-fit: contain;
     object-position: center;
     filter: drop-shadow(0 0 16px rgba(242, 253, 67, 0.35)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8));
@@ -68,12 +69,12 @@ const { image = kinsLogoNew } = Astro.props;
 
   @media (max-width: 767px) {
     .hero-banner-container {
-      height: 120px;
-      min-height: 100px;
+      min-height: 130px;
+      padding: 6px 12px;
     }
     .hero-banner-img {
-      max-width: 320px;
-      max-height: 105px;
+      max-width: 185px;
+      max-height: 155px;
     }
   }
 </style>

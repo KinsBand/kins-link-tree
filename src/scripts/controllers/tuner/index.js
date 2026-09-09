@@ -4,7 +4,8 @@ import { midiToPitchClass } from './notesUtil.js';
 import { state, getString, getPreset, setInstrument, setPreset, setString, setStringCount,
   setCustomStringCount, setMode, setAutoAdvance, setAutoIdentify, setMaterial, setA4, restore } from './tunerState.js';
 import { createAudioEngine } from './audioEngine.js';
-import { createCentsSmoother, createNoteStabilizer } from './pitchDetector.js';
+import { createNoteStabilizer } from './pitchDetector.js';
+import { createPitchSmoother } from './pitchSmoothing.js';
 import { createTuningConfirmation } from './confirmation.js';
 import { createUi } from './uiBindings.js';
 import { createReferenceTone } from './referenceTone.js';
@@ -17,10 +18,10 @@ let workBuf = new Float32Array(DETECT.WORK_WINDOW);
 let lastAnalysis = -Infinity, lastPacketAt = 0, lastGood = null, lastGoodAt = 0;
 let autoCandidate = null, autoSince = 0, pendingAdvance = null;
 let completed = new Set();
-const smoother = createCentsSmoother();
+const smoother = createPitchSmoother();
 const noteStab = createNoteStabilizer();
 const confirmation = createTuningConfirmation();
-const referenceTone = createReferenceTone(status => ui?.setReferenceStatus(status));
+const referenceTone = createReferenceTone((status, playback) => ui?.setReferenceStatus(status, playback));
 
 function targetFreq(string) { return state.instrumentId === 'drums' ? string.freq : noteToFreq(string.midi, state.a4); }
 function resetPipeline() {
@@ -32,7 +33,7 @@ function resetPipeline() {
 function holdReading(status = 'silent') {
   confirmation.reset(); autoCandidate = null; pendingAdvance = null;
   ui?.updateProgress?.(0, false);
-  if (lastGood && performance.now() - lastGoodAt < DETECT.STALE_CLEAR_MS && status === 'silent') {
+  if (lastGood && performance.now() - lastGoodAt < 1250) {
     ui.updateReading({ ...lastGood, held: true });
   } else ui?.updateReading({ status });
 }
@@ -53,6 +54,10 @@ function handleReading(reading) {
     holdReading(reading.status === 'clipped' || reading.status === 'uncertain' ? reading.status : 'silent');
     return;
   }
+  const detectedFrequency = reading.freq;
+  const signal = smoother.push(reading.freq, time);
+  if (signal.held) { holdReading(); return; }
+  reading = { ...reading, freq: signal.frequency };
   identifyString(reading.freq, time);
   const midi = Math.round(69 + 12 * Math.log2(reading.freq / state.a4));
   const stableMidi = noteStab.update(midi, time);
@@ -61,18 +66,17 @@ function handleReading(reading) {
   const target = getString();
   const targetHz = chromatic ? noteToFreq(midi, state.a4) : targetFreq(target);
   if (targetHz < DETECT.MIN_DETECT_HZ || targetHz > DETECT.MAX_DETECT_HZ) { holdReading('out-of-range'); return; }
-  const rawCents = 1200 * Math.log2(reading.freq / targetHz);
-  if (lastGood?.midi !== midi) smoother.reset();
-  const cents = smoother.push(rawCents, true, time).cents;
+  const rawCents = 1200 * Math.log2(detectedFrequency / targetHz);
+  const cents = 1200 * Math.log2(reading.freq / targetHz);
   const dwell = confirmation.update({ time, cents: rawCents, tolerance: state.tolerance ?? 3, trusted: true, targetId: String(targetHz) });
   const output = { status: 'ok', freq: reading.freq, cents, rawCents, locked: true, held: false,
     detectedNote: midiToPitchClass(midi), detectedOctave: Math.floor(midi / 12) - 1,
     nearestName: midiToPitchClass(midi) + (Math.floor(midi / 12) - 1), target, midi,
-    confirmed: !chromatic && dwell.confirmed, inRange: Math.abs(rawCents) <= (state.tolerance ?? 3), zone: Math.abs(rawCents) > 600 && !chromatic ? 'wrong-octave' : null };
+    confirmed: state.mode === 'guided' && dwell.confirmed, inRange: Math.abs(rawCents) <= (state.tolerance ?? 3), zone: Math.abs(rawCents) > 600 && !chromatic ? 'wrong-octave' : null };
   lastGood = output; lastGoodAt = performance.now();
   ui.updateReading(output); ui.updateProgress?.(chromatic ? 0 : dwell.progress, output.confirmed);
   if (!dwell.confirmed) pendingAdvance = null;
-  if (!chromatic && dwell.confirmed) {
+  if (state.mode === 'guided' && dwell.confirmed) {
     completed.add(state.stringIndex);
     if (state.autoAdvance && !pendingAdvance) pendingAdvance = { index: state.stringIndex, at: time };
   }
@@ -110,7 +114,6 @@ function stopMic() {
 }
 async function onMicToggle() {
   referenceTone.stop(); drums?.stopReference();
-  if (state.mode === 'ear' && state.instrumentId !== 'drums') return;
   if (state.listening || state.starting) { stopMic(); return; }
   const targetHz = targetFreq(getString());
   if (state.instrumentId !== 'drums' && state.mode === 'guided' && (targetHz < DETECT.MIN_DETECT_HZ || targetHz > DETECT.MAX_DETECT_HZ)) {
@@ -155,13 +158,11 @@ function strumSelection() {
   if (state.instrumentId === 'drums') return;
   if (state.listening || state.starting) stopMic();
   const strings = getPreset().strings;
-  // Illustration coordinates remain available while the tuning picker is open.
-  const pegs = [...document.querySelectorAll('#tunerFigure .tuner-peg')].map(peg => {
-    const hit = peg.querySelector('.art-hit-target');
-    return { index: Number(peg.getAttribute('data-string-index')), x: Number(hit?.getAttribute('x')), y: Number(hit?.getAttribute('y')) };
-  }).sort((a, b) => a.y - b.y || a.x - b.x);
-  const notes = pegs.map(peg => strings[peg.index]?.midi).filter(Number.isFinite);
-  if (notes.length) referenceTone.playSequence(state.instrumentId, notes, state.a4).catch(() => showToast('Reference recordings could not play. Tap a string to retry.', 'error'));
+  // Pitch order is independent of the left/right layout of the headstock.
+  const sequence = strings.map((string, index) => ({ midi: string.midi, index }))
+    .filter(string => Number.isFinite(string.midi))
+    .sort((a, b) => a.midi - b.midi || a.index - b.index);
+  if (sequence.length) referenceTone.playSequence(state.instrumentId, sequence.map(string => string.midi), state.a4, sequence.map(string => string.index)).catch(() => showToast('Reference recordings could not play. Tap a string to retry.', 'error'));
 }
 
 function onInstrumentChange(id) {
@@ -197,7 +198,7 @@ function onStringSelect(index) {
   setString(index);
   resetPipeline();
   ui.renderFigure();
-  if (playReference) referenceTone.play(state.instrumentId, getString().midi, state.a4).catch(() => showToast('Recording could not load. Check your connection and tap the peg to retry.', 'error'));
+  if (playReference) referenceTone.play(state.instrumentId, getString().midi, state.a4, state.stringIndex).catch(() => showToast('Recording could not load. Check your connection and tap the peg to retry.', 'error'));
 }
 
 function onStringCountSelect(count) {
@@ -234,7 +235,6 @@ function onCustomStringCount(count) {
 
 function onModeSelect(mode) {
   referenceTone.stop();
-  if (mode === 'ear') stopMic();
   setMode(mode);
   // Mic stays alive across mode switches — only an instrument change
   // restarts capture (different profile/layout).

@@ -45,8 +45,14 @@ test('ear training spans the settings row, plays calibrated pegs and restores gu
   const box = await ear.boundingBox();
   expect(Math.abs(box!.width - parent!.width)).toBeLessThan(2);
   await ear.click(); await page.keyboard.press('Escape');
-  await expect(page.locator('#tunerReadoutPanel')).toBeHidden();
-  await expect(page.locator('#tunerMicToggleBtn')).toBeHidden();
+  await expect(page.locator('#tunerReadoutPanel')).toBeVisible();
+  await expect(page.locator('#tunerTension')).toBeVisible();
+  await expect(page.locator('.tuner-tension-scale span')).toHaveText(['Loose', 'Normal', 'Tight']);
+  await expect(page.locator('.tuner-tension-colors')).toBeVisible();
+  await expect(page.locator('#tunerTensionStatus')).toBeEmpty();
+  await expect(page.locator('#tunerCentsReadout')).toBeHidden();
+  await expect(page.locator('#tunerNeedle')).toBeHidden();
+  await expect(page.locator('#tunerMicToggleBtn')).toBeVisible();
   await page.locator('[data-string-index="0"]').click();
   await expect.poll(() => page.evaluate(() => (window as any).__modeAudio.references.length)).toBe(1);
   expect(await page.evaluate(() => (window as any).__modeAudio.references[0])).toBeCloseTo(432.5 * 2 ** ((40 - 69) / 12) / 82.3846, 5);
@@ -61,12 +67,12 @@ test('ear training spans the settings row, plays calibrated pegs and restores gu
   await expect.poll(() => page.evaluate(() => (window as any).__modeAudio.contexts.every((ctx: AudioContext) => ctx.state === 'closed'))).toBe(true);
 });
 
-test('ear training stops active capture and persists the selected mode', async ({ page }) => {
+test('ear training retains capture for tension estimates and persists the selected mode', async ({ page }) => {
   await open(page);
   await page.locator('#tunerMicToggleBtn').click();
   await expect(page.locator('#tunerMicToggleBtn')).toHaveAttribute('aria-label', 'Stop tuning');
   await page.locator('#tunerSettingsBtn').click(); await page.locator('[data-sheet-mode="ear"]').click();
-  expect(await page.evaluate(() => (window as any).__modeAudio.streams.every((s: MediaStream) => s.getTracks().every(t => t.readyState === 'ended')))).toBe(true);
+  expect(await page.evaluate(() => (window as any).__modeAudio.streams.every((s: MediaStream) => s.getTracks().every(t => t.readyState === 'live')))).toBe(true);
   // The init script intentionally resets the initial mode; inspect saved value before reload.
   expect(await page.evaluate(() => localStorage.getItem('kins-tuner-mode'))).toBe('ear');
 });
@@ -105,14 +111,14 @@ test('both themes show distinct guitar artwork and a usable drum workflow', asyn
       await page.locator(`#tunerInstrumentRow [data-instrument="${instrument}"]`).click();
       await expect(page.locator(`.art-${instrument}`)).toBeVisible();
       await expect(page.locator('.tuner-peg')).toHaveCount(instrument === 'bass' ? 4 : 6);
-      await page.screenshot({ path: `artifacts/tuner-modes/${testInfo.project.name}-${theme}-${instrument}.png` });
+      await page.screenshot({ path: testInfo.outputPath(`${theme}-${instrument}.png`) });
     }
     await page.locator('#tunerSettingsBtn').click();
-    await page.screenshot({ path: `artifacts/tuner-modes/${testInfo.project.name}-${theme}-settings.png` });
+    await page.screenshot({ path: testInfo.outputPath(`${theme}-settings.png`) });
     await page.keyboard.press('Escape');
     await page.locator('#tunerInstrumentRow [data-instrument="drums"]').click();
     await expect(page.locator('#drumWorkflow')).toBeVisible();
-    await page.screenshot({ path: `artifacts/tuner-modes/${testInfo.project.name}-${theme}-drums.png` });
+    await page.screenshot({ path: testInfo.outputPath(`${theme}-drums.png`) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.locator('#drumNextStep').scrollIntoViewIfNeeded();
     await expect(page.locator('#drumNextStep')).toBeInViewport();

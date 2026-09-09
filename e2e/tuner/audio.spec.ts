@@ -40,20 +40,14 @@ async function start(page: Page) {
   await expect(page.locator('#tunerMicToggleBtn')).toHaveAttribute('aria-label', 'Stop tuning');
 }
 
-test('known 440 Hz reaches the real worklet, worker and fractional-cents readout', async ({ page }) => {
+test('known 440 Hz reaches the worklet and clean Free mode readout', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await openTuner(page); await start(page);
   await expect(page.locator('#tunerDetectedNote')).toHaveText('A');
   await expect(page.locator('#tunerDetectedNoteOctave')).toHaveText('4');
-  await expect.poll(() => page.evaluate(() => {
-    const note = document.querySelector('.rail-note.is-near')?.getBoundingClientRect();
-    const rail = document.querySelector('.tuner-chromatic-rail')?.getBoundingClientRect();
-    return note && rail ? Math.abs((note.left + note.right - rail.left - rail.right) / 2) : Infinity;
-  })).toBeLessThan(4);
-  await expect.poll(async () => Math.abs(parseFloat(await page.locator('#tunerCentsReadout').innerText()))).toBeLessThan(1);
-  await page.evaluate(() => { const source = (window as any).__tunerInput.sources[0]; source.oscillator.frequency.value = 440 * 2 ** (2 / 1200); });
-  await expect.poll(async () => parseFloat(await page.locator('#tunerCentsReadout').innerText())).toBeGreaterThan(1.5);
+  await expect(page.locator('#tunerCentsReadout')).toBeHidden();
+  await expect(page.locator('#tunerChromRail')).toBeHidden();
   await page.locator('#tunerMicToggleBtn').click();
   expect(await page.evaluate(() => (window as any).__tunerInput.sources[0].stream.getTracks().every((track: MediaStreamTrack) => track.readyState === 'ended'))).toBe(true);
   expect(errors).toEqual([]);
@@ -63,7 +57,7 @@ test('low B0 identifies the correct bass octave', async ({ page }) => {
   await openTuner(page, 30.867706); await start(page);
   await expect(page.locator('#tunerDetectedNote')).toHaveText('B');
   await expect(page.locator('#tunerDetectedNoteOctave')).toHaveText('0');
-  await expect.poll(async () => Math.abs(parseFloat(await page.locator('#tunerCentsReadout').innerText()))).toBeLessThan(1);
+  await expect(page.locator('#tunerCentsReadout')).toBeHidden();
 });
 
 test('guided target confirms from fresh audio then loses live success on silence', async ({ page }) => {
@@ -78,14 +72,14 @@ test('guided target confirms from fresh audio then loses live success on silence
 
 test('calibration is visible and a saved fractional reference is preserved', async ({ page }) => {
   await openTuner(page, 432.5, 'chromatic', '432.5');
-  await expect(page.locator('#tunerTargetLabel')).toContainText('432.5 Hz');
+  await expect(page.locator('#tunerTargetLabel')).toHaveCount(0);
   await page.locator('#tunerSettingsBtn').click();
   await expect(page.locator('#tunerCalibration')).toHaveValue('432.5');
   await page.locator('#tunerTolerance').selectOption('1');
   await page.locator('#tunerCalibrationReset').click();
   await expect(page.locator('#tunerCalibration')).toHaveValue('440');
   await page.keyboard.press('Escape');
-  await expect(page.locator('#tunerTargetLabel')).toContainText('440 Hz');
+  await expect(page.locator('#tunerTargetLabel')).toHaveCount(0);
 });
 
 test('cancelled permission cannot restart capture when permission later resolves', async ({ page }) => {
@@ -140,10 +134,10 @@ test('unsupported browsers explain unavailable microphone processing', async ({ 
 test('auto advance follows confirmation without reusing the previous string pitch', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('kins-tuner-auto-advance', '1'));
   await openTuner(page, 82.406889, 'guided'); await start(page);
-  await expect(page.locator('#tunerTargetLabel')).toContainText('Target A2', { timeout: 20_000 });
+  await expect(page.locator('.tuner-peg.is-active')).toHaveAttribute('data-string-index', '1', { timeout: 20_000 });
   await expect(page.locator('#tunerConfirmation')).toHaveAttribute('aria-valuenow', '0');
   await page.evaluate(() => { (window as any).__tunerInput.sources[0].oscillator.frequency.value = 110; });
-  await expect(page.locator('#tunerTargetLabel')).toContainText('Target D3', { timeout: 20_000 });
+  await expect(page.locator('.tuner-peg.is-active')).toHaveAttribute('data-string-index', '2', { timeout: 20_000 });
 });
 
 test('both themes fit the viewport and settings retain keyboard focus', async ({ page }, testInfo) => {

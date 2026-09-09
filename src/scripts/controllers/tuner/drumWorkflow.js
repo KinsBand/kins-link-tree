@@ -14,7 +14,7 @@ export function crossingOrder(count) {
 export function validKit(value) {
   return Array.isArray(value) && value.length > 0 && value.length <= 12 &&
     new Set(value.map(d => d?.id)).size === value.length && value.every(d => d &&
-      typeof d.id === 'string' && /^[a-z0-9-]{1,30}$/.test(d.id) && typeof d.label === 'string' && d.label.length <= 40 &&
+      typeof d.id === 'string' && /^[a-z0-9-]{1,30}$/.test(d.id) && typeof d.label === 'string' && d.label.trim().length > 0 && d.label.length <= 40 &&
       ['tom', 'snare', 'kick'].includes(d.kind) && Number.isInteger(d.diameter) && d.diameter >= 6 && d.diameter <= 30 &&
       Number.isInteger(d.lugs) && d.lugs >= 4 && d.lugs <= 12 && ['batter', 'resonant', 'whole'].every(key => Number.isFinite(d[key]) && d[key] >= 45 && d[key] <= 500));
 }
@@ -38,9 +38,21 @@ export function createDrumWorkflow(onChange, beforePreview = () => {}) {
     });
   }
   const recordKey = () => `${selected}:${step}`;
+  function closeMenu(focus = false) {
+    get('drumSelectMenu').hidden = true;
+    get('drumSelect').setAttribute('aria-expanded', 'false');
+    if (focus) get('drumSelect').focus();
+  }
   function selectOptions() {
-    get('drumSelect').replaceChildren(...kit.map(d => new Option(d.label, d.id)));
-    get('drumSelect').value = selected;
+    get('drumSelectedName').textContent = drum().label;
+    get('drumName').value = drum().label;
+    get('drumOptions').replaceChildren(...kit.map(d => {
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'brutal-press';
+      button.dataset.drumId = d.id; button.textContent = d.label;
+      button.setAttribute('aria-pressed', String(d.id === selected));
+      return button;
+    }));
   }
   function clearReading() { last = null; get('drumReading').innerHTML = '—<small>Hz · last tap</small>'; get('drumUseReading').disabled = true; }
   function changed() { reference.stop(); clearReading(); onChange(); render(); }
@@ -117,8 +129,7 @@ export function createDrumWorkflow(onChange, beforePreview = () => {}) {
   }
   root.addEventListener('change', event => {
     const input = event.target, current = drum();
-    if (input.id === 'drumSelect') { selected = input.value; lug = 0; step = 'batter'; }
-    else if (input.id === 'drumDiameter' || input.id === 'drumTargetHz') {
+    if (input.id === 'drumDiameter' || input.id === 'drumTargetHz') {
       if (!input.checkValidity() || !Number.isFinite(input.valueAsNumber)) { input.reportValidity(); input.value = input.id === 'drumDiameter' ? current.diameter : current[step]; return; }
       if (input.id === 'drumDiameter') current.diameter = input.valueAsNumber;
       else current[step] = input.valueAsNumber;
@@ -128,7 +139,21 @@ export function createDrumWorkflow(onChange, beforePreview = () => {}) {
   }, { signal: events.signal });
   function handleClick(event) {
     const button = event.target.closest('button'); if (!button || button.disabled) return;
-    if (button.dataset.lug !== undefined) { lug = Number(button.dataset.lug); changed(); preview(); root.querySelector(`[data-lug="${lug}"]`)?.focus({ preventScroll: true }); }
+    if (button.id === 'drumSelect') {
+      const opening = get('drumSelectMenu').hidden;
+      get('drumSelectMenu').hidden = !opening;
+      button.setAttribute('aria-expanded', String(opening));
+    } else if (button.dataset.drumId) {
+      selected = button.dataset.drumId; lug = 0; step = 'batter';
+      selectOptions(); changed(); closeMenu(true);
+    } else if (button.id === 'drumRename') {
+      const input = get('drumName');
+      input.value = input.value.trim();
+      if (!input.checkValidity()) { input.reportValidity(); return; }
+      drum().label = input.value;
+      selectOptions(); render(); closeMenu(true);
+      get('drumNotice').textContent = 'Drum renamed · Save to keep changes';
+    } else if (button.dataset.lug !== undefined) { lug = Number(button.dataset.lug); changed(); preview(); root.querySelector(`[data-lug="${lug}"]`)?.focus({ preventScroll: true }); }
     else if (button.id === 'drumPreview') preview();
     else if (button.id === 'drumLugsMinus' || button.id === 'drumLugsPlus') {
       drum().lugs = Math.max(4, Math.min(12, drum().lugs + (button.id === 'drumLugsPlus' ? 1 : -1)));
@@ -139,7 +164,7 @@ export function createDrumWorkflow(onChange, beforePreview = () => {}) {
       for (const key of Object.keys(records)) if (key.startsWith(selected + ':')) delete records[key];
       kit.splice(index, 1); selected = kit[Math.min(index, kit.length - 1)].id; step = 'batter'; lug = 0;
       selectOptions(); changed(); get('drumNotice').textContent = `${removed} removed · Save to keep changes`;
-      get('drumSelect').focus();
+      closeMenu(true);
     }
     else if (button.dataset.drumStep) { step = button.dataset.drumStep; lug = 0; changed(); }
     else if (button.id === 'drumNextLug') { const order = crossingOrder(drum().lugs); lug = order[(order.indexOf(lug) + 1) % order.length]; changed(); }
@@ -162,13 +187,23 @@ export function createDrumWorkflow(onChange, beforePreview = () => {}) {
       catch { showToast('Your browser could not save this kit. Allow site storage and retry.', 'error'); }
     }
   }
+  document.addEventListener('click', event => {
+    if (!event.target.closest('.drum-picker')) closeMenu();
+  }, { signal: events.signal });
+  root.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !get('drumSelectMenu').hidden) { event.stopPropagation(); closeMenu(true); }
+    if (event.key === 'Enter' && event.target.id === 'drumName') { event.preventDefault(); get('drumRename').click(); }
+  }, { signal: events.signal });
+  root.addEventListener('focusout', event => {
+    if (!get('drumSelectMenu').hidden && !root.querySelector('.drum-picker').contains(event.relatedTarget)) closeMenu();
+  }, { signal: events.signal });
   root.addEventListener('click', handleClick, { signal: events.signal });
   for (const id of ['drumAdd', 'drumSave']) get(id).addEventListener('click', handleClick, { signal: events.signal });
   selectOptions(); render();
   return {
     update, target: () => drum()[step],
     setListening(value) { if (value) reference.stop(); listening = value; clearReading(); render(); },
-    show(value) { if (!value) reference.stop(); root.hidden = !value; },
+    show(value) { if (!value) { reference.stop(); closeMenu(); } root.hidden = !value; },
     stopReference() { reference.stop(); },
     destroy() { reference.destroy(); events.abort(); },
   };

@@ -98,3 +98,69 @@ html[data-theme] .tuner-page .drum-workflow .drum-preview-center:active { transf
 @media (prefers-reduced-motion: reduce) {
   .drum-reference-loading .drum-lug, .drum-reference-loading .drum-preview-center { animation: none; }
 }
+
+/* Stable presentation footprint; signal filtering lives outside the layout. */
+html[data-theme] .tuner-page .tuner-readout { width: 100%; margin-inline: auto; }
+html[data-theme] .tuner-page .tuner-note-row { width: 100%; justify-content: flex-start; min-height: var(--tuner-touch-target); }
+html[data-theme] .tuner-page .tuner-status { min-height: 1.5em; }
+html[data-theme] .tuner-page .tuner-needle { transition: transform var(--tuner-signal-duration) var(--ease-snappy), opacity var(--tuner-signal-duration) ease; }
+html[data-theme] .tuner-page .tuner-note-row { transition: opacity var(--tuner-signal-duration) ease, transform var(--tuner-signal-duration) var(--ease-snappy); }
+html[data-theme] .tuner-page .tuner-readout[data-phase="idle"] .tuner-note-row { opacity: 0.5; transform: scale(0.98); }
+html[data-theme] .tuner-page .tuner-readout[data-phase="listening"] .tuner-note-row { opacity: 0.7; transform: scale(0.99); }
+html[data-theme] .tuner-page .tuner-readout:is([data-phase="locked"], [data-phase="in-tune"]) .tuner-note-row { opacity: 1; transform: scale(1); }
+html[data-theme] .tuner-page .mode-chromatic :is(.tuner-badges, .tuner-quality-details, .tuner-note-freq, .tuner-status, .tuner-hint, .tuner-chromatic-rail) { display: none; }
+html[data-theme] .tuner-page .mode-ear :is(.tuner-badges, .tuner-note-row, .tuner-quality-details, .tuner-hint, .tuner-meter-zone, .tuner-meter-zone-safety, .tuner-needle, .tuner-extreme-cue) { display: none; }
+.tuner-extreme-cue { position: absolute; top: 50%; inset-inline-start: 0; transform: translateY(-50%); color: var(--brand-accent-primary); font-size: var(--tuner-detail-font); }
+.tuner-extreme-cue[data-direction="high"] { inset-inline-start: auto; inset-inline-end: 0; }
+.tuner-tension { width: 100%; text-align: center; color: var(--text-on-light); font: var(--tuner-detail-font) var(--font-primary); }
+.tuner-tension-scale { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--tuner-detail-gap); }
+.tuner-tension-scale span { padding: var(--tuner-detail-gap); border: var(--border-brutal-sm); border-color: var(--tuner-control-border); border-radius: var(--radius-sm); position: relative; }
+.tuner-tension-scale span::after { content: ''; position: absolute; inset: 0; border: var(--tuner-focus-width) solid var(--brand-accent-primary); border-radius: inherit; opacity: 0; transition: opacity var(--tuner-signal-duration) ease; }
+.tuner-tension-scale .is-active::after { opacity: 1; }
+.tuner-tension-scale .is-active { font-weight: 700; text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tuner-page :is(.tuner-needle, .tuner-note-row, .tuner-tension-scale span::after) { transition: none; transform: none; }
+}
+
+html[data-theme] .tuner-page .tuner-sub-readout { width: 100%; margin-inline: auto; display: grid; gap: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page .mode-ear .tuner-sub-readout { display: none; }
+
+html[data-theme] .tuner-page .tuner-tension-colors { display: none; }
+html[data-theme] .tuner-page .mode-ear .tuner-tension-colors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); position: absolute; inset: 0; overflow: hidden; border-radius: var(--radius-pill); }
+.tuner-tension-colors span { opacity: 0.35; transition: opacity var(--tuner-signal-duration) ease; }
+.tuner-tension-colors [data-tension-color="slack"] { background: var(--tuner-tension-loose); }
+.tuner-tension-colors [data-tension-color="normal"] { background: var(--tuner-tension-normal); }
+.tuner-tension-colors [data-tension-color="high"] { background: var(--tuner-tension-tight); }
+[data-tension="slack"] [data-tension-color="slack"], [data-tension="normal"] [data-tension-color="normal"], [data-tension="high"] [data-tension-color="high"] { opacity: 1; }
+html[data-theme] .tuner-page .tuner-tension-scale span { padding: 0; border: none; border-radius: 0; }
+html[data-theme] .tuner-page .tuner-tension-scale span::after { display: none; }
+.tuner-tension-scale [data-zone="slack"] { text-align: left; }
+.tuner-tension-scale [data-zone="normal"] { text-align: center; }
+.tuner-tension-scale [data-zone="high"] { text-align: right; }
+#tunerTensionStatus:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .tuner-tension-colors span { transition: none; } }
+
+.drum-picker { position: relative; min-width: 0; }
+html[data-theme] .tuner-page .drum-workflow #drumSelect { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--tuner-detail-gap); min-width: 0; }
+#drumSelectedName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drum-select-menu { position: absolute; inset-inline-start: 0; inset-block-start: calc(100% + var(--tuner-detail-gap)); width: max(100%, var(--tuner-drum-menu-width)); max-width: var(--tuner-drum-menu-max); z-index: 20; padding: var(--tuner-settings-gap); display: grid; gap: var(--tuner-detail-gap); background: var(--surface-card-panel); border: var(--border-brutal-sm); border-radius: var(--radius-md); box-shadow: var(--shadow-brutal-black-lg); }
+.drum-options { display: grid; gap: var(--tuner-detail-gap); max-height: var(--tuner-drum-options-height); overflow-y: auto; }
+.drum-rename-row { display: flex; gap: var(--tuner-detail-gap); }
+.drum-rename-row input { min-width: 0; flex: 1; }
+html[data-theme] .tuner-page .drum-workflow #drumRemove { box-shadow: none; }
+html[data-theme] .tuner-page .drum-workflow :is(.drum-lug, .drum-preview-center, .tuner-stepper-button) { border-radius: var(--radius-sm); }
+html[data-theme] .tuner-page .drum-workflow .tuner-stepper-button { background: var(--tuner-stepper-surface); color: var(--tuner-stepper-text); box-shadow: var(--tuner-stepper-shadow); }
+html[data-theme] .tuner-page .drum-workflow .tuner-stepper-button:hover:not(:disabled) { background: var(--tuner-stepper-hover); }
+html[data-theme] .tuner-page .drum-workflow .tuner-stepper-button:active:not(:disabled) { background: var(--btn-brand-primary); color: var(--btn-brand-text); box-shadow: var(--tuner-stepper-pressed-shadow); }
+
+html[data-theme] .tuner-page .mode-drums button { border-radius: var(--radius-sm); }
+
+.tuner-art-svg .tuner-string-line.reference-vibrating { stroke: var(--brand-accent-primary); transform-box: fill-box; transform-origin: center; animation: tuner-string-vibration var(--tuner-string-period) ease-in-out infinite alternate; }
+.tuner-art-svg .art-string-wrap.reference-vibrating { stroke: var(--brand-accent-primary); }
+.tuner-art-svg .tuner-peg.reference-vibrating { animation: tuner-peg-pulse var(--tuner-peg-period) ease-in-out infinite alternate; }
+.tuner-art-svg .tuner-peg.reference-vibrating .tuner-peg-circle { fill: var(--btn-brand-primary); }
+.tuner-art-svg .tuner-peg.reference-vibrating .tuner-peg-label { fill: var(--btn-brand-text); }
+[data-anim-gated].reference-offscreen .reference-vibrating { animation-play-state: paused; }
+@keyframes tuner-string-vibration { from { transform: translateX(calc(-1 * var(--tuner-string-vibration))); opacity: 0.65; } to { transform: translateX(var(--tuner-string-vibration)); opacity: 1; } }
+@keyframes tuner-peg-pulse { from { transform: scale(1) rotate(-3deg); } to { transform: scale(1.06) rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .tuner-art-svg .reference-vibrating { animation: none !important; transform: none; } }

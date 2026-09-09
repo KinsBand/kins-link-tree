@@ -349,3 +349,15 @@ body[data-theme="dark"],
 }
 
 :root, [data-theme="dark"] { --tuner-instrument-icon-size: 18px; }
+
+:root, [data-theme="dark"] { --tuner-signal-duration: 250ms; }
+
+:root, [data-theme="dark"] {
+  --tuner-tension-loose: var(--level-low);
+  --tuner-tension-normal: var(--level-mid);
+  --tuner-tension-tight: var(--status-danger);
+}
+
+:root, [data-theme="dark"] { --tuner-drum-menu-width: 260px; --tuner-drum-menu-max: calc(100vw - 64px); --tuner-drum-options-height: 180px; }
+
+:root, [data-theme="dark"] { --tuner-string-vibration: 2px; --tuner-string-period: 110ms; --tuner-peg-period: 440ms; }

@@ -22,10 +22,10 @@ export function createReferenceTone(onStatus = () => {}, resolveSample = referen
     if (old && old.state !== 'closed') old.close().catch(() => {});
     onStatus('idle');
   }
-  async function play(instrument, midi, a4) {
-    return playSequence(instrument, [midi], a4);
+  async function play(instrument, midi, a4, stringIndex = 0) {
+    return playSequence(instrument, [midi], a4, [stringIndex]);
   }
-  async function playSequence(instrument, notes, a4) {
+  async function playSequence(instrument, notes, a4, stringIndices = []) {
     stop();
     const id = generation;
     const Context = window.AudioContext || window['webkitAudioContext'];
@@ -54,9 +54,10 @@ export function createReferenceTone(onStatus = () => {}, resolveSample = referen
         return pending.get(sample.url);
       }));
       if (id !== generation || current !== context || signal.aborted) return;
-      // Use the audio clock, not JS timers, for a relaxed top-to-bottom strum.
+      // Use the audio clock, not JS timers, for a relaxed low-to-high strum.
       const startTime = current.currentTime + 0.025;
       let remaining = samples.length;
+      const timeline = [];
       samples.forEach((sample, index) => {
         const source = current.createBufferSource(), gain = current.createGain();
         voices.push(source);
@@ -64,6 +65,7 @@ export function createReferenceTone(onStatus = () => {}, resolveSample = referen
         source.buffer = buffer; source.playbackRate.value = sample.playbackRate;
         const time = startTime + index * 0.42;
         const duration = Math.min(3.5, buffer.duration / sample.playbackRate);
+        timeline.push({ stringIndex: stringIndices[index] ?? index, start: time, end: time + duration });
         const level = samples.length > 1 ? 0.3 : 0.65;
         gain.gain.setValueAtTime(0, time);
         gain.gain.linearRampToValueAtTime(level, time + 0.008);
@@ -73,7 +75,7 @@ export function createReferenceTone(onStatus = () => {}, resolveSample = referen
         source.onended = () => { gain.disconnect(); if (id === generation && --remaining === 0) stop(); };
         source.start(time); source.stop(time + duration);
       });
-      onStatus('playing');
+      onStatus('playing', { timeline, currentTime: () => current.currentTime });
     } catch (error) {
       if (id !== generation || signal.aborted) return;
       stop(); throw error;

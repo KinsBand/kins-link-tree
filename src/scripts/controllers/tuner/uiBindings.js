@@ -1,3 +1,5 @@
+import { createReferenceAnimation } from './referenceAnimation.js';
+import { createDisplayState, tensionZone } from './displayState.js';
 import {
   TUNER_INSTRUMENTS,
   TUNER_CATEGORY_LABELS,
@@ -10,7 +12,7 @@ import { showToast } from '../toast.js';
 import { NOTE_NAMES, noteLetter } from './notesUtil.js';
 import {
   state,
-  getGroup,
+  getGroup, getProfile,
   getPreset,
   materialOptions,
   stringCountOptions,
@@ -86,6 +88,7 @@ export function createUi(callbacks) {
     for (const id of timers) window.clearTimeout(id);
     for (const id of frames) window.cancelAnimationFrame(id);
     timers.clear(); frames.clear(); cleanupSheetDragListeners();
+    referenceAnimation.stop();
     textMemo.clear();
   }
 
@@ -513,7 +516,7 @@ export function createUi(callbacks) {
     els.sheetModeRow.innerHTML = `
       <button type="button" class="tuner-sheet-chip brutal-press${isGuided ? ' active' : ''}" role="radio" aria-checked="${isGuided}" data-sheet-mode="guided">GUIDED</button>
       <button type="button" class="tuner-sheet-chip brutal-press${state.mode === 'chromatic' ? ' active' : ''}" role="radio" aria-checked="${state.mode === 'chromatic'}" data-sheet-mode="chromatic">FREE</button>
-      ${state.instrumentId !== 'drums' ? `<button type="button" class="tuner-sheet-chip tuner-ear-mode brutal-press${state.mode === 'ear' ? ' active' : ''}" role="radio" aria-checked="${state.mode === 'ear'}" data-sheet-mode="ear">EAR TRAINING<span>Tap a peg. Listen. Match by ear.</span></button>` : ''}
+      ${state.instrumentId !== 'drums' ? `<button type="button" class="tuner-sheet-chip tuner-ear-mode brutal-press${state.mode === 'ear' ? ' active' : ''}" role="radio" aria-checked="${state.mode === 'ear'}" data-sheet-mode="ear">EAR TRAINING</button>` : ''}
     `;
     els.sheetModeRow.querySelectorAll('[data-sheet-mode]').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -1005,8 +1008,9 @@ export function createUi(callbacks) {
     els.tunerView.classList.toggle('mode-drums', drumsMode);
     const ear = state.mode === 'ear' && state.instrumentId !== 'drums';
     els.tunerView.classList.toggle('mode-ear', ear);
-    els.readout.hidden = ear || drumsMode;
-    els.micCta.hidden = ear;
+    els.readout.hidden = drumsMode;
+    document.getElementById('tunerTension').hidden = !ear;
+    els.micCta.hidden = false;
     els.presetBtn.disabled = drumsMode;
     if (drumsMode) els.presetLabel.textContent = 'My kit';
     els.figure.hidden = drumsMode;
@@ -1015,13 +1019,7 @@ export function createUi(callbacks) {
     if (els.modeLabel && ear) els.modeLabel.textContent = 'EAR TRAINING';
     if (els.sheetAutoAdvance) els.sheetAutoAdvance.disabled = ear || state.instrumentId === 'drums';
     if (els.sheetAutoId) els.sheetAutoId.disabled = ear || state.instrumentId === 'drums';
-    if (els.chromRail) {
-      els.chromRail.hidden = state.mode !== 'chromatic';
-      if (state.mode === 'chromatic') {
-        buildRail();
-        centerRailDefault();
-      }
-    }
+    if (els.chromRail) els.chromRail.hidden = true;
     layoutZones();
     renderSheetSettings();
   }
@@ -1130,15 +1128,6 @@ export function createUi(callbacks) {
   function renderA4() {
     const calibration = document.getElementById('tunerCalibration');
     if (calibration) calibration.value = String(state.a4);
-    const target = getPreset().strings[state.stringIndex];
-    const label = document.getElementById('tunerTargetLabel');
-    if (label) {
-      const hz = target && noteToFreq(target.midi, state.a4);
-      const unsupported = hz < DETECT.MIN_DETECT_HZ || hz > DETECT.MAX_DETECT_HZ;
-      const caption = state.instrumentId === 'drums' ? 'Drum reference only' : state.mode === 'chromatic' ? 'Chromatic · ±' + state.tolerance + ' ct' : 'Target ' + (target?.note || '—') + (unsupported ? ' · reference only' : ' · ±' + state.tolerance + ' ct');
-      label.textContent = caption + ' · A4 = ' + state.a4 + ' Hz';
-    }
-
     // Calibration lives in the accessible settings form; clear obsolete chips.
     if (els.a4Chips) els.a4Chips.replaceChildren();
     // keep sheet A4 in sync (legacy hidden row)
@@ -1308,7 +1297,10 @@ export function createUi(callbacks) {
     }
   }
 
-  function setReferenceStatus(status) {
+  const referenceAnimation = createReferenceAnimation();
+  function setReferenceStatus(status, playback) {
+    referenceAnimation.stop();
+    if (status === 'playing' && playback) referenceAnimation.play(els.figure, playback);
     if (!els) return;
     els.figure.setAttribute('aria-busy', String(status === 'loading'));
     els.figure.classList.toggle('reference-loading', status === 'loading');
@@ -1438,7 +1430,13 @@ export function createUi(callbacks) {
     return (value > 0 ? '+' : '') + (locked ? value.toFixed(1) : String(Math.round(value))) + ' ct';
   }
 
+  const visualState = createDisplayState();
+  const tensionState = createDisplayState();
   function resetReadout() {
+    els.readout.dataset.phase = visualState.reset(state.listening ? 'listening' : 'idle');
+    tensionState.reset('unknown');
+    renderTension('unknown');
+    document.getElementById('tunerExtremeCue').textContent = '';
     clearSafetyClasses();
     setInTuneHighlight(false);
     setNeedle(0);
@@ -1495,44 +1493,62 @@ export function createUi(callbacks) {
     setText(textMemo, label, state.mode === 'chromatic' ? 'Play one note at a time.' : confirmed ? 'String checked' : percent ? 'Confirming tuning · ' + percent + '%' : 'Keep one string ringing to confirm its tuning.');
   }
 
+  function renderTension(zone) {
+    const gauge = document.getElementById('tunerTension');
+    gauge.dataset.zone = zone;
+    els.readout.dataset.tension = zone;
+    for (const segment of gauge.querySelectorAll('[data-zone]')) {
+      const active = segment.dataset.zone === zone;
+      segment.classList.toggle('is-active', active);
+      segment.setAttribute('aria-current', String(active));
+    }
+    const labels = { unknown: '',
+      normal: '', slack: 'Very loose string: tighten cautiously.',
+      high: 'High tension / snap risk: stop tightening and loosen the string.' };
+    setText(textMemo, document.getElementById('tunerTensionStatus'), labels[zone]);
+  }
+
   function updateReading(reading) {
+    const ear = state.mode === 'ear';
     const chromatic = state.mode === 'chromatic';
-    clearSafetyClasses();
-    if (reading.held || reading.status !== 'ok') setInTuneHighlight(false);
-    els.readout.classList.toggle('is-held', !!reading.held);
+    const now = performance.now();
+    const next = reading.status !== 'ok' ? 'listening' : reading.confirmed || (chromatic && reading.inRange) ? 'in-tune' : 'locked';
+    els.readout.dataset.phase = visualState.update(ear && next === 'in-tune' ? 'locked' : next, now);
     els.readout.dataset.signal = reading.held ? 'held' : reading.status;
-    if (reading.held) {
-      setPill('LAST READING — PLAY AGAIN', 'pill-neutral');
-      setText(textMemo, els.hint, 'Last reading; no current pitch measurement.');
+    if (reading.held) return;
+    clearSafetyClasses();
+    document.getElementById('tunerExtremeCue').textContent = '';
+    setText(textMemo, els.hint, '');
+    if (ear) {
+      setNeedle(0); setInTuneHighlight(false);
+      setText(textMemo, els.note, ''); setText(textMemo, els.noteOctave, '');
+      setText(textMemo, els.freq, ''); setCents('', '');
+      setPill(state.listening ? 'LISTEN AND MATCH BY EAR' : 'TAP TO START', 'pill-neutral');
+      const zone = reading.status === 'ok' ? tensionZone(reading.rawCents, getProfile()) : 'unknown';
+      renderTension(tensionState.update(zone, now));
       return;
     }
     if (reading.status !== 'ok') {
-      setNeedle(0); clearRail(); setCents('--', '');
-      const messages = { clipped: TUNER_COPY.tooLoud, uncertain: 'Play one clear note; pitch is uncertain.',
-        polyphonic: TUNER_COPY.playOneString, reference: 'Drum reference only', 'out-of-range': 'Target is outside the supported microphone range.' };
-      setPill(messages[reading.status] || TUNER_COPY.listening, 'pill-neutral');
+      setInTuneHighlight(false); setNeedle(0); setCents('', '');
+      setPill(TUNER_COPY.listening, 'pill-neutral');
       setText(textMemo, els.note, '--'); setText(textMemo, els.noteOctave, '');
-      setText(textMemo, els.freq, ''); setText(textMemo, els.hint, '');
+      setText(textMemo, els.freq, '');
       return;
     }
     setNeedle(reading.cents);
     setText(textMemo, els.note, reading.detectedNote);
     setText(textMemo, els.noteOctave, String(reading.detectedOctave));
-    setText(textMemo, els.freq, reading.freq.toFixed(2) + ' Hz');
-    setCents(formatCentsDisplay(reading.cents, reading.locked), reading.inRange ? 'is-in-tune' : reading.cents < 0 ? 'is-flat' : 'is-sharp');
-    if (chromatic) updateRail(reading.freq, reading.rawCents, reading.locked);
-    els.readout.classList.toggle('in-tune', reading.inRange);
-    setInTuneHighlight(reading.confirmed);
-    if (reading.zone === 'wrong-octave') {
-      setPill('CHECK TARGET STRING AND OCTAVE', 'pill-neutral');
-      setText(textMemo, els.hint, 'Confirm the selected string before adjusting its peg.');
-    } else if (reading.inRange) {
-      setPill(chromatic ? 'IN RANGE' : reading.confirmed ? 'STRING CHECKED' : 'IN RANGE — CONFIRMING', 'pill-tuned');
-      setText(textMemo, els.hint, '');
-    } else {
-      setPill(reading.rawCents < 0 ? TUNER_COPY.tooFlat : TUNER_COPY.tooSharp, 'pill-off');
-      setText(textMemo, els.hint, reading.rawCents < 0 ? 'Tighten gradually ↑' : 'Loosen gradually ↓');
+    setText(textMemo, els.freq, chromatic ? '' : reading.freq.toFixed(2) + ' Hz');
+    setCents(chromatic ? '' : formatCentsDisplay(reading.cents, reading.locked), '');
+    const inTune = els.readout.dataset.phase === 'in-tune';
+    els.readout.classList.toggle('in-tune', inTune);
+    setInTuneHighlight(inTune && !chromatic);
+    if (!chromatic && Math.abs(reading.rawCents) > 100) {
+      const cue = document.getElementById('tunerExtremeCue');
+      cue.textContent = reading.rawCents < 0 ? '\u25c0' : '\u25b6';
+      cue.dataset.direction = reading.rawCents < 0 ? 'low' : 'high';
     }
+    setPill(chromatic ? '' : inTune ? 'STRING CHECKED' : 'LISTENING', 'pill-neutral');
   }
 
   async function refreshInputs() {

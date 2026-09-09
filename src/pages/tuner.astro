@@ -70,6 +70,7 @@ if (!isTunerEnabled) {
         <button type="button" class="tuner-meter-btn brutal-press" id="tunerMicBtn" data-track="tuner:mic_start" aria-label="Start or stop mic tuning">
           <span class="tuner-meter" id="tunerMeter" aria-hidden="true">
             <span class="tuner-meter-ticks"></span>
+            <span class="tuner-tension-colors"><span data-tension-color="slack"></span><span data-tension-color="normal"></span><span data-tension-color="high"></span></span>
             <span class="tuner-meter-zone"></span>
             <span class="tuner-meter-zone-safety zone-warn-up" id="tunerZoneWarnUp" hidden></span>
             <span class="tuner-meter-zone-safety zone-danger" id="tunerZoneDanger" hidden></span>
@@ -79,21 +80,32 @@ if (!isTunerEnabled) {
               <div class="tuner-chromatic-tape" id="tunerChromTape"></div>
             </div>
             <span class="tuner-needle" id="tunerNeedle"></span>
+            <span class="tuner-extreme-cue" id="tunerExtremeCue"></span>
           </span>
         </button>
+        <div class="tuner-sub-readout">
+        <div class="tuner-note-row">
+          <span class="tuner-note" id="tunerDetectedNote">--</span>
+          <span class="tuner-note-octave" id="tunerDetectedNoteOctave"></span>
+          <span class="tuner-note-freq" id="tunerDetectedFreq"></span>
+        </div>
         <div class="tuner-badges">
           <span class="tuner-badge-side" id="tunerBadgeLow">TOO LOW</span>
           <span class="tuner-cents" id="tunerCentsReadout">--</span>
           <span class="tuner-badge-side" id="tunerBadgeHigh">TOO HIGH</span>
         </div>
         <p class="tuner-status" id="tunerStatusLine" aria-live="polite">TAP TO START TUNING</p>
-        <div class="tuner-note-row">
-          <span class="tuner-note" id="tunerDetectedNote">--</span>
-          <span class="tuner-note-octave" id="tunerDetectedNoteOctave"></span>
-          <span class="tuner-note-freq" id="tunerDetectedFreq"></span>
-        </div>
         <p class="tuner-hint" id="tunerDirectionHint"></p>
         <TunerQualityReadout />
+        </div>
+        <div class="tuner-tension" id="tunerTension" hidden aria-label="Estimated string tension">
+          <div class="tuner-tension-scale">
+            <span data-zone="slack">Loose</span>
+            <span data-zone="normal">Normal</span>
+            <span data-zone="high">Tight</span>
+          </div>
+          <p id="tunerTensionStatus" role="status"></p>
+        </div>
         <p class="tuner-warning" id="tunerMicWarning" hidden></p>
         <p class="tuner-low-mic-hint" id="tunerLowMicHint" hidden></p>
       </section>
@@ -184,7 +196,7 @@ if (!isTunerEnabled) {
         </div>
 
         <TunerInputSettings />
-        <p class="tuner-sample-credits">Recorded guitar sounds: <a href={TUNER_SAMPLE_CREDITS.source} target="_blank" rel="noopener noreferrer">tonejs-instruments · Nicholaus P. Brosowsky</a> (<a href={TUNER_SAMPLE_CREDITS.license} target="_blank" rel="noopener noreferrer">CC BY 3.0</a>). Acoustic: University of Iowa. Electric &amp; bass: Karoryfer. Pitch-adjusted for your tuning.</p>
+        <p class="tuner-sample-credits">Pitch-adjusted guitar sounds from <a href={TUNER_SAMPLE_CREDITS.source} target="_blank" rel="noopener noreferrer">tonejs-instruments by Nicholaus P. Brosowsky, University of Iowa and Karoryfer</a> and drum sounds from <a href="https://oramics.github.io/sampled/DRUMS/pearl-master-studio/" target="_blank" rel="noopener noreferrer">Pearl Master Studio by enoe</a> are licensed under <a href={TUNER_SAMPLE_CREDITS.license} target="_blank" rel="noopener noreferrer">CC BY 3.0</a>.</p>
         <p class="tuner-settings-label" id="tunerBehaviorHeading">TUNING BEHAVIOR</p>
         <div class="tuner-behavior-buttons">
           <button type="button" id="tunerSheetAutoAdvance" class="tuner-mini-button brutal-press" aria-label="Auto advance next string" aria-pressed="false"><span class="tuner-auto-symbol" aria-hidden="true">A</span>Advance next</button>

@@ -29,14 +29,14 @@ test('compact settings and drum actions work in both themes', async ({ page }, i
     await page.locator('#tunerSheetClose').click();
     await page.locator('[data-instrument="drums"]').click();
     const select = await page.locator('#drumSelect').boundingBox();
-    const hz = await page.locator('#drumTargetHz').boundingBox();
+    const hz = await page.locator('#drumLugsMinus').boundingBox();
     expect(Math.abs(select!.y - hz!.y)).toBeLessThan(2);
     const add = await page.locator('#drumAdd').boundingBox();
     const start = await page.locator('#tunerMicToggleBtn').boundingBox();
     const save = await page.locator('#drumSave').boundingBox();
     expect(add!.x).toBeLessThan(start!.x); expect(save!.x).toBeGreaterThan(start!.x);
-    const options = await page.locator('#drumSelect option').count();
-    await page.locator('#drumAdd').click(); await expect(page.locator('#drumSelect option')).toHaveCount(options + 1);
+    const options = await page.locator('#drumOptions [data-drum-id]').count();
+    await page.locator('#drumAdd').click(); await expect(page.locator('#drumOptions [data-drum-id]')).toHaveCount(options + 1);
     await page.locator('#drumSave').click();
     await expect(page.locator('#drumNotice')).toHaveText('Kit saved');
     await page.screenshot({ path: info.outputPath(`drums-${theme}.png`) });

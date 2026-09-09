@@ -44,8 +44,8 @@ test.describe('tier1 smoke — tuner', () => {
     await page.keyboard.press('Escape');
     // Mic must survive the switch — no permission re-prompt, no restart.
     await expect(cta).toHaveClass(/listening/);
-    await expect(page.locator('#tunerChromRail')).toBeVisible();
-    await expect(page.locator('#tunerChromTape .rail-note').first()).toBeVisible();
+    await expect(page.locator('#tunerChromRail')).toBeHidden();
+    await expect(page.locator('#tunerCentsReadout')).toBeHidden();
 
     await page.locator('#tunerSettingsBtn').click();
     await page.locator('[data-sheet-mode="guided"]').click();
@@ -59,14 +59,12 @@ test.describe('tier1 smoke — tuner', () => {
     await page.locator('#tunerSettingsBtn').click();
     await expect(page.locator('#tunerSheet')).toHaveClass(/open/);
     const autoToggle = page.locator('#tunerSheetAutoId');
-    const autoToggleControl = page.locator('.tuner-sheet-toggle').filter({ has: autoToggle });
-    await autoToggleControl.evaluate((element) => element.scrollIntoView({ block: 'center' }));
     await expect(autoToggle).toBeVisible();
-    await expect(autoToggle).toBeChecked();
-    await autoToggleControl.click();
-    await expect(autoToggle).not.toBeChecked();
-    await autoToggleControl.click();
-    await expect(autoToggle).toBeChecked();
+    await expect(autoToggle).toHaveAttribute('aria-pressed', 'true');
+    await autoToggle.click();
+    await expect(autoToggle).toHaveAttribute('aria-pressed', 'false');
+    await autoToggle.click();
+    await expect(autoToggle).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('settings sheet exposes instruments, strings and qualified input controls', async ({ page }) => {
@@ -76,16 +74,11 @@ test.describe('tier1 smoke — tuner', () => {
     await expect(page.locator('[data-sheet-instrument="electric"]')).toBeVisible();
     await expect(page.locator('[data-sheet-instrument="drums"]')).toBeVisible();
     await expect(page.locator('#tunerSheetModeRow')).toBeVisible();
-    await expect(page.locator('#tunerSheetStringsBtn')).toBeVisible();
-    await expect(page.locator('#tunerSheetMaterialBtn')).toBeHidden();
-    // String options open inside the settings sheet.
-    await page.locator('#tunerSheetStringsBtn').click();
-    await expect(page.locator('#tunerSheetStringsSlot .tuner-menu-panel')).toBeVisible();
-    await page.keyboard.press('Escape');
+    await expect(page.locator('#tunerStringCount')).toBeVisible();
     await expect(page.locator('#tunerCalibration')).toBeVisible();
     await expect(page.locator('#tunerTolerance')).toBeVisible();
-    await expect(page.locator('#tunerInputDevice')).toBeVisible();
-    await expect(page.locator('#tunerInputChannel')).toBeVisible();
+    await expect(page.locator('#tunerInputDevice')).toHaveCount(0);
+    await expect(page.locator('#tunerInputChannel')).toHaveCount(0);
     // Legacy chip controls remain hidden.
     await expect(page.locator('#tunerA4Chips')).toBeHidden();
     await expect(page.locator('#tunerSheetA4Row')).toBeHidden();
