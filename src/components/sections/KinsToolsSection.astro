@@ -511,15 +511,23 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
     transition: transform 0.12s var(--ease-tactile), background-color 0.12s ease, box-shadow 0.12s ease;
   }
 
+  /* Launch links are secondary actions: the page's filled brand buttons are
+     reserved for signup, so these use the card-panel surface instead. */
   .tool-btn-primary {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    min-height: 44px;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
   }
 
   .tool-btn-primary:hover {
-    background: #faff60;
+    background: var(--surface-card-panel-hover);
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
+  }
+
+  .tool-btn-primary:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 2px;
   }
 
   .tool-btn-secondary {
@@ -699,8 +707,6 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
   }
 
   :global([data-theme="dark"]) .tool-btn-primary {
-    background: var(--accent-neon-yellow, #f2fd43);
-    color: #000000;
     border-color: #000000;
   }
 

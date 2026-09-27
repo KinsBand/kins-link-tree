@@ -51,6 +51,8 @@ export interface HeroConfig {
       badge: string;
       title: string;
       desc: string;
+      /** Pre-save link (DistroKid, Feature.fm…). When set, the card's button pre-saves instead of opening signup. */
+      presaveUrl?: string;
     };
     mystery_countdown: {
       badge: string;
@@ -310,7 +312,8 @@ export const heroConfig: HeroConfig = {
     minimal_teaser: {
       badge: "UPCOMING RELEASE",
       title: "New music is on the way",
-      desc: "First official cover coming soon..."
+      desc: "First official cover coming soon...",
+      presaveUrl: ""
     },
     mystery_countdown: {
       badge: "SECRET ANNOUNCEMENT",

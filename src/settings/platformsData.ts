@@ -15,6 +15,20 @@ export interface PlatformItem {
   isPrimary?: boolean;
 }
 
+/**
+ * True when a URL lands on the band's own page. Platform search-result URLs
+ * (open.spotify.com/search/…, ?q=…, ?term=…) are placeholders until the band's
+ * real artist profile exists, so they are never shown to fans.
+ */
+export function isProfileUrl(url: string): boolean {
+  try {
+    const { pathname, searchParams } = new URL(url);
+    return !/\/search(\/|$)/.test(pathname) && !searchParams.has('q') && !searchParams.has('term');
+  } catch {
+    return false;
+  }
+}
+
 export const platformsData: PlatformItem[] = [
   // --- STREAMS ---
   {
@@ -112,7 +126,7 @@ export const platformsData: PlatformItem[] = [
   {
     id: 'instagram',
     name: 'Instagram',
-    url: 'https://www.instagram.com/kinsbandofficial?igsi=M21ycDZuemZ0bDIx',
+    url: 'https://www.instagram.com/kinsbandofficial',
     icon: 'fa-brands fa-instagram',
     category: 'socials',
     count: 18400,
@@ -121,7 +135,7 @@ export const platformsData: PlatformItem[] = [
   {
     id: 'tiktok',
     name: 'TikTok',
-    url: 'https://www.tiktok.com/@kinsbandofficial?_r=1&_t=ZS-995ASSdnVsQ',
+    url: 'https://www.tiktok.com/@kinsbandofficial',
     icon: 'fa-brands fa-tiktok',
     category: 'socials',
     count: 24600,
@@ -130,7 +144,7 @@ export const platformsData: PlatformItem[] = [
   {
     id: 'youtube',
     name: 'YouTube',
-    url: 'https://youtube.com/@kinsbandofficial?si=NYyLEYxEDcoH21XZ',
+    url: 'https://www.youtube.com/@kinsbandofficial',
     icon: 'fa-brands fa-youtube',
     category: 'socials',
     count: 8900,
@@ -195,7 +209,7 @@ export const platformsData: PlatformItem[] = [
   {
     id: 'reddit',
     name: 'Reddit',
-    url: 'https://www.reddit.com/u/KinsBandOfficial/s/m8JXFDETij',
+    url: 'https://www.reddit.com/user/KinsBandOfficial',
     icon: 'fa-brands fa-reddit-alien',
     category: 'community',
     count: 820,
@@ -204,7 +218,7 @@ export const platformsData: PlatformItem[] = [
   {
     id: 'substack',
     name: 'Substack',
-    url: 'https://substack.com/@kinsbandoffical?utm_source=share&utm_medium=android&r=8uyitn',
+    url: 'https://substack.com/@kinsbandoffical',
     icon: 'fa-solid fa-bookmark',
     category: 'community',
     count: 2100,

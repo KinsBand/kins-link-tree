@@ -35,9 +35,9 @@ export const secondaryStreams: PlatformLink[] = [
 ];
 
 export const primarySocials: PlatformLink[] = [
-  { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://www.instagram.com/kinsbandofficial?igsi=M21ycDZuemZ0bDIx", platform: "instagram" },
-  { name: "TikTok", icon: "fa-brands fa-tiktok", url: "https://www.tiktok.com/@kinsbandofficial?_r=1&_t=ZS-995ASSdnVsQ", platform: "tiktok" },
-  { name: "YouTube", icon: "fa-brands fa-youtube", url: "https://youtube.com/@kinsbandofficial?si=NYyLEYxEDcoH21XZ", platform: "youtube" },
+  { name: "Instagram", icon: "fa-brands fa-instagram", url: "https://www.instagram.com/kinsbandofficial", platform: "instagram" },
+  { name: "TikTok", icon: "fa-brands fa-tiktok", url: "https://www.tiktok.com/@kinsbandofficial", platform: "tiktok" },
+  { name: "YouTube", icon: "fa-brands fa-youtube", url: "https://www.youtube.com/@kinsbandofficial", platform: "youtube" },
   { name: "Facebook", icon: "fa-brands fa-facebook", url: "https://www.facebook.com/share/1LU7GTyCBW/", platform: "facebook" },
   { name: "Twitter / X", icon: "fa-brands fa-x-twitter", url: "https://x.com/KinsBandOfficial", platform: "twitter" },
   { name: "Threads", icon: "fa-brands fa-threads", url: "https://www.threads.com/@kinsbandofficial", platform: "threads" }
@@ -50,8 +50,8 @@ export const secondarySocials: PlatformLink[] = [
 
 export const primaryCommunity: PlatformLink[] = [
   { name: "Discord", icon: "fa-brands fa-discord", url: "https://discord.gg/Yu2npHUrH", platform: "discord" },
-  { name: "Reddit", icon: "fa-brands fa-reddit-alien", url: "https://www.reddit.com/u/KinsBandOfficial/s/m8JXFDETij", platform: "reddit" },
-  { name: "Substack", icon: "fa-solid fa-bookmark", url: "https://substack.com/@kinsbandoffical?utm_source=share&utm_medium=android&r=8uyitn", platform: "substack" },
+  { name: "Reddit", icon: "fa-brands fa-reddit-alien", url: "https://www.reddit.com/user/KinsBandOfficial", platform: "reddit" },
+  { name: "Substack", icon: "fa-solid fa-bookmark", url: "https://substack.com/@kinsbandoffical", platform: "substack" },
   { name: "Patreon", icon: "fa-brands fa-patreon", url: "https://patreon.com/KinsBand", platform: "patreon" },
   { name: "Twitch", icon: "fa-brands fa-twitch", url: "https://twitch.tv/KinsBandOfficial", platform: "twitch" },
   { name: "Pinterest", icon: "fa-brands fa-pinterest", url: "https://pinterest.com/KinsBandOfficial", platform: "pinterest" }
@@ -186,7 +186,7 @@ export const routingMatrix: RoutingRule[] = [
   },
   {
     source_platform: "Instagram",
-    source_url: "https://www.instagram.com/kinsbandofficial?igsi=M21ycDZuemZ0bDIx",
+    source_url: "https://www.instagram.com/kinsbandofficial",
     source_category: "Social",
     default_tab: "Socials",
     recommended: {
@@ -197,7 +197,7 @@ export const routingMatrix: RoutingRule[] = [
   },
   {
     source_platform: "TikTok",
-    source_url: "https://www.tiktok.com/@kinsbandofficial?_r=1&_t=ZS-995ASSdnVsQ",
+    source_url: "https://www.tiktok.com/@kinsbandofficial",
     source_category: "Social",
     default_tab: "Socials",
     recommended: {
@@ -208,7 +208,7 @@ export const routingMatrix: RoutingRule[] = [
   },
   {
     source_platform: "YouTube",
-    source_url: "https://youtube.com/@kinsbandofficial?si=NYyLEYxEDcoH21XZ",
+    source_url: "https://www.youtube.com/@kinsbandofficial",
     source_category: "Social",
     default_tab: "Socials",
     recommended: {
@@ -285,7 +285,7 @@ export const routingMatrix: RoutingRule[] = [
   },
   {
     source_platform: "Reddit",
-    source_url: "https://www.reddit.com/u/KinsBandOfficial/s/m8JXFDETij",
+    source_url: "https://www.reddit.com/user/KinsBandOfficial",
     source_category: "Community",
     default_tab: "Community",
     recommended: {
@@ -296,7 +296,7 @@ export const routingMatrix: RoutingRule[] = [
   },
   {
     source_platform: "Substack",
-    source_url: "https://substack.com/@kinsbandoffical?utm_source=share&utm_medium=android&r=8uyitn",
+    source_url: "https://substack.com/@kinsbandoffical",
     source_category: "Community",
     default_tab: "Community",
     recommended: {

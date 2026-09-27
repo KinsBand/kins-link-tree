@@ -633,6 +633,10 @@ export function initHeroFeatureController() {
     }
   });
 
+  document.getElementById('heroNotifyBtn')?.addEventListener('click', (e) => {
+    if (focusSignupForm()) e.preventDefault();
+  });
+
   // --- ACTIONS: LIVESTREAM CTA TRIGGERS ---
   const heroLiveNotifyBtn = document.getElementById('heroLiveNotifyBtn');
   heroLiveNotifyBtn?.addEventListener('click', () => {

@@ -12,6 +12,7 @@ import MerchSection from '../components/sections/MerchSection.astro';
 import InspirationVault from '../components/sections/InspirationVault.astro';
 import KinsToolsSection from '../components/sections/KinsToolsSection.astro';
 import SubscribeSection from '../components/sections/SubscribeSection.astro';
+import ContactsSection from '../components/sections/ContactsSection.astro';
 
 // Navigation Components
 import TopNav from '../components/navigation/TopNav.astro';
@@ -51,6 +52,7 @@ const isToolsEnabled = functionalityConfig.enableKinsTools ?? false;
         <HeroFeatureCard />
         <TabbedLinks />
         <SubscribeSection />
+        <ContactsSection />
       </aside>
 
       <!-- Scrollable Right Main View for Desktop / Bottom Portion for Mobile -->
@@ -216,15 +218,17 @@ const isToolsEnabled = functionalityConfig.enableKinsTools ?? false;
     .left-sidebar > :global(.profile-section) { order: 3; }
     .left-sidebar > :global(.hero-feature-card-wrapper) { order: 4; }
     .left-sidebar > :global(.tabbed-links-section) { order: 5; }
+    /* Signup sits right after the links so it lands within the first two screens. */
+    .left-sidebar > :global(.subscribe-section) { order: 6; }
 
-    .right-main-content > :global(.members-section) { order: 6; }
-    .right-main-content > :global(.spotlight-section) { order: 7; }
-    .right-main-content > :global(.merch-section) { order: 8; }
-    .right-main-content > :global(.inspired-section) { order: 9; }
-    .right-main-content > :global(.rehearsal-utilities-section) { order: 10; }
+    .right-main-content > :global(.members-section) { order: 7; }
+    .right-main-content > :global(.spotlight-section) { order: 8; }
+    .right-main-content > :global(.merch-section) { order: 9; }
+    .right-main-content > :global(.inspired-section) { order: 10; }
+    .right-main-content > :global(.rehearsal-utilities-section) { order: 11; }
 
-    .left-sidebar > :global(.subscribe-section) { order: 11; }
-    .right-main-content > :global(.site-footer) { order: 12; }
+    .left-sidebar > :global(.contacts-section) { order: 12; }
+    .right-main-content > :global(.site-footer) { order: 13; }
   }
 </style>
 

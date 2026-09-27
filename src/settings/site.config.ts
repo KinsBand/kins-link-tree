@@ -10,7 +10,7 @@ export const siteConfig = {
   siteUrl: "https://kinshub.vercel.app",
   ogImage: "new.png",
   themeColor: "#0e0e0e",
-  // Ko-fi page URL — set PUBLIC_KOFI_URL at build time. Empty = tip UI shows
-  // an honest "launching soon" state instead of a dead button.
+  // Ko-fi page URL — set PUBLIC_KOFI_URL at build time. Empty = the homepage
+  // tip button is left out (the /live tip jar keeps its own fallback).
   tipJarUrl: import.meta.env.PUBLIC_KOFI_URL || "",
 };

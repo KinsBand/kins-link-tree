@@ -1,5 +1,6 @@
 ---
 import { heroConfig } from '../../settings/hero.config';
+import { features } from '../../settings/features';
 
 const {
   activeState,
@@ -75,6 +76,21 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
             <p class="upcoming-teaser-desc">{upcoming.minimal_teaser.desc}</p>
           </div>
         </div>
+        {upcoming.minimal_teaser.presaveUrl ? (
+          <div class="upcoming-teaser-actions">
+            <a href={upcoming.minimal_teaser.presaveUrl} target="_blank" rel="noopener noreferrer" class="hero-btn-primary upcoming-teaser-cta brutal-press" data-track="hero:presave">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>Pre-save</span>
+            </a>
+          </div>
+        ) : features.newsletter && (
+          <div class="upcoming-teaser-actions">
+            <a href="#subscribeFormSection" class="hero-btn-primary upcoming-teaser-cta brutal-press" id="heroNotifyBtn" data-track="hero:notify_me">
+              <i class="fa-regular fa-bell" aria-hidden="true"></i>
+              <span>Notify me when it drops</span>
+            </a>
+          </div>
+        )}
       </div>
       )}
 
@@ -1001,6 +1017,21 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
     padding: 12px 14px;
     box-sizing: border-box;
     background: var(--surface-card-light);
+  }
+
+  .upcoming-teaser-actions {
+    display: flex;
+    margin-top: 12px;
+  }
+
+  .upcoming-teaser-cta {
+    min-height: 44px;
+    height: auto;
+  }
+
+  .upcoming-teaser-cta:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 2px;
   }
 
   .upcoming-teaser-card, .mystery-countdown-card {

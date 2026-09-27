@@ -1,7 +1,9 @@
 ---
-import { platformsData } from '../../settings/platformsData';
+import { platformsData as allPlatforms, isProfileUrl } from '../../settings/platformsData';
 import { computePlatformMetrics } from '../../scripts/utils/metricsFormatter';
 
+// Search-result placeholders are dropped; only real profile links reach fans.
+const platformsData = allPlatforms.filter((p) => isProfileUrl(p.url));
 const { formattedCategoryCounts } = computePlatformMetrics(platformsData);
 
 const primaryStreams = platformsData.filter(p => p.category === 'streams' && p.isPrimary !== false);
@@ -14,33 +16,41 @@ const primaryCommunity = platformsData.filter(p => p.category === 'community' &&
 const secondaryCommunity = platformsData.filter(p => p.category === 'community' && p.isPrimary === false);
 
 const baseUrl = import.meta.env.BASE_URL;
+
+// The Streams tab appears once any real streaming profile exists, and becomes
+// the default once there is a choice of at least two services to listen on.
+const allStreams = [...primaryStreams, ...secondaryStreams];
+const showStreamsTab = allStreams.length > 0;
+const defaultTab = allStreams.length >= 2 ? 'streams' : 'socials';
 ---
 
 <section class="tabbed-links-section" data-track-container="main:tabs">
-  <!-- Neo-Brutalist Segmented Tabs: 1) STREAMS, 2) SOCIALS (Default Open), 3) COMMUNITY -->
+  <!-- Neo-Brutalist Segmented Tabs: 1) STREAMS (once real profiles exist), 2) SOCIALS, 3) COMMUNITY -->
   <div class="brutal-tab-switcher" role="tablist">
+    {showStreamsTab && (
     <button 
-      class="brutal-tab-btn" 
+      class:list={['brutal-tab-btn', { active: defaultTab === 'streams' }]}
       id="tabStreamsBtn" 
       data-target="streamsTab" 
       data-category="streams"
       data-track="tab-btn-streams" 
       data-track-container="main:tabs"
       role="tab"
-      aria-selected="false"
+      aria-selected={defaultTab === 'streams' ? 'true' : 'false'}
     >
       STREAMS
     </button>
+    )}
 
     <button 
-      class="brutal-tab-btn active" 
+      class:list={['brutal-tab-btn', { active: defaultTab === 'socials' }]}
       id="tabSocialsBtn" 
       data-target="socialsTab" 
       data-category="socials"
       data-track="tab-btn-socials" 
       data-track-container="main:tabs"
       role="tab"
-      aria-selected="true"
+      aria-selected={defaultTab === 'socials' ? 'true' : 'false'}
     >
       SOCIALS
     </button>
@@ -62,7 +72,8 @@ const baseUrl = import.meta.env.BASE_URL;
   <!-- Tab Panels Stacking Wrapper (Zero-Jump CSS Grid Area 1 / 1) -->
   <div class="tab-panels-wrapper" id="tabPanelsWrapper">
     <!-- STREAMS Tab Content -->
-    <div class="tab-content" id="streamsTab" role="tabpanel">
+    {showStreamsTab && (
+    <div class:list={['tab-content', { active: defaultTab === 'streams' }]} id="streamsTab" role="tabpanel">
     <div class="buttons-list">
       {primaryStreams.map((link) => (
         <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card stream-link-only" data-platform={link.id} data-name={link.name} data-track={`stream-btn-${link.id}`} data-track-container="main:streams_tab">
@@ -107,9 +118,10 @@ const baseUrl = import.meta.env.BASE_URL;
       </button>
     )}
   </div>
+    )}
 
-  <!-- SOCIALS Tab Content (Default Open) -->
-  <div class="tab-content active" id="socialsTab" role="tabpanel">
+  <!-- SOCIALS Tab Content -->
+  <div class:list={['tab-content', { active: defaultTab === 'socials' }]} id="socialsTab" role="tabpanel">
     <div class="buttons-list">
       {primarySocials.map((link) => (
         <a href={link.url} target="_blank" rel="noopener" class="brutal-link-card" data-platform={link.id} data-name={link.name} data-track={`social-btn-${link.id}`} data-track-container="main:socials_tab">
@@ -216,7 +228,8 @@ const baseUrl = import.meta.env.BASE_URL;
   /* Neo-Brutalist Tab Switcher */
   .brutal-tab-switcher {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     gap: 6px;
     width: 100%;
     user-select: none;
@@ -528,9 +541,10 @@ const baseUrl = import.meta.env.BASE_URL;
   function applyReferralRouting() {
     const rule = getRoutingRuleForUser();
 
-    // 1. Activate default tab from routing rule (fallback to Socials)
-    let targetTabId = 'socialsTab';
-    let targetBtnId = 'tabSocialsBtn';
+    // 1. Activate the tab the routing rule asks for; keep the server-rendered
+    //    default when there is no rule or that tab isn't on the page.
+    let targetTabId = '';
+    let targetBtnId = '';
 
     if (rule && rule.default_tab) {
       if (rule.default_tab === 'Streams') {

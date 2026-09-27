@@ -1,65 +1,64 @@
 ---
-import { generalEmail, bookingEmail } from '../../settings/contact.config';
-import { siteConfig } from '../../settings/site.config';
-
-const tipJarUrl = siteConfig.tipJarUrl || '';
+import { features } from '../../settings/features';
 ---
 
-<section class="subscribe-section" id="subscribeFormSection">
+{features.newsletter && (
+<section class="subscribe-section" id="subscribeFormSection" data-track-container="main:subscribe">
   <div class="subscribe-card">
-    <!-- Newsletter / Subscribe Card Container (Masked with Coming Soon) -->
-    <div class="subscribe-soon-wrapper" id="subscribeSoonWrapper" role="region" aria-label="Fan Club Subscription (Coming Soon)">
+    <div class="subscribe-form-region" role="region" aria-labelledby="subscribeHeading">
       <!-- Form State -->
-      <div id="subscribeFormContainer" class="subscribe-form-container is-coming-soon">
+      <div id="subscribeFormContainer" class="subscribe-form-container">
         <div class="subscribe-header">
           <div class="subscribe-title-row">
-            <h3>Subscribe to Kins!</h3>
-            <span class="est-time-pill coming-soon-pill"><i class="fa-solid fa-wrench" aria-hidden="true"></i> Under Works</span>
+            <h3 id="subscribeHeading">Get new music first</h3>
           </div>
-          <p class="subscribe-subtext">Fan club drops & newsletter engine currently under works. Stay tuned!</p>
+          <p class="subscribe-subtext">New releases, gig dates and behind-the-scenes drops, straight to your inbox.</p>
         </div>
 
-        <!-- 1-Tap Social Auth Row -->
-        <div class="social-auth-row">
-          <button type="button" class="social-auth-btn google-auth-btn" id="googleAuthBtn" aria-label="Subscribe with Google (Coming Soon)">
-            <div class="google-btn-left">
-              <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-              </svg>
-              <span class="google-btn-title">Google</span>
-            </div>
-            <div class="google-btn-details" aria-label="Coming Soon">
-              <span class="google-detail-tag coming-soon-tag"><i class="fa-solid fa-wrench" aria-hidden="true"></i>Coming Soon</span>
-            </div>
-          </button>
-        </div>
+        {features.googleOneTap && (
+          <div class="social-auth-row">
+            <button type="button" class="social-auth-btn google-auth-btn" id="googleAuthBtn" aria-label="Subscribe with Google">
+              <div class="google-btn-left">
+                <svg class="social-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+                <span class="google-btn-title">Google</span>
+              </div>
+              <div class="google-btn-details" aria-label="Permissions: Name and Email">
+                <span class="google-detail-tag"><i class="fa-solid fa-check check-icon" aria-hidden="true"></i>Name</span>
+                <span class="google-detail-tag"><i class="fa-solid fa-check check-icon" aria-hidden="true"></i>Email</span>
+              </div>
+            </button>
+          </div>
 
-        <!-- Divider -->
-        <div class="auth-divider">
-          <span class="divider-line"></span>
-          <span class="divider-text">OR WITH EMAIL</span>
-          <span class="divider-line"></span>
-        </div>
+          <div class="auth-divider">
+            <span class="divider-line"></span>
+            <span class="divider-text">OR WITH EMAIL</span>
+            <span class="divider-line"></span>
+          </div>
+        )}
 
         <!-- Unified Inline Email Form -->
-        <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST">
+        <form id="subscribeForm" class="subscribe-form" action="/api/subscribe" method="POST" novalidate>
+          <label for="emailInput" class="sr-only">Email address</label>
           <div class="unified-input-container">
             <input
-              type="text"
+              type="email"
               name="email"
               id="emailInput"
-              placeholder="Fan club drops launching soon..."
+              placeholder="you@example.com"
+              required
               autocomplete="email"
               inputmode="email"
               autocapitalize="none"
               spellcheck="false"
-              tabindex="-1"
+              aria-describedby="subscribePrivacyNote"
             />
-            <button type="submit" id="subscribeSubmitBtn" class="unified-join-btn" aria-label="Join Kins Fan Club (Coming Soon)">
-              <span>SOON ➔</span>
+            <button type="submit" id="subscribeSubmitBtn" class="unified-join-btn" aria-label="Join the Kins mailing list">
+              <span>JOIN ➔</span>
             </button>
           </div>
 
@@ -68,16 +67,12 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
             <div class="email-suggestions-list" id="emailSuggestionsList"></div>
           </div>
         </form>
-      </div>
 
-      <!-- High Contrast Diagonal Ribbon Mask spanning across Subscribe Box (matching Gig Map ribbon style) -->
-      <div class="subscribe-soon-diagonal-banner" aria-hidden="true">
-        <span>COMING SOON • UNDER WORKS</span>
+        <p class="subscribe-privacy-note" id="subscribePrivacyNote">
+          No spam. Unsubscribe anytime.
+          <button type="button" class="subscribe-privacy-link" id="openPrivacyFormBtn">Privacy</button>
+        </p>
       </div>
-
-      <!-- Full-card Click Interceptor Overlay -->
-      <div class="subscribe-soon-interceptor" id="subscribeSoonInterceptor" role="button" tabindex="0" aria-label="Fan club subscription coming soon. Tap for more info."></div>
-    </div>
 
     <!-- Subscribed State -->
     <div id="subscribeSuccessContainer" class="subscribe-success-container hidden">
@@ -85,91 +80,19 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
         <i class="fa-solid fa-circle-check"></i>
         <h3>You're Subscribed!</h3>
       </div>
-      <p class="subscribed-subtext">Welcome email sent! You'll receive exclusive drops & gig alerts straight to your inbox.</p>
+      <p class="subscribed-subtext">You're on the list. New music and gig dates will land in your inbox first.</p>
       <div class="subscribed-actions-row">
-        <a href={`mailto:${generalEmail}?subject=Kins%20Subscribed%20Fan`} id="openEmailAppBtn" class="open-email-app-btn brutal-press" target="_blank" rel="noopener noreferrer">
-          <i class="fa-solid fa-envelope-open-text"></i>
-          <span>Open Email App</span>
-        </a>
-      </div>
-    </div>
-
-    <!-- Always-Visible Official Contacts Block (Both Emails + Suggestions) -->
-    <div class="official-contacts-block">
-      <div class="contacts-block-header">
-        <i class="fa-solid fa-paper-plane"></i>
-        <span>Official Contacts & Feedback</span>
-      </div>
-
-      <div class="emails-list">
-        <div class="email-row-item copy-email-card" data-email={generalEmail} role="button" tabindex="0" title={`Click to copy ${generalEmail}`}>
-          <div class="email-icon"><i class="fa-regular fa-paper-plane"></i></div>
-          <div class="email-details">
-            <span class="email-address">{generalEmail}</span>
-            <span class="email-desc">General Chat, Help & Site Suggestions</span>
-          </div>
-          <div class="email-actions-group">
-            <button type="button" class="copy-email-btn" data-email={generalEmail} title="Copy Email" aria-label={`Copy email ${generalEmail}`}>
-              <i class="fa-regular fa-copy" aria-hidden="true"></i>
-              <span class="sr-only">Copy email</span>
-            </button>
-            <a href={`mailto:${generalEmail}?subject=Kins%20Inquiry%20%26%20Feedback`} class="send-email-btn" title="Open Mail App" aria-label={`Send email to ${generalEmail}`} target="_blank" rel="noopener noreferrer">
-              <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-              <span class="sr-only">Go to mail app</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="email-row-item copy-email-card" data-email={bookingEmail} role="button" tabindex="0" title={`Click to copy ${bookingEmail}`}>
-          <div class="email-icon"><i class="fa-regular fa-calendar-check"></i></div>
-          <div class="email-details">
-            <span class="email-address">{bookingEmail}</span>
-            <span class="email-desc">Shows, Tours & Live Booking</span>
-          </div>
-          <div class="email-actions-group">
-            <button type="button" class="copy-email-btn" data-email={bookingEmail} title="Copy Email" aria-label={`Copy email ${bookingEmail}`}>
-              <i class="fa-regular fa-copy" aria-hidden="true"></i>
-              <span class="sr-only">Copy email</span>
-            </button>
-            <a href={`mailto:${bookingEmail}?subject=Kins%20Booking%20Inquiry`} class="send-email-btn" title="Open Mail App" aria-label={`Send email to ${bookingEmail}`} target="_blank" rel="noopener noreferrer">
-              <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-              <span class="sr-only">Go to mail app</span>
-            </a>
-          </div>
-        </div>
-      </div>
-      <div class="contacts-actions-row">
-        <button type="button" class="contacts-action-btn feedback-action-btn brutal-press" id="openFeedbackFromContactsBtn" aria-label="Suggest improvement or report issue">
-          <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
-          <span>Suggest Feedback</span>
+        <button type="button" id="subscribedShareBtn" class="open-email-app-btn brutal-press">
+          <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+          <span>Share Kins with a friend</span>
         </button>
-        {tipJarUrl ? (
-          <a
-            href={tipJarUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="contacts-action-btn tip-action-btn brutal-press"
-            id="openTipFromContactsBtn"
-            aria-label="Tip or support Kins on Ko-fi"
-          >
-            <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
-            <span>Tip / Support Kins</span>
-          </a>
-        ) : (
-          <button
-            type="button"
-            class="contacts-action-btn tip-action-btn brutal-press"
-            id="openTipFromContactsBtn"
-            aria-label="Tip or support Kins"
-          >
-            <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
-            <span>Tip / Support Kins</span>
-          </button>
-        )}
       </div>
     </div>
+    </div>
+
   </div>
 </section>
+)}
 
 <style>
   .subscribe-section {
@@ -189,95 +112,34 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     box-sizing: border-box;
   }
 
-  /* Newsletter / Subscribe Coming Soon Mask & Diagonal Ribbon */
-  .subscribe-soon-wrapper {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    background: rgba(0, 0, 0, 0.02);
-    border: 2px dashed rgba(0, 0, 0, 0.25);
-    padding: 16px 14px;
-    box-sizing: border-box;
-    transition: border-color 0.2s ease;
+  .subscribe-privacy-note {
+    margin: 0;
+    color: var(--text-card-secondary);
+    font-family: var(--font-primary);
+    font-size: 0.75rem;
+    font-weight: 500;
   }
 
-  :global([data-theme="dark"]) .subscribe-soon-wrapper {
-    background: rgba(255, 255, 255, 0.02);
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-  }
-
-  .subscribe-form-container.is-coming-soon {
-    opacity: 0.65;
-    filter: grayscale(20%);
-    pointer-events: none;
-    user-select: none;
-  }
-
-  .subscribe-soon-diagonal-banner {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 10;
-  }
-
-  .subscribe-soon-diagonal-banner span {
-    background: var(--btn-brand-primary, var(--accent-neon-yellow));
-    color: #000000;
-    border: 2.5px solid #000000;
-    box-shadow: 2.5px 2.5px 0px #000000;
-    font-family: var(--font-heading, sans-serif);
-    font-size: 0.82rem;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 6px 36px;
-    white-space: nowrap;
-    transform: rotate(-10deg);
-    text-align: center;
-    width: 140%;
-    max-width: 580px;
-  }
-
-  :global([data-theme="dark"]) .subscribe-soon-diagonal-banner span {
-    background: var(--brand-accent-primary, #d4af37);
-    color: #000000;
-  }
-
-  .subscribe-soon-interceptor {
-    position: absolute;
-    inset: 0;
-    z-index: 15;
+  .subscribe-privacy-link {
+    min-height: 44px;
+    padding: 0 4px;
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
     cursor: pointer;
-    background: transparent;
   }
 
-  .subscribe-soon-interceptor:focus-visible {
-    outline: 2px solid var(--accent-neon-yellow);
-    outline-offset: -2px;
+  .subscribe-privacy-link:hover {
+    color: var(--text-card-primary);
   }
 
-  .subscribe-soon-wrapper:hover {
-    border-color: #000000;
-  }
-
-  :global([data-theme="dark"]) .subscribe-soon-wrapper:hover {
-    border-color: var(--brand-accent-primary, #d4af37);
-  }
-
-  @media (max-width: 480px) {
-    .subscribe-soon-diagonal-banner span {
-      font-size: 0.68rem;
-      padding: 5px 20px;
-      letter-spacing: 0.08em;
-      transform: rotate(-12deg);
-    }
-    .subscribe-soon-wrapper {
-      padding: 12px 8px;
-    }
+  .subscribe-privacy-link:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 2px;
   }
 
   .subscribe-form-container {
@@ -343,23 +205,6 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-  }
-
-  .est-time-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--accent-neon-yellow);
-    border: 1.5px solid #000000;
-    box-shadow: 1.5px 1.5px 0px #000000;
-    color: #000000;
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
-    font-weight: 800;
-    padding: 2px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
   }
 
   /* 2. 1-Tap Social Auth Row */
@@ -926,258 +771,9 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     box-shadow: 3px 3px 0px #000000;
     color: #000000;
   }
-
-  .coming-soon-pill {
-    background: var(--btn-brand-primary, #f2fd43);
-    color: #000000;
-    font-weight: 900;
-    gap: 5px;
-    text-transform: uppercase;
-  }
-
-  .coming-soon-tag {
-    background: var(--surface-card-panel, var(--surface-card-light));
-    color: var(--text-card-secondary);
-    font-weight: 800;
-    font-size: 0.70rem;
-    padding: 2px 7px;
-  }
-
-  .official-contacts-block {
-    border-top: 2px solid #000000;
-    padding-top: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .contacts-block-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-card-primary);
-    font-family: var(--font-secondary);
-    font-size: 0.76rem;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .emails-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .email-row-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surface-input);
-    border: 2px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    border-radius: 6px;
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
-  }
-
-  .email-row-item:hover {
-    background: var(--surface-card-light-hover);
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
-  }
-
-  .email-icon {
-    font-size: 1rem;
-    color: var(--text-card-primary);
-    width: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .email-details {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .email-address {
-    font-family: var(--font-secondary);
-    font-size: 0.82rem;
-    font-weight: 800;
-    color: var(--text-card-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .email-desc {
-    font-family: var(--font-secondary);
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--text-card-secondary);
-  }
-
-  .email-actions-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-
-  .copy-email-btn, .send-email-btn {
-    background: var(--surface-card-light);
-    border: 1.5px solid #000000;
-    box-shadow: 1px 1px 0px #000000;
-    color: var(--text-card-primary);
-    padding: 4px 8px;
-    height: 28px;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    cursor: pointer;
-    text-decoration: none;
-    font-family: var(--font-secondary);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    transition: transform 0.16s var(--ease-tactile);
-    white-space: nowrap;
-  }
-
-  .copy-email-btn:hover {
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    transform: translate(-1px, -1px);
-  }
-
-  .send-email-btn {
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    font-weight: 900;
-  }
-
-  .send-email-btn:hover {
-    background: var(--surface-card-light-hover);
-    transform: translate(-1px, -1px);
-  }
-
-  .contacts-actions-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 6px;
-    padding-top: 8px;
-    border-top: 1.5px dashed rgba(0, 0, 0, 0.2);
-  }
-
-  @media (max-width: 440px) {
-    .contacts-actions-row {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .contacts-action-btn {
-    width: 100%;
-    min-height: 38px;
-    padding: 8px 10px;
-    border: 2px solid #000000;
-    box-shadow: 2px 2px 0px #000000;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    font-family: var(--font-secondary);
-    font-size: 0.74rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    text-decoration: none;
-    box-sizing: border-box;
-    white-space: nowrap;
-    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
-  }
-
-  .contacts-action-btn:focus-visible {
-    outline: 2px solid var(--brand-accent-primary, var(--accent-neon-yellow));
-    outline-offset: 2px;
-  }
-
-  .feedback-action-btn {
-    background: var(--surface-input);
-    color: var(--text-card-primary);
-  }
-
-  .feedback-action-btn:hover {
-    background: var(--surface-card-light-hover);
-    color: var(--text-card-primary);
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
-  }
-
-  .tip-action-btn {
-    background: var(--btn-brand-primary, var(--accent-neon-yellow));
-    color: #000000;
-  }
-
-  .tip-action-btn:hover {
-    background: var(--btn-brand-hover, #faff60);
-    color: #000000;
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0px #000000;
-  }
-
-  :global([data-theme="dark"]) .contacts-actions-row,
-  :root[data-theme="dark"] .contacts-actions-row {
-    border-top: 1.5px dashed #2e2e36;
-  }
-
-  :global([data-theme="dark"]) .contacts-action-btn,
-  :root[data-theme="dark"] .contacts-action-btn {
-    border: 1.5px solid #2e2e36;
-    box-shadow: none;
-  }
-
-  :global([data-theme="dark"]) .feedback-action-btn,
-  :root[data-theme="dark"] .feedback-action-btn {
-    background: #1c1c21;
-    color: #ffffff;
-  }
-
-  :global([data-theme="dark"]) .feedback-action-btn:hover,
-  :root[data-theme="dark"] .feedback-action-btn:hover {
-    background: #27272e;
-    border-color: #43434f;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  }
-
-  :global([data-theme="dark"]) .tip-action-btn,
-  :root[data-theme="dark"] .tip-action-btn {
-    background: var(--btn-brand-primary, #d4af37);
-    color: #000000;
-    border-color: var(--brand-accent-primary, #d4af37);
-  }
-
-  :global([data-theme="dark"]) .tip-action-btn:hover,
-  :root[data-theme="dark"] .tip-action-btn:hover {
-    background: #e5b948;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 10px rgba(212, 175, 55, 0.35);
-  }
 </style>
 
 <script>
-  import { copyToClipboard, animateCopySuccess } from '../../scripts/controllers/clipboard.js';
   import { showToast } from '../../scripts/controllers/toast.js';
 
   import { getSubscriptionState, setSubscriptionState } from '../../scripts/controllers/subscribeController.js';
@@ -1535,28 +1131,79 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     suggestionsList.addEventListener('wheel', handleSuggestionsWheel, { passive: false });
   }
 
-  const subscribeSoonInterceptor = document.getElementById('subscribeSoonInterceptor');
-  subscribeSoonInterceptor?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showToast('Fan club & newsletter subscription is coming soon! Stay tuned.', 'info');
-  });
-  subscribeSoonInterceptor?.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      showToast('Fan club & newsletter subscription is coming soon! Stay tuned.', 'info');
-    }
-  });
+  const JOIN_LABEL = '<span>JOIN ➔</span>';
 
-  const googleAuthBtn = document.getElementById('googleAuthBtn');
-  googleAuthBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    showToast('Fan club & newsletter subscription is coming soon! Stay tuned.', 'info');
-  });
+  function setSubmitBusy(btn: HTMLButtonElement | null, busy: boolean) {
+    if (!btn) return;
+    btn.disabled = busy;
+    btn.setAttribute('aria-busy', String(busy));
+    btn.innerHTML = busy ? '<i class="fa-solid fa-compact-disc fa-spin" aria-hidden="true"></i><span class="sr-only">Joining…</span>' : JOIN_LABEL;
+  }
 
   if (subscribeForm) {
     subscribeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      showToast('Fan club & newsletter subscription is coming soon! Stay tuned.', 'info');
+      const submitBtn = subscribeForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (!emailInput) return;
+
+      const rawEmail = emailInput.value.trim();
+      if (!rawEmail) {
+        showToast('Enter your email address to join.', 'error');
+        emailInput.focus();
+        return;
+      }
+
+      hideSuggestionsContainer(true);
+      setSubmitBusy(submitBtn, true);
+
+      // Syntax, disposable-domain and MX checks before we hit the API.
+      const validation = await validateRealEmail(rawEmail);
+      if (!validation.valid) {
+        emailInput.setAttribute('aria-invalid', 'true');
+        showToast(validation.error || 'Please enter a valid, active email address.', 'error');
+        setSubmitBusy(submitBtn, false);
+        emailInput.focus();
+        return;
+      }
+      emailInput.removeAttribute('aria-invalid');
+
+      const email = validation.cleanEmail!;
+      const baseUrl = import.meta.env.BASE_URL ? import.meta.env.BASE_URL.replace(/\/$/, '') : '';
+
+      try {
+        const res = await fetch(`${baseUrl}/api/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: getReferralSource('website') }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+          setSubscriptionState(true, email);
+          showToast(data.message || "You're subscribed! Check your inbox for your welcome email.", 'success');
+        } else {
+          // Surface the server's reason (rate limit, paused signups) and keep the form usable.
+          showToast(data.message || `Subscription failed (${res.status}). Please try again.`, 'error');
+        }
+      } catch (err) {
+        console.warn('[subscribe] request failed:', err);
+        showToast('Could not reach the subscription service. Please try again shortly.', 'error');
+      }
+
+      setSubmitBusy(submitBtn, false);
+    });
+  }
+
+  document.getElementById('subscribedShareBtn')?.addEventListener('click', () => {
+    document.getElementById('shareBtn')?.click();
+  });
+
+  // Google One Tap: the button only renders when PUBLIC_GOOGLE_CLIENT_ID is set.
+  if (document.getElementById('googleAuthBtn')) {
+    scheduleIdle(() => {
+      loadSocialAuth()
+        .then((m) => m.initSocialAuth())
+        .catch((err) => console.warn('socialAuth init failed:', err));
     });
   }
 
@@ -1578,54 +1225,4 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
       document.body.classList.add('modal-open');
     }
   });
-
-  async function copyEmailHandler(email: string, targetEl: HTMLElement) {
-    const ok = await copyToClipboard(email);
-    if (ok) {
-      const copyBtn = targetEl.querySelector('.copy-email-btn') || targetEl;
-      animateCopySuccess(copyBtn);
-      showToast(`Copied ${email} to clipboard!`);
-    }
-  }
-
-  document.querySelectorAll('.copy-email-card').forEach(card => {
-    card.addEventListener('click', async (e) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('.send-email-btn')) return;
-
-      const email = card.getAttribute('data-email');
-      if (email) {
-        await copyEmailHandler(email, card as HTMLElement);
-      }
-    });
-
-    card.addEventListener('keydown', async (e: any) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        const email = card.getAttribute('data-email');
-        if (email) {
-          await copyEmailHandler(email, card as HTMLElement);
-        }
-      }
-    });
-  });
-
-  document.querySelectorAll('.send-email-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-  });
-
-  document.getElementById('openFeedbackFromContactsBtn')?.addEventListener('click', () => {
-    const feedbackModal = document.getElementById('feedbackModal');
-    feedbackModal?.classList.remove('hidden');
-    document.body.classList.add('modal-open');
-  });
-
-  const tipBtn = document.getElementById('openTipFromContactsBtn');
-  if (tipBtn && tipBtn.tagName.toLowerCase() === 'button') {
-    tipBtn.addEventListener('click', () => {
-      showToast('☕ Tip jar launching soon! Thank you for the support!', 'info');
-    });
-  }
 </script>

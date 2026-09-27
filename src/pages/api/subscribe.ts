@@ -225,9 +225,9 @@ function generateWelcomeEmailHtml(email: string): string {
 
       <div class="socials-row">
         <a href="https://open.spotify.com/artist/0F4YhJc3cI8rVq6U7v7q7C" target="_blank">Spotify</a> •
-        <a href="https://youtube.com/@kinsbandofficial?si=NYyLEYxEDcoH21XZ" target="_blank">YouTube</a> •
-        <a href="https://www.instagram.com/kinsbandofficial?igsi=M21ycDZuemZ0bDIx" target="_blank">Instagram</a> •
-        <a href="https://www.tiktok.com/@kinsbandofficial?_r=1&_t=ZS-995ASSdnVsQ" target="_blank">TikTok</a> •
+        <a href="https://www.youtube.com/@kinsbandofficial" target="_blank">YouTube</a> •
+        <a href="https://www.instagram.com/kinsbandofficial" target="_blank">Instagram</a> •
+        <a href="https://www.tiktok.com/@kinsbandofficial" target="_blank">TikTok</a> •
         <a href="https://x.com/KinsBandOfficial" target="_blank">X</a>
       </div>
     </div>
@@ -293,6 +293,16 @@ export const POST: APIRoute = async ({ request }) => {
     let welcomeEmailSent = false;
 
     const db = getSupabaseServiceClient();
+
+    // Without a database, admin email or Discord webhook the address would be
+    // dropped while the fan is told they subscribed. Refuse it honestly instead.
+    if (!db && !getNotifyConfig().resendApiKey && !getDiscordConfig().webhookUrl) {
+      console.error('[subscribe] No storage configured (Supabase, Resend or Discord webhook); signup refused.');
+      return new Response(
+        JSON.stringify({ status: 'error', message: 'Signups are paused right now. Please try again soon.' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     // 1. Save Subscriber to Supabase Database (subscribers table)
     if (db) {

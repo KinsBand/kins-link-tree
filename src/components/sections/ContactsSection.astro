@@ -1,0 +1,369 @@
+---
+import { generalEmail, bookingEmail } from '../../settings/contact.config';
+import { siteConfig } from '../../settings/site.config';
+
+const tipJarUrl = siteConfig.tipJarUrl || '';
+---
+
+<section class="contacts-section" id="contactsSection" data-track-container="main:contacts">
+  <div class="contacts-card">
+    <!-- Always-Visible Official Contacts Block (Both Emails + Suggestions) -->
+    <div class="official-contacts-block">
+      <div class="contacts-block-header">
+        <i class="fa-solid fa-paper-plane"></i>
+        <span>Official Contacts & Feedback</span>
+      </div>
+
+      <div class="emails-list">
+        <div class="email-row-item copy-email-card" data-email={generalEmail} role="button" tabindex="0" title={`Click to copy ${generalEmail}`}>
+          <div class="email-icon"><i class="fa-regular fa-paper-plane"></i></div>
+          <div class="email-details">
+            <span class="email-address">{generalEmail}</span>
+            <span class="email-desc">General Chat, Help & Site Suggestions</span>
+          </div>
+          <div class="email-actions-group">
+            <button type="button" class="copy-email-btn" data-email={generalEmail} title="Copy Email" aria-label={`Copy email ${generalEmail}`}>
+              <i class="fa-regular fa-copy" aria-hidden="true"></i>
+              <span class="sr-only">Copy email</span>
+            </button>
+            <a href={`mailto:${generalEmail}?subject=Kins%20Inquiry%20%26%20Feedback`} class="send-email-btn" title="Open Mail App" aria-label={`Send email to ${generalEmail}`} target="_blank" rel="noopener noreferrer">
+              <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+              <span class="sr-only">Go to mail app</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="email-row-item copy-email-card" data-email={bookingEmail} role="button" tabindex="0" title={`Click to copy ${bookingEmail}`}>
+          <div class="email-icon"><i class="fa-regular fa-calendar-check"></i></div>
+          <div class="email-details">
+            <span class="email-address">{bookingEmail}</span>
+            <span class="email-desc">Shows, Tours & Live Booking</span>
+          </div>
+          <div class="email-actions-group">
+            <button type="button" class="copy-email-btn" data-email={bookingEmail} title="Copy Email" aria-label={`Copy email ${bookingEmail}`}>
+              <i class="fa-regular fa-copy" aria-hidden="true"></i>
+              <span class="sr-only">Copy email</span>
+            </button>
+            <a href={`mailto:${bookingEmail}?subject=Kins%20Booking%20Inquiry`} class="send-email-btn" title="Open Mail App" aria-label={`Send email to ${bookingEmail}`} target="_blank" rel="noopener noreferrer">
+              <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+              <span class="sr-only">Go to mail app</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="contacts-actions-row">
+        <button type="button" class="contacts-action-btn feedback-action-btn brutal-press" id="openFeedbackFromContactsBtn" aria-label="Suggest improvement or report issue">
+          <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+          <span>Suggest Feedback</span>
+        </button>
+        {tipJarUrl && (
+          <a
+            href={tipJarUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="contacts-action-btn tip-action-btn brutal-press"
+            id="openTipFromContactsBtn"
+            aria-label="Tip or support Kins on Ko-fi"
+          >
+            <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
+            <span>Tip / Support Kins</span>
+          </a>
+        )}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contacts-section {
+    width: 100%;
+    margin-top: 18px;
+  }
+
+  .contacts-card {
+    background: var(--surface-card-light);
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 8px;
+    padding: 18px 20px;
+    box-sizing: border-box;
+  }
+
+  .official-contacts-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .contacts-block-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-card-primary);
+    font-family: var(--font-secondary);
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .emails-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .email-row-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-input);
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: transform 0.16s var(--ease-tactile), box-shadow 0.16s ease;
+  }
+
+  .email-row-item:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .email-icon {
+    font-size: 1rem;
+    color: var(--text-card-primary);
+    width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .email-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .email-address {
+    font-family: var(--font-secondary);
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--text-card-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .email-desc {
+    font-family: var(--font-secondary);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-card-secondary);
+  }
+
+  .email-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .copy-email-btn, .send-email-btn {
+    background: var(--surface-card-light);
+    border: 1.5px solid #000000;
+    box-shadow: 1px 1px 0px #000000;
+    color: var(--text-card-primary);
+    padding: 4px 8px;
+    height: 28px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: var(--font-secondary);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: transform 0.16s var(--ease-tactile);
+    white-space: nowrap;
+  }
+
+  .copy-email-btn:hover {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    transform: translate(-1px, -1px);
+  }
+
+  .send-email-btn {
+    background: var(--accent-neon-yellow);
+    color: #000000;
+    font-weight: 900;
+  }
+
+  .send-email-btn:hover {
+    background: var(--surface-card-light-hover);
+    transform: translate(-1px, -1px);
+  }
+
+  .contacts-actions-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1.5px dashed rgba(0, 0, 0, 0.2);
+  }
+
+  @media (max-width: 440px) {
+    .contacts-actions-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .contacts-action-btn {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    font-family: var(--font-secondary);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    box-sizing: border-box;
+    white-space: nowrap;
+    transition: transform 0.16s var(--ease-tactile), background-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+  }
+
+  .contacts-action-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary, var(--accent-neon-yellow));
+    outline-offset: 2px;
+  }
+
+  .feedback-action-btn {
+    background: var(--surface-input);
+    color: var(--text-card-primary);
+  }
+
+  .feedback-action-btn:hover {
+    background: var(--surface-card-light-hover);
+    color: var(--text-card-primary);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  .tip-action-btn {
+    background: var(--btn-brand-primary, var(--accent-neon-yellow));
+    color: #000000;
+  }
+
+  .tip-action-btn:hover {
+    background: var(--btn-brand-hover, #faff60);
+    color: #000000;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  :global([data-theme="dark"]) .contacts-actions-row,
+  :root[data-theme="dark"] .contacts-actions-row {
+    border-top: 1.5px dashed #2e2e36;
+  }
+
+  :global([data-theme="dark"]) .contacts-action-btn,
+  :root[data-theme="dark"] .contacts-action-btn {
+    border: 1.5px solid #2e2e36;
+    box-shadow: none;
+  }
+
+  :global([data-theme="dark"]) .feedback-action-btn,
+  :root[data-theme="dark"] .feedback-action-btn {
+    background: #1c1c21;
+    color: #ffffff;
+  }
+
+  :global([data-theme="dark"]) .feedback-action-btn:hover,
+  :root[data-theme="dark"] .feedback-action-btn:hover {
+    background: #27272e;
+    border-color: #43434f;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  :global([data-theme="dark"]) .tip-action-btn,
+  :root[data-theme="dark"] .tip-action-btn {
+    background: var(--btn-brand-primary, #d4af37);
+    color: #000000;
+    border-color: var(--brand-accent-primary, #d4af37);
+  }
+
+  :global([data-theme="dark"]) .tip-action-btn:hover,
+  :root[data-theme="dark"] .tip-action-btn:hover {
+    background: #e5b948;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 10px rgba(212, 175, 55, 0.35);
+  }
+</style>
+
+<script>
+  import { copyToClipboard, animateCopySuccess } from '../../scripts/controllers/clipboard.js';
+  import { showToast } from '../../scripts/controllers/toast.js';
+
+  async function copyEmailHandler(email: string, targetEl: HTMLElement) {
+    const ok = await copyToClipboard(email);
+    if (ok) {
+      const copyBtn = targetEl.querySelector('.copy-email-btn') || targetEl;
+      animateCopySuccess(copyBtn);
+      showToast(`Copied ${email} to clipboard!`);
+    }
+  }
+
+  document.querySelectorAll('.copy-email-card').forEach(card => {
+    card.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.send-email-btn')) return;
+
+      const email = card.getAttribute('data-email');
+      if (email) {
+        await copyEmailHandler(email, card as HTMLElement);
+      }
+    });
+
+    card.addEventListener('keydown', async (e: any) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const email = card.getAttribute('data-email');
+        if (email) {
+          await copyEmailHandler(email, card as HTMLElement);
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll('.send-email-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  });
+
+  document.getElementById('openFeedbackFromContactsBtn')?.addEventListener('click', () => {
+    const feedbackModal = document.getElementById('feedbackModal');
+    feedbackModal?.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  });
+</script>

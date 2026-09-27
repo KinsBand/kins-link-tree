@@ -35,6 +35,8 @@ export function getSubscriberEmail() {
 
 /**
  * Saves subscription state to both safeStorage and Cookie, and triggers a sync event.
+ * @param {boolean} isSubscribed
+ * @param {string | null} [email]
  */
 export function setSubscriptionState(isSubscribed, email = null) {
   if (typeof window === 'undefined') return;
@@ -102,7 +104,7 @@ export function updateBellUI(btnEl, isSubscribed, shouldAnimate = true) {
  */
 export function focusSignupForm() {
   const section = document.getElementById('subscribeFormSection');
-  if (!section) return false;
+  if (!section || !document.getElementById('subscribeForm')) return false;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   section.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });

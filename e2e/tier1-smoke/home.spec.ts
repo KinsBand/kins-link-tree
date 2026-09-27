@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { heroConfig } from '../../src/settings/hero.config';
+import { platformsData, isProfileUrl } from '../../src/settings/platformsData';
+import { routingMatrix } from '../../src/settings/links.config';
+
+// Streams only render for real artist profiles (search-result placeholders are
+// dropped), and the tab becomes the default once there are two to choose from.
+const profileStreams = platformsData.filter((p) => p.category === 'streams' && isProfileUrl(p.url));
+const primaryProfileStreams = profileStreams.filter((p) => p.isPrimary !== false);
+const streamsIsDefault = profileStreams.length >= 2;
 
 test.describe('tier1 smoke — home hub', () => {
   test('home renders hero, members and subscribe sections', async ({ page }) => {
@@ -323,40 +331,58 @@ test.describe('tier1 smoke — home hub', () => {
     const socialsBtn = page.locator('#tabSocialsBtn');
     const communityBtn = page.locator('#tabCommunityBtn');
 
-    // Verify all 3 tab buttons are present and ordered
-    await expect(streamsBtn).toBeVisible();
-    await expect(streamsBtn).toContainText('STREAMS');
+    // Verify the tab buttons are present and ordered (Streams only with real profiles)
+    if (profileStreams.length > 0) {
+      await expect(streamsBtn).toBeVisible();
+      await expect(streamsBtn).toContainText('STREAMS');
+    } else {
+      await expect(streamsBtn).toHaveCount(0);
+    }
     await expect(socialsBtn).toBeVisible();
     await expect(socialsBtn).toContainText('SOCIALS');
     await expect(communityBtn).toBeVisible();
     await expect(communityBtn).toContainText('COMMUNITY');
 
-    // Verify Socials is the default active tab
-    await expect(socialsBtn).toHaveClass(/active/);
-    await expect(streamsBtn).not.toHaveClass(/active/);
-    await expect(communityBtn).not.toHaveClass(/active/);
-
     const socialsTab = page.locator('#socialsTab');
     const streamsTab = page.locator('#streamsTab');
     const communityTab = page.locator('#communityTab');
 
+    // Verify the default active tab
+    await expect(communityBtn).not.toHaveClass(/active/);
+    await expect(communityTab).toBeHidden();
+    if (streamsIsDefault) {
+      await expect(streamsBtn).toHaveClass(/active/);
+      await expect(socialsBtn).not.toHaveClass(/active/);
+      await socialsBtn.click();
+    } else {
+      await expect(socialsBtn).toHaveClass(/active/);
+      if (profileStreams.length > 0) await expect(streamsBtn).not.toHaveClass(/active/);
+    }
+
     await expect(socialsTab).toBeVisible();
     await expect(streamsTab).toBeHidden();
     await expect(communityTab).toBeHidden();
+
+    // No platform search-result placeholders anywhere in the tabs
+    await expect(page.locator('.tabbed-links-section a[href*="/search"], .tabbed-links-section a[href*="?q="], .tabbed-links-section a[href*="?term="]')).toHaveCount(0);
 
     // Verify primary socials exist
     await expect(socialsTab.locator('a[data-platform="instagram"]')).toBeVisible();
     await expect(socialsTab.locator('a[data-platform="tiktok"]')).toBeVisible();
 
     // Switch to Streams tab
-    await streamsBtn.click();
-    await expect(streamsBtn).toHaveClass(/active/);
-    await expect(socialsBtn).not.toHaveClass(/active/);
-    await expect(communityBtn).not.toHaveClass(/active/);
-    await expect(streamsTab).toBeVisible();
-    await expect(socialsTab).toBeHidden();
-    await expect(communityTab).toBeHidden();
-    await expect(streamsTab.locator('a[data-platform="spotify"]')).toBeVisible();
+    if (profileStreams.length > 0) {
+      await streamsBtn.click();
+      await expect(streamsBtn).toHaveClass(/active/);
+      await expect(socialsBtn).not.toHaveClass(/active/);
+      await expect(communityBtn).not.toHaveClass(/active/);
+      await expect(streamsTab).toBeVisible();
+      await expect(socialsTab).toBeHidden();
+      await expect(communityTab).toBeHidden();
+      if (primaryProfileStreams.length > 0) {
+        await expect(streamsTab.locator(`a[data-platform="${primaryProfileStreams[0].id}"]`)).toBeVisible();
+      }
+    }
 
     // Switch to Community tab
     await communityBtn.click();
@@ -388,19 +414,24 @@ test.describe('tier1 smoke — home hub', () => {
     const socialsTab = page.locator('#socialsTab');
     const communityTab = page.locator('#communityTab');
 
-    // Verify Streams tab is opened by default for spotify origin
-    await expect(streamsBtn).toHaveClass(/active/);
-    await expect(socialsBtn).not.toHaveClass(/active/);
-    await expect(streamsTab).toBeVisible();
-    await expect(socialsTab).toBeHidden();
+    // Verify Streams tab is opened for spotify origin (when real streaming profiles exist)
+    if (profileStreams.length > 0) {
+      await expect(streamsBtn).toHaveClass(/active/);
+      await expect(socialsBtn).not.toHaveClass(/active/);
+      await expect(streamsTab).toBeVisible();
+      await expect(socialsTab).toBeHidden();
 
-    // Verify recommended stream platforms have .is-recommended and minimalist ★ badge
-    const appleMusicCard = streamsTab.locator('a[data-name="Apple Music"]');
-    const ytMusicCard = streamsTab.locator('a[data-name="YT Music"]');
-    await expect(appleMusicCard).toHaveClass(/is-recommended/);
-    await expect(appleMusicCard.locator('.rec-star-badge')).toBeVisible();
-    await expect(ytMusicCard).toHaveClass(/is-recommended/);
-    await expect(ytMusicCard.locator('.rec-star-badge')).toBeVisible();
+      // Verify recommended stream platforms that are on the page get .is-recommended and the ★ badge
+      const rule = routingMatrix.find((r) => r.source_platform === 'Spotify');
+      const shownPrimaryNames = primaryProfileStreams.map((p) => p.name);
+      for (const name of (rule?.recommended.streams ?? []).filter((n) => shownPrimaryNames.includes(n))) {
+        const card = streamsTab.locator(`a[data-name="${name}"]`);
+        await expect(card).toHaveClass(/is-recommended/);
+        await expect(card.locator('.rec-star-badge')).toBeVisible();
+      }
+    } else {
+      await expect(socialsBtn).toHaveClass(/active/);
+    }
 
     // Switch to Socials tab and check recommended socials (Instagram, TikTok)
     await socialsBtn.click();
