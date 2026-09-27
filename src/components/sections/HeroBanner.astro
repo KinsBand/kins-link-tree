@@ -11,16 +11,29 @@ const { image = kinsLogoHero } = Astro.props;
 
 <div class="hero-banner-container" id="heroBannerContainer" data-track-container="main:hero">
   <div class="hero-banner-glow"></div>
-  {
-    typeof image === 'string' ? (
-      <img src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" fetchpriority="high" width="409" height="372" />
-    ) : (
-      <Image src={image} alt="Kins logo banner" class="hero-banner-img" id="heroBannerImg" decoding="async" loading="eager" fetchpriority="high" width={409} height={372} />
-    )
-  }
+  <h1 class="hero-banner-heading">
+    {
+      typeof image === 'string' ? (
+        <img src={image} alt="KINS" class="hero-banner-img" id="heroBannerImg" decoding="async" fetchpriority="high" width="409" height="372" />
+      ) : (
+        <Image src={image} alt="KINS" class="hero-banner-img" id="heroBannerImg" decoding="async" loading="eager" fetchpriority="high" width={409} height={372} />
+      )
+    }
+  </h1>
 </div>
 
 <style>
+  .hero-banner-heading {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0;
+    font-size: inherit;
+    line-height: 0;
+    position: relative;
+    z-index: 2;
+  }
+
   .hero-banner-container {
     position: relative;
     width: 100%;

@@ -24,7 +24,8 @@ const showStreamsTab = allStreams.length > 0;
 const defaultTab = allStreams.length >= 2 ? 'streams' : 'socials';
 ---
 
-<section class="tabbed-links-section" data-track-container="main:tabs">
+<section class="tabbed-links-section" data-track-container="main:tabs" aria-labelledby="tabbedLinksHeading">
+  <h2 class="sr-only" id="tabbedLinksHeading">Listen and follow Kins</h2>
   <!-- Neo-Brutalist Segmented Tabs: 1) STREAMS (once real profiles exist), 2) SOCIALS, 3) COMMUNITY -->
   <div class="brutal-tab-switcher" role="tablist">
     {showStreamsTab && (

@@ -8,6 +8,7 @@ import { epkConfig } from '../settings/epk.config';
 import { bookingEmail } from '../settings/contact.config';
 
 import { primaryStreams, primarySocials, primaryCommunity } from '../settings/links.config';
+import { platformsData, isProfileUrl } from '../settings/platformsData';
 
 interface Props {
   title?: string;
@@ -35,7 +36,15 @@ const sameAsUrls = [
   ...primaryStreams.map((s) => s.url),
   ...primarySocials.map((s) => s.url),
   ...primaryCommunity.map((c) => c.url)
-].filter((u) => typeof u === 'string' && u.startsWith('http'));
+].filter((u) => typeof u === 'string' && u.startsWith('http') && isProfileUrl(u));
+
+// Only real artist profiles back the streaming FAQ answer.
+const streamingProfiles = platformsData
+  .filter((p) => p.category === 'streams' && isProfileUrl(p.url))
+  .map((p) => p.name);
+const streamingAnswer = streamingProfiles.length > 0
+  ? `You can stream KINS on ${streamingProfiles.join(', ')}.`
+  : 'KINS is releasing its first music soon. Join the mailing list on this page to hear it first.';
 
 const musicGroupEntity = {
   '@type': 'MusicGroup',
@@ -140,7 +149,7 @@ const faqEntity = {
       name: 'Where can I stream KINS music?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'You can stream KINS on Spotify, Apple Music, YouTube Music, Bandcamp, and SoundCloud.'
+        text: streamingAnswer
       }
     }
   ]

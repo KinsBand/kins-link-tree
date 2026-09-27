@@ -1,5 +1,10 @@
 ---
 import { features } from '../../settings/features';
+import { epkConfig } from '../../settings/epk.config';
+
+// Visible two-line bio, sourced from the band's approved EPK copy.
+const genreLine = `${epkConfig.genreMain} · Formed ${epkConfig.yearFormed}`;
+const riylLine = epkConfig.riyl.slice(0, 3).join(', ');
 ---
 
 <section class="profile-section" data-track-container="main:profile">
@@ -35,6 +40,11 @@ import { features } from '../../settings/features';
         </svg>
       </span>
     </div>
+  </div>
+
+  <div class="profile-bio">
+    <p class="profile-bio-genre">{genreLine}</p>
+    <p class="profile-bio-riyl"><span class="profile-bio-label">For fans of</span> {riylLine}</p>
   </div>
 
   {features.followerCounter && (
@@ -124,6 +134,36 @@ import { features } from '../../settings/features';
     border-radius: 2px;
     box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
     display: inline-block;
+  }
+
+  .profile-bio {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 360px;
+    font-family: var(--font-primary);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .profile-bio p {
+    margin: 0;
+  }
+
+  .profile-bio-genre {
+    color: var(--text-on-dark);
+    font-weight: 600;
+  }
+
+  .profile-bio-riyl {
+    color: var(--text-muted);
+  }
+
+  .profile-bio-label {
+    color: var(--brand-accent-primary);
+    font-weight: 700;
   }
 
   .total-followers-card {
