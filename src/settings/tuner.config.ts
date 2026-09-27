@@ -826,6 +826,16 @@ export const DETECT = {
   YIN_THRESH_MAX: 0.18,
   YIN_ADAPT_FULL_RMS: 0.03,
   CONF_LOCK: 0.82,
+  // Band-limiting before YIN: rumble/DC high-pass and a low-pass above the
+  // highest detectable fundamental.
+  PREFILTER_HP_HZ: 22,
+  PREFILTER_LP_HZ: 2600,
+  // Low-SNR fallback: the earliest dip within this CMNDF distance of the
+  // deepest one, accepted only with clarity >= WEAK_CONF and when it
+  // continues the previous reading within WEAK_TRACK_CENTS.
+  WEAK_DIP_SLACK: 0.06,
+  WEAK_CONF: 0.5,
+  WEAK_TRACK_CENTS: 20,
   // Note label keeps its note until the pitch is this far from it (> 50).
   NOTE_HOLD_CENTS: 60,
   CONFIRM_MS: 2000,
