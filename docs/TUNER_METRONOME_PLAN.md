@@ -1,6 +1,35 @@
 # Tuner & Metronome — World-Class Reliability Plan
 
-Status: **Plan (no code changed yet)** · Scope: `/tuner`, `/metronome` · Date: 2026-09-27
+Status: **In progress** · Scope: `/tuner`, `/metronome` · Date: 2026-09-27
+
+## Progress
+
+| Plan item | State | Evidence |
+| --- | --- | --- |
+| 0.1 Metronome offline test harness | ✅ Done | `npm run test:metronome` (18 tests: worklet PCM render, clock, legacy engine) |
+| 0.2 Tuner realistic corpus | ✅ Done | `tests/tuner/realistic.test.mjs`, `stream.test.mjs` |
+| 1.1 No grid re-seat on tab return / resume (M1) | ✅ Done | suspension-gap test: grid and bar phase kept |
+| 1.2 Position model, phase-preserving tempo (M2) | ✅ Done | `metroClock.js`; no double downbeat, beats stay on grid |
+| 1.5 Zero-alloc worklet (M6, M7) | ✅ Done | prewarmed buffers, voice pool with stealing, one message per click |
+| 1.6 Resume inside the play gesture (M8) | ✅ Done (verify on iOS device) | |
+| 1.7 Dead paths removed (M9) | ✅ Done | `metronome-processor`, sample-rate check, forced 48 kHz, speech count |
+| 2.1 Worklet → Worker direct stream (T2) | ✅ Done | `analysisStream.js`, protocol v3 |
+| 2.2 Pre-conditioning + hum notch (T1) | ✅ Done | band-limit per window; streaming 50/60 Hz notch comb |
+| 2.3/2.4 Robust dip search + weak fallback (T1) | ✅ Partial | full-dip search, continuity-gated fallback; FFT core still open |
+| 3.1 Chromatic: no blanking, visible cents (T3, T4) | ✅ Done | ±60 ct note hysteresis; cents in the pitch pill; throttled SR announcements |
+| 3.2 Confirmation hysteresis, tolerance options (T5, T9) | ✅ Done | 0.5/1/2/3/5 ct |
+| 1.3 Bar program in worklet (coach mutes, sections) | ⏳ Next | |
+| 1.4 Output-latency compensation + calibration | ⏳ | |
+| 1.8 Tap tempo, 3.3 needle spring, 3.6 safety monitor, 3.7 reference context | ⏳ | |
+| 2.5–2.7 Precision stage, inharmonicity, attack gating; 3.4 strobe | ⏳ | |
+
+Measured after the detector work (accepted frames, before → after): E2 white
+noise 10 dB 8% → 92%, A4 10 dB 15% → 100%, A2 6 dB 0% → 79%; E2 20 dB p95
+error 39 → 2.6 ct; note under −20 dB mains hum 30/30 frames within 3 ct.
+Clean benchmark p95 0.046 ct.
+
+Known unrelated failure: `e2e/tuner/strum.spec.ts` ("strum on the audio
+clock…") fails on the pre-change code too.
 
 The architecture is already good. The metronome renders its clicks on the audio
 thread (AudioWorklet), and the tuner captures audio in a worklet and runs YIN
