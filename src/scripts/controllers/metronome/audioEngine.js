@@ -1,22 +1,26 @@
 import { METRO_GAIN, METRO_SOUNDS, METRO_TIMING } from '../../../settings/metronome.config';
 import { getSound } from './metroState.js';
+import { MetroClock } from './metroClock.js';
 
 /* KINS Metronome click engine — two paths behind one API.
 
    WORKLET PATH (default where supported): an AudioWorkletProcessor runs
    the whole scheduler + synthesiser on the audio rendering thread. It is
    immune to ANY main-thread stall, so the click literally cannot stutter
-   or skip because of GC/layout/JS work. Config travels via AudioParam
-   (bpm/subdivision/gains/isPlaying) + port messages; beat events travel
+   or skip because of GC/layout/JS work. Config travels via port messages
+   (gains via AudioParam); beat events travel
    back for the visual queue. Pipeline enforces bounded headroom with
    oversampled soft-limiting.
 
    LEGACY PATH (fallback): the classic lookahead scheduler ("A Tale of
-   Two Clocks") hardened beyond the original version — 0.3s lookahead,
-   a registry of every scheduled source so tempo/subdivision/time-signature
-   changes FLUSH unplayed clicks and land immediately (instead of up to a
-   full lookahead later), explicit stop cancellation (no ghost beat), and
-   scheduling gated on ctx.state === 'running'.
+   Two Clocks") with a registry of every scheduled source, so tempo /
+   subdivision / time-signature changes FLUSH unplayed clicks, rewind the
+   clock to the first flushed click and re-schedule under the new config.
+
+   Both paths track musical position with MetroClock (metroClock.js):
+   explicit bar/beat/sub counters, phase-preserving tempo changes,
+   subdivision changes on the next beat and meter changes on the next bar,
+   so live edits never shift the grid or double a downbeat.
 
    Both paths share: rAF visual-beat drain locked to ctx.currentTime,
    accent haptics fired from the drain (never from drifted setTimeouts),
@@ -35,7 +39,6 @@ import { getSound } from './metroState.js';
 export function createMetroEngine() {
   let ctx = null;
   let masterGain = null;
-  let compressor = null;
   let softClipper = null;
   let hpFilter = null;
 
@@ -48,20 +51,16 @@ export function createMetroEngine() {
   let uiRafId = null;
   let metroWorker = null;
   let workerAvailable = false;
-  let hardwareCheckId = null;
 
   /* Scheduling cursor + bookkeeping (legacy owns these; worklet mirrors
      them internally) */
-  let nextClickTime = 0;
-  let clickCounter = 0;
-  let beatCounter = 0;   /* downbeats scheduled since start — bar position */
+  const clock = new MetroClock(); /* legacy path position; worklet owns its own copy */
   let scheduledTotal = 0;/* all clicks scheduled since start */
 
   /* Run config captured per start/change so loops never read DOM or
      module state mid-run */
   let runPerBeat = 1;
   let runBeatsPerBar = 4;
-  let runAccentFirst = false;
   let runVibrate = false;
   let runBeatTiers = ['mid', 'mid', 'mid', 'mid'];
 
@@ -74,18 +73,14 @@ export function createMetroEngine() {
   let onInterruption = null;
 
   /* Registry of scheduled-but-maybe-unplayed clicks (legacy only):
-     enables instant cancel on stop/tempo change */
-  const pendingSources = []; /* { osc, gain, time, startsABeat } */
+     enables instant cancel on stop/tempo change. `snap` is the clock state
+     before the click was emitted, so a flush can rewind exactly. */
+  const pendingSources = []; /* { osc, gain, time, snap } — osc null for muted beats */
 
   /* iOS-style interruption bridge */
   let interruptedPending = false;
 
-  /* Hardware adaptation */
-  let hardwareSampleRate = 48000;
   let backgroundSilenceEl = null;
-  /* Bumped on stop() and on every hardware rebuild so an in-flight context
-     rebuild can never resurrect playback the user already stopped */
-  let rebuildGeneration = 0;
 
   /* Scheduler health stats (?metrodebug=1 reads these) */
   let tickCount = 0;
@@ -138,7 +133,6 @@ export function createMetroEngine() {
     }
     // 1. Transparent 4x Oversampled Soft-Knee Peak Limiter (linear below 0.80)
     // Replaces the aggressive 1ms compressor which was crushing transients and causing distortion
-    compressor = null;
     try {
       softClipper = ctx.createWaveShaper();
       softClipper.curve = generateSoftKneeCurve(1024, 0.8);
@@ -243,93 +237,19 @@ export function createMetroEngine() {
     }
   }
 
-  function handleHardwareAdaptation() {
-    // Monitor sampleRate divergence (Bluetooth A2DP 48k -> 44.1k etc.)
-    // WebKit on iOS does not resample worklet graphs; we must rebuild context.
-    try {
-      const currentRate = ctx ? ctx.sampleRate : hardwareSampleRate;
-      if (currentRate !== hardwareSampleRate) {
-        // Divergence detected — teardown and rebuild on next start
-        // If currently playing, attempt immediate recovery within 250ms
-        if (runRef.playing) {
-          const saved = { bpm: runRef.bpm, perBeat: runPerBeat, beatsPerBar: runBeatsPerBar, accentFirst: runAccentFirst, tiers: [...runBeatTiers] };
-          const gen = ++rebuildGeneration;
-          try { if (workletNode) workletNode.disconnect(); } catch (e) {}
-          try { if (hpFilter) hpFilter.disconnect(); } catch (e) {}
-          try { if (compressor) compressor.disconnect(); } catch (e) {}
-          try { if (softClipper) softClipper.disconnect(); } catch (e) {}
-          try { if (masterGain) masterGain.disconnect(); } catch (e) {}
-          try { const p = ctx.close(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
-          ctx = null;
-          masterGain = null;
-          compressor = null;
-          softClipper = null;
-          hpFilter = null;
-          workletNode = null;
-          usingWorklet = false;
-          hardwareSampleRate = currentRate;
-          // Re-instantiate quickly (generation-guarded: a stop() during the
-          // await must leave the metronome stopped, never ghost-playing)
-          ensureContext().then(() => {
-            if (gen !== rebuildGeneration || !runRef.playing || !ctx) return;
-            // Reload sample tables is not needed (synth only), re-post config
-            if (usingWorklet) {
-              postToWorklet({ type: 'sounds', sounds: METRO_SOUNDS.map(s => ({ id: s.id, type: s.type, freq: s.freq, accentFreq: s.accentFreq, decay: s.decay, gain: s.gain })) });
-              postToWorklet({ type: 'sound', id: getSound().id });
-              postToWorklet({ type: 'start', bpm: saved.bpm, perBeat: saved.perBeat, beatsPerBar: saved.beatsPerBar, accentFirst: saved.accentFirst, tiers: saved.tiers });
-              try {
-                const now = ctx.currentTime;
-                const isPlaying = workletNode.parameters.get('isPlaying');
-                isPlaying.setValueAtTime(1, now);
-                // Fresh node defaults to raw sub gain — re-apply the
-                // equal-power subdivision attenuation
-                if (workletNode.parameters.has('subGain')) {
-                  workletNode.parameters.get('subGain').setValueAtTime(METRO_GAIN.sub * getSubdivisionScale(saved.perBeat), now);
-                }
-              } catch (e) {}
-            } else {
-              nextClickTime = ctx.currentTime + METRO_TIMING.startOffsetSec;
-              ensureSchedulerTimer();
-              schedulerTick();
-            }
-          });
-        }
-      }
-    } catch (e) {}
-  }
-
-  /* Voice-count helper: speaks beat number 1..beatsPerBar with tier-adjusted pitch */
-  function speakVoiceCount(beatInBar, tier, isAccent) {
-    if (tier === 'mute') return;
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    try {
-      const count = ((beatInBar % runBeatsPerBar) + runBeatsPerBar) % runBeatsPerBar + 1;
-      const text = String(count);
-      const utt = new SpeechSynthesisUtterance(text);
-      const pitchMap = { low: 0.75, mid: 1.0, high: 1.45 };
-      utt.pitch = pitchMap[tier] != null ? pitchMap[tier] : 1.0;
-      if (isAccent) utt.pitch = Math.min(2, utt.pitch * 1.08);
-      utt.volume = isAccent ? 1.0 : 0.95;
-      const baseRate = Math.min(2.0, Math.max(0.9, runRef.bpm / 110));
-      utt.rate = Math.min(2.2, baseRate * (runPerBeat > 1 ? 1.15 : 1));
-      utt.lang = 'en-US';
-      try { window.speechSynthesis.cancel(); } catch (e2) {}
-      window.speechSynthesis.speak(utt);
-    } catch (e) {}
-  }
-
   /* ---------- context bootstrap ---------- */
 
   async function ensureContext() {
     if (ctx) return true;
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return false;
-    try {
-      ctx = new AudioCtx({ latencyHint: 'interactive', sampleRate: 48000 });
-    } catch (e) {
-      try { ctx = new AudioCtx({ latencyHint: 'interactive' }); } catch (e2) { return false; }
+    /* Native device rate: forcing 48k makes 44.1k hardware resample */
+    try { ctx = new AudioCtx({ latencyHint: 'interactive' }); } catch (e) { return false; }
+    /* First run: start resuming synchronously, still inside the gesture,
+       before the worklet module load yields */
+    if (ctx.state === 'suspended') {
+      try { const p = ctx.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
     }
-    hardwareSampleRate = ctx.sampleRate || 48000;
 
     setupDynamicsPipeline();
     attachStateHandler();
@@ -358,24 +278,12 @@ export function createMetroEngine() {
     if (ctx.audioWorklet) {
       try {
         await ctx.audioWorklet.addModule(METRO_TIMING.workletUrl);
-        // Prefer kins-click (tier-aware, accent=mute/high) — metronome-processor is spec path without tier support
-        let nodeCreated = false;
-        try {
-          workletNode = new AudioWorkletNode(ctx, METRO_TIMING.workletName, {
-            numberOfInputs: 0,
-            numberOfOutputs: 1,
-            outputChannelCount: [1]
-          });
-          nodeCreated = true;
-        } catch (e) {
-          workletNode = new AudioWorkletNode(ctx, 'metronome-processor', {
-            numberOfInputs: 0,
-            numberOfOutputs: 1,
-            outputChannelCount: [2]
-          });
-          nodeCreated = true;
-        }
-        if (nodeCreated && workletNode) {
+        workletNode = new AudioWorkletNode(ctx, METRO_TIMING.workletName, {
+          numberOfInputs: 0,
+          numberOfOutputs: 1,
+          outputChannelCount: [1]
+        });
+        {
           workletNode.port.onmessage = onWorkletMessage;
           /* Worklet path: connect DIRECTLY to masterGain, bypassing the
              HPF → Compressor → WaveShaper chain. The worklet already has
@@ -404,17 +312,8 @@ export function createMetroEngine() {
       } catch (e) {
         usingWorklet = false;
         workletNode = null;
-        // Legacy path: oscs will connect directly to compressor instead of masterGain
-        // Already wired compressor->master->dest, so legacy path will feed compressor
+        // Legacy path: oscillators feed hpFilter -> softClipper -> masterGain
       }
-    }
-    // If not using worklet, ensure legacy oscs feed compressor
-    // (scheduleClick will connect to compressor if available, else masterGain)
-
-    if (hardwareCheckId === null) {
-      try {
-        hardwareCheckId = setInterval(() => { if (ctx && runRef.playing) handleHardwareAdaptation(); }, METRO_TIMING.hardwareCheckMs || 1000);
-      } catch (e) { hardwareCheckId = null; }
     }
 
     return true;
@@ -432,12 +331,6 @@ export function createMetroEngine() {
       if (visualQueue.length >= METRO_TIMING.maxVisualQueueLen) visualQueue.shift();
       visualQueue.push({ time: d.time, beatInBar: d.beatInBar, isAccent: !!d.isAccent, tier: d.tier || 'mid', isBeatStart: d.isBeatStart !== false });
       scheduledTotal = d.n || scheduledTotal + 1;
-    } else if (d.type === 'TICK_EVENT') {
-      // Spec TICK_EVENT also drives visual queue if beat not already queued (avoid double)
-      // We already handle 'beat', so ignore duplicate unless 'beat' missing
-      if (d.role && typeof d.frame === 'number' && visualQueue.length < METRO_TIMING.maxVisualQueueLen) {
-        // No-op: beat message already queued; keep for debug
-      }
     }
   }
 
@@ -451,9 +344,7 @@ export function createMetroEngine() {
       } else if (st === 'running' && interruptedPending) {
         interruptedPending = false;
         safeCall(onInterruption, 'resumed');
-        handleHardwareAdaptation();
       } else if (st === 'suspended') {
-        // Could be Bluetooth route change; check sampleRate on next resume
         if (runRef.playing) {
           // Attempt resume quickly
           try { ctx.resume(); } catch (e) {}
@@ -465,13 +356,12 @@ export function createMetroEngine() {
 
   /* ---------- legacy path internals ---------- */
 
-  function scheduleClick(time, isAccent, startsABeat, tier) {
+  function scheduleClick(time, isAccent, startsABeat, tier, snap) {
+    const entry = { osc: null, gain: null, time, snap };
+    pendingSources.push(entry);
+    scheduledTotal++;
     if (tier === 'mute') return;
     const sound = getSound();
-    if (sound.id === 'voice-count') {
-      scheduledTotal++;
-      return;
-    }
     let t = time;
     if (ctx && t <= ctx.currentTime) t = ctx.currentTime + 0.001;
     const tt = tier || 'mid';
@@ -481,10 +371,7 @@ export function createMetroEngine() {
     let nominalGain;
     if (isAccent) nominalGain = METRO_GAIN.accent;
     else if (startsABeat) nominalGain = METRO_GAIN.beat;
-    else nominalGain = METRO_GAIN.sub;
-    if (!isAccent && !startsABeat) {
-      nominalGain *= getSubdivisionScale(runPerBeat);
-    }
+    else nominalGain = METRO_GAIN.sub * getSubdivisionScale(runPerBeat);
     const peakGain = Math.max(METRO_GAIN.epsilon, Math.min(1, nominalGain * (Math.max(METRO_GAIN.epsilon, sound.gain) / 0.5)));
 
     const osc = ctx.createOscillator();
@@ -504,8 +391,8 @@ export function createMetroEngine() {
     } catch (e) { gain.connect(masterGain); }
     osc.start(t);
     osc.stop(t + sound.decay + 0.02);
-    pendingSources.push({ osc, gain, time: t, startsABeat });
-    scheduledTotal++;
+    entry.osc = osc;
+    entry.gain = gain;
   }
 
   function prunePending() {
@@ -517,8 +404,9 @@ export function createMetroEngine() {
   }
 
   function cancelSource(entry, now) {
+    if (!entry.osc) return;
     try {
-      // Spec-compliant de-click: cancelAndHold then 3ms exponential to epsilon
+      // De-click: cancelAndHold then 3ms exponential to epsilon
       try {
         entry.gain.gain.cancelAndHoldAtTime(now);
       } catch (e) {
@@ -528,50 +416,31 @@ export function createMetroEngine() {
       entry.gain.gain.setValueAtTime(held, now);
       entry.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.003);
       entry.osc.stop(now + 0.005);
-      setTimeout(() => {
+      entry.osc.onended = () => {
         try { entry.osc.disconnect(); entry.gain.disconnect(); } catch (e) {}
-      }, 10);
+      };
     } catch (e) {}
   }
 
-  function flushFrom(guardSec, killUnstarted) {
+  /* Cancel every scheduled click later than now + guardSec and rewind the
+     clock to the first one, so the caller's config change re-schedules
+     from exactly that grid position. */
+  function flushFrom(guardSec) {
     if (!ctx) return;
     const now = ctx.currentTime;
     const cutoff = now + guardSec;
-    const kept = [];
-    let resumeAt = -1;
+    let firstIdx = -1;
     for (let i = 0; i < pendingSources.length; i++) {
-      const p = pendingSources[i];
-      if (p.time > cutoff) {
-        if (resumeAt === -1) resumeAt = p.time;
-        cancelSource(p, now);
-        clickCounter--;
-        if (p.startsABeat) beatCounter--;
-      } else if (killUnstarted && p.time > now) {
-        cancelSource(p, now);
-      } else {
-        kept.push(p);
-      }
+      if (pendingSources[i].time > cutoff) { firstIdx = i; break; }
     }
-    pendingSources.length = 0;
-    for (let i = 0; i < kept.length; i++) pendingSources.push(kept[i]);
-    if (resumeAt !== -1) {
-      while (visualQueue.length && visualQueue[visualQueue.length - 1].time > cutoff) {
-        visualQueue.pop();
-      }
-      if (clickCounter < 0) clickCounter = 0;
-      if (beatCounter < 0) beatCounter = 0;
-      nextClickTime = Math.max(resumeAt, now + guardSec);
-    } else {
-      if (nextClickTime < now + guardSec) nextClickTime = now + guardSec;
+    if (firstIdx === -1) return;
+    clock.restore(pendingSources[firstIdx].snap);
+    scheduledTotal -= pendingSources.length - firstIdx;
+    for (let i = firstIdx; i < pendingSources.length; i++) cancelSource(pendingSources[i], now);
+    pendingSources.length = firstIdx;
+    while (visualQueue.length && visualQueue[visualQueue.length - 1].time > cutoff) {
+      visualQueue.pop();
     }
-  }
-
-  function skipMissedClick(clickDur) {
-    const startsABeat = Math.abs(clickCounter % runPerBeat) < 1e-9;
-    if (startsABeat) beatCounter++;
-    clickCounter++;
-    nextClickTime += clickDur;
   }
 
   function schedulerTick() {
@@ -587,40 +456,16 @@ export function createMetroEngine() {
     const aheadSec = (typeof document !== 'undefined' && document.hidden)
       ? METRO_TIMING.hiddenScheduleAheadSec
       : METRO_TIMING.scheduleAheadSec;
-    const clickDur = 60 / runRef.bpm / runPerBeat;
-    let missedSteps = 0;
-    while (nextClickTime < ctx.currentTime + aheadSec) {
-      if (nextClickTime < ctx.currentTime - METRO_TIMING.resyncGraceSec) {
-        /* Behind the horizon (long tab freeze / OS suspension). Step
-           per-click so bar phase stays exact, but bail to a
-           phase-preserving bulk jump once the backlog is huge — a
-           multi-hour sleep would otherwise loop 100k+ times on the
-           first tick after resume. */
-        if (++missedSteps > (METRO_TIMING.maxCatchupSteps || 256)) {
-          const target = ctx.currentTime + aheadSec;
-          const steps = Math.ceil((target - nextClickTime) / clickDur);
-          if (steps > 0 && Number.isFinite(steps)) {
-            const rpb = Math.max(1, runPerBeat);
-            beatCounter += Math.floor((clickCounter + steps - 1) / rpb) - Math.floor((clickCounter - 1) / rpb);
-            clickCounter += steps;
-            nextClickTime += steps * clickDur;
-          }
-          break;
-        }
-        skipMissedClick(clickDur);
-        continue;
-      }
-      const startsABeat = Math.abs(clickCounter % runPerBeat) < 1e-9;
-      const soundingBeat = startsABeat ? beatCounter : beatCounter - 1;
-      const beatInBar = ((Math.max(0, soundingBeat) % runBeatsPerBar) + runBeatsPerBar) % runBeatsPerBar;
-      const tier = (runBeatTiers && runBeatTiers[beatInBar]) || 'mid';
-      // Accent is exclusively tier 'high' on beat starts (user report: no accent unless beat is high)
-      const isAccent = tier === 'high' && startsABeat;
-      scheduleClick(nextClickTime, isAccent, startsABeat, tier);
-      visualQueue.push({ time: nextClickTime, beatInBar, isAccent, tier, isBeatStart: startsABeat });
-      nextClickTime += clickDur;
-      clickCounter++;
-      if (startsABeat) beatCounter++;
+    /* Behind the horizon (long tab freeze / OS suspension): skip the
+       missed clicks with bar phase preserved instead of bursting them. */
+    if (clock.nextTime < ctx.currentTime - METRO_TIMING.resyncGraceSec) {
+      clock.skipTo(ctx.currentTime);
+    }
+    while (clock.nextTime < ctx.currentTime + aheadSec) {
+      const snap = clock.snapshot();
+      const e = clock.next();
+      scheduleClick(e.time, e.isAccent, e.isBeatStart, e.tier, snap);
+      visualQueue.push({ time: e.time, beatInBar: e.beatInBar, isAccent: e.isAccent, tier: e.tier, isBeatStart: e.isBeatStart });
     }
   }
 
@@ -675,18 +520,17 @@ export function createMetroEngine() {
       if (evt.isAccent && runVibrate && typeof navigator !== 'undefined' && navigator.vibrate) {
         try { navigator.vibrate(12); } catch (e) {}
       }
-      try {
-        const curSound = getSound();
-        if (curSound && curSound.id === 'voice-count' && evt.tier !== 'mute' && evt.isBeatStart !== false) {
-          speakVoiceCount(evt.beatInBar, evt.tier, !!evt.isAccent);
-        }
-      } catch (e2) {}
     }
   }
 
   /* ---------- public API ---------- */
 
   async function start(opts) {
+    /* Resume inside the user gesture, before any await: strict autoplay
+       policies (iOS Safari) drop the activation once we yield. */
+    if (ctx && ctx.state !== 'running') {
+      try { const p = ctx.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    }
     const ok = await ensureContext();
     if (!ok) {
       const err = new Error('unsupported');
@@ -697,7 +541,6 @@ export function createMetroEngine() {
     runRef.bpm = opts.bpm;
     runPerBeat = opts.perBeat;
     runBeatsPerBar = opts.beatsPerBar;
-    runAccentFirst = opts.accentFirst;
     runVibrate = opts.vibrate;
     if (Array.isArray(opts.tiers)) runBeatTiers = [...opts.tiers];
     onVisualBeat = opts.onVisualBeat || null;
@@ -724,8 +567,6 @@ export function createMetroEngine() {
     }
 
     visualQueue.length = 0;
-    clickCounter = 0;
-    beatCounter = 0;
     scheduledTotal = 0;
     firedBeats = 0;
     tickCount = 0;
@@ -755,24 +596,19 @@ export function createMetroEngine() {
         bpm: runRef.bpm,
         perBeat: runPerBeat,
         beatsPerBar: runBeatsPerBar,
-        accentFirst: runAccentFirst,
         tiers: runBeatTiers
       });
       try {
         const now = ctx.currentTime;
-        if (workletNode.parameters.has('bpm')) workletNode.parameters.get('bpm').setValueAtTime(runRef.bpm, now);
-        if (workletNode.parameters.has('subdivision')) workletNode.parameters.get('subdivision').setValueAtTime(runPerBeat, now);
-        if (workletNode.parameters.has('accentGain')) workletNode.parameters.get('accentGain').setValueAtTime(METRO_GAIN.accent, now);
-        if (workletNode.parameters.has('beatGain')) workletNode.parameters.get('beatGain').setValueAtTime(METRO_GAIN.beat, now);
-        if (workletNode.parameters.has('subGain')) {
-          const gSub = METRO_GAIN.sub * getSubdivisionScale(runPerBeat);
-          workletNode.parameters.get('subGain').setValueAtTime(gSub, now);
-        }
-        if (workletNode.parameters.has('isPlaying')) workletNode.parameters.get('isPlaying').setValueAtTime(1, now);
-        workletNode.port.postMessage({ type: 'RESET_PHASE' });
+        workletNode.parameters.get('accentGain').setValueAtTime(METRO_GAIN.accent, now);
+        workletNode.parameters.get('beatGain').setValueAtTime(METRO_GAIN.beat, now);
+        workletNode.parameters.get('subGain').setValueAtTime(METRO_GAIN.sub * getSubdivisionScale(runPerBeat), now);
       } catch (e) {}
     } else {
-      nextClickTime = ctx.currentTime + METRO_TIMING.startOffsetSec;
+      pendingSources.length = 0;
+      clock.reset(ctx.currentTime + METRO_TIMING.startOffsetSec, {
+        bpm: runRef.bpm, perBeat: runPerBeat, beatsPerBar: runBeatsPerBar, tiers: runBeatTiers
+      });
       ensureSchedulerTimer();
       schedulerTick();
     }
@@ -782,18 +618,16 @@ export function createMetroEngine() {
   function stop() {
     runRef.playing = false;
     interruptedPending = false;
-    /* Invalidate any in-flight hardware-context rebuild so it cannot
-       resurrect playback after the user stopped */
-    rebuildGeneration++;
     pauseBackgroundSilence();
     clearSchedulerTimer();
     if (usingWorklet && workletNode && ctx) {
       postToWorklet({ type: 'stop' });
-      try {
-        if (workletNode.parameters.has('isPlaying')) workletNode.parameters.get('isPlaying').setValueAtTime(0, ctx.currentTime);
-      } catch (e) {}
     } else if (ctx) {
-      flushFrom(METRO_TIMING.stopFlushGuardSec, true);
+      /* Explicit stop: cancel every click that has not started yet */
+      const now = ctx.currentTime;
+      for (let i = 0; i < pendingSources.length; i++) {
+        if (pendingSources[i].time > now) cancelSource(pendingSources[i], now);
+      }
       pendingSources.length = 0;
     }
     if (ctx && masterGain) {
@@ -832,65 +666,42 @@ export function createMetroEngine() {
       uiRafId = null;
     }
     visualQueue.length = 0;
-    try { if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
   }
 
+  /* Live changes. Tempo is phase-preserving and immediate; subdivision
+     lands on the next beat and meter on the next bar (MetroClock). */
   function updateBpm(bpm) {
     runRef.bpm = bpm;
     if (usingWorklet && workletNode) {
-      // Prefer AudioParam (k-rate, no flood)
-      try {
-        if (workletNode.parameters.has('bpm')) {
-          workletNode.parameters.get('bpm').setValueAtTime(bpm, ctx.currentTime);
-          return;
-        }
-      } catch (e) {}
       postToWorklet({ type: 'bpm', bpm });
       return;
     }
     if (runRef.playing && ctx) {
       flushFrom(METRO_TIMING.changeGuardSec);
+      clock.setBpm(bpm, ctx.currentTime);
       schedulerTick();
     }
   }
 
   function updateOptions(opts) {
-    if (typeof opts.perBeat === 'number') runPerBeat = opts.perBeat;
-    if (typeof opts.beatsPerBar === 'number') runBeatsPerBar = opts.beatsPerBar;
-    if (typeof opts.accentFirst === 'boolean') runAccentFirst = opts.accentFirst;
+    const msg = { type: 'opts' };
+    if (typeof opts.perBeat === 'number') { runPerBeat = opts.perBeat; msg.perBeat = opts.perBeat; }
+    if (typeof opts.beatsPerBar === 'number') { runBeatsPerBar = opts.beatsPerBar; msg.beatsPerBar = opts.beatsPerBar; }
     if (typeof opts.vibrate === 'boolean') runVibrate = opts.vibrate;
+    if (msg.perBeat === undefined && msg.beatsPerBar === undefined) return;
     if (usingWorklet && workletNode) {
-      try {
-        let handled = false;
-        if (typeof opts.perBeat === 'number' && workletNode.parameters.has('subdivision')) {
-          workletNode.parameters.get('subdivision').setValueAtTime(opts.perBeat, ctx.currentTime);
-          handled = true;
-          try {
-            const gSub = METRO_GAIN.sub * getSubdivisionScale(opts.perBeat);
-            if (workletNode.parameters.has('subGain')) workletNode.parameters.get('subGain').setValueAtTime(gSub, ctx.currentTime);
-          } catch (e) {}
-        }
-        if (handled) {
-          // Also forward opts for legacy compatibility
-          postToWorklet({
-            type: 'opts',
-            perBeat: runPerBeat,
-            beatsPerBar: runBeatsPerBar,
-            accentFirst: runAccentFirst
-          });
-          return;
-        }
-      } catch (e) {}
-      postToWorklet({
-        type: 'opts',
-        perBeat: runPerBeat,
-        beatsPerBar: runBeatsPerBar,
-        accentFirst: runAccentFirst
-      });
+      if (msg.perBeat !== undefined) {
+        try {
+          workletNode.parameters.get('subGain').setValueAtTime(METRO_GAIN.sub * getSubdivisionScale(msg.perBeat), ctx.currentTime);
+        } catch (e) {}
+      }
+      postToWorklet(msg);
       return;
     }
     if (runRef.playing && ctx) {
       flushFrom(METRO_TIMING.changeGuardSec);
+      if (msg.perBeat !== undefined) clock.setPerBeat(msg.perBeat);
+      if (msg.beatsPerBar !== undefined) clock.setMeter(msg.beatsPerBar);
       schedulerTick();
     }
   }
@@ -903,6 +714,7 @@ export function createMetroEngine() {
     }
     if (runRef.playing && ctx) {
       flushFrom(METRO_TIMING.changeGuardSec);
+      clock.setTiers(runBeatTiers);
       schedulerTick();
     }
   }
@@ -910,15 +722,6 @@ export function createMetroEngine() {
   async function previewClick(tierId, soundId) {
     if (tierId === 'mute') return;
     const sound = (soundId ? METRO_SOUNDS.find((s) => s.id === soundId) : null) || getSound();
-    if (sound.id === 'voice-count') {
-      const ok = await ensureContext();
-      if (!ok || !ctx) return;
-      if (ctx.state !== 'running') {
-        try { await ctx.resume(); } catch (e) {}
-      }
-      speakVoiceCount(0, tierId || 'mid', false);
-      return;
-    }
     const ok = await ensureContext();
     if (!ok || !ctx) return;
     if (ctx.state !== 'running') {
@@ -956,9 +759,6 @@ export function createMetroEngine() {
 
   function updateSound(id) {
     if (usingWorklet) postToWorklet({ type: 'sound', id });
-    if (id !== 'voice-count') {
-      try { if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
-    }
   }
 
   function setVolume(value) {
@@ -977,15 +777,14 @@ export function createMetroEngine() {
     }
   }
 
+  /* Called after a tab returns to view or the OS ends an interruption.
+     The audio clock is continuous, so the grid is never re-seated (that
+     used to skip a beat and restart the bar): the worklet and the legacy
+     scheduler both skip missed clicks with bar phase preserved. Only
+     visual events that went stale while hidden are dropped. */
   function sync() {
     if (!ctx || !runRef.playing) return;
-    handleHardwareAdaptation();
-    if (usingWorklet) {
-      postToWorklet({ type: 'sync', offsetSec: METRO_TIMING.startOffsetSec });
-      try { workletNode.port.postMessage({ type: 'RESET_PHASE' }); } catch (e) {}
-    } else if (nextClickTime < ctx.currentTime - METRO_TIMING.resyncGraceSec) {
-      nextClickTime = ctx.currentTime + METRO_TIMING.startOffsetSec;
-    }
+    if (!usingWorklet) schedulerTick();
     while (visualQueue.length && visualQueue[0].time < ctx.currentTime - METRO_TIMING.staleVisualSec) {
       visualQueue.shift();
     }
@@ -999,8 +798,8 @@ export function createMetroEngine() {
       bpm: runRef.bpm,
       pendingSources: usingWorklet ? -1 : pendingSources.length,
       visualQueued: visualQueue.length,
-      nextClickInMs: (!usingWorklet && ctx && runRef.playing && nextClickTime > ctx.currentTime)
-        ? Math.round((nextClickTime - ctx.currentTime) * 1000)
+      nextClickInMs: (!usingWorklet && ctx && runRef.playing && clock.nextTime > ctx.currentTime)
+        ? Math.round((clock.nextTime - ctx.currentTime) * 1000)
         : -1,
       ticks: tickCount,
       lastTickDeltaMs: Math.round(lastTickDeltaMs),
@@ -1015,12 +814,7 @@ export function createMetroEngine() {
      repeated init/teardown cycles eventually make `new AudioContext()`
      throw and the metronome dies permanently. */
   function destroy() {
-    rebuildGeneration++;
     try { stop(); } catch (e) {}
-    if (hardwareCheckId !== null) {
-      clearInterval(hardwareCheckId);
-      hardwareCheckId = null;
-    }
     if (metroWorker) {
       try { metroWorker.terminate(); } catch (e) {}
       metroWorker = null;
@@ -1050,7 +844,6 @@ export function createMetroEngine() {
     }
     ctx = null;
     masterGain = null;
-    compressor = null;
     softClipper = null;
     hpFilter = null;
     workletNode = null;

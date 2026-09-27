@@ -274,15 +274,12 @@ export const METRO_TIMING = {
   /* Already-scheduled clicks closer than this to now are left alone when
      flushing on a tempo/option change (cancelling mid-playback artifacts) */
   changeGuardSec: 0.03,
-  /* On explicit stop() everything further than this from now is cancelled */
-  stopFlushGuardSec: 0.005,
   /* Visual beats fire this early on the rAF drain (frame quantisation slack) */
   visualDrainLeadSec: 0.02,
   /* AudioWorklet module (progressive enhancement over the legacy path) */
   workletName: 'kins-click',
-  workletUrl: '/worklets/click-worklet.js',
-  /* Hardware sampleRate divergence check interval (Bluetooth route) */
-  hardwareCheckMs: 1000
+  /* Bump ?v= (and public/sw.js) whenever the worklet protocol changes */
+  workletUrl: '/worklets/click-worklet.js?v=3'
 } as const;
 
 export const METRO_COPY = {
