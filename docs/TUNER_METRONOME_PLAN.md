@@ -18,7 +18,10 @@ Status: **In progress** · Scope: `/tuner`, `/metronome` · Date: 2026-09-27
 | 2.3/2.4 Robust dip search + weak fallback (T1) | ✅ Partial | full-dip search, continuity-gated fallback; FFT core still open |
 | 3.1 Chromatic: no blanking, visible cents (T3, T4) | ✅ Done | ±60 ct note hysteresis; cents in the pitch pill; throttled SR announcements |
 | 3.2 Confirmation hysteresis, tolerance options (T5, T9) | ✅ Done | 0.5/1/2/3/5 ct |
-| 1.3 Bar program in worklet (coach mutes, sections) | ⏳ Next | |
+| 1.3 Bar program in worklet — coach muted bars | ✅ Done | mute program in `MetroClock`; bar-exact silence test |
+| 1.3 Bar program — speed-trainer steps, setlist sections, count-in | ⏳ Next | still applied from the visual beat |
+| Free mode stage (dial, pitch trace, nearest string) | ✅ Done | `TunerFreeStage.astro`, `freeStage.js` |
+| Ear-training tension marker | ✅ Done | `tensionPosition()` |
 | 1.4 Output-latency compensation + calibration | ⏳ | |
 | 1.8 Tap tempo, 3.3 needle spring, 3.6 safety monitor, 3.7 reference context | ⏳ | |
 | 2.5–2.7 Precision stage, inharmonicity, attack gating; 3.4 strobe | ⏳ | |
