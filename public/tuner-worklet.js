@@ -1,20 +1,35 @@
 // Protocol changes must also change the versioned URL in audioEngine.js.
+// v3: chunks go straight to the analysis Worker over a MessagePort handed in
+// with { type: 'connect', port }; frames are absolute context frames.
 class TunerCaptureProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
-    this.chunk = options.processorOptions?.chunk || 512;
-    this.channel = options.processorOptions?.channel || 0;
-    this.pool = Array.from({ length: 4 }, () => new Float32Array(this.chunk));
+    const opts = options.processorOptions || {};
+    this.chunk = opts.chunk || 512;
+    this.channel = opts.channel || 0;
+    this.poolSize = opts.pool || 24;
+    this.pool = Array.from({ length: this.poolSize }, () => new Float32Array(this.chunk));
     this.current = null;
     this.fill = 0;
-    this.frame = 0;
+    this.frame = null;
     this.startFrame = 0;
+    this.out = this.port;
+    const recycle = event => {
+      const data = event.data;
+      if (data instanceof Float32Array && data.length === this.chunk && this.pool.length < this.poolSize) this.pool.push(data);
+    };
     this.port.onmessage = event => {
       const data = event.data;
-      if (data instanceof Float32Array && data.length === this.chunk && this.pool.length < 4) this.pool.push(data);
+      if (data && data.type === 'connect' && data.port) {
+        this.out = data.port;
+        this.out.onmessage = recycle;
+        return;
+      }
+      recycle(event);
     };
   }
   process(inputs) {
+    if (this.frame === null) this.frame = typeof currentFrame === 'number' ? currentFrame : 0;
     const channels = inputs[0];
     const input = channels?.[this.channel];
     const count = channels?.[0]?.length || 128;
@@ -30,7 +45,7 @@ class TunerCaptureProcessor extends AudioWorkletProcessor {
       this.current.set(input.subarray(offset, offset + take), this.fill);
       offset += take; this.fill += take; this.frame += take;
       if (this.fill === this.chunk) {
-        this.port.postMessage({ protocol: 2, frame: this.startFrame, samples: this.current }, [this.current.buffer]);
+        this.out.postMessage({ protocol: 3, frame: this.startFrame, samples: this.current }, [this.current.buffer]);
         this.current = null; this.fill = 0;
       }
     }

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import fs from 'node:fs';
 
-function capture(channel = 0) {
+function capture(channel = 0, pool = 4) {
   const packets = [];
   let Processor;
   vm.runInNewContext(fs.readFileSync(new URL('../../public/tuner-worklet.js', import.meta.url), 'utf8'), {
@@ -13,7 +13,7 @@ function capture(channel = 0) {
     },
     registerProcessor(name, implementation) { assert.equal(name, 'tuner-capture'); Processor = implementation; }
   });
-  return { node: new Processor({ processorOptions: { channel, chunk: 512 } }), packets };
+  return { node: new Processor({ processorOptions: { channel, chunk: 512, pool } }), packets };
 }
 
 test('worklet preserves exact sample order, channel selection and frame positions', () => {
@@ -22,7 +22,7 @@ test('worklet preserves exact sample order, channel selection and frame position
     node.process([[new Float32Array(128), Float32Array.from({ length: 128 }, (_, i) => block * 128 + i)]]);
   }
   assert.equal(packets.length, 1);
-  assert.equal(packets[0].protocol, 2);
+  assert.equal(packets[0].protocol, 3);
   assert.equal(packets[0].frame, 0);
   assert.deepEqual(packets[0].samples, Float32Array.from({ length: 512 }, (_, i) => i));
 });
@@ -37,4 +37,18 @@ test('worklet starvation and missing channels create detectable gaps rather than
   for (let i = 0; i < 4; i++) node.process(block);
   assert.equal(packets.length, 5);
   assert.equal(packets[4].frame, 2688);
+});
+
+test('connect hands chunks to a direct port and recycles buffers returned on it', () => {
+  const { node, packets } = capture();
+  const direct = [];
+  const port = { onmessage: null, postMessage(packet, transfer) { direct.push(structuredClone(packet, { transfer })); } };
+  node.port.onmessage({ data: { type: 'connect', port } });
+  const block = [[new Float32Array(128).fill(.1)]];
+  for (let i = 0; i < 16; i++) node.process(block);
+  assert.equal(packets.length, 0, 'chunks still sent to the node port');
+  assert.equal(direct.length, 4);
+  port.onmessage({ data: direct[0].samples });
+  for (let i = 0; i < 4; i++) node.process(block);
+  assert.equal(direct.length, 5);
 });

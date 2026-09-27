@@ -16,7 +16,7 @@ const PRECACHE_ASSETS = [
   './favicon.ico',
   './followers.json',
   './noise-tile.png',
-  './tuner-worklet.js?v=2',
+  './tuner-worklet.js?v=3',
   './worklets/click-worklet.js?v=3',
   './worklets/metro-worker.js'
 ];

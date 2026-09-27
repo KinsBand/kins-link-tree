@@ -856,7 +856,20 @@ export const DETECT = {
   METER_CORE_SPLIT: 0.68,
   RING_SAMPLES: 32768,
   WORK_WINDOW: 16384,
-  WORKLET_CHUNK: 512
+  WORKLET_CHUNK: 512,
+  // Capture buffers in flight between worklet and worker (~256 ms @ 48k).
+  WORKLET_POOL: 24,
+  // Worker pacing: wall-clock gap after an analysis before the next one,
+  // so chunks queued behind a slow analysis are absorbed, not re-analysed.
+  MIN_WALL_GAP_MS: 5,
+  // Mains hum: a strong lock within HUM_TOLERANCE_HZ of 50/60 Hz (or 2x/3x)
+  // held for HUM_CONFIRM_MS with level steady within HUM_MAX_LEVEL_RATIO
+  // enables notches at the first HUM_HARMONICS multiples.
+  HUM_TOLERANCE_HZ: 0.2,
+  HUM_CONFIRM_MS: 1500,
+  HUM_MAX_LEVEL_RATIO: 1.6,
+  HUM_HARMONICS: 6,
+  HUM_NOTCH_Q: 30
 } as const;
 
 export const TUNER_COPY = {

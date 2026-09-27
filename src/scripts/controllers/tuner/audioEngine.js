@@ -3,20 +3,20 @@ import { DETECT } from '../../../settings/tuner.config.ts';
 const abortError = () => Object.assign(new Error('Microphone start cancelled'), { name: 'AbortError' });
 const unavailable = (code) => Object.assign(new Error(code), { code });
 
+/** Microphone capture. PCM flows AudioWorklet -> analysis Worker over a
+ * MessagePort created here; the main thread never touches samples. */
 export function createAudioEngine() {
   let session = null;
   let generation = 0;
   let micLost = null;
-  let samplesReady = null;
-  const ring = new Float32Array(DETECT.RING_SAMPLES);
-  let writeIndex = 0, valid = 0, fresh = false, sampleEnd = 0, epoch = 0;
 
-  function clearSamples() { ring.fill(0); writeIndex = 0; valid = 0; fresh = false; sampleEnd = 0; epoch++; }
   function release(current) {
     if (!current) return;
     current.closed = true;
     current.events.abort();
     current.stream?.getTracks().forEach(track => track.stop());
+    current.channel?.port1.close();
+    current.channel?.port2.close();
     if (current.node) {
       current.node.port.onmessage = null;
       current.node.port.close?.();
@@ -28,14 +28,15 @@ export function createAudioEngine() {
   function stop() {
     generation++;
     const old = session; session = null;
-    release(old); clearSamples();
+    release(old);
   }
+  /** options.worker receives { type: 'connect', port, rate, config }. */
   async function start(options = {}) {
     stop();
     if (!navigator.mediaDevices?.getUserMedia) throw unavailable('unsupported');
     const Context = window.AudioContext || window.webkitAudioContext;
     if (!Context) throw unavailable('unsupported');
-    const current = { id: generation, ctx: null, stream: null, source: null, node: null, events: new AbortController(), closed: false, bluetooth: false, expectedFrame: null };
+    const current = { id: generation, ctx: null, stream: null, source: null, node: null, channel: null, events: new AbortController(), closed: false, bluetooth: false };
     session = current;
     const assertCurrent = () => { if (session !== current || current.closed) throw abortError(); };
     try {
@@ -59,49 +60,28 @@ export function createAudioEngine() {
       track.addEventListener('mute', lost, { signal: current.events.signal });
       current.bluetooth = /bluetooth|airpod|handsfree|galaxy buds/i.test(track.label || '');
       if (!current.ctx.audioWorklet || typeof AudioWorkletNode === 'undefined') throw unavailable('worklet-unavailable');
-      await current.ctx.audioWorklet.addModule('/tuner-worklet.js?v=2');
+      await current.ctx.audioWorklet.addModule('/tuner-worklet.js?v=3');
       assertCurrent();
       current.source = current.ctx.createMediaStreamSource(current.stream);
-      current.node = new AudioWorkletNode(current.ctx, 'tuner-capture', { numberOfOutputs: 0, processorOptions: { chunk: DETECT.WORKLET_CHUNK, channel: options.channel ?? 0, protocol: 2 } });
+      current.node = new AudioWorkletNode(current.ctx, 'tuner-capture', { numberOfOutputs: 0, processorOptions: { chunk: DETECT.WORKLET_CHUNK, channel: options.channel ?? 0, pool: DETECT.WORKLET_POOL } });
       current.node.addEventListener('processorerror', lost, { signal: current.events.signal });
-      current.node.port.onmessage = event => {
-        if (session !== current || current.closed) return;
-        const packet = event.data;
-        if (packet?.protocol !== 2 || !(packet.samples instanceof Float32Array)) { lost(); return; }
-        const data = packet.samples;
-        if (current.expectedFrame !== null && packet.frame !== current.expectedFrame) clearSamples();
-        current.expectedFrame = packet.frame + data.length;
-        sampleEnd = current.expectedFrame;
-        for (let i = 0; i < data.length; i++) {
-          ring[writeIndex] = data[i]; writeIndex = (writeIndex + 1) % ring.length;
-        }
-        valid = Math.min(ring.length, valid + data.length); fresh = true;
-        current.node.port.postMessage(data, [data.buffer]);
-        samplesReady?.();
-      };
+      current.channel = new MessageChannel();
+      current.node.port.postMessage({ type: 'connect', port: current.channel.port1 }, [current.channel.port1]);
+      options.worker?.postMessage({ type: 'connect', port: current.channel.port2, rate: current.ctx.sampleRate, config: options.config }, [current.channel.port2]);
       current.source.connect(current.node);
       return current.ctx;
     } catch (error) {
       release(current);
-      if (session === current) { session = null; clearSamples(); }
+      if (session === current) session = null;
       throw error;
     }
   }
-  function readLatest(target) {
-    const window = Math.ceil((session?.ctx.sampleRate ?? 48000) * DETECT.ANALYSIS_WINDOW_MS / 1000);
-    const size = Math.min(target.length, valid, window);
-    let position = (writeIndex - size + ring.length) % ring.length;
-    for (let i = 0; i < size; i++) { target[i] = ring[position]; position = (position + 1) % ring.length; }
-    return size;
-  }
   return {
-    start, stop, readLatest,
-    takeFresh() { const result = fresh; fresh = false; return result; },
+    start, stop,
     onMicLost(callback) { micLost = callback; },
-    onSamples(callback) { samplesReady = callback; },
     get sampleRate() { return session?.ctx.sampleRate ?? 48000; },
-    get sampleTime() { return sampleEnd / (session?.ctx.sampleRate ?? 48000) * 1000; },
-    get epoch() { return epoch; },
+    /** Audio clock in ms, the same timebase as reading timestamps. */
+    get audioTime() { return session ? session.ctx.currentTime * 1000 : 0; },
     get bluetooth() { return session?.bluetooth ?? false; },
     get running() { return session?.ctx.state === 'running' && !session.closed; }
   };

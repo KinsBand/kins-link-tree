@@ -25,9 +25,10 @@ function rng(seed) {
 /** A decaying plucked string rendered as one continuous take.
  *  partials: relative amplitudes of harmonics 1..n (index 0 = fundamental)
  *  B: inharmonicity (f_n = n f0 sqrt(1 + B n^2)), decay: 1/s for the fundamental
- *  vibrato: { cents, hz }, noise: { snrDb, color: 'white'|'pink' }, hum: { hz, db } */
+ *  vibrato: { cents, hz }, noise: { snrDb, color: 'white'|'pink' }, hum: { hz, db }
+ *  mute: render only noise/hum (levels stay relative to `level`) */
 export function renderTake({ f0, rate = 48000, seconds = 2.2, partials = [1, 0.8, 0.6, 0.4, 0.3, 0.2], B = 0, decay = 1.2,
-  vibrato = null, noise = null, hum = null, level = 0.15, seed = 11 }) {
+  vibrato = null, noise = null, hum = null, level = 0.15, seed = 11, mute = false }) {
   const n = Math.round(seconds * rate);
   const out = new Float32Array(n);
   const phases = partials.map(() => 0);
@@ -41,7 +42,7 @@ export function renderTake({ f0, rate = 48000, seconds = 2.2, partials = [1, 0.8
       phases[h] += 2 * Math.PI * freqs[h] * bend / rate;
       s += partials[h] * Math.sin(phases[h]) * Math.exp(-t * decay * (1 + 0.35 * h));
     }
-    out[i] = level * s / norm;
+    out[i] = mute ? 0 : level * s / norm;
   }
   if (noise) {
     const random = rng(seed);
