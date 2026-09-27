@@ -7,7 +7,7 @@ function environment() {
   const contexts = [];
   const node = () => ({ connect() {}, disconnect() {} });
   class Context {
-    state = 'running'; sampleRate = 48000; destination = {};
+    state = 'running'; sampleRate = 48000; currentTime = 0; destination = {};
     audioWorklet = { async addModule() {} };
     constructor() { contexts.push(this); }
     createMediaStreamSource() { return node(); }
@@ -52,7 +52,16 @@ test('an older permission completion cannot replace or stop a newer session', as
   assert.equal(newer.track.stopped, true);
 });
 
-test('a fresh engine never reports uncaptured samples as valid', () => {
-  const engine = createAudioEngine();
-  assert.equal(engine.readLatest(new Float32Array(6144)), 0);
+test('capture is wired worklet -> worker over a dedicated port; stop closes it', async () => {
+  const env = environment(); const engine = createAudioEngine();
+  const worker = { messages: [], postMessage(message) { this.messages.push(message); } };
+  const start = engine.start({ worker, config: { instrument: 'bass', revision: 3 } });
+  env.pending[0].resolve(env.stream()); await start;
+  const connect = worker.messages.find(m => m.type === 'connect');
+  assert.ok(connect && connect.port, 'worker never received the capture port');
+  assert.equal(connect.rate, 48000);
+  assert.deepEqual(connect.config, { instrument: 'bass', revision: 3 });
+  assert.equal(engine.audioTime, 0);
+  engine.stop();
+  assert.equal(engine.running, false);
 });

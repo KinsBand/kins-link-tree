@@ -13,9 +13,8 @@ import { createDrumWorkflow } from './drumWorkflow.js';
 
 let initialized = false, engine = null, ui = null, worker = null, events = null;
 let drums = null;
-let sessionId = 0, revision = 0, busy = false, watchdog = null;
-let workBuf = new Float32Array(DETECT.WORK_WINDOW);
-let lastAnalysis = -Infinity, lastPacketAt = 0, lastGood = null, lastGoodAt = 0;
+let sessionId = 0, revision = 0, watchdog = null;
+let lastPacketAt = 0, lastGood = null, lastGoodAt = 0, sentConfig = '';
 let autoCandidate = null, autoSince = 0, pendingAdvance = null;
 let completed = new Set();
 const smoother = createPitchSmoother();
@@ -24,11 +23,24 @@ const confirmation = createTuningConfirmation();
 const referenceTone = createReferenceTone((status, playback) => ui?.setReferenceStatus(status, playback));
 
 function targetFreq(string) { return state.instrumentId === 'drums' ? string.freq : noteToFreq(string.midi, state.a4); }
+function analysisConfig() {
+  return { type: 'config', instrument: state.instrumentId, targetHz: drums?.target() ?? 0, revision };
+}
+/** Keep the Worker's instrument / drum target / revision current. */
+function syncWorkerConfig() {
+  if (!worker) return;
+  const config = analysisConfig();
+  const key = config.instrument + '|' + config.targetHz + '|' + config.revision;
+  if (key === sentConfig) return;
+  sentConfig = key;
+  worker.postMessage(config);
+}
 function resetPipeline() {
   revision++; smoother.reset(); noteStab.reset(); confirmation.reset();
   lastGood = null; lastGoodAt = 0; autoCandidate = null; pendingAdvance = null;
   completed.clear();
   ui?.updateProgress?.(0, false);
+  syncWorkerConfig();
 }
 function holdReading(status = 'silent') {
   confirmation.reset(); autoCandidate = null; pendingAdvance = null;
@@ -97,20 +109,10 @@ function handleReading(reading) {
     showToast(TUNER_COPY.autoAdvanced(strings[next].note), 'success');
   }
 }
-function dispatchAnalysis() {
-  lastPacketAt = performance.now();
-  if (!state.listening || busy || !worker || engine.sampleTime - lastAnalysis < DETECT.ANALYSIS_HOP_MS) return;
-  const size = engine.readLatest(workBuf);
-  if (size < Math.ceil(2 * engine.sampleRate / DETECT.MIN_DETECT_HZ) + 2) return;
-  lastAnalysis = engine.sampleTime; busy = true;
-  worker.postMessage({ samples: workBuf, size, rate: engine.sampleRate, time: lastAnalysis, epoch: engine.epoch, revision,
-    instrument: state.instrumentId, targetHz: drums?.target() }, [workBuf.buffer]);
-}
 function stopMic() {
   sessionId++; state.listening = false; state.starting = false;
-  engine?.stop(); worker?.terminate(); worker = null; busy = false;
+  engine?.stop(); worker?.terminate(); worker = null; sentConfig = '';
   if (watchdog !== null) clearInterval(watchdog); watchdog = null;
-  workBuf = new Float32Array(DETECT.WORK_WINDOW);
   resetPipeline(); ui?.setMicState(false, false);
   drums?.setListening(false);
 }
@@ -126,16 +128,21 @@ async function onMicToggle() {
   try {
     worker = new Worker(new URL('./pitchWorker.js', import.meta.url), { type: 'module' });
     worker.onmessage = ({ data }) => {
-      if (id !== sessionId) return;
-      busy = false; workBuf = data.samples;
-      if (data.revision !== revision || data.epoch !== engine.epoch) return;
-      if (engine.sampleTime - data.reading.timestamp > DETECT.RESULT_GAP_MS) { holdReading(); return; }
+      if (id !== sessionId || !state.listening) return;
+      if (data.type === 'error') { stopMic(); ui.showMicWarning(TUNER_COPY.micLost); return; }
+      lastPacketAt = performance.now();
+      syncWorkerConfig();
+      if (data.revision !== revision) return;
+      if (engine.audioTime - data.reading.timestamp > DETECT.RESULT_GAP_MS) { holdReading(); return; }
       handleReading(data.reading);
     };
     worker.onerror = () => { if (id === sessionId) { stopMic(); ui.showMicWarning('Audio analysis stopped. Tap Start tuning to retry.'); } };
-    await engine.start({ deviceId: state.deviceId, channel: state.inputChannel });
+    sentConfig = '';
+    const config = analysisConfig();
+    await engine.start({ deviceId: state.deviceId, channel: state.inputChannel, worker, config });
     if (id !== sessionId || !initialized) return;
-    resetPipeline(); lastAnalysis = -Infinity; lastPacketAt = performance.now();
+    sentConfig = config.instrument + '|' + config.targetHz + '|' + config.revision;
+    resetPipeline(); lastPacketAt = performance.now();
     ui.setMicState(true, false);
     if (state.instrumentId === 'drums') drums?.setListening(true);
     ui.refreshInputs?.();
@@ -282,7 +289,6 @@ export function initTuner() {
   if (initialized || !document.getElementById('tunerView')) return;
   initialized = true; events = new AbortController(); restore();
   engine = createAudioEngine();
-  engine.onSamples(dispatchAnalysis);
   engine.onMicLost(() => { stopMic(); ui.showMicWarning(TUNER_COPY.micLost); });
   ui = createUi({ onMicToggle, onInstrumentChange, onPresetSelect, onStringSelect, onStringCountSelect,
     onCustomStringCount, onModeSelect, onAutoAdvanceToggle, onAutoIdToggle, onMaterialSelect, onA4Select, onToleranceChange,
