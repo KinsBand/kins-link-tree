@@ -1,3 +1,6 @@
+---
+import { TUNER_TOLERANCES, DEFAULT_TUNER_TOLERANCE } from '../../settings/tuner.config';
+---
 <div class="tuner-input-settings">
   <div class="tuner-input-col">
     <label for="tunerCalibration">Reference A4 (Hz)</label>
@@ -11,8 +14,9 @@
   <div class="tuner-input-col">
     <label for="tunerTolerance">In-tune tolerance</label>
     <select id="tunerTolerance" aria-label="In-tune tolerance">
-      <option value="3">±3 cents</option>
-      <option value="1">±1 cent</option>
+      {TUNER_TOLERANCES.map((cents) => (
+        <option value={String(cents)} selected={cents === DEFAULT_TUNER_TOLERANCE}>±{cents} {cents === 1 ? 'cent' : 'cents'}</option>
+      ))}
     </select>
   </div>
 </div>

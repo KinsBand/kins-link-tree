@@ -59,20 +59,22 @@ function handleReading(reading) {
   if (signal.held) { holdReading(); return; }
   reading = { ...reading, freq: signal.frequency };
   identifyString(reading.freq, time);
-  const midi = Math.round(69 + 12 * Math.log2(reading.freq / state.a4));
-  const stableMidi = noteStab.update(midi, time);
-  if (stableMidi !== midi) { holdReading(); return; }
+  // Spatial hysteresis: near a note boundary the label holds and the cents
+  // run past ±50 instead of the reading blanking.
+  const midi = noteStab.update(69 + 12 * Math.log2(reading.freq / state.a4));
   const chromatic = state.mode === 'chromatic';
   const target = getString();
   const targetHz = chromatic ? noteToFreq(midi, state.a4) : targetFreq(target);
   if (targetHz < DETECT.MIN_DETECT_HZ || targetHz > DETECT.MAX_DETECT_HZ) { holdReading('out-of-range'); return; }
   const rawCents = 1200 * Math.log2(detectedFrequency / targetHz);
   const cents = 1200 * Math.log2(reading.freq / targetHz);
-  const dwell = confirmation.update({ time, cents: rawCents, tolerance: state.tolerance ?? 3, trusted: true, targetId: String(targetHz) });
+  // Confirm on the smoothed pitch with entry/exit hysteresis, so frame
+  // jitter at the tolerance edge cannot keep restarting the dwell.
+  const dwell = confirmation.update({ time, cents, tolerance: state.tolerance ?? 3, trusted: true, targetId: String(targetHz) });
   const output = { status: 'ok', freq: reading.freq, cents, rawCents, locked: true, held: false,
     detectedNote: midiToPitchClass(midi), detectedOctave: Math.floor(midi / 12) - 1,
     nearestName: midiToPitchClass(midi) + (Math.floor(midi / 12) - 1), target, midi,
-    confirmed: state.mode === 'guided' && dwell.confirmed, inRange: Math.abs(rawCents) <= (state.tolerance ?? 3), zone: Math.abs(rawCents) > 600 && !chromatic ? 'wrong-octave' : null };
+    confirmed: state.mode === 'guided' && dwell.confirmed, inRange: dwell.inBand, zone: Math.abs(rawCents) > 600 && !chromatic ? 'wrong-octave' : null };
   lastGood = output; lastGoodAt = performance.now();
   ui.updateReading(output); ui.updateProgress?.(chromatic ? 0 : dwell.progress, output.confirmed);
   if (!dwell.confirmed) pendingAdvance = null;
@@ -261,6 +263,11 @@ function onMaterialSelect(id) {
   ui.resetReadout();
 }
 
+function onToleranceChange() {
+  confirmation.reset();
+  ui.updateProgress?.(0, false);
+}
+
 function onA4Select(hz) {
   referenceTone.stop();
   setA4(hz);
@@ -278,7 +285,7 @@ export function initTuner() {
   engine.onSamples(dispatchAnalysis);
   engine.onMicLost(() => { stopMic(); ui.showMicWarning(TUNER_COPY.micLost); });
   ui = createUi({ onMicToggle, onInstrumentChange, onPresetSelect, onStringSelect, onStringCountSelect,
-    onCustomStringCount, onModeSelect, onAutoAdvanceToggle, onAutoIdToggle, onMaterialSelect, onA4Select,
+    onCustomStringCount, onModeSelect, onAutoAdvanceToggle, onAutoIdToggle, onMaterialSelect, onA4Select, onToleranceChange,
     onInputChange() { if (state.listening || state.starting) stopMic(); resetPipeline(); } });
   ui.init();
   drums = createDrumWorkflow(resetPipeline, () => {

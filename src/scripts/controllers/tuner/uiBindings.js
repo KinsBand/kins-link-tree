@@ -1397,7 +1397,7 @@ export function createUi(callbacks) {
   /* Live scrolling chromatic visualizer:
      Tape continuously translates left/right with subpixel precision tracking pitch.
      When pitch is exact, the note and reticle highlight. */
-  function updateRail(freq, cents, locked) {
+  function updateRail(freq, nearestMidi, isExact) {
     if (!els || !els.chromRail || els.chromRail.hidden || !els.chromTape || !meterWidth) return;
     if (!railNotes.length) buildRail();
     const mf = 69 + 12 * Math.log2(freq / state.a4);
@@ -1405,8 +1405,6 @@ export function createUi(callbacks) {
     const tapeX = (meterWidth / 2) - ((fractionalIdx + 0.5) * noteSpacing);
     els.chromTape.style.transform = 'translate3d(' + tapeX.toFixed(1) + 'px, 0, 0)';
 
-    const nearestMidi = Math.round(mf);
-    const isExact = Math.abs(cents) <= state.tolerance;
 
     if (activeRailMidi !== nearestMidi || activeRailExact !== isExact) {
       if (activeRailNearEl) {
@@ -1460,7 +1458,7 @@ export function createUi(callbacks) {
   function setCents(text, extraClass) {
     if (!els.cents) return;
     setText(textMemo, els.cents, text);
-    const base = 'sr-only';
+    const base = 'tuner-note-cents';
     const cls = extraClass ? base + ' ' + extraClass : base;
     if (els.cents.className !== cls) els.cents.className = cls;
   }
@@ -1468,6 +1466,22 @@ export function createUi(callbacks) {
   function formatCentsDisplay(cents, locked) {
     const value = Math.abs(cents) < 0.05 ? 0 : cents;
     return (value > 0 ? '+' : '') + (locked ? value.toFixed(1) : String(Math.round(value))) + ' ct';
+  }
+
+  /* Screen-reader summary through the polite status region: immediately
+     when the in-tune state changes, otherwise at most every 2 s. */
+  const ANNOUNCE_GAP_MS = 2000;
+  let lastAnnounceAt = -Infinity, lastAnnounceInTune = false;
+  function announceReading(reading, inTune, now) {
+    const name = reading.detectedNote + reading.detectedOctave;
+    const rounded = Math.round(Math.abs(reading.cents));
+    const text = inTune ? name + ' in tune'
+      : rounded === 0 ? name + ', on pitch'
+      : name + ', ' + rounded + (rounded === 1 ? ' cent ' : ' cents ') + (reading.cents < 0 ? 'flat' : 'sharp');
+    if (inTune === lastAnnounceInTune && now - lastAnnounceAt < ANNOUNCE_GAP_MS) return;
+    lastAnnounceAt = now;
+    lastAnnounceInTune = inTune;
+    setPill(text, 'pill-neutral');
   }
 
   const visualState = createDisplayState();
@@ -1486,7 +1500,7 @@ export function createUi(callbacks) {
     setText(textMemo, els.noteOctave, '');
     setText(textMemo, els.freq, '-- Hz');
     setText(textMemo, els.hint, '');
-    setCents('--', '');
+    setCents('', '');
     if (state.listening) {
       setPill(TUNER_COPY.listening, 'pill-neutral');
     } else if (state.starting) {
@@ -1576,12 +1590,12 @@ export function createUi(callbacks) {
       return;
     }
     setNeedle(chromatic ? 0 : reading.cents);
-    if (chromatic) updateRail(reading.freq, reading.cents, reading.locked);
+    if (chromatic) updateRail(reading.freq, reading.midi, reading.inRange);
     setText(textMemo, els.note, reading.detectedNote);
     setText(textMemo, els.noteOctave, String(reading.detectedOctave));
     setText(textMemo, els.freq, reading.freq.toFixed(2) + ' Hz');
-    setCents(chromatic ? '' : formatCentsDisplay(reading.cents, reading.locked), '');
     const inTune = els.readout.dataset.phase === 'in-tune';
+    setCents(formatCentsDisplay(reading.cents, reading.locked), reading.inRange ? 'is-in-tune' : reading.cents < 0 ? 'is-flat' : 'is-sharp');
     els.readout.classList.toggle('in-tune', inTune);
     setInTuneHighlight(inTune && !chromatic);
     if (!chromatic && Math.abs(reading.rawCents) > 100) {
@@ -1589,7 +1603,7 @@ export function createUi(callbacks) {
       cue.textContent = reading.rawCents < 0 ? '\u25c0' : '\u25b6';
       cue.dataset.direction = reading.rawCents < 0 ? 'low' : 'high';
     }
-    setPill(chromatic ? '' : inTune ? 'STRING CHECKED' : 'LISTENING', 'pill-neutral');
+    announceReading(reading, chromatic ? reading.inRange : inTune, now);
   }
 
   async function refreshInputs() {
@@ -1627,7 +1641,7 @@ export function createUi(callbacks) {
     document.getElementById('tunerCalibrationReset')?.addEventListener('click', () => callbacks.onA4Select(440), { signal: eventLifetime.signal });
     const tolerance = document.getElementById('tunerTolerance');
     if (tolerance) tolerance.value = String(state.tolerance);
-    tolerance?.addEventListener('change', () => { setTolerance(tolerance.value); callbacks.onA4Select(state.a4); layoutZones(); }, { signal: eventLifetime.signal });
+    tolerance?.addEventListener('change', () => { setTolerance(tolerance.value); tolerance.value = String(state.tolerance); callbacks.onToleranceChange(); layoutZones(); }, { signal: eventLifetime.signal });
     document.getElementById('tunerInputDevice')?.addEventListener('change', event => { state.deviceId = event.target.value; callbacks.onInputChange(); }, { signal: eventLifetime.signal });
     document.getElementById('tunerInputChannel')?.addEventListener('change', event => { state.inputChannel = Number(event.target.value); callbacks.onInputChange(); }, { signal: eventLifetime.signal });
     navigator.mediaDevices?.addEventListener('devicechange', refreshInputs, { signal: eventLifetime.signal });

@@ -109,38 +109,18 @@ export function createCentsSmoother() {
   return { push, reset };
 }
 
-export function createNoteStabilizer() {
+/** Spatial hysteresis for the note label: the current note is kept while
+ * the pitch stays within ±holdCents of it, so a pitch near a note boundary
+ * reads as "E +55" instead of flickering between labels or blanking.
+ * Temporal debouncing of real note changes happens upstream in
+ * createPitchSmoother. Input is a fractional MIDI number. */
+export function createNoteStabilizer(holdCents = DETECT.NOTE_HOLD_CENTS) {
   let current = null;
-  let candidate = null;
-  let candidateSince = 0;
-
-  function reset() {
-    current = null;
-    candidate = null;
-    candidateSince = 0;
-  }
-
-  function update(midi, nowMs) {
-    if (current === null) {
-      current = midi;
-      candidate = null;
-      return current;
-    }
-    if (midi === current) {
-      candidate = null;
-      return current;
-    }
-    if (midi === candidate) {
-      if (nowMs - candidateSince >= DETECT.LABEL_HYSTERESIS_MS) {
-        current = midi;
-        candidate = null;
-      }
-    } else {
-      candidate = midi;
-      candidateSince = nowMs;
-    }
+  function reset() { current = null; }
+  function update(midiFloat) {
+    if (!Number.isFinite(midiFloat)) return current;
+    if (current === null || Math.abs(midiFloat - current) * 100 > holdCents) current = Math.round(midiFloat);
     return current;
   }
-
   return { update, reset };
 }

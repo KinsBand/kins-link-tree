@@ -229,6 +229,18 @@ html[data-theme] .tuner-page .tuner-pitch-pill .tuner-note { font-size: var(--tu
 html[data-theme] .tuner-page .tuner-pitch-pill :is(.tuner-note-octave, .tuner-note-freq) { font: var(--tuner-detail-font) var(--font-mono); color: inherit; }
 html[data-theme] .tuner-page .tuner-pitch-pill .tuner-note-freq { border-inline-start: var(--tuner-focus-width) solid var(--text-muted); padding-inline-start: var(--tuner-detail-gap); }
 html[data-theme] .tuner-page .tuner-readout.in-tune .tuner-pitch-name { color: var(--brand-accent-primary); }
+/* Visible cents offset; announced separately through #tunerStatusLine */
+html[data-theme] .tuner-page .tuner-pitch-pill .tuner-note-cents {
+  min-width: 8ch; text-align: end;
+  font: var(--tuner-detail-font) var(--font-mono); font-weight: 700; color: inherit;
+  border-inline-start: var(--tuner-focus-width) solid var(--text-muted); padding-inline-start: var(--tuner-detail-gap);
+  transition: color 0.16s ease;
+}
+html[data-theme] .tuner-page .tuner-pitch-pill .tuner-note-cents:empty { display: none; }
+html[data-theme] .tuner-page .tuner-pitch-pill .tuner-note-cents.is-in-tune { color: var(--brand-accent-primary); }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tuner-page .tuner-pitch-pill .tuner-note-cents { transition: none; }
+}
 html[data-theme] .tuner-page .tuner-input-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
 html[data-theme] .tuner-page .tuner-input-settings .tuner-input-col { min-width: 0; }
 html[data-theme] .tuner-page .tuner-sheet-setup-cell { min-width: 0; }
