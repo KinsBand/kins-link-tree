@@ -561,10 +561,10 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: var(--tap-target-min);
+    height: var(--tap-target-min);
+    min-width: var(--tap-target-min);
+    min-height: var(--tap-target-min);
     padding: 0;
     background: var(--surface-input, #ffffff);
     color: var(--text-card-primary, #000000);
@@ -850,7 +850,7 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
 
     .tool-mobile-blurb {
       font-family: var(--font-secondary);
-      font-size: 0.70rem;
+      font-size: max(var(--font-size-min), 0.70rem);
       font-weight: 500;
       color: var(--text-card-secondary);
       margin: 0;
@@ -875,7 +875,7 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
       max-width: 100%;
       box-sizing: border-box;
       padding: 7px 4px;
-      font-size: 0.72rem;
+      font-size: max(var(--font-size-min), 0.72rem);
       letter-spacing: 0.02em;
       text-align: center;
       white-space: nowrap;
@@ -884,10 +884,6 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
     }
 
     .kins-tools-pwa-btn {
-      width: 30px;
-      height: 30px;
-      min-width: 30px;
-      min-height: 30px;
       font-size: 0.85rem;
     }
   }
@@ -924,11 +920,10 @@ const visibleTools = tools.filter((tool) => toolGating[tool.id] ?? true);
     .tool-card-name {
       font-size: 0.70rem;
       letter-spacing: 0.01em;
-    }
-
-    .tool-action-btn {
+  
       padding: 6px 3px;
-      font-size: 0.68rem;
+      font-size: max(var(--font-size-min), 0.68rem);
+       font-size: 0.68rem;
     }
   }
 

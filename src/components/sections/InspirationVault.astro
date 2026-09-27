@@ -111,12 +111,13 @@ const memberTabs = [
     box-shadow: 1.5px 1.5px 0px #000000;
     color: var(--text-card-muted);
     font-family: var(--font-secondary);
-    font-size: 0.74rem;
+    font-size: max(var(--font-size-min), 0.74rem);
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     cursor: pointer;
     padding: 7px 8px;
+    min-height: var(--tap-target-min);
     border-radius: 6px;
     white-space: nowrap;
     text-align: center;
@@ -312,7 +313,7 @@ const memberTabs = [
 
   .inspired-tracks-container :global(.genre-tag) {
     font-family: var(--font-secondary);
-    font-size: 0.72rem;
+    font-size: max(var(--font-size-min), 0.72rem);
     color: var(--text-card-muted);
     font-weight: 800;
     letter-spacing: 0.05em;
@@ -349,8 +350,8 @@ const memberTabs = [
   }
 
   .inspired-tracks-container :global(.play-btn) {
-    width: 38px;
-    height: 38px;
+    width: var(--tap-target-min);
+    height: var(--tap-target-min);
     flex-shrink: 0;
     border-radius: 6px;
     background: var(--accent-neon-yellow);
@@ -421,7 +422,7 @@ const memberTabs = [
   .dots-wrapper {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 0;
   }
 
   .page-nav-arrow {
@@ -429,8 +430,8 @@ const memberTabs = [
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     color: var(--text-card-primary);
-    width: 32px;
-    height: 32px;
+    width: var(--tap-target-min);
+    height: var(--tap-target-min);
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -457,25 +458,45 @@ const memberTabs = [
     box-shadow: none;
   }
 
+  /* Each dot is a full-size tap target; the visible pip is drawn by ::after. */
   .dots-pagination-container :global(.inspired-dot) {
+    position: relative;
+    width: var(--tap-target-min);
+    height: var(--tap-target-min);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .dots-pagination-container :global(.inspired-dot)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 8px;
     height: 8px;
     border-radius: 2px;
     background: var(--text-card-muted);
     opacity: 0.32;
     border: 1px solid #000000;
-    cursor: pointer;
-    padding: 0;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%);
     transition: background-color 0.2s var(--ease-snappy), opacity 0.2s ease, width 0.2s var(--ease-snappy);
   }
 
-  .dots-pagination-container :global(.inspired-dot:hover) {
+  .dots-pagination-container :global(.inspired-dot:focus-visible) {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: -8px;
+  }
+
+  .dots-pagination-container :global(.inspired-dot:hover)::after {
     background: var(--text-card-primary);
     opacity: 0.55;
   }
 
-  .dots-pagination-container :global(.inspired-dot.active) {
-    background: var(--accent-neon-yellow);
+  .dots-pagination-container :global(.inspired-dot.active)::after {
+    background: var(--brand-accent-primary);
     opacity: 1;
     width: 18px;
   }

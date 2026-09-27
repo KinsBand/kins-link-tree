@@ -48,7 +48,7 @@ const streamingProfiles = platformsData
 
 <BaseLayout title="Kins | Official Link in Bio">
   <div class="app-wrapper">
-    <div class="site-container" id="siteContainer">
+    <div class:list={['site-container', { 'has-dock': features.audioPlayer }]} id="siteContainer">
       <!-- Fixed Left Sidebar for Desktop / Top Portion for Mobile -->
       <TopNav />
 
@@ -206,7 +206,7 @@ const streamingProfiles = platformsData
       margin: 0;
       background: transparent;
       border-radius: 0;
-      padding: 16px 14px 160px;
+      padding: 16px 14px 32px;
       box-shadow: none;
       border: none;
       display: flex;
@@ -237,12 +237,32 @@ const streamingProfiles = platformsData
     .right-main-content > :global(.site-footer) { order: 13; }
   }
 
+  /* The container already reserves the dock clearance, so the footer's own
+     bottom spacer (sized for pages without it) is not needed here. */
+  .has-dock :global(.site-footer) {
+    padding-bottom: 24px;
+  }
+
+  /* Keep the last content clear of the floating audio dock */
+  @media (max-width: 1023px) {
+    .site-container.has-dock {
+      padding-bottom: calc(var(--dock-clearance) + 16px);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .has-dock .left-sidebar,
+    .has-dock .right-main-content {
+      padding-bottom: calc(var(--dock-clearance) + 16px);
+    }
+  }
+
   /* Tablet (768px–1023px): centered column below the fixed 64px top bar */
   @media (min-width: 768px) and (max-width: 1023px) {
     .site-container {
       max-width: 680px;
       margin: 0 auto;
-      padding: calc(64px + 24px) 24px 160px;
+      padding: calc(64px + 24px) 24px 32px;
       gap: 20px;
     }
   }

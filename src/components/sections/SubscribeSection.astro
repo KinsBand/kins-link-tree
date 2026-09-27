@@ -375,9 +375,9 @@ import { features } from '../../settings/features';
 
   /* 4. Unified Inline Email Input Field */
   .unified-input-container {
-    height: 46px;
-    min-height: 46px;
-    max-height: 46px;
+    height: 52px;
+    min-height: 52px;
+    max-height: 52px;
     background: var(--surface-input);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
@@ -398,7 +398,9 @@ import { features } from '../../settings/features';
 
   .unified-input-container input {
     flex: 1;
+    align-self: stretch;
     min-width: 0;
+    min-height: var(--tap-target-min);
     background: transparent;
     border: none;
     outline: none;
@@ -435,9 +437,9 @@ import { features } from '../../settings/features';
   }
 
   .unified-join-btn {
-    height: 36px;
-    min-height: 36px;
-    max-height: 36px;
+    height: var(--tap-target-min);
+    min-height: var(--tap-target-min);
+    max-height: var(--tap-target-min);
     padding: 0 14px;
     background: var(--accent-neon-yellow);
     border: 2px solid #000000;

@@ -114,8 +114,8 @@ const photoSrc = (photo: string) => (photo.startsWith('http') ? photo : `${baseU
     border: 2.5px solid #000000;
     box-shadow: 2px 2px 0px #000000;
     color: var(--text-card-primary);
-    width: 32px;
-    height: 32px;
+    width: var(--tap-target-min);
+    height: var(--tap-target-min);
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -225,7 +225,7 @@ const photoSrc = (photo: string) => (photo.startsWith('http') ? photo : `${baseU
     color: #000000;
     border: 1.5px solid #000000;
     font-family: var(--font-secondary);
-    font-size: 0.58rem;
+    font-size: max(var(--font-size-min), 0.58rem);
     font-weight: 900;
     padding: 2px 6px;
     border-radius: 3px;

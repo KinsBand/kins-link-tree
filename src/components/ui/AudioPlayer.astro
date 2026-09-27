@@ -198,6 +198,11 @@ import { features } from '../../settings/features';
     transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
   }
 
+  /* Dock tucked away while reading (see script): overlay fades, dock slides below the fold */
+  :global(body.dock-tucked) .bottom-gradient-blur-overlay {
+    opacity: 0;
+  }
+
   :global([data-theme="dark"]) .bottom-gradient-blur-overlay,
   :global(body[data-theme="dark"]) .bottom-gradient-blur-overlay {
     background: linear-gradient(to bottom, 
@@ -226,7 +231,19 @@ import { features } from '../../settings/features';
     width: calc(100% - 24px);
     max-width: 480px;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.25s ease, transform 0.24s var(--ease-snappy);
+  }
+
+  :global(body.dock-tucked) .bottom-floating-controls-wrapper {
+    transform: translate(-50%, calc(100% + 24px + env(safe-area-inset-bottom, 0px)));
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bottom-floating-controls-wrapper,
+    .bottom-gradient-blur-overlay {
+      transition: none;
+    }
   }
 
   :global(body.modal-open) .bottom-floating-controls-wrapper {
@@ -397,7 +414,7 @@ import { features } from '../../settings/features';
     align-items: center;
     justify-content: center;
     font-family: var(--font-secondary);
-    font-size: 0.66rem;
+    font-size: max(var(--font-size-min), 0.66rem);
     font-weight: 900;
     letter-spacing: 0.06em;
     color: var(--text-card-primary);
@@ -704,7 +721,7 @@ import { features } from '../../settings/features';
 
   .idle-mix-title {
     font-family: var(--font-heading);
-    font-size: clamp(0.74rem, 2.4vw, 0.85rem);
+    font-size: clamp(var(--font-size-min), 2.4vw, 0.85rem);
     font-weight: 900;
     letter-spacing: 0.03em;
     color: #ffffff;
@@ -717,7 +734,7 @@ import { features } from '../../settings/features';
 
   .idle-mix-subtitle {
     font-family: var(--font-secondary);
-    font-size: clamp(0.56rem, 1.8vw, 0.63rem);
+    font-size: clamp(var(--font-size-min), 1.8vw, 0.75rem);
     font-weight: 700;
     color: #d4d4d8;
     white-space: nowrap;
@@ -727,9 +744,9 @@ import { features } from '../../settings/features';
   }
 
   .idle-play-btn {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
+    width: var(--tap-target-min);
+    height: var(--tap-target-min);
+    min-width: var(--tap-target-min);
     border-radius: 4px;
     background: var(--surface-input);
     color: var(--text-card-primary);
@@ -1130,5 +1147,42 @@ import { features } from '../../settings/features';
   scheduleIdle(() => {
     import('../../scripts/controllers/audioPlayer.js').then((m) => m.initAudioPlayer());
   });
+
+  // Tuck the dock away while the reader scrolls down so it never covers content;
+  // bring it back on scroll up, near the top or end of the page, while a track is
+  // playing or the stream drawer is open, and whenever it receives keyboard focus.
+  const dockWrapper = document.getElementById('bottomFloatingControls');
+  if (dockWrapper) {
+    const TUCK_AFTER_PX = 160;
+    const SCROLL_DELTA_PX = 6;
+    let lastY = window.scrollY;
+    let ticking = false;
+
+    const keepDockOut = () =>
+      document.body.classList.contains('stream-panel-open') ||
+      !document.getElementById('deckActiveView')?.classList.contains('hidden');
+
+    const updateDock = () => {
+      ticking = false;
+      const y = window.scrollY;
+      const atEnd = window.innerHeight + y >= document.documentElement.scrollHeight - 24;
+      if (y < TUCK_AFTER_PX || atEnd || keepDockOut()) {
+        document.body.classList.remove('dock-tucked');
+      } else if (y - lastY > SCROLL_DELTA_PX) {
+        document.body.classList.add('dock-tucked');
+      } else if (lastY - y > SCROLL_DELTA_PX) {
+        document.body.classList.remove('dock-tucked');
+      }
+      lastY = y;
+    };
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(updateDock);
+      }
+    }, { passive: true });
+    dockWrapper.addEventListener('focusin', () => document.body.classList.remove('dock-tucked'));
+  }
 </script>
 

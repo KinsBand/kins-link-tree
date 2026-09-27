@@ -3,6 +3,8 @@ import { generalEmail, bookingEmail } from '../../settings/contact.config';
 import { siteConfig } from '../../settings/site.config';
 
 const tipJarUrl = siteConfig.tipJarUrl || '';
+// Long addresses may wrap, but only at the "@", never mid-word.
+const splitEmail = (email: string) => email.split('@') as [string, string];
 ---
 
 <section class="contacts-section" id="contactsSection" data-track-container="main:contacts">
@@ -18,7 +20,7 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
         <div class="email-row-item copy-email-card" data-email={generalEmail} role="button" tabindex="0" title={`Click to copy ${generalEmail}`}>
           <div class="email-icon"><i class="fa-regular fa-paper-plane"></i></div>
           <div class="email-details">
-            <span class="email-address">{generalEmail}</span>
+            <span class="email-address">{splitEmail(generalEmail)[0]}<wbr />@{splitEmail(generalEmail)[1]}</span>
             <span class="email-desc">General Chat, Help & Site Suggestions</span>
           </div>
           <div class="email-actions-group">
@@ -36,7 +38,7 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
         <div class="email-row-item copy-email-card" data-email={bookingEmail} role="button" tabindex="0" title={`Click to copy ${bookingEmail}`}>
           <div class="email-icon"><i class="fa-regular fa-calendar-check"></i></div>
           <div class="email-details">
-            <span class="email-address">{bookingEmail}</span>
+            <span class="email-address">{splitEmail(bookingEmail)[0]}<wbr />@{splitEmail(bookingEmail)[1]}</span>
             <span class="email-desc">Shows, Tours & Live Booking</span>
           </div>
           <div class="email-actions-group">
@@ -161,14 +163,27 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     font-size: 0.82rem;
     font-weight: 800;
     color: var(--text-card-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: normal;
+  }
+
+  @media (max-width: 479px) {
+    .contacts-card {
+      padding: 14px;
+    }
+
+    .email-row-item {
+      padding: 8px 10px;
+    }
+
+    .email-icon {
+      display: none;
+    }
   }
 
   .email-desc {
     font-family: var(--font-secondary);
-    font-size: 0.68rem;
+    font-size: max(var(--font-size-min), 0.68rem);
     font-weight: 600;
     color: var(--text-card-secondary);
   }
@@ -186,7 +201,8 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     box-shadow: 1px 1px 0px #000000;
     color: var(--text-card-primary);
     padding: 4px 8px;
-    height: 28px;
+    min-width: var(--tap-target-min);
+    height: var(--tap-target-min);
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
@@ -237,7 +253,7 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
 
   .contacts-action-btn {
     width: 100%;
-    min-height: 38px;
+    min-height: var(--tap-target-min);
     padding: 8px 10px;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
@@ -248,7 +264,7 @@ const tipJarUrl = siteConfig.tipJarUrl || '';
     gap: 6px;
     cursor: pointer;
     font-family: var(--font-secondary);
-    font-size: 0.74rem;
+    font-size: max(var(--font-size-min), 0.74rem);
     font-weight: 800;
     letter-spacing: 0.02em;
     text-decoration: none;

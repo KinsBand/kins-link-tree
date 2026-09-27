@@ -304,10 +304,10 @@ const currentYear = new Date().getFullYear();
   }
 
   .theme-pill-btn {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    width: var(--tap-target-min);
+    height: var(--tap-target-min);
+    min-width: var(--tap-target-min);
+    min-height: var(--tap-target-min);
     border-radius: var(--radius-sm, 6px);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
@@ -407,13 +407,13 @@ const currentYear = new Date().getFullYear();
     border: none;
     color: #a1a1aa;
     font-family: var(--font-secondary);
-    font-size: 11px;
-    font-size: 0.6875rem;
+    font-size: var(--font-size-min);
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     cursor: pointer;
-    padding: 4px 8px;
+    min-height: var(--tap-target-min);
+    padding: 4px 10px;
     border-radius: 4px;
     text-decoration: none;
     line-height: 1;
@@ -450,8 +450,7 @@ const currentYear = new Date().getFullYear();
       gap: 4px 8px;
     }
     .footer-nav-item {
-      font-size: 10.5px;
-      padding: 3px 6px;
+      padding: 3px 8px;
       letter-spacing: 0.06em;
     }
   }

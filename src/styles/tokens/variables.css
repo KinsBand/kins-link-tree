@@ -117,6 +117,12 @@
   --radius-lg: 14px;
   --radius-pill: 9999px;
 
+  /* Accessibility floors (theme-independent) */
+  --tap-target-min: 44px;   /* minimum touch target for any interactive control */
+  --font-size-min: 0.75rem; /* 12px: smallest readable UI text */
+  /* Space kept below page content so the floating audio dock never covers it */
+  --dock-clearance: calc(100px + env(safe-area-inset-bottom, 0px));
+
   /* Hard Offset Drop Shadows */
   --shadow-brutal-black: 3px 3px 0px #000000;
   --shadow-brutal-black-lg: 4px 4px 0px #000000;

@@ -1076,7 +1076,7 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
 
   .upcoming-teaser-badge {
     font-family: var(--font-secondary);
-    font-size: 0.64rem;
+    font-size: max(var(--font-size-min), 0.64rem);
     font-weight: 900;
     color: var(--text-card-primary);
     letter-spacing: 0.06em;

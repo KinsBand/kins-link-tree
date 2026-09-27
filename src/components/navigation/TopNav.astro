@@ -142,6 +142,7 @@ const searchLabel = features.coversCatalog ? 'Search cover videos' : 'Covers: wh
     .top-nav-brand-link {
       display: inline-flex;
       align-items: center;
+      min-height: var(--tap-target-min);
       gap: 10px;
       text-decoration: none;
       transition: transform 0.16s var(--ease-tactile);
@@ -164,7 +165,7 @@ const searchLabel = features.coversCatalog ? 'Search cover videos' : 'Covers: wh
       background: var(--accent-neon-yellow);
       color: #000000;
       font-family: var(--font-heading, var(--font-secondary));
-      font-size: 0.64rem;
+      font-size: max(var(--font-size-min), 0.64rem);
       font-weight: 900;
       letter-spacing: 0.08em;
       padding: 2px 7px;
