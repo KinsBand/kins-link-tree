@@ -139,3 +139,25 @@ test('a full voice pool steals the oldest voice instead of throwing or dropping'
   assert.ok(h.processor.voices.length === 16);
   assert.ok(h.levelAround(h.beats()[0].time).after > 0.05);
 });
+
+test('coach inner clock: muted bars are silent from their first click, audible bars start at full level', () => {
+  const h = started({ start: { perBeat: 2 } });
+  h.run(0.3); // mid bar 0: the program starts on bar 1
+  h.send({ type: 'muteProgram', program: { audible: 2, muted: 1, random: false } });
+  h.run(8.2); // bars 0..4
+  const beats = h.beats();
+  const expectMuted = (bar) => bar >= 1 && (bar - 1) % 3 === 2; // bars 3, 6, ...
+  for (const b of beats) {
+    assert.equal(b.muted, expectMuted(b.bar), `bar ${b.bar} muted flag`);
+    const level = h.levelAround(b.time).after;
+    if (expectMuted(b.bar)) assert.ok(level < 1e-6, `click leaked in muted bar ${b.bar} at ${b.time}`);
+    else assert.ok(level > 0.05, `click missing in audible bar ${b.bar} at ${b.time}`);
+  }
+  assert.equal(beats.find((b) => b.bar === 0).mutePhase, null, 'program must not start mid-bar');
+  const firstBack = beats.find((b) => b.bar === 4 && b.isBeatStart);
+  const reference = beats.find((b) => b.bar === 1 && b.isBeatStart);
+  assert.ok(Math.abs(h.levelAround(firstBack.time).after - h.levelAround(reference.time).after) < 1e-6, 'first click after the gap was faded');
+  h.send({ type: 'muteProgram', program: null });
+  h.run(2.0);
+  for (const b of h.beats().slice(beats.length)) assert.equal(b.muted, false);
+});

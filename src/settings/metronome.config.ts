@@ -279,7 +279,7 @@ export const METRO_TIMING = {
   /* AudioWorklet module (progressive enhancement over the legacy path) */
   workletName: 'kins-click',
   /* Bump ?v= (and public/sw.js) whenever the worklet protocol changes */
-  workletUrl: '/worklets/click-worklet.js?v=3'
+  workletUrl: '/worklets/click-worklet.js?v=4'
 } as const;
 
 export const METRO_COPY = {

@@ -372,7 +372,7 @@ export async function cacheCoreAssets(onProgress) {
     `${baseUrl}/followers.json`,
     `${baseUrl}/noise-tile.png`,
     `${baseUrl}/tuner-worklet.js?v=3`,
-    `${baseUrl}/worklets/click-worklet.js?v=3`,
+    `${baseUrl}/worklets/click-worklet.js?v=4`,
     `${baseUrl}/worklets/metro-worker.js`,
   ];
 

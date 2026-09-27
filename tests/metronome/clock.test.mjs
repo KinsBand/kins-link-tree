@@ -72,3 +72,27 @@ test('invalid input is ignored', () => {
   c.setBpm(-5, 0); c.setPerBeat(NaN); c.setMeter(999); c.setTiers(null);
   assert.deepEqual([c.bpm, c.perBeat, c.beatsPerBar], [120, 1, 4]);
 });
+
+test('mute program: phases count whole bars, random lengths stay in bounds, skipTo keeps phase', () => {
+  const c = new MetroClock();
+  c.reset(0, { bpm: 240, beatsPerBar: 4 });
+  c.setMuteProgram({ audible: 1, muted: 2 });
+  const bars = [];
+  for (let i = 0; i < 4 * 9; i++) { const e = c.next(); if (e.isBeatStart && e.beatInBar === 0) bars.push(e.muted ? 'M' : 'A'); }
+  assert.equal(bars.join(''), 'AMMAMMAMM');
+
+  const r = new MetroClock();
+  let k = 0; const seq = [0.0, 0.99, 0.5];
+  r.random = () => seq[k++ % seq.length];
+  r.reset(0, { bpm: 240, beatsPerBar: 1 });
+  r.setMuteProgram({ audible: 1, muted: 16, random: true });
+  for (let i = 0; i < 200; i++) { const e = r.next(); assert.ok(e.mutePhaseLength >= 1 && e.mutePhaseLength <= 16); }
+
+  const s = new MetroClock();
+  s.reset(0, { bpm: 120, beatsPerBar: 4 });
+  s.setMuteProgram({ audible: 3, muted: 1 });
+  s.skipTo(2 * 60 * 60); // two hours: whole-bar bulk jumps
+  const e = s.next();
+  const cycleBar = e.bar % 4;
+  assert.equal(e.muted, cycleBar === 3, `bar ${e.bar} phase drifted`);
+});

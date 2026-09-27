@@ -113,6 +113,9 @@ export function createCoachEngine(cbs) {
         live.currentBpm = metroState.bpm;
         live.phase = 'audible';
         live.phaseBar = 0;
+        // The audio clock owns the phases so muted bars are click-exact;
+        // this module only mirrors them from beat events.
+        if (callbacks.setMuteProgram) callbacks.setMuteProgram(innerProgram());
         if (callbacks.onCoachTick) callbacks.onCoachTick(getLiveSnapshot());
       } else if (tabId === 'speed-trainer') {
         const s = metroState.coachSpeed;
@@ -158,8 +161,17 @@ export function createCoachEngine(cbs) {
       return live;
     },
     getGeneration() { return generation; },
-    handleBeat(beatInBar, isAccent, isBeatStart) {
+    /** Inner-clock settings changed mid-run: restart the phases on the next bar. */
+    updateInnerProgram() {
+      if (live && live.running && live.tabId === 'inner-clock' && callbacks.setMuteProgram) callbacks.setMuteProgram(innerProgram());
+    },
+    handleBeat(beatInBar, isAccent, isBeatStart, evt) {
       if (!live || !live.running) return;
+      if (live.tabId === 'inner-clock' && evt && evt.mutePhase) {
+        live.phase = evt.mutePhase;
+        live.phaseBar = evt.mutePhaseBar;
+        live.innerMuted = !!evt.muted;
+      }
       const isBeat = isBeatStart !== false;
       // Only count physical beats, not subdivision clicks — otherwise bars
       // advance N× per beat when perBeat > 1 (e.g. 1/8 = 2 clicks/beat)
@@ -280,7 +292,13 @@ export function createCoachEngine(cbs) {
   };
 }
 
+function innerProgram() {
+  const cfg = metroState.coachInner;
+  return { audible: cfg.audibleBars, muted: cfg.mutedBars, random: !!cfg.random };
+}
+
 function stopInternal() {
+  if (live && live.running && live.tabId === 'inner-clock' && callbacks.setMuteProgram) callbacks.setMuteProgram(null);
   if (live) live.running = false;
 }
 
@@ -335,31 +353,8 @@ function advanceSpeedTrainerStep() {
 function handleBarBoundary() {
   if (!live || !live.running) return;
   if (live.tabId === 'inner-clock') {
-    const cfg = metroState.coachInner;
-    let audible = cfg.audibleBars;
-    let muted = cfg.mutedBars;
-    if (cfg.random) {
-      const jitter = Math.floor(Math.random() * 3) - 1; // -1,0,1
-      if (live.phase === 'audible') {
-        const nm = Math.min(8, Math.max(1, muted + jitter));
-        live.nextMuted = nm;
-      } else {
-        const na = Math.min(8, Math.max(1, audible + jitter));
-        live.nextAudible = na;
-      }
-      audible = live.nextAudible || audible;
-      muted = live.nextMuted || muted;
-    }
-    live.phaseBar++;
-    if (live.phase === 'audible' && live.phaseBar >= audible) {
-      live.phase = 'muted';
-      live.phaseBar = 0;
-      if (callbacks.setMuted) callbacks.setMuted(true);
-    } else if (live.phase === 'muted' && live.phaseBar >= muted) {
-      live.phase = 'audible';
-      live.phaseBar = 0;
-      if (callbacks.setMuted) callbacks.setMuted(false);
-    }
+    // Phases come from the audio clock via handleBeat(evt).
+    return;
   } else if (live.tabId === 'rhythm-step') {
     const cfg = metroState.coachRhythm;
     const every = Math.max(1, cfg.everyBars);

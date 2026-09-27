@@ -17,12 +17,19 @@
                     the bar has not yet passed beat 1, so a change made on a
                     downbeat (setlist sections) re-reads that bar.
      - tiers:       immediate, unless a meter change is pending, in which
-                    case they travel with it. */
+                    case they travel with it.
+     - mute program (coach "inner clock"): alternating audible / muted
+                    phases counted in whole bars, starting on the next bar
+                    (or this one if the next click is its downbeat). Muted
+                    bars are silenced click-exactly by the renderer; events
+                    still fire so visuals and bar counting continue. */
 
 /* METRO-CLOCK:BEGIN */
 class MetroClock {
   constructor() {
-    this.event = { time: 0, bar: 0, beatInBar: 0, sub: 0, isBeatStart: true, tier: 'mid', isAccent: false, n: 0 };
+    this.event = { time: 0, bar: 0, beatInBar: 0, sub: 0, isBeatStart: true, tier: 'mid', isAccent: false, n: 0,
+      muted: false, mutePhase: null, mutePhaseBar: 0, mutePhaseLength: 0 };
+    this.random = Math.random;
     this.reset(0, {});
   }
 
@@ -41,6 +48,8 @@ class MetroClock {
     this.pendingPerBeat = 0;
     this.pendingBeatsPerBar = 0;
     this.pendingTiers = null;
+    this.mute = null;
+    this.pendingMute = null;
   }
 
   static validBpm(v) { return typeof v === 'number' && v > 0 && v < 2000; }
@@ -61,6 +70,11 @@ class MetroClock {
     e.tier = tier;
     e.isAccent = e.isBeatStart && tier === 'high';
     e.n = ++this.count;
+    const m = this.mute;
+    e.muted = !!m && m.phase === 'muted';
+    e.mutePhase = m ? m.phase : null;
+    e.mutePhaseBar = m ? m.phaseBar : 0;
+    e.mutePhaseLength = m ? m.length : 0;
     this.lastTime = this.nextTime;
     this.nextTime += this.interval();
     this.sub++;
@@ -72,9 +86,42 @@ class MetroClock {
         this.beat = 0;
         this.bar++;
         this.applyPendingMeter();
+        this.advanceMute();
       }
     }
     return e;
+  }
+
+  /* program: { audible, muted, random } in bars (1-16), or null to end. */
+  setMuteProgram(program) {
+    if (!program) { this.mute = null; this.pendingMute = null; return; }
+    const clampBars = (v) => Math.min(16, Math.max(1, Math.round(Number(v) || 1)));
+    const p = { audible: clampBars(program.audible), muted: clampBars(program.muted), random: !!program.random };
+    if (this.beat === 0 && this.sub === 0) { this.pendingMute = null; this.startMute(p); }
+    else this.pendingMute = p;
+  }
+
+  startMute(p) {
+    this.mute = { program: p, phase: 'audible', phaseBar: 0, length: this.phaseLength(p, 'audible') };
+  }
+
+  phaseLength(p, phase) {
+    const base = phase === 'audible' ? p.audible : p.muted;
+    if (!p.random) return base;
+    const jitter = Math.floor(this.random() * 3) - 1; // -1, 0, +1 bar
+    return Math.min(16, Math.max(1, base + jitter));
+  }
+
+  advanceMute() {
+    if (this.pendingMute) { this.startMute(this.pendingMute); this.pendingMute = null; return; }
+    const m = this.mute;
+    if (!m) return;
+    m.phaseBar++;
+    if (m.phaseBar >= m.length) {
+      m.phase = m.phase === 'audible' ? 'muted' : 'audible';
+      m.phaseBar = 0;
+      m.length = this.phaseLength(m.program, m.phase);
+    }
   }
 
   setBpm(bpm, now) {
@@ -130,7 +177,10 @@ class MetroClock {
       if (++steps > 256 && this.beat === 0 && this.sub === 0 && !this.pendingPerBeat) {
         const barSec = this.beatsPerBar * 60 / this.bpm;
         const bars = Math.floor((time - this.nextTime) / barSec);
-        if (bars > 0) { this.nextTime += bars * barSec; this.bar += bars; this.count += bars * this.beatsPerBar * this.perBeat; }
+        if (bars > 0) {
+          this.nextTime += bars * barSec; this.bar += bars; this.count += bars * this.beatsPerBar * this.perBeat;
+          for (let i = 0; i < bars && this.mute; i++) this.advanceMute();
+        }
         steps = 0;
         if (this.nextTime >= time) break;
       }
@@ -143,7 +193,9 @@ class MetroClock {
       bpm: this.bpm, perBeat: this.perBeat, beatsPerBar: this.beatsPerBar, tiers: this.tiers,
       bar: this.bar, beat: this.beat, sub: this.sub, nextTime: this.nextTime, lastTime: this.lastTime,
       count: this.count, pendingPerBeat: this.pendingPerBeat, pendingBeatsPerBar: this.pendingBeatsPerBar,
-      pendingTiers: this.pendingTiers
+      pendingTiers: this.pendingTiers,
+      mute: this.mute ? { program: this.mute.program, phase: this.mute.phase, phaseBar: this.mute.phaseBar, length: this.mute.length } : null,
+      pendingMute: this.pendingMute
     };
   }
 
@@ -152,6 +204,8 @@ class MetroClock {
     this.bar = s.bar; this.beat = s.beat; this.sub = s.sub; this.nextTime = s.nextTime; this.lastTime = s.lastTime;
     this.count = s.count; this.pendingPerBeat = s.pendingPerBeat; this.pendingBeatsPerBar = s.pendingBeatsPerBar;
     this.pendingTiers = s.pendingTiers;
+    this.mute = s.mute ? { program: s.mute.program, phase: s.mute.phase, phaseBar: s.mute.phaseBar, length: s.mute.length } : null;
+    this.pendingMute = s.pendingMute;
   }
 }
 /* METRO-CLOCK:END */

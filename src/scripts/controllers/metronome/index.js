@@ -60,7 +60,7 @@ const tapTimes = [];
 function onVisualBeat(evt) {
   ui.renderBeat(evt.beatInBar, evt.tier);
   if (coachEngine && coachEngine.isRunning()) {
-    coachEngine.handleBeat(evt.beatInBar, evt.isAccent, evt.isBeatStart);
+    coachEngine.handleBeat(evt.beatInBar, evt.isAccent, evt.isBeatStart, evt);
   }
 
   // Handle bar progression and transitions on downbeat (beatInBar === 0).
@@ -641,6 +641,7 @@ function onCoachTabChange(tabId) {
 function onCoachInnerChange(patch) {
   setCoachInner(patch);
   ui.renderCoachInner();
+  if (coachEngine) coachEngine.updateInnerProgram();
 }
 
 function onCoachSpeedChange(patch) {
@@ -744,9 +745,8 @@ function applyCoachSubdivision(id) {
   }
 }
 
-function setCoachMuted(muted) {
-  if (muted) engine.setVolume(0);
-  else engine.setVolume(metroState.volume);
+function setCoachMuteProgram(program) {
+  engine.setMuteProgram(program);
 }
 
 function onPrimerTap(time) {
@@ -870,7 +870,7 @@ export function initMetronome() {
     onCoachTick,
     applyBpm: applyCoachBpm,
     applySubdivision: applyCoachSubdivision,
-    setMuted: setCoachMuted
+    setMuteProgram: setCoachMuteProgram
   });
   ui = createUi({
     getCurrentBpm: () => metroState.bpm,

@@ -329,7 +329,8 @@ export function createMetroEngine() {
     if (!d || typeof d !== 'object') return;
     if (d.type === 'beat') {
       if (visualQueue.length >= METRO_TIMING.maxVisualQueueLen) visualQueue.shift();
-      visualQueue.push({ time: d.time, beatInBar: d.beatInBar, isAccent: !!d.isAccent, tier: d.tier || 'mid', isBeatStart: d.isBeatStart !== false });
+      visualQueue.push({ time: d.time, bar: d.bar, beatInBar: d.beatInBar, isAccent: !!d.isAccent, tier: d.tier || 'mid', isBeatStart: d.isBeatStart !== false,
+        muted: !!d.muted, mutePhase: d.mutePhase || null, mutePhaseBar: d.mutePhaseBar || 0, mutePhaseLength: d.mutePhaseLength || 0 });
       scheduledTotal = d.n || scheduledTotal + 1;
     }
   }
@@ -464,8 +465,9 @@ export function createMetroEngine() {
     while (clock.nextTime < ctx.currentTime + aheadSec) {
       const snap = clock.snapshot();
       const e = clock.next();
-      scheduleClick(e.time, e.isAccent, e.isBeatStart, e.tier, snap);
-      visualQueue.push({ time: e.time, beatInBar: e.beatInBar, isAccent: e.isAccent, tier: e.tier, isBeatStart: e.isBeatStart });
+      scheduleClick(e.time, e.isAccent, e.isBeatStart, e.muted ? 'mute' : e.tier, snap);
+      visualQueue.push({ time: e.time, bar: e.bar, beatInBar: e.beatInBar, isAccent: e.isAccent, tier: e.tier, isBeatStart: e.isBeatStart,
+        muted: e.muted, mutePhase: e.mutePhase, mutePhaseBar: e.mutePhaseBar, mutePhaseLength: e.mutePhaseLength });
     }
   }
 
@@ -719,6 +721,22 @@ export function createMetroEngine() {
     }
   }
 
+  /* Coach "inner clock": alternating audible / muted bars rendered
+     click-exactly by the clock (no volume ramps, so the first click of a
+     muted bar never leaks and the first audible click is never faded).
+     program = { audible, muted, random } bars, or null to end. */
+  function setMuteProgram(program) {
+    if (usingWorklet && workletNode) {
+      postToWorklet({ type: 'muteProgram', program: program || null });
+      return;
+    }
+    if (runRef.playing && ctx) {
+      flushFrom(METRO_TIMING.changeGuardSec);
+      clock.setMuteProgram(program || null);
+      schedulerTick();
+    }
+  }
+
   async function previewClick(tierId, soundId) {
     if (tierId === 'mute') return;
     const sound = (soundId ? METRO_SOUNDS.find((s) => s.id === soundId) : null) || getSound();
@@ -858,6 +876,7 @@ export function createMetroEngine() {
     updateBpm,
     updateOptions,
     updateTiers,
+    setMuteProgram,
     previewClick,
     updateSound,
     setVolume,
