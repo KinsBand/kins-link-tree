@@ -297,3 +297,26 @@ html[data-theme] .tuner-page .mode-drums button { border-radius: var(--radius-sm
 @keyframes tuner-string-vibration { from { transform: translateX(calc(-1 * var(--tuner-string-vibration))); opacity: 0.65; } to { transform: translateX(var(--tuner-string-vibration)); opacity: 1; } }
 @keyframes tuner-peg-pulse { from { transform: scale(1) rotate(-3deg); } to { transform: scale(1.06) rotate(3deg); } }
 @media (prefers-reduced-motion: reduce) { .tuner-art-svg .reference-vibrating { animation: none !important; transform: none; } }
+
+/* Ear training: pointer riding the Loose / Normal / Tight scale. Centred
+   means at pitch; the Normal band spans several semitones, so fine tuning
+   still has to be done by ear. Positioned in px by uiBindings (transform). */
+.tuner-tension-marker { display: none; }
+html[data-theme] .tuner-page .mode-ear .tuner-tension-marker {
+  display: block; position: absolute; top: 3px; bottom: 3px; left: 50%; z-index: 2;
+  width: var(--tuner-tension-marker-width); margin-inline-start: calc(var(--tuner-tension-marker-width) / -2);
+  background: var(--tuner-tension-marker-fill); border: var(--tuner-focus-width) solid var(--tuner-tension-marker-edge);
+  border-radius: var(--radius-pill); box-sizing: border-box;
+  opacity: 0; transform: translateX(0);
+  transition: transform var(--tuner-free-duration) linear, opacity var(--tuner-signal-duration) ease;
+}
+html[data-theme] .tuner-page .mode-ear .tuner-tension-marker[data-visible="true"] { opacity: 1; }
+html[data-theme] .tuner-page .mode-ear .tuner-tension-marker[data-visible="held"] { opacity: 0.55; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tuner-page .mode-ear .tuner-tension-marker { transition: none; }
+}
+
+/* Free mode: the stage (dial, trace, nearest string) replaces the small
+   pitch pill and fills the space the headstock art uses in guided mode. */
+html[data-theme] .tuner-page .mode-chromatic .tuner-badges { display: none; }
+html[data-theme] .tuner-page .mode-chromatic .tuner-middle-scroll { justify-content: center; min-height: 0; overflow: hidden; }

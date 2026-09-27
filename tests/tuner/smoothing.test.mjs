@@ -41,3 +41,16 @@ test('ear tension zones reveal no proximity across the normal range', () => {
   assert.equal(tensionZone(-400, profile), 'slack');
   assert.equal(tensionZone(0, null), 'unknown');
 });
+
+test('ear-training tension marker: centred at pitch, thirds at zone edges, clamped', async () => {
+  const { tensionPosition } = await import('../../src/scripts/controllers/tuner/displayState.js');
+  const profile = { warnUp: 2, dangerUp: 3, deadDown: -4 };
+  assert.equal(tensionPosition(0, profile), 0.5);
+  assert.ok(Math.abs(tensionPosition(-400, profile) - 1 / 3) < 1e-9);
+  assert.ok(Math.abs(tensionPosition(200, profile) - 2 / 3) < 1e-9);
+  assert.equal(tensionPosition(-5000, profile), 0);
+  assert.equal(tensionPosition(5000, profile), 1);
+  assert.ok(tensionPosition(10, profile) - 0.5 < 0.01, 'fine offsets must barely move the marker');
+  assert.equal(tensionPosition(NaN, profile), null);
+  assert.equal(tensionPosition(0, null), null);
+});

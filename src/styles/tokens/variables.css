@@ -403,3 +403,31 @@ body[data-theme="dark"],
   --metro-pill-text: var(--text-card-primary);
 }
 
+
+/* Tuner free mode stage + ear-training tension marker: explicit parity. */
+:root {
+  --tuner-free-dial-max: 400px;
+  --tuner-free-note-font: clamp(3rem, 9vh, 4.5rem);
+  --tuner-free-cents-font: 1.05rem;
+  --tuner-free-trace-height: clamp(76px, 14vh, 128px);
+  --tuner-free-needle: var(--brand-accent-primary);
+  --tuner-free-tick: var(--text-muted);
+  --tuner-free-track: var(--surface-elevated);
+  --tuner-free-duration: 80ms;
+  --tuner-tension-marker-width: 8px;
+  --tuner-tension-marker-fill: var(--text-on-dark);
+  --tuner-tension-marker-edge: #000000;
+}
+[data-theme="dark"] {
+  --tuner-free-dial-max: 400px;
+  --tuner-free-note-font: clamp(3rem, 9vh, 4.5rem);
+  --tuner-free-cents-font: 1.05rem;
+  --tuner-free-trace-height: clamp(76px, 14vh, 128px);
+  --tuner-free-needle: var(--brand-accent-primary);
+  --tuner-free-tick: var(--text-muted);
+  --tuner-free-track: var(--surface-elevated);
+  --tuner-free-duration: 80ms;
+  --tuner-tension-marker-width: 8px;
+  --tuner-tension-marker-fill: var(--text-on-dark);
+  --tuner-tension-marker-edge: #000000;
+}

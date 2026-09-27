@@ -49,6 +49,10 @@ test('known 440 Hz reaches the worklet and clean Free mode readout', async ({ pa
   await expect(page.locator('#tunerCentsReadout')).toHaveText(/^[+-]?0\.\d ct$/);
   await expect(page.locator('#tunerCentsReadout')).toHaveClass(/is-in-tune/);
   await expect(page.locator('#tunerStatusLine')).toHaveText('A4 in tune');
+  // Free mode stage fills the space the headstock uses in guided mode.
+  await expect(page.locator('#tunerFreeStage')).toBeVisible();
+  await expect(page.locator('#tunerFreeNote')).toHaveText('A');
+  await expect(page.locator('#tunerFreeDial')).toHaveAttribute('data-state', 'in-tune');
   await expect(page.locator('#tunerChromRail')).toBeVisible();
   await expect(page.locator('#tunerDetectedFreq')).toContainText('Hz');
   await expect(page.locator('.rail-note').first()).toHaveAttribute('data-midi', '12');
@@ -78,6 +82,7 @@ test('guided target confirms from fresh audio then loses live success on silence
   await openTuner(page, 82.406889, 'guided'); await start(page);
   await expect(page.locator('#tunerConfirmation')).toHaveAttribute('aria-valuenow', '100', { timeout: 20_000 });
   await expect(page.locator('#tunerStatusLine')).toHaveText('E2 in tune');
+  await expect(page.locator('#tunerFreeStage')).toBeHidden();
   await page.evaluate(() => { (window as any).__tunerInput.sources[0].gain.gain.value = 0; });
   await expect(page.locator('#tunerConfirmation')).toHaveAttribute('aria-valuenow', '0');
   await expect(page.locator('#tunerReadoutPanel')).not.toHaveClass(/in-tune/);

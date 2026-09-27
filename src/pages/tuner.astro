@@ -9,6 +9,7 @@ import { functionalityConfig } from '../settings/functionality.config';
 import '../styles/tuner-quality.css';
 import '../styles/tuner-modes.css';
 import DrumTuningPanel from '../components/tuner/DrumTuningPanel.astro';
+import TunerFreeStage from '../components/tuner/TunerFreeStage.astro';
 import TunerInstrumentIcon from '../components/tuner/TunerInstrumentIcon.astro';
 import { TUNER_SAMPLE_CREDITS } from '../settings/tunerSamples.config';
 
@@ -71,6 +72,7 @@ if (!isTunerEnabled) {
           <span class="tuner-meter" id="tunerMeter" aria-hidden="true">
             <span class="tuner-meter-ticks"></span>
             <span class="tuner-tension-colors"><span data-tension-color="slack"></span><span data-tension-color="normal"></span><span data-tension-color="high"></span></span>
+            <span class="tuner-tension-marker" id="tunerTensionMarker" data-visible="false"></span>
             <span class="tuner-meter-zone"></span>
             <span class="tuner-meter-zone-safety zone-warn-up" id="tunerZoneWarnUp" hidden></span>
             <span class="tuner-meter-zone-safety zone-danger" id="tunerZoneDanger" hidden></span>
@@ -111,6 +113,7 @@ if (!isTunerEnabled) {
 
       <div class="tuner-middle-scroll">
         <DrumTuningPanel />
+        <TunerFreeStage />
         <section class="tuner-figure" id="tunerFigure" aria-label="String and drum targets"></section>
         <span id="tunerAudioStatus" class="sr-only" role="status"></span>
       </div>

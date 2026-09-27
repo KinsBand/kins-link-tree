@@ -1,0 +1,169 @@
+---
+/* Free (chromatic) mode stage: arc cents dial, pitch trace and nearest
+   string. Decorative for assistive tech — readings are announced through
+   #tunerStatusLine. Geometry: hub (120,130), radius 100, ±50 ct = ±60°. */
+const HUB_X = 120, HUB_Y = 130, R = 100, SWEEP = 60;
+const point = (deg: number, r: number) => {
+  const a = (deg * Math.PI) / 180;
+  return [HUB_X + r * Math.sin(a), HUB_Y - r * Math.cos(a)].map((v) => v.toFixed(2));
+};
+const ticks = Array.from({ length: 11 }, (_, i) => {
+  const cents = -50 + i * 10;
+  const deg = (cents / 50) * SWEEP;
+  const major = cents % 50 === 0 || cents === 0;
+  const [x1, y1] = point(deg, R - (major ? 14 : 8));
+  const [x2, y2] = point(deg, R);
+  return { x1, y1, x2, y2, major };
+});
+const [ax, ay] = point(-SWEEP, R);
+const [bx, by] = point(SWEEP, R);
+const [lx, ly] = point(-SWEEP, R + 14);
+const [rx, ry] = point(SWEEP, R + 14);
+---
+<section class="tuner-free-stage" id="tunerFreeStage" aria-hidden="true" hidden>
+  <div class="tuner-free-dial" id="tunerFreeDial" data-state="idle">
+    <svg class="tuner-free-arc" viewBox="0 0 240 150" focusable="false">
+      <path class="free-arc-track" d={`M${ax},${ay} A${R},${R} 0 0 1 ${bx},${by}`} />
+      <path class="free-arc-zone" id="tunerFreeZone" d="" />
+      {ticks.map((t) => <line class={t.major ? 'free-tick major' : 'free-tick'} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} />)}
+      <text class="free-arc-label" x={lx} y={ly} text-anchor="middle">♭</text>
+      <text class="free-arc-label" x={rx} y={ry} text-anchor="middle">♯</text>
+      <g class="free-needle" id="tunerFreeNeedle">
+        <line x1={HUB_X} y1={HUB_Y} x2={HUB_X} y2={HUB_Y - R + 4} />
+      </g>
+      <circle class="free-hub" cx={HUB_X} cy={HUB_Y} r="6" />
+    </svg>
+    <div class="tuner-free-readout">
+      <p class="tuner-free-note"><span id="tunerFreeNote">--</span><span class="tuner-free-octave" id="tunerFreeOctave"></span></p>
+      <p class="tuner-free-cents" id="tunerFreeCents">Play one note</p>
+    </div>
+  </div>
+  <div class="tuner-free-trace">
+    <span class="tuner-free-caption">Pitch · last 4 s</span>
+    <canvas id="tunerFreeTrace"></canvas>
+  </div>
+  <div class="tuner-free-meta">
+    <span id="tunerFreeHz">-- Hz</span>
+    <span id="tunerFreeString">Nearest string —</span>
+  </div>
+</section>
+
+<style>
+  .tuner-free-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-evenly;
+    gap: var(--tuner-settings-gap);
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: var(--tuner-free-dial-max);
+    min-height: 0;
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+  .tuner-free-stage[hidden] { display: none; }
+
+  /* The dial takes whatever height the layout leaves (mobile column or the
+     fixed desktop grid cell) and the arc scales inside it, so the stage
+     never overflows onto the controls below. */
+  .tuner-free-dial {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    box-sizing: border-box;
+    background: var(--surface-card);
+    border: var(--border-brutal-sm);
+    border-color: var(--tuner-control-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-brutal-black);
+    padding: var(--tuner-detail-gap) var(--tuner-control-padding) var(--tuner-control-padding);
+    color: var(--text-on-dark);
+  }
+  .tuner-free-arc { display: block; flex: 1 1 auto; width: 100%; height: clamp(120px, 30vh, 260px); min-height: 72px; max-height: 260px; overflow: visible; }
+  .free-arc-track { fill: none; stroke: var(--tuner-free-track); stroke-width: 12; stroke-linecap: round; }
+  .free-arc-zone { fill: none; stroke: var(--tuner-target-zone-border); stroke-width: 12; opacity: 0.55; }
+  .free-tick { stroke: var(--tuner-free-tick); stroke-width: 1.5; }
+  .free-tick.major { stroke: var(--text-on-dark); stroke-width: 2.5; }
+  .free-arc-label { fill: var(--tuner-free-tick); font: 700 14px var(--font-primary); }
+  .free-needle {
+    transform-box: view-box;
+    transform-origin: 120px 130px;
+    transform: rotate(0deg);
+    transition: transform var(--tuner-free-duration) linear, opacity var(--tuner-free-duration) linear;
+  }
+  .free-needle line { stroke: var(--tuner-free-needle); stroke-width: 4; stroke-linecap: round; }
+  .free-hub { fill: var(--tuner-free-needle); stroke: var(--tuner-control-border); stroke-width: 2; }
+  .tuner-free-dial[data-state="idle"] .free-needle { opacity: 0.35; }
+  .tuner-free-dial[data-state="held"] .free-needle { opacity: 0.6; }
+  .tuner-free-dial[data-state="in-tune"] :is(.free-needle line, .free-hub) { stroke: var(--tuner-target-zone-border); }
+  .tuner-free-dial[data-state="in-tune"] .free-hub { fill: var(--tuner-target-zone-border); }
+  .tuner-free-dial[data-state="in-tune"] .free-arc-zone { opacity: 1; }
+
+  /* Below the arc, never under the needle's sweep. */
+  .tuner-free-readout {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    margin-block-start: var(--tuner-detail-gap);
+  }
+  .tuner-free-readout p { margin: 0; }
+  .tuner-free-note {
+    font: 800 var(--tuner-free-note-font) / 1 var(--font-heading);
+    font-variant-numeric: tabular-nums;
+  }
+  .tuner-free-octave { font: 700 calc(var(--tuner-free-note-font) * 0.38) var(--font-mono); color: var(--text-muted); margin-inline-start: 2px; }
+  .tuner-free-cents { font: 700 var(--tuner-free-cents-font) var(--font-mono); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .tuner-free-dial[data-state="in-tune"] .tuner-free-note,
+  .tuner-free-dial[data-state="in-tune"] .tuner-free-cents { color: var(--tuner-target-zone-border); }
+  .tuner-free-dial[data-state="locked"] .tuner-free-cents { color: var(--text-on-dark); }
+
+  .tuner-free-trace {
+    position: relative;
+    height: var(--tuner-free-trace-height);
+    flex: 0 0 auto;
+    background: var(--surface-card);
+    border: var(--border-brutal-sm);
+    border-color: var(--tuner-control-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .tuner-free-trace canvas { display: block; width: 100%; height: 100%; }
+  .tuner-free-caption {
+    position: absolute;
+    top: 4px;
+    inset-inline-start: 8px;
+    font: 700 0.7rem var(--font-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .tuner-free-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--tuner-detail-gap);
+    font: 600 var(--tuner-detail-font) var(--font-mono);
+    color: var(--text-card-secondary); /* sits on the page, not the card: AA in both themes */
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Wide, short desktop cell: dial beside the trace so the arc keeps its size. */
+  @media (min-width: 768px) {
+    .tuner-free-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto;
+      max-width: 640px;
+    }
+    .tuner-free-dial { grid-row: 1 / span 2; }
+    .tuner-free-trace { height: auto; min-height: var(--tuner-free-trace-height); }
+    .tuner-free-meta { grid-column: 2; flex-direction: column; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .free-needle { transition: none; }
+  }
+</style>

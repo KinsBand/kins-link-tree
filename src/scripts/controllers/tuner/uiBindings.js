@@ -1,5 +1,6 @@
 import { createReferenceAnimation } from './referenceAnimation.js';
-import { createDisplayState, tensionZone } from './displayState.js';
+import { createDisplayState, tensionZone, tensionPosition } from './displayState.js';
+import { createFreeStage } from './freeStage.js';
 import {
   TUNER_INSTRUMENTS,
   TUNER_INSTRUMENT_SHORT_LABELS,
@@ -98,6 +99,7 @@ export function createUi(callbacks) {
   }
 
   let els = null;
+  let freeStage = null;
   let meterWidth = 0;
   let openMenuName = null;
   let openTriggerEl = null;
@@ -148,6 +150,7 @@ export function createUi(callbacks) {
       zoneDead: document.getElementById('tunerZoneDead'),
       zoneLoose: document.getElementById('tunerZoneLoose'),
       chromRail: document.getElementById('tunerChromRail'),
+      tensionMarker: document.getElementById('tunerTensionMarker'),
       chromTape: document.getElementById('tunerChromTape'),
       badgeLow: document.getElementById('tunerBadgeLow'),
       badgeHigh: document.getElementById('tunerBadgeHigh'),
@@ -191,12 +194,14 @@ export function createUi(callbacks) {
       copyLinkBtn: document.getElementById('tunerCopyLinkBtn'),
       copyBadge: document.getElementById('tunerCopyBadge')
     };
+    freeStage = createFreeStage();
   }
 
   function invalidateMeterRect() {
     if (!els || !els.meter) return;
     meterWidth = els.meter.clientWidth || 0;
     layoutZones();
+    freeStage?.resize();
     if (state && state.mode === 'chromatic') {
       centerRailDefault();
     }
@@ -1046,6 +1051,7 @@ export function createUi(callbacks) {
     els.tunerView.classList.toggle('mode-ear', ear);
     els.readout.hidden = drumsMode;
     document.getElementById('tunerTension').hidden = !ear;
+    freeStage?.show(state.mode === 'chromatic' && !drumsMode);
     els.micCta.hidden = false;
     els.presetBtn.disabled = drumsMode;
     if (drumsMode) els.presetLabel.textContent = 'My kit';
@@ -1336,6 +1342,17 @@ export function createUi(callbacks) {
       const travel = meterWidth / 2 - 18;
       zone.style.width = (2 * Math.abs(centsToPct(state.tolerance)) * travel / 100) + 'px';
     }
+    freeStage?.layout(state.tolerance);
+  }
+
+  /* Ear training: slide the pointer along Loose | Normal | Tight. */
+  function setTensionMarker(position, visibility) {
+    const marker = els?.tensionMarker;
+    if (!marker) return;
+    marker.dataset.visible = position === null ? 'false' : visibility;
+    if (position === null || !meterWidth) return;
+    const travel = Math.max(0, meterWidth - marker.offsetWidth - 8);
+    marker.style.transform = 'translateX(' + ((position - 0.5) * travel).toFixed(1) + 'px)';
   }
 
   const referenceAnimation = createReferenceAnimation();
@@ -1501,6 +1518,8 @@ export function createUi(callbacks) {
     setText(textMemo, els.freq, '-- Hz');
     setText(textMemo, els.hint, '');
     setCents('', '');
+    freeStage?.reset();
+    setTensionMarker(null);
     if (state.listening) {
       setPill(TUNER_COPY.listening, 'pill-neutral');
     } else if (state.starting) {
@@ -1569,7 +1588,11 @@ export function createUi(callbacks) {
     const next = reading.status !== 'ok' ? 'listening' : reading.confirmed || (chromatic && reading.inRange) ? 'in-tune' : 'locked';
     els.readout.dataset.phase = visualState.update(ear && next === 'in-tune' ? 'locked' : next, now);
     els.readout.dataset.signal = reading.held ? 'held' : reading.status;
-    if (reading.held) return;
+    if (reading.held) {
+      if (chromatic) freeStage?.hold(now);
+      if (ear && els.tensionMarker?.dataset.visible === 'true') els.tensionMarker.dataset.visible = 'held';
+      return;
+    }
     clearSafetyClasses();
     document.getElementById('tunerExtremeCue').textContent = '';
     setText(textMemo, els.hint, '');
@@ -1580,6 +1603,7 @@ export function createUi(callbacks) {
       setPill(state.listening ? 'LISTEN AND MATCH BY EAR' : 'TAP TO START', 'pill-neutral');
       const zone = reading.status === 'ok' ? tensionZone(reading.rawCents, getProfile()) : 'unknown';
       renderTension(tensionState.update(zone, now));
+      setTensionMarker(reading.status === 'ok' ? tensionPosition(reading.rawCents, getProfile()) : null, 'true');
       return;
     }
     if (reading.status !== 'ok') {
@@ -1587,9 +1611,11 @@ export function createUi(callbacks) {
       setPill(TUNER_COPY.listening, 'pill-neutral');
       setText(textMemo, els.note, '--'); setText(textMemo, els.noteOctave, '');
       setText(textMemo, els.freq, '-- Hz');
+      if (chromatic) freeStage?.idle(now, 'Listening…');
       return;
     }
     setNeedle(chromatic ? 0 : reading.cents);
+    if (chromatic) freeStage?.update(reading, now, { preset: getPreset(), a4: state.a4 });
     if (chromatic) updateRail(reading.freq, reading.midi, reading.inRange);
     setText(textMemo, els.note, reading.detectedNote);
     setText(textMemo, els.noteOctave, String(reading.detectedOctave));
