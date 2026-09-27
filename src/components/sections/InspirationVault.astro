@@ -719,7 +719,7 @@ const memberTabs = [
         card.innerHTML = `
           <div class="music-card-thumb">
             <i class="fa-solid fa-compact-disc fallback-disc-icon" style="${hasArt ? 'display: none;' : ''}"></i>
-            <img class="track-artwork-img ${hasArt ? '' : 'hidden'}" src="${hasArt ? initialArtwork : ''}" alt="${track.title}" width="48" height="48" loading="lazy" decoding="async">
+            <img class="track-artwork-img ${hasArt ? '' : 'hidden'}" src="${hasArt ? initialArtwork : ''}" alt="" width="48" height="48" loading="lazy" decoding="async">
           </div>
           <div class="music-card-info">
             <div class="song-title-container">
@@ -741,15 +741,26 @@ const memberTabs = [
         const fallbackDisc = card.querySelector('.fallback-disc-icon') as HTMLElement;
         const img = card.querySelector('.track-artwork-img') as HTMLImageElement;
 
+        // Artwork that can't load (blocked CDN, dead URL) swaps to the disc placeholder
+        // instead of the browser's broken-image icon.
+        const showFallbackArt = () => {
+          img.classList.add('hidden');
+          if (fallbackDisc) fallbackDisc.style.display = 'flex';
+        };
+        img.addEventListener('error', showFallbackArt);
+
         getITunesTrackData(track.artist, track.title).then((meta: any) => {
           if (meta && meta.artworkUrl) {
             track.coverUrl = meta.artworkUrl;
             track.artworkUrl = meta.artworkUrl;
-            loadAlbumArt(img, meta.artworkUrl, meta.rawArtworkUrl).then(() => {
-              if (fallbackDisc) fallbackDisc.style.display = 'none';
-            }).catch(() => {
-              if (fallbackDisc && !img.src) fallbackDisc.style.display = 'flex';
-            });
+            loadAlbumArt(img, meta.artworkUrl, meta.rawArtworkUrl).then((loaded: boolean) => {
+              if (loaded) {
+                img.classList.remove('hidden');
+                if (fallbackDisc) fallbackDisc.style.display = 'none';
+              } else {
+                showFallbackArt();
+              }
+            }).catch(showFallbackArt);
           } else if (fallbackDisc && !initialArtwork) {
             fallbackDisc.style.display = 'flex';
           }

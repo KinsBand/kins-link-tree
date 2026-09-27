@@ -128,8 +128,10 @@ const streamingProfiles = platformsData
     z-index: 2;
   }
 
-  /* Split Viewport (≥ 768px): Fullscreen Split with Fluid Left Sidebar & Right Main Content */
-  @media (min-width: 768px) {
+  /* Split Viewport (≥ 1024px): Fullscreen Split with Fluid Left Sidebar & Right Main Content.
+     Below 1024px the sidebar would be squeezed under ~310px and truncate link labels,
+     so tablets use the stacked single column instead. */
+  @media (min-width: 1024px) {
     .app-wrapper {
       padding: 0;
       margin: 0;
@@ -153,7 +155,7 @@ const streamingProfiles = platformsData
       position: fixed;
       top: 64px;
       left: 0;
-      width: clamp(300px, 30vw, 420px);
+      width: clamp(360px, 32vw, 420px);
       height: calc(100vh - 64px);
       overflow-y: auto;
       overscroll-behavior: contain;
@@ -171,8 +173,8 @@ const streamingProfiles = platformsData
     /* Scrollable Right Main Content - Fills remaining width, offset below top header */
     .right-main-content {
       margin-top: 64px;
-      margin-left: clamp(300px, 30vw, 420px);
-      width: calc(100% - clamp(300px, 30vw, 420px));
+      margin-left: clamp(360px, 32vw, 420px);
+      width: calc(100% - clamp(360px, 32vw, 420px));
       min-height: calc(100vh - 64px);
       display: flex;
       flex-direction: column;
@@ -191,8 +193,8 @@ const streamingProfiles = platformsData
     }
   }
 
-  /* Mobile Stacked Edge-to-Edge View (< 768px) */
-  @media (max-width: 767px) {
+  /* Stacked Single-Column View (< 1024px): phones edge-to-edge, tablets centered below */
+  @media (max-width: 1023px) {
     .app-wrapper {
       padding: 0;
       margin: 0;
@@ -233,6 +235,16 @@ const streamingProfiles = platformsData
 
     .left-sidebar > :global(.contacts-section) { order: 12; }
     .right-main-content > :global(.site-footer) { order: 13; }
+  }
+
+  /* Tablet (768px–1023px): centered column below the fixed 64px top bar */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .site-container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: calc(64px + 24px) 24px 160px;
+      gap: 20px;
+    }
   }
 </style>
 

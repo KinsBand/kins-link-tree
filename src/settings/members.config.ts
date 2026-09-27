@@ -12,6 +12,8 @@ export interface BandMember {
   bio: string;
   instruments: string[];
   gearSummary: string;
+  /** Square photo (path under public/, e.g. "members/vivian.jpg", or a full URL). Falls back to the initial card. */
+  photo?: string;
 }
 
 export const bandMembers: BandMember[] = [

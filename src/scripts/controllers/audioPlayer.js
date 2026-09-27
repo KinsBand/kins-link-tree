@@ -314,6 +314,13 @@ export function initAudioPlayer() {
       if (imgEl.src && !imgEl.classList.contains('hidden')) {
         if (fallback) fallback.style.display = 'none';
       }
+      // Unreachable artwork shows the disc icon rather than a broken image.
+      const showFallback = () => {
+        imgEl.classList.add('hidden');
+        if (fallback) fallback.style.display = '';
+      };
+      imgEl.addEventListener('error', showFallback);
+      if (imgEl.complete && imgEl.src && imgEl.naturalWidth === 0) showFallback();
     });
 
     featured.forEach(async (item, index) => {
@@ -323,8 +330,11 @@ export function initAudioPlayer() {
       try {
         const meta = await getITunesTrackData(item.artist, item.title);
         if (meta && meta.artworkUrl) {
-          await loadAlbumArt(imgEl, meta.artworkUrl, meta.rawArtworkUrl);
-          if (fallback) fallback.style.display = 'none';
+          const loaded = await loadAlbumArt(imgEl, meta.artworkUrl, meta.rawArtworkUrl);
+          if (loaded) {
+            imgEl.classList.remove('hidden');
+            if (fallback) fallback.style.display = 'none';
+          }
         }
       } catch (err) {
         console.warn('Failed to load stacked album cover:', err);
@@ -923,8 +933,9 @@ export function initAudioPlayer() {
 
   function setMiniPlayerCover(url) {
     if (url && audioBarCoverImg) {
-      loadAlbumArt(audioBarCoverImg, url).then(() => {
-        if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'none';
+      loadAlbumArt(audioBarCoverImg, url).then((loaded) => {
+        if (!loaded) audioBarCoverImg.classList.add('hidden');
+        if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = loaded ? 'none' : 'flex';
       }).catch(() => {
         if (audioBarFallbackIcon) audioBarFallbackIcon.style.display = 'flex';
       });
