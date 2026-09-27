@@ -11,6 +11,7 @@
     "check": "astro check",
     "test": "playwright test",
     "test:tuner": "node --test tests/tuner/*.test.mjs",
+    "test:metronome": "node --test tests/metronome/*.test.mjs",
     "test:tuner:browser": "playwright test --config playwright.tuner.config.ts",
     "test:tuner:benchmark": "node tests/tuner/benchmark.mjs",
     "seo:verify": "node scripts/verify-seo-ai.js",

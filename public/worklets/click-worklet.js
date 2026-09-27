@@ -1,67 +1,190 @@
 /* ==========================================================================
-   KINS Metronome — AudioWorklet click generator ('kins-click' + 'metronome-processor').
-   Loads via ctx.audioWorklet.addModule('/worklets/click-worklet.js').
+   KINS Metronome — AudioWorklet click generator ('kins-click').
+   Loads via ctx.audioWorklet.addModule(METRO_TIMING.workletUrl).
    Runs on the audio rendering thread: scheduling and synthesis are immune
-   to ALL main-thread stalls (GC, layout, long tasks), which is the only
-   design that guarantees the metronome never stutters or skips a beat.
-   The main thread stays authoritative for config; this side renders.
+   to ALL main-thread stalls (GC, layout, long tasks). The main thread
+   stays authoritative for config; this side renders.
 
-   Dual processors registered:
-   - 'kins-click'           : legacy horizon scheduler (KinsClickProcessor) — hardened, sample-accurate
-   - 'metronome-processor'  : spec-compliant zero-allocation frame-clock engine (MetronomeProcessor)
+   The audio clock never stops while the context runs, so there is no
+   "re-sync": the grid is continuous across tab switches and interruptions.
+   Musical position lives in MetroClock (copied verbatim from
+   src/scripts/controllers/metronome/metroClock.js — worklet modules are
+   served unbundled; tests/metronome asserts the copies match).
 
-   Both share the same synthesis kernels and headroom strategy.
-
-   Protocol (main -> worklet) legacy:
-      { type:'sounds', sounds:[{id,type,freq,accentFreq,decay,gain}] }
-      { type:'sound',  id }
-      { type:'start',  bpm, perBeat, beatsPerBar, accentFirst, tiers? }
-      { type:'stop' }
-      { type:'bpm',    bpm }                       // takes effect next click
-      { type:'opts',   perBeat?, beatsPerBar?, accentFirst? }
-      { type:'tiers',  tiers:[...] }
-      { type:'sync',   offsetSec }                 // re-seat cursor after an
-                                                   // interruption/background
-                                                   // gap (counters preserved)
-   Protocol (main -> worklet) spec:
-      { type:'LOAD_SAMPLE', data:{ role, buffer } }
-      { type:'SET_SIGNATURE', data:{ beatsPerBar } }
-      { type:'RESET_PHASE' }
+   Protocol (main -> worklet):
+     { type:'sounds', sounds:[{id,type,freq,accentFreq,decay,gain}] }
+     { type:'sound',  id }
+     { type:'start',  bpm, perBeat, beatsPerBar, tiers? }
+     { type:'stop' }
+     { type:'bpm',    bpm }                 // phase-preserving, immediate
+     { type:'opts',   perBeat?, beatsPerBar? } // next beat / next bar
+     { type:'tiers',  tiers:[...] }
+     { type:'preview', soundId?, tier? }
 
    Protocol (worklet -> main):
-     { type:'beat', time, beatInBar, isAccent, tier } // time = audio-clock secs
-     { type:'TICK_EVENT', role, frame }                // spec frame event
-     { type:'stats', scheduled }
-
-   NOTE: worklet modules cannot import site config — the beat math below
-   intentionally mirrors src/scripts/controllers/metronome/audioEngine.js.
+     { type:'beat', time, n, bar, beatInBar, isAccent, tier, isBeatStart }
+       time = audio-clock seconds at which the click sounds
    ========================================================================== */
 
-/* Render-quantum blocks to keep pre-rendered ahead of playback. The audio
-   thread calls process() every 128 frames (~2.7ms @48k), so a two-block
-   horizon is ample slack without delaying tempo changes. */
+/* Render-quantum blocks scheduled ahead of playback. process() runs every
+   128 frames (~2.7ms @48k); two blocks is ample slack and keeps tempo
+   changes immediate. */
 var WORKLET_AHEAD_BLOCKS = 2;
 
 /* Click tail length past the exponential-decay endpoint, seconds */
 var WORKLET_TAIL_SEC = 0.01;
 var MAX_ACTIVE_VOICES = 16;
 
-/* Soft-knee ceiling. The transfer curve is continuous at the knee
-   (output == input at |x| = KNEE), so crossing it never steps the
-   waveform, and asymptotic to 1.0 so overlapping voices can never
-   exceed digital full scale. */
+/* First click after start lands this far ahead (mirrors
+   METRO_TIMING.startOffsetSec) so it never fires before the graph runs. */
+var WORKLET_START_OFFSET_SEC = 0.08;
+
+/* Soft-knee ceiling: continuous at the knee and asymptotic to 1.0, so
+   overlapping voices can never exceed digital full scale. */
 var WORKLET_LIMIT_KNEE = 0.8;
 
-/* Release ramp applied to ringing voices on stop/sync: truncating a
-   mid-decay click hard-cuts the waveform and pops; a ~3ms cosine-ish
-   fade lands every voice at true zero instead. Spec mandates 3.0ms. */
+/* Release ramp applied to ringing voices on stop: truncating a mid-decay
+   click pops; a 3ms fade lands every voice at true zero instead. */
 var WORKLET_RELEASE_SEC = 0.003;
 
-// ======================================================================
-//  Legacy / Hardened Processor: 'kins-click'
-//  Sample-accurate horizon scheduler, pre-rendered buffer pool, 0.75ms
-//  attack ramp, 2ms tail fade, soft-knee tanh ceiling, ~3ms release.
-// ======================================================================
+var WORKLET_TIERS = ['low', 'mid', 'high'];
+
+/* METRO-CLOCK:BEGIN */
+class MetroClock {
+  constructor() {
+    this.event = { time: 0, bar: 0, beatInBar: 0, sub: 0, isBeatStart: true, tier: 'mid', isAccent: false, n: 0 };
+    this.reset(0, {});
+  }
+
+  reset(time, cfg) {
+    const c = cfg || {};
+    this.bpm = MetroClock.validBpm(c.bpm) ? c.bpm : 120;
+    this.perBeat = MetroClock.validCount(c.perBeat) ? Math.round(c.perBeat) : 1;
+    this.beatsPerBar = MetroClock.validCount(c.beatsPerBar) ? Math.round(c.beatsPerBar) : 4;
+    this.tiers = Array.isArray(c.tiers) ? c.tiers.slice() : [];
+    this.bar = 0;
+    this.beat = 0;
+    this.sub = 0;
+    this.nextTime = time;
+    this.lastTime = -Infinity;
+    this.count = 0;
+    this.pendingPerBeat = 0;
+    this.pendingBeatsPerBar = 0;
+    this.pendingTiers = null;
+  }
+
+  static validBpm(v) { return typeof v === 'number' && v > 0 && v < 2000; }
+  static validCount(v) { return typeof v === 'number' && v >= 1 && v <= 64; }
+
+  interval() { return 60 / this.bpm / this.perBeat; }
+
+  /* Emit the click at nextTime and advance. Returns a reused object:
+     copy fields out before calling next() again. */
+  next() {
+    const e = this.event;
+    const tier = this.tiers[this.beat] || 'mid';
+    e.time = this.nextTime;
+    e.bar = this.bar;
+    e.beatInBar = this.beat;
+    e.sub = this.sub;
+    e.isBeatStart = this.sub === 0;
+    e.tier = tier;
+    e.isAccent = e.isBeatStart && tier === 'high';
+    e.n = ++this.count;
+    this.lastTime = this.nextTime;
+    this.nextTime += this.interval();
+    this.sub++;
+    if (this.sub >= this.perBeat) {
+      this.sub = 0;
+      if (this.pendingPerBeat) { this.perBeat = this.pendingPerBeat; this.pendingPerBeat = 0; }
+      this.beat++;
+      if (this.beat >= this.beatsPerBar) {
+        this.beat = 0;
+        this.bar++;
+        this.applyPendingMeter();
+      }
+    }
+    return e;
+  }
+
+  setBpm(bpm, now) {
+    if (!MetroClock.validBpm(bpm) || bpm === this.bpm) return;
+    /* Anchor on the last emitted click when it is still in the future
+       (already committed to the output) so the rescale is exact. */
+    const anchor = Math.max(now, this.lastTime);
+    if (this.nextTime > anchor) this.nextTime = anchor + (this.nextTime - anchor) * (this.bpm / bpm);
+    this.bpm = bpm;
+  }
+
+  setPerBeat(value) {
+    if (!MetroClock.validCount(value)) return;
+    const n = Math.round(value);
+    if (n === (this.pendingPerBeat || this.perBeat)) return;
+    if (n === this.perBeat) { this.pendingPerBeat = 0; return; }
+    if (this.sub === 0) { this.perBeat = n; this.pendingPerBeat = 0; }
+    else this.pendingPerBeat = n;
+  }
+
+  setMeter(value) {
+    if (!MetroClock.validCount(value)) return;
+    const n = Math.round(value);
+    if (n === (this.pendingBeatsPerBar || this.beatsPerBar)) return;
+    if (n === this.beatsPerBar) {
+      this.pendingBeatsPerBar = 0;
+      if (this.pendingTiers) { this.tiers = this.pendingTiers; this.pendingTiers = null; }
+      return;
+    }
+    this.pendingBeatsPerBar = n;
+    if (this.beat === 0 || (this.beat === 1 && this.sub === 0)) {
+      this.applyPendingMeter();
+      if (this.beat >= this.beatsPerBar) { this.beat = 0; this.bar++; }
+    }
+  }
+
+  setTiers(tiers) {
+    if (!Array.isArray(tiers)) return;
+    if (this.pendingBeatsPerBar) this.pendingTiers = tiers.slice();
+    else this.tiers = tiers.slice();
+  }
+
+  applyPendingMeter() {
+    if (this.pendingBeatsPerBar) { this.beatsPerBar = this.pendingBeatsPerBar; this.pendingBeatsPerBar = 0; }
+    if (this.pendingTiers) { this.tiers = this.pendingTiers; this.pendingTiers = null; }
+  }
+
+  /* Phase-preserving catch-up after a stall: advance whole clicks until
+     nextTime >= time, jumping whole bars in bulk after a long gap. */
+  skipTo(time) {
+    let steps = 0;
+    while (this.nextTime < time) {
+      if (++steps > 256 && this.beat === 0 && this.sub === 0 && !this.pendingPerBeat) {
+        const barSec = this.beatsPerBar * 60 / this.bpm;
+        const bars = Math.floor((time - this.nextTime) / barSec);
+        if (bars > 0) { this.nextTime += bars * barSec; this.bar += bars; this.count += bars * this.beatsPerBar * this.perBeat; }
+        steps = 0;
+        if (this.nextTime >= time) break;
+      }
+      this.next();
+    }
+  }
+
+  snapshot() {
+    return {
+      bpm: this.bpm, perBeat: this.perBeat, beatsPerBar: this.beatsPerBar, tiers: this.tiers,
+      bar: this.bar, beat: this.beat, sub: this.sub, nextTime: this.nextTime, lastTime: this.lastTime,
+      count: this.count, pendingPerBeat: this.pendingPerBeat, pendingBeatsPerBar: this.pendingBeatsPerBar,
+      pendingTiers: this.pendingTiers
+    };
+  }
+
+  restore(s) {
+    this.bpm = s.bpm; this.perBeat = s.perBeat; this.beatsPerBar = s.beatsPerBar; this.tiers = s.tiers;
+    this.bar = s.bar; this.beat = s.beat; this.sub = s.sub; this.nextTime = s.nextTime; this.lastTime = s.lastTime;
+    this.count = s.count; this.pendingPerBeat = s.pendingPerBeat; this.pendingBeatsPerBar = s.pendingBeatsPerBar;
+    this.pendingTiers = s.pendingTiers;
+  }
+}
+/* METRO-CLOCK:END */
 class KinsClickProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
@@ -74,74 +197,25 @@ class KinsClickProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this.playing = false;
-    this.bpm = 120;
-    this.perBeat = 1;
-    this.beatsPerBar = 4;
-    this.accentFirst = true;
-    this.beatTiers = ['mid', 'mid', 'mid', 'mid'];
-    this.nextClickTime = 0;
-    this.clickCounter = 0;
-    this.beatCounter = 0;
-    this.scheduledTotal = 0;
+    this.clock = new MetroClock();
     this.soundId = null;
     this.sounds = {};
     this.buffers = new Map(); /* "<id>:<accent>:<tier>" -> Float32Array */
-    this.active = [];         /* [{frame, buf}] sorted implicitly by push order */
-    this.releaseFrame = -1;   /* absolute frame from which voices fade out; -1 = off */
-    this.releaseFrames = Math.max(32, Math.round(WORKLET_RELEASE_SEC * sampleRate));
     this.cachedSampleRate = sampleRate;
-    this._phase = 0;          /* phase-integrated synth accumulator */
-    /* Frame-clock fields for spec compatibility (also maintained here for audit) */
-    this.totalFramesProcessed = 0;
-    this.nextTickFrame = 0;
-    this.subdivisionCounter = 0;
-    this.sampleBuffers = { accent: null, beat: null, sub: null };
-    this.MAX_VOICES = 16;
+    this.releaseFrames = Math.max(32, Math.round(WORKLET_RELEASE_SEC * sampleRate));
+    /* Fixed voice pool: no allocation while rendering */
     this.voices = [];
-    for (let i = 0; i < this.MAX_VOICES; i++) {
-      this.voices.push({
-        active: false,
-        type: 'synth',
-        synthType: 'woodblock',
-        buffer: null,
-        playbackIndex: 0,
-        frequency: 880,
-        decay: 0.05,
-        elapsedSeconds: 0
-      });
+    for (var i = 0; i < MAX_ACTIVE_VOICES; i++) {
+      this.voices.push({ active: false, frame: 0, buf: null, role: 'beat', releaseFrame: -1, age: 0 });
     }
+    this.voiceAge = 0;
 
     var self = this;
     this.port.onmessage = function (e) { self.onMessage(e.data); };
   }
 
-  // Supports both legacy and spec message shapes
   onMessage(m) {
     if (!m || typeof m !== 'object') return;
-    // Spec messages (upper-case)
-    if (m.type === 'LOAD_SAMPLE' && m.data) {
-      var role = m.data.role;
-      var buf = m.data.buffer;
-      if (buf) {
-        // Transfer Float32Array view
-        try { this.sampleBuffers[role] = new Float32Array(buf); } catch (e) { this.sampleBuffers[role] = buf; }
-      }
-      return;
-    }
-    if (m.type === 'SET_SIGNATURE' && m.data) {
-      if (typeof m.data.beatsPerBar === 'number') this.beatsPerBar = m.data.beatsPerBar || 4;
-      return;
-    }
-    if (m.type === 'RESET_PHASE') {
-      this.subdivisionCounter = 0;
-      this.nextTickFrame = this.totalFramesProcessed;
-      // Also reset legacy counters for seamless switch
-      this.clickCounter = 0;
-      this.beatCounter = 0;
-      this.nextClickTime = currentTime + 0.08;
-      this.releaseVoices();
-      return;
-    }
     switch (m.type) {
       case 'sounds':
         this.sounds = {};
@@ -150,62 +224,39 @@ class KinsClickProcessor extends AudioWorkletProcessor {
           if (list[i] && list[i].id) this.sounds[list[i].id] = list[i];
         }
         this.buffers.clear();
+        this.prewarm();
         break;
       case 'sound':
         if (typeof m.id === 'string') this.soundId = m.id;
+        this.prewarm();
         break;
       case 'start':
-        this.bpm = m.bpm || 120;
-        this.perBeat = m.perBeat || 1;
-        this.beatsPerBar = m.beatsPerBar || 4;
-        this.accentFirst = !!m.accentFirst;
-        if (Array.isArray(m.tiers)) this.beatTiers = m.tiers;
-        this.clickCounter = 0;
-        this.beatCounter = 0;
-        this.subdivisionCounter = 0;
-        this.totalFramesProcessed = Math.round(currentTime * sampleRate);
-        this.nextTickFrame = this.totalFramesProcessed;
-        this.nextClickTime = currentTime + 0.08; /* mirrors startOffsetSec */
-        /* Fresh run: hard-drop any stale release-ramp voices. A quick
-           stop→start inside the ~10ms tail otherwise keeps releaseFrame
-           armed and process() fades the FIRST new clicks to zero. */
-        this.active.length = 0;
-        this.releaseFrame = -1;
+        this.clock.reset(currentTime + WORKLET_START_OFFSET_SEC, {
+          bpm: m.bpm, perBeat: m.perBeat, beatsPerBar: m.beatsPerBar, tiers: m.tiers
+        });
+        /* Fresh run: hard-drop voices still ringing from a previous run */
+        for (var v = 0; v < this.voices.length; v++) this.voices[v].active = false;
         this.playing = true;
         break;
       case 'stop':
         this.playing = false;
         this.releaseVoices();
         break;
-      case 'preview':
-        var previewSoundId = m.soundId || this.soundId;
-        var soundObj = (previewSoundId && this.sounds[previewSoundId]) ? this.sounds[previewSoundId] : this.currentSound();
-        var prevTier = m.tier || 'mid';
-        var prevAccent = prevTier === 'high';
-        var previewBuf = this.getBuffer(soundObj, prevAccent, prevTier);
-        if (this.active.length < MAX_ACTIVE_VOICES) {
-          var previewRole = prevAccent ? 'accent' : 'beat';
-          this.active.push({ frame: Math.round(currentTime * sampleRate), buf: previewBuf, role: previewRole });
-        }
-        break;
-      case 'tiers':
-        if (Array.isArray(m.tiers)) this.beatTiers = m.tiers;
-        break;
-      case 'sync':
-        var offset = (typeof m.offsetSec === 'number' && m.offsetSec > 0) ? m.offsetSec : 0.08;
-        if (this.playing) {
-          this.releaseVoices();
-          this.nextClickTime = currentTime + offset;
-          this.nextTickFrame = Math.round((currentTime + offset) * sampleRate);
-        }
-        break;
       case 'bpm':
-        if (typeof m.bpm === 'number' && m.bpm > 0) this.bpm = m.bpm;
+        this.clock.setBpm(m.bpm, currentTime);
         break;
       case 'opts':
-        if (typeof m.perBeat === 'number' && m.perBeat > 0) this.perBeat = m.perBeat;
-        if (typeof m.beatsPerBar === 'number' && m.beatsPerBar > 0) this.beatsPerBar = m.beatsPerBar;
-        if (typeof m.accentFirst === 'boolean') this.accentFirst = m.accentFirst;
+        if (typeof m.perBeat === 'number') this.clock.setPerBeat(m.perBeat);
+        if (typeof m.beatsPerBar === 'number') this.clock.setMeter(m.beatsPerBar);
+        break;
+      case 'tiers':
+        this.clock.setTiers(m.tiers);
+        break;
+      case 'preview':
+        var previewSound = (m.soundId && this.sounds[m.soundId]) || this.currentSound();
+        var previewTier = m.tier || 'mid';
+        var previewAccent = previewTier === 'high';
+        this.addVoice(Math.round(currentTime * sampleRate), this.getBuffer(previewSound, previewAccent, previewTier), previewAccent ? 'accent' : 'beat');
         break;
     }
   }
@@ -216,9 +267,39 @@ class KinsClickProcessor extends AudioWorkletProcessor {
       { id: 'click', type: 'square', freq: 1100, accentFreq: 1750, decay: 0.04, gain: 0.5 };
   }
 
+  /* Render every buffer the current sound can need when the sound is
+     chosen, never inside the process() call that must play the click. */
+  prewarm() {
+    var sound = this.currentSound();
+    for (var i = 0; i < WORKLET_TIERS.length; i++) {
+      this.getBuffer(sound, false, WORKLET_TIERS[i]);
+    }
+    this.getBuffer(sound, true, 'high');
+  }
+
+  addVoice(frame, buf, role) {
+    var slot = null;
+    var oldest = null;
+    for (var i = 0; i < this.voices.length; i++) {
+      var v = this.voices[i];
+      if (!v.active) { slot = v; break; }
+      if (!oldest || v.age < oldest.age) oldest = v;
+    }
+    /* Pool full: steal the oldest voice rather than dropping the click */
+    if (!slot) slot = oldest;
+    slot.active = true;
+    slot.frame = frame;
+    slot.buf = buf;
+    slot.role = role;
+    slot.releaseFrame = -1;
+    slot.age = ++this.voiceAge;
+  }
+
   releaseVoices() {
-    if (this.active.length && this.releaseFrame < 0) {
-      this.releaseFrame = Math.round(currentTime * sampleRate);
+    var now = Math.round(currentTime * sampleRate);
+    for (var i = 0; i < this.voices.length; i++) {
+      var v = this.voices[i];
+      if (v.active && v.releaseFrame < 0) v.releaseFrame = now;
     }
   }
 
@@ -326,44 +407,27 @@ class KinsClickProcessor extends AudioWorkletProcessor {
 
   schedule() {
     var horizon = currentTime + (128 / sampleRate) * WORKLET_AHEAD_BLOCKS;
-    while (this.playing && this.nextClickTime < horizon) {
-      var startsABeat = Math.abs(this.clickCounter % this.perBeat) < 1e-9;
-      var beatIndex = this.beatCounter - (startsABeat ? 0 : 1);
-      if (beatIndex < 0) beatIndex = 0;
-      var beatInBar = ((beatIndex % this.beatsPerBar) + this.beatsPerBar) % this.beatsPerBar;
-      var tier = (this.beatTiers && this.beatTiers[beatInBar]) || 'mid';
-      var isAccent = tier === 'high' && startsABeat;
-      var curSound = this.currentSound();
-      var isVoice = curSound && curSound.id === 'voice-count';
-      if (tier !== 'mute' && !isVoice) {
-        var buf = this.getBuffer(curSound, isAccent, tier);
-        if (this.active.length < MAX_ACTIVE_VOICES) {
-          var role = isAccent ? 'accent' : (startsABeat ? 'beat' : 'sub');
-          this.active.push({ frame: Math.round(this.nextClickTime * sampleRate), buf: buf, role: role });
-        }
+    var clock = this.clock;
+    /* A context suspended mid-run resumes with the cursor in the past:
+       skip the missed clicks while keeping bar phase, never burst them. */
+    if (clock.nextTime < currentTime - 0.1) clock.skipTo(currentTime);
+    var sound = this.currentSound();
+    while (clock.nextTime < horizon) {
+      var e = clock.next();
+      if (e.tier !== 'mute') {
+        var role = e.isAccent ? 'accent' : (e.isBeatStart ? 'beat' : 'sub');
+        this.addVoice(Math.round(e.time * sampleRate), this.getBuffer(sound, e.isAccent, e.tier), role);
       }
-
-      this.scheduledTotal++;
       this.port.postMessage({
         type: 'beat',
-        time: this.nextClickTime,
-        n: this.scheduledTotal,
-        beatInBar: beatInBar,
-        isAccent: isAccent,
-        tier: tier,
-        isBeatStart: startsABeat
+        time: e.time,
+        n: e.n,
+        bar: e.bar,
+        beatInBar: e.beatInBar,
+        isAccent: e.isAccent,
+        tier: e.tier,
+        isBeatStart: e.isBeatStart
       });
-      // Also emit spec TICK_EVENT for inspection
-      this.port.postMessage({
-        type: 'TICK_EVENT',
-        role: isAccent ? 'accent' : (startsABeat ? 'beat' : 'sub'),
-        frame: Math.round(this.nextClickTime * sampleRate),
-        time: this.nextClickTime
-      });
-      if (startsABeat) this.beatCounter++;
-      this.clickCounter++;
-      this.subdivisionCounter = (this.subdivisionCounter + 1) % (this.beatsPerBar * Math.max(1, Math.round(this.perBeat)));
-      this.nextClickTime += 60 / this.bpm / this.perBeat;
     }
   }
 
@@ -373,43 +437,40 @@ class KinsClickProcessor extends AudioWorkletProcessor {
     if (this.playing) this.schedule();
     out.fill(0);
 
-    if (this.active.length) {
-      /* Read role gains from AudioParams (k-rate: one value per 128-frame block) */
-      var accentG = parameters.accentGain ? parameters.accentGain[0] : 0.8;
-      var beatG   = parameters.beatGain   ? parameters.beatGain[0]   : 0.6;
-      var subG    = parameters.subGain    ? parameters.subGain[0]    : 0.4;
+    /* k-rate role gains: one value per 128-frame block */
+    var accentG = parameters.accentGain ? parameters.accentGain[0] : 0.8;
+    var beatG = parameters.beatGain ? parameters.beatGain[0] : 0.6;
+    var subG = parameters.subGain ? parameters.subGain[0] : 0.4;
+    var blockStart = Math.round(currentTime * sampleRate);
+    var relN = this.releaseFrames;
+    var any = false;
 
-      /* Integer-locked blockStart prevents non-integer TypedArray indexing and NaNs */
-      var blockStart = Math.round(currentTime * sampleRate);
-      var relStart = this.releaseFrame;
-      var relN = this.releaseFrames;
-      for (var i = this.active.length - 1; i >= 0; i--) {
-        var a = this.active[i];
-        var offset = Math.round(a.frame) - blockStart;
-        if (offset >= out.length) continue;
-        var end = offset + a.buf.length;
-        if (end <= 0) { this.active.splice(i, 1); continue; }
-        var srcStart = offset < 0 ? -offset : 0;
-        var dstStart = offset > 0 ? offset : 0;
-        var n = Math.min(a.buf.length - srcStart, out.length - dstStart);
-
-        /* Per-voice role gain: accent/beat/sub from AudioParams */
-        var roleG = a.role === 'accent' ? accentG : (a.role === 'beat' ? beatG : subG);
-
-        if (relStart >= 0) {
-          for (var j = 0; j < n; j++) {
-            var df = blockStart + dstStart + j - relStart;
-            if (df >= relN) break;
-            var g = df < 0 ? 1 : 1 - df / relN;
-            out[dstStart + j] += a.buf[srcStart + j] * g * roleG;
-          }
-        } else {
-          for (var k = 0; k < n; k++) out[dstStart + k] += a.buf[srcStart + k] * roleG;
+    for (var i = 0; i < this.voices.length; i++) {
+      var a = this.voices[i];
+      if (!a.active) continue;
+      var offset = a.frame - blockStart;
+      if (offset >= out.length) { any = true; continue; }
+      var srcStart = offset < 0 ? -offset : 0;
+      var dstStart = offset > 0 ? offset : 0;
+      var n = Math.min(a.buf.length - srcStart, out.length - dstStart);
+      if (n <= 0) { a.active = false; a.buf = null; continue; }
+      any = true;
+      var roleG = a.role === 'accent' ? accentG : (a.role === 'beat' ? beatG : subG);
+      if (a.releaseFrame >= 0) {
+        for (var j = 0; j < n; j++) {
+          var df = blockStart + dstStart + j - a.releaseFrame;
+          if (df >= relN) { a.active = false; break; }
+          var g = df < 0 ? 1 : 1 - df / relN;
+          out[dstStart + j] += a.buf[srcStart + j] * g * roleG;
         }
-        if (srcStart + n >= a.buf.length) this.active.splice(i, 1);
+      } else {
+        for (var k = 0; k < n; k++) out[dstStart + k] += a.buf[srcStart + k] * roleG;
       }
-      if (!this.active.length) this.releaseFrame = -1;
+      if (srcStart + n >= a.buf.length) { a.active = false; }
+      if (!a.active) a.buf = null;
+    }
 
+    if (any) {
       for (var s = 0; s < out.length; s++) {
         var val = out[s];
         if (val > WORKLET_LIMIT_KNEE || val < -WORKLET_LIMIT_KNEE) {
@@ -418,243 +479,9 @@ class KinsClickProcessor extends AudioWorkletProcessor {
           out[s] = val < 0 ? -shaped : shaped;
         }
       }
-    } else if (this.releaseFrame >= 0) {
-      this.releaseFrame = -1;
     }
-
-    this.totalFramesProcessed += out.length;
     return true;
   }
 }
 
 registerProcessor('kins-click', KinsClickProcessor);
-
-// ======================================================================
-//  Spec-Compliant Zero-Allocation Processor: 'metronome-processor'
-//  Frame-accurate, voice-pool, analytical DSP + PCM streaming, AudioParam
-//  control, equal-power scaling, tanh soft-clipper.
-// ======================================================================
-class MetronomeProcessor extends AudioWorkletProcessor {
-  static get parameterDescriptors() {
-    return [
-      { name: 'bpm', defaultValue: 120, minValue: 30, maxValue: 400, automationRate: 'k-rate' },
-      { name: 'subdivision', defaultValue: 1, minValue: 1, maxValue: 16, automationRate: 'k-rate' },
-      { name: 'accentGain', defaultValue: 0.8, minValue: 0, maxValue: 1, automationRate: 'k-rate' },
-      { name: 'beatGain', defaultValue: 0.5, minValue: 0, maxValue: 1, automationRate: 'k-rate' },
-      { name: 'subGain', defaultValue: 0.3, minValue: 0, maxValue: 1, automationRate: 'k-rate' },
-      { name: 'isPlaying', defaultValue: 0, minValue: 0, maxValue: 1, automationRate: 'k-rate' }
-    ];
-  }
-
-  constructor() {
-    super();
-    this.totalFramesProcessed = 0;
-    this.nextTickFrame = 0;
-    this.subdivisionCounter = 0;
-    this.beatsPerBar = 4;
-    this.sampleBuffers = {
-      accent: null,
-      beat: null,
-      sub: null
-    };
-    this.MAX_VOICES = 16;
-    this.voices = [];
-    for (let i = 0; i < this.MAX_VOICES; i++) {
-      this.voices.push({
-        active: false,
-        type: 'synth',
-        synthType: 'woodblock',
-        buffer: null,
-        playbackIndex: 0,
-        frequency: 880,
-        decay: 0.05,
-        elapsedSeconds: 0
-      });
-    }
-    this._legacyBpm = 120;
-    this._legacyPerBeat = 1;
-    this.beatCounter = 0;
-    this.scheduledTotal = 0;
-    this._phase = 0;
-
-    this.port.onmessage = (event) => {
-      const { type, data } = event.data || {};
-      // Legacy spec naming may be nested or flat
-      const payload = data || event.data;
-      if (type === 'LOAD_SAMPLE') {
-        const role = payload.role || (payload.data && payload.data.role);
-        const buffer = payload.buffer || (payload.data && payload.data.buffer);
-        if (role && buffer) {
-          try { this.sampleBuffers[role] = new Float32Array(buffer); } catch (e) { this.sampleBuffers[role] = buffer; }
-        }
-      } else if (type === 'SET_SIGNATURE') {
-        this.beatsPerBar = (payload.beatsPerBar || (payload.data && payload.data.beatsPerBar)) || 4;
-      } else if (type === 'RESET_PHASE') {
-        this.subdivisionCounter = 0;
-        this.scheduledTotal = 0;
-        this.nextTickFrame = this.totalFramesProcessed;
-        /* Drop stale voices so a restart never resumes clicks mid-decay
-           (isPlaying gating alone does not clear the voice pool) */
-        for (let vi = 0; vi < this.voices.length; vi++) {
-          this.voices[vi].active = false;
-          this.voices[vi].buffer = null;
-        }
-      } else if (type === 'sounds' || type === 'sound' || type === 'start' || type === 'stop' || type === 'bpm' || type === 'opts' || type === 'tiers' || type === 'sync') {
-        // Forward to also handle via same logic if needed for testing
-        if (type === 'bpm' && typeof payload.bpm === 'number') this._legacyBpm = payload.bpm;
-        if (type === 'opts' && typeof payload.perBeat === 'number') this._legacyPerBeat = payload.perBeat;
-      }
-    };
-  }
-
-  triggerVoice(role, bpm, subdivision) {
-    let voice = this.voices.find(v => !v.active);
-    if (!voice) {
-      voice = this.voices[0];
-    }
-
-    voice.active = true;
-    voice.elapsedSeconds = 0;
-    voice.playbackIndex = 0;
-    voice.role = role; /* Store semantic role for gain lookup */
-
-    const isAccent = (this.subdivisionCounter === 0);
-    const isPrimaryBeat = (this.subdivisionCounter % Math.max(1, Math.floor(subdivision)) === 0);
-
-    if (this.sampleBuffers[role]) {
-      voice.type = 'pcm';
-      voice.buffer = this.sampleBuffers[role];
-    } else {
-      voice.type = 'synth';
-      if (isAccent) {
-        voice.frequency = 1200;
-        voice.decay = 0.035;
-        voice.synthType = 'woodblock';
-      } else if (isPrimaryBeat) {
-        voice.frequency = 800;
-        voice.decay = 0.030;
-        voice.synthType = 'woodblock';
-      } else {
-        voice.frequency = 600;
-        voice.decay = 0.020;
-        voice.synthType = 'sine';
-      }
-    }
-  }
-
-  process(inputs, outputs, parameters) {
-    const output = outputs[0];
-    const channelLeft = output[0];
-    const channelRight = output[1] || output[0];
-    if (!channelLeft) return true;
-    const bufferLength = channelLeft.length;
-
-    const isPlaying = parameters.isPlaying ? parameters.isPlaying[0] > 0.5 : false;
-    // For standalone spec tests without AudioParam automation, allow legacy flag? But spec says use isPlaying param.
-    if (!isPlaying) {
-      this.totalFramesProcessed += bufferLength;
-      return true;
-    }
-
-    const bpm = parameters.bpm ? parameters.bpm[0] : this._legacyBpm;
-    const subdivision = Math.max(1, Math.floor(parameters.subdivision ? parameters.subdivision[0] : this._legacyPerBeat));
-    const accentGain = parameters.accentGain ? parameters.accentGain[0] : 0.8;
-    const beatGain = parameters.beatGain ? parameters.beatGain[0] : 0.5;
-    const subGainRaw = parameters.subGain ? parameters.subGain[0] : 0.3;
-    // Equal-power subdivision attenuation: G_sub(N) = min(1, 1/sqrt(N))
-    const N = Math.max(1, subdivision);
-    const G_sub = Math.min(1.0, 1.0 / Math.sqrt(N));
-    const subGain = subGainRaw * G_sub;
-    // Summed sub-mix headroom 0.707 applied later
-
-    const framesPerSubdivision = (sampleRate * 60) / (bpm * subdivision);
-
-    for (let i = 0; i < bufferLength; i++) {
-      const currentFrame = this.totalFramesProcessed + i;
-
-      if (currentFrame >= this.nextTickFrame) {
-        /* Compute from the PRE-increment counter: the old code read the
-           post-increment value, shifting every reported beat position by
-           one click and cycling `n` (modulo) instead of a running total. */
-        const preCounter = this.subdivisionCounter;
-        const isAccent = (preCounter === 0);
-        const isPrimaryBeat = (preCounter % subdivision === 0);
-        const role = isAccent ? 'accent' : (isPrimaryBeat ? 'beat' : 'sub');
-        const beatInBar = Math.floor(preCounter / subdivision) % this.beatsPerBar;
-
-        this.triggerVoice(role, bpm, subdivision);
-
-        this.subdivisionCounter = (preCounter + 1) % (this.beatsPerBar * subdivision);
-        this.nextTickFrame += framesPerSubdivision;
-        this.scheduledTotal++;
-
-        this.port.postMessage({
-          type: 'TICK_EVENT',
-          role: role,
-          frame: currentFrame
-        });
-        this.port.postMessage({
-          type: 'beat',
-          time: currentFrame / sampleRate,
-          n: this.scheduledTotal,
-          beatInBar: beatInBar,
-          isAccent: isAccent,
-          tier: isAccent ? 'high' : (isPrimaryBeat ? 'mid' : 'low'),
-          isBeatStart: isPrimaryBeat
-        });
-      }
-
-      let sampleSum = 0;
-
-      for (let v = 0; v < this.MAX_VOICES; v++) {
-        const voice = this.voices[v];
-        if (!voice.active) continue;
-
-        let sample = 0;
-        if (voice.type === 'pcm') {
-          if (voice.playbackIndex < voice.buffer.length) {
-            sample = voice.buffer[voice.playbackIndex++];
-          } else {
-            voice.active = false;
-          }
-        } else if (voice.type === 'synth') {
-          const t = voice.elapsedSeconds;
-          const attack = Math.min(1.0, t / 0.0008);
-          if (voice.synthType === 'woodblock') {
-            const env = Math.exp(-t / voice.decay) * attack;
-            sample = Math.sin(2 * Math.PI * voice.frequency * t) * env;
-            sample += 0.3 * Math.sin(2 * Math.PI * (voice.frequency * 1.62) * t) * Math.exp(-t / (voice.decay * 0.5)) * attack;
-          } else {
-            const env = Math.exp(-t / voice.decay) * attack;
-            sample = Math.sin(2 * Math.PI * voice.frequency * t) * env;
-          }
-
-          voice.elapsedSeconds += (1 / sampleRate);
-          if (t > voice.decay * 5) {
-            voice.active = false;
-          }
-        }
-
-        const roleGain = voice.role === 'accent' ? accentGain : (voice.role === 'beat' ? beatGain : subGain);
-        sampleSum += sample * roleGain;
-      }
-
-      /* Soft-knee limiting catches the rare multi-voice sum that exceeds
-         the knee; the fixed 0.707 bus penalty is removed since per-voice
-         AudioParam gains already provide proper headroom. */
-      if (sampleSum > WORKLET_LIMIT_KNEE || sampleSum < -WORKLET_LIMIT_KNEE) {
-        var over = Math.abs(sampleSum) - WORKLET_LIMIT_KNEE;
-        var shaped = WORKLET_LIMIT_KNEE + (1 - WORKLET_LIMIT_KNEE) * Math.tanh(over / (1 - WORKLET_LIMIT_KNEE));
-        sampleSum = sampleSum < 0 ? -shaped : shaped;
-      }
-
-      channelLeft[i] = sampleSum;
-      if (channelRight !== channelLeft) channelRight[i] = sampleSum;
-    }
-
-    this.totalFramesProcessed += bufferLength;
-    return true;
-  }
-}
-
-registerProcessor('metronome-processor', MetronomeProcessor);

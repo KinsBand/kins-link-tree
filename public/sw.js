@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kins-link-bio-v34';
+const CACHE_NAME = 'kins-link-bio-v35';
 
 // Small, stable shell assets only. Heavy media (new.png) is NOT precached —
 // it competes with first-load bandwidth and is runtime-cached on first view.
@@ -17,7 +17,7 @@ const PRECACHE_ASSETS = [
   './followers.json',
   './noise-tile.png',
   './tuner-worklet.js?v=2',
-  './worklets/click-worklet.js',
+  './worklets/click-worklet.js?v=3',
   './worklets/metro-worker.js'
 ];
 
