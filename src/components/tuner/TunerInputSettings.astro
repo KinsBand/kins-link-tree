@@ -1,22 +1,103 @@
 <div class="tuner-input-settings">
-  <label for="tunerCalibration">Reference A4 (Hz)</label>
-  <div class="tuner-calibration-row">
-    <input id="tunerCalibration" type="number" min="410" max="470" step="0.1" value="440" inputmode="decimal" />
-    <button type="button" id="tunerCalibrationReset" class="brutal-press">Reset 440</button>
+  <div class="tuner-input-col">
+    <label for="tunerCalibration">Reference A4 (Hz)</label>
+    <div class="tuner-calibration-row">
+      <input id="tunerCalibration" type="number" min="410" max="470" step="0.1" value="440" inputmode="decimal" aria-label="Reference A4 in Hertz" />
+      <button type="button" id="tunerCalibrationReset" class="brutal-press" aria-label="Reset reference pitch to 440 Hz" title="Reset to 440 Hz">
+        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+      </button>
+    </div>
   </div>
-  <label for="tunerTolerance">In-tune tolerance</label>
-  <select id="tunerTolerance"><option value="3">Standard · ±3 cents</option><option value="1">Precision · ±1 cent</option></select>
+  <div class="tuner-input-col">
+    <label for="tunerTolerance">In-tune tolerance</label>
+    <select id="tunerTolerance" aria-label="In-tune tolerance">
+      <option value="3">±3 cents</option>
+      <option value="1">±1 cent</option>
+    </select>
+  </div>
 </div>
 
 <style>
-  .tuner-input-settings { display: grid; gap: var(--tuner-detail-gap); margin-block: var(--tuner-settings-gap); color: var(--text-on-light); font-family: var(--font-primary); }
-  .tuner-calibration-row { display: flex; gap: var(--tuner-detail-gap); }
-  .tuner-calibration-row input { min-width: 0; flex: 1; }
-  .tuner-input-settings :is(input, select, button) { min-height: var(--tuner-touch-target); max-width: 100%; padding-inline: var(--tuner-control-padding); border: var(--border-brutal-sm); border-radius: var(--radius-sm); background: var(--surface-input); color: var(--text-on-light); font: inherit; }
-  .tuner-input-settings button { background: var(--btn-brand-primary); color: var(--btn-brand-text); cursor: pointer; }
-  .tuner-input-settings button:hover { background: var(--btn-brand-hover); }
-  .tuner-input-settings :is(input, select):hover { border-color: var(--brand-accent-primary); }
-  .tuner-input-settings :is(input, select, button):focus-visible { outline: var(--tuner-focus-width) solid var(--brand-accent-primary); outline-offset: var(--tuner-focus-offset); }
-  .tuner-input-settings :is(input, select, button):disabled { opacity: 0.5; cursor: not-allowed; }
-  .tuner-input-settings p { font-size: var(--tuner-detail-font); margin: 0; }
+  .tuner-input-settings {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-block: var(--tuner-settings-gap);
+    color: var(--text-on-light);
+    font-family: var(--font-primary);
+  }
+  .tuner-input-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .tuner-input-col label {
+    font-family: var(--font-secondary, var(--font-primary));
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    color: #a1a1aa;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .tuner-calibration-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .tuner-calibration-row input {
+    min-width: 0;
+    flex: 1;
+    text-align: center;
+  }
+  .tuner-input-settings :is(input, select, button) {
+    min-height: var(--tuner-touch-target);
+    height: var(--tuner-touch-target);
+    max-width: 100%;
+    padding-inline: var(--tuner-control-padding);
+    border: var(--border-brutal-sm);
+    border-radius: var(--radius-sm);
+    background: var(--surface-input);
+    color: var(--text-on-light);
+    font: inherit;
+    box-sizing: border-box;
+  }
+  #tunerCalibrationReset {
+    width: var(--tuner-touch-target);
+    min-width: var(--tuner-touch-target);
+    height: var(--tuner-touch-target);
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  #tunerCalibrationReset:hover {
+    background: var(--btn-brand-hover);
+  }
+  .tuner-input-settings select {
+    cursor: pointer;
+    width: 100%;
+    text-overflow: ellipsis;
+  }
+  .tuner-input-settings :is(input, select):hover {
+    border-color: var(--brand-accent-primary);
+  }
+  .tuner-input-settings :is(input, select, button):focus-visible {
+    outline: var(--tuner-focus-width) solid var(--brand-accent-primary);
+    outline-offset: var(--tuner-focus-offset);
+  }
+  .tuner-input-settings :is(input, select, button):disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .tuner-input-settings p {
+    font-size: var(--tuner-detail-font);
+    margin: 0;
+  }
 </style>

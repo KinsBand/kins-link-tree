@@ -1,5 +1,15 @@
 /* Coordinates describe artwork; paint and UI sizes live in semantic tokens.
  * Generate every peg, including custom 1–12 string setups. */
+function stringSpan(index, gauge, x, y, endX, endY, aboveNut = false) {
+  const length = Math.hypot(endX - x, endY - y);
+  const angle = -Math.atan2(endX - x, endY - y) * 180 / Math.PI;
+  // Local Y follows the string. Scaling only the bowed X component keeps
+  // the nut fixed; the above-nut span also stays anchored at the tuning post.
+  // The bridge is outside the artwork, so the lower crop is free to move.
+  const bow = aboveNut ? `M0 0 Q2 ${length / 2} 0 ${length}` : `M0 0 Q0 ${length / 2} 1 ${length}`;
+  return `<g class="tuner-string-span str-s${index}${aboveNut ? ' tuner-string-above-nut' : ''}" transform="translate(${x} ${y}) rotate(${angle})" stroke-width="${gauge}"><path class="tuner-string-line tuner-string-rest" d="M0 0 V${length}"/><path class="tuner-string-line tuner-string-motion" vector-effect="non-scaling-stroke" d="${bow}"/></g>`;
+}
+
 export function getInstrumentArt(instrumentId, stringCount) {
   if (!['electric', 'acoustic', 'bass'].includes(instrumentId)) return '';
   const count = Math.max(1, Math.min(12, Number(stringCount) || 6));
@@ -21,7 +31,9 @@ export function getInstrumentArt(instrumentId, stringCount) {
     const stringX = (split ? 123 : 143) + i * ((split ? 74 : 28) / Math.max(1, count - 1));
     const gauge = Math.max(0.5, bass ? 2.7 - i * 0.22 : 1.9 - i * 0.07);
     hardware += `<path class="art-metal-line" d="M${x} ${y} H${post}"/><circle class="art-washer" cx="${post}" cy="${y}" r="10"/><circle class="art-core" cx="${post}" cy="${y}" r="4"/>`;
-    strings += `<path class="tuner-string-line str-s${i}" stroke-width="${gauge}" d="M${stringX} ${height} V${nut + 2} L${post} ${y}"/><circle class="art-string-wrap str-s${i}" cx="${post}" cy="${y}" r="6"/>`;
+    strings += stringSpan(i, gauge, stringX, nut + 8, stringX, height)
+      + stringSpan(i, gauge, stringX, nut, post, y, true)
+      + `<path class="tuner-string-line str-s${i}" stroke-width="${gauge}" d="M${stringX} ${nut} v8"/><circle class="art-string-wrap str-s${i}" cx="${post}" cy="${y}" r="6"/>`;
     const key = `<rect class="tuner-peg-circle" x="${x - 23}" y="${y - 19}" width="46" height="38" rx="10"/>`;
     pegs += `<g class="tuner-peg brutal-press" data-string-index="${i}" role="button" tabindex="0" aria-label="Target string ${count - i}"><rect class="art-hit-target" x="${x - 26}" y="${y - 26}" width="52" height="52" rx="8"/>${key}<text class="tuner-peg-label" x="${x}" y="${y + 1}" text-anchor="middle" dominant-baseline="middle">${count - i}</text></g>`;
   }

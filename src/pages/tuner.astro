@@ -84,17 +84,16 @@ if (!isTunerEnabled) {
           </span>
         </button>
         <div class="tuner-sub-readout">
-        <div class="tuner-note-row">
-          <span class="tuner-note" id="tunerDetectedNote">--</span>
-          <span class="tuner-note-octave" id="tunerDetectedNoteOctave"></span>
-          <span class="tuner-note-freq" id="tunerDetectedFreq"></span>
-        </div>
         <div class="tuner-badges">
           <span class="tuner-badge-side" id="tunerBadgeLow">TOO LOW</span>
-          <span class="tuner-cents" id="tunerCentsReadout">--</span>
+          <div class="tuner-pitch-pill" aria-label="Detected pitch">
+            <span class="tuner-pitch-name"><span class="tuner-note" id="tunerDetectedNote">--</span><span class="tuner-note-octave" id="tunerDetectedNoteOctave"></span></span>
+            <span class="tuner-note-freq" id="tunerDetectedFreq">-- Hz</span>
+            <span class="sr-only" id="tunerCentsReadout" hidden>--</span>
+          </div>
           <span class="tuner-badge-side" id="tunerBadgeHigh">TOO HIGH</span>
         </div>
-        <p class="tuner-status" id="tunerStatusLine" aria-live="polite">TAP TO START TUNING</p>
+        <p class="sr-only" id="tunerStatusLine" aria-live="polite"></p>
         <p class="tuner-hint" id="tunerDirectionHint"></p>
         <TunerQualityReadout />
         </div>
@@ -160,7 +159,7 @@ if (!isTunerEnabled) {
 
       <section class="tuner-sheet-panel" id="tunerPanelSettings" hidden aria-label="Settings">
         <div class="tuner-sheet-floating-header"><p class="tuner-sheet-title">SETTINGS</p><button class="tuner-sheet-close brutal-press" id="tunerSheetClose" type="button" aria-label="Close tuner settings">×</button></div>
-
+        <div class="tuner-settings-scroll">
         <p class="tuner-settings-label">INSTRUMENT</p>
         <div class="tuner-sheet-instruments" id="tunerSheetInstrumentRow" role="radiogroup" aria-label="Instrument"></div>
 
@@ -174,20 +173,32 @@ if (!isTunerEnabled) {
               <span class="tuner-sheet-setup-label">STRINGS</span>
               <div class="tuner-stepper-controls">
                 <button type="button" class="tuner-stepper-button brutal-press" id="tunerStringsMinus" aria-label="Remove one string">−</button>
-                <label class="tuner-count-edit"><input id="tunerStringCount" class="brutal-press" type="number" min="1" max="12" step="1" inputmode="numeric" value="6" aria-label="String count" /><span aria-hidden="true">◦◦◦</span></label>
+                <label class="tuner-count-edit"><input id="tunerStringCount" type="number" min="1" max="12" step="1" inputmode="numeric" value="6" aria-label="String count" title="Edit string count" /></label>
                 <button type="button" class="tuner-stepper-button brutal-press" id="tunerStringsPlus" aria-label="Add one string">+</button>
               </div>
             </div>
           </div>
-          <div class="tuner-sheet-setup-cell" hidden>
-            <button hidden type="button" class="tuner-sheet-setup-btn brutal-press" id="tunerSheetMaterialBtn" aria-haspopup="true" aria-expanded="false">
-              <span class="tuner-sheet-setup-label">MATERIAL</span>
+          <div class="tuner-sheet-setup-cell">
+            <span class="tuner-sheet-setup-label">MATERIAL</span>
+            <button type="button" class="tuner-sheet-setup-btn brutal-press" id="tunerSheetMaterialBtn" aria-haspopup="true" aria-expanded="false">
               <span class="tuner-sheet-setup-value" id="tunerSheetMaterialLabelSheet">STEEL</span>
               <svg class="tuner-btn-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
             <div id="tunerSheetMaterialSlot" class="tuner-sheet-slot"></div>
           </div>
         </div>
+
+        <section id="tunerStringLabels" aria-label="String labels">
+          <p class="tuner-settings-label">STRING LABELS</p>
+          <div class="tuner-string-label-options" role="group" aria-label="String label display">
+            <button type="button" class="tuner-sheet-chip brutal-press" data-string-label="notes" aria-pressed="true">Notes</button>
+            <button type="button" class="tuner-sheet-chip brutal-press" data-string-label="number" aria-pressed="false">Number</button>
+            <button type="button" class="tuner-sheet-chip brutal-press" data-string-label="gauge" aria-pressed="false">Gauge</button>
+          </div>
+          <div id="tunerGaugeSettings" hidden>
+            <div id="tunerGaugeInputs" class="tuner-gauge-inputs"></div>
+          </div>
+        </section>
 
         <!-- legacy containers kept hidden for compat (JS may still query) -->
         <div hidden aria-hidden="true">
@@ -196,13 +207,15 @@ if (!isTunerEnabled) {
         </div>
 
         <TunerInputSettings />
-        <p class="tuner-sample-credits">Pitch-adjusted guitar sounds from <a href={TUNER_SAMPLE_CREDITS.source} target="_blank" rel="noopener noreferrer">tonejs-instruments by Nicholaus P. Brosowsky, University of Iowa and Karoryfer</a> and drum sounds from <a href="https://oramics.github.io/sampled/DRUMS/pearl-master-studio/" target="_blank" rel="noopener noreferrer">Pearl Master Studio by enoe</a> are licensed under <a href={TUNER_SAMPLE_CREDITS.license} target="_blank" rel="noopener noreferrer">CC BY 3.0</a>.</p>
+        <p class="tuner-sample-credits">Guitar and drum samples from <a href={TUNER_SAMPLE_CREDITS.source} target="_blank" rel="noopener noreferrer">tonejs-instruments</a> and <a href="https://oramics.github.io/sampled/DRUMS/pearl-master-studio/" target="_blank" rel="noopener noreferrer">Pearl Master Studio</a> licensed under <a href={TUNER_SAMPLE_CREDITS.license} target="_blank" rel="noopener noreferrer">CC BY 3.0</a>.</p>
         <p class="tuner-settings-label" id="tunerBehaviorHeading">TUNING BEHAVIOR</p>
         <div class="tuner-behavior-buttons">
           <button type="button" id="tunerSheetAutoAdvance" class="tuner-mini-button brutal-press" aria-label="Auto advance next string" aria-pressed="false"><span class="tuner-auto-symbol" aria-hidden="true">A</span>Advance next</button>
           <button type="button" id="tunerSheetAutoId" class="tuner-mini-button brutal-press" aria-label="Auto string select" aria-pressed="false"><span class="tuner-auto-symbol" aria-hidden="true">A</span>String select</button>
         </div>
 
+        </div>
+        <footer class="tuner-settings-dock">
         <div class="tuner-settings-copy-wrap">
           <button type="button" class="tuner-copy-link-card brutal-press" id="tunerCopyLinkBtn" aria-label="Copy Tuner link" data-track="tuner:copy_link">
             <div class="tuner-copy-link-left">
@@ -237,6 +250,7 @@ if (!isTunerEnabled) {
             <button type="button" id="tunerOpenLegalFooterBtn" class="footer-legal-btn open-legal-trigger">LEGAL</button>
           </nav>
         </div>
+        </footer>
       </section>
     </div>
 
@@ -245,12 +259,11 @@ if (!isTunerEnabled) {
         <header class="tuning-header">
           <button type="button" class="tuning-back-btn brutal-press" id="tunerBackToTunerBtn" aria-label="Back to Tuner">
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 3.5L6 10l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Back</span>
           </button>
           <h1 class="tuning-title">TUNING</h1>
           <div class="tuning-header-anchor">
             <button type="button" class="tuning-instrument-btn brutal-press" id="tunerInstrumentBtn" aria-haspopup="true">
-              <span id="tunerInstrumentLabel">Electric</span>
+              <span id="tunerInstrumentLabel">Elec.</span>
               <svg class="tuning-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <div id="tunerInstrumentMenuSlot"></div>
@@ -278,7 +291,9 @@ if (!isTunerEnabled) {
         </section>
       </div>
 
-      <div class="tuning-list" id="tunerCategoryList"></div>
+      <div class="tuning-list-window">
+        <div class="tuning-list" id="tunerCategoryList" tabindex="0" aria-label="Available tunings"></div>
+      </div>
 
       <div class="tuning-bottom-fixed" hidden aria-hidden="true">
         <!-- A4 calibration removed — fixed 440 Hz (see tuner.config.ts) -->
@@ -309,9 +324,11 @@ if (!isTunerEnabled) {
     min-height: 100vh;
     min-height: 100dvh;
     overflow: hidden;
-    background-color: var(--bg-dark);
-    background-image: var(--bg-dark-gradient);
-    color: var(--text-white);
+    background-color: var(--surface-canvas);
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 70%),
+      radial-gradient(circle at 100% 100%, var(--brand-accent-glow) 0%, transparent 60%);
+    color: var(--text-on-dark);
   }
 
   .tuner-view {
@@ -371,18 +388,18 @@ if (!isTunerEnabled) {
   }
 
   .tuner-icon-btn {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--surface-card);
-    color: var(--text-white);
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: var(--border-brutal-sm);
     box-shadow: var(--shadow-brutal-black);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -395,8 +412,8 @@ if (!isTunerEnabled) {
   .tuner-icon-btn:hover {
     transform: translate(-1px, -1px);
     box-shadow: var(--shadow-brutal-black-lg);
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
 
@@ -472,8 +489,8 @@ if (!isTunerEnabled) {
   }
 
   .tuner-pill {
-    background: var(--surface-card);
-    color: var(--text-white);
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: var(--border-brutal-sm);
     box-shadow: var(--shadow-brutal-black);
     border-radius: var(--radius-pill);
@@ -492,8 +509,14 @@ if (!isTunerEnabled) {
   }
 
   .tuner-pill:hover {
+    background: var(--surface-card-panel-hover);
     transform: translate(-1px, -1px);
     box-shadow: var(--shadow-brutal-black-lg);
+  }
+
+  .tuner-pill:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
   }
 
   .tuner-pill-tuning {
@@ -580,7 +603,7 @@ if (!isTunerEnabled) {
 
   .tuner-meter-btn {
     width: 100%;
-    background: var(--surface-card);
+    background: var(--surface-card-panel);
     border: var(--border-brutal);
     box-shadow: var(--shadow-brutal-black-lg);
     border-radius: var(--radius-pill);
@@ -597,7 +620,8 @@ if (!isTunerEnabled) {
   }
 
   .tuner-meter-btn.listening {
-    border-color: var(--accent-neon-yellow);
+    border-color: var(--brand-accent-primary);
+    box-shadow: 0 0 12px var(--brand-accent-glow), 4px 4px 0px #000000;
   }
 
   .tuner-meter {
@@ -1044,12 +1068,12 @@ if (!isTunerEnabled) {
   }
 
   .tuner-inst-card {
-    background: var(--surface-card);
+    background: var(--surface-card-panel);
     border: var(--border-brutal-sm);
     box-shadow: var(--shadow-brutal-black);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     padding: clamp(6px, 1dvh, 10px) 4px clamp(8px, 1.2dvh, 12px);
-    color: var(--text-white);
+    color: var(--text-card-primary);
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -1061,13 +1085,20 @@ if (!isTunerEnabled) {
   }
 
   .tuner-inst-card:hover {
+    background: var(--surface-card-panel-hover);
     transform: translate(-1px, -1px);
     box-shadow: var(--shadow-brutal-black-lg);
   }
 
+  .tuner-inst-card:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
   .tuner-inst-card.active {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border-color: #000000;
   }
 
   .tuner-inst-label {
@@ -1091,16 +1122,17 @@ if (!isTunerEnabled) {
     width: calc(50% - 4px);
     margin-left: auto;
     margin-right: auto;
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border: var(--border-brutal);
     box-shadow: var(--shadow-brutal-black-lg);
     border-radius: var(--radius-pill);
     padding: clamp(8px, 1.4dvh, 14px) 18px;
-    font-family: var(--font-secondary);
+    font-family: var(--font-heading, var(--font-secondary));
     font-size: clamp(0.85rem, 2dvh, 0.95rem);
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: 0.06em;
+    text-transform: uppercase;
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -1109,12 +1141,20 @@ if (!isTunerEnabled) {
   }
 
   .tuner-mic-cta:hover {
+    background: var(--btn-brand-hover);
     transform: translate(-1px, -1px);
     box-shadow: 5px 5px 0px #000000;
   }
 
+  .tuner-mic-cta:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
   .tuner-mic-cta.listening {
-    background: var(--btn-green);
+    background: var(--btn-brand-primary);
+    box-shadow: 0 0 14px var(--brand-accent-glow), 4px 4px 0px #000000;
+    animation: badgePulseGlow 1.5s ease-in-out infinite;
   }
 
   .tuner-mic-cta svg {
@@ -1155,8 +1195,7 @@ if (!isTunerEnabled) {
   }
 
   /* ---------- Chromatic mode ---------- */
-  .tuner-view.mode-chromatic .tuner-figure,
-  .tuner-view.mode-chromatic .tuner-badges {
+  .tuner-view.mode-chromatic .tuner-figure {
     display: none;
   }
 
@@ -1314,6 +1353,15 @@ if (!isTunerEnabled) {
     position: relative;
     display: flex;
     flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .tuner-string-stepper {
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .tuner-sheet-setup-btn {
@@ -1322,12 +1370,14 @@ if (!isTunerEnabled) {
     justify-content: space-between;
     gap: 8px;
     width: 100%;
-    padding: 10px 12px;
+    min-height: var(--tuner-touch-target);
+    height: var(--tuner-touch-target);
+    padding: 0 12px;
     background: #1e1e24;
     color: #f5f5f7;
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     font-family: var(--font-secondary);
     font-size: 0.78rem;
     font-weight: 800;
@@ -1387,14 +1437,15 @@ if (!isTunerEnabled) {
      Using in-flow static panel keeps it scrollable and not clipped by sheet's
      overflow. */
   .tuner-sheet-slot :global(.tuner-menu-panel) {
-    position: static;
-    width: 100%;
-    min-width: 0;
-    margin-top: 8px;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: max(100%, 240px);
     z-index: 75;
     max-height: min(340px, 42dvh);
     box-shadow: 4px 4px 0px #000000;
     animation: tuner-sheet-menu-in 0.18s var(--ease-snappy);
+    overflow-y: auto;
   }
 
   /* Upward variant — toggled via .is-up on the panel when JS detects top collision */
@@ -1806,8 +1857,11 @@ if (!isTunerEnabled) {
     flex-direction: column;
     gap: 10px;
     width: 100%;
-    padding: 6px 0 12px;
-    background-color: var(--bg-dark);
+    padding: var(--tuner-library-header-padding);
+    box-sizing: border-box;
+    background: linear-gradient(to bottom, var(--surface-elevated), var(--surface-base));
+    border: var(--border-brutal-sm);
+    border-radius: var(--radius-md);
     position: sticky;
     top: 0;
     z-index: 20;
@@ -1815,14 +1869,17 @@ if (!isTunerEnabled) {
 
   .tuning-header {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    gap: 10px;
+    gap: var(--tuner-detail-gap);
     padding: 2px 0;
     width: 100%;
   }
 
   .tuning-back-btn {
+    width: var(--tuner-touch-target);
+    height: var(--tuner-touch-target);
+    justify-content: center;
     background: var(--surface-card);
     border: var(--border-brutal-sm);
     box-shadow: var(--shadow-brutal-black);
@@ -1877,7 +1934,24 @@ if (!isTunerEnabled) {
     justify-self: end;
     justify-content: flex-end;
     flex-shrink: 0;
+    min-width: 0;
+    max-width: 100%;
   }
+
+  .tuning-header :is(.tuning-back-btn, .tuning-instrument-btn) {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-inline: var(--tuner-detail-gap);
+  }
+
+  .tuning-header :is(.tuning-back-btn, .tuning-instrument-btn) span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tuning-header .tuning-caret { flex-shrink: 0; }
 
   .tuning-header-anchor :global(.tuner-menu-panel) {
     left: auto;
@@ -2028,6 +2102,22 @@ if (!isTunerEnabled) {
   }
 
   /* ---------- Tuning list — scrollable middle ---------- */
+  .tuning-list-window {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+  }
+  .tuning-list-window::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: var(--tuner-library-fade-height);
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, var(--tuner-library-fade-middle) 65%, var(--surface-card-panel));
+  }
   .tuning-list {
     flex: 1 1 auto;
     min-height: 0;
@@ -2035,7 +2125,10 @@ if (!isTunerEnabled) {
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    padding: 4px 2px calc(16px + env(safe-area-inset-bottom, 0px)) 0;
+    height: 100%;
+    box-sizing: border-box;
+    padding: var(--tuner-detail-gap) var(--tuner-focus-width) calc(var(--tuner-library-fade-height) + env(safe-area-inset-bottom, 0px)) 0;
+    scroll-padding-block: var(--tuner-detail-gap) var(--tuner-library-fade-height);
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -2334,17 +2427,9 @@ if (!isTunerEnabled) {
     white-space: nowrap;
   }
 
-  /* ---------- Auto string ID: one-shot peg pop (transform-only) ---------- */
-  @keyframes tuner-peg-pop {
-    0% { transform: scale(1); }
-    40% { transform: scale(1.28); }
-    100% { transform: scale(1); }
-  }
-
+  /* ---------- Auto string ID: stationary peg highlight ---------- */
   :global(.tuner-peg.peg-acquired .tuner-peg-circle) {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: tuner-peg-pop 0.32s var(--ease-tactile);
+    fill: var(--btn-brand-primary);
   }
 
   /* ---------- Runtime DOM: pegs (guitar art ships its own <style>) ---------- */
@@ -2360,7 +2445,6 @@ if (!isTunerEnabled) {
     fill: var(--btn-green);
   }
 
-  :global(.tuner-peg.is-in-tune.lock-pop-celebrate .tuner-peg-circle),
   :global(.tuner-drum.is-in-tune.lock-pop-celebrate .tuner-drum-shape) {
     animation: celebrateSuccessPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
@@ -2736,6 +2820,7 @@ if (!isTunerEnabled) {
     }
 
     .tuning-top-fixed,
+    .tuning-list-window,
     .tuning-list,
     .tuning-bottom-fixed {
       width: 100%;
@@ -2885,37 +2970,37 @@ if (!isTunerEnabled) {
   }
   html[data-theme="standard"] .tuner-badge-side,
   html[data-theme="standard"] .tuner-cents {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: 2px solid #000000;
     box-shadow: 1.5px 1.5px 0px #000000;
   }
   html[data-theme="standard"] .tuner-cents.is-in-tune {
     color: #000000;
-    background: var(--btn-green);
+    background: var(--level-high);
     border-color: #000000;
   }
   html[data-theme="standard"] .tuner-cents.is-flat,
   html[data-theme="standard"] .tuner-cents.is-sharp {
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] .tuner-status.pill-neutral,
   html[data-theme="standard"] .tuner-status.pill-off {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border-color: #000000;
   }
   html[data-theme="standard"] .tuner-note {
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] .tuner-note-octave {
-    color: #0a0a0c;
+    color: var(--brand-accent-primary);
   }
   html[data-theme="standard"] .tuner-note-freq {
-    color: #52525b;
+    color: var(--text-muted);
   }
   html[data-theme="standard"] .tuner-hint {
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] .tuner-low-mic-hint {
     background: #e4e4e7;
@@ -2923,20 +3008,20 @@ if (!isTunerEnabled) {
     border: 1px solid rgba(0, 0, 0, 0.1);
   }
   html[data-theme="standard"] .tuner-inst-card {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border-color: #000000;
     box-shadow: 3px 3px 0px #000000;
   }
   html[data-theme="standard"] .tuner-inst-card:hover {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--surface-card-panel-hover);
+    color: var(--text-card-primary);
     border-color: #000000;
     box-shadow: 4px 4px 0px #000000;
   }
   html[data-theme="standard"] .tuner-inst-card.active {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
     box-shadow: 3px 3px 0px #000000;
   }
@@ -2944,17 +3029,18 @@ if (!isTunerEnabled) {
     color: inherit;
   }
   html[data-theme="standard"] .tuner-mic-cta {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
     box-shadow: 4px 4px 0px #000000;
   }
   html[data-theme="standard"] .tuner-mic-cta:hover {
+    background: var(--btn-brand-hover);
     box-shadow: 5px 5px 0px #000000;
   }
   html[data-theme="standard"] .tuner-mic-cta.listening {
-    background: var(--btn-green);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
   }
 
   /* Chromatic Rail in Light Mode */
@@ -3009,31 +3095,31 @@ if (!isTunerEnabled) {
     color: #0a0a0c;
   }
   html[data-theme="standard"] .tuning-back-btn {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border-color: #000000;
     box-shadow: 3px 3px 0px #000000;
   }
   html[data-theme="standard"] .tuning-back-btn:hover {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
     box-shadow: 4px 4px 0px #000000;
   }
   html[data-theme="standard"] .tuning-instrument-btn {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border-color: #000000;
     box-shadow: 3px 3px 0px #000000;
   }
   html[data-theme="standard"] .tuning-instrument-btn:hover {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
     box-shadow: 4px 4px 0px #000000;
   }
   html[data-theme="standard"] .tuning-search-box {
-    background: #ffffff;
+    background: var(--surface-card-panel);
     border-color: #000000;
     box-shadow: 3px 3px 0px #000000;
   }
@@ -3045,77 +3131,79 @@ if (!isTunerEnabled) {
     color: #000000;
   }
   html[data-theme="standard"] .tuning-search-box input {
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] .tuning-search-box input::placeholder {
-    color: #71717a;
+    color: var(--text-muted);
   }
   html[data-theme="standard"] .tuning-filter-chip {
-    background: #ffffff;
-    color: #52525b;
+    background: var(--surface-card-panel);
+    color: var(--text-card-secondary);
     border: 2px solid #000000;
     box-shadow: 1.5px 1.5px 0px #000000;
   }
   html[data-theme="standard"] .tuning-filter-chip:hover {
-    color: #000000;
+    background: var(--surface-card-panel-hover);
+    color: var(--text-card-primary);
     border-color: #000000;
   }
   html[data-theme="standard"] .tuning-filter-chip.active {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
   html[data-theme="standard"] :global(.tuning-category) {
     border-bottom: 2px solid rgba(0, 0, 0, 0.12);
   }
   html[data-theme="standard"] :global(.tuning-category-head) {
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] :global(.tuning-category .tuning-caret) {
-    color: #71717a;
+    color: var(--text-muted);
   }
   html[data-theme="standard"] :global(.tuning-card) {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border-color: #000000;
     box-shadow: 3px 3px 0px #000000;
   }
   html[data-theme="standard"] :global(.tuning-card:hover) {
+    background: var(--surface-card-panel-hover);
     box-shadow: 4px 4px 0px #000000;
   }
   html[data-theme="standard"] :global(.tuning-card-name) {
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] :global(.tuning-card-notes) {
-    color: #52525b;
+    color: var(--text-card-secondary);
   }
   html[data-theme="standard"] :global(.tuning-card.active) {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
   html[data-theme="standard"] :global(.tuning-card.active .tuning-card-name) {
-    color: #000000;
+    color: var(--btn-brand-text);
   }
   html[data-theme="standard"] :global(.tuning-card.active .tuning-card-notes) {
-    color: #27272a;
+    color: var(--btn-brand-text);
   }
   html[data-theme="standard"] :global(.tuning-card-radio) {
     border: 2.5px solid #71717a;
   }
   html[data-theme="standard"] :global(.tuning-card-radio.checked) {
-    background: var(--btn-green);
+    background: var(--level-high);
     border-color: #000000;
     color: #000000;
   }
   html[data-theme="standard"] :global(.tuning-empty) {
-    color: #71717a;
+    color: var(--text-muted);
   }
 
   /* Settings Sheet in Light Mode */
   html[data-theme="standard"] .tuner-sheet {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border-color: #000000;
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
   }
@@ -3123,43 +3211,43 @@ if (!isTunerEnabled) {
     background: #d4d4d8;
   }
   html[data-theme="standard"] .tuner-sheet-title {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
   }
   html[data-theme="standard"] .tuner-settings-label,
   html[data-theme="standard"] .tuner-sheet-setup-label {
-    color: #71717a;
+    color: var(--text-muted);
   }
   html[data-theme="standard"] .tuner-sheet-setup-btn {
-    background: #f5f4ef;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
   }
   html[data-theme="standard"] .tuner-sheet-setup-btn:hover {
-    background: #ffffff;
+    background: var(--surface-card-panel-hover);
     box-shadow: 3px 3px 0px #000000;
   }
   html[data-theme="standard"] .tuner-sheet-setup-btn[aria-expanded="true"] {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
   html[data-theme="standard"] :global(.tuner-sheet-chip) {
-    background: #f5f4ef;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
   }
   html[data-theme="standard"] :global(.tuner-sheet-chip:hover) {
-    background: #ffffff;
+    background: var(--surface-card-panel-hover);
     box-shadow: 3px 3px 0px #000000;
   }
   html[data-theme="standard"] :global(.tuner-sheet-chip.active) {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
   html[data-theme="standard"] .tuner-sheet-toggle-track {
@@ -3170,31 +3258,31 @@ if (!isTunerEnabled) {
     background: #71717a;
   }
   html[data-theme="standard"] .tuner-sheet-toggle input:checked + .tuner-sheet-toggle-track {
-    background: var(--accent-neon-yellow);
+    background: var(--btn-brand-primary);
     border-color: #000000;
   }
   html[data-theme="standard"] .tuner-sheet-toggle input:checked + .tuner-sheet-toggle-track :global(.tuner-sheet-toggle-knob) {
     background: #000000;
   }
   html[data-theme="standard"] .tuner-sheet-toggle-text {
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] .tuner-copy-link-card {
-    background: #f5f4ef;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: 2px solid #000000;
     box-shadow: 3px 3px 0px #000000;
   }
   html[data-theme="standard"] .tuner-copy-link-card:hover {
-    background: #ffffff;
+    background: var(--surface-card-panel-hover);
     box-shadow: 4px 4px 0px #000000;
   }
   html[data-theme="standard"] .tuner-copy-link-left i {
     color: #000000;
   }
   html[data-theme="standard"] .tuner-copy-badge {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border: 2px solid #000000;
   }
   html[data-theme="standard"] .tuner-settings-copy-wrap,
@@ -3202,22 +3290,22 @@ if (!isTunerEnabled) {
     border-top: 2px solid rgba(0, 0, 0, 0.1);
   }
   html[data-theme="standard"] .footer-brand-badge {
-    background: #f5f4ef;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
   }
   html[data-theme="standard"] .footer-brand-badge:hover {
-    background: #ffffff;
+    background: var(--surface-card-panel-hover);
   }
   html[data-theme="standard"] .footer-brand-icon {
     color: #000000;
   }
   html[data-theme="standard"] .tuner-sheet-footer-card .footer-legal-btn {
-    color: #71717a;
+    color: var(--text-muted);
   }
   html[data-theme="standard"] .tuner-sheet-footer-card .footer-legal-btn:hover {
-    color: #000000;
+    color: var(--text-card-primary);
     background: rgba(0, 0, 0, 0.06);
   }
   html[data-theme="standard"] .tuner-sheet-footer-card .legal-bullet {
@@ -3226,25 +3314,25 @@ if (!isTunerEnabled) {
 
   /* Dropdown Menus in Light Mode */
   html[data-theme="standard"] :global(.tuner-menu-panel) {
-    background: #ffffff;
-    color: #0a0a0c;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: 2px solid #000000;
     box-shadow: 4px 4px 0px #000000;
   }
   html[data-theme="standard"] :global(.tuner-menu-row) {
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] :global(.tuner-menu-row:hover) {
     background: rgba(0, 0, 0, 0.05);
   }
   html[data-theme="standard"] :global(.tuner-menu-row.active) {
-    background: rgba(242, 253, 67, 0.25);
+    background: var(--brand-accent-glow);
   }
   html[data-theme="standard"] :global(.tuner-menu-row-title) {
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] :global(.tuner-menu-row-sub) {
-    color: #71717a;
+    color: var(--text-muted);
   }
   html[data-theme="standard"] :global(.tuner-menu-check) {
     color: #000000;
@@ -3257,23 +3345,23 @@ if (!isTunerEnabled) {
     border: 2px solid #000000;
   }
   html[data-theme="standard"] :global(.tuner-toggle.on) {
-    background: var(--btn-green);
+    background: var(--level-high);
   }
   html[data-theme="standard"] :global(.tuner-toggle-knob) {
     background: #ffffff;
     border: 2px solid #000000;
   }
   html[data-theme="standard"] :global(.tuner-custom-input) {
-    background: #f5f4ef;
+    background: var(--surface-card-panel);
     border: 2px solid #000000;
-    color: #0a0a0c;
+    color: var(--text-card-primary);
   }
   html[data-theme="standard"] :global(.tuner-custom-input:focus-visible) {
     border-color: #000000;
   }
   html[data-theme="standard"] :global(.tuner-custom-apply) {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border: 2px solid #000000;
   }
 </style>

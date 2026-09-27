@@ -33,7 +33,7 @@ html[data-theme] .tuner-page .tuner-sheet {
 }
 html[data-theme] .tuner-page .tuner-sheet-backdrop { background: var(--surface-overlay); }
 html[data-theme] .tuner-page .tuner-sheet-setup-cell[hidden] { display: none; }
-html[data-theme] .tuner-page .tuner-sheet-setup-row { grid-template-columns: minmax(0, 1fr); }
+html[data-theme] .tuner-page .tuner-sheet-setup-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 html[data-theme] .tuner-page :is(button, input, select, a):focus-visible {
   outline: var(--tuner-focus-width) solid var(--brand-accent-primary);
   outline-offset: var(--tuner-focus-offset);
@@ -46,22 +46,33 @@ html[data-theme] .tuner-page :is(.tuner-icon-btn, .tuner-inst-card, .tuner-sheet
 html[data-theme] .tuner-page .tuner-sheet-floating-header {
   position: absolute;
   inset-block-end: calc(100% + var(--tuner-detail-gap));
-  inset-inline-start: 50%;
-  transform: translateX(-50%);
+  inset-inline: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 16px;
+  box-sizing: border-box;
   z-index: 10;
+  pointer-events: none;
+}
+html[data-theme] .tuner-page .tuner-sheet-floating-header > * {
+  pointer-events: auto;
 }
 html[data-theme] .tuner-page .tuner-sheet-close {
   position: absolute;
   inset-block-start: 50%;
-  inset-inline-start: calc(100% + var(--tuner-detail-gap));
+  inset-inline-end: 16px;
+  inset-inline-start: auto;
   transform: translateY(-50%);
   z-index: 1;
-  width: var(--tuner-touch-target); height: var(--tuner-touch-target);
+  width: 30px; height: 30px;
+  min-width: 30px; min-height: 30px;
   display: grid; place-items: center;
   border: var(--border-brutal-sm); border-radius: var(--radius-sm);
   box-shadow: var(--shadow-brutal-black);
   background: var(--surface-card-panel); color: var(--text-on-light);
-  font: var(--tuner-close-font) var(--font-primary); cursor: pointer;
+  font: bold 1.15rem var(--font-primary); cursor: pointer;
   transition: transform var(--tuner-mode-duration) var(--ease-tactile), background-color var(--tuner-mode-duration) ease, box-shadow var(--tuner-mode-duration) ease;
 }
 html[data-theme] .tuner-page .tuner-sheet-close:hover { background: var(--surface-card-panel-hover); transform: translateY(-50%) translate(-1px, -1px); }
@@ -113,7 +124,7 @@ html[data-theme] .tuner-page :is(.tuner-stepper-button, .drum-workflow .tuner-st
   display: inline-flex; align-items: center; justify-content: center;
   width: 100%; height: var(--tuner-touch-target); min-height: var(--tuner-touch-target);
   padding: 0; flex-shrink: 0; border: var(--border-brutal-sm); border-color: var(--tuner-control-border);
-  border-radius: var(--radius-pill); box-shadow: var(--tuner-stepper-shadow);
+  border-radius: var(--radius-sm); box-shadow: var(--tuner-stepper-shadow);
   background: var(--tuner-stepper-surface); color: var(--tuner-stepper-text);
   font: bold 1rem var(--font-primary); cursor: pointer; touch-action: manipulation;
   user-select: none; transition: transform var(--tuner-mode-duration) var(--ease-tactile);

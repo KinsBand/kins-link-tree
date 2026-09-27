@@ -280,6 +280,7 @@ body[data-theme="dark"],
   --tuner-workflow-title-size: 1.3rem;
   --tuner-drum-reading-size: 2.5rem;
   --tuner-drum-diagram-width: 300px;
+  --tuner-drum-diagram-compact: 240px;
   --tuner-drum-lug-size: 44px;
   --tuner-mode-duration: 160ms;
   --tuner-loading-duration: 600ms;
@@ -360,4 +361,39 @@ body[data-theme="dark"],
 
 :root, [data-theme="dark"] { --tuner-drum-menu-width: 260px; --tuner-drum-menu-max: calc(100vw - 64px); --tuner-drum-options-height: 180px; }
 
-:root, [data-theme="dark"] { --tuner-string-vibration: 2px; --tuner-string-period: 110ms; --tuner-peg-period: 440ms; }
+:root, [data-theme="dark"] {
+  --tuner-library-header-padding: 12px;
+  --tuner-settings-fade-height: 32px;
+  --tuner-view-duration: 200ms;
+  --tuner-view-offset: 14px;
+  --tuner-library-fade-height: 72px;
+  --tuner-library-fade-middle: color-mix(in srgb, var(--surface-card-panel) 45%, transparent);
+}
+
+/* Unitless amplitudes scale the SVG bow in artwork coordinates. */
+:root, [data-theme="dark"] { --tuner-string-vibration: 2; --tuner-string-above-nut-vibration: 0.12; --tuner-string-period: 110ms; }
+
+/* Metronome & Musician Tools Semantic Tokens */
+:root {
+  --metro-dial-hub-bg: var(--surface-card-panel);
+  --metro-dial-hub-text: var(--text-card-primary);
+  --metro-dial-ring-track: rgba(0, 0, 0, 0.12);
+  --metro-deck-bg: var(--surface-card-panel);
+  --metro-deck-hover: var(--surface-card-panel-hover);
+  --metro-deck-text: var(--text-card-primary);
+  --metro-pill-bg: var(--surface-card-panel);
+  --metro-pill-hover: var(--surface-card-panel-hover);
+  --metro-pill-text: var(--text-card-primary);
+}
+[data-theme="dark"] {
+  --metro-dial-hub-bg: var(--surface-card-panel);
+  --metro-dial-hub-text: var(--text-card-primary);
+  --metro-dial-ring-track: rgba(255, 255, 255, 0.12);
+  --metro-deck-bg: var(--surface-card-panel);
+  --metro-deck-hover: var(--surface-card-panel-hover);
+  --metro-deck-text: var(--text-card-primary);
+  --metro-pill-bg: var(--surface-card-panel);
+  --metro-pill-hover: var(--surface-card-panel-hover);
+  --metro-pill-text: var(--text-card-primary);
+}
+

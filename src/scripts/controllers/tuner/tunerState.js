@@ -1,5 +1,6 @@
 import {
   TUNER_INSTRUMENTS,
+  TUNER_STRING_GAUGES,
   DEFAULT_INSTRUMENT,
   MATERIAL_PROFILES,
   INSTRUMENT_MATERIALS,
@@ -92,6 +93,7 @@ export const state = {
   stringIndex: 0,
   stringCount: 6,
   mode: 'guided',
+  stringLabel: 'notes',
   autoAdvance: false,
   autoIdentify: true,
   materialId: 'avg',
@@ -294,6 +296,7 @@ export function setA4(hz) {
 }
 
 export function restore() {
+  setStringLabel(storageGet('kins-tuner-string-label'));
   setA4(storageGet(KEYS.a4) ?? A4_REFERENCE);
   state.tolerance = storageGet('kins-tuner-tolerance') === '1' ? 1 : 3;
   const savedInstrument = storageGet(KEYS.instrument);
@@ -314,4 +317,30 @@ export function restore() {
 export function setTolerance(value) {
   state.tolerance = Number(value) === 1 ? 1 : 3;
   storageSet('kins-tuner-tolerance', String(state.tolerance));
+}
+
+export function setStringLabel(value) {
+  state.stringLabel = ['notes', 'number', 'gauge'].includes(value) ? value : 'notes';
+  storageSet('kins-tuner-string-label', state.stringLabel);
+}
+
+export function getStringGauges() {
+  const count = currentStringCount();
+  const base = TUNER_STRING_GAUGES[state.instrumentId]?.[count] || [];
+  let saved = [];
+  try { saved = JSON.parse(storageGet(`kins-tuner-gauges-${state.instrumentId}-${count}`) || '[]'); } catch {}
+  return Array.from({ length: count }, (_, index) => {
+    const value = Array.isArray(saved) ? saved[index] : null;
+    if (Number.isFinite(value) && value > 0 && value <= 200) return value;
+    return base[index] ?? null;
+  });
+}
+
+export function setStringGauge(index, value) {
+  const gauges = getStringGauges();
+  const parsed = Number(value);
+  if (!Number.isInteger(index) || index < 0 || index >= gauges.length || !Number.isFinite(parsed) || parsed <= 0 || parsed > 200) return false;
+  gauges[index] = parsed;
+  storageSet(`kins-tuner-gauges-${state.instrumentId}-${gauges.length}`, JSON.stringify(gauges));
+  return true;
 }

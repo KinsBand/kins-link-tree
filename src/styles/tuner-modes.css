@@ -1,4 +1,95 @@
 html[data-theme] .tuner-page [hidden] { display: none !important; }
+
+/* Shared settings/drum controls: restrained corners, clear selected states. */
+html[data-theme] .tuner-page :is(#tunerSheet, #drumWorkflow, #tunerView .tuner-main-actions) button {
+  min-width: 0; min-height: var(--tuner-touch-target); box-sizing: border-box;
+  border: var(--border-brutal-sm); border-radius: var(--radius-md);
+  background: var(--surface-card); color: var(--text-on-dark);
+  box-shadow: var(--shadow-brutal-black);
+  transition: transform var(--tuner-mode-duration) var(--ease-tactile), opacity var(--tuner-mode-duration) ease;
+}
+html[data-theme] .tuner-page :is(#tunerSheet, #drumWorkflow, #tunerView .tuner-main-actions) button:hover:not(:disabled) {
+  background: var(--surface-elevated); color: var(--brand-accent-primary);
+}
+html[data-theme] .tuner-page :is(#tunerSheet, #drumWorkflow, #tunerView .tuner-main-actions) button:is(.active, [aria-pressed="true"], [aria-current="step"], #tunerCalibrationReset, #tunerMicToggleBtn) {
+  background: var(--btn-brand-primary); color: var(--btn-brand-text);
+}
+html[data-theme] .tuner-page :is(#tunerSheet, #drumWorkflow, #tunerView .tuner-main-actions) button:is(.active, [aria-pressed="true"], [aria-current="step"], #tunerCalibrationReset, #tunerMicToggleBtn):hover:not(:disabled) {
+  background: var(--btn-brand-hover); color: var(--btn-brand-text);
+}
+html[data-theme] .tuner-page :is(#tunerSheet, #drumWorkflow, #tunerView .tuner-main-actions) button:disabled { opacity: 0.5; cursor: not-allowed; }
+html[data-theme] .tuner-page :is(#tunerSheet, #drumWorkflow, #tunerView .tuner-main-actions) button:focus-visible {
+  outline: var(--tuner-focus-width) solid var(--brand-accent-primary); outline-offset: var(--tuner-focus-offset);
+}
+html[data-theme] .tuner-page :is(#tunerSheet, #drumWorkflow) :is(input, select) { border-radius: var(--radius-md); min-width: 0; max-width: 100%; }
+html[data-theme] .tuner-page #tunerSheet .tuner-sheet-close { min-height: var(--tuner-touch-target); min-width: var(--tuner-touch-target); }
+html[data-theme] .tuner-page #tunerSheet #tunerSheetClose {
+  width: var(--tuner-touch-target); height: var(--tuner-touch-target);
+  min-width: var(--tuner-touch-target); min-height: var(--tuner-touch-target);
+  padding: 0; display: grid; place-items: center; line-height: 1;
+}
+html[data-theme] .tuner-page #tunerSheet #tunerSheetClose:active { transform: translateY(-50%) !important; }
+html[data-theme] .tuner-page #tunerSheet #tunerStringCount {
+  height: var(--tuner-touch-target); min-height: var(--tuner-touch-target);
+  padding: 0; border: var(--border-brutal-sm); border-radius: var(--radius-md);
+  background: var(--surface-input); color: var(--text-on-light);
+  cursor: text; line-height: 1;
+}
+html[data-theme] .tuner-page #tunerSheet .theme-pill-btn { min-height: var(--tuner-touch-target); min-width: var(--tuner-touch-target); }
+html[data-theme] .tuner-page #tunerSheet .footer-legal-links .footer-legal-btn { box-shadow: none; border-color: transparent; background: transparent; }
+
+/* Keep scrollable content and the persistent action areas inside their shells. */
+html[data-theme] .tuner-page #tunerView :is(.tuner-middle-scroll, .tuner-footer-group, .tuner-main-actions) { min-width: 0; width: 100%; max-width: 100%; box-sizing: border-box; }
+html[data-theme] .tuner-page #tunerView .tuner-middle-scroll { padding: var(--tuner-detail-gap); box-sizing: border-box; scroll-padding-block: var(--tuner-settings-gap); }
+html[data-theme] .tuner-page #tunerView .tuner-footer-group { padding-inline: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page #drumWorkflow { padding: var(--tuner-detail-gap); margin-inline: auto; }
+html[data-theme] .tuner-page #drumWorkflow :is(.drum-session, .drum-measurement, .drum-fields, .drum-actions) { min-width: 0; }
+html[data-theme] .tuner-page #drumWorkflow .drum-lug-diagram { width: min(100%, var(--tuner-drum-diagram-compact)); aspect-ratio: 1; }
+html[data-theme] .tuner-page #drumWorkflow .drum-lug-diagram > svg { display: block; }
+html[data-theme] .tuner-page #drumWorkflow .drum-reading { margin: 0; }
+html[data-theme] .tuner-page #drumWorkflow .drum-audio-status { font: var(--tuner-detail-font) var(--font-primary); line-height: 1.5; text-align: center; margin-block: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page #drumWorkflow .drum-steps { align-items: stretch; }
+html[data-theme] .tuner-page #drumWorkflow .drum-steps button { line-height: 1.35; padding: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page #tunerSheet .tuner-settings-scroll { padding-inline: var(--tuner-detail-gap); scroll-padding-top: var(--tuner-settings-gap); }
+html[data-theme] .tuner-page #tunerSheet .tuner-settings-label { margin-block: var(--tuner-detail-gap) 0; }
+html[data-theme] .tuner-page #tunerSheet .tuner-input-settings { margin-block: 0; }
+html[data-theme] .tuner-page #tunerSheet .tuner-input-settings :is(input, select) { padding-inline: var(--tuner-detail-gap); font-size: var(--tuner-detail-font); }
+html[data-theme] .tuner-page #tunerSheet .tuner-calibration-row { gap: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page #tunerSheet .tuner-behavior-buttons button { white-space: normal; line-height: 1.35; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tuner-page :is(#tunerSheet, #drumWorkflow, #tunerView .tuner-main-actions) button { transition: none; }
+}
+
+/* Main navigation and instrument choices share rounded rectangular controls. */
+html[data-theme] .tuner-page #tunerView :is(.tuner-icon-btn-back, .tuner-icon-btn-settings, .tuner-inst-card) {
+  background: var(--surface-card);
+  color: var(--text-on-dark);
+  border: var(--border-brutal-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-brutal-black);
+  transition: transform var(--tuner-mode-duration) var(--ease-tactile), opacity var(--tuner-mode-duration) ease;
+}
+html[data-theme] .tuner-page #tunerView :is(.tuner-icon-btn-back, .tuner-icon-btn-settings, .tuner-inst-card):hover:not(:disabled) {
+  background: var(--surface-elevated);
+  color: var(--brand-accent-primary);
+  box-shadow: var(--shadow-brutal-black-lg);
+}
+html[data-theme] .tuner-page #tunerView .tuner-inst-card.active {
+  background: var(--btn-brand-primary);
+  color: var(--btn-brand-text);
+}
+html[data-theme] .tuner-page #tunerView .tuner-inst-card.active:hover:not(:disabled) {
+  background: var(--btn-brand-hover);
+  color: var(--btn-brand-text);
+}
+html[data-theme] .tuner-page #tunerView :is(.tuner-icon-btn-back, .tuner-icon-btn-settings, .tuner-inst-card):focus-visible {
+  outline: var(--tuner-focus-width) solid var(--brand-accent-primary);
+  outline-offset: var(--tuner-focus-offset);
+}
+html[data-theme] .tuner-page #tunerView :is(.tuner-icon-btn-back, .tuner-icon-btn-settings, .tuner-inst-card):disabled { opacity: 0.5; cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tuner-page #tunerView :is(.tuner-icon-btn-back, .tuner-icon-btn-settings, .tuner-inst-card) { transition: none; }
+}
 html[data-theme] .tuner-page .tuner-ear-mode { grid-column: 1 / -1; display: grid; gap: var(--tuner-detail-gap); }
 .tuner-ear-mode span { font: var(--tuner-detail-font) var(--font-primary); text-transform: none; }
 .tuner-sample-credits { font: var(--tuner-detail-font) var(--font-primary); color: var(--text-card-secondary); line-height: 1.5; }
@@ -36,9 +127,9 @@ html[data-theme] .tuner-page .tuner-art-svg { max-width: var(--tuner-art-width);
 .tuner-art-svg .tuner-peg:focus-visible { outline: var(--tuner-focus-width) solid var(--brand-accent-primary); outline-offset: var(--tuner-focus-offset); }
 .tuner-art-svg .tuner-peg[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
 html[data-theme] .tuner-page .mode-drums .tuner-middle-scroll { overflow-y: auto; overflow-x: hidden; justify-content: flex-start; min-height: 0; }
-html[data-theme] .tuner-page:has(.mode-ear) :is(label[for="tunerTolerance"], #tunerTolerance, label[for="tunerInputDevice"], #tunerInputDevice, label[for="tunerInputChannel"], #tunerInputChannel, .tuner-input-settings p, #tunerBehaviorHeading, .tuner-toggle-row) { display: none; }
+html[data-theme] .tuner-page:has(.mode-ear) :is(.tuner-input-col:has(#tunerTolerance), label[for="tunerTolerance"], #tunerTolerance, label[for="tunerInputDevice"], #tunerInputDevice, label[for="tunerInputChannel"], #tunerInputChannel, .tuner-input-settings p, #tunerBehaviorHeading, .tuner-toggle-row) { display: none; }
 html[data-theme] .tuner-page:has(.mode-drums) :is(#tunerBehaviorHeading, .tuner-toggle-row) { display: none; }
-html[data-theme] .tuner-page:has(.mode-drums) :is(#tunerModeHeading, #tunerSheetModeRow, #tunerSetupHeading, .tuner-sheet-setup-row, label[for="tunerCalibration"], .tuner-calibration-row, label[for="tunerTolerance"], #tunerTolerance) { display: none; }
+html[data-theme] .tuner-page:has(.mode-drums) :is(#tunerModeHeading, #tunerSheetModeRow, #tunerSetupHeading, .tuner-sheet-setup-row, label[for="tunerCalibration"], .tuner-calibration-row, label[for="tunerTolerance"], #tunerTolerance, .tuner-input-settings) { display: none; }
 .drum-workflow { width: 100%; max-width: var(--tuner-workflow-width); padding: var(--tuner-settings-gap); box-sizing: border-box; font-family: var(--font-primary); color: var(--text-on-light); }
 .drum-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--tuner-detail-gap); margin-bottom: var(--tuner-detail-gap); }
 .drum-heading h2 { font: bold var(--tuner-workflow-title-size) var(--font-heading); margin: 0; }
@@ -108,7 +199,9 @@ html[data-theme] .tuner-page .tuner-note-row { transition: opacity var(--tuner-s
 html[data-theme] .tuner-page .tuner-readout[data-phase="idle"] .tuner-note-row { opacity: 0.5; transform: scale(0.98); }
 html[data-theme] .tuner-page .tuner-readout[data-phase="listening"] .tuner-note-row { opacity: 0.7; transform: scale(0.99); }
 html[data-theme] .tuner-page .tuner-readout:is([data-phase="locked"], [data-phase="in-tune"]) .tuner-note-row { opacity: 1; transform: scale(1); }
-html[data-theme] .tuner-page .mode-chromatic :is(.tuner-badges, .tuner-quality-details, .tuner-note-freq, .tuner-status, .tuner-hint, .tuner-chromatic-rail) { display: none; }
+html[data-theme] .tuner-page .mode-chromatic :is(.tuner-badge-side, .tuner-quality-details, .tuner-status, .tuner-hint, .tuner-meter-ticks, .tuner-meter-zone) { display: none; }
+html[data-theme] .tuner-page .mode-chromatic .tuner-badges { display: flex; justify-content: center; }
+html[data-theme] .tuner-page .mode-chromatic .tuner-chromatic-rail:not([hidden]) { display: flex; }
 html[data-theme] .tuner-page .mode-ear :is(.tuner-badges, .tuner-note-row, .tuner-quality-details, .tuner-hint, .tuner-meter-zone, .tuner-meter-zone-safety, .tuner-needle, .tuner-extreme-cue) { display: none; }
 .tuner-extreme-cue { position: absolute; top: 50%; inset-inline-start: 0; transform: translateY(-50%); color: var(--brand-accent-primary); font-size: var(--tuner-detail-font); }
 .tuner-extreme-cue[data-direction="high"] { inset-inline-start: auto; inset-inline-end: 0; }
@@ -123,6 +216,34 @@ html[data-theme] .tuner-page .mode-ear :is(.tuner-badges, .tuner-note-row, .tune
 }
 
 html[data-theme] .tuner-page .tuner-sub-readout { width: 100%; margin-inline: auto; display: grid; gap: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page .tuner-pitch-pill {
+  display: flex; align-items: baseline; justify-content: center;
+  justify-self: center; gap: var(--tuner-detail-gap);
+  padding: var(--tuner-detail-gap) var(--tuner-control-padding);
+  border: var(--border-brutal-sm); border-radius: var(--radius-pill);
+  background: var(--surface-card); color: var(--text-on-dark);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+html[data-theme] .tuner-page .tuner-pitch-name { display: inline-flex; align-items: baseline; }
+html[data-theme] .tuner-page .tuner-pitch-pill .tuner-note { font-size: var(--tuner-close-font); color: inherit; }
+html[data-theme] .tuner-page .tuner-pitch-pill :is(.tuner-note-octave, .tuner-note-freq) { font: var(--tuner-detail-font) var(--font-mono); color: inherit; }
+html[data-theme] .tuner-page .tuner-pitch-pill .tuner-note-freq { border-inline-start: var(--tuner-focus-width) solid var(--text-muted); padding-inline-start: var(--tuner-detail-gap); }
+html[data-theme] .tuner-page .tuner-readout.in-tune .tuner-pitch-name { color: var(--brand-accent-primary); }
+html[data-theme] .tuner-page .tuner-input-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
+html[data-theme] .tuner-page .tuner-input-settings .tuner-input-col { min-width: 0; }
+html[data-theme] .tuner-page .tuner-sheet-setup-cell { min-width: 0; }
+html[data-theme] .tuner-page #tunerPanelSettings { overflow: hidden; gap: 0; padding-bottom: 0; }
+.tuner-settings-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: var(--tuner-settings-gap); padding-bottom: var(--tuner-settings-fade-height); scroll-padding-block: var(--tuner-settings-gap) var(--tuner-settings-fade-height); }
+.tuner-settings-scroll > * { flex-shrink: 0; }
+.tuner-settings-dock { flex: 0 0 auto; position: relative; z-index: 1; background: var(--surface-card-panel); padding-block: var(--tuner-detail-gap) calc(var(--tuner-settings-gap) + env(safe-area-inset-bottom, 0px)); }
+.tuner-settings-dock::before { content: ''; position: absolute; inset-inline: 0; bottom: 100%; height: var(--tuner-settings-fade-height); pointer-events: none; background: linear-gradient(to bottom, transparent, var(--tuner-library-fade-middle), var(--surface-card-panel)); }
+html[data-theme] .tuner-page .tuner-settings-dock .tuner-settings-copy-wrap { margin-top: 0; }
+.tuner-string-label-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--tuner-detail-gap); width: 100%; }
+.tuner-string-label-options button { min-width: 0; width: 100%; }
+.tuner-gauge-inputs { display: grid; grid-template-columns: repeat(var(--tuner-gauge-columns, 5), minmax(0, 1fr)); gap: var(--tuner-detail-gap); margin-block-start: var(--tuner-settings-gap); }
+.tuner-gauge-inputs label { display: grid; gap: var(--tuner-detail-gap); font: var(--tuner-detail-font) var(--font-primary); color: var(--text-card-secondary); }
+.tuner-gauge-inputs input { width: 100%; min-width: 0; min-height: var(--tuner-touch-target); box-sizing: border-box; border: var(--border-brutal-sm); border-radius: var(--radius-sm); background: var(--surface-input); color: var(--text-on-light); padding-inline: var(--tuner-detail-gap); font: inherit; }
+.tuner-gauge-inputs input:hover { border-color: var(--brand-accent-primary); }
 html[data-theme] .tuner-page .mode-ear .tuner-sub-readout { display: none; }
 
 html[data-theme] .tuner-page .tuner-tension-colors { display: none; }

@@ -1,10 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { state, setInstrument, setPreset, setCustomStringCount, getPreset, restore } from '../../src/scripts/controllers/tuner/tunerState.js';
+import { state, setInstrument, setPreset, setCustomStringCount, getPreset, restore, getStringGauges, setStringGauge } from '../../src/scripts/controllers/tuner/tunerState.js';
 import { TUNER_INSTRUMENTS, noteToFreq } from '../../src/settings/tuner.config.ts';
 
 const saved = new Map();
 globalThis.localStorage = { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) };
+
+test('all instruments and string counts have gauges; custom gauges stay isolated and survive restoration', () => {
+  saved.clear();
+  for (const instrument of ['electric', 'acoustic', 'bass']) {
+    setInstrument(instrument);
+    for (let count = 1; count <= 12; count++) {
+      setCustomStringCount(count);
+      const gauges = getStringGauges();
+      assert.equal(gauges.length, count);
+      assert.ok(gauges.every(gauge => Number.isFinite(gauge) && gauge > 0 && gauge <= 200));
+    }
+  }
+  setInstrument('electric'); setCustomStringCount(6);
+  assert.equal(getStringGauges()[0], 52);
+  assert.ok(setStringGauge(0, 54)); restore();
+  assert.equal(getStringGauges()[0], 54);
+  setCustomStringCount(7); assert.equal(getStringGauges()[0], 64);
+  setInstrument('acoustic'); setCustomStringCount(6); assert.equal(getStringGauges()[0], 53);
+  setInstrument('electric'); setCustomStringCount(6); assert.equal(getStringGauges()[0], 54);
+});
 
 test('custom string counts are strict, complete, and survive restoration', () => {
   for (const instrument of ['acoustic', 'electric', 'bass']) {

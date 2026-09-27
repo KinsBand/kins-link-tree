@@ -2,6 +2,7 @@ import { createReferenceAnimation } from './referenceAnimation.js';
 import { createDisplayState, tensionZone } from './displayState.js';
 import {
   TUNER_INSTRUMENTS,
+  TUNER_INSTRUMENT_SHORT_LABELS,
   TUNER_CATEGORY_LABELS,
   TUNER_CATEGORY_ORDER,
   MATERIAL_PROFILES,
@@ -16,7 +17,7 @@ import {
   getPreset,
   materialOptions,
   stringCountOptions,
-  currentStringCount, setTolerance
+  currentStringCount, setTolerance, setStringLabel, getStringGauges, setStringGauge
 } from './tunerState.js';
 import { getInstrumentArt } from './instrumentArt.js';
 
@@ -72,6 +73,8 @@ export function createUi(callbacks) {
   const frames = new Set();
   let disposed = false;
   let meterObserver = null;
+  let viewMotion = null;
+  let viewGeneration = 0;
   function setTimeout(callback, delay) {
     const id = window.setTimeout(() => { timers.delete(id); if (!disposed) callback(); }, delay);
     timers.add(id); return id;
@@ -84,6 +87,8 @@ export function createUi(callbacks) {
   function cancelAnimationFrame(id) { frames.delete(id); window.cancelAnimationFrame(id); }
   function destroy() {
     disposed = true; eventLifetime.abort();
+    viewGeneration++;
+    viewMotion?.cancel();
     meterObserver?.disconnect();
     for (const id of timers) window.clearTimeout(id);
     for (const id of frames) window.cancelAnimationFrame(id);
@@ -101,7 +106,8 @@ export function createUi(callbacks) {
   let figureListenerBound = false;
   let activeTargetEl = null;
   let activeFilter = 'all';
-  const START_MIDI = 20;
+  const START_MIDI = 12; // C0, through G9 (the top of the MIDI note range).
+  const END_MIDI = 127;
   let noteSpacing = 0;
   let railNotes = [];
   let activeRailMidi = null;
@@ -196,20 +202,49 @@ export function createUi(callbacks) {
     }
   }
 
-  function showTunerView() {
+  async function switchTunerView(next, focusTarget, direction) {
+    const generation = ++viewGeneration;
+    viewMotion?.cancel();
     closeMenus();
-    els.tuningView.hidden = true;
-    els.tunerView.hidden = false;
+    const views = [els.tunerView, els.tuningView];
+    const previous = views.find(view => !view.hidden);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const tokens = getComputedStyle(next);
+    const duration = parseFloat(tokens.getPropertyValue('--tuner-view-duration'));
+    const offset = tokens.getPropertyValue('--tuner-view-offset').trim();
+    const easing = tokens.getPropertyValue('--ease-snappy').trim();
+    if (previous && previous !== next && !reduced) {
+      previous.inert = true;
+      viewMotion = previous.animate([
+        { opacity: 1, transform: 'translateX(0)' },
+        { opacity: 0, transform: `translateX(${direction > 0 ? '-' : ''}${offset})` },
+      ], { duration: duration / 2, easing, fill: 'forwards' });
+      await viewMotion.finished.catch(() => {});
+      if (disposed || generation !== viewGeneration) return;
+      viewMotion.cancel();
+    }
+    for (const view of views) { view.hidden = view !== next; view.inert = view !== next; }
     window.scrollTo(0, 0);
-    requestAnimationFrame(invalidateMeterRect);
+    invalidateMeterRect();
+    if (!reduced && previous !== next) {
+      viewMotion = next.animate([
+        { opacity: 0, transform: `translateX(${direction < 0 ? '-' : ''}${offset})` },
+        { opacity: 1, transform: 'translateX(0)' },
+      ], { duration, easing });
+      await viewMotion.finished.catch(() => {});
+      if (disposed || generation !== viewGeneration) return;
+    }
+    viewMotion = null;
+    focusTarget?.focus({ preventScroll: true });
+  }
+
+  function showTunerView() {
+    void switchTunerView(els.tunerView, els.presetBtn, -1);
   }
 
   function showTuningView() {
-    closeMenus();
-    els.tunerView.hidden = true;
-    els.tuningView.hidden = false;
-    window.scrollTo(0, 0);
     renderTuningList(getSearchQuery());
+    void switchTunerView(els.tuningView, els.backToTunerBtn, 1);
   }
 
   function closeMenus(restoreFocus) {
@@ -529,6 +564,7 @@ export function createUi(callbacks) {
 
   function syncSheetSetupButtons() {
     if (!els) return;
+    renderStringLabelSettings();
     const isGuided = state.mode === 'guided';
     const drums = state.instrumentId === 'drums';
     const hasStrings = stringCountOptions().length > 0 && !drums;
@@ -1019,7 +1055,10 @@ export function createUi(callbacks) {
     if (els.modeLabel && ear) els.modeLabel.textContent = 'EAR TRAINING';
     if (els.sheetAutoAdvance) els.sheetAutoAdvance.disabled = ear || state.instrumentId === 'drums';
     if (els.sheetAutoId) els.sheetAutoId.disabled = ear || state.instrumentId === 'drums';
-    if (els.chromRail) els.chromRail.hidden = true;
+    if (els.chromRail) {
+      els.chromRail.hidden = state.mode !== 'chromatic' || drumsMode;
+      if (!els.chromRail.hidden) { buildRail(); centerRailDefault(); }
+    }
     layoutZones();
     renderSheetSettings();
   }
@@ -1099,7 +1138,8 @@ export function createUi(callbacks) {
         }
         const label = peg.querySelector('.tuner-peg-label');
         const noteText = state.instrumentId === 'bass' ? str.note : noteLetter(str.note);
-        if (label) label.textContent = state.mode === 'ear' ? String(preset.strings.length - idx) : noteText;
+        if (label) label.textContent = state.stringLabel === 'number' ? String(preset.strings.length - idx)
+          : state.stringLabel === 'gauge' ? String(getStringGauges()[idx] ?? '—') : noteText;
         peg.setAttribute('aria-label', state.mode === 'ear' ? 'Play reference for string ' + (preset.strings.length - idx) : 'Target string ' + str.note);
         peg.setAttribute('aria-pressed', String(idx === state.stringIndex));
         peg.classList.toggle('is-active', idx === state.stringIndex);
@@ -1236,7 +1276,8 @@ export function createUi(callbacks) {
       empty.textContent = q ? `No tunings match "${q}" in this category.` : 'No tunings found for this filter.';
       els.categoryList.appendChild(empty);
     }
-    els.instrumentLabel.textContent = group.dropdownLabel;
+    els.instrumentLabel.textContent = TUNER_INSTRUMENT_SHORT_LABELS[group.id];
+    els.instrumentBtn.setAttribute('aria-label', 'Instrument: ' + group.dropdownLabel);
     renderA4();
   }
 
@@ -1322,7 +1363,7 @@ export function createUi(callbacks) {
   function buildRail() {
     if (!els || !els.chromTape || railNotes.length) return;
     railNotes = [];
-    for (let m = START_MIDI; m <= 108; m++) {
+    for (let m = START_MIDI; m <= END_MIDI; m++) {
       const pitchClass = NOTE_NAMES[((m % 12) + 12) % 12];
       const octave = Math.floor(m / 12) - 1;
       const sp = document.createElement('span');
@@ -1408,9 +1449,8 @@ export function createUi(callbacks) {
   }
 
   function setPill(text, pillClass) {
-    // Visible status also announces meaningful state changes to screen readers.
-    const base = 'tuner-status';
-    const cls = base + (pillClass ? ' ' + pillClass : '');
+    // Announce status without duplicating the bottom Start/Stop action.
+    const cls = 'sr-only';
     if (els.status) {
       setText(textMemo, els.status, text);
       if (els.status.className !== cls) els.status.className = cls;
@@ -1420,7 +1460,7 @@ export function createUi(callbacks) {
   function setCents(text, extraClass) {
     if (!els.cents) return;
     setText(textMemo, els.cents, text);
-    const base = 'tuner-cents';
+    const base = 'sr-only';
     const cls = extraClass ? base + ' ' + extraClass : base;
     if (els.cents.className !== cls) els.cents.className = cls;
   }
@@ -1444,7 +1484,7 @@ export function createUi(callbacks) {
     clearRail();
     setText(textMemo, els.note, '--');
     setText(textMemo, els.noteOctave, '');
-    setText(textMemo, els.freq, '');
+    setText(textMemo, els.freq, '-- Hz');
     setText(textMemo, els.hint, '');
     setCents('--', '');
     if (state.listening) {
@@ -1532,13 +1572,14 @@ export function createUi(callbacks) {
       setInTuneHighlight(false); setNeedle(0); setCents('', '');
       setPill(TUNER_COPY.listening, 'pill-neutral');
       setText(textMemo, els.note, '--'); setText(textMemo, els.noteOctave, '');
-      setText(textMemo, els.freq, '');
+      setText(textMemo, els.freq, '-- Hz');
       return;
     }
-    setNeedle(reading.cents);
+    setNeedle(chromatic ? 0 : reading.cents);
+    if (chromatic) updateRail(reading.freq, reading.cents, reading.locked);
     setText(textMemo, els.note, reading.detectedNote);
     setText(textMemo, els.noteOctave, String(reading.detectedOctave));
-    setText(textMemo, els.freq, chromatic ? '' : reading.freq.toFixed(2) + ' Hz');
+    setText(textMemo, els.freq, reading.freq.toFixed(2) + ' Hz');
     setCents(chromatic ? '' : formatCentsDisplay(reading.cents, reading.locked), '');
     const inTune = els.readout.dataset.phase === 'in-tune';
     els.readout.classList.toggle('in-tune', inTune);
@@ -1566,6 +1607,18 @@ export function createUi(callbacks) {
   }
 
   function bindQualitySettings() {
+    document.querySelectorAll('[data-string-label]').forEach(button => {
+      button.addEventListener('click', () => {
+        setStringLabel(button.getAttribute('data-string-label'));
+        renderStringLabelSettings(); renderFigure();
+      }, { signal: eventLifetime.signal });
+    });
+    document.getElementById('tunerGaugeInputs')?.addEventListener('change', event => {
+      const input = event.target.closest('[data-string-gauge]');
+      if (!input) return;
+      if (!setStringGauge(Number(input.dataset.stringGauge), input.value)) showToast('Enter a gauge greater than 0 and up to 200.', 'error');
+      renderStringLabelSettings(); renderFigure();
+    }, { signal: eventLifetime.signal });
     const calibration = document.getElementById('tunerCalibration');
     calibration?.addEventListener('change', () => {
       if (!calibration.checkValidity()) { calibration.reportValidity(); return; }
@@ -1598,6 +1651,21 @@ export function createUi(callbacks) {
     pegPulseTimer = setTimeout(() => {
       if (activeTargetEl) activeTargetEl.classList.remove('peg-acquired');
     }, 450);
+  }
+
+  function renderStringLabelSettings() {
+    const section = document.getElementById('tunerStringLabels');
+    if (!section) return;
+    section.hidden = state.instrumentId === 'drums';
+    section.querySelectorAll('[data-string-label]').forEach(button => {
+      const selected = button.getAttribute('data-string-label') === state.stringLabel;
+      button.setAttribute('aria-pressed', String(selected));
+      button.classList.toggle('active', selected);
+    });
+    document.getElementById('tunerGaugeSettings').hidden = state.stringLabel !== 'gauge';
+    const gauges = getStringGauges();
+    document.getElementById('tunerGaugeInputs').style.setProperty('--tuner-gauge-columns', String(Math.min(5, gauges.length)));
+    document.getElementById('tunerGaugeInputs').innerHTML = gauges.map((gauge, index) => `<label>String ${gauges.length - index}<input type="number" min="0.1" max="200" step="0.1" inputmode="decimal" data-string-gauge="${index}" aria-label="String ${gauges.length - index} gauge" value="${gauge ?? ''}" placeholder="—" /></label>`).join('');
   }
 
   function bindStaticEvents() {

@@ -637,10 +637,10 @@ if (!isMetronomeEnabled) {
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    background-color: #0a0a0c;
+    background-color: var(--surface-canvas);
     background-image:
-      radial-gradient(circle at 50% 16%, #1e1c18 0%, #121210 42%, #08080a 78%, #040405 100%);
-    color: var(--text-white);
+      radial-gradient(circle at 50% 16%, var(--brand-accent-glow) 0%, transparent 60%);
+    color: var(--text-on-dark);
     overflow: hidden;
     position: relative;
   }
@@ -824,8 +824,8 @@ if (!isMetronomeEnabled) {
     height: 54px;
     min-height: 54px;
     padding: 0 18px;
-    background: #1a1a1e;
-    color: #f5f5f7;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: 3px solid #000000;
     box-shadow: 3px 3px 0px #000000;
     border-radius: var(--radius-pill);
@@ -852,8 +852,8 @@ if (!isMetronomeEnabled) {
   .metro-back-pill:hover {
     transform: translate(-1px, -1px);
     box-shadow: 4px 4px 0px #000000;
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
 
@@ -867,7 +867,7 @@ if (!isMetronomeEnabled) {
   }
 
   .metro-back-pill:focus-visible {
-    outline: 2px solid var(--accent-neon-yellow);
+    outline: 2px solid var(--brand-accent-primary);
     outline-offset: 3px;
   }
 
@@ -1063,11 +1063,11 @@ if (!isMetronomeEnabled) {
     align-items: center;
     justify-content: center;
     height: 48px;
-    background: #1a1a1e;
-    color: var(--accent-neon-yellow);
+    background: var(--metro-deck-bg, var(--surface-card-panel));
+    color: var(--brand-accent-primary);
     border: 2px solid #000000;
     box-shadow: 2px 2px 0px #000000;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     font-size: 1.15rem;
     cursor: pointer;
     touch-action: manipulation;
@@ -1076,8 +1076,8 @@ if (!isMetronomeEnabled) {
   }
 
   .metro-setlist-deck-btn:hover {
-    background: #25252e;
-    color: var(--btn-green-hover);
+    background: var(--metro-deck-hover, var(--surface-card-panel-hover));
+    color: var(--btn-brand-hover);
     transform: translate(-1px, -1px);
     box-shadow: 3px 3px 0px #000000;
   }
@@ -1085,8 +1085,8 @@ if (!isMetronomeEnabled) {
   .metro-setlist-deck-btn:active {
     transform: translate(1px, 1px);
     box-shadow: 1px 1px 0px #000000;
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
   }
 
   @keyframes metroTopbarIn {
@@ -1115,11 +1115,11 @@ if (!isMetronomeEnabled) {
     width: 54px;
     height: 54px;
     flex-shrink: 0;
-    background: #1a1a1e;
-    color: #f5f5f7;
+    background: var(--surface-card-panel);
+    color: var(--text-card-primary);
     border: 3px solid #000000;
     box-shadow: 3px 3px 0px #000000;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     font-size: 1.15rem;
     cursor: pointer;
     touch-action: manipulation;
@@ -1130,7 +1130,8 @@ if (!isMetronomeEnabled) {
   .metro-icon-btn:hover {
     transform: translate(-1px, -1px);
     box-shadow: 4px 4px 0px #000000;
-    color: var(--accent-neon-yellow);
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
   }
 
   .metro-icon-btn:active {
@@ -1982,11 +1983,12 @@ if (!isMetronomeEnabled) {
     align-items: center;
     gap: 10px;
     margin-top: 14px;
-    background: #101014;
-    border: 3px solid #000000;
-    box-shadow: 3px 3px 0px #000000;
+    background: var(--metro-pill-bg, var(--surface-card-panel));
+    border: var(--border-brutal);
+    box-shadow: var(--shadow-brutal-black);
     border-radius: var(--radius-pill);
     padding: 8px 14px;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .metro-pill {
@@ -1994,7 +1996,7 @@ if (!isMetronomeEnabled) {
     align-items: center;
     gap: 7px;
     background: transparent;
-    color: #f5f5f7;
+    color: var(--text-card-primary);
     border: none;
     padding: 4px 6px;
     font-family: var(--font-secondary);
@@ -2008,12 +2010,23 @@ if (!isMetronomeEnabled) {
   }
 
   .metro-pill:hover {
-    color: var(--accent-neon-yellow);
+    color: var(--brand-accent-primary);
+    transform: translateY(-1px);
+  }
+
+  .metro-pill:active {
+    transform: translateY(1px);
+  }
+
+  .metro-pill:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
   }
 
   .metro-pill-caret {
     font-size: 0.65rem;
-    color: var(--accent-neon-yellow);
+    color: var(--brand-accent-primary);
     transition: transform 0.16s ease;
   }
 
@@ -2024,7 +2037,7 @@ if (!isMetronomeEnabled) {
   .metro-pill-divider {
     width: 2px;
     height: 18px;
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--border-subtle, rgba(255, 255, 255, 0.2));
   }
 
   /* ---------- bottom controls ---------- */
@@ -2116,16 +2129,16 @@ if (!isMetronomeEnabled) {
     height: 54px;
     min-height: 54px;
     box-sizing: border-box;
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    border: 3px solid #000000;
-    box-shadow: 3px 3px 0px #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border: var(--border-brutal);
+    box-shadow: var(--shadow-brutal-black);
     border-radius: var(--radius-pill);
     padding: 0 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-family: var(--font-secondary);
+    font-family: var(--font-heading);
     font-size: 0.95rem;
     font-weight: 900;
     letter-spacing: 0.14em;
@@ -2137,13 +2150,18 @@ if (!isMetronomeEnabled) {
 
   .metro-tap-btn:hover {
     transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0px #000000;
-    background: var(--btn-green-hover);
+    box-shadow: var(--shadow-brutal-black-lg);
+    background: var(--btn-brand-hover);
   }
 
   .metro-tap-btn:active {
-    transform: translate(1px, 1px);
+    transform: translate(2px, 2px) scale(0.985);
     box-shadow: 1px 1px 0px #000000;
+  }
+
+  .metro-tap-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 2px;
   }
 
   .metro-play-btn {
@@ -2154,10 +2172,10 @@ if (!isMetronomeEnabled) {
     height: 54px;
     flex-shrink: 0;
     margin-left: auto;
-    background: var(--accent-neon-yellow);
-    color: #000000;
-    border: 3px solid #000000;
-    box-shadow: 3px 3px 0px #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    border: var(--border-brutal);
+    box-shadow: var(--shadow-brutal-black);
     border-radius: var(--radius-pill);
     font-size: 1.15rem;
     cursor: pointer;
@@ -2168,22 +2186,27 @@ if (!isMetronomeEnabled) {
 
   .metro-play-btn:hover {
     transform: translate(-1px, -1px);
-    box-shadow: 5px 5px 0px #000000;
-    background: var(--btn-green-hover);
+    box-shadow: var(--shadow-brutal-black-lg);
+    background: var(--btn-brand-hover);
   }
 
   .metro-play-btn:active {
-    transform: translate(1px, 1px);
+    transform: translate(2px, 2px) scale(0.985);
     box-shadow: 1px 1px 0px #000000;
   }
 
+  .metro-play-btn:focus-visible {
+    outline: 2px solid var(--brand-accent-primary);
+    outline-offset: 2px;
+  }
+
   .metro-play-btn.playing {
-    background: #c0392b;
+    background: var(--status-danger);
     color: #ffffff;
   }
 
   .metro-play-btn.playing:hover {
-    background: #d64a3b;
+    background: #dc2626;
   }
 
   .metro-play-icon {
@@ -2213,10 +2236,10 @@ if (!isMetronomeEnabled) {
     align-items: center;
     gap: 10px;
     min-width: 0;
-    background: #1a1a1e;
-    color: #f5f5f7;
-    border: 3px solid #000000;
-    box-shadow: 3px 3px 0px #000000;
+    background: var(--surface-card, #1a1a1e);
+    color: var(--text-on-dark, #f5f5f7);
+    border: var(--border-brutal);
+    box-shadow: var(--shadow-brutal-black);
     border-radius: var(--radius-pill);
     padding: 6px 10px 6px 16px;
     box-sizing: border-box;
@@ -2256,7 +2279,7 @@ if (!isMetronomeEnabled) {
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.06em;
-    color: var(--accent-neon-yellow);
+    color: var(--brand-accent-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2272,7 +2295,7 @@ if (!isMetronomeEnabled) {
 
   .metro-now-playing-bars {
     font-variant-numeric: tabular-nums;
-    color: #a1a1aa;
+    color: var(--text-muted);
     font-size: 0.66rem;
   }
 
@@ -2292,11 +2315,11 @@ if (!isMetronomeEnabled) {
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    background: #0f0f12;
-    color: #a1a1aa;
-    border: 2px solid #000000;
+    background: var(--surface-base, #0f0f12);
+    color: var(--text-muted, #a1a1aa);
+    border: var(--border-brutal-sm);
     box-shadow: 1px 1px 0px #000000;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     font-size: 0.72rem;
     cursor: pointer;
     touch-action: manipulation;
@@ -2305,7 +2328,7 @@ if (!isMetronomeEnabled) {
   }
 
   .metro-now-playing-exit:hover {
-    background: #c0392b;
+    background: var(--status-danger, #ef4444);
     color: #ffffff;
     transform: translate(-1px, -1px);
     box-shadow: 2px 2px 0px #000000;
@@ -6810,8 +6833,8 @@ if (!isMetronomeEnabled) {
     opacity: 0.035;
   }
   html[data-theme="standard"] .metro-back-pill:hover {
-    background: var(--accent-neon-yellow);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-back-pill,
@@ -6826,8 +6849,8 @@ if (!isMetronomeEnabled) {
     box-shadow: 3px 3px 0px #000000;
   }
   html[data-theme="standard"] .metro-topbar-title {
-    color: #000000;
-    background: var(--accent-neon-yellow);
+    color: var(--btn-brand-text);
+    background: var(--btn-brand-primary);
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-dial {
@@ -6918,13 +6941,13 @@ if (!isMetronomeEnabled) {
   html[data-theme="standard"] :global(.metro-sub-chip.active),
   html[data-theme="standard"] .metro-beatstyle-chip.active,
   html[data-theme="standard"] .metro-settoggle[aria-pressed="true"] {
-    background: var(--accent-neon-yellow, #f2fd43);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-settoggle[aria-pressed="true"] i,
   html[data-theme="standard"] .metro-settoggle[aria-pressed="true"] span {
-    color: #000000;
+    color: var(--btn-brand-text);
   }
   html[data-theme="standard"] .metro-settings-scroll {
     background: transparent;
@@ -7010,8 +7033,8 @@ if (!isMetronomeEnabled) {
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-menu-nav-btn.active {
-    background: var(--accent-neon-yellow, #f2fd43);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     font-weight: 900;
   }
   html[data-theme="standard"] .metro-bottom-search-pill,
@@ -7040,7 +7063,7 @@ if (!isMetronomeEnabled) {
   html[data-theme="standard"] .metro-tap-btn,
   html[data-theme="standard"] .metro-play-btn,
   html[data-theme="standard"] .metro-coach-btn {
-    color: #000000;
+    color: var(--btn-brand-text);
   }
   html[data-theme="standard"] .metro-setlist-filter {
     background: #ffffff;
@@ -7052,8 +7075,8 @@ if (!isMetronomeEnabled) {
     color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-filter.active {
-    background: var(--accent-neon-yellow, #f2fd43);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
   }
   html[data-theme="standard"] .metro-setlist-sort-chip {
     background: #ffffff;
@@ -7066,7 +7089,7 @@ if (!isMetronomeEnabled) {
   }
   html[data-theme="standard"] .metro-setlist-sort-chip.active {
     background: #000000;
-    color: var(--accent-neon-yellow, #f2fd43);
+    color: var(--brand-accent-primary);
     border-color: #000000;
   }
   html[data-theme="standard"] :global(.metro-setlist-row),
@@ -7090,12 +7113,12 @@ if (!isMetronomeEnabled) {
   }
   html[data-theme="standard"] :global(.metro-setlist-bpm) {
     background: #000000;
-    color: var(--accent-neon-yellow, #f2fd43);
+    color: var(--brand-accent-primary);
     border: 1px solid #000000;
   }
   html[data-theme="standard"] :global(.metro-setlist-card-badge) {
     background: #000000;
-    color: var(--accent-neon-yellow, #f2fd43);
+    color: var(--brand-accent-primary);
     border: 1px solid #000000;
   }
   html[data-theme="standard"] :global(.metro-setlist-song-num) {
@@ -7143,8 +7166,8 @@ if (!isMetronomeEnabled) {
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-setlist-add-tab.active {
-    background: var(--accent-neon-yellow, #f2fd43);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     font-weight: 900;
   }
   html[data-theme="standard"] .metro-picker-card {
@@ -7163,8 +7186,8 @@ if (!isMetronomeEnabled) {
     color: #52525b;
   }
   html[data-theme="standard"] .metro-picker-confirm-btn {
-    background: var(--accent-neon-yellow, #f2fd43);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
   html[data-theme="standard"] :global(.metro-picker-item) {
@@ -7196,8 +7219,8 @@ if (!isMetronomeEnabled) {
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-midi-btn {
-    background: var(--accent-neon-yellow, #f2fd43);
-    color: #000000;
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
     border-color: #000000;
   }
   html[data-theme="standard"] .metro-midi-hint {

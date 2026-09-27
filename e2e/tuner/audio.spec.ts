@@ -47,8 +47,20 @@ test('known 440 Hz reaches the worklet and clean Free mode readout', async ({ pa
   await expect(page.locator('#tunerDetectedNote')).toHaveText('A');
   await expect(page.locator('#tunerDetectedNoteOctave')).toHaveText('4');
   await expect(page.locator('#tunerCentsReadout')).toBeHidden();
-  await expect(page.locator('#tunerChromRail')).toBeHidden();
-  await page.locator('#tunerMicToggleBtn').click();
+  await expect(page.locator('#tunerChromRail')).toBeVisible();
+  await expect(page.locator('#tunerDetectedFreq')).toContainText('Hz');
+  await expect(page.locator('.rail-note').first()).toHaveAttribute('data-midi', '12');
+  await expect(page.locator('.rail-note').last()).toHaveAttribute('data-midi', '127');
+  await expect(page.locator('.rail-note.is-near')).toHaveAttribute('data-midi', '69');
+  const centered = await page.locator('.rail-note.is-near').evaluate(el => {
+    const note = el.getBoundingClientRect();
+    const rail = document.getElementById('tunerChromRail')!.getBoundingClientRect();
+    return Math.abs(note.x + note.width / 2 - rail.x - rail.width / 2);
+  });
+  expect(centered).toBeLessThan(4);
+  // The listening CTA pulses; keyboard activation is independent of its transform.
+  await page.locator('#tunerMicToggleBtn').focus();
+  await page.locator('#tunerMicToggleBtn').press('Enter');
   expect(await page.evaluate(() => (window as any).__tunerInput.sources[0].stream.getTracks().every((track: MediaStreamTrack) => track.readyState === 'ended'))).toBe(true);
   expect(errors).toEqual([]);
 });

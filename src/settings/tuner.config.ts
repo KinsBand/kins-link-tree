@@ -21,6 +21,48 @@ export interface TunerPreset {
 }
 
 export type TunerInstrumentId = 'acoustic' | 'electric' | 'bass' | 'drums';
+export const TUNER_INSTRUMENT_SHORT_LABELS: Record<TunerInstrumentId, string> = {
+  electric: 'Elec.', acoustic: 'Acous.', bass: 'Bass', drums: 'Drums',
+};
+
+// Example gauges in thousandths of an inch, ordered lowest to highest string.
+// Users can replace these with the gauges fitted to their instrument.
+export const TUNER_STRING_GAUGES: Record<Exclude<TunerInstrumentId, 'drums'>, Record<number, number[]>> = {
+  electric: {
+    1: [10], 2: [13, 10], 3: [17, 13, 10],
+    4: [30, 17, 13, 10], 5: [42, 30, 17, 13, 10],
+    6: [52, 42, 30, 17, 13, 10],
+    7: [64, 52, 42, 30, 17, 13, 10],
+    8: [74, 64, 52, 42, 30, 17, 13, 10],
+    9: [90, 74, 64, 52, 42, 30, 17, 13, 10],
+    10: [105, 90, 74, 64, 52, 42, 30, 17, 13, 10],
+    11: [120, 105, 90, 74, 64, 52, 42, 30, 17, 13, 10],
+    // Paired courses follow the 12-string tuning generator's order.
+    12: [46, 26, 36, 18, 26, 12, 17, 8, 13, 13, 10, 10],
+  },
+  acoustic: {
+    1: [12], 2: [16, 12], 3: [24, 16, 12],
+    4: [32, 24, 16, 12], 5: [42, 32, 24, 16, 12],
+    6: [53, 42, 32, 24, 16, 12],
+    7: [65, 53, 42, 32, 24, 16, 12],
+    8: [80, 65, 53, 42, 32, 24, 16, 12],
+    9: [95, 80, 65, 53, 42, 32, 24, 16, 12],
+    10: [110, 95, 80, 65, 53, 42, 32, 24, 16, 12],
+    11: [125, 110, 95, 80, 65, 53, 42, 32, 24, 16, 12],
+    12: [47, 27, 39, 18, 30, 12, 23, 8, 14, 14, 10, 10],
+  },
+  bass: {
+    1: [45], 2: [65, 45], 3: [85, 65, 45],
+    4: [105, 85, 65, 45], 5: [130, 105, 85, 65, 45],
+    6: [130, 105, 85, 65, 45, 32],
+    7: [145, 130, 105, 85, 65, 45, 32],
+    8: [145, 130, 105, 85, 65, 45, 32, 25],
+    9: [165, 145, 130, 105, 85, 65, 45, 32, 25],
+    10: [165, 145, 130, 105, 85, 65, 45, 32, 25, 20],
+    11: [185, 165, 145, 130, 105, 85, 65, 45, 32, 25, 20],
+    12: [185, 165, 145, 130, 105, 85, 65, 45, 32, 25, 20, 16],
+  },
+};
 
 export type TunerMode = 'guided' | 'chromatic';
 
