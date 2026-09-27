@@ -42,8 +42,12 @@ const activeSubvar = activeSubvarMap[activeState] || '';
 // Only the configured state and sub-variation ship in the page. The inactive
 // variants hold demo copy ("Sold Out!", "10,000 Followers!") that must not reach
 // visitors or crawlers. Switch variants by editing hero.config.ts.
-const showState = (state: string) => state === activeState;
-const showVar = (state: string, subvar: string) => state === activeState && subvar === activeSubvar;
+// Carousel slides (when enabled) also need their variants in the page.
+const carouselSlides = heroConfig.carousel?.enabled ? heroConfig.carousel.slides : [];
+const showState = (state: string) => state === activeState || carouselSlides.some((s) => s.state === state);
+const showVar = (state: string, subvar: string) =>
+  (state === activeState && subvar === activeSubvar) ||
+  carouselSlides.some((s) => s.state === state && s.subvar === subvar);
 
 // Calculate total votes for poll variations
 const recordingTotalVotes = poll.recording_cover.options.reduce((acc, opt) => acc + opt.votes, 0);
