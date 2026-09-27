@@ -1,4 +1,5 @@
 ---
+import { features } from '../../settings/features';
 ---
 
 <div class="bottom-floating-controls-wrapper" id="bottomFloatingControls">
@@ -138,8 +139,9 @@
       </div>
     </div>
 
+    {features.gigMap && (
     <!-- Right Card: GIG MAP (Tab-Sized Compact Width) -->
-    <button type="button" class="brutal-gig-card" id="floatingGigPillBtn" aria-label="Tour dates & Gig Map (Coming Soon)" data-track="gig:coming_soon">
+    <button type="button" class="brutal-gig-card" id="floatingGigPillBtn" aria-label="Tour dates & Gig Map" data-track="gig:open_map">
       <!-- Folder Tab Spanning Full Width of the Button -->
       <div class="card-folder-tab tab-gigmap">GIG MAP</div>
       
@@ -152,6 +154,7 @@
         <span>COMING SOON</span>
       </div>
     </button>
+    )}
   </div>
 </div>
 

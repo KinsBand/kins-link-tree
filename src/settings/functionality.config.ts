@@ -8,7 +8,7 @@ export const functionalityConfig = {
   enableInspirationVault: true,
   enableMerchStore: false,
   enableNewsletter: true,
-  enableFollowerCounter: true,
+  enableFollowerCounter: false,
   audioAutoPlay: false,
   enableLivePage: false,
   enableEpkPage: false,

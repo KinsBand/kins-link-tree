@@ -2,6 +2,7 @@
 import { liveConfig } from '../../settings/live.config';
 import { functionalityConfig } from '../../settings/functionality.config';
 import { epkConfig } from '../../settings/epk.config';
+import { features } from '../../settings/features';
 import { Image } from 'astro:assets';
 import kinsLogoNew from '../../assets/new.png';
 
@@ -9,6 +10,14 @@ const baseUrl = import.meta.env.BASE_URL;
 const isLive = (functionalityConfig.enableLivePage ?? true) && (liveConfig.enabled ?? true) && liveConfig.status === 'live';
 const isEpkEnabled = (functionalityConfig.enableEpkPage ?? true) && (epkConfig.enabled ?? true);
 const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
+
+// Center slot: LIVE NOW > Join pill > covers search pill. The left icon slot
+// holds whichever of search or the subscribe bell didn't get the center.
+const centerSlot = isLive ? 'live' : features.newsletter ? 'join' : features.coversSearch ? 'search' : null;
+const leftSlot = features.coversSearch && centerSlot !== 'search'
+  ? 'search'
+  : features.newsletter && centerSlot !== 'join' ? 'bell' : null;
+const searchLabel = features.coversCatalog ? 'Search cover videos' : 'Covers: what we are learning and song requests';
 ---
 
 <header class="top-nav" id="topNavHeader" data-track-container="nav:top_bar">
@@ -22,27 +31,38 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
 
   <!-- Unified Center Action Cluster: [🔔 Notification] [🔍 Search / LIVE NOW] [↗ Share] -->
   <div class="top-nav-center-cluster">
-    <button class="nav-brutal-btn nav-icon-btn top-subscribe-soon-btn" id="topSubscribeBtn" aria-label="Subscribe to updates (Coming Soon)" title="Subscribe (Coming Soon)" data-track="nav:subscribe">
-      <i class="fa-solid fa-bell nav-icon"></i>
-      <div class="bell-soon-diagonal-banner" aria-hidden="true">
-        <span>SOON</span>
-      </div>
-    </button>
+    {leftSlot === 'bell' && (
+      <a href="#subscribeFormSection" class="nav-brutal-btn nav-icon-btn" id="topSubscribeBtn" aria-label="Subscribe to Kins" title="Subscribe to Kins" data-track="nav:subscribe">
+        <i class="fa-regular fa-bell nav-icon" aria-hidden="true"></i>
+      </a>
+    )}
+    {leftSlot === 'search' && (
+      <button class="nav-brutal-btn nav-icon-btn" id="headerSearchPillBtn" aria-label={searchLabel} title="Covers" data-track="nav:search_icon">
+        <i class="fa-solid fa-magnifying-glass nav-icon" aria-hidden="true"></i>
+      </button>
+    )}
 
-    {isLive ? (
+    {centerSlot === 'live' ? (
       <!-- Expanded LIVE NOW Button taking the center space when live -->
       <a href={`${baseUrl}live`} class="header-live-now-full-btn" id="headerLiveNowBtn" aria-label="Watch Live Stream Now" data-track="nav:live_stream_full">
         <span class="nav-live-pulse-dot"></span>
         <span class="nav-live-full-text">🔴 LIVE NOW • KINS LIVE</span>
         <i class="fa-solid fa-arrow-right nav-live-arrow-icon"></i>
       </a>
-    ) : (
+    ) : centerSlot === 'search' ? (
       <!-- Standard Search Covers Pill Button when not live -->
-      <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label="Search cover videos" data-track="nav:search_pill">
+      <button class="header-search-pill-btn" id="headerSearchPillBtn" aria-label={searchLabel} data-track="nav:search_pill">
         <i class="fa-solid fa-magnifying-glass search-pill-icon"></i>
         <span class="search-pill-placeholder">search covers...</span>
         <span class="search-kbd-badge" aria-hidden="true">⌘K</span>
       </button>
+    ) : centerSlot === 'join' && (
+      <!-- Join pill: jumps to the signup form -->
+      <a href="#subscribeFormSection" class="header-search-pill-btn header-join-pill-btn" id="headerJoinPillBtn" data-track="nav:join_pill">
+        <i class="fa-regular fa-bell search-pill-icon" aria-hidden="true"></i>
+        <span class="search-pill-placeholder">Get new music first</span>
+        <span class="join-pill-chip" aria-hidden="true">JOIN</span>
+      </a>
     )}
 
     <button class="nav-brutal-btn nav-icon-btn" id="shareBtn" aria-label="Share page" title="Share" data-track="nav:share">
@@ -332,7 +352,7 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
   /* --------------------------------------------------------------------------
      Interactive Action Buttons Styling (Shared Neo-Brutalist Language)
      -------------------------------------------------------------------------- */
-  #topSubscribeBtn, #shareBtn, .header-search-pill-btn, .header-live-now-full-btn {
+  #topSubscribeBtn, #shareBtn, #headerSearchPillBtn, .header-search-pill-btn, .header-live-now-full-btn {
     will-change: opacity, transform;
     transition: opacity 0.22s var(--ease-snappy), transform 0.16s var(--ease-tactile), background-color 0.18s ease, box-shadow 0.18s ease;
     touch-action: manipulation;
@@ -340,6 +360,7 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
   }
 
   .top-nav.search-active #topSubscribeBtn,
+  .top-nav.search-active #headerJoinPillBtn,
   .top-nav.search-active #shareBtn {
     opacity: 0 !important;
     pointer-events: none !important;
@@ -417,6 +438,7 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
 
   /* Neo-Brutalist Top Action Buttons */
   .nav-brutal-btn {
+    text-decoration: none;
     background: var(--surface-card-light);
     border: 3px solid #000000;
     box-shadow: 2px 2px 0px #000000;
@@ -470,46 +492,6 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
   .nav-brutal-btn:focus-visible {
     outline: 3px solid var(--accent-neon-yellow);
     outline-offset: 2px;
-  }
-
-  /* Coming Soon Diagonal Ribbon on Bell Button */
-  .top-subscribe-soon-btn {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .bell-soon-diagonal-banner {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    overflow: hidden;
-    border-radius: inherit;
-    z-index: 10;
-  }
-
-  .bell-soon-diagonal-banner span {
-    background: var(--btn-brand-primary, var(--accent-neon-yellow));
-    color: #000000;
-    border: 1.5px solid #000000;
-    box-shadow: 1px 1px 0px #000000;
-    font-family: var(--font-secondary, sans-serif);
-    font-size: 0.44rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 1px 10px;
-    white-space: nowrap;
-    transform: rotate(-35deg);
-    text-align: center;
-    width: 140%;
-  }
-
-  :global([data-theme="dark"]) .bell-soon-diagonal-banner span {
-    background: var(--brand-accent-primary, #d4af37);
-    color: #000000;
   }
 
   /* Subscribed Bell State */
@@ -598,6 +580,35 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
     outline-offset: 2px;
   }
 
+  .header-join-pill-btn {
+    text-decoration: none;
+  }
+
+  .header-join-pill-btn .search-pill-icon {
+    color: var(--brand-accent-primary);
+  }
+
+  @media (max-width: 419px) {
+    .header-join-pill-btn .search-pill-icon {
+      display: none;
+    }
+  }
+
+  .join-pill-chip {
+    flex-shrink: 0;
+    margin-left: auto;
+    padding: 3px 10px;
+    border: var(--border-brutal-sm);
+    border-radius: var(--radius-pill);
+    background: var(--btn-brand-primary);
+    color: var(--btn-brand-text);
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+  }
+
   .search-pill-icon {
     font-size: 0.88rem;
     color: var(--text-card-primary);
@@ -623,6 +634,7 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
 
   const topSubscribeBtn = document.getElementById('topSubscribeBtn');
   const headerSearchPillBtn = document.getElementById('headerSearchPillBtn');
+  const headerJoinPillBtn = document.getElementById('headerJoinPillBtn');
   const headerLiveNowBtn = document.getElementById('headerLiveNowBtn');
   const shareBtn = document.getElementById('shareBtn');
 
@@ -634,7 +646,7 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
 
     // Desktop view (>= 768px): Unified Top Header Bar remains permanently fixed and defined
     if (mql.matches) {
-      const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, headerLiveNowBtn, shareBtn];
+      const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, headerJoinPillBtn, headerLiveNowBtn, shareBtn];
       elementsToFade.forEach(el => {
         if (!el) return;
         el.style.opacity = '1';
@@ -650,7 +662,7 @@ const isStoreEnabled = functionalityConfig.enableMerchStore ?? true;
     const easedProgress = 1 - Math.pow(1 - rawProgress, 2.5);
     const targetOpacity = Math.max(0, 1 - easedProgress);
 
-    const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, headerLiveNowBtn, shareBtn];
+    const elementsToFade = [topSubscribeBtn, headerSearchPillBtn, headerJoinPillBtn, headerLiveNowBtn, shareBtn];
     const isTransparent = targetOpacity <= 0.02;
 
     elementsToFade.forEach(el => {

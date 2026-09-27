@@ -1,4 +1,5 @@
 ---
+import { features } from '../../settings/features';
 ---
 
 <section class="profile-section" data-track-container="main:profile">
@@ -36,6 +37,7 @@
     </div>
   </div>
 
+  {features.followerCounter && (
   <div class="total-followers-card">
     <div class="followers-left">
       <i class="fa-solid fa-users"></i>
@@ -46,6 +48,7 @@
     </div>
     <div class="followers-count" id="totalFollowersCount">0</div>
   </div>
+  )}
 </section>
 
 <style>
@@ -124,11 +127,51 @@
   }
 
   .total-followers-card {
-    display: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    max-width: 360px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--surface-card);
+    border: var(--border-brutal-sm);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-brutal-black);
+    color: var(--text-on-dark);
+    font-family: var(--font-primary);
+    box-sizing: border-box;
+  }
+
+  .followers-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+  }
+
+  .followers-label-group {
+    display: flex;
+    flex-direction: column;
+    font-weight: 700;
+  }
+
+  .followers-last-updated {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .followers-count {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--brand-accent-primary);
   }
 </style>
 
 <script>
   import { initFollowersTracker } from '../../scripts/controllers/followers.js';
-  initFollowersTracker();
+  if (document.getElementById('totalFollowersCount')) initFollowersTracker();
 </script>

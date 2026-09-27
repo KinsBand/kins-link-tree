@@ -1,5 +1,6 @@
 import { openCoverVideoModal } from './videoModalController.js';
 import { showToast } from './toast.js';
+import { focusSignupForm } from './subscribeController.js';
 import { initLiveFanUploadForm } from './liveUploadController.js';
 import { heroConfig } from '../../settings/hero.config';
 
@@ -625,9 +626,7 @@ export function initHeroFeatureController() {
 
   const previewPreSaveBtn = document.getElementById('previewPreSaveBtn');
   previewPreSaveBtn?.addEventListener('click', () => {
-    const topSubscribeBtn = document.getElementById('topSubscribeBtn');
-    if (topSubscribeBtn) {
-      topSubscribeBtn.click();
+    if (focusSignupForm()) {
       showToast("Drop your email and you'll be first to hear Chemical Fires!", 'success');
     } else {
       showToast('Follow KINS on your streaming app to catch the release.');
@@ -637,10 +636,7 @@ export function initHeroFeatureController() {
   // --- ACTIONS: LIVESTREAM CTA TRIGGERS ---
   const heroLiveNotifyBtn = document.getElementById('heroLiveNotifyBtn');
   heroLiveNotifyBtn?.addEventListener('click', () => {
-    const topSubscribeBtn = document.getElementById('topSubscribeBtn');
-    if (topSubscribeBtn) {
-      topSubscribeBtn.click();
-    } else {
+    if (!focusSignupForm()) {
       showToast("You'll be notified as soon as KINS goes live!", "success");
     }
   });

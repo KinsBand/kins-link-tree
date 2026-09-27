@@ -17,6 +17,7 @@ import SubscribeSection from '../components/sections/SubscribeSection.astro';
 import TopNav from '../components/navigation/TopNav.astro';
 import SiteFooter from '../components/navigation/SiteFooter.astro';
 import { functionalityConfig } from '../settings/functionality.config';
+import { features } from '../settings/features';
 
 // Modal Components
 import ShareModal from '../components/modals/ShareModal.astro';
@@ -57,7 +58,7 @@ const isToolsEnabled = functionalityConfig.enableKinsTools ?? false;
         <MembersSection />
         <KinsCrewSpotlight />
         <MerchSection />
-        <InspirationVault />
+        {features.inspirationVault && <InspirationVault />}
         {isToolsEnabled && <KinsToolsSection />}
 
         <!-- Accessible Entity & Discovery Summary for Screen Readers & AI Search Crawlers -->
@@ -87,16 +88,16 @@ const isToolsEnabled = functionalityConfig.enableKinsTools ?? false;
     </div>
   </div>
 
-  <CoversSearchOverlay />
+  {features.coversSearch && <CoversSearchOverlay />}
   <CoverVideoModal />
   <CommunitySubmissionModal />
   <LiveUploadModal />
   <LegalModal />
   <FeedbackModal />
-  <RequestSongModal />
+  {features.coversSearch && <RequestSongModal />}
   <ShareModal />
-  <GigMapSheet />
-  <AudioPlayer />
+  {features.gigMap && <GigMapSheet />}
+  {features.audioPlayer && <AudioPlayer />}
   <ToastContainer />
 </BaseLayout>
 

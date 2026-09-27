@@ -1,4 +1,3 @@
-import { showToast } from './toast.js';
 import { safeGet, safeSet, safeRemove } from '../utils/safeStorage.js';
 
 const STORAGE_KEY = 'kins_subscribed';
@@ -98,26 +97,42 @@ export function updateBellUI(btnEl, isSubscribed, shouldAnimate = true) {
 }
 
 /**
- * Initializes the state-aware Notification Bell UI component.
+ * Scrolls the signup form into view and focuses its email field.
+ * Returns false when the page has no signup form (newsletter disabled).
+ */
+export function focusSignupForm() {
+  const section = document.getElementById('subscribeFormSection');
+  if (!section) return false;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  section.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+
+  const input = document.getElementById('emailInput');
+  if (input && !getSubscriptionState()) {
+    input.focus({ preventScroll: true });
+  }
+  return true;
+}
+
+/**
+ * Initializes the state-aware Notification Bell and Join pill in the top bar.
  */
 export function initSubscribeBell() {
   const topSubscribeBtn = document.getElementById('topSubscribeBtn');
+  const headerJoinPillBtn = document.getElementById('headerJoinPillBtn');
 
   // On Load: Check storage & initialize state immediately (zero layout shift/delay)
   const initialIsSubscribed = getSubscriptionState();
 
   if (topSubscribeBtn) {
     updateBellUI(topSubscribeBtn, initialIsSubscribed, false);
-
-    topSubscribeBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const subscribeFormSection = document.getElementById('subscribeFormSection');
-      if (subscribeFormSection) {
-        subscribeFormSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      showToast("Fan club & notifications are coming soon! Stay tuned.", 'info');
-    });
   }
+
+  [topSubscribeBtn, headerJoinPillBtn].forEach((btn) => {
+    btn?.addEventListener('click', (e) => {
+      if (focusSignupForm()) e.preventDefault();
+    });
+  });
 
   // Listen to global subscription state changes (e.g. when user submits form)
   window.addEventListener('kins:subscription-change', (e) => {

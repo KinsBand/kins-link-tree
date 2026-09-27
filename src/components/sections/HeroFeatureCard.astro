@@ -38,6 +38,12 @@ const activeSubvarMap = {
 
 const activeSubvar = activeSubvarMap[activeState] || '';
 
+// Only the configured state and sub-variation ship in the page. The inactive
+// variants hold demo copy ("Sold Out!", "10,000 Followers!") that must not reach
+// visitors or crawlers. Switch variants by editing hero.config.ts.
+const showState = (state: string) => state === activeState;
+const showVar = (state: string, subvar: string) => state === activeState && subvar === activeSubvar;
+
 // Calculate total votes for poll variations
 const recordingTotalVotes = poll.recording_cover.options.reduce((acc, opt) => acc + opt.votes, 0);
 const setlistTotalVotes = poll.setlist_song.options.reduce((acc, opt) => acc + opt.votes, 0);
@@ -54,8 +60,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
   <div class="hero-feature-card" id="heroFeatureCard" data-active-state={activeState} data-active-var={activeSubvar} data-anim-gated>
 
     <!-- ==================== STATE 0: UPCOMING ==================== -->
+    {showState('upcoming') && (
     <div class:list={['hero-card-state', 'state-upcoming', { hidden: activeState !== 'upcoming' }]} id="stateUpcoming">
       <!-- Sub-Var 0A: Minimal Teaser -->
+      {showVar('upcoming', 'minimal_teaser') && (
       <div class:list={['sub-var-panel', 'var-upcoming-minimal_teaser', { hidden: activeState !== 'upcoming' || activeSubvar !== 'minimal_teaser' }]} id="varUpcomingMinimalTeaser">
         <div class="upcoming-teaser-card">
           <div class="upcoming-icon-box">
@@ -68,9 +76,11 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
 
       <!-- Sub-Var 0B: Mystery Countdown -->
+      {showVar('upcoming', 'mystery_countdown') && (
       <div class:list={['sub-var-panel', 'var-upcoming-mystery_countdown', { hidden: activeState !== 'upcoming' || activeSubvar !== 'mystery_countdown' }]} id="varUpcomingMysteryCountdown">
         <div class="mystery-countdown-card">
           <span class="upcoming-teaser-badge">{upcoming.mystery_countdown.badge}</span>
@@ -83,11 +93,15 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
     </div>
+    )}
 
     <!-- ==================== STATE 1: RELEASES ==================== -->
+    {showState('release') && (
     <div class:list={['hero-card-state', 'state-release', { hidden: activeState !== 'release' }]} id="stateRelease">
       <!-- Sub-Var 1A: Cover Video Release -->
+      {showVar('release', 'cover_video') && (
       <div class:list={['sub-var-panel', 'var-release-cover_video', { hidden: activeState !== 'release' || activeSubvar !== 'cover_video' }]} id="varReleaseCoverVideo">
         <div class="hero-card-media-bg" id="heroVideoWrapper">
           <div class="hero-media-overlay"></div>
@@ -158,8 +172,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           <span class="hero-footer-text">{release.cover_video.footerText}</span>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 1B: Original Single Release -->
+      {showVar('release', 'original_single') && (
       <div class:list={['sub-var-panel', 'var-release-original_single', { hidden: activeState !== 'release' || activeSubvar !== 'original_single' }]} id="varReleaseOriginalSingle">
         <div class="hero-card-media-bg single-bg">
           <div class="hero-media-overlay"></div>
@@ -196,8 +212,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           <span class="hero-footer-text">{release.original_single.footerText}</span>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 1C: EP Pre-Order -->
+      {showVar('release', 'ep_preorder') && (
       <div class:list={['sub-var-panel', 'var-release-ep_preorder', { hidden: activeState !== 'release' || activeSubvar !== 'ep_preorder' }]} id="varReleaseEpPreorder">
         <div class="hero-card-media-bg ep-bg">
           <div class="hero-media-overlay"></div>
@@ -227,11 +245,15 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           <span class="hero-footer-text">{release.ep_preorder.footerText}</span>
         </div>
       </div>
+      )}
     </div>
+    )}
 
     <!-- ==================== STATE 2: POLLS ==================== -->
+    {showState('poll') && (
     <div class:list={['hero-card-state', 'state-poll', { hidden: activeState !== 'poll' }]} id="statePoll">
       <!-- Sub-Var 2A: Recording Cover Poll -->
+      {showVar('poll', 'recording_cover') && (
       <div class:list={['sub-var-panel', 'var-poll-recording_cover', { hidden: activeState !== 'poll' || activeSubvar !== 'recording_cover' }]} id="varPollRecordingCover">
         <div class="poll-card-header">
           <div class="poll-header-top-row">
@@ -254,8 +276,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           })}
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 2B: Setlist Song Poll + Gig Countdown -->
+      {showVar('poll', 'setlist_song') && (
       <div class="sub-var-panel var-poll-setlist_song hidden" id="varPollSetlistSong">
         <div class="poll-card-header">
           <div class="poll-header-top-row">
@@ -292,8 +316,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         )}
       </div>
+      )}
 
       <!-- Sub-Var 2C: Merch Design Vote (3-in-a-row Visual Cards) -->
+      {showVar('poll', 'merch_design') && (
       <div class="sub-var-panel var-poll-merch_design hidden" id="varPollMerchDesign">
         <div class="poll-card-header">
           <div class="poll-header-top-row">
@@ -329,8 +355,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           })}
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 2D: Tour City Request Poll -->
+      {showVar('poll', 'city_request') && (
       <div class="sub-var-panel var-poll-city_request hidden" id="varPollCityRequest">
         <div class="poll-card-header">
           <div class="poll-header-top-row">
@@ -353,11 +381,15 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           })}
         </div>
       </div>
+      )}
     </div>
+    )}
 
     <!-- ==================== STATE 3: PREVIEWS ==================== -->
+    {showState('preview') && (
     <div class="hero-card-state state-preview hidden" id="statePreview">
       <!-- Sub-Var 3A: Inspired-Style Demo Preview -->
+      {showVar('preview', 'inspired_demo') && (
       <div class="sub-var-panel var-preview-inspired_demo" id="varPreviewInspiredDemo">
         <div class="inspired-style-preview-card">
           <div class="preview-thumb-box" id="previewDiscBox">
@@ -398,8 +430,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </button>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 3B: Studio BTS Vlog Teaser -->
+      {showVar('preview', 'studio_bts') && (
       <div class="sub-var-panel var-preview-studio_bts hidden" id="varPreviewStudioBts">
         <div class="inspired-style-preview-card">
           <div class="preview-thumb-box">
@@ -414,11 +448,15 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </button>
         </div>
       </div>
+      )}
     </div>
+    )}
 
     <!-- ==================== STATE 4: TOUR SPOTLIGHT ==================== -->
+    {showState('tour') && (
     <div class="hero-card-state state-tour hidden" id="stateTour">
       <!-- Sub-Var 4A: Next Show & Ticket Drop -->
+      {showVar('tour', 'next_show') && (
       <div class="sub-var-panel var-tour-next_show" id="varTourNextShow">
         <div class="tour-card-content">
           <div class="tour-header-badge-row">
@@ -441,8 +479,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 4B: Concert Aftermovie -->
+      {showVar('tour', 'aftermovie') && (
       <div class="sub-var-panel var-tour-aftermovie hidden" id="varTourAftermovie">
         <div class="tour-card-content">
           <span class="tour-badge">{tour.aftermovie.badge}</span>
@@ -457,8 +497,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 4C: Sold Out Alert -->
+      {showVar('tour', 'sold_out') && (
       <div class="sub-var-panel var-tour-sold_out hidden" id="varTourSoldOut">
         <div class="tour-card-content">
           <span class="tour-badge sold-out-badge">{tour.sold_out.badge}</span>
@@ -473,11 +515,15 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
     </div>
+    )}
 
     <!-- ==================== STATE 5: MILESTONES ==================== -->
+    {showState('milestones') && (
     <div class="hero-card-state state-milestones hidden" id="stateMilestones">
       <!-- Sub-Var 5A: Follower Milestone -->
+      {showVar('milestones', 'follower_milestone') && (
       <div class="sub-var-panel var-milestones-follower_milestone" id="varMilestonesFollower">
         <div class="milestone-card-content">
           <!-- Top Row: Icon + Meta Column -->
@@ -504,8 +550,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 5B: Stream Milestone -->
+      {showVar('milestones', 'stream_milestone') && (
       <div class="sub-var-panel var-milestones-stream_milestone hidden" id="varMilestonesStream">
         <div class="milestone-card-content spotify-theme">
           <!-- Top Row: Spotify Icon + Meta Column -->
@@ -532,8 +580,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 5C: Press / Blog Quote -->
+      {showVar('milestones', 'press_quote') && (
       <div class="sub-var-panel var-milestones-press_quote hidden" id="varMilestonesPress">
         <div class="milestone-card-content quote-theme">
           <i class="fa-solid fa-quote-left press-quote-icon"></i>
@@ -541,11 +591,15 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           <span class="press-pub-name">— {milestones.press_quote.publication}</span>
         </div>
       </div>
+      )}
     </div>
+    )}
 
     <!-- ==================== STATE 6: LIVESTREAM & EVENTS ==================== -->
+    {showState('livestream') && (
     <div class="hero-card-state state-livestream hidden" id="stateLivestream">
       <!-- Sub-Var 6A: Pre-Show -->
+      {showVar('livestream', 'preshow') && (
       <div class="sub-var-panel var-livestream-preshow" id="varLivestreamPreshow">
         <div class="livestream-card-content preshow-theme">
           <div class="hero-live-badge-row">
@@ -572,8 +626,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 6B: Showtime (Live Now) -->
+      {showVar('livestream', 'live_now') && (
       <div class="sub-var-panel var-livestream-live_now" id="varLivestreamLiveNow">
         <div class="livestream-card-content live-theme">
           <div class="hero-live-badge-row">
@@ -610,8 +666,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 6C: Post-Show -->
+      {showVar('livestream', 'postshow') && (
       <div class="sub-var-panel var-livestream-postshow" id="varLivestreamPostshow">
         <div class="livestream-card-content postshow-theme">
           <div class="hero-live-badge-row">
@@ -638,8 +696,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 6D: Upcoming Stream Countdown -->
+      {showVar('livestream', 'upcoming_stream') && (
       <div class="sub-var-panel var-livestream-upcoming_stream hidden" id="varLivestreamUpcoming">
         <div class="livestream-card-content">
           <span class="tour-badge"><i class="fa-solid fa-clock"></i> {livestream.upcoming_stream.badge}</span>
@@ -654,8 +714,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 6E: Listening Party -->
+      {showVar('livestream', 'listening_party') && (
       <div class="sub-var-panel var-livestream-listening_party hidden" id="varLivestreamParty">
         <div class="livestream-card-content">
           <span class="tour-badge party-badge"><i class="fa-solid fa-headphones"></i> {livestream.listening_party.badge}</span>
@@ -670,11 +732,15 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
     </div>
+    )}
 
     <!-- ==================== STATE 7: SPOTLIGHT ==================== -->
+    {showState('spotlight') && (
     <div class="hero-card-state state-spotlight hidden" id="stateSpotlight">
       <!-- Sub-Var 7A: Member Spotlight -->
+      {showVar('spotlight', 'member_spotlight') && (
       <div class="sub-var-panel var-spotlight-member_spotlight" id="varSpotlightMember">
         <div class="spotlight-card-content">
           <div class="spotlight-thumb-box">
@@ -687,8 +753,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 7B: Origin Story -->
+      {showVar('spotlight', 'origin_story') && (
       <div class="sub-var-panel var-spotlight-origin_story hidden" id="varSpotlightOrigin">
         <div class="spotlight-card-content origin-theme">
           <span class="tour-badge">{spotlight.origin_story.yearFormed}</span>
@@ -696,8 +764,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           <p class="spotlight-quote">{spotlight.origin_story.snippet}</p>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 7C: Gear Showcase (3-in-a-row) -->
+      {showVar('spotlight', 'gear_showcase') && (
       <div class="sub-var-panel var-spotlight-gear_showcase hidden" id="varSpotlightGear">
         <div class="poll-card-header">
           <h3 class="poll-question">{spotlight.gear_showcase.title}</h3>
@@ -719,11 +789,15 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           ))}
         </div>
       </div>
+      )}
     </div>
+    )}
 
     <!-- ==================== STATE 8: COLLAB ==================== -->
+    {showState('collab') && (
     <div class="hero-card-state state-collab hidden" id="stateCollab">
       <!-- Sub-Var 8A: Collab Single -->
+      {showVar('collab', 'collab_single') && (
       <div class="sub-var-panel var-collab-collab_single" id="varCollabSingle">
         <div class="tour-card-content">
           <span class="tour-badge">{collab.collab_single.badge}</span>
@@ -737,8 +811,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 8B: Featured Playlist -->
+      {showVar('collab', 'featured_playlist') && (
       <div class="sub-var-panel var-collab-featured_playlist hidden" id="varCollabPlaylist">
         <div class="tour-card-content spotify-theme">
           <span class="tour-badge">{collab.featured_playlist.badge}</span>
@@ -752,8 +828,10 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
 
       <!-- Sub-Var 8C: TikTok Challenge -->
+      {showVar('collab', 'tiktok_challenge') && (
       <div class="sub-var-panel var-collab-tiktok_challenge hidden" id="varCollabTiktok">
         <div class="tour-card-content">
           <span class="tour-badge">{collab.tiktok_challenge.badge}</span>
@@ -768,7 +846,9 @@ const resolveImg = (src?: string) => !src ? `${baseUrl}new.png` : src.startsWith
           </div>
         </div>
       </div>
+      )}
     </div>
+    )}
 
   </div>
 </div>
