@@ -89,6 +89,10 @@ export interface MaterialProfile {
 
 export const A4_REFERENCE = 440;
 
+/* In-tune tolerance choices (± cents). 3 is the default. */
+export const TUNER_TOLERANCES = [0.5, 1, 2, 3, 5] as const;
+export const DEFAULT_TUNER_TOLERANCE = 3;
+
 export const A4_CALIBRATION: readonly number[] = [415, 432, 440, 442, 443];
 
 export function noteToFreq(midi: number, a4: number = A4_REFERENCE): number {
@@ -822,9 +826,14 @@ export const DETECT = {
   YIN_THRESH_MAX: 0.18,
   YIN_ADAPT_FULL_RMS: 0.03,
   CONF_LOCK: 0.82,
-  LABEL_HYSTERESIS_MS: 250,
+  // Note label keeps its note until the pitch is this far from it (> 50).
+  NOTE_HOLD_CENTS: 60,
   CONFIRM_MS: 2000,
   CONFIRM_MAX_GAP_MS: 75,
+  // Once inside ±tolerance, confirmation holds until |cents| exceeds
+  // tolerance + min(this, tolerance / 2), so jitter at the edge cannot
+  // restart the dwell.
+  CONFIRM_EXIT_MARGIN_CENTS: 1.5,
   AUTO_ADVANCE_DEBOUNCE_MS: 400,
   AUTO_ID_CENTS: 150,
   AUTO_ID_SEPARATION_CENTS: 50,

@@ -46,7 +46,9 @@ test('known 440 Hz reaches the worklet and clean Free mode readout', async ({ pa
   await openTuner(page); await start(page);
   await expect(page.locator('#tunerDetectedNote')).toHaveText('A');
   await expect(page.locator('#tunerDetectedNoteOctave')).toHaveText('4');
-  await expect(page.locator('#tunerCentsReadout')).toBeHidden();
+  await expect(page.locator('#tunerCentsReadout')).toHaveText(/^[+-]?0\.\d ct$/);
+  await expect(page.locator('#tunerCentsReadout')).toHaveClass(/is-in-tune/);
+  await expect(page.locator('#tunerStatusLine')).toHaveText('A4 in tune');
   await expect(page.locator('#tunerChromRail')).toBeVisible();
   await expect(page.locator('#tunerDetectedFreq')).toContainText('Hz');
   await expect(page.locator('.rail-note').first()).toHaveAttribute('data-midi', '12');
@@ -69,17 +71,17 @@ test('low B0 identifies the correct bass octave', async ({ page }) => {
   await openTuner(page, 30.867706); await start(page);
   await expect(page.locator('#tunerDetectedNote')).toHaveText('B');
   await expect(page.locator('#tunerDetectedNoteOctave')).toHaveText('0');
-  await expect(page.locator('#tunerCentsReadout')).toBeHidden();
+  await expect(page.locator('#tunerCentsReadout')).toHaveText(/^[+-]?[0-2]\.\d ct$/);
 });
 
 test('guided target confirms from fresh audio then loses live success on silence', async ({ page }) => {
   await openTuner(page, 82.406889, 'guided'); await start(page);
   await expect(page.locator('#tunerConfirmation')).toHaveAttribute('aria-valuenow', '100', { timeout: 20_000 });
-  await expect(page.locator('#tunerStatusLine')).toHaveText('STRING CHECKED');
+  await expect(page.locator('#tunerStatusLine')).toHaveText('E2 in tune');
   await page.evaluate(() => { (window as any).__tunerInput.sources[0].gain.gain.value = 0; });
   await expect(page.locator('#tunerConfirmation')).toHaveAttribute('aria-valuenow', '0');
   await expect(page.locator('#tunerReadoutPanel')).not.toHaveClass(/in-tune/);
-  await expect(page.locator('#tunerStatusLine')).not.toHaveText('STRING CHECKED');
+  await expect(page.locator('#tunerStatusLine')).not.toHaveText('E2 in tune');
 });
 
 test('calibration is visible and a saved fractional reference is preserved', async ({ page }) => {

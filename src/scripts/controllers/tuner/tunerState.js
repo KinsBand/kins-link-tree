@@ -7,6 +7,8 @@ import {
   INSTRUMENT_STRING_COUNTS,
   DEFAULT_STRING_COUNTS,
   A4_REFERENCE,
+  TUNER_TOLERANCES,
+  DEFAULT_TUNER_TOLERANCE,
   noteToFreq
 } from '../../../settings/tuner.config.ts';
 import { midiToNoteName } from './notesUtil.js';
@@ -87,7 +89,7 @@ function generateStandardStrings(instrumentId, count, a4) {
 export const state = {
   deviceId: '',
   inputChannel: 0,
-  tolerance: 3,
+  tolerance: DEFAULT_TUNER_TOLERANCE,
   instrumentId: DEFAULT_INSTRUMENT,
   presetIndex: 0,
   stringIndex: 0,
@@ -298,7 +300,7 @@ export function setA4(hz) {
 export function restore() {
   setStringLabel(storageGet('kins-tuner-string-label'));
   setA4(storageGet(KEYS.a4) ?? A4_REFERENCE);
-  state.tolerance = storageGet('kins-tuner-tolerance') === '1' ? 1 : 3;
+  state.tolerance = parseTolerance(storageGet('kins-tuner-tolerance'));
   const savedInstrument = storageGet(KEYS.instrument);
   if (TUNER_INSTRUMENTS.some((g) => g.id === savedInstrument)) {
     setInstrument(savedInstrument);
@@ -314,8 +316,13 @@ export function restore() {
 }
 
 
+function parseTolerance(value) {
+  const parsed = Number(value);
+  return TUNER_TOLERANCES.includes(parsed) ? parsed : DEFAULT_TUNER_TOLERANCE;
+}
+
 export function setTolerance(value) {
-  state.tolerance = Number(value) === 1 ? 1 : 3;
+  state.tolerance = parseTolerance(value);
   storageSet('kins-tuner-tolerance', String(state.tolerance));
 }
 

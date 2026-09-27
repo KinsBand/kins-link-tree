@@ -45,7 +45,8 @@ test.describe('tier1 smoke — tuner', () => {
     // Mic must survive the switch — no permission re-prompt, no restart.
     await expect(cta).toHaveClass(/listening/);
     await expect(page.locator('#tunerChromRail')).toBeHidden();
-    await expect(page.locator('#tunerCentsReadout')).toBeHidden();
+    // Visible cents are decorative for AT; readings are announced via #tunerStatusLine.
+    await expect(page.locator('#tunerCentsReadout')).toHaveAttribute('aria-hidden', 'true');
 
     await page.locator('#tunerSettingsBtn').click();
     await page.locator('[data-sheet-mode="guided"]').click();

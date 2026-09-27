@@ -59,3 +59,15 @@ test('locked display responds to a 20-cent change within 250 ms', () => {
   for (let frame = 20; frame < 30; frame++) value = smoother.push(0, true, frame * 25).cents;
   assert.ok(Math.abs(value) <= 2, `Still showing ${value} cents`);
 });
+
+test('note label holds its note up to ±60 cents, then follows the pitch', async () => {
+  const { createNoteStabilizer } = await import('../../src/scripts/controllers/tuner/pitchDetector.js');
+  const stab = createNoteStabilizer();
+  assert.equal(stab.update(40.02), 40);
+  assert.equal(stab.update(40.55), 40, 'flipped at +55 ct');
+  assert.equal(stab.update(39.45), 40, 'flipped at -55 ct');
+  assert.equal(stab.update(40.61), 41);
+  assert.equal(stab.update(40.45), 41, 'flipped back inside the hold band');
+  assert.equal(stab.update(45.1), 45, 'large move must follow immediately');
+  assert.equal(stab.update(NaN), 45);
+});
